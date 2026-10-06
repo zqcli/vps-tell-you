@@ -44,9 +44,12 @@
 
 截图保留在验证环境，未随源码发布。独立 Astra 最终源码 review 发现并复审通过“已提交写入但重读失败”的跨页面提示与写入保护修正；最终独立聚合检查通过。
 
-## 待完成
+## 发布验证
 
-- dev 发布后同一 SHA / CI 验证
+- 源码提交 `2bd509ddccb749f88a5314212e4dd3b239907749` 已正常推送至 `zqcli/vps-tell-you:dev`；`git ls-remote` 与本地 SHA 一致
+- 同一源码 SHA 的 [GitHub Actions #1](https://github.com/zqcli/vps-tell-you/actions/runs/37403531097) 已成功：Linux 依赖、锁文件、format、analyze、16 项测试与 release build；总时长 3m 2s
+- 非阻塞警告：checkout v4 的 Node20 运行时被 GitHub runner 替换为 Node24；后续可更新 action
+- 此后补充发布文档的提交不改变源码；当前分支最终 SHA / CI 应从 Git 与 Actions 实时核实
 
 ## 未运行（后续阶段）
 
