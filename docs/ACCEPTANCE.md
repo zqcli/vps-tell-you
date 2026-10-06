@@ -194,3 +194,35 @@ Android / iOS 构建 / 签名 / 真机安装，Keychain / Keystore / 权限与�
 Dart 的 Socket.close 返回与 done 相同的 Future；dartssh2 在远端 EOF 后未等待其 transport.close，导致先前已由 done 观察的写错误在 cleanup 再次传播。原生 adapter 现在仅在 close 清理时捕获 SocketException 并 destroy；原始 done / sink / flush 错误仍保持可观察，未添加全局错误吞掉或自动重连。
 
 新增 5 项确定性 close / done / write / flush / SSHClient EOF 回归和 12 次真实 loopback TCP reset / reconnect / 不重放检查。修正后全量 199 / 199 通过，format 61 文件 / 0 changes、analyze、diff check、Linux release build 通过，并重新独立 review。最终同 SHA CI 必须另行核实，不以失败的 #5 代替完成。
+
+## 阶段 5：恢复后的新验收（2026-10-06 UTC）
+
+本次重新从已验证的远端 d9e8d35 基线应用带断言恢复补丁，没有跳过不匹配的代码。下面均为恢复后实际checkout的新执行结果，旧环境日志不充当新证据。
+
+### 自动与独立复审
+
+- 335 / 335 全量测试通过；包括最新 SSH 输出排空 / native EOF 队列修正
+- format 0 changes、analyze无问题、offline --enforce-lockfile、git diff --check通过
+- clean production `flutter build linux --release --target lib/main.dart`通过；测试fixture入口单独构建并复制，不进入生产main
+- 独立Astra复审无阻塞项；154项相关测试通过（包含额外scratch账户菜单重复点击回归），随后全量335通过
+- 协议81项：V1 multipart status-only、rootless XML/错误/未知、DTD/重复/嵌套/16KiB限制；V2 account/project/server只读allowlist、规格单位、投影、分页/跨origin/端口/循环/矛盾metadata；401/403/429、坏JSON/XML、超时/取消/响应大小和整体预算
+- 真实loopback TLS：默认拒绝自签，受信测试证书仍拒绝错误主机名；重定向目标零请求；body stall、取消与chunked上界有效；不设置badCertificateCallback
+- schema v1–v4迁移保留旧数据；同endpoint多连接、同远端ID跨账户隔离、UUID变化阻断、IP/名称变化不改身份、重复/归档导入去重
+- 失败重新授权保留旧秘密与关联；新秘密写入/读回/DB提交/清理失败与跨云/SSH cleanup races有回归；秘密不进SQLite/错误
+- V1明确detach/rebind，旧台账与账务/SSH保留；V2不同远端账户拒绝；解绑/更新generation后旧请求不能恢复关联
+- widget：390px / 2×字号、masked输入、/home.php规范地址显示、失败/取消/Back动画/后台清理、保存后重读失败不重复提交、模板/设置入口防重复导航，验证/保存防重复提交，账户菜单重复点击回归通过
+- 新复审指出并修复 metadata reload成功后旧错误残留，新增回归并纳入335全量
+
+### 原生 Linux 合成闭环
+
+使用真实NativeSecretStore、用户已批准范围内的独立临时GNOME Keyring与私有D-Bus。官方Debian包只解包到workspace QA prefix，不修改系统PAM/autostart、既有钥匙环或真实凭据。HTTPS fixture只绑定localhost，测试入口只接受该host/port，私有测试CA只在fixture factory中生效。
+
+实际UI验证：默认空数据 → 选择SolusVM2 → masked合成Token与HTTPS自定义端口 → account/project/两页server清单 → 选第一台保存 → 关闭进程 → 重启恢复台账 → 从原生存储读回授权继续导入 → 首台显示“已关联”且不可重复选择 → 仅新增第二台 → 明确确认解绑 → 账户/观测/关联/待清理引用为0，2条台账保留。
+
+SQLite不含SYNTHETIC_秘密标记。测试app、fixture与专用keyring进程全部退出；临时keyring home、TLS key/cert已删除。没有生产API、正常钥匙环读取、密码/Token索取、资源销毁或真实电源命令。
+
+证据：`../recovery-stage5/assembly-evidence/final-aggregate.log`、`final-analyze.log`、`final-format.log`、`clean-production-build.log`；`../vps-qa-stage5/logs/native-db-assertions.json`、`native-cleanup-check.json`、`https-fixture.jsonl`；截图`restart-dedup.jpg`与`unbound-account.jpg`。发布前整理非秘密证据归档与完整Git bundle。
+
+### 尚未验证
+
+真实服务商/用户面板版本、API开放/权限、真实字段和证书，VirMach实际兼容性；iOS/Android构建、签名、安装、安全存储/设备认证、键盘/IME/旋转/后台/切网、提醒/分享。桌面与合成协议通过不代表上述项目通过。最终dev发布与同SHA CI须单独核实。

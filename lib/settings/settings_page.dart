@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../cloud/cloud_pages.dart';
 import '../core/app_theme.dart';
 import '../data/ledger_store.dart';
 import '../finance/fx_page.dart';
@@ -8,9 +9,31 @@ import '../servers/ledger_controller.dart';
 import '../servers/refresh_failure_notice.dart';
 import '../servers/server_record.dart';
 
-class SettingsPage extends StatelessWidget {
+class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key, required this.controller});
   final LedgerController controller;
+  @override
+  State<SettingsPage> createState() => _SettingsPageState();
+}
+
+class _SettingsPageState extends State<SettingsPage> {
+  LedgerController get controller => widget.controller;
+  bool openingCloud = false;
+  Future<void> openCloud() async {
+    if (openingCloud) return;
+    openingCloud = true;
+    try {
+      await Navigator.push<void>(
+        context,
+        MaterialPageRoute(
+          builder: (_) => CloudAccountsPage(ledger: controller),
+        ),
+      );
+    } finally {
+      openingCloud = false;
+    }
+  }
+
   @override
   Widget build(BuildContext context) => ListView(
     padding: const EdgeInsets.all(20),
@@ -76,7 +99,7 @@ class SettingsPage extends StatelessWidget {
           ],
         ),
       ),
-      const SectionTitle('后续能力'),
+      const SectionTitle('账户与偏好'),
       LedgerCard(
         padding: EdgeInsets.zero,
         child: Column(
@@ -84,12 +107,9 @@ class SettingsPage extends StatelessWidget {
             SettingRow(
               icon: Icons.cloud_outlined,
               title: '云账户',
-              subtitle: 'SolusVM 1 / 2 · 阶段 5',
-              onTap: () => showStage(
-                context,
-                '云账户尚未接入',
-                '目前仅支持手动台账。阶段 5 将提供 SolusVM 1 / 2 读取能力，当前不会接收或保存 API 凭据。',
-              ),
+              subtitle:
+                  'SolusVM 1 / 2 · ${controller.cloud.accounts.length} 个连接',
+              onTap: openCloud,
             ),
             const Divider(),
             SettingRow(
@@ -136,7 +156,7 @@ class SettingsPage extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              '阶段 4 · SSH / TCP / 命令片段',
+              '阶段 5 · SolusVM 1 / 2 读取',
               style: TextStyle(fontWeight: FontWeight.w600),
             ),
             InfoNote(

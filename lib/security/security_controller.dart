@@ -147,6 +147,7 @@ class SecurityController extends ChangeNotifier {
     bool savePassphrase = false,
   }) async {
     if (!_startMutation()) return false;
+    String? reservedRef;
     try {
       final cleanName = name.trim();
       final user = defaultUsername.trim();
@@ -191,7 +192,8 @@ class SecurityController extends ChangeNotifier {
           : 'vps_credential_${newLocalId()}';
       if (secret != null) {
         // A durable reservation precedes the possibly partial/late native write.
-        await store.reserveSecret(ref);
+        reservedRef = ref;
+        await store.reserveSecret(ref, active: true);
         final encoded = jsonEncode({
           'version': 1,
           'kind': kind.name,
@@ -229,11 +231,13 @@ class SecurityController extends ChangeNotifier {
       _failed(problem);
       // Reservations remain durable on every failure boundary, including a
       // plugin that partially wrote or has not returned after its timeout.
+      if (reservedRef != null) store.releaseSecretReservation(reservedRef);
       try {
         cleanupCount = (await store.pendingSecretCleanup()).length;
       } catch (_) {}
       return false;
     } finally {
+      if (reservedRef != null) store.releaseSecretReservation(reservedRef);
       _finish();
     }
   }

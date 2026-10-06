@@ -132,6 +132,13 @@ void main() {
         'revision': 2,
       });
       final trustBefore = await raw.query('host_trust');
+      for (final table in [
+        'cloud_bindings',
+        'cloud_observations',
+        'cloud_accounts',
+      ]) {
+        await raw.execute('DROP TABLE $table');
+      }
       await raw.execute('DROP TABLE snippets');
       await raw.setVersion(3);
       await store.close();
@@ -143,7 +150,7 @@ void main() {
       expect((await store.fxSettings()).toMap(), fxBefore);
       final reopened = await databaseFactoryFfiNoIsolate.openDatabase(path);
       expect(await reopened.query('host_trust'), trustBefore);
-      expect(await reopened.getVersion(), 4);
+      expect(await reopened.getVersion(), LedgerStore.schemaVersion);
       expect(await store.snippets(), isEmpty);
       await store.saveSnippet(
         const CommandSnippet(id: 'new', name: 'Test', content: 'echo fixture'),

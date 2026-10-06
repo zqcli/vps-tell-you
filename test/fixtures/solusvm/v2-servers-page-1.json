@@ -1,0 +1,72 @@
+{
+  "data": [
+    {
+      "id": 101,
+      "uuid": "5b92db3f-ef56-4a84-b322-25b95d0ce1ff",
+      "name": "fixture-vps",
+      "status": "processing",
+      "real_status": "started",
+      "is_processing": true,
+      "is_suspended": false,
+      "virtualization_type": "kvm",
+      "specifications": {
+        "vcpu": 2,
+        "ram": 2147483648,
+        "disk": 40
+      },
+      "ip_addresses": {
+        "ipv4": [
+          {
+            "id": 10,
+            "ip": "192.0.2.10",
+            "is_primary": true
+          }
+        ],
+        "ipv6": [
+          {
+            "id": 11,
+            "primary_ip": "2001:db8::10",
+            "range": "2001:db8::/64",
+            "is_primary": true
+          }
+        ]
+      },
+      "location": {
+        "id": 1,
+        "name": "Fixture region"
+      },
+      "plan": {
+        "id": 3,
+        "name": "Plan label only"
+      },
+      "settings": {
+        "os_image": {
+          "name": "Debian 12",
+          "type": "os_image"
+        },
+        "vnc_password": "IGNORE_SYNTHETIC_SECRET_FIELD",
+        "application_login_link": {
+          "type": "url",
+          "content": "IGNORE_SYNTHETIC_SECRET_FIELD"
+        }
+      },
+      "project": {
+        "id": 7
+      },
+      "user": {
+        "id": 12
+      }
+    }
+  ],
+  "links": {
+    "first": "https://panel.example.test:8443/api/v1/projects/7/servers?page=1",
+    "last": "https://panel.example.test:8443/api/v1/projects/7/servers?page=2",
+    "prev": null,
+    "next": "https://panel.example.test:8443/api/v1/projects/7/servers?page=2"
+  },
+  "meta": {
+    "current_page": 1,
+    "last_page": 2,
+    "per_page": 50
+  }
+}

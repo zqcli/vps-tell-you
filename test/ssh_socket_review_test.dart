@@ -9,7 +9,7 @@ import 'package:vps_tell_you/connections/ssh_socket_io.dart';
 /// A deterministic native Socket contract, without a real network endpoint.
 /// Like dart:io's IOSink, close() returns the same future as done, carrying
 /// a prior asynchronous write failure to every listener.
-class _SocketFixture implements Socket {
+class _SocketFixture extends Stream<Uint8List> implements Socket {
   final incoming = StreamController<Uint8List>();
   final completion = Completer<void>();
   final writes = <List<int>>[];
@@ -90,7 +90,6 @@ void main() {
       expect(raw.closeCalls, 1);
       expect(raw.destroys, 1);
       expect(adapter.sink, same(raw));
-      expect(adapter.stream, same(raw));
     },
   );
 

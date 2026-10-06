@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../cloud/cloud_pages.dart';
+import '../cloud/cloud_widgets.dart';
 import '../core/app_theme.dart';
 import 'ledger_controller.dart';
 import 'refresh_failure_notice.dart';
@@ -35,6 +37,20 @@ class ServerList extends StatefulWidget {
 class _ServerListState extends State<ServerList> {
   late final TextEditingController search;
   LedgerController get c => widget.controller;
+  bool openingCloud = false;
+  Future<void> importCloud() async {
+    if (openingCloud) return;
+    openingCloud = true;
+    try {
+      await Navigator.push<void>(
+        context,
+        MaterialPageRoute(builder: (_) => CloudTemplatesPage(ledger: c)),
+      );
+    } finally {
+      openingCloud = false;
+    }
+  }
+
   @override
   void initState() {
     super.initState();
@@ -185,6 +201,13 @@ class _ServerListState extends State<ServerList> {
           ],
         ),
         if (c.refreshFailed) RefreshFailureNotice(controller: c),
+        const SizedBox(height: 12),
+        OutlinedButton.icon(
+          key: const ValueKey('import-cloud-server'),
+          onPressed: c.canMutate ? importCloud : null,
+          icon: const Icon(Icons.cloud_download_outlined),
+          label: const Text('从云账户导入'),
+        ),
         if (all.isEmpty && c.records.isEmpty) ...[
           const SizedBox(height: 78),
           Center(
@@ -428,7 +451,9 @@ class _ServerListState extends State<ServerList> {
                 ],
               ),
             ),
-          const InfoNote('仅显示本地已保存资料 · 远端状态尚未检测\n到期日按设备今天计算，未来 30 天不含第 30 天。'),
+          const InfoNote(
+            '显示本地资料与最近 API 观测 · 无后台持续监控\n到期日按设备今天计算，未来 30 天不含第 30 天。',
+          ),
         ],
       ],
     );
@@ -442,6 +467,7 @@ class ServerRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final s = record;
+    final binding = controller.cloud.bindingFor(s.id);
     final days = controller.dueIn(s);
     final due = switch (s.billing) {
       BillingKind.unknown => '费用待补充',
@@ -546,8 +572,10 @@ class ServerRow extends StatelessWidget {
                       ],
                     ),
                     const SizedBox(height: 7),
-                    const Text(
-                      '● 未检测 · 本地记录',
+                    Text(
+                      binding != null
+                          ? cloudBindingSummary(binding)
+                          : '● 未检测 · 本地记录',
                       style: TextStyle(color: AppColors.muted, fontSize: 10),
                     ),
                   ],

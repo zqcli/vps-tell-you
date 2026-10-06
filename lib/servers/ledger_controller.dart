@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 
+import '../cloud/cloud_controller.dart';
 import '../core/value_types.dart';
 import '../data/ledger_store.dart';
 import '../finance/finance_models.dart';
@@ -17,12 +18,22 @@ class LedgerController extends ChangeNotifier {
     this.store, {
     DateTime Function()? clock,
     SecurityController? security,
+    CloudController? cloud,
   }) : clock = clock ?? DateTime.now,
-       security = security ?? SecurityController(store: store);
+       security = security ?? SecurityController(store: store) {
+    this.cloud =
+        cloud ?? CloudController(store: store, secrets: this.security.secrets);
+    this.cloud.addListener(_cloudChanged);
+  }
   final SecurityController security;
+  late final CloudController cloud;
+
+  void _cloudChanged() => notifyListeners();
 
   @override
   void dispose() {
+    cloud.removeListener(_cloudChanged);
+    cloud.dispose();
     security.dispose();
     super.dispose();
   }
@@ -112,6 +123,7 @@ class LedgerController extends ChangeNotifier {
     final loadedPeriods = await store.servicePeriods();
     final loadedPayments = await store.payments();
     final loadedFx = await store.fxSettings();
+    await cloud.reload();
     refreshFailed = false;
     periods = List.unmodifiable(loadedPeriods);
     payments = List.unmodifiable(loadedPayments);
@@ -124,6 +136,17 @@ class LedgerController extends ChangeNotifier {
       groupFilter = null;
     }
     notifyListeners();
+  }
+
+  /// A cloud write is already committed. Surface a reload failure without
+  /// inviting duplicate imports or losing the successful write result.
+  Future<void> refreshAfterCloudCommit() async {
+    try {
+      await refresh();
+    } catch (_) {
+      refreshFailed = true;
+      notifyListeners();
+    }
   }
 
   Future<T> mutate<T>(Future<T> Function() action) async {

@@ -41,8 +41,17 @@ class SshSocketConnection {
 class NativeSshSocket implements SSHSocket {
   NativeSshSocket(this.socket);
   final Socket socket;
+  // dartssh2 4.1.0 awaits each buffered packet handler. Raw EOF can otherwise
+  // close its transport before those queued packet microtasks finish. Give
+  // ordinary buffered packets one event turn; this does not wait for another
+  // read, asynchronous key exchange, or a user's host-verification decision.
+  late final Stream<Uint8List> _incoming = socket.transform(
+    StreamTransformer<Uint8List, Uint8List>.fromHandlers(
+      handleDone: (sink) => Timer.run(sink.close),
+    ),
+  );
   @override
-  Stream<Uint8List> get stream => socket;
+  Stream<Uint8List> get stream => _incoming;
   @override
   StreamSink<List<int>> get sink => socket;
   @override

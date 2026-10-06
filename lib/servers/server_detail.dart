@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../cloud/cloud_widgets.dart';
 import '../core/app_theme.dart';
 import '../connections/connection_pages.dart';
 import '../connections/tcp_test_page.dart';
@@ -83,6 +84,10 @@ class ServerDetail extends StatelessWidget {
     listenable: controller,
     builder: (context, _) {
       final s = controller.byId(id);
+      final binding = controller.cloud.bindingFor(id);
+      final cloudAccount = controller.cloud.accounts
+          .where((a) => a.id == binding?.accountId)
+          .firstOrNull;
       if (s == null) {
         return Scaffold(
           appBar: AppBar(title: const Text('服务器详情')),
@@ -236,12 +241,18 @@ class ServerDetail extends StatelessWidget {
                     '${controller.groupName(s.groupId)} · ${s.purpose.isEmpty ? '待补充' : s.purpose}',
                   ),
                   value('规格', s.spec),
-                  const InfoNote(
-                    '未检测 · 本地记录\n未接入厂商状态。SSH / TCP 连通性不能证明开机状态或业务健康。',
+                  InfoNote(
+                    binding == null
+                        ? '未检测 · 本地记录\n未关联云账户状态。SSH / TCP 连通性不能证明开机状态或业务健康。'
+                        : '以上是本地可编辑资料。API 观测在下方独立展示，不会覆盖这里的内容。',
                   ),
                 ],
               ),
             ),
+            if (binding != null) ...[
+              const SectionTitle('API 观测'),
+              CloudObservationCard(binding: binding, account: cloudAccount),
+            ],
             const SectionTitle('续费信息'),
             LedgerCard(
               child: Column(

@@ -9,6 +9,7 @@ import '../security/key_import.dart';
 import '../security/security_controller.dart';
 import '../security/security_models.dart';
 import 'ssh_host_key_capture.dart';
+import 'ssh_session_output.dart';
 import 'ssh_socket_connector.dart';
 
 export 'ssh_socket_connector.dart' show supportsNativeSsh;
@@ -143,7 +144,8 @@ class NativeSshService extends SshService {
   SSHSession? _session;
   HostVerificationAttempt? _verification;
   Timer? _phaseTimer;
-  final List<StreamSubscription<String>> _subscriptions = [];
+  SshSessionOutput? _sessionOutput;
+  bool _draining = false;
 
   bool _active(int epoch) => !_disposed && epoch == generation;
   void _guard(int epoch) {
@@ -314,12 +316,8 @@ class NativeSshService extends SshService {
       _client = client;
       unawaited(
         client.done.then(
-          (_) {
-            if (_active(epoch) && connected) _remoteClosed(epoch);
-          },
-          onError: (Object _) {
-            if (_active(epoch) && connected) _remoteClosed(epoch);
-          },
+          (_) => _finishRemoteClose(epoch),
+          onError: (Object _) => _finishRemoteClose(epoch),
         ),
       );
       await client.authenticated;
@@ -334,36 +332,17 @@ class NativeSshService extends SshService {
       }
       _session = session;
       _phaseTimer?.cancel();
-      final streamsDone = <Future<void>>[];
-      for (final stream in [session.stdout, session.stderr]) {
-        final done = Completer<void>();
-        streamsDone.add(done.future);
-        _subscriptions.add(
-          stream
-              .cast<List<int>>()
-              .transform(const Utf8Decoder(allowMalformed: true))
-              .listen(
-                (text) {
-                  if (_active(epoch)) _output.add(text);
-                },
-                onError: (Object _) {
-                  if (!done.isCompleted) done.complete();
-                },
-                onDone: () {
-                  if (!done.isCompleted) done.complete();
-                },
-              ),
-        );
-      }
+      _sessionOutput = SshSessionOutput(
+        session.stdout,
+        session.stderr,
+        onData: (text) {
+          if (_active(epoch)) _output.add(text);
+        },
+      );
       unawaited(
         session.done.then(
-          (_) async {
-            await Future.wait(streamsDone);
-            if (_active(epoch)) _remoteClosed(epoch);
-          },
-          onError: (Object _) {
-            if (_active(epoch)) _remoteClosed(epoch);
-          },
+          (_) => _finishRemoteClose(epoch),
+          onError: (Object _) => _finishRemoteClose(epoch),
         ),
       );
       _setStatus(SshStatus.connected);
@@ -384,6 +363,13 @@ class NativeSshService extends SshService {
     }
   }
 
+  Future<void> _finishRemoteClose(int epoch) async {
+    if (!_active(epoch) || !connected) return;
+    _draining = true;
+    await _sessionOutput?.done;
+    if (_active(epoch)) _remoteClosed(epoch);
+  }
+
   void _remoteClosed(int epoch) {
     if (!_active(epoch)) return;
     _release();
@@ -401,7 +387,13 @@ class NativeSshService extends SshService {
 
   @override
   void write(String value) {
-    if (!connected || _disposed || value.isEmpty) return;
+    if (!connected ||
+        _disposed ||
+        _draining ||
+        _client?.isClosed != false ||
+        value.isEmpty) {
+      return;
+    }
     try {
       _session?.write(Uint8List.fromList(utf8.encode(value)));
     } catch (_) {
@@ -413,7 +405,7 @@ class NativeSshService extends SshService {
   void resize(int columns, int rows) {
     _columns = columns.clamp(1, 1000);
     _rows = rows.clamp(1, 1000);
-    if (connected) {
+    if (connected && !_draining && _client?.isClosed == false) {
       try {
         _session?.resizeTerminal(_columns, _rows);
       } catch (_) {
@@ -428,8 +420,9 @@ class NativeSshService extends SshService {
     required int expectedGeneration,
   }) async {
     if (!connected ||
+        _draining ||
         !_active(expectedGeneration) ||
-        _client == null ||
+        _client?.isClosed != false ||
         _powerIssuedGeneration == generation) {
       return PowerResult.failed;
     }
@@ -467,10 +460,9 @@ class NativeSshService extends SshService {
     _phaseTimer = null;
     _verification?.cancel();
     _verification = null;
-    for (final subscription in _subscriptions) {
-      unawaited(subscription.cancel());
-    }
-    _subscriptions.clear();
+    _sessionOutput?.cancel();
+    _sessionOutput = null;
+    _draining = false;
     _session?.close();
     _session = null;
     final client = _client;

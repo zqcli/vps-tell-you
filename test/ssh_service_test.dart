@@ -850,20 +850,29 @@ void main() {
     () async {
       final remote = await fixture();
       final id = await credential();
-      await service.connect(target(remote, id), verifyHost: accept);
-      expect(service.connected, isTrue, reason: service.error);
-      await eventually(() => output.toString().contains('fixture-stderr'));
-      output.clear();
-      await remote.finishWithOutput();
-      await eventually(() => !service.connected);
-      expect(
-        output.toString().contains('${'f' * 65536}fixture-final-你好\r\n'),
-        isTrue,
-        reason: 'Final 64 KiB stdout and UTF-8 tail must survive remote close',
-      );
-      expect(output.toString(), contains('fixture-final-stderr\r\n'));
-      expect(output.toString(), isNot(contains('\uFFFD')));
-      await remote.waitFor('closed');
+      final stdoutText = '${'f' * 65536}fixture-final-你好\r\n';
+      const stderrText = 'fixture-final-stderr\r\n';
+      for (var cycle = 1; cycle <= 8; cycle++) {
+        await service.connect(target(remote, id), verifyHost: accept);
+        expect(service.connected, isTrue, reason: service.error);
+        await eventually(() => output.toString().contains('fixture-stderr'));
+        output.clear();
+        await remote.finishWithOutput();
+        await eventually(() => !service.connected);
+        final text = output.toString();
+        expect(stderrText.allMatches(text), hasLength(1));
+        // Independent stdout/stderr queues may interleave. Removing the one
+        // complete stderr event must leave every stdout character in order.
+        expect(
+          text.replaceFirst(stderrText, ''),
+          stdoutText,
+          reason: 'cycle $cycle: final stdout must survive remote close',
+        );
+        expect(text.length, stdoutText.length + stderrText.length);
+        expect(text, isNot(contains('\uFFFD')));
+        await remote.waitFor('closed', where: (e) => e['connection'] == cycle);
+        output.clear();
+      }
     },
   );
 

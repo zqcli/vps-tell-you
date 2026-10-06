@@ -1,6 +1,6 @@
 # vps tell you
 
-本地优先的个人 VPS 台账，Flutter 原生应用。当前为 **阶段 4（开发版 0.1.0）**，以 V6.2 为视觉与交互基础。Android / iOS 工程已生成，Linux 用于原生开发与验证。
+本地优先的个人 VPS 台账，Flutter 原生应用。当前为 **阶段 5（开发版 0.1.0）**，以 V6.2 为视觉与交互基础。Android / iOS 工程已生成，Linux 用于原生开发与验证。
 
 ## 当前可以做什么
 
@@ -28,7 +28,13 @@
 - 命令片段增改查删、完整转义预览；只插入独立草稿，明确确认目标与全部字节后才发送
 - 单机 SSH 重启 / 关机，经影响确认和完整目标二次核对；不开机、无 API 电源，不自动重试不确定结果
 
-SolusVM 1/2（阶段 5），提醒 / 备份 / 移动分享（阶段 6）尚未实现。界面明确说明，未模拟成功。没有系统快照、最近使用或费用“接下来需要做什么”。
+- SolusVM 1 单 VPS Key/Hash 与 SolusVM 2 用户 Token 的原生只读接入；严格 HTTPS、证书验证、取消 / 超时 / 响应及分页上界
+- 云账户独立别名、验证后选择导入或仅保存、继续导入去重、手动刷新、重新授权、解除本地关联
+- 相同面板可有多个独立连接；V1 不伪造 IP / 规格 / 实例 ID，V2 以账户 / 项目 / 实例 ID 隔离
+- API 观测与本地字段分离，失败保留旧观测时间；解除账户保留服务器、账务、付款和 SSH
+- API 秘密只进设备安全存储，失败重新授权保留旧引用；V1 换凭据需明确解除旧关联再重新选择导入
+
+提醒 / 备份 / 移动分享仍为阶段 6。界面明确说明未实现项，不模拟成功。没有系统快照、最近使用或费用“接下来需要做什么”。
 
 ## 环境与运行
 
@@ -39,7 +45,7 @@ flutter pub get --enforce-lockfile
 flutter run -d linux
 ```
 
-Linux 需要 clang、CMake、Ninja、pkg-config、GTK 3 开发包、SQLite 运行环境及 `libsecret-1-dev`。凭据读写还需要可用且已解锁的 Secret Service（如 GNOME Keyring）；无服务 / 被锁 / 失败时明确报错，台账仍可使用。默认窗口 430×900，可缩放；界面最大宽度 760。首次打开空数据，演示日期相对于当前设备日期生成，演示 IP 使用文档保留地址，不进行真实网络请求。
+Linux 需要 clang、CMake、Ninja、pkg-config、GTK 3 开发包、OpenSSL CLI（本地 TLS 测试）、SQLite 运行环境及 `libsecret-1-dev`。凭据读写还需要可用且已解锁的 Secret Service（如 GNOME Keyring）；无服务 / 被锁 / 失败时明确报错，台账仍可使用。默认窗口 430×900，可缩放；界面最大宽度 760。首次打开空数据，演示日期相对于当前设备日期生成，演示 IP 使用文档保留地址，不进行真实网络请求。
 
 ```sh
 dart format --output=none --set-exit-if-changed lib test
@@ -55,17 +61,18 @@ Android / iOS 是真实 Flutter 工程，不是 Web 包装。当前没有验证�
 ## 代码结构与数据规则
 
 - `lib/core`：V6.2 视觉组件、纯 Dart 日期 / Money 值类型
-- `lib/data`：schema v4、真实 v1 / v2 / v3 升级迁移、SQLite 事务与平台打开方式
+- `lib/data`：schema v5、真实 v1 / v2 / v3 / v4 升级迁移、SQLite 事务与平台打开方式
 - `lib/servers`：本地字段模型、ChangeNotifier 控制器、列表 / 表单 / 详情
 - `lib/finance`：纯 Dart 财务 / FX、付款、计算器、白名单 PNG 导出
 - `lib/security`：凭据元数据与原生存储、密钥校验、设备认证、SSH 配置、完整主机信任
 - `lib/connections`：SSH 服务 / xterm、临时连接、单目标 TCP、片段 / 待发送区与电源确认
+- `lib/cloud`：SolusVM 只读协议、独立账户 / API 观测、验证 / 导入 / 刷新 / 重新授权 / 解绑
 - `lib/settings`：分组、归档、币种与手动汇率、能力说明
 - `lib/app.dart`：启动恢复状态和四 Tab；使用 Flutter Navigator
 
 只有一个本地数据库，无后端、代码生成、额外状态或路由框架。依赖来自 pub.dev 维护者，直接版本固定，传递版本保存于 `pubspec.lock`。
 
-服务器和分组使用稳定本地 ID。归档不删除服务器。当前模型属于用户手动资料；未来厂商观测必须单独存储，不得整对象覆盖用户字段。财务表保存服务期间、付款与手动 FX。安全表保存凭据元数据、SSH 引用、公开主机公钥与未引用秘密清理队列；没有明文秘密表，也未预建云账户模型。
+服务器和分组使用稳定本地 ID。归档不删除服务器。用户手动资料与云账户 API 观测分开存储，刷新不得整对象覆盖用户字段。财务表保存服务期间、付款与手动 FX。安全表保存凭据元数据、SSH 引用、公开主机公钥与未引用秘密清理队列；没有明文秘密表。云账户表只存独立连接元数据和秘密引用，API 观测与服务器关联单独存储。
 
 USD / CNY / EUR 金额使用整数分，0 是免费、null 是未知，不跨币种直接相加。比例与 FX 使用 BigInt 精确分数，合计后四舍五入到分，中点远离 0；缺汇率明确显示可转换部分与覆盖率。日期是日历日期，服务期 `[start, due)`；UTC 仅作日序数，避免 DST 午夜毫秒差。缺日期保持未知。未来 30 天为今天起 `[0, 30)`，不含第 30 天。显示的“未检测”不代表运行状态。
 
@@ -79,7 +86,7 @@ USD / CNY / EUR 金额使用整数分，0 是免费、null 是未知，不跨币
 
 数据库 `ledger.sqlite3` 位于平台的 application-support 目录，Linux 通常是 `$XDG_DATA_HOME/com.vpstellyou.vps_tell_you/`。应用没有遥测、自动上传或云同步。
 
-当前尚无备份导出。不要清除应用数据、卸载重装或删除数据库来“修复”。打不开时先检查磁盘空间、权限与应用版本，再点“重试打开”。较新 schema 会阻止旧应用打开，不执行破坏性降级。v1 → v2 → v3 → v4 事务迁移保留旧 ID、分组、归档及费用字段，只为可推断的预付资料建立初始服务期；不虚构历史实付或汇率。v2 → v3 只添加安全资料表，不读取或创建钥匙环；v3 → v4 只添加命令片段表。后续 schema 变更仍须增加事务迁移并验证旧数据。
+当前尚无备份导出。不要清除应用数据、卸载重装或删除数据库来“修复”。打不开时先检查磁盘空间、权限与应用版本，再点“重试打开”。较新 schema 会阻止旧应用打开，不执行破坏性降级。v1 → v2 → v3 → v4 → v5 事务迁移保留旧 ID、分组、归档及费用字段，只为可推断的预付资料建立初始服务期；不虚构历史实付或汇率。v2 → v3 只添加安全资料表，不读取或创建钥匙环；v3 → v4 只添加命令片段表；v4 → v5 添加云账户、观测和关联表，保留现有台账、账务与 SSH 配置。后续 schema 变更仍须增加事务迁移并验证旧数据。
 
 恢复开发：先读本文件、`docs/STATUS.md`、`docs/ACCEPTANCE.md` → 检查 `git status`、当前分支与远端 → 核对远端 SHA/CI → 执行分析与最小测试 → 从首个未通过项继续。不要自动 tag、强推或改变其他分支。
 
@@ -119,3 +126,13 @@ VPS_SSH_FIXTURE_PYTHON="$PWD/.ssh-test-venv/bin/python" flutter test
 ```
 
 fixture 只绑定 loopback 临时端口，从不执行 shell / exec；依赖缺失会明确失败，不把跳过当通过。CI 安装同一固定 AsyncSSH 版本。所有 `.fixture` 私钥均为合成测试资料，不得用于真实访问。
+
+## SolusVM 验证边界
+
+协议与身份说明见 [docs/SOLUSVM.md](docs/SOLUSVM.md)。自动测试只用官方协议形状的合成数据及本地 HTTPS fixture。实际服务商的面板版本、Client API 开放、Token 权限、字段缺失、证书与手机平台兼容性仍须真机验收；没有联系用户的真实 VPS 面板或索取真实秘密。VirMach 仅按用户确认的 SolusVM 1 模板准备，尚未验证其实际 API。
+
+```sh
+flutter test test/solusvm_adapter_test.dart test/solusvm_tls_test.dart
+```
+
+原生 GUI 合成验收入口和隔离要求见 `test/support/solusvm_fixture/README.md`；生产入口始终为 `lib/main.dart`，不带测试证书信任或 fixture 凭据。

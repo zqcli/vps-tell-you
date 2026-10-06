@@ -573,6 +573,9 @@ void main() {
       'host_trust',
       'secret_cleanup',
       'snippets',
+      'cloud_bindings',
+      'cloud_observations',
+      'cloud_accounts',
     ]) {
       await db.execute('DROP TABLE $table');
     }

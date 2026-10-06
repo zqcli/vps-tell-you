@@ -163,6 +163,10 @@ async def main():
                     session.channel.write("fixture-final-你好\r\n".encode("utf-8"))
                     session.channel.write_stderr(b"fixture-final-stderr\r\n")
                     session.channel.exit(0)
+                    # connection.close() ultimately aborts the transport.
+                    # Wait for channel-close acknowledgement so the fixture
+                    # itself cannot discard its pending final writes.
+                    await session.channel.wait_closed()
                     session.owner.connection.close()
     finally:
         listener.close()

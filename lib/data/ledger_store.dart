@@ -3,6 +3,8 @@ import 'dart:convert';
 import 'package:sqflite/sqflite.dart';
 
 import '../core/value_types.dart';
+import '../cloud/cloud_account.dart';
+import '../cloud/cloud_models.dart';
 import '../connections/snippet.dart';
 import '../servers/server_record.dart';
 import '../finance/finance_models.dart';
@@ -27,7 +29,10 @@ class LedgerStore {
   LedgerStore._(this._db, this.clock);
   final Database _db;
   final DateTime Function() clock;
-  static const schemaVersion = 4;
+  static const schemaVersion = 5;
+  // Shared by both credential controllers using this store. A durable journal
+  // reservation is not an orphan while its native write/DB commit is active.
+  final Set<String> _activeSecretReservations = {};
 
   static Future<LedgerStore> open({
     required DatabaseFactory factory,
@@ -49,6 +54,7 @@ class LedgerStore {
           if (oldVersion < 2) await _addFinanceSchema(db);
           if (oldVersion < 3) await _addSecuritySchema(db);
           if (oldVersion < 4) await _addSnippetSchema(db);
+          if (oldVersion < 5) await _addCloudSchema(db);
         },
         onDowngrade: (db, oldVersion, newVersion) async {
           throw StateError('Newer ledger version; upgrade the app');
@@ -82,6 +88,7 @@ class LedgerStore {
     await _addFinanceSchema(db);
     await _addSecuritySchema(db);
     await _addSnippetSchema(db);
+    await _addCloudSchema(db);
   }
 
   Future<List<ServerRecord>> servers() async =>
@@ -740,34 +747,51 @@ class LedgerStore {
   }
 
   /// Must commit before native storage write. References are fresh and immutable.
-  Future<void> reserveSecret(String ref) async {
-    await _db.transaction((txn) async {
-      if ((await txn.query(
-        'credentials',
-        where: 'secret_ref = ?',
-        whereArgs: [ref],
-        limit: 1,
-      )).isNotEmpty) {
-        throw const LedgerConflict();
-      }
-      await txn.insert('secret_cleanup', {
-        'secret_ref': ref,
-        'created_at': clock().toUtc().toIso8601String(),
+  Future<void> reserveSecret(String ref, {bool active = false}) async {
+    if (active && !_activeSecretReservations.add(ref)) {
+      throw const LedgerConflict();
+    }
+    try {
+      await _db.transaction((txn) async {
+        if (await _secretIsReferenced(txn, ref)) throw const LedgerConflict();
+        await txn.insert('secret_cleanup', {
+          'secret_ref': ref,
+          'created_at': clock().toUtc().toIso8601String(),
+        });
       });
-    });
+    } catch (_) {
+      if (active) _activeSecretReservations.remove(ref);
+      rethrow;
+    }
   }
+
+  void releaseSecretReservation(String ref) =>
+      _activeSecretReservations.remove(ref);
 
   Future<List<String>> pendingSecretCleanup() async =>
       (await _db.query('secret_cleanup'))
           .map((row) => row['secret_ref'] as String)
+          .where((ref) => !_activeSecretReservations.contains(ref))
           .toList(growable: false);
 
-  Future<bool> secretIsReferenced(String ref) async => (await _db.query(
-    'credentials',
-    where: 'secret_ref = ?',
-    whereArgs: [ref],
-    limit: 1,
-  )).isNotEmpty;
+  Future<bool> secretIsReferenced(String ref) => _secretIsReferenced(_db, ref);
+
+  static Future<bool> _secretIsReferenced(
+    DatabaseExecutor db,
+    String ref,
+  ) async {
+    for (final table in ['credentials', 'cloud_accounts']) {
+      if ((await db.query(
+        table,
+        where: 'secret_ref = ?',
+        whereArgs: [ref],
+        limit: 1,
+      )).isNotEmpty) {
+        return true;
+      }
+    }
+    return false;
+  }
 
   Future<void> finishSecretCleanup(String ref) async {
     await _db.delete(
@@ -1057,6 +1081,416 @@ class LedgerStore {
     );
     if (changed != 1) throw const LedgerConflict();
   }
+
+  static Future<void> _addCloudSchema(DatabaseExecutor db) async {
+    await db.execute('''CREATE TABLE cloud_accounts (
+      id TEXT PRIMARY KEY, provider TEXT NOT NULL CHECK(provider IN ('solusVm1','solusVm2')),
+      alias TEXT NOT NULL, endpoint TEXT NOT NULL, secret_ref TEXT NOT NULL UNIQUE,
+      remote_account_id INTEGER, revision INTEGER NOT NULL DEFAULT 0,
+      generation INTEGER NOT NULL DEFAULT 0, created_at TEXT NOT NULL,
+      last_attempt_at TEXT, last_failure TEXT,
+      CHECK((provider = 'solusVm1' AND remote_account_id IS NULL) OR
+            (provider = 'solusVm2' AND remote_account_id > 0)))''');
+    await db.execute('''CREATE TABLE cloud_observations (
+      account_id TEXT NOT NULL REFERENCES cloud_accounts(id) ON DELETE CASCADE,
+      instance_key TEXT NOT NULL, identity_uuid TEXT, observation TEXT NOT NULL,
+      stale INTEGER NOT NULL DEFAULT 0 CHECK(stale IN (0,1)),
+      missing INTEGER NOT NULL DEFAULT 0 CHECK(missing IN (0,1)),
+      PRIMARY KEY(account_id, instance_key))''');
+    await db.execute(
+      '''CREATE TABLE cloud_bindings (
+      server_id TEXT PRIMARY KEY REFERENCES servers(id) ON DELETE CASCADE,
+      account_id TEXT NOT NULL, instance_key TEXT NOT NULL,
+      UNIQUE(account_id, instance_key),
+      FOREIGN KEY(account_id, instance_key)
+        REFERENCES cloud_observations(account_id, instance_key) ON DELETE CASCADE)''',
+    );
+  }
+
+  Future<List<CloudAccount>> cloudAccounts() async => (await _db.query(
+    'cloud_accounts',
+    orderBy: 'alias COLLATE NOCASE, id',
+  )).map(CloudAccount.fromMap).toList(growable: false);
+
+  Future<List<CloudBinding>> cloudBindings() async => (await _db.rawQuery('''
+    SELECT b.server_id, o.* FROM cloud_bindings b JOIN cloud_observations o
+      ON b.account_id = o.account_id AND b.instance_key = o.instance_key
+  ''')).map(CloudBinding.fromMap).toList(growable: false);
+
+  static Future<CloudAccount> _currentCloud(
+    DatabaseExecutor txn,
+    CloudAccount expected, {
+    bool checkGeneration = true,
+  }) async {
+    final rows = await txn.query(
+      'cloud_accounts',
+      where: 'id = ?',
+      whereArgs: [expected.id],
+    );
+    if (rows.length != 1) throw const LedgerConflict();
+    final current = CloudAccount.fromMap(rows.single);
+    if (current.revision != expected.revision ||
+        (checkGeneration && current.generation != expected.generation) ||
+        current.secretRef != expected.secretRef ||
+        current.provider != expected.provider ||
+        current.endpoint != expected.endpoint ||
+        current.remoteAccountId != expected.remoteAccountId) {
+      throw const LedgerConflict();
+    }
+    return current;
+  }
+
+  static void _checkCloudCancellation(bool Function()? isCancelled) {
+    if (isCancelled?.call() ?? false) {
+      throw const CloudFailure(CloudFailureKind.cancelled);
+    }
+  }
+
+  /// Claims a monotonically newer read. Refresh does not modify user metadata
+  /// revisions, so another read can supersede this one without an ABA window.
+  Future<CloudAccount> beginCloudRead(
+    CloudAccount expected, {
+    bool Function()? isCancelled,
+  }) => _db.transaction((txn) async {
+    _checkCloudCancellation(isCancelled);
+    final current = await _currentCloud(txn, expected, checkGeneration: false);
+    final map = current.toMap()..['generation'] = current.generation + 1;
+    await txn.update(
+      'cloud_accounts',
+      {'generation': current.generation + 1},
+      where: 'id = ?',
+      whereArgs: [current.id],
+    );
+    _checkCloudCancellation(isCancelled);
+    return CloudAccount.fromMap(map);
+  });
+
+  static void _validateCloudSnapshot(
+    CloudAccount account,
+    CloudSnapshot snapshot,
+  ) {
+    if (snapshot.provider != account.provider ||
+        snapshot.remoteAccountId != account.remoteAccountId) {
+      throw CloudAccountFailure.identity;
+    }
+    if (snapshot.provider == CloudProvider.solusVm1 &&
+        snapshot.instances.length != 1) {
+      throw const CloudFailure(CloudFailureKind.invalidResponse);
+    }
+    if (snapshot.provider == CloudProvider.solusVm2 &&
+        (snapshot.remoteAccountId ?? 0) <= 0) {
+      throw const CloudFailure(CloudFailureKind.invalidResponse);
+    }
+    final keys = <String>{};
+    for (final i in snapshot.instances) {
+      if (!keys.add(cloudInstanceKey(snapshot, i))) {
+        throw const CloudFailure(CloudFailureKind.invalidResponse);
+      }
+    }
+  }
+
+  Future<void> _applyCloudSnapshot(
+    DatabaseExecutor txn,
+    CloudAccount account,
+    CloudSnapshot snapshot,
+  ) async {
+    _validateCloudSnapshot(account, snapshot);
+    // Missing objects retain their last observation and timestamp; absence is
+    // never converted to a fresh "stopped" observation.
+    await txn.update(
+      'cloud_observations',
+      {'stale': 1, 'missing': 1},
+      where: 'account_id = ?',
+      whereArgs: [account.id],
+    );
+    for (final instance in snapshot.instances) {
+      final key = cloudInstanceKey(snapshot, instance);
+      final old = await txn.query(
+        'cloud_observations',
+        where: 'account_id = ? AND instance_key = ?',
+        whereArgs: [account.id, key],
+      );
+      final uuid = old.isEmpty ? null : old.single['identity_uuid'] as String?;
+      if (uuid != null && instance.uuid != null && uuid != instance.uuid) {
+        throw CloudAccountFailure.identity;
+      }
+      final map = <String, Object?>{
+        'account_id': account.id,
+        'instance_key': key,
+        'identity_uuid': uuid ?? instance.uuid,
+        'observation': encodeCloudInstance(instance),
+        'stale': 0,
+        'missing': 0,
+      };
+      if (old.isEmpty) {
+        await txn.insert('cloud_observations', map);
+      } else {
+        // Never use REPLACE: it would cascade-delete the server binding.
+        await txn.update(
+          'cloud_observations',
+          map,
+          where: 'account_id = ? AND instance_key = ?',
+          whereArgs: [account.id, key],
+        );
+      }
+    }
+    await txn.update(
+      'cloud_accounts',
+      {
+        'last_attempt_at': snapshot.completedAt.toUtc().toIso8601String(),
+        'last_failure': null,
+      },
+      where: 'id = ?',
+      whereArgs: [account.id],
+    );
+  }
+
+  Future<CloudAccount> commitCloudSnapshot(
+    CloudAccount expected,
+    CloudSnapshot snapshot, {
+    bool Function()? isCancelled,
+  }) => _db.transaction((txn) async {
+    _checkCloudCancellation(isCancelled);
+    final current = await _currentCloud(txn, expected);
+    await _applyCloudSnapshot(txn, current, snapshot);
+    _checkCloudCancellation(isCancelled);
+    return CloudAccount.fromMap(
+      current.toMap()
+        ..['last_attempt_at'] = snapshot.completedAt.toUtc().toIso8601String()
+        ..['last_failure'] = null,
+    );
+  });
+
+  Future<void> recordCloudFailure(
+    CloudAccount expected,
+    CloudFailureKind failure,
+  ) => _db.transaction((txn) async {
+    await _currentCloud(txn, expected);
+    await txn.update(
+      'cloud_accounts',
+      {
+        'last_attempt_at': clock().toUtc().toIso8601String(),
+        'last_failure': failure.name,
+      },
+      where: 'id = ?',
+      whereArgs: [expected.id],
+    );
+    await txn.update(
+      'cloud_observations',
+      {'stale': 1},
+      where: 'account_id = ?',
+      whereArgs: [expected.id],
+    );
+  });
+
+  /// New account (possibly zero imports) or verified reauthorization and imports
+  /// commit together. The vault reservation must already exist, and the old
+  /// reference is journaled only after metadata points to the new secret.
+  Future<int> saveCloudAccount({
+    required CloudAccount account,
+    required CloudSnapshot snapshot,
+    required CloudAccount? expected,
+    Set<String> selectedInstanceKeys = const {},
+    String? v1DisplayName,
+    bool confirmV1Rebind = false,
+    bool Function()? isCancelled,
+  }) => _db.transaction((txn) async {
+    _checkCloudCancellation(isCancelled);
+    if (account.alias.trim().isEmpty || account.alias.length > 80) {
+      throw CloudAccountFailure.alias;
+    }
+    CloudEndpoint.parse(account.endpoint);
+    _validateCloudSnapshot(account, snapshot);
+    if (expected == null) {
+      if ((await txn.query(
+        'cloud_accounts',
+        where: 'id = ?',
+        whereArgs: [account.id],
+      )).isNotEmpty) {
+        throw const LedgerConflict();
+      }
+    } else {
+      await _currentCloud(txn, expected);
+      if (account.id != expected.id ||
+          account.provider != expected.provider ||
+          account.endpoint != expected.endpoint ||
+          account.remoteAccountId != expected.remoteAccountId) {
+        throw CloudAccountFailure.identity;
+      }
+      if (account.provider == CloudProvider.solusVm1 && !confirmV1Rebind) {
+        throw CloudAccountFailure.v1Rebind;
+      }
+    }
+    if (account.secretRef == expected?.secretRef ||
+        await _secretIsReferenced(txn, account.secretRef) ||
+        (await txn.query(
+          'secret_cleanup',
+          where: 'secret_ref = ?',
+          whereArgs: [account.secretRef],
+        )).isEmpty) {
+      throw CloudAccountFailure.secret;
+    }
+    final map = account.toMap()
+      ..['revision'] = expected == null ? 0 : expected.revision + 1
+      ..['generation'] = expected == null ? 0 : expected.generation + 1;
+    if (expected == null) {
+      await txn.insert('cloud_accounts', map);
+    } else {
+      map['created_at'] = expected.createdAt.toUtc().toIso8601String();
+      await txn.update(
+        'cloud_accounts',
+        map,
+        where: 'id = ?',
+        whereArgs: [account.id],
+      );
+      if (account.provider == CloudProvider.solusVm1) {
+        // Cascades only local cloud links. The old server, payments and SSH stay.
+        await txn.delete(
+          'cloud_observations',
+          where: 'account_id = ?',
+          whereArgs: [account.id],
+        );
+      }
+      await txn.insert('secret_cleanup', {
+        'secret_ref': expected.secretRef,
+        'created_at': clock().toUtc().toIso8601String(),
+      }, conflictAlgorithm: ConflictAlgorithm.ignore);
+    }
+    await txn.delete(
+      'secret_cleanup',
+      where: 'secret_ref = ?',
+      whereArgs: [account.secretRef],
+    );
+    final saved = CloudAccount.fromMap(map);
+    await _applyCloudSnapshot(txn, saved, snapshot);
+    final count = await _importCloud(
+      txn,
+      saved,
+      selectedInstanceKeys,
+      v1DisplayName: v1DisplayName,
+    );
+    _checkCloudCancellation(isCancelled);
+    return count;
+  });
+
+  Future<int> importCloudInstances(
+    CloudInventory inventory, {
+    required Set<String> selectedInstanceKeys,
+    String? v1DisplayName,
+    bool Function()? isCancelled,
+  }) => _db.transaction((txn) async {
+    _checkCloudCancellation(isCancelled);
+    final current = await _currentCloud(txn, inventory.account);
+    if (current.lastFailure != null) throw CloudAccountFailure.selection;
+    final count = await _importCloud(
+      txn,
+      current,
+      selectedInstanceKeys,
+      v1DisplayName: v1DisplayName,
+    );
+    _checkCloudCancellation(isCancelled);
+    return count;
+  });
+
+  Future<int> _importCloud(
+    DatabaseExecutor txn,
+    CloudAccount account,
+    Set<String> selected, {
+    String? v1DisplayName,
+  }) async {
+    if (v1DisplayName != null &&
+        (v1DisplayName.trim().isEmpty || v1DisplayName.length > 80)) {
+      throw const CloudAccountFailure('服务器名称需为 1–80 个字符');
+    }
+    var count = 0;
+    for (final key in selected) {
+      final rows = await txn.query(
+        'cloud_observations',
+        where:
+            'account_id = ? AND instance_key = ? AND stale = 0 AND missing = 0',
+        whereArgs: [account.id, key],
+      );
+      if (rows.length != 1) throw CloudAccountFailure.selection;
+      if ((await txn.query(
+        'cloud_bindings',
+        where: 'account_id = ? AND instance_key = ?',
+        whereArgs: [account.id, key],
+      )).isNotEmpty) {
+        continue;
+      }
+      final instance = decodeCloudInstance(
+        rows.single['observation'] as String,
+      );
+      final now = clock().toUtc();
+      final host = instance.ipv4 ?? instance.ipv6 ?? '';
+      final name = account.provider == CloudProvider.solusVm1
+          ? v1DisplayName?.trim() ?? account.alias
+          : (instance.name?.trim().isNotEmpty ?? false)
+          ? instance.name!
+          : 'VPS ${instance.serverId}';
+      final server = ServerRecord(
+        id: newLocalId(),
+        name: _cloudImportName(name),
+        vendor: '服务商待填写',
+        host: ServerRecord.validHost(host) ? host : '',
+        createdAt: now,
+        updatedAt: now,
+      );
+      if (server.validate() != null) throw CloudAccountFailure.selection;
+      await txn.insert('servers', server.toMap());
+      await txn.insert('cloud_bindings', {
+        'server_id': server.id,
+        'account_id': account.id,
+        'instance_key': key,
+      });
+      count++;
+    }
+    return count;
+  }
+
+  static String _cloudImportName(String value) {
+    final name = value.trim();
+    if (name.length <= 80) return name;
+    // ServerRecord bounds UTF-16 units. Keep surrogate pairs intact.
+    final unit = name.codeUnitAt(79);
+    return name.substring(0, unit >= 0xd800 && unit <= 0xdbff ? 79 : 80);
+  }
+
+  Future<void> renameCloudAccount(CloudAccount expected, String alias) =>
+      _db.transaction((txn) async {
+        final clean = alias.trim();
+        if (clean.isEmpty || clean.length > 80) throw CloudAccountFailure.alias;
+        final current = await _currentCloud(
+          txn,
+          expected,
+          checkGeneration: false,
+        );
+        await txn.update(
+          'cloud_accounts',
+          {
+            'alias': clean,
+            'revision': current.revision + 1,
+            'generation': current.generation + 1,
+          },
+          where: 'id = ?',
+          whereArgs: [current.id],
+        );
+      });
+
+  Future<void> unbindCloudAccount(CloudAccount expected) => _db.transaction((
+    txn,
+  ) async {
+    final current = await _currentCloud(txn, expected, checkGeneration: false);
+    await txn.delete(
+      'cloud_accounts',
+      where: 'id = ?',
+      whereArgs: [current.id],
+    );
+    await txn.insert('secret_cleanup', {
+      'secret_ref': current.secretRef,
+      'created_at': clock().toUtc().toIso8601String(),
+    }, conflictAlgorithm: ConflictAlgorithm.ignore);
+  });
 
   Future<void> close() => _db.close();
 }
