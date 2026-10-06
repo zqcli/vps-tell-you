@@ -866,4 +866,40 @@ void main() {
       await remote.waitFor('closed');
     },
   );
+
+  test(
+    'repeated remote TCP resets contain writer failures and never replay input',
+    () async {
+      final remote = await fixture();
+      final id = await credential();
+      for (var cycle = 1; cycle <= 12; cycle++) {
+        await service.connect(target(remote, id), verifyHost: accept);
+        expect(
+          service.connected,
+          isTrue,
+          reason: 'cycle $cycle: ${service.error}',
+        );
+        service.write('synthetic-cycle-$cycle\r');
+        await remote.waitFor('input', where: (e) => e['connection'] == cycle);
+        await remote.abortClients();
+        // These writes deliberately race the peer reset. The service must
+        // contain writer errors rather than leak an unhandled async exception.
+        for (var packet = 0; packet < 8; packet++) {
+          service.write('synthetic-inflight-$cycle-$packet:${'x' * 8192}\r');
+        }
+        await eventually(() => !service.connected);
+        await remote.waitFor('closed', where: (e) => e['connection'] == cycle);
+        service.write('must-not-replay-after-reset-$cycle\r');
+        expect(remote.of('connection'), hasLength(cycle));
+      }
+      final allInput = remote
+          .of('input')
+          .map((e) => utf8.decode(base64Decode(e['data'] as String)))
+          .join();
+      expect(allInput, isNot(contains('must-not-replay-after-reset')));
+      for (var cycle = 1; cycle <= 12; cycle++) {
+        expect('synthetic-cycle-$cycle\r'.allMatches(allInput), hasLength(1));
+      }
+    },
+  );
 }

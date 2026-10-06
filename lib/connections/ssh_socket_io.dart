@@ -26,7 +26,7 @@ class SshSocketConnection {
       socket.destroy();
       throw StateError('Cancelled');
     }
-    return _NativeSocket(socket);
+    return NativeSshSocket(socket);
   }
 
   void cancel() {
@@ -36,8 +36,10 @@ class SshSocketConnection {
   }
 }
 
-class _NativeSocket implements SSHSocket {
-  _NativeSocket(this.socket);
+/// Native transport boundary. The library observes [done] for write errors;
+/// close is cleanup and must not rethrow the same terminal write failure.
+class NativeSshSocket implements SSHSocket {
+  NativeSshSocket(this.socket);
   final Socket socket;
   @override
   Stream<Uint8List> get stream => socket;
@@ -47,7 +49,14 @@ class _NativeSocket implements SSHSocket {
   Future<void> get done => socket.done;
   @override
   Future<void> close() async {
-    await socket.close();
+    try {
+      await socket.close();
+    } on SocketException {
+      // dartssh2 calls close unawaited on peer EOF. Socket.close can reject
+      // with an earlier EPIPE even when its done error was already observed.
+      // Preserve that original done error, but make terminal cleanup safe.
+      socket.destroy();
+    }
   }
 
   @override

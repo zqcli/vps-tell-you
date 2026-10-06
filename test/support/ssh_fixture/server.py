@@ -9,6 +9,8 @@ import argparse
 import asyncio
 import base64
 import json
+import socket
+import struct
 import sys
 from pathlib import Path
 
@@ -145,6 +147,14 @@ async def main():
             if command["action"] == "disconnect":
                 for connection in list(state["connections"]):
                     connection.close()
+            if command["action"] == "abort":
+                for connection in list(state["connections"]):
+                    # Per-test loopback socket only: close with TCP RST to
+                    # exercise asynchronous broken-pipe writer failures.
+                    connection.get_extra_info("socket").setsockopt(
+                        socket.SOL_SOCKET, socket.SO_LINGER,
+                        struct.pack("ii", 1, 0))
+                    connection.abort()
             if command["action"] == "finish":
                 for session in list(state["sessions"]):
                     # Synthetic output immediately followed by channel and

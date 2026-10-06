@@ -186,3 +186,11 @@ Android / iOS 构建 / 签名 / 真机安装，Keychain / Keystore / 权限与�
 证据位于本次验收环境 `vps-qa-stage4`：`screenshots/unsaved-key-prompt.jpg`、`host-before-auth.jpg`、`changed-host-blocked.jpg`、`full-byte-send-preview.jpg`、`final-native-terminal-icons.jpg`、`tcp-success.jpg` / `tcp-refused.jpg`；`logs/desktop-ssh-server.jsonl`、`clean-release-build.log` 与 `native-app.log`。截图 / 临时钥匙环不随源码提交。
 
 窗口管理器仍采用 1180×812；390px / 2×字体验收是 Widget 测试，未冒充手机真机。Android / iOS IME / 旋转 / 切网 / 后台、真实 VPS 与实际电源执行继续未运行。
+
+## 阶段 4 CI 断线清理回归修正
+
+首次阶段提交 `cc6785a612ce7a6bf2d165dfd70070478d1bd7ad` 的 [CI #5](https://github.com/zqcli/vps-tell-you/actions/runs/37414098447) 在 disconnect / reconnect 用例失败：192 项通过，1 项出现未处理的 Broken pipe。随后本地重复同一测试也重现，未将其视为偶然超时或放宽断言。
+
+Dart 的 Socket.close 返回与 done 相同的 Future；dartssh2 在远端 EOF 后未等待其 transport.close，导致先前已由 done 观察的写错误在 cleanup 再次传播。原生 adapter 现在仅在 close 清理时捕获 SocketException 并 destroy；原始 done / sink / flush 错误仍保持可观察，未添加全局错误吞掉或自动重连。
+
+新增 5 项确定性 close / done / write / flush / SSHClient EOF 回归和 12 次真实 loopback TCP reset / reconnect / 不重放检查。修正后全量 199 / 199 通过，format 61 文件 / 0 changes、analyze、diff check、Linux release build 通过，并重新独立 review。最终同 SHA CI 必须另行核实，不以失败的 #5 代替完成。

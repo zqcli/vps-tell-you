@@ -110,6 +110,11 @@ class SshFixture {
     await process.stdin.flush();
   }
 
+  Future<void> abortClients() async {
+    process.stdin.writeln(jsonEncode({'action': 'abort'}));
+    await process.stdin.flush();
+  }
+
   Future<void> close() async {
     if (_closed) return;
     _closed = true;

@@ -26,7 +26,7 @@
 - 片段 CR / LF / NUL / bidi 保存往返、CAS / v3→v4；真实 IPv4 / IPv6 loopback TCP、refused 与 synthetic timeout / cancel / stale socket
 - Widget：草稿插入 / 取消 / 换目标 / 重连无发送，完整 Send，双击导航 / Send / power 防重复，加密私钥导入默认 / opt-in、隐藏口令清理，390px / 2× 字号
 
-最终源码 format：60 文件 / 0 changes；analyze 无问题；全量 193 / 193 测试通过；enforced offline lockfile / diff check / Linux release 全通过。独立 Astra review APPROVE，最后箭头图标修正后重跑并复审通过。发布 SHA / CI 在阶段收尾后核实。测试依赖与命令见 README / test/support/ssh_fixture/README.md；依赖缺失显式失败，不静默跳过。
+最终源码 format：61 文件 / 0 changes；analyze 无问题；全量 199 / 199 测试通过；enforced offline lockfile / diff check / Linux release 全通过。独立 Astra review APPROVE，最后箭头图标修正后重跑并复审通过。发布 SHA / CI 在阶段收尾后核实。测试依赖与命令见 README / test/support/ssh_fixture/README.md；依赖缺失显式失败，不静默跳过。
 
 ## Native Linux 状态
 
@@ -35,6 +35,10 @@
 已验：未存口令的加密私钥每次单独询问；错误 / 取消无 socket；进程重启后仍重新询问；首次 host reject 只有连接 / 关闭、零认证；独立核对完整公钥后真正 Ed25519 签名登录，xterm 显示分片 UTF-8 中文 / stderr；PTY / resize 记录正确；片段插入与 Send 取消零字节，确认后精确一次发送 22 字节 CR / LF / control 内容；Ctrl+C / Arrow 上行字节正确。
 
 原生箭头缺字改为 Material icons；清理增量构建遗留的旧字体 subset 后，clean release 的四方向图标已截图核实。额外通过密码真实登录、changed host 拒绝及独立重新核实、进程重启复用正确 pin、终端直接键盘 / Back 退出 socket 清理、TCP 成功 / 拒绝 / 改目标立即清旧结果。验收结束停止 app / SSH fixture / 专用 keyring，移除临时钥匙环；日志和 SQLite 不含合成秘密。截图 / fixture 日志保留在隔离验收目录；没有执行电源操作。
+
+## CI 修正记录
+
+首个阶段提交 `cc6785a612ce7a6bf2d165dfd70070478d1bd7ad` 的 CI #5：192 通过 / 1 失败，远端关闭时重复传播 Broken pipe。仅修正 native Socket.close 清理，保留原始 done / write / flush 的错误。新增 5 项确定性适配器 / SSHClient EOF 回归与 12 次 TCP reset / reconnect 检查；修正后 199 / 199 全量、analyze、format、diff check 和 release build 通过。新 SHA 的 CI 仍须实时核实；不把失败运行当通过。
 
 ## 发布约束与恢复
 
