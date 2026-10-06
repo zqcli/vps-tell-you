@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import '../servers/server_record.dart';
 import 'cloud_models.dart';
 
 /// Local connection identity. Neither the endpoint nor a remote name/IP is a
@@ -92,6 +93,51 @@ class CloudBinding {
   );
 }
 
+/// A saved observation, including whether another local record already owns it.
+/// Reading this value never reads a secret or contacts a cloud provider.
+class CloudBindingChoice {
+  const CloudBindingChoice({
+    required this.accountId,
+    required this.instanceKey,
+    required this.observation,
+    required this.stale,
+    required this.missing,
+    this.serverId,
+  });
+  final String accountId, instanceKey;
+  final String? serverId;
+  final CloudInstance observation;
+  final bool stale, missing;
+
+  factory CloudBindingChoice.fromMap(Map<String, Object?> row) =>
+      CloudBindingChoice(
+        accountId: row['account_id'] as String,
+        instanceKey: row['instance_key'] as String,
+        observation: decodeCloudInstance(row['observation'] as String),
+        stale: row['stale'] == 1,
+        missing: row['missing'] == 1,
+        serverId: row['server_id'] as String?,
+      );
+}
+
+/// One transactional local snapshot. All account generations fence binding
+/// edits, including an unbound → bound → unbound ABA on a different account.
+/// This avoids changing server revisions or invalidating payment undo merely
+/// because the user changed a local cloud association.
+class ServerCloudBindingOptions {
+  ServerCloudBindingOptions({
+    required this.server,
+    required List<CloudAccount> accounts,
+    required List<CloudBindingChoice> choices,
+  }) : accounts = List.unmodifiable(accounts),
+       choices = List.unmodifiable(choices);
+  final ServerRecord server;
+  final List<CloudAccount> accounts;
+  final List<CloudBindingChoice> choices;
+  CloudBindingChoice? get current =>
+      choices.where((choice) => choice.serverId == server.id).firstOrNull;
+}
+
 /// V1's anonymous singleton is scoped by the local connection ID in every DB
 /// key. V2 additionally includes the verified remote user and project/server IDs.
 String cloudInstanceKey(CloudSnapshot snapshot, CloudInstance instance) {
@@ -127,6 +173,10 @@ class CloudAccountFailure implements Exception {
   static const selection = CloudAccountFailure('导入列表已变化或选择无效，请重新读取');
   static const alias = CloudAccountFailure('账户别名需为 1–80 个字符');
   static const secret = CloudAccountFailure('原生安全存储未完成，原授权保持不变；请检查设备后重试');
+  static const bindingTaken = CloudAccountFailure('该实例已关联其他服务器，不能覆盖；请重新读取本地列表');
+  static const bindingUnavailable = CloudAccountFailure(
+    '实例观测已失效或本次未返回，请到云账户手动刷新后重新选择',
+  );
 }
 
 // Explicit observation whitelist. No remote response map is serialized.

@@ -298,6 +298,39 @@ void main() {
   );
 
   testWidgets(
+    'finance surfaces omit standalone bill creation and preserve history',
+    (tester) async {
+      await store.recordAccountPayment(
+        id: 'legacy-account-payment',
+        accountLabel: 'Legacy bill',
+        amount: const Money('USD', 1234),
+        paidDate: today,
+      );
+      await controller.refresh();
+      for (final page in <Widget>[
+        Scaffold(body: FinancePage(controller: controller)),
+        RenewalsPage(controller: controller),
+        PaymentListPage(controller: controller),
+      ]) {
+        await mount(tester, page, scale: 2);
+        final scrollable = find.byType(Scrollable).first;
+        while (tester.state<ScrollableState>(scrollable).position.extentAfter >
+            0) {
+          expect(find.text('记录账户账单'), findsNothing);
+          expect(find.byTooltip('记录账户账单'), findsNothing);
+          await tester.drag(scrollable, const Offset(0, -400));
+          await tester.pumpAndSettle();
+        }
+        expect(find.text('记录账户账单'), findsNothing);
+        expect(tester.takeException(), isNull);
+      }
+      expect(find.text('Legacy bill'), findsOneWidget);
+      expect(find.textContaining('历史账户账单，只计一次'), findsOneWidget);
+      expect((await store.payments()).single.id, 'legacy-account-payment');
+    },
+  );
+
+  testWidgets(
     '390px large text finance, payment and calculator remain scrollable',
     (tester) async {
       for (final page in <Widget>[

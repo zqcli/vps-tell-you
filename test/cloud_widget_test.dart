@@ -7,7 +7,6 @@ import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:vps_tell_you/cloud/cloud_controller.dart';
 import 'package:vps_tell_you/cloud/cloud_models.dart';
 import 'package:vps_tell_you/cloud/cloud_pages.dart';
-import 'package:vps_tell_you/cloud/cloud_widgets.dart';
 import 'package:vps_tell_you/core/app_theme.dart';
 import 'package:vps_tell_you/core/value_types.dart';
 import 'package:vps_tell_you/data/ledger_store.dart';
@@ -790,7 +789,7 @@ void main() {
   );
 
   testWidgets(
-    'observation detail separates local values, timestamps, unavailable and unknown power',
+    'detail hides provider observation fields and retains local values on refresh failure',
     (tester) async {
       final saved = await account();
       behavior = (provider, _) async => _snapshot(
@@ -812,22 +811,17 @@ void main() {
         scale: 2.0,
       );
       await tester.scrollUntilVisible(
-        find.byType(CloudObservationCard),
+        find.byKey(const ValueKey('server-cloud-binding')),
         400,
         scrollable: find.byType(Scrollable).first,
       );
-      expect(find.text('读取失败 · 旧观测 · 电源未知'), findsOneWidget);
-      expect(find.text('远端变化的名称'), findsOneWidget);
-      expect(find.text('面板暂时无法提供 API 读取服务'), findsOneWidget);
-      expect(
-        find.byWidgetPredicate(
-          (w) =>
-              w is SelectableText &&
-              w.data == cloudTime(DateTime.utc(2026, 10, 6, 6)),
-        ),
-        findsOneWidget,
-      );
-      expect(find.textContaining('未知（API 未提供）'), findsWidgets);
+      expect(find.text('API 观测'), findsNothing);
+      expect(find.text('远端变化的名称'), findsNothing);
+      expect(find.text('未知（API 未提供）'), findsNothing);
+      expect(find.text('管理关联'), findsOneWidget);
+      expect(ledger.active.single.name, 'Fixture VPS 101');
+      expect(cloud.bindings.single.observation.name, '远端变化的名称');
+      expect(cloud.bindings.single.stale, isTrue);
       expect(tester.takeException(), isNull);
     },
   );

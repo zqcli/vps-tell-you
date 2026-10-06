@@ -374,23 +374,7 @@ class _PaymentListPageState extends State<PaymentListPage> {
         c.fx,
       );
       return Scaffold(
-        appBar: AppBar(
-          title: const Text('付款记录'),
-          actions: [
-            IconButton(
-              tooltip: '记录账户账单',
-              onPressed: c.canMutate
-                  ? () => Navigator.push<bool>(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => PaymentForm(controller: c),
-                      ),
-                    )
-                  : null,
-              icon: const Icon(Icons.add),
-            ),
-          ],
-        ),
+        appBar: AppBar(title: const Text('付款记录')),
         body: ListView(
           padding: const EdgeInsets.all(20),
           children: [
@@ -400,7 +384,7 @@ class _PaymentListPageState extends State<PaymentListPage> {
               isExpanded: true,
               decoration: const InputDecoration(labelText: '付款对象'),
               items: [
-                const DropdownMenuItem(value: '', child: Text('全部服务器 / 账户')),
+                const DropdownMenuItem(value: '', child: Text('全部付款记录')),
                 ...c.records.map(
                   (s) => DropdownMenuItem(
                     value: s.id,
@@ -475,7 +459,7 @@ class _PaymentListPageState extends State<PaymentListPage> {
                           ),
                         ),
                         Text(
-                          '${p.paidDate} · ${p.serverId == null ? '账户账单，只计一次' : '服务至 ${p.until}'}',
+                          '${p.paidDate} · ${p.serverId == null ? '历史账户账单，只计一次' : '服务至 ${p.until}'}',
                         ),
                         if (p.serverId != null &&
                             c.byId(p.serverId!)?.archived == true)
@@ -485,8 +469,7 @@ class _PaymentListPageState extends State<PaymentListPage> {
                   ),
                 ),
               ),
-            if (rows.isEmpty)
-              const InfoNote('此范围暂无付款记录。服务器续期从详情录入，账户账单可点右上角 +。'),
+            if (rows.isEmpty) const InfoNote('此范围暂无付款记录。请从服务器详情记录续费付款。'),
           ],
         ),
       );

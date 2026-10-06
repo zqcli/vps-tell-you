@@ -166,7 +166,7 @@ void main() {
         path: path,
       );
       final migrated = await raw();
-      expect(await migrated.getVersion(), 7);
+      expect(await migrated.getVersion(), LedgerStore.schemaVersion);
       for (final table in tables) {
         final after = (await migrated.query(table))
             .map((row) => Map<String, Object?>.from(row))

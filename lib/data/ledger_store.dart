@@ -34,7 +34,7 @@ class LedgerStore {
   LedgerStore._(this._db, this.clock);
   final Database _db;
   final DateTime Function() clock;
-  static const schemaVersion = 7;
+  static const schemaVersion = 8;
   // Shared by both credential controllers using this store. A durable journal
   // reservation is not an orphan while its native write/DB commit is active.
   final Set<String> _activeSecretReservations = {};
@@ -62,6 +62,9 @@ class LedgerStore {
           if (oldVersion < 5) await _addCloudSchema(db);
           if (oldVersion < 6) await _addSettingsSchema(db);
           if (oldVersion < 7) await _addResourcesSchema(db);
+          // v8 permits partial local resources and a traffic period in JSON.
+          // Existing v7 rows are already valid and must not be rewritten; the
+          // version fence prevents older readers from accepting the new shape.
         },
         onDowngrade: (db, oldVersion, newVersion) async {
           throw StateError('Newer ledger version; upgrade the app');
@@ -1131,6 +1134,126 @@ class LedgerStore {
       ON b.account_id = o.account_id AND b.instance_key = o.instance_key
   ''')).map(CloudBinding.fromMap).toList(growable: false);
 
+  Future<ServerCloudBindingOptions> serverCloudBindingOptions(
+    String serverId,
+  ) => _db.transaction((txn) async {
+    final rows = await txn.query(
+      'servers',
+      where: 'id = ?',
+      whereArgs: [serverId],
+    );
+    if (rows.length != 1) throw const LedgerConflict();
+    return ServerCloudBindingOptions(
+      server: ServerRecord.fromMap(rows.single),
+      accounts: (await txn.query(
+        'cloud_accounts',
+        orderBy: 'alias COLLATE NOCASE, id',
+      )).map(CloudAccount.fromMap).toList(),
+      choices: (await txn.rawQuery('''
+        SELECT o.*, b.server_id FROM cloud_observations o
+        LEFT JOIN cloud_bindings b ON b.account_id = o.account_id
+          AND b.instance_key = o.instance_key
+        ORDER BY o.account_id, o.instance_key
+      ''')).map(CloudBindingChoice.fromMap).toList(),
+    );
+  });
+
+  /// Changes only the association. Every check and the replacement happen in
+  /// one transaction; a conflict/cancellation cannot first remove the old link.
+  Future<void> setServerCloudBinding(
+    ServerCloudBindingOptions expected, {
+    CloudBindingChoice? choice,
+    bool Function()? isCancelled,
+  }) => _db.transaction((txn) async {
+    _checkCloudCancellation(isCancelled);
+    final servers = await txn.query(
+      'servers',
+      where: 'id = ?',
+      whereArgs: [expected.server.id],
+    );
+    if (servers.length != 1) throw const LedgerConflict();
+    final server = ServerRecord.fromMap(servers.single);
+    if (server.revision != expected.server.revision ||
+        server.archived ||
+        server.isDemo) {
+      throw const LedgerConflict();
+    }
+    final accounts = await txn.query('cloud_accounts');
+    if (accounts.length != expected.accounts.length) {
+      throw const LedgerConflict();
+    }
+    for (final account in expected.accounts) {
+      await _currentCloud(txn, account);
+    }
+    final oldRows = await txn.query(
+      'cloud_bindings',
+      where: 'server_id = ?',
+      whereArgs: [server.id],
+    );
+    final old = oldRows.firstOrNull;
+    final original = expected.current;
+    if (old?['account_id'] != original?.accountId ||
+        old?['instance_key'] != original?.instanceKey) {
+      throw const LedgerConflict();
+    }
+    if (choice != null) {
+      if (!expected.choices.any(
+        (c) =>
+            c.accountId == choice.accountId &&
+            c.instanceKey == choice.instanceKey,
+      )) {
+        throw CloudAccountFailure.selection;
+      }
+      final account = accounts
+          .where((a) => a['id'] == choice.accountId)
+          .firstOrNull;
+      final observations = await txn.query(
+        'cloud_observations',
+        where: 'account_id = ? AND instance_key = ?',
+        whereArgs: [choice.accountId, choice.instanceKey],
+      );
+      if (account == null ||
+          account['last_failure'] != null ||
+          observations.length != 1 ||
+          observations.single['stale'] != 0 ||
+          observations.single['missing'] != 0) {
+        throw CloudAccountFailure.bindingUnavailable;
+      }
+      final claimed = await txn.query(
+        'cloud_bindings',
+        where: 'account_id = ? AND instance_key = ?',
+        whereArgs: [choice.accountId, choice.instanceKey],
+      );
+      if (claimed.isNotEmpty && claimed.single['server_id'] != server.id) {
+        throw CloudAccountFailure.bindingTaken;
+      }
+    }
+    _checkCloudCancellation(isCancelled);
+    if (original?.accountId == choice?.accountId &&
+        original?.instanceKey == choice?.instanceKey) {
+      return;
+    }
+    await txn.delete(
+      'cloud_bindings',
+      where: 'server_id = ?',
+      whereArgs: [server.id],
+    );
+    if (choice != null) {
+      await txn.insert('cloud_bindings', {
+        'server_id': server.id,
+        'account_id': choice.accountId,
+        'instance_key': choice.instanceKey,
+      });
+    }
+    // Fence every open local selection, including adding a temporary account,
+    // binding/unbinding through it and then deleting it. Updating only that
+    // temporary account would lose the fence when its row was removed.
+    await txn.rawUpdate(
+      'UPDATE cloud_accounts SET generation = generation + 1',
+    );
+    _checkCloudCancellation(isCancelled);
+  });
+
   static Future<CloudAccount> _currentCloud(
     DatabaseExecutor txn,
     CloudAccount expected, {
@@ -1444,7 +1567,7 @@ class LedgerStore {
           ? v1Resources
           : null;
       if (account.provider == CloudProvider.solusVm1) {
-        final error = resources?.validate();
+        final error = resources?.validate(requireComplete: true);
         if (resources == null || error != null) {
           throw CloudAccountFailure(error ?? '请先补全并确认六项本地资源配置');
         }

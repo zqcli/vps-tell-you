@@ -7,9 +7,15 @@ import 'server_record.dart';
 import 'server_resource_fields.dart';
 
 class ServerForm extends StatefulWidget {
-  const ServerForm({super.key, required this.controller, this.record});
+  const ServerForm({
+    super.key,
+    required this.controller,
+    this.record,
+    this.focusHardware = false,
+  });
   final LedgerController controller;
   final ServerRecord? record;
+  final bool focusHardware;
   @override
   State<ServerForm> createState() => _ServerFormState();
 }
@@ -47,6 +53,15 @@ class _ServerFormState extends State<ServerForm> {
     currency = s?.currency ?? 'USD';
     cycle = s?.cycleMonths ?? 12;
     groupId = s?.groupId;
+    if (widget.focusHardware) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        final hardwareContext = _resources.currentContext;
+        if (hardwareContext != null) {
+          Scrollable.ensureVisible(hardwareContext);
+        }
+      });
+    }
   }
 
   @override
@@ -121,23 +136,21 @@ class _ServerFormState extends State<ServerForm> {
   Future<void> save() async {
     if (saving || !_form.currentState!.validate()) return;
     final old = widget.record;
-    final resources = old?.resources == null
-        ? null
-        : _resources.currentState?.validateAndRead();
-    if (old?.resources != null && resources == null) return;
+    final resources = _resources.currentState?.validateAndRead();
+    if (resources == null) return;
     final now = widget.controller.clock();
     String text(String key) => fields[key]!.text.trim();
     final s = ServerRecord(
       id: old?.id ?? newLocalId(),
       name: text('name'),
       vendor: text('vendor'),
-      host: resources != null && text('host') == old?.resources?.ip
-          ? resources.ip
+      host: old == null && text('host').isEmpty
+          ? (resources.ip.isNotEmpty ? resources.ip : resources.hostname)
           : text('host'),
       region: text('region'),
       purpose: text('purpose'),
       os: text('os'),
-      spec: resources != null && text('spec') == old?.resources?.specSummary
+      spec: text('spec') == old?.resources?.specSummary
           ? resources.specSummary
           : text('spec'),
       notes: text('notes'),
@@ -206,7 +219,10 @@ class _ServerFormState extends State<ServerForm> {
               const InfoNote('只保存本地台账，不修改云端实例，也不需要密码或 API Key。'),
               field('name', '服务器名称', required: true),
               field('vendor', '厂商', required: true, hint: '例如：搬瓦工 / 自定义厂商'),
-              field('host', 'IP 或域名（选填）', hint: 'IPv4、IPv6 或域名', max: 253),
+              field('host', '主机地址（选填）', hint: '独立保存的 IPv4、IPv6 或域名', max: 253),
+              const InfoNote(
+                '新建留空时采用硬件 IP 或 Hostname；已有主机地址与硬件资料独立保存，不随硬件修改自动更换。SSH 配置单独设置。',
+              ),
               select<String>('用途分组', groupId ?? '', [
                 const DropdownMenuItem(value: '', child: Text('未分组')),
                 ...widget.controller.groups.map(
@@ -217,13 +233,13 @@ class _ServerFormState extends State<ServerForm> {
               field('region', '地区（选填）'),
               field('os', '操作系统（选填）'),
               field('spec', '规格（选填）', max: 200),
-              if (widget.record?.resources != null)
-                ServerResourceFields(
-                  key: _resources,
-                  initial: widget.record!.resources,
-                  enabled: !saving,
-                  importing: false,
-                ),
+              ServerResourceFields(
+                key: _resources,
+                initial: widget.record?.resources,
+                enabled: !saving,
+                importing: false,
+                defaultTrafficPeriodMonths: widget.record == null ? 1 : null,
+              ),
               const SectionTitle('费用资料'),
               if (termsLocked)
                 const InfoNote(

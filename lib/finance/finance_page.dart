@@ -39,7 +39,7 @@ bool incompleteFinance(LedgerController c, ServerRecord s) =>
 void showFinanceRules(BuildContext context) => showStage(
   context,
   '这些数字如何计算',
-  '合计月参考 = 有效预付续费价 ÷ 周期月数 + 按量月估算。预付到期日 ≤ 今天或未知时不计入月参考。\n\n剩余价值按已知服务期间 [开始日, 到期日) 逐期折算当前续费价。未来整期计整价，过期为真实 0；按量不适用，资料缺失为未知。历史实付独立保存。\n\n未来 30 天包含今天，不含第 30 天；已过期项目不补推。六个月为本月起六个自然月，预测从今天开始，不包含按量账单。\n\n近 30 天实付包含今天及前 29 天。全部范围保留归档付款，账户账单只计一次；分组不分摊账户账单。\n\n缺汇率只展示可转换部分，不补 0。原币小计保留。先精确求和，再四舍五入到分，中点远离 0。参考折算不是银行卡扣款额。',
+  '合计月参考 = 有效预付续费价 ÷ 周期月数 + 按量月估算。预付到期日 ≤ 今天或未知时不计入月参考。\n\n剩余价值按已知服务期间 [开始日, 到期日) 逐期折算当前续费价。未来整期计整价，过期为真实 0；按量不适用，资料缺失为未知。历史实付独立保存。\n\n未来 30 天包含今天，不含第 30 天；已过期项目不补推。六个月为本月起六个自然月，预测从今天开始，不包含按量账单。\n\n近 30 天实付包含今天及前 29 天。全部范围保留归档付款，历史账户账单只计一次；分组不分摊账户账单。\n\n缺汇率只展示可转换部分，不补 0。原币小计保留。先精确求和，再四舍五入到分，中点远离 0。参考折算不是银行卡扣款额。',
 );
 
 class FinancePage extends StatefulWidget {
@@ -362,7 +362,7 @@ class _FinancePageState extends State<FinancePage> {
           ),
           InfoNote(
             groupId == null
-                ? '点击分布查看同一口径的服务器明细。账户账单独立记录，不复制到实例。'
+                ? '点击分布查看同一口径的服务器明细。费用资料与续费记录均从服务器详情维护。'
                 : '当前分组不分摊账户级实付。点击分布查看明细。',
           ),
           const SectionTitle('本月起六个月 · 预付续费'),
@@ -416,18 +416,6 @@ class _FinancePageState extends State<FinancePage> {
           ),
           const InfoNote(
             '从今天起按当前续费价与原锚点推演，到第七个月月初截止。图表与月度下钻使用同一批事件；不包含按量账单或已过期项目。',
-          ),
-          OutlinedButton.icon(
-            onPressed: c.canMutate
-                ? () => Navigator.push<bool>(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => PaymentForm(controller: c),
-                    ),
-                  )
-                : null,
-            icon: const Icon(Icons.add),
-            label: const Text('记录账户账单'),
           ),
         ],
       );
@@ -674,18 +662,7 @@ class RenewalsPage extends StatelessWidget {
                 ),
               ),
             ],
-            const InfoNote('按量账单单独核对，不产生预付续费事件。'),
-            OutlinedButton(
-              onPressed: c.canMutate
-                  ? () => Navigator.push<bool>(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => PaymentForm(controller: c),
-                      ),
-                    )
-                  : null,
-              child: const Text('记录账户账单'),
-            ),
+            const InfoNote('按量费用在服务器资料中维护月估算，不产生预付续费事件。'),
           ],
         ),
       );

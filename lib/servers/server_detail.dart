@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../cloud/cloud_widgets.dart';
+import '../cloud/server_cloud_binding_page.dart';
 import '../core/app_theme.dart';
 import '../connections/connection_pages.dart';
 import '../connections/tcp_test_page.dart';
@@ -11,6 +12,7 @@ import '../finance/finance_widgets.dart';
 import '../finance/payment_pages.dart';
 import '../security/ssh_configuration_page.dart';
 import '../settings/reminder_page.dart';
+import 'hardware_information_card.dart';
 import 'ledger_controller.dart';
 import 'refresh_failure_notice.dart';
 import 'server_form.dart';
@@ -251,22 +253,71 @@ class ServerDetail extends StatelessWidget {
                     '${controller.groupName(s.groupId)} · ${s.purpose.isEmpty ? '待补充' : s.purpose}',
                   ),
                   value(context, '规格', s.spec),
-                  InfoNote(
-                    binding == null
-                        ? '未检测 · 本地记录\n未关联云账户状态。SSH / TCP 连通性不能证明开机状态或业务健康。'
-                        : '以上是本地可编辑资料。API 观测在下方独立展示，不会覆盖这里的内容。',
-                  ),
+                  InfoNote('以上资料保存在本地，云账户刷新不会覆盖。SSH / TCP 连通性不能证明开机状态或业务健康。'),
                 ],
               ),
             ),
-            if (s.resources != null) ...[
-              const SizedBox(height: 16),
-              LocalResourceCard(s.resources!),
-            ],
-            if (binding != null) ...[
-              const SectionTitle('API 观测'),
-              CloudObservationCard(binding: binding, account: cloudAccount),
-            ],
+            SectionTitle(
+              '硬件信息',
+              action: TextButton(
+                onPressed: !controller.canMutate || s.archived
+                    ? null
+                    : () => Navigator.push<String>(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => ServerForm(
+                            controller: controller,
+                            record: s,
+                            focusHardware: true,
+                          ),
+                        ),
+                      ),
+                child: const Text('编辑硬件'),
+              ),
+            ),
+            HardwareInformationCard(s.resources),
+            const SectionTitle('云厂商关联'),
+            LedgerCard(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Text(
+                    cloudAccount?.alias ?? '未关联云账户',
+                    style: const TextStyle(fontWeight: FontWeight.w700),
+                  ),
+                  if (cloudAccount != null)
+                    Text(cloudProviderName(cloudAccount.provider)),
+                  const InfoNote('关联已保存的云账户及实例，仅管理本地对应关系。硬件信息需手动编辑。'),
+                  OutlinedButton.icon(
+                    key: const ValueKey('server-cloud-binding'),
+                    onPressed:
+                        !controller.canMutate ||
+                            s.archived ||
+                            controller.cloud.busy ||
+                            controller.cloud.needsReload
+                        ? null
+                        : () => Navigator.push<bool>(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => ServerCloudBindingPage(
+                                ledger: controller,
+                                serverId: s.id,
+                              ),
+                            ),
+                          ),
+                    icon: const Icon(Icons.link),
+                    label: Text(binding == null ? '关联云账户' : '管理关联'),
+                  ),
+                  if (controller.cloud.needsReload)
+                    TextButton(
+                      onPressed: controller.cloud.busy
+                          ? null
+                          : () => controller.cloud.reload(),
+                      child: const Text('重新读取云账户资料'),
+                    ),
+                ],
+              ),
+            ),
             const SectionTitle('续费信息'),
             LedgerCard(
               child: Column(
@@ -308,7 +359,7 @@ class ServerDetail extends StatelessWidget {
                     s.billing == BillingKind.unknown
                         ? '未知金额不会当作 0 元。可通过“编辑”补充费用资料。'
                         : s.billing == BillingKind.metered
-                        ? '按量费用作为月估算，不产生剩余价值。账户账单从费用页独立录入一次。'
+                        ? '按量费用作为月估算，不产生剩余价值。可在编辑服务器时维护费用资料。'
                         : '按当前续费价折算已知服务期；历史实付另计，不覆盖续费价。',
                   ),
                   if (controller.reminderFor(s.id) case final rule?)

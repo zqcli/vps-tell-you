@@ -12,10 +12,14 @@ class ServerResourceFields extends StatefulWidget {
     this.observed = const {},
     this.enabled = true,
     this.importing = true,
+    this.defaultTrafficPeriodMonths,
   });
   final ServerResources? initial;
   final Map<String, Object?> observed;
   final bool enabled, importing;
+
+  /// Only used for new configurations; existing unknown periods stay unknown.
+  final int? defaultTrafficPeriodMonths;
   @override
   State<ServerResourceFields> createState() => ServerResourceFieldsState();
 }
@@ -25,6 +29,7 @@ class ServerResourceFieldsState extends State<ServerResourceFields> {
   final _fields = <String, TextEditingController>{};
   final _units = <String, int>{};
   late bool _unlimited;
+  int? _trafficPeriodMonths;
   static const units = {
     'B': 1,
     'MiB': 1048576,
@@ -47,6 +52,9 @@ class ServerResourceFieldsState extends State<ServerResourceFields> {
             'diskBytes': initial.diskBytes,
             'trafficBytes': initial.trafficBytes,
           };
+    _trafficPeriodMonths = initial == null
+        ? widget.defaultTrafficPeriodMonths
+        : initial.trafficPeriodMonths;
     _unlimited =
         initial?.trafficUnlimited ??
         widget.observed['trafficUnlimited'] == true;
@@ -122,6 +130,12 @@ class ServerResourceFieldsState extends State<ServerResourceFields> {
   }
 
   String _source(String key) {
+    if (!widget.importing && !_apiSource(key)) {
+      return _fields[key]!.text.trim().isEmpty &&
+              !(key == 'trafficBytes' && _unlimited)
+          ? '未知可留空，之后可手动补充'
+          : '来源：手动填写';
+    }
     if (_apiSource(key)) return '来源：API，导入后保留为本地资料';
     if (widget.initial != null) return '来源：手动填写';
     if (key == 'trafficBytes' && _unlimited) return '来源：手动确认无限流量';
@@ -134,22 +148,26 @@ class ServerResourceFieldsState extends State<ServerResourceFields> {
     final result = ServerResources(
       ip: _fields['ip']!.text.trim(),
       hostname: _fields['hostname']!.text.trim(),
-      vcpu: _value('vcpu') as int,
-      ramBytes: _bytes('ramBytes')!,
-      diskBytes: _bytes('diskBytes')!,
+      vcpu: _value('vcpu') as int?,
+      ramBytes: _bytes('ramBytes'),
+      diskBytes: _bytes('diskBytes'),
       trafficBytes: _unlimited ? null : _bytes('trafficBytes'),
       trafficUnlimited: _unlimited,
+      trafficPeriodMonths: _trafficPeriodMonths,
       apiFields: {
         for (final key in _fields.keys)
           if (_apiSource(key)) key,
       },
     );
-    return result.validate() == null ? result : null;
+    return result.validate(requireComplete: widget.importing) == null
+        ? result
+        : null;
   }
 
   String? _validate(String key) {
     final value = _value(key);
     if (key == 'trafficBytes' && _unlimited) return null;
+    if (!widget.importing && _fields[key]!.text.trim().isEmpty) return null;
     if (key == 'ip') {
       return ServerResources.validIp(value as String)
           ? null
@@ -203,7 +221,12 @@ class ServerResourceFieldsState extends State<ServerResourceFields> {
             child: DropdownButtonFormField<int>(
               key: ValueKey('resource-unit-$key'),
               initialValue: _units[key],
-              decoration: const InputDecoration(labelText: '容量单位（1024 进制）'),
+              isExpanded: true,
+              decoration: InputDecoration(
+                labelText: key == 'trafficBytes'
+                    ? '流量单位（1024 进制）'
+                    : '容量单位（1024 进制）',
+              ),
               items: [
                 for (final unit in units.entries)
                   DropdownMenuItem(value: unit.value, child: Text(unit.key)),
@@ -224,16 +247,43 @@ class ServerResourceFieldsState extends State<ServerResourceFields> {
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        const SectionTitle('资源资料 · 六项必填'),
+        SectionTitle(widget.importing ? '资源资料 · 六项必填' : '硬件信息'),
         InfoNote(
           widget.importing
               ? '核对 API 已填值，补齐未知项。0 不代表容量或无限流量；若暂时不知道，可仅保存账户，稍后继续导入。'
-              : '本地资源资料与 API 观测分别保存，修改这些值不会更改远端配置。',
+              : 'IP、Hostname、磁盘、流量、RAM 和 vCPU 均可手动维护，未知可留空。保存后不会被 API 刷新覆盖；修改不会更改远端配置或 SSH 连接地址。',
         ),
         _field('ip', 'IP 地址'),
         _field('hostname', 'Hostname'),
         _field('diskBytes', '磁盘额度', bytes: true),
         _field('trafficBytes', '流量额度', bytes: true),
+        Padding(
+          padding: const EdgeInsets.only(bottom: 18),
+          child: DropdownButtonFormField<int>(
+            key: const ValueKey('resource-traffic-period'),
+            initialValue: _trafficPeriodMonths ?? 0,
+            isExpanded: true,
+            decoration: InputDecoration(
+              labelText: '流量周期',
+              helperText:
+                  widget.defaultTrafficPeriodMonths == 1 &&
+                      widget.initial == null
+                  ? '新建默认月，可修改或选“未设置”；请按套餐确认。'
+                  : '周期独立于容量单位；未知选“未设置”，不从 API 推断。',
+              helperMaxLines: 3,
+            ),
+            items: [
+              const DropdownMenuItem(value: 0, child: Text('未设置')),
+              for (final period in ServerResources.trafficPeriods.entries)
+                DropdownMenuItem(value: period.key, child: Text(period.value)),
+            ],
+            onChanged: widget.enabled
+                ? (value) => setState(
+                    () => _trafficPeriodMonths = value == 0 ? null : value,
+                  )
+                : null,
+          ),
+        ),
         CheckboxListTile(
           key: const ValueKey('resource-traffic-unlimited'),
           contentPadding: EdgeInsets.zero,

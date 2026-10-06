@@ -34,7 +34,7 @@ void main() {
         trafficUnlimited: true,
       ),
     ]) {
-      expect(resources.validate(), isNull);
+      expect(resources.validate(requireComplete: true), isNull);
       final decoded = ServerResources.decode(resources.encode());
       expect(decoded.toJson(), resources.toJson());
       expect(decoded.specSummary, contains('2 vCPU'));
@@ -63,10 +63,18 @@ void main() {
       'fe80::1%eth0',
       '2001:db8::1/64',
     ]) {
-      expect(resourceFixture(ip: ip).validate(), isNotNull, reason: ip);
+      expect(
+        resourceFixture(ip: ip).validate(requireComplete: true),
+        isNotNull,
+        reason: ip,
+      );
     }
     for (final ip in ['192.0.2.9', '2001:DB8::1', '::ffff:192.0.2.9']) {
-      expect(resourceFixture(ip: ip).validate(), isNull, reason: ip);
+      expect(
+        resourceFixture(ip: ip).validate(requireComplete: true),
+        isNull,
+        reason: ip,
+      );
     }
   });
 
@@ -74,7 +82,10 @@ void main() {
     'hostname accepts DNS labels and FQDN, not placeholders or endpoints',
     () {
       for (final hostname in ['VPS', 'Node-7', 'UPPER.Example.', 'a']) {
-        expect(resourceFixture(hostname: hostname).validate(), isNull);
+        expect(
+          resourceFixture(hostname: hostname).validate(requireComplete: true),
+          isNull,
+        );
       }
       for (final hostname in [
         '',
@@ -94,7 +105,7 @@ void main() {
         '${'a' * 63}.${'b' * 63}.${'c' * 63}.${'d' * 63}',
       ]) {
         expect(
-          resourceFixture(hostname: hostname).validate(),
+          resourceFixture(hostname: hostname).validate(requireComplete: true),
           isNotNull,
           reason: hostname,
         );
@@ -106,22 +117,40 @@ void main() {
     'counts and byte quotas are positive, bounded and traffic is exclusive',
     () {
       for (final bad in [0, -1, ServerResources.maxVcpu + 1]) {
-        expect(resourceFixture(vcpu: bad).validate(), isNotNull);
+        expect(
+          resourceFixture(vcpu: bad).validate(requireComplete: true),
+          isNotNull,
+        );
       }
       for (final bad in [0, -1, ServerResources.maxBytes + 1]) {
-        expect(resourceFixture(ramBytes: bad).validate(), isNotNull);
-        expect(resourceFixture(diskBytes: bad).validate(), isNotNull);
-        expect(resourceFixture(trafficBytes: bad).validate(), isNotNull);
+        expect(
+          resourceFixture(ramBytes: bad).validate(requireComplete: true),
+          isNotNull,
+        );
+        expect(
+          resourceFixture(diskBytes: bad).validate(requireComplete: true),
+          isNotNull,
+        );
+        expect(
+          resourceFixture(trafficBytes: bad).validate(requireComplete: true),
+          isNotNull,
+        );
       }
-      expect(resourceFixture(trafficBytes: null).validate(), isNotNull);
-      expect(resourceFixture(trafficUnlimited: true).validate(), isNotNull);
+      expect(
+        resourceFixture(trafficBytes: null).validate(requireComplete: true),
+        isNotNull,
+      );
+      expect(
+        resourceFixture(trafficUnlimited: true).validate(requireComplete: true),
+        isNotNull,
+      );
       expect(
         resourceFixture(
           vcpu: ServerResources.maxVcpu,
           ramBytes: ServerResources.maxBytes,
           diskBytes: 1,
           trafficBytes: 1,
-        ).validate(),
+        ).validate(requireComplete: true),
         isNull,
       );
     },
@@ -134,11 +163,19 @@ void main() {
     expect(resources.apiFields, {'ip'});
     expect(() => resources.apiFields.add('hostname'), throwsUnsupportedError);
     expect(
-      resourceFixture(apiFields: {'trafficUnlimited'}).validate(),
+      resourceFixture(apiFields: {'trafficUnlimited'})
+          .validate(requireComplete: true),
       isNotNull,
     );
-    expect(resourceFixture(apiFields: {'password'}).validate(), isNotNull);
-    expect(resourceFixture(apiFields: {'trafficBytes'}).validate(), isNull);
+    expect(
+      resourceFixture(apiFields: {'password'}).validate(requireComplete: true),
+      isNotNull,
+    );
+    expect(
+      resourceFixture(apiFields: {'trafficBytes'})
+          .validate(requireComplete: true),
+      isNull,
+    );
   });
 
   test(

@@ -277,7 +277,7 @@ class CloudController extends ChangeNotifier {
       if (verification.provider == CloudProvider.solusVm1 &&
           selection.isNotEmpty) {
         final problem =
-            v1Resources?.validate() ??
+            v1Resources?.validate(requireComplete: true) ??
             (v1Resources == null ? '请补齐六项资源资料后导入，也可仅保存账户' : null);
         if (problem != null) throw CloudAccountFailure(problem);
       }
@@ -446,6 +446,49 @@ class CloudController extends ChangeNotifier {
       return true;
     } catch (problem) {
       _failed(problem);
+      return false;
+    } finally {
+      _mutating = false;
+      _notify();
+    }
+  }
+
+  /// Uses only the saved local snapshot; it never creates an adapter or reads
+  /// API credentials. The caller must explicitly refresh from the account page.
+  Future<ServerCloudBindingOptions?> serverBindingOptions(
+    String serverId,
+  ) async {
+    if (_disposed || busy || needsReload) return null;
+    error = null;
+    try {
+      return await store.serverCloudBindingOptions(serverId);
+    } catch (problem) {
+      _failed(problem);
+      _notify();
+      return null;
+    }
+  }
+
+  /// A null choice unlinks only this server, retaining the account and secret.
+  Future<bool> setServerBinding(
+    ServerCloudBindingOptions expected, {
+    CloudBindingChoice? choice,
+    bool Function()? isCancelled,
+  }) async {
+    if (_disposed || busy || needsReload) return false;
+    _mutating = true;
+    error = null;
+    _notify();
+    try {
+      await store.setServerCloudBinding(
+        expected,
+        choice: choice,
+        isCancelled: () => _disposed || (isCancelled?.call() ?? false),
+      );
+      await _afterCommit();
+      return true;
+    } catch (problem) {
+      if (!_disposed) _failed(problem);
       return false;
     } finally {
       _mutating = false;

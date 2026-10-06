@@ -288,6 +288,76 @@ void main() {
     expect(await target.cloudBindings(), isEmpty);
   });
 
+  test('partial hardware and independent traffic period survive backup and reopening', () async {
+    final resources = ServerResources(
+      ip: '192.0.2.41',
+      trafficBytes: 1099511627776,
+      trafficPeriodMonths: 3,
+    );
+    await source.saveServer(backupServer(resources: resources), isNew: true);
+    await source.close();
+    source = await LedgerStore.open(
+      factory: databaseFactoryFfiNoIsolate,
+      path: sourcePath,
+    );
+    expect(
+      (await source.servers()).single.resources!.toJson(),
+      resources.toJson(),
+    );
+    final snapshot = LedgerBackupSnapshot.decode(
+      (await source.exportLedgerBackup()).encode(),
+    );
+    await target.restoreLedgerBackup(snapshot);
+    final restored = (await target.servers()).single.resources!;
+    expect(restored.toJson(), resources.toJson());
+    expect(restored.hostname, isEmpty);
+    expect(restored.ramBytes, isNull);
+    expect(restored.diskBytes, isNull);
+    expect(restored.vcpu, isNull);
+    expect(restored.trafficPeriodMonths, 3);
+  });
+
+  test('v7 upgrade preserves legacy resources byte-for-byte without inventing a period', () async {
+    final resources = ServerResources(
+      ip: '192.0.2.42',
+      hostname: 'legacy',
+      vcpu: 2,
+      ramBytes: 2147483648,
+      diskBytes: 21474836480,
+      trafficBytes: 1099511627776,
+    );
+    await source.saveServer(backupServer(resources: resources), isNew: true);
+    await source.close();
+    final legacyJson = jsonEncode(
+      {...resources.toJson()}..remove('trafficPeriodMonths'),
+    );
+    final raw = await databaseFactoryFfiNoIsolate.openDatabase(sourcePath);
+    await raw.update('servers', {'resources_json': legacyJson});
+    await raw.setVersion(7);
+    final before = await raw.query('servers');
+    await raw.close();
+    source = await LedgerStore.open(
+      factory: databaseFactoryFfiNoIsolate,
+      path: sourcePath,
+    );
+    final after = await databaseFactoryFfiNoIsolate.openDatabase(sourcePath);
+    expect(await after.getVersion(), LedgerStore.schemaVersion);
+    expect(await after.query('servers'), before);
+    expect(
+      (await source.servers()).single.resources!.trafficPeriodMonths,
+      isNull,
+    );
+    final snapshot = LedgerBackupSnapshot.decode(
+      (await source.exportLedgerBackup()).encode(),
+    );
+    await target.restoreLedgerBackup(snapshot);
+    expect(
+      (await target.servers()).single.resources!.trafficPeriodMonths,
+      isNull,
+    );
+    expect((await target.servers()).single.resources!.ip, '192.0.2.42');
+  });
+
   test(
     'old v1 backup without optional resources field still restores',
     () async {
