@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 
 import '../core/value_types.dart';
 import '../data/ledger_store.dart';
+import '../finance/finance_models.dart';
 import 'server_record.dart';
 
 enum ServerFilter { all, favorites, pending }
@@ -17,6 +18,26 @@ class LedgerController extends ChangeNotifier {
   final DateTime Function() clock;
   List<ServerRecord> records = [];
   List<ServerGroup> groups = [];
+  List<ServicePeriod> periods = [];
+  List<PaymentRecord> payments = [];
+  FxSettings fx = const FxSettings();
+  List<ServicePeriod> periodsFor(String serverId) =>
+      periods.where((p) => p.serverId == serverId).toList(growable: false);
+  List<PaymentRecord> paymentsFor(String serverId) => payments
+      .where((p) => p.serverId == serverId && !p.voided)
+      .toList(growable: false);
+  bool hasPaymentPeriods(String serverId) =>
+      periods.any((p) => p.serverId == serverId && p.paymentId != null);
+  bool canUndoPayment(PaymentRecord payment) {
+    if (payment.voided) return false;
+    if (payment.isAccount) return true;
+    final server = byId(payment.serverId!);
+    return server != null &&
+        !server.archived &&
+        server.revision == payment.appliedServerRevision &&
+        server.dueDate == payment.until;
+  }
+
   String search = '';
   ServerFilter filter = ServerFilter.all;
   DueFilter dueFilter = DueFilter.all;
@@ -72,10 +93,16 @@ class LedgerController extends ChangeNotifier {
   }
 
   Future<void> refresh() async {
-    // Assign only after both reads succeed; a failed read leaves visible data intact.
+    // Publish the complete loaded ledger only after every read succeeds.
     final loadedRecords = await store.servers();
     final loadedGroups = await store.groups();
+    final loadedPeriods = await store.servicePeriods();
+    final loadedPayments = await store.payments();
+    final loadedFx = await store.fxSettings();
     refreshFailed = false;
+    periods = List.unmodifiable(loadedPeriods);
+    payments = List.unmodifiable(loadedPayments);
+    fx = loadedFx;
     records = loadedRecords;
     groups = loadedGroups;
     if (groupFilter != null &&

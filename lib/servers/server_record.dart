@@ -52,6 +52,7 @@ class ServerRecord {
     this.cycleMonths = 12,
     this.startDate,
     this.dueDate,
+    this.renewalAnchorDate,
     this.archivedAt,
     this.revision = 0,
     this.isDemo = false,
@@ -63,7 +64,7 @@ class ServerRecord {
   final String currency;
   final int? amountMinor;
   final int cycleMonths, revision;
-  final LedgerDate? startDate, dueDate;
+  final LedgerDate? startDate, dueDate, renewalAnchorDate;
   final DateTime createdAt, updatedAt;
   final DateTime? archivedAt;
   bool get archived => archivedAt != null;
@@ -98,6 +99,13 @@ class ServerRecord {
       return '请填写有效金额，0 表示免费';
     }
     if (![1, 3, 6, 12, 24, 36].contains(cycleMonths)) return '请选择有效周期';
+    if ([
+      startDate,
+      dueDate,
+      renewalAnchorDate,
+    ].any((d) => d != null && !d.isValid)) {
+      return '日期无效';
+    }
     if (startDate != null &&
         dueDate != null &&
         startDate!.compareTo(dueDate!) >= 0) {
@@ -124,6 +132,7 @@ class ServerRecord {
     'cycle_months': cycleMonths,
     'start_date': startDate?.toString(),
     'due_date': dueDate?.toString(),
+    'renewal_anchor_date': renewalAnchorDate?.toString(),
     'archived_at': archivedAt?.toUtc().toIso8601String(),
     'created_at': createdAt.toUtc().toIso8601String(),
     'updated_at': updatedAt.toUtc().toIso8601String(),
@@ -152,6 +161,9 @@ class ServerRecord {
     dueDate: row['due_date'] == null
         ? null
         : LedgerDate.tryParse(row['due_date'] as String),
+    renewalAnchorDate: row['renewal_anchor_date'] == null
+        ? null
+        : LedgerDate.tryParse(row['renewal_anchor_date'] as String),
     archivedAt: row['archived_at'] == null
         ? null
         : DateTime.parse(row['archived_at'] as String),

@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'core/app_theme.dart';
 import 'data/ledger_store.dart';
 import 'data/open_ledger.dart';
+import 'finance/finance_page.dart';
+import 'finance/calculator_page.dart';
 import 'servers/ledger_controller.dart';
 import 'servers/server_list.dart';
 import 'settings/settings_page.dart';
@@ -129,8 +131,8 @@ class _HomeShellState extends State<HomeShell> {
         bottom: false,
         child: switch (tab) {
           0 => ServerList(controller: widget.controller),
-          1 => const FinancePage(),
-          2 => const ToolsPage(),
+          1 => FinancePage(controller: widget.controller),
+          2 => ToolsPage(controller: widget.controller),
           _ => SettingsPage(controller: widget.controller),
         },
       ),
@@ -202,71 +204,9 @@ class _HomeShellState extends State<HomeShell> {
   );
 }
 
-class FinancePage extends StatelessWidget {
-  const FinancePage({super.key});
-  @override
-  Widget build(BuildContext context) => ListView(
-    padding: const EdgeInsets.all(20),
-    children: [
-      const Text(
-        '费用',
-        style: TextStyle(fontSize: 28, fontWeight: FontWeight.w800),
-      ),
-      const SizedBox(height: 22),
-      Container(
-        padding: const EdgeInsets.all(22),
-        decoration: BoxDecoration(
-          color: const Color(0xFF1E355B),
-          borderRadius: BorderRadius.circular(17),
-        ),
-        child: const Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              '费用统计 · 阶段 2',
-              style: TextStyle(color: Color(0xFFC0CEE4), fontSize: 12),
-            ),
-            SizedBox(height: 16),
-            Text(
-              '原币资料，已经开始记录',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 23,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-            SizedBox(height: 12),
-            Text(
-              '目前可在服务器详情编辑续费金额与服务期。费用合计、剩余价值与付款记录尚未实现。',
-              style: TextStyle(
-                color: Color(0xFFCAD5E7),
-                fontSize: 13,
-                height: 1.8,
-              ),
-            ),
-          ],
-        ),
-      ),
-      const SectionTitle('本阶段说明'),
-      const LedgerCard(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('未知金额不当作 0 元', style: TextStyle(fontWeight: FontWeight.w700)),
-            InfoNote('不同币种不会直接相加。尚未设置参考汇率，当前不显示估算合计或虚构付款。'),
-            Divider(),
-            SizedBox(height: 14),
-            Text('记录费用不等于付款', style: TextStyle(fontWeight: FontWeight.w700)),
-            InfoNote('本应用不会支付、续费或改变厂商的自动扣费设置。'),
-          ],
-        ),
-      ),
-    ],
-  );
-}
-
 class ToolsPage extends StatelessWidget {
-  const ToolsPage({super.key});
+  const ToolsPage({super.key, required this.controller});
+  final LedgerController controller;
   @override
   Widget build(BuildContext context) => ListView(
     padding: const EdgeInsets.all(20),
@@ -285,9 +225,13 @@ class ToolsPage extends StatelessWidget {
         child: SettingRow(
           icon: Icons.calculate_outlined,
           title: '剩余价值计算器',
-          subtitle: '阶段 2 · 独立试算与 PNG 分享',
-          onTap: () =>
-              showStage(context, '计算器待实现', '阶段 2 将提供独立和引用服务器的试算。当前不会生成试算结果。'),
+          subtitle: '独立 / 引用试算 · PNG 预览与保存',
+          onTap: () => Navigator.push<void>(
+            context,
+            MaterialPageRoute(
+              builder: (_) => CalculatorPage(controller: controller),
+            ),
+          ),
         ),
       ),
       const SectionTitle('连接与排障'),

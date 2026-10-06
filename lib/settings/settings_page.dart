@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../core/app_theme.dart';
 import '../data/ledger_store.dart';
+import '../finance/fx_page.dart';
 import '../servers/ledger_controller.dart';
 import '../servers/refresh_failure_notice.dart';
 import '../servers/server_record.dart';
@@ -104,11 +105,13 @@ class SettingsPage extends StatelessWidget {
             SettingRow(
               icon: Icons.currency_exchange,
               title: '币种与参考汇率',
-              subtitle: '手动汇率与折算 · 阶段 2',
-              onTap: () => showStage(
+              subtitle:
+                  '${controller.fx.displayCurrency} · 手动汇率 ${controller.fx.rateDate ?? '未设置'}',
+              onTap: () => Navigator.push<void>(
                 context,
-                '参考汇率待实现',
-                '台账已按原币与整数最小单位保存金额。汇率和跨币种统计将在阶段 2 提供。',
+                MaterialPageRoute(
+                  builder: (_) => FxPage(controller: controller),
+                ),
               ),
             ),
             const Divider(),
@@ -131,11 +134,11 @@ class SettingsPage extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              '阶段 1 · 可运行本地台账',
+              '阶段 2 · 费用、付款与试算',
               style: TextStyle(fontWeight: FontWeight.w600),
             ),
             InfoNote(
-              'V6.2 视觉基础 · 0.1.0\n无需 App 登录 · 不安装监控 Agent\n删除本地记录不会取消服务或停止扣费。',
+              'V6.2 视觉基础 · 本地优先\n无需 App 登录 · 不安装监控 Agent\n删除本地记录不会取消服务或停止扣费。',
             ),
           ],
         ),

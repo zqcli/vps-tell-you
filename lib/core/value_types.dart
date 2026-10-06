@@ -21,6 +21,20 @@ class LedgerDate implements Comparable<LedgerDate> {
 
   factory LedgerDate.today(DateTime now) =>
       LedgerDate(now.year, now.month, now.day);
+  bool get isValid =>
+      year >= 1 &&
+      year <= 9999 &&
+      ordinal.year == year &&
+      ordinal.month == month &&
+      ordinal.day == day;
+  @override
+  bool operator ==(Object other) =>
+      other is LedgerDate &&
+      year == other.year &&
+      month == other.month &&
+      day == other.day;
+  @override
+  int get hashCode => Object.hash(year, month, day);
   DateTime get ordinal => DateTime.utc(year, month, day);
   int daysUntil(LedgerDate other) => other.ordinal.difference(ordinal).inDays;
   LedgerDate addDays(int days) {
@@ -59,7 +73,7 @@ class Money {
   }
 
   String get decimal =>
-      '${minor ~/ 100}.${(minor % 100).toString().padLeft(2, '0')}';
+      "${minor < 0 ? '-' : ''}${minor.abs() ~/ 100}.${(minor.abs() % 100).toString().padLeft(2, '0')}";
   String get formatted =>
       '${{'USD': '\$', 'CNY': '¥', 'EUR': '€'}[currency] ?? currency}$decimal';
 }

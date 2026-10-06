@@ -2,6 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../core/app_theme.dart';
+import '../finance/calculator_page.dart';
+import '../finance/finance_math.dart';
+import '../finance/finance_widgets.dart';
+import '../finance/payment_pages.dart';
 import 'ledger_controller.dart';
 import 'refresh_failure_notice.dart';
 import 'server_form.dart';
@@ -17,7 +21,7 @@ class ServerDetail extends StatelessWidget {
       context,
       title: '移除本地服务器记录？',
       message:
-          '${record.name}\n\n不会销毁云主机，也不会停止厂商扣费。记录将归档，保留同一 ID，可撤销或在“设置 → 已归档记录”中恢复。',
+          '${record.name}\n\n不会销毁云主机，也不会停止厂商扣费。记录将归档，保留同一 ID，可撤销或在“设置 / 已归档记录”中恢复。',
       action: '仅归档本地记录',
       dangerous: true,
     );
@@ -274,11 +278,86 @@ class ServerDetail extends StatelessWidget {
                     s.billing == BillingKind.unknown
                         ? '未知金额不会当作 0 元。可通过“编辑”补充费用资料。'
                         : s.billing == BillingKind.metered
-                        ? '仅保存原币月估算，无预付到期日。费用统计与付款记录将在阶段 2 提供。'
-                        : '原币续费资料已保存。剩余价值计算与实际付款记录将在阶段 2 提供。',
+                        ? '按量费用作为月估算，不产生剩余价值。账户账单从费用页独立录入一次。'
+                        : '按当前续费价折算已知服务期；历史实付另计，不覆盖续费价。',
                   ),
                 ],
               ),
+            ),
+            if (s.billing == BillingKind.prepaid) ...[
+              const SectionTitle('剩余价值'),
+              Builder(
+                builder: (context) {
+                  final valuation = serverValuation(
+                    s,
+                    controller.periodsFor(s.id),
+                    controller.today,
+                  );
+                  if (valuation == null) {
+                    return const LedgerCard(
+                      child: InfoNote('日期或费用资料不足，剩余价值未知，不按 0 元计。'),
+                    );
+                  }
+                  return ValuationCard(
+                    value: valuation,
+                    renewal: s.money!,
+                    cycleMonths: s.cycleMonths,
+                    due: s.dueDate!,
+                    asOf: controller.today,
+                    fx: controller.fx,
+                  );
+                },
+              ),
+              const SizedBox(height: 12),
+              Wrap(
+                spacing: 10,
+                runSpacing: 10,
+                children: [
+                  FilledButton.icon(
+                    onPressed:
+                        !controller.canMutate || s.archived || !canRenew(s)
+                        ? null
+                        : () => Navigator.push<bool>(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => PaymentForm(
+                                controller: controller,
+                                server: s,
+                              ),
+                            ),
+                          ),
+                    icon: const Icon(Icons.add_card_outlined),
+                    label: const Text('记录已付款'),
+                  ),
+                  OutlinedButton.icon(
+                    onPressed: controller.refreshFailed
+                        ? null
+                        : () => Navigator.push<void>(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => CalculatorPage(
+                                controller: controller,
+                                server: s,
+                              ),
+                            ),
+                          ),
+                    icon: const Icon(Icons.calculate_outlined),
+                    label: const Text('引用资料试算'),
+                  ),
+                ],
+              ),
+            ],
+            const SizedBox(height: 12),
+            OutlinedButton.icon(
+              onPressed: () => Navigator.push<void>(
+                context,
+                MaterialPageRoute(
+                  builder: (_) =>
+                      PaymentListPage(controller: controller, serverId: s.id),
+                ),
+              ),
+              icon: const Icon(Icons.receipt_long_outlined),
+              label: const Text('查看付款记录'),
             ),
             const SectionTitle('连接与控制'),
             const LedgerCard(

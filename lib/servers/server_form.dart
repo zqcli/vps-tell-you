@@ -21,6 +21,9 @@ class _ServerFormState extends State<ServerForm> {
   late int cycle;
   String? groupId;
   bool saving = false;
+  bool get termsLocked =>
+      widget.record != null &&
+      widget.controller.hasPaymentPeriods(widget.record!.id);
   @override
   void initState() {
     super.initState();
@@ -64,7 +67,7 @@ class _ServerFormState extends State<ServerForm> {
     child: TextFormField(
       key: ValueKey('field-$id'),
       controller: fields[id],
-      enabled: !saving,
+      enabled: !saving && !(termsLocked && (id == 'start' || id == 'due')),
       maxLines: lines,
       maxLength: max,
       keyboardType: id == 'amount'
@@ -107,7 +110,9 @@ class _ServerFormState extends State<ServerForm> {
       isExpanded: true,
       decoration: InputDecoration(labelText: label),
       items: items,
-      onChanged: saving ? null : changed,
+      onChanged: saving || (termsLocked && (label == '计费方式' || label == '付款周期'))
+          ? null
+          : changed,
     ),
   );
 
@@ -144,6 +149,7 @@ class _ServerFormState extends State<ServerForm> {
       updatedAt: now,
       revision: old?.revision ?? 0,
       isDemo: old?.isDemo ?? false,
+      renewalAnchorDate: old?.renewalAnchorDate,
     );
     final error = s.validate();
     if (error != null) {
@@ -197,6 +203,10 @@ class _ServerFormState extends State<ServerForm> {
             field('os', '操作系统（选填）'),
             field('spec', '规格（选填）', max: 200),
             const SectionTitle('费用资料'),
+            if (termsLocked)
+              const InfoNote(
+                '已记录追加服务期，计费方式、周期和日期已锁定。更正请先安全撤销付款；调整续费价或币种不会改写历史实付。',
+              ),
             select<BillingKind>('计费方式', billing, const [
               DropdownMenuItem(
                 value: BillingKind.unknown,
@@ -242,10 +252,12 @@ class _ServerFormState extends State<ServerForm> {
                 ),
                 field('start', '服务开始日（选填）', hint: 'YYYY-MM-DD', max: 10),
                 field('due', '服务到期日（选填）', hint: 'YYYY-MM-DD', max: 10),
-                const InfoNote('到期日是服务截止边界 [开始日, 到期日)。未填日期会保持未知，不自动猜测服务期。'),
+                const InfoNote(
+                  '到期日是服务截止边界 [开始日, 到期日)。仅有到期日时反推一个日历周期并标注推算；缺少到期日保持未知。',
+                ),
               ],
               const InfoNote(
-                '0 元表示明确免费。费用未知请选“费用未知”。保存原币金额，暂不折算汇总；修改续费价不代表已经付款。',
+                '0 元表示明确免费。费用未知请选“费用未知”。保存原币金额；参考汇率仅用于折算。修改续费价不代表已经付款。',
               ),
             ],
             field('notes', '备注（选填）', max: 4000, lines: 4),

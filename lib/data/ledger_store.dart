@@ -1,7 +1,11 @@
+import 'dart:convert';
+
 import 'package:sqflite/sqflite.dart';
 
 import '../core/value_types.dart';
 import '../servers/server_record.dart';
+import '../finance/finance_models.dart';
+import '../finance/finance_math.dart';
 
 class LedgerConflict implements Exception {
   const LedgerConflict();
@@ -21,7 +25,7 @@ class LedgerStore {
   LedgerStore._(this._db, this.clock);
   final Database _db;
   final DateTime Function() clock;
-  static const schemaVersion = 1;
+  static const schemaVersion = 2;
 
   static Future<LedgerStore> open({
     required DatabaseFactory factory,
@@ -35,7 +39,11 @@ class LedgerStore {
         onConfigure: (db) async => db.execute('PRAGMA foreign_keys = ON'),
         onCreate: (db, version) => createSchema(db),
         onUpgrade: (db, oldVersion, newVersion) async {
-          throw StateError('Unsupported ledger migration');
+          if (oldVersion == 1 && newVersion == 2) {
+            await _addFinanceSchema(db);
+          } else {
+            throw StateError('Unsupported ledger migration');
+          }
         },
         onDowngrade: (db, oldVersion, newVersion) async {
           throw StateError('Newer ledger version; upgrade the app');
@@ -66,6 +74,7 @@ class LedgerStore {
       is_demo INTEGER NOT NULL DEFAULT 0 CHECK(is_demo IN (0,1)))''');
     await db.execute('CREATE INDEX servers_group ON servers(group_id)');
     await db.execute('CREATE INDEX servers_archive ON servers(archived_at)');
+    await _addFinanceSchema(db);
   }
 
   Future<List<ServerRecord>> servers() async =>
@@ -90,6 +99,40 @@ class LedgerStore {
           )).isEmpty) {
         throw const LedgerConflict();
       }
+      ServerRecord? previous;
+      if (!isNew) {
+        final rows = await txn.query(
+          'servers',
+          where: 'id = ?',
+          whereArgs: [record.id],
+        );
+        if (rows.isEmpty) throw const LedgerConflict();
+        previous = ServerRecord.fromMap(rows.single);
+        if (previous.archived || previous.revision != record.revision) {
+          throw const LedgerConflict();
+        }
+      }
+      final termsChanged =
+          previous == null ||
+          previous.billing != record.billing ||
+          previous.startDate != record.startDate ||
+          previous.dueDate != record.dueDate ||
+          previous.cycleMonths != record.cycleMonths;
+      if (previous != null &&
+          termsChanged &&
+          (await txn.query(
+            'service_periods',
+            where: 'server_id = ? AND payment_id IS NOT NULL',
+            whereArgs: [record.id],
+            limit: 1,
+          )).isNotEmpty) {
+        throw ArgumentError('已有付款服务期，不能直接修改日期、周期或计费方式；请先核对并安全撤销付款');
+      }
+      map['renewal_anchor_date'] = termsChanged
+          ? (record.billing == BillingKind.prepaid
+                ? record.dueDate?.toString()
+                : null)
+          : previous.renewalAnchorDate?.toString();
       map['updated_at'] = clock().toUtc().toIso8601String();
       if (isNew) {
         map['revision'] = 0;
@@ -108,6 +151,7 @@ class LedgerStore {
         );
         if (count != 1) throw const LedgerConflict();
       }
+      if (termsChanged) await _replaceInitialPeriod(txn, record);
     });
   }
 
@@ -303,8 +347,337 @@ class LedgerStore {
           updatedAt: now,
           isDemo: true,
         );
-        await txn.insert('servers', record.toMap());
+        await txn.insert('servers', {
+          ...record.toMap(),
+          'renewal_anchor_date': record.dueDate?.toString(),
+        });
+        await _replaceInitialPeriod(txn, record);
       }
+    });
+  }
+
+  static Future<void> _addFinanceSchema(DatabaseExecutor db) async {
+    await db.execute('ALTER TABLE servers ADD COLUMN renewal_anchor_date TEXT');
+    await db.execute(
+      '''CREATE TABLE payments (
+      id TEXT PRIMARY KEY,
+      server_id TEXT REFERENCES servers(id), target_name TEXT NOT NULL,
+      account_label TEXT, amount_minor INTEGER NOT NULL CHECK(amount_minor >= 0),
+      currency TEXT NOT NULL CHECK(currency IN ('USD','CNY','EUR')),
+      paid_date TEXT NOT NULL, from_date TEXT, until_date TEXT,
+      cycle_count INTEGER NOT NULL, note TEXT NOT NULL,
+      previous_due TEXT, applied_server_revision INTEGER,
+      created_at TEXT NOT NULL, voided_at TEXT, request_fingerprint TEXT NOT NULL,
+      CHECK((server_id IS NULL AND account_label IS NOT NULL AND cycle_count=0)
+        OR (server_id IS NOT NULL AND account_label IS NULL AND cycle_count BETWEEN 1 AND 3)))''',
+    );
+    await db.execute(
+      '''CREATE UNIQUE INDEX payments_active_until
+      ON payments(server_id,until_date) WHERE server_id IS NOT NULL AND voided_at IS NULL''',
+    );
+    await db.execute('''CREATE TABLE service_periods (
+      id TEXT PRIMARY KEY, server_id TEXT NOT NULL REFERENCES servers(id),
+      start_date TEXT NOT NULL, end_date TEXT NOT NULL CHECK(end_date > start_date),
+      inferred INTEGER NOT NULL CHECK(inferred IN (0,1)),
+      payment_id TEXT REFERENCES payments(id))''');
+    await db.execute(
+      'CREATE INDEX service_periods_server ON service_periods(server_id,start_date)',
+    );
+    await db.execute('''CREATE TABLE finance_settings (
+      id INTEGER PRIMARY KEY CHECK(id=1), display_currency TEXT NOT NULL,
+      usd_to_cny TEXT, eur_to_cny TEXT, rate_date TEXT)''');
+    await db.insert('finance_settings', const FxSettings().toMap());
+    final records = (await db.query('servers')).map(ServerRecord.fromMap);
+    for (final record in records) {
+      if (record.billing == BillingKind.prepaid && record.dueDate != null) {
+        await db.update(
+          'servers',
+          {'renewal_anchor_date': record.dueDate.toString()},
+          where: 'id = ?',
+          whereArgs: [record.id],
+        );
+      }
+      await _replaceInitialPeriod(db, record);
+    }
+  }
+
+  static Future<void> _replaceInitialPeriod(
+    DatabaseExecutor db,
+    ServerRecord record,
+  ) async {
+    await db.delete(
+      'service_periods',
+      where: 'server_id = ? AND payment_id IS NULL',
+      whereArgs: [record.id],
+    );
+    final due = record.dueDate;
+    if (record.billing != BillingKind.prepaid ||
+        due == null ||
+        !due.isValid ||
+        !validCycle(record.cycleMonths)) {
+      return;
+    }
+    final knownStart = record.startDate;
+    final hasStart =
+        knownStart != null &&
+        knownStart.isValid &&
+        knownStart.compareTo(due) < 0;
+    final start = hasStart ? knownStart : due.addMonths(-record.cycleMonths);
+    if (!start.isValid || start.compareTo(due) >= 0) return;
+    await db.insert(
+      'service_periods',
+      ServicePeriod(
+        id: 'initial-${record.id}',
+        serverId: record.id,
+        start: start,
+        end: due,
+        inferred: !hasStart,
+      ).toMap(),
+    );
+  }
+
+  Future<List<ServicePeriod>> servicePeriods() async => (await _db.query(
+    'service_periods',
+    orderBy: 'start_date, end_date, id',
+  )).map(ServicePeriod.fromMap).toList(growable: false);
+  Future<List<PaymentRecord>> payments() async => (await _db.query(
+    'payments',
+    orderBy: 'paid_date DESC, created_at DESC, id',
+  )).map(PaymentRecord.fromMap).toList(growable: false);
+  Future<FxSettings> fxSettings() async => FxSettings.fromMap(
+    (await _db.query('finance_settings', where: 'id = 1')).single,
+  );
+  Future<void> saveFx(FxSettings settings) async {
+    final error = settings.validate();
+    if (error != null) throw ArgumentError(error);
+    if (settings.rateDate != null &&
+        settings.rateDate!.compareTo(LedgerDate.today(clock())) > 0) {
+      throw ArgumentError('汇率日期不能晚于今天');
+    }
+    await _db.update('finance_settings', settings.toMap(), where: 'id = 1');
+  }
+
+  void _validatePayment(
+    String id,
+    Money amount,
+    LedgerDate paidDate,
+    String note,
+  ) {
+    if (id.isEmpty || id.length > 128) throw ArgumentError('付款标识无效');
+    if (!Money.currencies.contains(amount.currency) ||
+        amount.minor < 0 ||
+        amount.minor > Money.maxMinor) {
+      throw ArgumentError('请输入有效实付金额，0 表示免费');
+    }
+    if (!paidDate.isValid ||
+        paidDate.compareTo(LedgerDate.today(clock())) > 0) {
+      throw ArgumentError('付款日期不能晚于今天');
+    }
+    if (note.length > 4000) throw ArgumentError('备注最多 4000 个字符');
+  }
+
+  Future<PaymentRecord?> _existingPayment(
+    Transaction txn,
+    String id,
+    String fingerprint,
+  ) async {
+    final rows = await txn.query('payments', where: 'id = ?', whereArgs: [id]);
+    if (rows.isEmpty) return null;
+    final existing = PaymentRecord.fromMap(rows.single);
+    if (existing.voided) throw ArgumentError('此付款已撤销，请重新核对后创建新记录');
+    if (existing.requestFingerprint != fingerprint) {
+      throw ArgumentError('相同付款标识的内容不同，请勿重复录入');
+    }
+    return existing;
+  }
+
+  Future<PaymentRecord> recordPayment({
+    required String id,
+    required ServerRecord server,
+    required Money amount,
+    required LedgerDate paidDate,
+    required int cycleCount,
+    required LedgerDate until,
+    required bool confirmed,
+    String note = '',
+  }) async {
+    if (!confirmed) throw ArgumentError('请确认已在厂商付款并核对金额与期限');
+    final fingerprint = jsonEncode([
+      'server',
+      server.id,
+      amount.currency,
+      amount.minor,
+      paidDate.toString(),
+      cycleCount,
+      until.toString(),
+      note,
+    ]);
+    return _db.transaction((txn) async {
+      final existing = await _existingPayment(txn, id, fingerprint);
+      if (existing != null) return existing;
+      _validatePayment(id, amount, paidDate, note);
+      if (!const [1, 2, 3].contains(cycleCount) || !until.isValid) {
+        throw ArgumentError('请选择 1–3 个有效续费周期');
+      }
+      final rows = await txn.query(
+        'servers',
+        where: 'id = ?',
+        whereArgs: [server.id],
+      );
+      if (rows.isEmpty) throw const LedgerConflict();
+      final current = ServerRecord.fromMap(rows.single);
+      if (current.archived || current.revision != server.revision) {
+        throw const LedgerConflict();
+      }
+      if (current.billing != BillingKind.prepaid || current.dueDate == null) {
+        throw ArgumentError('仅有明确到期日的预付服务可以续期');
+      }
+      if (renewalDate(current, cycleCount) != until) {
+        throw ArgumentError('新到期日与所选周期及原续费锚点不一致');
+      }
+      if ((await txn.query(
+        'payments',
+        where: 'server_id = ? AND until_date = ? AND voided_at IS NULL',
+        whereArgs: [current.id, until.toString()],
+      )).isNotEmpty) {
+        throw ArgumentError('该服务到期日已有付款记录，请勿重复录入');
+      }
+      final now = clock().toUtc();
+      final payment = PaymentRecord(
+        id: id,
+        serverId: current.id,
+        targetName: current.name,
+        amount: amount,
+        paidDate: paidDate,
+        from: current.dueDate,
+        until: until,
+        cycleCount: cycleCount,
+        note: note,
+        previousDue: current.dueDate,
+        appliedServerRevision: current.revision + 1,
+        createdAt: now,
+        requestFingerprint: fingerprint,
+      );
+      await txn.insert('payments', payment.toMap());
+      for (var i = 0; i < cycleCount; i++) {
+        await txn.insert(
+          'service_periods',
+          ServicePeriod(
+            id: '$id-$i',
+            serverId: current.id,
+            start: renewalDate(current, i),
+            end: renewalDate(current, i + 1),
+            paymentId: id,
+          ).toMap(),
+        );
+      }
+      final count = await txn.update(
+        'servers',
+        {
+          'due_date': until.toString(),
+          'revision': current.revision + 1,
+          'renewal_anchor_date': (current.renewalAnchorDate ?? current.dueDate)
+              .toString(),
+          'updated_at': now.toIso8601String(),
+        },
+        where: 'id = ? AND revision = ? AND archived_at IS NULL',
+        whereArgs: [current.id, current.revision],
+      );
+      if (count != 1) throw const LedgerConflict();
+      return payment;
+    });
+  }
+
+  Future<PaymentRecord> recordAccountPayment({
+    required String id,
+    required String accountLabel,
+    required Money amount,
+    required LedgerDate paidDate,
+    LedgerDate? from,
+    LedgerDate? until,
+    String note = '',
+  }) async {
+    final label = accountLabel.trim();
+    final fingerprint = jsonEncode([
+      'account',
+      label,
+      amount.currency,
+      amount.minor,
+      paidDate.toString(),
+      from?.toString(),
+      until?.toString(),
+      note,
+    ]);
+    return _db.transaction((txn) async {
+      final existing = await _existingPayment(txn, id, fingerprint);
+      if (existing != null) return existing;
+      _validatePayment(id, amount, paidDate, note);
+      if (label.isEmpty || label.length > 80) {
+        throw ArgumentError('账户名称需为 1–80 个字符');
+      }
+      if ((from == null) != (until == null) ||
+          (from != null &&
+              (!from.isValid ||
+                  !until!.isValid ||
+                  from.compareTo(until) >= 0))) {
+        throw ArgumentError('可选账期需填写有效起止日期，结束日必须晚于开始日');
+      }
+      final payment = PaymentRecord(
+        id: id,
+        targetName: label,
+        accountLabel: label,
+        amount: amount,
+        paidDate: paidDate,
+        from: from,
+        until: until,
+        note: note,
+        createdAt: clock().toUtc(),
+        requestFingerprint: fingerprint,
+      );
+      await txn.insert('payments', payment.toMap());
+      return payment;
+    });
+  }
+
+  Future<void> undoPayment(String id) async {
+    await _db.transaction((txn) async {
+      final rows = await txn.query(
+        'payments',
+        where: 'id = ?',
+        whereArgs: [id],
+      );
+      if (rows.isEmpty) throw const LedgerConflict();
+      final payment = PaymentRecord.fromMap(rows.single);
+      if (payment.voided) return;
+      final now = clock().toUtc().toIso8601String();
+      if (!payment.isAccount) {
+        final count = await txn.update(
+          'servers',
+          {
+            'due_date': payment.previousDue.toString(),
+            'revision': payment.appliedServerRevision! + 1,
+            'updated_at': now,
+          },
+          where: 'id = ? AND revision = ? AND due_date = ? AND archived_at IS NULL',
+          whereArgs: [
+            payment.serverId,
+            payment.appliedServerRevision,
+            payment.until.toString(),
+          ],
+        );
+        if (count != 1) throw const LedgerConflict();
+        await txn.delete(
+          'service_periods',
+          where: 'payment_id = ?',
+          whereArgs: [id],
+        );
+      }
+      await txn.update(
+        'payments',
+        {'voided_at': now},
+        where: 'id = ?',
+        whereArgs: [id],
+      );
     });
   }
 

@@ -89,14 +89,14 @@ class LedgerCard extends StatelessWidget {
   final Widget child;
   final EdgeInsetsGeometry padding;
   @override
-  Widget build(BuildContext context) => Container(
-    padding: padding,
-    decoration: BoxDecoration(
-      color: Colors.white,
+  Widget build(BuildContext context) => Material(
+    color: Colors.white,
+    shape: RoundedRectangleBorder(
       borderRadius: BorderRadius.circular(16),
-      border: Border.all(color: AppColors.line),
+      side: const BorderSide(color: AppColors.line),
     ),
-    child: child,
+    clipBehavior: Clip.antiAlias,
+    child: Padding(padding: padding, child: child),
   );
 }
 
@@ -204,7 +204,7 @@ void showFailure(BuildContext context, Object error) {
       ? error.message.toString()
       : error.toString().contains('记录已发生变化')
       ? '记录已发生变化，请返回后重试'
-      : '操作未完成。已保存的记录仍保留，请重试；分组名称不能重复。';
+      : '操作未完成，已保存的记录仍保留。请检查输入后重试（分组名称不能重复）。';
   ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
 }
 
