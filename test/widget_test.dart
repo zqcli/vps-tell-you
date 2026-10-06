@@ -249,7 +249,10 @@ void main() {
           scale: scale,
         );
         for (var pass = 0; pass < 8; pass++) {
-          await tester.drag(find.byType(ListView), const Offset(0, -550));
+          await tester.drag(
+            find.byType(Scrollable).first,
+            const Offset(0, -550),
+          );
           await tester.pumpAndSettle();
           expect(tester.takeException(), isNull, reason: 'form scroll $pass');
         }

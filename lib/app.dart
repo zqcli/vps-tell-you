@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import 'core/app_theme.dart';
@@ -10,31 +12,48 @@ import 'finance/finance_page.dart';
 import 'finance/calculator_page.dart';
 import 'servers/ledger_controller.dart';
 import 'servers/server_list.dart';
+import 'servers/server_detail.dart';
+import 'settings/reminder_scheduler.dart';
 import 'settings/settings_page.dart';
 import 'security/security_pages.dart';
 
 class LedgerApp extends StatefulWidget {
-  const LedgerApp({super.key, this.openStore = openLedger});
+  const LedgerApp({
+    super.key,
+    this.openStore = openLedger,
+    this.reminderPlatform,
+  });
   final Future<LedgerStore> Function() openStore;
+  final ReminderPlatform? reminderPlatform;
   @override
   State<LedgerApp> createState() => _LedgerAppState();
 }
 
-class _LedgerAppState extends State<LedgerApp> {
+class _LedgerAppState extends State<LedgerApp> with WidgetsBindingObserver {
   LedgerController? controller;
+  final navigatorKey = GlobalKey<NavigatorState>();
+  String? pendingReminder;
+  bool reminderFrameQueued = false;
   bool loading = true;
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     load();
   }
 
   Future<void> load() async {
     setState(() => loading = true);
     LedgerStore? store;
+    LedgerController? ready;
     try {
       store = await widget.openStore();
-      final ready = LedgerController(store);
+      ready = LedgerController(
+        store,
+        reminderPlatform:
+            widget.reminderPlatform ??
+            NativeReminderPlatform(onOpen: openReminder),
+      );
       await ready.refresh();
       if (!mounted) {
         ready.dispose();
@@ -45,14 +64,80 @@ class _LedgerAppState extends State<LedgerApp> {
         controller = ready;
         loading = false;
       });
+      ready.addListener(ledgerChanged);
+      queuePendingReminder();
     } catch (_) {
+      ready?.dispose();
       await store?.close();
       if (mounted) setState(() => loading = false);
     }
   }
 
+  void ledgerChanged() {
+    if (mounted) setState(() {});
+    queuePendingReminder();
+  }
+
+  void queuePendingReminder() {
+    final ledger = controller;
+    if (!mounted ||
+        pendingReminder == null ||
+        reminderFrameQueued ||
+        ledger == null ||
+        ledger.busy ||
+        ledger.refreshFailed) {
+      return;
+    }
+    reminderFrameQueued = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      reminderFrameQueued = false;
+      if (!mounted ||
+          controller == null ||
+          controller!.busy ||
+          controller!.refreshFailed) {
+        return;
+      }
+      final id = pendingReminder;
+      pendingReminder = null;
+      if (id != null) openReminder(id);
+    });
+  }
+
+  void openReminder(String id) {
+    if (!mounted) return;
+    final ledger = controller;
+    final navigator = navigatorKey.currentState;
+    if (ledger == null ||
+        navigator == null ||
+        ledger.busy ||
+        ledger.refreshFailed) {
+      pendingReminder = id;
+      queuePendingReminder();
+      return;
+    }
+    // A newer tap supersedes a previously deferred target, even when its
+    // already-queued post-frame callback has not run yet.
+    pendingReminder = null;
+    final server = ledger.byId(id);
+    if (server == null || server.archived) return;
+    navigator.push<void>(
+      MaterialPageRoute(
+        builder: (_) => ServerDetail(controller: ledger, id: id),
+      ),
+    );
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed && controller != null) {
+      unawaited(controller!.reminders.reconcile());
+    }
+  }
+
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    controller?.removeListener(ledgerChanged);
     controller?.dispose();
     controller?.store.close();
     super.dispose();
@@ -61,11 +146,18 @@ class _LedgerAppState extends State<LedgerApp> {
   @override
   Widget build(BuildContext context) => MaterialApp(
     title: 'vps tell you',
+    navigatorKey: navigatorKey,
     navigatorObservers: [securityRouteObserver],
     debugShowCheckedModeBanner: false,
     theme: appTheme(),
+    darkTheme: appTheme(brightness: Brightness.dark),
+    themeMode: switch (controller?.themeMode) {
+      'light' => ThemeMode.light,
+      'dark' => ThemeMode.dark,
+      _ => ThemeMode.system,
+    },
     builder: (context, child) => ColoredBox(
-      color: AppColors.canvas,
+      color: Theme.of(context).scaffoldBackgroundColor,
       child: Align(
         alignment: Alignment.topCenter,
         child: ConstrainedBox(
@@ -142,9 +234,13 @@ class _HomeShellState extends State<HomeShell> {
         },
       ),
       bottomNavigationBar: DecoratedBox(
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          border: Border(top: BorderSide(color: AppColors.line)),
+        decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.surface,
+          border: Border(
+            top: BorderSide(
+              color: Theme.of(context).colorScheme.outlineVariant,
+            ),
+          ),
         ),
         child: SafeArea(
           top: false,
@@ -157,6 +253,7 @@ class _HomeShellState extends State<HomeShell> {
                     child: Semantics(
                       selected: tab == i,
                       button: true,
+                      enabled: true,
                       child: InkWell(
                         key: ValueKey('tab-$i'),
                         onTap: () => setState(() => tab = i),
@@ -176,8 +273,10 @@ class _HomeShellState extends State<HomeShell> {
                                   Icons.settings_outlined,
                                 ][i],
                                 color: tab == i
-                                    ? AppColors.blue
-                                    : AppColors.muted,
+                                    ? Theme.of(context).colorScheme.primary
+                                    : Theme.of(context)
+                                          .colorScheme
+                                          .onSurfaceVariant,
                                 size: 23,
                               ),
                               const SizedBox(height: 4),
@@ -190,8 +289,10 @@ class _HomeShellState extends State<HomeShell> {
                                       ? FontWeight.w600
                                       : FontWeight.normal,
                                   color: tab == i
-                                      ? AppColors.blue
-                                      : AppColors.muted,
+                                      ? Theme.of(context).colorScheme.primary
+                                      : Theme.of(context)
+                                            .colorScheme
+                                            .onSurfaceVariant,
                                 ),
                               ),
                             ],
@@ -223,9 +324,11 @@ class ToolsPage extends StatelessWidget {
       const InfoNote('选择任务，再确认操作对象。'),
       Container(
         decoration: BoxDecoration(
-          color: AppColors.soft,
+          color: Theme.of(context).colorScheme.primaryContainer,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: const Color(0xFFDCE5FA)),
+          border: Border.all(
+            color: Theme.of(context).colorScheme.outlineVariant,
+          ),
         ),
         child: SettingRow(
           icon: Icons.calculate_outlined,

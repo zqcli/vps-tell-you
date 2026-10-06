@@ -12,73 +12,107 @@ abstract final class AppColors {
   static const red = Color(0xFFB9363F);
 }
 
-ThemeData appTheme() => ThemeData(
-  useMaterial3: true,
-  colorScheme: ColorScheme.fromSeed(
-    seedColor: AppColors.blue,
-    primary: AppColors.blue,
-    surface: Colors.white,
-    onSurface: AppColors.ink,
-  ),
-  scaffoldBackgroundColor: AppColors.canvas,
-  fontFamilyFallback: const [
-    'Noto Sans CJK SC',
-    'PingFang SC',
-    'Microsoft YaHei',
-  ],
-  textTheme: const TextTheme(
-    bodyMedium: TextStyle(fontSize: 14, height: 1.5, color: AppColors.ink),
-    bodySmall: TextStyle(fontSize: 12, height: 1.5, color: AppColors.muted),
-    titleLarge: TextStyle(
-      fontSize: 20,
-      fontWeight: FontWeight.w700,
-      color: AppColors.ink,
+/// Surface and content roles follow the selected platform/app brightness.
+/// The export renderer intentionally keeps using the fixed light [AppColors].
+ThemeData appTheme({Brightness brightness = Brightness.light}) {
+  final dark = brightness == Brightness.dark;
+  final colors =
+      ColorScheme.fromSeed(
+        seedColor: AppColors.blue,
+        brightness: brightness,
+      ).copyWith(
+        primary: dark ? const Color(0xFFACC5FF) : AppColors.blue,
+        onPrimary: dark ? const Color(0xFF102C64) : Colors.white,
+        primaryContainer: dark ? const Color(0xFF213D70) : AppColors.soft,
+        onPrimaryContainer: dark ? const Color(0xFFD9E5FF) : AppColors.blue,
+        surface: dark ? const Color(0xFF151D2C) : Colors.white,
+        onSurface: dark ? const Color(0xFFE5ECF7) : AppColors.ink,
+        onSurfaceVariant: dark ? const Color(0xFFBAC5D6) : AppColors.muted,
+        outline: dark ? const Color(0xFF8997AD) : const Color(0xFF758298),
+        outlineVariant: dark ? const Color(0xFF35435B) : AppColors.line,
+        tertiary: dark ? const Color(0xFFFFD89B) : AppColors.amber,
+        onTertiary: dark ? const Color(0xFF442B07) : Colors.white,
+        tertiaryContainer: dark
+            ? const Color(0xFF49330F)
+            : AppColors.amberBackground,
+        onTertiaryContainer: dark ? const Color(0xFFFFE1AC) : AppColors.amber,
+        error: dark ? const Color(0xFFFFB3BA) : AppColors.red,
+        onError: dark ? const Color(0xFF650C1D) : Colors.white,
+        errorContainer: dark
+            ? const Color(0xFF57262E)
+            : const Color(0xFFFFF0F0),
+        onErrorContainer: dark ? const Color(0xFFFFD9DD) : AppColors.red,
+      );
+  final canvas = dark ? const Color(0xFF0D1420) : AppColors.canvas;
+  return ThemeData(
+    useMaterial3: true,
+    brightness: brightness,
+    colorScheme: colors,
+    scaffoldBackgroundColor: canvas,
+    fontFamilyFallback: const [
+      'Noto Sans CJK SC',
+      'PingFang SC',
+      'Microsoft YaHei',
+    ],
+    textTheme: TextTheme(
+      bodyMedium: TextStyle(fontSize: 14, height: 1.5, color: colors.onSurface),
+      bodySmall: TextStyle(
+        fontSize: 12,
+        height: 1.5,
+        color: colors.onSurfaceVariant,
+      ),
+      titleLarge: TextStyle(
+        fontSize: 20,
+        fontWeight: FontWeight.w700,
+        color: colors.onSurface,
+      ),
     ),
-  ),
-  appBarTheme: const AppBarTheme(
-    backgroundColor: AppColors.canvas,
-    surfaceTintColor: Colors.transparent,
-    centerTitle: true,
-    titleTextStyle: TextStyle(
-      fontSize: 17,
-      fontWeight: FontWeight.w600,
-      color: AppColors.ink,
+    appBarTheme: AppBarTheme(
+      backgroundColor: canvas,
+      foregroundColor: colors.onSurface,
+      surfaceTintColor: Colors.transparent,
+      centerTitle: true,
+      titleTextStyle: TextStyle(
+        fontSize: 17,
+        fontWeight: FontWeight.w600,
+        color: colors.onSurface,
+      ),
     ),
-  ),
-  inputDecorationTheme: InputDecorationTheme(
-    filled: true,
-    fillColor: Colors.white,
-    contentPadding: const EdgeInsets.all(14),
-    border: OutlineInputBorder(
-      borderRadius: BorderRadius.circular(12),
-      borderSide: const BorderSide(color: AppColors.line),
+    inputDecorationTheme: InputDecorationTheme(
+      filled: true,
+      fillColor: colors.surface,
+      contentPadding: const EdgeInsets.all(14),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide(color: colors.outline),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide(color: colors.outline),
+      ),
+      hintStyle: TextStyle(color: colors.onSurfaceVariant, fontSize: 14),
     ),
-    enabledBorder: OutlineInputBorder(
-      borderRadius: BorderRadius.circular(12),
-      borderSide: const BorderSide(color: AppColors.line),
+    filledButtonTheme: FilledButtonThemeData(
+      style: FilledButton.styleFrom(
+        minimumSize: const Size(48, 48),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      ),
     ),
-    hintStyle: const TextStyle(color: AppColors.muted, fontSize: 14),
-  ),
-  filledButtonTheme: FilledButtonThemeData(
-    style: FilledButton.styleFrom(
-      minimumSize: const Size(48, 48),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+    outlinedButtonTheme: OutlinedButtonThemeData(
+      style: OutlinedButton.styleFrom(
+        minimumSize: const Size(48, 48),
+        side: BorderSide(color: colors.outline),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      ),
     ),
-  ),
-  outlinedButtonTheme: OutlinedButtonThemeData(
-    style: OutlinedButton.styleFrom(
-      minimumSize: const Size(48, 48),
-      side: const BorderSide(color: AppColors.line),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+    dividerTheme: DividerThemeData(
+      color: colors.outlineVariant,
+      thickness: 1,
+      space: 1,
     ),
-  ),
-  dividerTheme: const DividerThemeData(
-    color: AppColors.line,
-    thickness: 1,
-    space: 1,
-  ),
-  snackBarTheme: const SnackBarThemeData(behavior: SnackBarBehavior.floating),
-);
+    snackBarTheme: const SnackBarThemeData(behavior: SnackBarBehavior.floating),
+  );
+}
 
 class LedgerCard extends StatelessWidget {
   const LedgerCard({
@@ -90,10 +124,10 @@ class LedgerCard extends StatelessWidget {
   final EdgeInsetsGeometry padding;
   @override
   Widget build(BuildContext context) => Material(
-    color: Colors.white,
+    color: Theme.of(context).colorScheme.surface,
     shape: RoundedRectangleBorder(
       borderRadius: BorderRadius.circular(16),
-      side: const BorderSide(color: AppColors.line),
+      side: BorderSide(color: Theme.of(context).colorScheme.outlineVariant),
     ),
     clipBehavior: Clip.antiAlias,
     child: Padding(padding: padding, child: child),
@@ -137,10 +171,10 @@ class LedgerBadge extends StatelessWidget {
     padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
     decoration: BoxDecoration(
       color: danger
-          ? const Color(0xFFFFF0F0)
+          ? Theme.of(context).colorScheme.errorContainer
           : warning
-          ? AppColors.amberBackground
-          : AppColors.canvas,
+          ? Theme.of(context).colorScheme.tertiaryContainer
+          : Theme.of(context).colorScheme.surfaceContainerLow,
       borderRadius: BorderRadius.circular(8),
     ),
     child: Text(
@@ -149,10 +183,10 @@ class LedgerBadge extends StatelessWidget {
         fontSize: 11,
         height: 1.4,
         color: danger
-            ? AppColors.red
+            ? Theme.of(context).colorScheme.onErrorContainer
             : warning
-            ? AppColors.amber
-            : AppColors.muted,
+            ? Theme.of(context).colorScheme.onTertiaryContainer
+            : Theme.of(context).colorScheme.onSurfaceVariant,
       ),
     ),
   );
@@ -188,7 +222,10 @@ Future<bool> confirmAction(
           ),
           FilledButton(
             style: dangerous
-                ? FilledButton.styleFrom(backgroundColor: AppColors.red)
+                ? FilledButton.styleFrom(
+                    backgroundColor: Theme.of(context).colorScheme.error,
+                    foregroundColor: Theme.of(context).colorScheme.onError,
+                  )
                 : null,
             onPressed: () => Navigator.pop(context, true),
             child: Text(action),
@@ -243,7 +280,7 @@ class SettingRow extends StatelessWidget {
       padding: const EdgeInsets.all(16),
       child: Row(
         children: [
-          Icon(icon, size: 23, color: AppColors.blue),
+          Icon(icon, size: 23, color: Theme.of(context).colorScheme.primary),
           const SizedBox(width: 13),
           Expanded(
             child: Column(
@@ -259,13 +296,20 @@ class SettingRow extends StatelessWidget {
                 const SizedBox(height: 4),
                 Text(
                   subtitle,
-                  style: const TextStyle(fontSize: 11, color: AppColors.muted),
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
                 ),
               ],
             ),
           ),
           const SizedBox(width: 6),
-          const Icon(Icons.chevron_right, size: 18, color: AppColors.muted),
+          Icon(
+            Icons.chevron_right,
+            size: 18,
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
         ],
       ),
     ),

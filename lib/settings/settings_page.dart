@@ -8,6 +8,8 @@ import '../security/security_pages.dart';
 import '../servers/ledger_controller.dart';
 import '../servers/refresh_failure_notice.dart';
 import '../servers/server_record.dart';
+import 'backup_page.dart';
+import 'reminder_page.dart';
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key, required this.controller});
@@ -18,6 +20,34 @@ class SettingsPage extends StatefulWidget {
 
 class _SettingsPageState extends State<SettingsPage> {
   LedgerController get controller => widget.controller;
+  Future<void> appearance(BuildContext context) async {
+    final mode = await showDialog<String>(
+      context: context,
+      builder: (context) => SimpleDialog(
+        title: const Text('外观'),
+        children: [
+          for (final entry in const {
+            'system': '跟随系统',
+            'light': '浅色',
+            'dark': '深色',
+          }.entries)
+            SimpleDialogOption(
+              onPressed: () => Navigator.pop(context, entry.key),
+              child: Text(
+                '${controller.themeMode == entry.key ? '✓ ' : ''}${entry.value}',
+              ),
+            ),
+        ],
+      ),
+    );
+    if (mode == null) return;
+    try {
+      await controller.mutate(() => controller.store.saveThemeMode(mode));
+    } catch (error) {
+      if (context.mounted) showFailure(context, error);
+    }
+  }
+
   bool openingCloud = false;
   Future<void> openCloud() async {
     if (openingCloud) return;
@@ -45,10 +75,14 @@ class _SettingsPageState extends State<SettingsPage> {
       const SizedBox(height: 22),
       if (controller.refreshFailed)
         RefreshFailureNotice(controller: controller),
-      const LedgerCard(
+      LedgerCard(
         child: Row(
           children: [
-            Icon(Icons.dns_outlined, size: 32, color: AppColors.blue),
+            Icon(
+              Icons.dns_outlined,
+              size: 32,
+              color: Theme.of(context).colorScheme.primary,
+            ),
             SizedBox(width: 14),
             Expanded(
               child: Column(
@@ -60,7 +94,10 @@ class _SettingsPageState extends State<SettingsPage> {
                   ),
                   Text(
                     '个人 VPS 管理 · 本地优先',
-                    style: TextStyle(fontSize: 12, color: AppColors.muted),
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
                   ),
                 ],
               ),
@@ -139,12 +176,38 @@ class _SettingsPageState extends State<SettingsPage> {
             const Divider(),
             SettingRow(
               icon: Icons.notifications_none,
-              title: '通知与备份',
-              subtitle: '移动端提醒与台账备份 · 阶段 6',
-              onTap: () => showStage(
+              title: '通知权限',
+              subtitle: controller.reminders.description,
+              onTap: () => Navigator.push<void>(
                 context,
-                '通知与备份尚未接入',
-                '当前没有申请通知权限，也没有排程提醒。数据仅保存在本机，尚无导出或恢复入口。请勿清除应用数据。',
+                MaterialPageRoute(
+                  builder: (_) => NotificationPage(controller: controller),
+                ),
+              ),
+            ),
+            const Divider(),
+            SettingRow(
+              icon: Icons.brightness_6_outlined,
+              title: '外观',
+              subtitle:
+                  const {
+                    'system': '跟随系统',
+                    'light': '浅色',
+                    'dark': '深色',
+                  }[controller.themeMode] ??
+                  '跟随系统',
+              onTap: controller.canMutate ? () => appearance(context) : null,
+            ),
+            const Divider(),
+            SettingRow(
+              icon: Icons.save_alt,
+              title: '台账备份与恢复',
+              subtitle: '不含凭据与主机信任 · 未加密 JSON',
+              onTap: () => Navigator.push<void>(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => BackupPage(controller: controller),
+                ),
               ),
             ),
           ],
@@ -155,10 +218,7 @@ class _SettingsPageState extends State<SettingsPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              '阶段 5 · SolusVM 1 / 2 读取',
-              style: TextStyle(fontWeight: FontWeight.w600),
-            ),
+            Text('阶段 6 · 移动端候选', style: TextStyle(fontWeight: FontWeight.w600)),
             InfoNote(
               'V6.2 视觉基础 · 本地优先\n无需 App 登录 · 不安装监控 Agent\n删除本地记录不会取消服务或停止扣费。',
             ),
@@ -243,7 +303,10 @@ class GroupsPage extends StatelessWidget {
               child: LedgerCard(
                 child: Row(
                   children: [
-                    const Icon(Icons.folder_outlined, color: AppColors.blue),
+                    Icon(
+                      Icons.folder_outlined,
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
                     const SizedBox(width: 12),
                     Expanded(
                       child: Column(
@@ -255,9 +318,11 @@ class GroupsPage extends StatelessWidget {
                           ),
                           Text(
                             '${controller.active.where((s) => s.groupId == g.id).length} 台活动服务器',
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 11,
-                              color: AppColors.muted,
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .onSurfaceVariant,
                             ),
                           ),
                         ],
@@ -331,8 +396,8 @@ class ArchivePage extends StatelessWidget {
                     ),
                     Text(
                       '${s.vendor} · ${controller.groupName(s.groupId)}',
-                      style: const TextStyle(
-                        color: AppColors.muted,
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
                         fontSize: 12,
                       ),
                     ),

@@ -140,6 +140,10 @@ void main() {
         await raw.execute('DROP TABLE $table');
       }
       await raw.execute('DROP TABLE snippets');
+      await raw.execute('DROP TRIGGER server_reminder');
+      await raw.execute('DROP TABLE reminder_rules');
+      await raw.execute('DROP TABLE app_settings');
+      await raw.execute('ALTER TABLE servers DROP COLUMN resources_json');
       await raw.setVersion(3);
       await store.close();
       store = await LedgerStore.open(

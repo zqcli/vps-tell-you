@@ -312,7 +312,9 @@ class _PaymentFormState extends State<PaymentForm> {
                     if (confirmationError != null)
                       Text(
                         confirmationError!,
-                        style: const TextStyle(color: AppColors.red),
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.error,
+                        ),
                       ),
                     const SizedBox(height: 18),
                     FilledButton(

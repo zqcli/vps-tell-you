@@ -2,53 +2,38 @@
 
 更新：2026-10-06 UTC
 
-## 当前检查点：阶段 5
+## 当前增量：SolusVM 1 六项资源导入
 
-SolusVM 1 / 2 只读账户闭环已实现，本地验收完成。执行环境重建后，从已核实的远端阶段4 `d9e8d35079a7f41ec0e89332eda4af83f87dc063` 恢复，并重新 review / 测试；不复用丢失环境的通过结果。最终发布 SHA 与同 SHA CI 仍须从 Git / Actions 实时核对。
+以阶段 6 本地源码 `422b5c6` 为基线。正式读取使用一次带资源标志的 status 请求；有效 IP、hostname、磁盘/流量额度、内存和 vCPU 自动预填，缺失/全零配置在导入前要求补齐，支持明确不限量流量。财务仍在导入后编辑。
 
-- Flutter 3.47.6 stable / Dart 3.13.5；开发版 0.1.0+1
-- SQLite schema v5；v4 → v5 仅新增云账户、API 观测与关联，保留台账 / 费用 / 付款 / SSH / 主机信任 / 片段
-- V1 单 VPS Key/Hash，仅读取 status；V2 用户 Token，仅 GET account / projects / project servers
-- 严格 HTTPS / 主机名验证、自定义端口、拒绝重定向、分页与响应限制、取消与整体超时；不含 API 电源或写入接口
-- 验证 → 选择导入 / 仅保存 → 继续导入 / 刷新 → 重新授权 / 解绑；独立账户允许同 endpoint 多连接
-- V2 用户 / 项目 / 实例 ID 与 UUID 身份约束；V1 无稳定远端 ID，换凭据需明确解除旧关联再重新选择
-- 秘密只进原生安全存储，先写新秘密 / 验证读回 / 提交引用 / 再清理旧秘密；durable cleanup 与云/SSH共享活动引用保护
-- API 观测独立于手工资料 / 费用 / SSH；失败或缺失保留旧时间与观测，不冒充新鲜关机
-- 持久化 generation / revision 与 UI 取消共同阻止迟到结果复活关联；Back / 后台 / 双击 / 2× 字号有回归
-- 新复审修复：资料重读成功清除已解决的旧错误提示；不清除等待期间到来的新错误
+schema v7 添加可空的本地资源 JSON 和来源，API 观测与本地数据分离；刷新/解绑保留本地配置。旧台账事务迁移和旧 v1 JSON 备份继续兼容。细节见 [SOLUSVM_RESOURCES](SOLUSVM_RESOURCES.md)。
 
-## 本次新验收
+- 独立 Astra xhigh review 修正占位 IP/hostname 与懒加载资源表单滚动失效问题；最终 571 项全量测试、format / analyze / diff 检查及 `lib/main.dart` 生产 Linux release 构建通过。
+- 2026-10-06 Linux 原生真实新增流程通过：用户亲自点继续导入后，四项 API 资源预填，用户补填 RAM/vCPU，单次本地导入成功；详情与 API/手动来源正确，仅重启隔离测试 App 后六项完整保留。费用仍未知，SSH/主机信任/付款未创建；未新增远端请求或执行电源/配置写入。旧主 App、钥匙环和台账保留，共享秘密引用未清理/解绑/重新授权。
+- 本增量尚未推送远端，未生成新 Android APK；原阶段 6 APK 不包含这次六项表单。Android/iOS 真实设备结果不能由 Linux 代替。
 
-- 全量 **335 / 335** 测试通过，串行运行，包含最新 SSH EOF / 输出排空修复
-- format：0 changes；analyze：无问题；offline enforced lockfile / diff check 通过
-- clean Linux production `lib/main.dart` release 构建通过，独立 fixture target 不进入生产入口
-- 独立 Astra 复审通过；154 项相关测试覆盖协议/TLS、持久化、控制器、widget、安全/片段与额外菜单重复点击
-- 原生 Linux：真实 NativeSecretStore、隔离临时 GNOME Keyring、私有 D-Bus 与本地 HTTPS 合成面板；验证两页清单、选择导入、重启后读取已存授权、继续导入去重、解绑保留2条台账
-- 最终 SQLite：账户 / API 观测 / 关联 / 待清理引用均0，服务器2；无合成秘密标记。测试进程全部退出，临时钥匙环及TLS私钥已删除
-- 390px / 2× 字号、V1 重绑、失败授权、保存失败、后台、Back 动画中迟到结果等由实际checkout的widget/协议回归验证
+## 基线：阶段 6 移动端候选
 
-协议依据与边界见 `docs/SOLUSVM.md`；逐项记录见 `docs/ACCEPTANCE.md`。本次证据日志目录为 `../recovery-stage5/assembly-evidence/`，原生截图与安全清理记录为 `../vps-qa-stage5/`。源代码另有完整历史 Git bundle 备份，不包含真实秘密。
+基线为已验证的阶段 4 `d9e8d35079a7f41ec0e89332eda4af83f87dc063`，并合入已发布阶段 5 / SSH 输出修正 `b7ab2ca018625a40bfefcd577d035f507c7ac811`（同源本地候选 `be301d3`）；[阶段 5 同 SHA CI #7](https://github.com/zqcli/vps-tell-you/actions/runs/37428264493) 通过。独立提醒/分享模块检查点 `47c6b99c6d467afd6bb2e1ddd655b3f470f6af38` 已复测。当前阶段最终提交 SHA 和远端同 SHA CI 必须由 Git / Actions 实时核对，不沿用早期 CI 作为证明。
 
-## SSH 修正
+- Flutter 3.47.6 / Dart 3.13.5；应用 0.1.0+1，SQLite schema v6
+- 每台提醒规则、使用计划、真实通知权限 API、串行重排 / 取消、时区 / 容量 / 覆盖状态；Linux 不排程
+- Android / iOS 白名单 PNG 分享接线，取消 / 未知 / 失败保持预览
+- 部分范围明文 JSON 台账导出、严格预览与空台账原子恢复；无凭据 / 主机信任 / 云关联恢复，导入后提醒默认关闭
+- 持久化系统 / 浅色 / 深色，390px / 大字与合成组件 golden
+- Android INTERNET、通知接收器 / 重启恢复、非精确闹钟、图标保留和 desugaring；iOS 通知 delegate 接线
 
-已整合重新实现并独立复审的双层 EOF 修复：先排空会话输出，再关闭；native socket 在库完成已排队数据包处理后通知 EOF。源修复提交为 `4d4e7c27fb13a89d58739c9d878c48868a135708`，在本阶段作为普通 cherry-pick 提交整合。8轮真实 fixture 尾部64KiB / UTF-8 / stderr 与取消丢弃回归通过。旧环境的未发布提交不当作现存对象。
+## 当前验证
 
-## 发布与恢复
+- 独立 Astra xhigh 全阶段审查通过；修正后的独立全回归 428 / 428、focused 100 / 100、format / analyze / diff check 全通过，Linux release build 已通过
+- 最终代码 `4d38572a2047ac0878d385b0548b878a2feeeabe` 合并后 428 / 428 全回归、Linux release 重建和原生流程通过；原生取消 / 保存 / 重启、明文备份空库恢复与 PNG 保存证据见 ACCEPTANCE
+- Android 通用测试签名 APK 已在云端本地离线 Gradle 构建并通过独立 Astra xhigh 产物审查：源 `94003d14f980c0b83eeee8ed4b4ba08379ff97df`，49,489,632 字节，SHA-256 `f5ca8ca55b32b2a93aa5b26dd24fb8a80f400f860eca8cb18c046b90e376bd0f`；仅 arm64-v8a / x86_64，未运行手机安装或通知等实测
+- 为适应附件大小限制，同一源码另生成并独立核验两个可单独安装的 APK：ARM64 24,674,032 字节、x86_64 26,191,304 字节，精确哈希与版本见 ACCEPTANCE；选择设备对应的一份安装
+- 阶段 6 基线验收未使用真实 VPS 或生产 power action；后续用户主动提交的独立 VirMach 只读诊断另见六资源记录，仍未执行电源或配置写入
+- iOS 编译 / 签名 / 安装未运行；Android / iOS 实机存储、权限投递、分享、IME / 旋转 / 切网 / 后台仍未验证
 
-只正常推送 `zqcli/vps-tell-you:dev`；提交使用 `type(scope): description`。不创建 tag、不强推、不改其他分支。发布后必须核实远端精确 SHA 和该 SHA 的 CI，而非前一提交的绿色结果。
+## 恢复与下一项
 
-```sh
-git status --short
-git branch --show-current
-git rev-parse HEAD
-```
+先看 README / 本文件 / ACCEPTANCE → `git status` / 分支 / 远端 → `git rev-parse HEAD` / 远端同 SHA / CI → 锁文件安装、分析、测试和适用平台构建。不要自动删库、改 schema 版本逃避迁移、降低测试断言、自动 tag 或强推。正式签名密钥与真实秘密不得提交。
 
-[dev](https://github.com/zqcli/vps-tell-you/tree/dev) / [Actions](https://github.com/zqcli/vps-tell-you/actions/workflows/ci.yml)。当前没有 shell Git 凭据时使用已授权 GitHub connector 正常更新 dev；不新建 PAT，也不提取浏览器凭据。最终 SHA 以实时检查为准，避免文档自身 SHA 的递归提交。
-
-## 下一阶段与明确未验项
-
-1. 阶段6：提醒 / 分享 / 备份 / 外观与移动适配；仅在阶段5发布门通过后整合
-2. iOS / Android 安装、签名、Keychain / Keystore、Face ID / PIN、IME、旋转、切网、后台、通知和原生分享仍待真机
-3. VirMach 仅按用户确认的 SolusVM 1 模板准备；实际 Client API 开放、权限、证书、字段与兼容性未连接验证。真实凭据只能由用户在原生应用自行输入
-4. 本次没有生产面板请求、真实 VPS 电源操作、云资源销毁或厂商支付
-5. Linux / fixture / widget 通过不能替代手机验收；后台不承诺常驻连接或实时监控
+停止条件是可交接的测试候选和清楚的设备验收清单；未做真机项目不能写成通过。最后原生、APK、review 与 CI 结果补充于下方完成记录。

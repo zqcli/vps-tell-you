@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 
 import '../cloud/cloud_controller.dart';
@@ -5,6 +7,8 @@ import '../core/value_types.dart';
 import '../data/ledger_store.dart';
 import '../finance/finance_models.dart';
 import '../security/security_controller.dart';
+import '../settings/reminder_rule.dart';
+import '../settings/reminder_scheduler.dart';
 import 'server_record.dart';
 
 enum ServerFilter { all, favorites, pending }
@@ -19,20 +23,34 @@ class LedgerController extends ChangeNotifier {
     DateTime Function()? clock,
     SecurityController? security,
     CloudController? cloud,
+    ReminderPlatform? reminderPlatform,
   }) : clock = clock ?? DateTime.now,
        security = security ?? SecurityController(store: store) {
     this.cloud =
         cloud ?? CloudController(store: store, secrets: this.security.secrets);
     this.cloud.addListener(_cloudChanged);
+    reminders = ReminderScheduler(
+      store,
+      platform: reminderPlatform,
+      clock: this.clock,
+    );
+    reminders.addListener(_cloudChanged);
   }
   final SecurityController security;
   late final CloudController cloud;
+  late final ReminderScheduler reminders;
+  List<ReminderRule> reminderRules = const [];
+  String themeMode = 'system';
+  ReminderRule? reminderFor(String id) =>
+      reminderRules.where((r) => r.serverId == id).firstOrNull;
 
   void _cloudChanged() => notifyListeners();
 
   @override
   void dispose() {
     cloud.removeListener(_cloudChanged);
+    reminders.removeListener(_cloudChanged);
+    reminders.dispose();
     cloud.dispose();
     security.dispose();
     super.dispose();
@@ -123,11 +141,15 @@ class LedgerController extends ChangeNotifier {
     final loadedPeriods = await store.servicePeriods();
     final loadedPayments = await store.payments();
     final loadedFx = await store.fxSettings();
+    final loadedRules = await store.reminderRules();
+    final loadedTheme = await store.themeMode();
     await cloud.reload();
     refreshFailed = false;
     periods = List.unmodifiable(loadedPeriods);
     payments = List.unmodifiable(loadedPayments);
     fx = loadedFx;
+    reminderRules = List.unmodifiable(loadedRules);
+    themeMode = loadedTheme;
     records = loadedRecords;
     groups = loadedGroups;
     if (groupFilter != null &&
@@ -136,6 +158,9 @@ class LedgerController extends ChangeNotifier {
       groupFilter = null;
     }
     notifyListeners();
+    // Native permission/scheduling errors must never turn a committed ledger
+    // mutation into a failed save or block access to local data.
+    unawaited(reminders.reconcile());
   }
 
   /// A cloud write is already committed. Surface a reload failure without

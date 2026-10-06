@@ -12,7 +12,7 @@ import 'package:vps_tell_you/security/secret_store.dart';
 import 'package:vps_tell_you/security/security_controller.dart';
 import 'package:vps_tell_you/security/security_models.dart';
 
-import 'cloud_store_test.dart' show snapshot, cloudTestTime;
+import 'cloud_store_test.dart' show snapshot, cloudTestTime, completedResources;
 
 class CloudTestSecrets implements SecretStore {
   final values = <String, String>{};
@@ -133,6 +133,7 @@ void main() {
       await controller.saveAccount(
         verification,
         alias: 'Panel',
+        v1Resources: v1 ? completedResources() : null,
         selectedInstanceKeys: import
             ? verification.snapshot.instances.map(verification.keyFor).toSet()
             : {},
@@ -310,6 +311,25 @@ void main() {
     expect(secrets.values.containsKey(account.secretRef), true);
     expect(controller.error, isNot(contains('DO-NOT-LEAK')));
   });
+  test('V1 incomplete resources fail before touching secure storage and can save account only', () async {
+    reader = (_) async => snapshot(v1: true);
+    final verification = (await verify(v1: true))!;
+    expect(
+      await controller.saveAccount(
+        verification,
+        alias: 'Panel',
+        selectedInstanceKeys: {'single'},
+      ),
+      isFalse,
+    );
+    expect(secrets.writes, 0);
+    expect(await store.cloudAccounts(), isEmpty);
+    expect(await store.servers(), isEmpty);
+    expect(await controller.saveAccount(verification, alias: 'Panel'), isTrue);
+    expect(secrets.writes, 1);
+    expect(await store.servers(), isEmpty);
+  });
+
   test('V1 reauth requires explicit detach; save without selection leaves old ledger unbound', () async {
     final account = await add(v1: true);
     final server = (await store.servers()).single;
@@ -336,6 +356,7 @@ void main() {
         inventory,
         selectedInstanceKeys: {'single'},
         v1DisplayName: 'Explicit VPS',
+        v1Resources: completedResources(),
       ),
       true,
     );

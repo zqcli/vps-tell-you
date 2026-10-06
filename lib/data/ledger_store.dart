@@ -7,9 +7,14 @@ import '../cloud/cloud_account.dart';
 import '../cloud/cloud_models.dart';
 import '../connections/snippet.dart';
 import '../servers/server_record.dart';
+import '../servers/server_resources.dart';
 import '../finance/finance_models.dart';
 import '../finance/finance_math.dart';
 import '../security/security_models.dart';
+import '../settings/reminder_rule.dart';
+
+part 'ledger_settings.dart';
+part 'ledger_backup.dart';
 
 class LedgerConflict implements Exception {
   const LedgerConflict();
@@ -29,7 +34,7 @@ class LedgerStore {
   LedgerStore._(this._db, this.clock);
   final Database _db;
   final DateTime Function() clock;
-  static const schemaVersion = 5;
+  static const schemaVersion = 7;
   // Shared by both credential controllers using this store. A durable journal
   // reservation is not an orphan while its native write/DB commit is active.
   final Set<String> _activeSecretReservations = {};
@@ -55,6 +60,8 @@ class LedgerStore {
           if (oldVersion < 3) await _addSecuritySchema(db);
           if (oldVersion < 4) await _addSnippetSchema(db);
           if (oldVersion < 5) await _addCloudSchema(db);
+          if (oldVersion < 6) await _addSettingsSchema(db);
+          if (oldVersion < 7) await _addResourcesSchema(db);
         },
         onDowngrade: (db, oldVersion, newVersion) async {
           throw StateError('Newer ledger version; upgrade the app');
@@ -89,7 +96,14 @@ class LedgerStore {
     await _addSecuritySchema(db);
     await _addSnippetSchema(db);
     await _addCloudSchema(db);
+    await _addSettingsSchema(db);
+    await _addResourcesSchema(db);
   }
+
+  /// Nullable by design: old/manual records are not populated with fabricated
+  /// resource values, and this migration touches no finance or SSH fields.
+  static Future<void> _addResourcesSchema(DatabaseExecutor db) =>
+      db.execute('ALTER TABLE servers ADD COLUMN resources_json TEXT');
 
   Future<List<ServerRecord>> servers() async =>
       (await _db.query('servers'))
@@ -1292,6 +1306,7 @@ class LedgerStore {
     required CloudAccount? expected,
     Set<String> selectedInstanceKeys = const {},
     String? v1DisplayName,
+    ServerResources? v1Resources,
     bool confirmV1Rebind = false,
     bool Function()? isCancelled,
   }) => _db.transaction((txn) async {
@@ -1368,6 +1383,7 @@ class LedgerStore {
       saved,
       selectedInstanceKeys,
       v1DisplayName: v1DisplayName,
+      v1Resources: v1Resources,
     );
     _checkCloudCancellation(isCancelled);
     return count;
@@ -1377,6 +1393,7 @@ class LedgerStore {
     CloudInventory inventory, {
     required Set<String> selectedInstanceKeys,
     String? v1DisplayName,
+    ServerResources? v1Resources,
     bool Function()? isCancelled,
   }) => _db.transaction((txn) async {
     _checkCloudCancellation(isCancelled);
@@ -1387,6 +1404,7 @@ class LedgerStore {
       current,
       selectedInstanceKeys,
       v1DisplayName: v1DisplayName,
+      v1Resources: v1Resources,
     );
     _checkCloudCancellation(isCancelled);
     return count;
@@ -1397,6 +1415,7 @@ class LedgerStore {
     CloudAccount account,
     Set<String> selected, {
     String? v1DisplayName,
+    ServerResources? v1Resources,
   }) async {
     if (v1DisplayName != null &&
         (v1DisplayName.trim().isEmpty || v1DisplayName.length > 80)) {
@@ -1421,8 +1440,17 @@ class LedgerStore {
       final instance = decodeCloudInstance(
         rows.single['observation'] as String,
       );
+      final resources = account.provider == CloudProvider.solusVm1
+          ? v1Resources
+          : null;
+      if (account.provider == CloudProvider.solusVm1) {
+        final error = resources?.validate();
+        if (resources == null || error != null) {
+          throw CloudAccountFailure(error ?? '请先补全并确认六项本地资源配置');
+        }
+      }
       final now = clock().toUtc();
-      final host = instance.ipv4 ?? instance.ipv6 ?? '';
+      final host = resources?.ip ?? instance.ipv4 ?? instance.ipv6 ?? '';
       final name = account.provider == CloudProvider.solusVm1
           ? v1DisplayName?.trim() ?? account.alias
           : (instance.name?.trim().isNotEmpty ?? false)
@@ -1433,6 +1461,8 @@ class LedgerStore {
         name: _cloudImportName(name),
         vendor: '服务商待填写',
         host: ServerRecord.validHost(host) ? host : '',
+        resources: resources,
+        spec: resources?.specSummary ?? '',
         createdAt: now,
         updatedAt: now,
       );

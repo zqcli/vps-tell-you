@@ -347,7 +347,9 @@ class _FinancePageState extends State<FinancePage> {
                                 value: ratio,
                                 minHeight: 5,
                                 borderRadius: BorderRadius.circular(4),
-                                backgroundColor: AppColors.line,
+                                backgroundColor: Theme.of(context)
+                                    .colorScheme
+                                    .outlineVariant,
                               ),
                             ],
                           ),
@@ -401,7 +403,9 @@ class _FinancePageState extends State<FinancePage> {
                                       .clamp(0, 1),
                             minHeight: 8,
                             borderRadius: BorderRadius.circular(4),
-                            backgroundColor: AppColors.line,
+                            backgroundColor: Theme.of(context)
+                                .colorScheme
+                                .outlineVariant,
                           ),
                         ],
                       ),
@@ -553,7 +557,11 @@ class FinanceDetailPage extends StatelessWidget {
                             ),
                             Text(
                               convertedAmount(amount, c.fx),
-                              style: const TextStyle(color: AppColors.muted),
+                              style: TextStyle(
+                                color: Theme.of(context)
+                                    .colorScheme
+                                    .onSurfaceVariant,
+                              ),
                             ),
                             if (s.dueDate != null) Text('服务至 ${s.dueDate}'),
                           ],

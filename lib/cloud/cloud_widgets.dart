@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../core/app_theme.dart';
+import '../servers/server_resources.dart';
 import 'cloud_account.dart';
 import 'cloud_models.dart';
 
@@ -49,7 +50,9 @@ class CloudSteps extends StatelessWidget {
             style: TextStyle(
               fontSize: 12,
               fontWeight: i + 1 == step ? FontWeight.w700 : FontWeight.normal,
-              color: i + 1 == step ? AppColors.blue : AppColors.muted,
+              color: i + 1 == step
+                  ? Theme.of(context).colorScheme.primary
+                  : Theme.of(context).colorScheme.onSurfaceVariant,
             ),
           ),
       ],
@@ -70,14 +73,18 @@ class CloudNotice extends StatelessWidget {
         width: double.infinity,
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
-          color: error ? AppColors.amberBackground : AppColors.soft,
+          color: error
+              ? Theme.of(context).colorScheme.tertiaryContainer
+              : Theme.of(context).colorScheme.primaryContainer,
           borderRadius: BorderRadius.circular(12),
         ),
         child: Text(
           message,
           style: TextStyle(
             fontSize: 12,
-            color: error ? AppColors.amber : AppColors.ink,
+            color: error
+                ? Theme.of(context).colorScheme.onTertiaryContainer
+                : Theme.of(context).colorScheme.onPrimaryContainer,
           ),
         ),
       ),
@@ -152,6 +159,7 @@ class CloudObservationCard extends StatelessWidget {
             ),
           const Divider(),
           CloudValue('API 名称', observation.name),
+          CloudValue('API Hostname', observation.hostname),
           CloudValue('API IPv4', observation.ipv4),
           CloudValue('API IPv6', observation.ipv6),
           CloudValue('API 位置', observation.location),
@@ -163,15 +171,80 @@ class CloudObservationCard extends StatelessWidget {
           ),
           CloudValue(
             'API 磁盘',
-            observation.diskGiB == null ? null : '${observation.diskGiB} GiB',
+            observation.diskBytes != null
+                ? resourceBytes(observation.diskBytes!)
+                : observation.diskGiB == null
+                ? null
+                : '${observation.diskGiB} GiB',
+          ),
+          CloudValue(
+            'API 流量额度',
+            observation.trafficUnlimited
+                ? '不限量'
+                : observation.trafficBytes == null
+                ? null
+                : resourceBytes(observation.trafficBytes!),
+          ),
+          CloudValue(
+            'API 已用流量',
+            observation.trafficUsedBytes == null
+                ? null
+                : resourceBytes(observation.trafficUsedBytes!),
           ),
           if (account?.provider == CloudProvider.solusVm1)
-            const InfoNote(
-              'SolusVM 1 Client API 仅返回单台 VPS 的状态，不提供稳定实例身份、IP 或规格。',
-            ),
+            const InfoNote('SolusVM 1 资源开放情况依厂商而异，未知或全零容量不视为实际规格；不提供稳定实例身份。'),
           const InfoNote(
             '以上是面板在该时间返回的观测，不是实时状态。API 不覆盖本地资料、费用、付款或 SSH；SSH / TCP 连通性也不等于开机状态或业务健康。',
           ),
+        ],
+      ),
+    );
+  }
+}
+
+String resourceBytes(int bytes) {
+  for (final unit in const {
+    'TiB': 1099511627776,
+    'GiB': 1073741824,
+    'MiB': 1048576,
+  }.entries) {
+    if (bytes > 0 && bytes % unit.value == 0) {
+      return '${bytes ~/ unit.value} ${unit.key}';
+    }
+  }
+  return '$bytes B';
+}
+
+class LocalResourceCard extends StatelessWidget {
+  const LocalResourceCard(this.resources, {super.key});
+  final ServerResources resources;
+  @override
+  Widget build(BuildContext context) {
+    String label(String key, String title) =>
+        '$title · ${resources.apiFields.contains(key) ? '导入时 API' : '手动填写'}';
+    return LedgerCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          const Text('本地资源资料', style: TextStyle(fontWeight: FontWeight.w700)),
+          CloudValue(label('ip', 'IP'), resources.ip),
+          CloudValue(label('hostname', 'Hostname'), resources.hostname),
+          CloudValue(
+            label('diskBytes', '磁盘额度'),
+            resourceBytes(resources.diskBytes),
+          ),
+          CloudValue(
+            label('trafficBytes', '流量额度'),
+            resources.trafficUnlimited
+                ? '不限量（已确认）'
+                : resourceBytes(resources.trafficBytes!),
+          ),
+          CloudValue(
+            label('ramBytes', '内存容量'),
+            resourceBytes(resources.ramBytes),
+          ),
+          CloudValue(label('vcpu', 'vCPU'), resources.vcpu.toString()),
+          const InfoNote('刷新只更新 API 观测；这里的本地资料和手动修改会保留。'),
         ],
       ),
     );

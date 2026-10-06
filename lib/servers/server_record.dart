@@ -2,6 +2,7 @@ import 'dart:math';
 import 'dart:io';
 
 import '../core/value_types.dart';
+import 'server_resources.dart';
 
 String newLocalId() {
   final random = Random.secure();
@@ -43,6 +44,7 @@ class ServerRecord {
     this.purpose = '',
     this.os = '',
     this.spec = '',
+    this.resources,
     this.notes = '',
     this.groupId,
     this.favorite = false,
@@ -59,6 +61,7 @@ class ServerRecord {
   });
   final String id, name, vendor, host, region, purpose, os, spec, notes;
   final String? groupId;
+  final ServerResources? resources;
   final bool favorite, isDemo;
   final BillingKind billing;
   final String currency;
@@ -90,6 +93,8 @@ class ServerRecord {
     if (name.trim().isEmpty || name.length > 80) return '名称需为 1–80 个字符';
     if (vendor.trim().isEmpty || vendor.length > 80) return '厂商需为 1–80 个字符';
     if (!validHost(host)) return '请输入 IP 或域名，不含协议、端口、路径或用户名';
+    final resourceError = resources?.validate();
+    if (resourceError != null) return resourceError;
     if (notes.length > 4000) return '备注最多 4000 个字符';
     if (!Money.currencies.contains(currency)) return '不支持的币种';
     if (billing != BillingKind.unknown &&
@@ -123,6 +128,7 @@ class ServerRecord {
     'purpose': purpose,
     'os': os,
     'spec': spec,
+    'resources_json': resources?.encode(),
     'notes': notes,
     'group_id': groupId,
     'favorite': favorite ? 1 : 0,
@@ -148,6 +154,9 @@ class ServerRecord {
     purpose: row['purpose'] as String,
     os: row['os'] as String,
     spec: row['spec'] as String,
+    resources: row['resources_json'] == null
+        ? null
+        : ServerResources.decode(row['resources_json'] as String),
     notes: row['notes'] as String,
     groupId: row['group_id'] as String?,
     favorite: row['favorite'] == 1,

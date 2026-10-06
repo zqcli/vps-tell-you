@@ -127,41 +127,39 @@ void main() {
   });
 
   group('SolusVM 1 exact read-only protocol', () {
-    test(
-      'multipart body only key/hash/status, no URL secrets or redirects',
-      () async {
-        var calls = 0;
-        final result = await v1((request) async {
-          calls++;
-          expect(request.method, 'POST');
-          expect(
-            request.url,
-            Uri.parse('https://panel.example.test:8443/api/client/command.php'),
-          );
-          expect(request.followRedirects, false);
-          expect(request.maxRedirects, 0);
-          expect(
-            request.headers['content-type'],
-            startsWith('multipart/form-data; boundary='),
-          );
-          expect(request.headers.containsKey('authorization'), false);
-          expect(
-            RegExp('name="(.*?)"').allMatches(request.body).map((m) => m[1]),
-            ['key', 'hash', 'action'],
-          );
-          expect(request.body, contains('\r\n\r\nstatus\r\n'));
-          expect(request.body, contains(sentinel));
-          return http.Response(fixture('v1-status-online.xml'), 200);
-        }).read(cancellation: CloudCancellation());
-        expect(calls, 1);
-        expect(result.remoteAccountId, null);
-        expect(result.instances.single.power, CloudPower.running);
-        expect(result.instances.single.serverId, null);
-        expect(result.instances.single.name, null);
-        expect(result.instances.single.ramBytes, null);
-        expect(result.completedAt, observedAt);
-      },
-    );
+    test('single status read with five resource flags, no URL secrets or redirects', () async {
+      var calls = 0;
+      final result = await v1((request) async {
+        calls++;
+        expect(request.method, 'POST');
+        expect(
+          request.url,
+          Uri.parse('https://panel.example.test:8443/api/client/command.php'),
+        );
+        expect(request.followRedirects, false);
+        expect(request.maxRedirects, 0);
+        expect(
+          request.headers['content-type'],
+          startsWith('multipart/form-data; boundary='),
+        );
+        expect(request.headers.containsKey('authorization'), false);
+        expect(
+          RegExp('name="(.*?)"').allMatches(request.body).map((m) => m[1]),
+          ['key', 'hash', 'action', 'ipaddr', 'mem', 'hdd', 'bw', 'status'],
+        );
+        expect(request.body, contains('\r\n\r\nstatus\r\n'));
+        expect(RegExp(r'\r\n\r\ntrue\r\n').allMatches(request.body).length, 5);
+        expect(request.body, contains(sentinel));
+        return http.Response(fixture('v1-status-online.xml'), 200);
+      }).read(cancellation: CloudCancellation());
+      expect(calls, 1);
+      expect(result.remoteAccountId, null);
+      expect(result.instances.single.power, CloudPower.running);
+      expect(result.instances.single.serverId, null);
+      expect(result.instances.single.name, null);
+      expect(result.instances.single.ramBytes, null);
+      expect(result.completedAt, observedAt);
+    });
     for (final state in ['offline', 'online', 'suspended', 'processing', '']) {
       test('maps status $state conservatively', () async {
         final result = await v1(

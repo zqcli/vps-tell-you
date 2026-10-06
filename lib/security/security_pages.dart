@@ -921,7 +921,10 @@ class _CredentialDeletePageState extends State<CredentialDeletePage> {
             ),
             SecurityNotice(controller: security),
             FilledButton(
-              style: FilledButton.styleFrom(backgroundColor: AppColors.red),
+              style: FilledButton.styleFrom(
+                backgroundColor: Theme.of(context).colorScheme.error,
+                foregroundColor: Theme.of(context).colorScheme.onError,
+              ),
               onPressed: !confirmed || security.busy || security.needsReload
                   ? null
                   : () async {

@@ -159,9 +159,9 @@ class _ServerListState extends State<ServerList> {
                   const SizedBox(height: 4),
                   Text(
                     '${all.length} 台服务器 · 本地台账',
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 12,
-                      color: AppColors.muted,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
                   ),
                 ],
@@ -214,13 +214,13 @@ class _ServerListState extends State<ServerList> {
             child: Container(
               padding: const EdgeInsets.all(22),
               decoration: BoxDecoration(
-                color: AppColors.soft,
+                color: Theme.of(context).colorScheme.primaryContainer,
                 borderRadius: BorderRadius.circular(24),
               ),
-              child: const Icon(
+              child: Icon(
                 Icons.dns_outlined,
                 size: 38,
-                color: AppColors.blue,
+                color: Theme.of(context).colorScheme.onPrimaryContainer,
               ),
             ),
           ),
@@ -231,10 +231,13 @@ class _ServerListState extends State<ServerList> {
             style: TextStyle(fontSize: 23, fontWeight: FontWeight.w700),
           ),
           const SizedBox(height: 14),
-          const Text(
+          Text(
             '把机器、费用和连接放在一起。\n无须安装 Agent，也不必先授权云账户。',
             textAlign: TextAlign.center,
-            style: TextStyle(color: AppColors.muted, height: 1.8),
+            style: TextStyle(
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+              height: 1.8,
+            ),
           ),
           const SizedBox(height: 28),
           FilledButton.icon(
@@ -300,13 +303,15 @@ class _ServerListState extends State<ServerList> {
                   label: Text(entry.$2),
                   selected: c.filter == entry.$1,
                   showCheckmark: false,
-                  selectedColor: AppColors.soft,
-                  backgroundColor: Colors.white,
-                  side: const BorderSide(color: AppColors.line),
+                  selectedColor: Theme.of(context).colorScheme.primaryContainer,
+                  backgroundColor: Theme.of(context).colorScheme.surface,
+                  side: BorderSide(
+                    color: Theme.of(context).colorScheme.outline,
+                  ),
                   labelStyle: TextStyle(
                     color: c.filter == entry.$1
-                        ? AppColors.blue
-                        : AppColors.ink,
+                        ? Theme.of(context).colorScheme.onPrimaryContainer
+                        : Theme.of(context).colorScheme.onSurface,
                   ),
                   onSelected: (_) => c.updateFilters(category: entry.$1),
                 ),
@@ -324,7 +329,7 @@ class _ServerListState extends State<ServerList> {
             Padding(
               padding: const EdgeInsets.only(top: 14),
               child: Material(
-                color: AppColors.amberBackground,
+                color: Theme.of(context).colorScheme.tertiaryContainer,
                 borderRadius: BorderRadius.circular(14),
                 child: InkWell(
                   borderRadius: BorderRadius.circular(14),
@@ -335,10 +340,12 @@ class _ServerListState extends State<ServerList> {
                       children: [
                         Text(
                           '${pending.length}',
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 30,
                             fontWeight: FontWeight.w700,
-                            color: AppColors.amber,
+                            color: Theme.of(context)
+                                .colorScheme
+                                .onTertiaryContainer,
                           ),
                         ),
                         const SizedBox(width: 16),
@@ -346,25 +353,34 @@ class _ServerListState extends State<ServerList> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              const Text(
+                              Text(
                                 '续费资料待核实',
                                 style: TextStyle(
                                   fontWeight: FontWeight.w700,
-                                  color: AppColors.amber,
+                                  color: Theme.of(context)
+                                      .colorScheme
+                                      .onTertiaryContainer,
                                 ),
                               ),
                               const SizedBox(height: 3),
                               Text(
                                 '$overdue 笔已过期 · ${pending.length - overdue} 笔 30 天内到期',
-                                style: const TextStyle(
+                                style: TextStyle(
                                   fontSize: 11,
-                                  color: AppColors.amber,
+                                  color: Theme.of(context)
+                                      .colorScheme
+                                      .onTertiaryContainer,
                                 ),
                               ),
                             ],
                           ),
                         ),
-                        const Icon(Icons.chevron_right, color: AppColors.amber),
+                        Icon(
+                          Icons.chevron_right,
+                          color: Theme.of(context)
+                              .colorScheme
+                              .onTertiaryContainer,
+                        ),
                       ],
                     ),
                   ),
@@ -402,14 +418,14 @@ class _ServerListState extends State<ServerList> {
                         ServerSort.name => '按名称排序',
                         ServerSort.updated => '按更新时间',
                       },
-                      style: const TextStyle(
-                        color: AppColors.blue,
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.primary,
                         fontSize: 12,
                       ),
                     ),
-                    const Icon(
+                    Icon(
                       Icons.expand_more,
-                      color: AppColors.blue,
+                      color: Theme.of(context).colorScheme.primary,
                       size: 18,
                     ),
                   ],
@@ -421,10 +437,10 @@ class _ServerListState extends State<ServerList> {
             LedgerCard(
               child: Column(
                 children: [
-                  const Icon(
+                  Icon(
                     Icons.search_off,
                     size: 32,
-                    color: AppColors.muted,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
                   const SizedBox(height: 12),
                   Text(all.isEmpty ? '没有活动服务器' : '没有符合条件的记录'),
@@ -503,15 +519,15 @@ class ServerRow extends StatelessWidget {
                   height: 38,
                   alignment: Alignment.center,
                   decoration: BoxDecoration(
-                    color: AppColors.soft,
+                    color: Theme.of(context).colorScheme.primaryContainer,
                     borderRadius: BorderRadius.circular(11),
                   ),
                   child: Text(
                     s.mark,
                     maxLines: 1,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 11,
-                      color: AppColors.blue,
+                      color: Theme.of(context).colorScheme.onPrimaryContainer,
                       fontWeight: FontWeight.w700,
                     ),
                   ),
@@ -545,8 +561,8 @@ class ServerRow extends StatelessWidget {
                         s.region,
                         if (s.favorite) '常用',
                       ].where((e) => e.isNotEmpty).join(' · '),
-                      style: const TextStyle(
-                        color: AppColors.muted,
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
                         fontSize: 11,
                       ),
                     ),
@@ -576,17 +592,20 @@ class ServerRow extends StatelessWidget {
                       binding != null
                           ? cloudBindingSummary(binding)
                           : '● 未检测 · 本地记录',
-                      style: TextStyle(color: AppColors.muted, fontSize: 10),
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        fontSize: 10,
+                      ),
                     ),
                   ],
                 ),
               ),
-              const Padding(
+              Padding(
                 padding: EdgeInsets.only(top: 6, left: 4),
                 child: Icon(
                   Icons.chevron_right,
                   size: 17,
-                  color: AppColors.muted,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
                 ),
               ),
             ],

@@ -8,6 +8,7 @@ import 'package:http/http.dart' as http;
 import 'package:xml/xml.dart';
 import 'package:xml/xml_events.dart';
 
+import '../servers/server_resources.dart';
 import 'cloud_models.dart';
 
 class CloudReadLimits {
@@ -58,15 +59,20 @@ class SolusVm1Adapter implements CloudAdapter {
             'key': credentials.key,
             'hash': credentials.hash,
             'action': 'status',
+            'ipaddr': 'true',
+            'mem': 'true',
+            'hdd': 'true',
+            'bw': 'true',
+            'status': 'true',
           });
     final body = await session.send(request, responseLimit: 16 * 1024);
-    final power = _v1Power(body);
-    session.check();
     final now = _clock().toUtc();
+    final instance = _v1Instance(body, credentials, now);
+    session.check();
     return CloudSnapshot(
       provider: CloudProvider.solusVm1,
       completedAt: now,
-      instances: [CloudInstance(observedAt: now, power: power)],
+      instances: [instance],
     );
   }
 }
@@ -360,7 +366,7 @@ void _boundJson(Object? root) {
   }
 }
 
-CloudPower _v1Power(String body) {
+Map<String, String> _v1Fields(String body, Set<String> names) {
   try {
     // The event pass bounds nesting before building nodes, rejects all DTDs
     // (including external entities) and does not perform network/entity lookup.
@@ -383,8 +389,16 @@ CloudPower _v1Power(String body) {
     if (elements.length == 1 && elements.single.name.qualified == 'response') {
       elements = elements.single.childElements.toList();
     }
-    String field(String name) {
+    String? field(String name) {
       final matches = elements.where((e) => e.name.qualified == name).toList();
+      if (matches.isEmpty) {
+        if (xml.descendants.whereType<XmlElement>().any(
+          (e) => e.name.qualified == name,
+        )) {
+          _invalid();
+        }
+        return null;
+      }
       if (matches.length != 1 || matches.single.childElements.isNotEmpty) {
         _invalid();
       }
@@ -399,22 +413,168 @@ CloudPower _v1Power(String body) {
       return matches.single.innerText.trim();
     }
 
-    final status = field('status');
-    final message = field('statusmsg');
-    if (status == 'error') {
-      throw const CloudFailure(CloudFailureKind.apiRejected);
-    }
-    if (status != 'success') _invalid();
-    return switch (message) {
-      'online' => CloudPower.running,
-      'offline' => CloudPower.stopped,
-      _ => CloudPower.unknown,
+    return {
+      for (final name in names)
+        if (field(name) case final String value) name: value,
     };
   } on CloudFailure {
     rethrow;
   } catch (_) {
     _invalid();
   }
+}
+
+CloudPower _v1PowerValue(String? value) => switch (value) {
+  'online' => CloudPower.running,
+  'offline' => CloudPower.stopped,
+  _ => CloudPower.unknown,
+};
+
+/// A bounded decimal integer, with zero retained for usage counters only.
+int? _v1Unsigned(String? value) {
+  if (value == null || !RegExp(r'^[0-9]{1,16}$').hasMatch(value)) return null;
+  final number = int.tryParse(value);
+  return number != null && number <= 9007199254740991 ? number : null;
+}
+
+/// Client counters are total, used, free (bytes), percentage. Validate the whole
+/// tuple before using either component, and never turn used/free into quota.
+/// Usage may exceed total and a displayed percentage may exceed 100.
+({int total, int used})? _v1Counter(String? value) {
+  if (value == null) return null;
+  final parts = value.split(',').map((part) => part.trim()).toList();
+  if (parts.length != 4) return null;
+  final total = _v1Unsigned(parts[0]);
+  final used = _v1Unsigned(parts[1]);
+  final free = _v1Unsigned(parts[2]);
+  final percent = RegExp(r'^[0-9]{1,9}(\.[0-9]{1,6})?$').hasMatch(parts[3])
+      ? num.tryParse(parts[3])
+      : null;
+  if (total == null || used == null || free == null || percent == null) {
+    return null;
+  }
+  return (total: total, used: used);
+}
+
+CloudInstance _v1Instance(
+  String body,
+  SolusVm1Credentials credentials,
+  DateTime observedAt,
+) {
+  // Explicit response allowlist. No extra requests, speculative resource flags,
+  // Admin API, provider names or package names are used to obtain missing data.
+  final fields = _v1Fields(body, {
+    'status',
+    'statusmsg',
+    'vmstat',
+    'ipaddress',
+    'ipaddr',
+    'hostname',
+    'mem',
+    'hdd',
+    'bw',
+    'vcpu',
+    'cpus',
+  });
+  if (fields['status'] == 'error') {
+    throw const CloudFailure(CloudFailureKind.apiRejected);
+  }
+  if (fields['status'] != 'success' || !fields.containsKey('statusmsg')) {
+    _invalid();
+  }
+  bool reflected(String value) => [
+    credentials.key,
+    credentials.hash,
+  ].any((secret) => value.toLowerCase().contains(secret.toLowerCase()));
+  // Even a syntactically valid hostname, address or numeric credential echo
+  // must never enter a snapshot or persistent observation.
+  String? resource(String name) {
+    final value = fields[name];
+    return value == null || reflected(value) ? null : value;
+  }
+
+  String? ipv4, ipv6;
+  // Prefer the documented main IP, then the first valid bound IP of each family.
+  // A malformed list is ignored as a whole; do not partially trust it.
+  for (final name in ['ipaddress', 'ipaddr']) {
+    final value = resource(name);
+    if (value == null) continue;
+    final parts = value.split(',').map((part) => part.trim()).toList();
+    if (parts.length > 64 || parts.any((part) => part.contains('%'))) continue;
+    final addresses = parts.map((part) {
+      final address = InternetAddress.tryParse(part);
+      // tryParse preserves the supplied text. Rebuild from bytes so display and
+      // credential-reflection checks see the same canonical address.
+      return address == null
+          ? null
+          : InternetAddress.fromRawAddress(address.rawAddress);
+    }).toList();
+    if (addresses.any((ip) => ip == null || reflected(ip.address))) continue;
+    for (final address in addresses) {
+      // Syntactically valid unspecified addresses are placeholders, not a VPS
+      // destination. Keep looking for a usable bound address of each family.
+      if (!ServerResources.validIp(address!.address)) continue;
+      if (address.type == InternetAddressType.IPv4) {
+        ipv4 ??= address.address;
+      } else if (address.type == InternetAddressType.IPv6) {
+        ipv6 ??= address.address;
+      }
+    }
+  }
+  String? hostname = resource('hostname');
+  if (hostname != null) {
+    if (hostname.endsWith('.')) {
+      hostname = hostname.substring(0, hostname.length - 1);
+    }
+    if (!ServerResources.validHostname(hostname) || reflected(hostname)) {
+      hostname = null;
+    }
+  }
+
+  // Optional compatibility extensions only, not guaranteed Client API fields.
+  // SolusVM 1's vserver-info schema documents cpus as a CPU count; SolusVM's
+  // vcpu resource uses the same count semantics. Accept only explicit positive
+  // integer counts. cpu, cpu_usage, cores and percentages are never aliases.
+  // Two returned count aliases must agree; no precedence hides a contradiction.
+  final counts = <int>[];
+  var invalidCount = false;
+  for (final name in ['vcpu', 'cpus']) {
+    if (!fields.containsKey(name)) continue;
+    final count = _positiveInt(_v1Unsigned(resource(name)));
+    if (count == null || count > ServerResources.maxVcpu) {
+      invalidCount = true;
+    } else {
+      counts.add(count);
+    }
+  }
+  final vcpu = !invalidCount && counts.isNotEmpty && counts.toSet().length == 1
+      ? counts.first
+      : null;
+  final memory = _v1Counter(resource('mem'));
+  final disk = _v1Counter(resource('hdd'));
+  final bandwidth = _v1Counter(resource('bw'));
+  final vmPower = _v1PowerValue(fields['vmstat']);
+  final messagePower = _v1PowerValue(fields['statusmsg']);
+  final power = vmPower == CloudPower.unknown
+      ? messagePower
+      : messagePower == CloudPower.unknown || messagePower == vmPower
+      ? vmPower
+      : CloudPower.unknown;
+  return CloudInstance(
+    observedAt: observedAt,
+    power: power,
+    ipv4: ipv4,
+    ipv6: ipv6,
+    hostname: hostname,
+    vcpu: vcpu,
+    ramBytes: _positiveInt(memory?.total),
+    diskBytes: _positiveInt(disk?.total),
+    trafficBytes: _positiveInt(bandwidth?.total),
+    trafficUsedBytes: bandwidth?.used,
+    // Zero, -1 and arbitrary "unlimited" strings have no verified Client API
+    // quota semantics. Missing quota requires an explicit manual choice.
+    trafficUnlimited: false,
+  );
 }
 
 int? _nextPage(Map<String, dynamic> response, Uri current, int page) {

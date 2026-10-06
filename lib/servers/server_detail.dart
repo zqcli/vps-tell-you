@@ -10,6 +10,7 @@ import '../finance/finance_math.dart';
 import '../finance/finance_widgets.dart';
 import '../finance/payment_pages.dart';
 import '../security/ssh_configuration_page.dart';
+import '../settings/reminder_page.dart';
 import 'ledger_controller.dart';
 import 'refresh_failure_notice.dart';
 import 'server_form.dart';
@@ -64,14 +65,17 @@ class ServerDetail extends StatelessWidget {
     }
   }
 
-  Widget value(String label, String value) => Padding(
+  Widget value(BuildContext context, String label, String value) => Padding(
     padding: const EdgeInsets.symmetric(vertical: 7),
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           label,
-          style: const TextStyle(fontSize: 11, color: AppColors.muted),
+          style: TextStyle(
+            fontSize: 11,
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
         ),
         const SizedBox(height: 3),
         SelectableText(value.isEmpty ? '待补充' : value),
@@ -113,7 +117,7 @@ class ServerDetail extends StatelessWidget {
                     },
               icon: Icon(
                 s.favorite ? Icons.star_rounded : Icons.star_outline_rounded,
-                color: AppColors.blue,
+                color: Theme.of(context).colorScheme.primary,
               ),
             ),
             PopupMenuButton<String>(
@@ -121,9 +125,14 @@ class ServerDetail extends StatelessWidget {
               enabled: controller.canMutate && !s.archived,
               onSelected: (_) => archive(context, s),
               itemBuilder: (_) => [
-                const PopupMenuItem(
+                PopupMenuItem(
                   value: 'archive',
-                  child: Text('移除本地记录', style: TextStyle(color: AppColors.red)),
+                  child: Text(
+                    '移除本地记录',
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.error,
+                    ),
+                  ),
                 ),
               ],
             ),
@@ -142,15 +151,15 @@ class ServerDetail extends StatelessWidget {
                   height: 48,
                   alignment: Alignment.center,
                   decoration: BoxDecoration(
-                    color: AppColors.soft,
+                    color: Theme.of(context).colorScheme.primaryContainer,
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Text(
                     s.mark,
                     maxLines: 1,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontWeight: FontWeight.w700,
-                      color: AppColors.blue,
+                      color: Theme.of(context).colorScheme.primary,
                     ),
                   ),
                 ),
@@ -172,8 +181,8 @@ class ServerDetail extends StatelessWidget {
                           s.vendor,
                           s.region,
                         ].where((e) => e.isNotEmpty).join(' · '),
-                        style: const TextStyle(
-                          color: AppColors.muted,
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
                           fontSize: 12,
                         ),
                       ),
@@ -209,7 +218,7 @@ class ServerDetail extends StatelessWidget {
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Expanded(child: value('主机地址', s.host)),
+                      Expanded(child: value(context, '主机地址', s.host)),
                       IconButton(
                         tooltip: '复制主机地址',
                         onPressed: s.host.isEmpty
@@ -235,12 +244,13 @@ class ServerDetail extends StatelessWidget {
                     ],
                   ),
                   const Divider(),
-                  value('操作系统', s.os),
+                  value(context, '操作系统', s.os),
                   value(
+                    context,
                     '分组 / 用途',
                     '${controller.groupName(s.groupId)} · ${s.purpose.isEmpty ? '待补充' : s.purpose}',
                   ),
-                  value('规格', s.spec),
+                  value(context, '规格', s.spec),
                   InfoNote(
                     binding == null
                         ? '未检测 · 本地记录\n未关联云账户状态。SSH / TCP 连通性不能证明开机状态或业务健康。'
@@ -249,6 +259,10 @@ class ServerDetail extends StatelessWidget {
                 ],
               ),
             ),
+            if (s.resources != null) ...[
+              const SizedBox(height: 16),
+              LocalResourceCard(s.resources!),
+            ],
             if (binding != null) ...[
               const SectionTitle('API 观测'),
               CloudObservationCard(binding: binding, account: cloudAccount),
@@ -264,8 +278,8 @@ class ServerDetail extends StatelessWidget {
                         : s.billing == BillingKind.prepaid
                         ? '续费金额'
                         : '费用待补充',
-                    style: const TextStyle(
-                      color: AppColors.muted,
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
                       fontSize: 12,
                     ),
                   ),
@@ -286,9 +300,9 @@ class ServerDetail extends StatelessWidget {
                       ],
                     ),
                   if (s.billing == BillingKind.prepaid) ...[
-                    value('付款周期', '${s.cycleMonths} 个月'),
-                    value('服务开始日', s.startDate?.toString() ?? '未知'),
-                    value('服务到期日', s.dueDate?.toString() ?? '未知'),
+                    value(context, '付款周期', '${s.cycleMonths} 个月'),
+                    value(context, '服务开始日', s.startDate?.toString() ?? '未知'),
+                    value(context, '服务到期日', s.dueDate?.toString() ?? '未知'),
                   ],
                   InfoNote(
                     s.billing == BillingKind.unknown
@@ -297,6 +311,22 @@ class ServerDetail extends StatelessWidget {
                         ? '按量费用作为月估算，不产生剩余价值。账户账单从费用页独立录入一次。'
                         : '按当前续费价折算已知服务期；历史实付另计，不覆盖续费价。',
                   ),
+                  if (controller.reminderFor(s.id) case final rule?)
+                    SettingRow(
+                      icon: Icons.notifications_none,
+                      title: '到期提醒与使用计划',
+                      subtitle:
+                          '${usagePlanLabel(rule.usagePlan)} · ${rule.enabled ? '${rule.leadDays.join(' / ')} 天前 · ${reminderTime(rule.minuteOfDay)}' : '已关闭本条提醒'}',
+                      onTap: () => Navigator.push<void>(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => ReminderPage(
+                            controller: controller,
+                            serverId: s.id,
+                          ),
+                        ),
+                      ),
+                    ),
                 ],
               ),
             ),

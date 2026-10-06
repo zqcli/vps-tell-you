@@ -175,6 +175,11 @@ class CloudInstance {
     this.projectName,
     this.ipv4,
     this.ipv6,
+    this.hostname,
+    this.diskBytes,
+    this.trafficBytes,
+    this.trafficUsedBytes,
+    this.trafficUnlimited = false,
     this.vcpu,
     this.ramBytes,
     this.diskGiB,
@@ -187,7 +192,9 @@ class CloudInstance {
   // Null for V1: its documented client API provides no stable remote ID.
   final int? projectId, serverId;
   final String? uuid, name, projectName, ipv4, ipv6, location, osImage;
-  final int? vcpu, ramBytes;
+  final String? hostname;
+  final int? vcpu, ramBytes, diskBytes, trafficBytes, trafficUsedBytes;
+  final bool trafficUnlimited;
   final num? diskGiB;
   final bool? suspended;
 }

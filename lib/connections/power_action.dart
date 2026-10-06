@@ -99,7 +99,10 @@ class _PowerTargetDialogState extends State<_PowerTargetDialog> {
           ),
           FilledButton(
             key: const ValueKey('power-confirm-submit'),
-            style: FilledButton.styleFrom(backgroundColor: AppColors.red),
+            style: FilledButton.styleFrom(
+              backgroundColor: Theme.of(context).colorScheme.error,
+              foregroundColor: Theme.of(context).colorScheme.onError,
+            ),
             onPressed: current && !_submitted && _input.text == widget.target
                 ? () {
                     setState(() => _submitted = true);

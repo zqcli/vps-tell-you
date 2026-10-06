@@ -98,9 +98,11 @@ class HostTrustPage extends StatelessWidget {
                                     await ledger.security.removeHostTrust(pin);
                                   }
                                 },
-                          child: const Text(
+                          child: Text(
                             '移除信任',
-                            style: TextStyle(color: AppColors.red),
+                            style: TextStyle(
+                              color: Theme.of(context).colorScheme.error,
+                            ),
                           ),
                         ),
                       ],

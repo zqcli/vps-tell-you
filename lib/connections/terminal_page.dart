@@ -417,7 +417,9 @@ class _TerminalPageState extends State<TerminalPage>
                       _statusLabel,
                       key: const ValueKey('terminal-status'),
                       style: TextStyle(
-                        color: _connected ? AppColors.blue : AppColors.muted,
+                        color: _connected
+                            ? Theme.of(context).colorScheme.primary
+                            : Theme.of(context).colorScheme.onSurfaceVariant,
                       ),
                     ),
                     if (_connecting || _connected)

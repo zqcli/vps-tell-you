@@ -6,6 +6,8 @@ import 'package:flutter/material.dart';
 import '../core/app_theme.dart';
 import '../servers/ledger_controller.dart';
 import '../servers/server_detail.dart';
+import '../servers/server_resource_fields.dart';
+import '../servers/server_resources.dart';
 import 'cloud_controller.dart';
 import 'cloud_models.dart';
 import 'cloud_widgets.dart';
@@ -105,10 +107,10 @@ class _CloudAccountsPageState extends State<CloudAccountsPage> {
               child: Column(
                 children: [
                   const SizedBox(height: 12),
-                  const Icon(
+                  Icon(
                     Icons.cloud_outlined,
                     size: 44,
-                    color: AppColors.blue,
+                    color: Theme.of(context).colorScheme.primary,
                   ),
                   const SizedBox(height: 16),
                   const Text(
@@ -137,7 +139,10 @@ class _CloudAccountsPageState extends State<CloudAccountsPage> {
                     child: Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Icon(Icons.cloud_outlined, color: AppColors.blue),
+                        Icon(
+                          Icons.cloud_outlined,
+                          color: Theme.of(context).colorScheme.primary,
+                        ),
                         const SizedBox(width: 12),
                         Expanded(
                           child: Column(
@@ -167,7 +172,10 @@ class _CloudAccountsPageState extends State<CloudAccountsPage> {
                           ),
                         ),
                         const SizedBox(width: 6),
-                        const Icon(Icons.more_vert, color: AppColors.muted),
+                        Icon(
+                          Icons.more_vert,
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
                       ],
                     ),
                   ),
@@ -552,6 +560,7 @@ class _CloudImportPageState extends State<CloudImportPage>
   bool get rebind => v1 && widget.verification?.existingAccount != null;
   final selected = <String>{};
   final displayName = TextEditingController();
+  final resourceForm = GlobalKey<ServerResourceFieldsState>();
   bool saving = false,
       confirmRebind = false,
       committed = false,
@@ -604,6 +613,16 @@ class _CloudImportPageState extends State<CloudImportPage>
   Future<void> save({bool accountOnly = false}) async {
     if (saving || expired || (rebind && !confirmRebind)) return;
     if (!accountOnly && selected.isEmpty) return;
+    final ServerResources? resources;
+    if (v1 && !accountOnly && selected.isNotEmpty) {
+      resources = resourceForm.currentState?.validateAndRead();
+      if (resources == null) {
+        setState(() => error = '请补齐并核对六项资源资料；不知道的项目请向服务商核实，也可仅保存账户。');
+        return;
+      }
+    } else {
+      resources = null;
+    }
     FocusScope.of(context).unfocus();
     setState(() {
       saving = true;
@@ -618,11 +637,13 @@ class _CloudImportPageState extends State<CloudImportPage>
             selectedInstanceKeys: picked,
             confirmV1Rebind: confirmRebind,
             v1DisplayName: name.isEmpty ? null : name,
+            v1Resources: resources,
           )
         : await cloud.importInstances(
             widget.inventory!,
             selectedInstanceKeys: picked,
             v1DisplayName: name.isEmpty ? null : name,
+            v1Resources: resources,
           );
     if (ok) {
       committed = true;
@@ -642,166 +663,193 @@ class _CloudImportPageState extends State<CloudImportPage>
     }
   }
 
+  Widget _importBody(List<Widget> children) {
+    // V1 is exactly one instance and owns a nested completion form. Eagerly
+    // mount that bounded form so validation and edits survive any scroll.
+    // V2 inventories may be large and continue using lazy list children.
+    return v1
+        ? SingleChildScrollView(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: children,
+            ),
+          )
+        : ListView(padding: const EdgeInsets.all(20), children: children);
+  }
+
   @override
   Widget build(BuildContext context) => PopScope<Object?>(
     canPop: !saving,
     child: Scaffold(
       appBar: AppBar(title: const Text('选择导入实例')),
-      body: ListView(
-        padding: const EdgeInsets.all(20),
-        children: [
-          const CloudSteps(3),
-          CloudNotice(
-            '完整读取已完成 · ${snapshot.instances.length} 台\n观测于 ${cloudTime(snapshot.completedAt)}${widget.verification != null ? '\n尚未保存这次授权' : ''}',
-          ),
-          Text(
-            widget.alias ?? account!.alias,
-            style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 19),
-          ),
-          SelectableText(
-            widget.verification?.endpoint.toString() ?? account!.endpoint,
-            style: Theme.of(context).textTheme.bodySmall,
-          ),
-          const SizedBox(height: 20),
-          if (snapshot.instances.isEmpty)
-            LedgerCard(
-              child: Text(
-                widget.verification != null
-                    ? '当前授权下没有可导入的实例。可仅保存账户，稍后继续导入。'
-                    : '本次完整列表没有返回可导入的实例。账户已保存，可稍后重新读取。',
-              ),
+      body: _importBody([
+        const CloudSteps(3),
+        CloudNotice(
+          '完整读取已完成 · ${snapshot.instances.length} 台\n观测于 ${cloudTime(snapshot.completedAt)}${widget.verification != null ? '\n尚未保存这次授权' : ''}',
+        ),
+        Text(
+          widget.alias ?? account!.alias,
+          style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 19),
+        ),
+        SelectableText(
+          widget.verification?.endpoint.toString() ?? account!.endpoint,
+          style: Theme.of(context).textTheme.bodySmall,
+        ),
+        const SizedBox(height: 20),
+        if (snapshot.instances.isEmpty)
+          LedgerCard(
+            child: Text(
+              widget.verification != null
+                  ? '当前授权下没有可导入的实例。可仅保存账户，稍后继续导入。'
+                  : '本次完整列表没有返回可导入的实例。账户已保存，可稍后重新读取。',
             ),
-          for (final instance in snapshot.instances)
-            Padding(
-              padding: const EdgeInsets.only(bottom: 12),
-              child: LedgerCard(
-                padding: EdgeInsets.zero,
-                child: CheckboxListTile(
-                  key: ValueKey('cloud-select-${keyFor(instance)}'),
-                  value:
-                      linked(instance) != null ||
-                      selected.contains(keyFor(instance)),
-                  onChanged: saving || expired || linked(instance) != null
-                      ? null
-                      : (checked) => setState(() {
-                          if (checked == true) {
-                            selected.add(keyFor(instance));
-                          } else {
-                            selected.remove(keyFor(instance));
-                          }
-                        }),
-                  controlAffinity: ListTileControlAffinity.leading,
-                  contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 8,
-                  ),
-                  title: Text(
-                    v1
-                        ? '该凭据对应的单台 VPS'
-                        : instance.name ?? '实例 ${instance.serverId}',
-                  ),
-                  subtitle: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      if (linked(instance) != null)
-                        const LedgerBadge('已关联 · 跳过重复导入'),
-                      if (!v1)
-                        Text(
-                          '项目 ${instance.projectName ?? instance.projectId} · 实例 ID ${instance.serverId}',
-                        ),
+          ),
+        for (final instance in snapshot.instances)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 12),
+            child: LedgerCard(
+              padding: EdgeInsets.zero,
+              child: CheckboxListTile(
+                key: ValueKey('cloud-select-${keyFor(instance)}'),
+                value:
+                    linked(instance) != null ||
+                    selected.contains(keyFor(instance)),
+                onChanged: saving || expired || linked(instance) != null
+                    ? null
+                    : (checked) => setState(() {
+                        if (checked == true) {
+                          selected.add(keyFor(instance));
+                        } else {
+                          selected.remove(keyFor(instance));
+                        }
+                      }),
+                controlAffinity: ListTileControlAffinity.leading,
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 8,
+                ),
+                title: Text(
+                  v1
+                      ? '该凭据对应的单台 VPS'
+                      : instance.name ?? '实例 ${instance.serverId}',
+                ),
+                subtitle: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    if (linked(instance) != null)
+                      const LedgerBadge('已关联 · 跳过重复导入'),
+                    if (!v1)
                       Text(
-                        v1
-                            ? '无稳定实例 ID · IP 与规格未知'
-                            : [
-                                instance.ipv4,
-                                instance.ipv6,
-                              ].whereType<String>().join(' / ').isEmpty
-                            ? 'IP 未提供'
-                            : [
-                                instance.ipv4,
-                                instance.ipv6,
-                              ].whereType<String>().join(' / '),
+                        '项目 ${instance.projectName ?? instance.projectId} · 实例 ID ${instance.serverId}',
                       ),
-                      Text('电源${cloudPowerLabel(instance.power)} · 缓存观测'),
-                    ],
-                  ),
+                    Text(
+                      v1
+                          ? '无稳定实例 ID · 请核对下方六项资源'
+                          : [
+                              instance.ipv4,
+                              instance.ipv6,
+                            ].whereType<String>().join(' / ').isEmpty
+                          ? 'IP 未提供'
+                          : [
+                              instance.ipv4,
+                              instance.ipv6,
+                            ].whereType<String>().join(' / '),
+                    ),
+                    Text('电源${cloudPowerLabel(instance.power)} · 缓存观测'),
+                  ],
                 ),
               ),
             ),
-          if (v1) ...[
-            const SizedBox(height: 6),
-            TextField(
-              key: const ValueKey('cloud-v1-name'),
-              controller: displayName,
+          ),
+        if (v1) ...[
+          const SizedBox(height: 6),
+          TextField(
+            key: const ValueKey('cloud-v1-name'),
+            controller: displayName,
+            enabled: !saving && !expired,
+            maxLength: 80,
+            decoration: const InputDecoration(
+              labelText: '本地显示名称（可选）',
+              helperText: '仅用于新台账，不作为实例身份',
+            ),
+          ),
+          if (snapshot.instances.isNotEmpty &&
+              linked(snapshot.instances.single) == null)
+            ServerResourceFields(
+              key: resourceForm,
               enabled: !saving && !expired,
-              maxLength: 80,
-              decoration: const InputDecoration(
-                labelText: '本地显示名称（可选）',
-                helperText: '仅用于新台账，不作为实例身份',
-              ),
+              observed: {
+                'ip':
+                    snapshot.instances.single.ipv4 ??
+                    snapshot.instances.single.ipv6,
+                'hostname': snapshot.instances.single.hostname,
+                'diskBytes': snapshot.instances.single.diskBytes,
+                'trafficBytes': snapshot.instances.single.trafficBytes,
+                'trafficUnlimited': snapshot.instances.single.trafficUnlimited,
+                'ramBytes': snapshot.instances.single.ramBytes,
+                'vcpu': snapshot.instances.single.vcpu,
+              },
             ),
-            const InfoNote(
-              'SolusVM 1 仅能确认该凭据可读取单台 VPS 状态，不能获得可靠 IP、规格或稳定实例身份。可在导入后手动补充。',
-            ),
-          ],
-          if (rebind) ...[
-            const CloudNotice(
-              '保存新授权将解除此连接的所有旧实例关联。旧记录、费用、付款和 SSH 原样保留；选择导入会新增本地记录，不自动覆盖或重连旧记录。',
-              error: true,
-            ),
-            CheckboxListTile(
-              key: const ValueKey('cloud-confirm-rebind'),
-              contentPadding: EdgeInsets.zero,
-              controlAffinity: ListTileControlAffinity.leading,
-              value: confirmRebind,
-              onChanged: saving || expired
-                  ? null
-                  : (value) => setState(() => confirmRebind = value ?? false),
-              title: const Text('我确认解除旧关联，并按本次选择重新绑定'),
-            ),
-          ],
           const InfoNote(
-            '导入不会覆盖已有本地名称、费用、付款、备注或 SSH 配置。去重依据独立连接与远端 ID，不按 IP 或名称合并。已归档的关联也不会重复导入。',
+            'SolusVM 1 不提供稳定实例 ID。资源字段依厂商开放情况而异；已填资料只存本机，不会触发 SSH、TCP 或远端配置修改。',
           ),
-          if (error != null) CloudNotice(error!, error: true),
-          FilledButton.icon(
-            key: const ValueKey('cloud-import-submit'),
-            onPressed:
-                saving ||
-                    expired ||
-                    selected.isEmpty ||
-                    (rebind && !confirmRebind)
-                ? null
-                : save,
-            icon: const Icon(Icons.download_outlined),
-            label: Text(
-              saving
-                  ? '正在保存…'
-                  : '${widget.verification == null ? '导入' : '保存账户并导入'} ${selected.length} 台',
-            ),
-          ),
-          if (widget.verification != null) ...[
-            const SizedBox(height: 12),
-            OutlinedButton(
-              key: const ValueKey('cloud-save-only'),
-              onPressed: saving || expired || (rebind && !confirmRebind)
-                  ? null
-                  : () => save(accountOnly: true),
-              child: Text(
-                widget.verification!.existingAccount == null
-                    ? '仅保存账户'
-                    : '仅更新授权',
-              ),
-            ),
-          ],
-          if (expired && !saving)
-            OutlinedButton(
-              onPressed: () => Navigator.pop(context, false),
-              child: const Text('返回重新验证'),
-            ),
-          if (saving) const InfoNote('正在提交到本机，请等待完成后再返回。'),
         ],
-      ),
+        if (rebind) ...[
+          const CloudNotice(
+            '保存新授权将解除此连接的所有旧实例关联。旧记录、费用、付款和 SSH 原样保留；选择导入会新增本地记录，不自动覆盖或重连旧记录。',
+            error: true,
+          ),
+          CheckboxListTile(
+            key: const ValueKey('cloud-confirm-rebind'),
+            contentPadding: EdgeInsets.zero,
+            controlAffinity: ListTileControlAffinity.leading,
+            value: confirmRebind,
+            onChanged: saving || expired
+                ? null
+                : (value) => setState(() => confirmRebind = value ?? false),
+            title: const Text('我确认解除旧关联，并按本次选择重新绑定'),
+          ),
+        ],
+        const InfoNote(
+          '导入不会覆盖已有本地名称、费用、付款、备注或 SSH 配置。去重依据独立连接与远端 ID，不按 IP 或名称合并。已归档的关联也不会重复导入。',
+        ),
+        if (error != null) CloudNotice(error!, error: true),
+        FilledButton.icon(
+          key: const ValueKey('cloud-import-submit'),
+          onPressed:
+              saving ||
+                  expired ||
+                  selected.isEmpty ||
+                  (rebind && !confirmRebind)
+              ? null
+              : save,
+          icon: const Icon(Icons.download_outlined),
+          label: Text(
+            saving
+                ? '正在保存…'
+                : '${widget.verification == null ? '导入' : '保存账户并导入'} ${selected.length} 台',
+          ),
+        ),
+        if (widget.verification != null) ...[
+          const SizedBox(height: 12),
+          OutlinedButton(
+            key: const ValueKey('cloud-save-only'),
+            onPressed: saving || expired || (rebind && !confirmRebind)
+                ? null
+                : () => save(accountOnly: true),
+            child: Text(
+              widget.verification!.existingAccount == null ? '仅保存账户' : '仅更新授权',
+            ),
+          ),
+        ],
+        if (expired && !saving)
+          OutlinedButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('返回重新验证'),
+          ),
+        if (saving) const InfoNote('正在提交到本机，请等待完成后再返回。'),
+      ]),
     ),
   );
 }
@@ -982,7 +1030,9 @@ Future<void> cloudAccountMenu(
                 contentPadding: EdgeInsets.zero,
                 leading: Icon(
                   row.$2,
-                  color: row.$1 == 'unbind' ? AppColors.red : AppColors.blue,
+                  color: row.$1 == 'unbind'
+                      ? Theme.of(context).colorScheme.error
+                      : Theme.of(context).colorScheme.primary,
                 ),
                 title: Text(row.$3),
                 onTap: () => Navigator.pop(context, row.$1),

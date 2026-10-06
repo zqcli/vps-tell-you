@@ -8,6 +8,7 @@ import 'package:path_provider/path_provider.dart';
 
 import '../core/app_theme.dart';
 import '../core/value_types.dart';
+import 'png_share.dart';
 
 /// Explicit export whitelist. Never accepts a server, payment or account object.
 /// Quotation / settlement information is deliberately absent.
@@ -230,10 +231,12 @@ class CalculationPreview extends StatefulWidget {
     required this.data,
     this.renderer = renderCalculationPng,
     this.saver = saveCalculationPng,
+    this.sharer,
   });
   final CalculationShareData data;
   final CalculationRenderer renderer;
   final CalculationSaver saver;
+  final MobilePngShare? sharer;
   @override
   State<CalculationPreview> createState() => _CalculationPreviewState();
 }
@@ -241,11 +244,13 @@ class CalculationPreview extends StatefulWidget {
 class _CalculationPreviewState extends State<CalculationPreview> {
   Uint8List? bytes;
   String? status;
-  bool generating = true, saving = false;
+  bool generating = true, saving = false, sharing = false;
+  late final MobilePngShare sharer;
   int generation = 0;
   @override
   void initState() {
     super.initState();
+    sharer = widget.sharer ?? MobilePngShare();
     generate();
   }
 
@@ -286,7 +291,7 @@ class _CalculationPreviewState extends State<CalculationPreview> {
   }
 
   Future<void> save() async {
-    if (saving || bytes == null) return;
+    if (saving || sharing || bytes == null) return;
     final ticket = generation;
     setState(() {
       saving = true;
@@ -301,6 +306,45 @@ class _CalculationPreviewState extends State<CalculationPreview> {
       setState(() => status = '保存未完成。预览仍保留，请检查空间与权限后重试。');
     } finally {
       if (mounted && ticket == generation) setState(() => saving = false);
+    }
+  }
+
+  Future<void> share(BuildContext buttonContext) async {
+    if (saving || sharing || bytes == null) return;
+    final ticket = generation;
+    final box = buttonContext.findRenderObject() as RenderBox?;
+    final origin = box == null
+        ? null
+        : box.localToGlobal(Offset.zero) & box.size;
+    setState(() {
+      sharing = true;
+      status = null;
+    });
+    try {
+      final result = await sharer.share(
+        bytes!,
+        widget.data.asOf,
+        origin: origin,
+      );
+      if (!mounted || ticket != generation) return;
+      setState(
+        () => status = switch (result) {
+          PngShareOutcome.selected => '已选择系统分享操作，请在目标应用核对是否送达。',
+          PngShareOutcome.dismissed => '已取消分享，预览仍保留。',
+          PngShareOutcome.unknown => '未收到系统分享结果，预览仍保留。',
+          PngShareOutcome.unsupported => '此平台不支持 PNG 系统分享，可保存到本地。',
+          PngShareOutcome.busy => '请先完成当前系统分享操作。',
+          PngShareOutcome.failed => '分享未完成，预览仍保留，请重试。',
+        },
+      );
+    } catch (_) {
+      if (mounted && ticket == generation) {
+        setState(() => status = '分享未完成，预览仍保留，请重试。');
+      }
+    } finally {
+      // A newer render must not inherit a permanently busy button from this
+      // earlier native sheet. The result itself remains generation-fenced.
+      if (mounted) setState(() => sharing = false);
     }
   }
 
@@ -334,11 +378,23 @@ class _CalculationPreviewState extends State<CalculationPreview> {
         if (bytes != null) ...[
           const SizedBox(height: 16),
           FilledButton.icon(
-            onPressed: saving ? null : save,
+            onPressed: saving || sharing ? null : save,
             icon: const Icon(Icons.download_outlined),
             label: Text(saving ? '正在保存…' : '保存 PNG'),
           ),
-          const InfoNote('保存到设备本地目录。移动端系统分享将在阶段 6 接入。'),
+          if (sharer.supported) ...[
+            const SizedBox(height: 10),
+            Builder(
+              builder: (buttonContext) => OutlinedButton.icon(
+                onPressed: saving || sharing
+                    ? null
+                    : () => share(buttonContext),
+                icon: const Icon(Icons.ios_share),
+                label: Text(sharing ? '正在分享…' : '系统分享 PNG'),
+              ),
+            ),
+          ],
+          const InfoNote('保存位置可能是应用私有目录，不等于相册或公开下载目录。移动端可使用系统分享另存；取消分享不会关闭预览。'),
         ],
       ],
     ),

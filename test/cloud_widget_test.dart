@@ -19,6 +19,7 @@ import 'package:vps_tell_you/servers/server_record.dart';
 import 'package:vps_tell_you/settings/settings_page.dart';
 
 import 'security_store_test.dart' show FakeSecretStore, FakeDeviceAuth;
+import 'cloud_store_test.dart' show completedResources;
 
 class _Adapter implements CloudAdapter {
   _Adapter(this.action);
@@ -200,6 +201,15 @@ void main() {
     }
   }
 
+  Future<void> fillResources(WidgetTester tester) async {
+    await fill(tester, 'resource-ip', '2001:db8::20');
+    await fill(tester, 'resource-hostname', 'Fixture-VM');
+    await fill(tester, 'resource-diskBytes', '20');
+    await fill(tester, 'resource-trafficBytes', '1536');
+    await fill(tester, 'resource-ramBytes', '2048');
+    await fill(tester, 'resource-vcpu', '2');
+  }
+
   Future<void> authorize(
     WidgetTester tester, {
     CloudProvider provider = CloudProvider.solusVm2,
@@ -235,6 +245,9 @@ void main() {
       await cloud.saveAccount(
         verification,
         alias: 'Fixture account',
+        v1Resources: provider == CloudProvider.solusVm1
+            ? completedResources()
+            : null,
         selectedInstanceKeys: import
             ? {verification.keyFor(verification.snapshot.instances.first)}
             : {},
@@ -287,7 +300,7 @@ void main() {
       await tapKey(tester, 'verify-cloud');
       expect(calls, 1);
       expect(endpoints.single, 'https://panel.example:5656');
-      expect(find.text('无稳定实例 ID · IP 与规格未知'), findsOneWidget);
+      expect(find.text('无稳定实例 ID · 请核对下方六项资源'), findsOneWidget);
       await reveal(tester, find.byKey(const ValueKey('cloud-import-submit')));
       expect(
         tester
@@ -299,13 +312,153 @@ void main() {
       );
       await tapKey(tester, 'cloud-select-single');
       await fill(tester, 'cloud-v1-name', '我的独立 VPS');
+      await fillResources(tester);
       await tapKey(tester, 'cloud-import-submit');
       expect(cloud.accounts, hasLength(1));
       expect(ledger.active.single.name, '我的独立 VPS');
-      expect(ledger.active.single.host, isEmpty);
-      expect(ledger.active.single.spec, isEmpty);
+      expect(ledger.active.single.host, '2001:db8::20');
+      expect(ledger.active.single.resources!.hostname, 'Fixture-VM');
+      expect(ledger.active.single.resources!.ramBytes, 2 * 1024 * 1024 * 1024);
+      expect(ledger.active.single.resources!.apiFields, isEmpty);
       expect(ledger.active.single.billing, BillingKind.unknown);
       expect(cloud.bindings.single.observation.name, isNull);
+      expect(tester.takeException(), isNull);
+    },
+  );
+
+  testWidgets(
+    'complete V1 API resources survive a direct bottom jump and import',
+    (tester) async {
+      final resources = completedResources();
+      behavior = (_, _) async => CloudSnapshot(
+        provider: CloudProvider.solusVm1,
+        completedAt: DateTime.utc(2026, 10, 6),
+        instances: [
+          CloudInstance(
+            observedAt: DateTime.utc(2026, 10, 6),
+            power: CloudPower.running,
+            ipv4: resources.ip,
+            hostname: resources.hostname,
+            diskBytes: resources.diskBytes,
+            trafficBytes: resources.trafficBytes,
+            ramBytes: resources.ramBytes,
+            vcpu: resources.vcpu,
+          ),
+        ],
+      );
+      await mount(
+        tester,
+        CloudAuthorizationPage(
+          ledger: ledger,
+          provider: CloudProvider.solusVm1,
+        ),
+        scale: 2,
+      );
+      await authorize(tester, provider: CloudProvider.solusVm1);
+      await tapKey(tester, 'cloud-select-single');
+      final scroll = tester
+          .state<ScrollableState>(find.byType(Scrollable).first)
+          .position;
+      scroll.jumpTo(scroll.maxScrollExtent);
+      await tester.pump();
+      await tester.tap(find.byKey(const ValueKey('cloud-import-submit')));
+      await tester.pumpAndSettle();
+      expect(ledger.active, hasLength(1));
+      final saved = ledger.active.single.resources!;
+      expect(saved.apiFields, {
+        'ip',
+        'hostname',
+        'diskBytes',
+        'trafficBytes',
+        'ramBytes',
+        'vcpu',
+      });
+      expect(saved.vcpu, resources.vcpu);
+      expect(saved.ramBytes, resources.ramBytes);
+      expect(calls, 1);
+      expect(tester.takeException(), isNull);
+    },
+  );
+  testWidgets('background expiry fences a completed V1 resource form', (
+    tester,
+  ) async {
+    await mount(
+      tester,
+      CloudAuthorizationPage(ledger: ledger, provider: CloudProvider.solusVm1),
+    );
+    await authorize(tester, provider: CloudProvider.solusVm1);
+    await tapKey(tester, 'cloud-select-single');
+    await fillResources(tester);
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.inactive);
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.hidden);
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.paused);
+    await tester.pump();
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.hidden);
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.inactive);
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+    await tester.pump();
+    final submit = find.byKey(const ValueKey('cloud-import-submit'));
+    await reveal(tester, submit);
+    expect(tester.widget<FilledButton>(submit).onPressed, isNull);
+    expect(cloud.accounts, isEmpty);
+    expect(await store.servers(), isEmpty);
+    expect(secrets.values, isEmpty);
+    expect(cancellations.single.isCancelled, isTrue);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets(
+    'partial V1 import shows required completion, never stores zeros, and repeated submit imports once',
+    (tester) async {
+      behavior = (_, _) async => CloudSnapshot(
+        provider: CloudProvider.solusVm1,
+        completedAt: DateTime.utc(2026, 10, 6),
+        instances: [
+          CloudInstance(
+            observedAt: DateTime.utc(2026, 10, 6),
+            power: CloudPower.running,
+            ipv4: '192.0.2.60',
+            hostname: 'Provider-VM',
+            diskBytes: 21474836480,
+            trafficBytes: 1649267441664,
+            trafficUsedBytes: 0,
+          ),
+        ],
+      );
+      await mount(
+        tester,
+        CloudAuthorizationPage(
+          ledger: ledger,
+          provider: CloudProvider.solusVm1,
+        ),
+      );
+      await authorize(tester, provider: CloudProvider.solusVm1);
+      await tapKey(tester, 'cloud-select-single');
+      await tapKey(tester, 'cloud-import-submit');
+      expect(cloud.accounts, isEmpty);
+      expect(secrets.values, isEmpty);
+      expect(await store.servers(), isEmpty);
+      await fill(tester, 'resource-ramBytes', '2048');
+      await fill(tester, 'resource-vcpu', '2');
+      final submit = find.byKey(const ValueKey('cloud-import-submit'));
+      await reveal(tester, submit);
+      await tester.tap(submit);
+      await tester.tap(submit, warnIfMissed: false);
+      await tester.pumpAndSettle();
+      expect(calls, 1);
+      expect(ledger.active, hasLength(1));
+      final resources = ledger.active.single.resources!;
+      expect(resources.apiFields, {
+        'ip',
+        'hostname',
+        'diskBytes',
+        'trafficBytes',
+      });
+      expect(resources.ramBytes, 2147483648);
+      expect(resources.vcpu, 2);
+      expect(cloud.bindings.single.observation.trafficUsedBytes, 0);
+      expect(ledger.active.single.billing, BillingKind.unknown);
+      expect(await store.sshConfigurations(), isEmpty);
       expect(tester.takeException(), isNull);
     },
   );
@@ -599,6 +752,7 @@ void main() {
         isNull,
       );
       await tapKey(tester, 'cloud-confirm-rebind');
+      await fillResources(tester);
       await tapKey(tester, 'cloud-import-submit');
       expect(ledger.active, hasLength(2));
       expect(ledger.byId(oldServerId), isNotNull);

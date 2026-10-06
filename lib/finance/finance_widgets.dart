@@ -15,7 +15,10 @@ class FinanceLine extends StatelessWidget {
       children: [
         Text(
           label,
-          style: const TextStyle(color: AppColors.muted, fontSize: 12),
+          style: TextStyle(
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+            fontSize: 12,
+          ),
         ),
         const SizedBox(height: 3),
         SelectableText(value),
@@ -42,7 +45,7 @@ class FinanceTotalView extends StatelessWidget {
         style: TextStyle(
           fontSize: compact ? 21 : 30,
           fontWeight: FontWeight.w700,
-          color: dark ? Colors.white : AppColors.ink,
+          color: dark ? Colors.white : Theme.of(context).colorScheme.onSurface,
         ),
       ),
       const SizedBox(height: 5),
@@ -50,7 +53,9 @@ class FinanceTotalView extends StatelessWidget {
         '折算覆盖 ${total.coverageLabel}${total.missingFx > 0 ? ' · ${total.missingFx} 项缺汇率' : ''}',
         style: TextStyle(
           fontSize: 12,
-          color: dark ? const Color(0xFFCAD5E7) : AppColors.muted,
+          color: dark
+              ? const Color(0xFFCAD5E7)
+              : Theme.of(context).colorScheme.onSurfaceVariant,
         ),
       ),
       if (total.unknown + total.notApplicable > 0)
@@ -58,7 +63,9 @@ class FinanceTotalView extends StatelessWidget {
           '${total.unknown} 项未知 · ${total.notApplicable} 项不适用 / 未纳入',
           style: TextStyle(
             fontSize: 12,
-            color: dark ? const Color(0xFFCAD5E7) : AppColors.muted,
+            color: dark
+                ? const Color(0xFFCAD5E7)
+                : Theme.of(context).colorScheme.onSurfaceVariant,
           ),
         ),
       if (total.missingFx > 0)
@@ -66,7 +73,9 @@ class FinanceTotalView extends StatelessWidget {
           '仅为可转换部分，缺失部分未补 0',
           style: TextStyle(
             fontSize: 12,
-            color: dark ? const Color(0xFFFFD89B) : AppColors.amber,
+            color: dark
+                ? const Color(0xFFFFD89B)
+                : Theme.of(context).colorScheme.onTertiaryContainer,
           ),
         ),
       if (total.originals.isNotEmpty)
@@ -76,7 +85,9 @@ class FinanceTotalView extends StatelessWidget {
             '原币小计：${total.originals.entries.map((e) => '${e.key} ${formatRational(e.value)}').join(' · ')}',
             style: TextStyle(
               fontSize: 12,
-              color: dark ? const Color(0xFFCAD5E7) : AppColors.muted,
+              color: dark
+                  ? const Color(0xFFCAD5E7)
+                  : Theme.of(context).colorScheme.onSurfaceVariant,
             ),
           ),
         ),
@@ -114,9 +125,12 @@ class ValuationCard extends StatelessWidget {
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        Text(
           '剩余价值 · 续费价口径',
-          style: TextStyle(color: AppColors.muted, fontSize: 12),
+          style: TextStyle(
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+            fontSize: 12,
+          ),
         ),
         const SizedBox(height: 12),
         Text(
@@ -125,7 +139,9 @@ class ValuationCard extends StatelessWidget {
         ),
         Text(
           convertedAmount(value.amount, fx),
-          style: const TextStyle(color: AppColors.muted),
+          style: TextStyle(
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
         ),
         const SizedBox(height: 22),
         Text(
@@ -136,12 +152,15 @@ class ValuationCard extends StatelessWidget {
           value: value.ratio.toDouble().clamp(0, 1),
           borderRadius: BorderRadius.circular(5),
           minHeight: 7,
-          backgroundColor: AppColors.line,
+          backgroundColor: Theme.of(context).colorScheme.outlineVariant,
         ),
         const SizedBox(height: 8),
         Text(
           '${value.activePeriod.start} 至 ${value.activePeriod.end}',
-          style: const TextStyle(fontSize: 12, color: AppColors.muted),
+          style: TextStyle(
+            fontSize: 12,
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
         ),
         const SizedBox(height: 12),
         FinanceLine('估值日 / 服务到期日', '$asOf / $due'),

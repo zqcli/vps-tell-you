@@ -195,6 +195,7 @@ Dart 的 Socket.close 返回与 done 相同的 Future；dartssh2 在远端 EOF �
 
 新增 5 项确定性 close / done / write / flush / SSHClient EOF 回归和 12 次真实 loopback TCP reset / reconnect / 不重放检查。修正后全量 199 / 199 通过，format 61 文件 / 0 changes、analyze、diff check、Linux release build 通过，并重新独立 review。最终同 SHA CI 必须另行核实，不以失败的 #5 代替完成。
 
+
 ## 阶段 5：恢复后的新验收（2026-10-06 UTC）
 
 本次重新从已验证的远端 d9e8d35 基线应用带断言恢复补丁，没有跳过不匹配的代码。下面均为恢复后实际checkout的新执行结果，旧环境日志不充当新证据。
@@ -226,3 +227,85 @@ SQLite不含SYNTHETIC_秘密标记。测试app、fixture与专用keyring进程�
 ### 尚未验证
 
 真实服务商/用户面板版本、API开放/权限、真实字段和证书，VirMach实际兼容性；iOS/Android构建、签名、安装、安全存储/设备认证、键盘/IME/旋转/后台/切网、提醒/分享。桌面与合成协议通过不代表上述项目通过。最终dev发布与同SHA CI须单独核实。
+
+
+## 阶段 6 云端候选验证（2026-10-06 UTC）
+
+首次完整阶段 6 聚合：421 / 421 通过，format / analyze / diff check 与 Linux release build 通过。使用临时 SQLite、只监听 loopback 的 SSH/HTTPS fixtures 和合成资料，无用户秘密或真实服务商请求。
+
+- 31 个提醒纯逻辑 / PNG boundary 回归：日历 / 月底 / 闰年、23 / 25 小时日、30 分钟跳变、跨午夜 gap、fold 单次、不补发、整天跳过、容量全局排序 / 未覆盖、ID 稳定、停止续用仍核对、分享取消 / 未知 / 并发 / 错误
+- schema v6 与旧 v1–v5 升级；规则触发器、持久化 revision / archive 冲突、外观；变更 / 禁用 / 归档 / 恢复 / 时区后的重排，迟到 native 返回不能越过新任务
+- 原生插件 Dart 通道合同：Android 实际权限 / 渠道读取、inexactAllowWhileIdle、无精确闹钟请求；iOS 初始化权限全部关闭，仅显式请求后再次读取；Linux不初始化通知插件
+- 提醒 / 外观 widget：返回取消不写库、显式保存、拒绝权限规则仍保留、真实 App ThemeMode 更新、前台时区重排；390px / 2×字深浅色无溢出
+- 白名单备份：负向版本 / 类型 / 金额 / 日期 / ID / FK / 大小矩阵、保存前预览、事务内空台账再检查、半途注入失败回滚、void / 幂等 / 费用历史及稳定 ID、私密表和备注排除、还原提醒关闭；21 个备份专用测试和独立 peer 安全 review 通过
+- 深浅色独立对比度、16 个实际页面 × 390px × 正常 / 2×字、固定深色终端、取消 / Back / 键盘清理；两个合成组件 golden。现有 UI 72 项回归通过
+- PNG 分享真实 renderer 字节与插件方法通道，双击只打开一次、关闭后迟到结果、新图片不被旧结果覆盖；系统选择不伪称送达，Linux 不显示移动分享入口
+
+Astra 全阶段 review、修正后的最终聚合、原生 Linux 流程、Android 通用 APK 和远端 CI 仍按后续完成记录追加，不将此条首次通过冒充后续精确 SHA 的验证。
+
+### 设备交接未运行项
+
+Android / iOS 实机安装重启、设备安全存储/设备认证、真实通知允许拒绝/渠道/重启/时区/节电、原生分享/取消和文件选择；SSH 手机键盘 / IME / 旋转 / 切网 / 后台；真实 SolusVM 面板版本/权限/证书；iOS Xcode 编译、签名与安装。测试签名 APK 的生成不是生产签名，更不是上述设备项目通过。
+
+
+### 阶段 6 独立源码审查与修正后复验
+
+独立 Astra xhigh review APPROVE。修正深色备份冲突文字的对比度、提醒保存期间 Back 触发二次 pop、保存完成误移除较新导航，以及待处理通知在下一帧盖过更新点击的竞态。新增 7 个独立回归覆盖冷启动 / 热通知、旧 / 已归档目标、保存 / 刷新阻塞队列与最后目标、dispose、Back、中途新导航和错误文字对比度。
+
+独立全回归 428 / 428、focused 100 / 100、analyze、format、diff check 通过。原生 Linux 另发现底部四 Tab 语义未显式标为启用，已补 enabled 语义与 widget flagsCollection 断言；不改变点击行为。其余平台操作结果仍见最终完成记录，未完成项不计为通过。
+
+### 阶段 6 最终 Linux 原生验收
+
+最终源码 `4d38572a2047ac0878d385b0548b878a2feeeabe` 合入已发布阶段 5 的同源树后，全量 428 / 428、format 97 文件 / 0 changes、analyze、diff check 与生产 Linux release 重建通过。实际生产入口 `lib/main.dart`，隔离 HOME / XDG 目录和不激活服务的私有 D-Bus；不用用户台账、真实秘密、钥匙环或 VPS。窗口实际为 1180×812，390px / 2×字号仍属于自动 Widget 验证。
+
+原生桌面闭环：
+
+- 首次空态，明确选择演示数据后才加入 4 条保留地址的合成记录
+- 保存深色外观；提醒更改后取消不写入，重新更改并保存为 30 / 7 / 3 / 1 天、到期不再使用、09:00；关闭进程并确认窗口消失，重启后深色与规则仍在。只读 SQLite 核实 schema 6 和 revision 1
+- Linux 显示“不支持定时通知，未排程”，演示记录明确不连接 / 不排程；四个底部导航在真实可访问性树中为启用状态
+- 原生文件保存导出 2,784 字节 JSON：4 台服务器、1 个分组、0 笔付款、2 个服务期；读取导出结构，无私密表、备注或提醒 / 偏好数据
+- 原生文件选择同一备份，非空台账恢复按钮禁用、冲突文字在深色下可读
+- 新隔离空台账选择备份，确认对话框先取消，SQLite 仍为 0 台；再次明确确认后，服务器 ID 与备份完全相同，4 台 / 1 组 / 2 期间恢复。所有提醒 enabled=0，外观仍为 system；凭据、SSH 配置、主机信任、云账户、关联、观测均为 0
+- 独立 $49.99 USD 年付试算实际生成白名单 PNG，预览后保存到隔离应用目录；再次解码为 1080×1352、154,164 字节，SHA-256 `b213b1ac161b3574c628f15c9ef87339ff59bbd7739412e239156795ebaa23ca`。界面显示真实路径，没有把保存说成相册或分享送达；Linux 无移动分享按钮
+- 完成后关闭 QA 应用并确认窗口退出。没有运行真实电源命令、联系生产 API 或发送导出给第三方
+
+非秘密证据保留于验收环境 `vps-qa-stage6`：`native-restore-evidence.json`、`native-png-evidence.json`、`png-saved.png`、`screenshots/native-dark.png`、`screenshots/restore-conflict.png`、`screenshots/restarted-dark.png` 与 `logs/native-app.log`。私有 D-Bus 缺少 dconf 服务的警告为隔离环境现象，文件选择 / 保存已实测成功；这些文件和测试数据库不提交到源码。
+
+此处 Linux 验收完成时 Android 本地 Gradle 曾被执行审批取消；最终恢复构建和产物核验见下一节。iOS 构建和所有上列手机实测仍未运行；Linux 文件选择 / 保存不作为手机通知投递或系统分享通过的证明。
+
+构建准备另加一项独立 Astra xhigh 审查通过的 Gradle 限定：清除 Flutter 默认 ABI filters，只保留 `arm64-v8a` 和 `x86_64`，避免原生依赖混入只有部分库的 32 位目录。该改动只影响 Android 打包目标，Dart / Linux 源码未变；最终 APK ABI 清单核验见下一节。
+
+### 阶段 6 Android 测试 APK 产物核验
+
+构建源码 `94003d14f980c0b83eeee8ed4b4ba08379ff97df`，已包含上述 ABI 限定。最终交接文档的后续提交不改变该 APK 的应用或平台源码。补齐已批准的官方依赖后，云端本地离线 Gradle `assembleRelease` 成功（464 个任务）；没有启用 Android GitHub Actions 作业。
+
+- 文件：`vps-tell-you-0.1.0-arm64-x86_64-test.apk`，49,489,632 字节
+- SHA-256：`f5ca8ca55b32b2a93aa5b26dd24fb8a80f400f860eca8cb18c046b90e376bd0f`
+- 包名 `com.vpstellyou.vps_tell_you`，versionName `0.1.0` / versionCode `1`，minSdk 24 / targetSdk 36，非 debuggable
+- apksigner 核验 Android Debug RSA 2048、v2 签名；这是 release 模式的测试签名包，不是生产签名或商店发布
+- 仅 `arm64-v8a` 与 `x86_64`；每种均完整包含 app / Flutter / dartjni / sqlite3 四个原生库，没有 32 位 x86 或 armeabi-v7a 残片；ZIP 与 ELF 的 16 KB 对齐检查通过
+- 最终 DEX 包含定时通知 / 重启接收器，通知图标保留；权限为 INTERNET、POST_NOTIFICATIONS、RECEIVE_BOOT_COMPLETED、USE_BIOMETRIC、USE_FINGERPRINT、VIBRATE 和应用范围的签名接收器权限，无精确闹钟 / 全屏通知 / 外部存储权限
+- 独立 Astra xhigh 对最终 APK 核验 APPROVED；证据 `stage6-apk-evidence/apk-validation.json`、`apksigner-verify.txt`、`zipalign--c.txt`、`build-offline.log`
+
+未安装到模拟器或实体机，未验证手机通知投递、权限提示、Keystore / 设备认证、文件选择 / 分享、SSH 键盘 / IME / 旋转 / 后台 / 切网；这些仍按上方设备交接清单执行。APK 可供用户安装测试，不将静态产物核验写成手机验收通过。
+
+### 同源分架构附件
+
+通用 APK 超过聊天附件大小限制，因此保留通用产物，并从同一 `94003d1` 源码通过官方按 ABI 打包生成两份可独立安装的 APK。没有修改应用源码；仅在本次 Gradle 调用的 `androidComponents.finalizeDsl` 中清除通用包 ABI filters，让 Flutter 的 `split-per-abi` / `android-arm64,android-x64` 控制两种产物。调用专用脚本和离线构建证据随交接资料保留，不改变默认通用包配置。
+
+- `vps-tell-you-0.1.0-arm64-v8a-test.apk`：24,674,032 字节，versionCode 2001，SHA-256 `4f705c5cbc38adb913a20b909b233039920170b5e59f58a8ba625cf9b9a2c3a8`
+- `vps-tell-you-0.1.0-x86_64-test.apk`：26,191,304 字节，versionCode 4001，SHA-256 `c319ff9f7781990131f0b789dc917d64a6d2e16f9dab944b1dd4b870868c00e8`
+
+两份 versionName 均为 0.1.0，minSdk 24 / targetSdk 36，与通用包同一测试签名。对应 native libraries、DEX 和 assets 字节与通用包一致；各自只含目标 ABI，独立 Astra xhigh 产物审查通过。ARM64 用于对应手机 / 平板，x86_64 用于对应模拟器；不支持 32 位 x86。两份均未运行设备安装或功能测试。更换签名的后续构建无法直接覆盖安装；卸载前先导出台账，并注意该备份不包含凭据、主机信任等已列明内容。
+
+实际聊天交付使用每种架构一个普通 ZIP 压缩包，包含原始已签名 APK 和说明，先解压再安装。ZIP 仅为适应附件大小限制；解压后的 APK 哈希与上述核验值完全一致，没有重新编译或修改 APK。
+
+
+## SolusVM 1 六项资源导入增量（2026-10-06 UTC）
+
+- 独立 Astra xhigh 复审与最终 571 项全量测试通过，包括本地 SSH fixture；format/analyze/diff 检查通过。
+- 生产 Linux release 使用 `lib/main.dart` 构建通过；不是诊断入口。
+- 覆盖一次 enriched status 请求、XML/TLS/取消、IPv4/IPv6/hostname、字节四元组、0 使用量/缺失配额、可选核数冲突、六项补填、明确无限流量、精确单位转换、来源标记、v6→v7 迁移、旧/新备份、刷新与解绑保留、重复提交和后台过期。
+- 复审复现并修正：资源表单滚出懒加载列表后状态丢失导致编辑保存无响应。单台 V1 导入和本地编辑改为有界完整表单，V2 大清单保留懒加载。测试包含 390px / 2× 大字、直接滚到底导入、资源编辑后滚到费用/备注保存、隐藏无效值阻断及来回滚动保留。
+- 原生真实新增流程通过：用户本人触发一次带资源标志的只读读取，四项有效 API 资源自动预填、RAM/vCPU 由用户补填；勾选单实例后仅本地导入成功。详情逐项显示 API/手动来源；只重启新版隔离测试 App 后所有六项和来源保留，无重复服务器。只读 SQLite 核对 schema7，账户/服务器/观测/关联各1，SSH/主机信任/付款/服务期/清理队列均0，费用类型仍未知、金额及日期为空。原账户、钥匙环、主 App 和旧台账保持不变；本阶段未由代理发起额外凭据请求、远端电源或配置操作。真实资源值仅存私有测试证据，不进入仓库。
+- 此增量未推送，未更新 Android APK。Android/iOS 设备存储、安装与移动端交互仍需设备单独验收。

@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import '../data/ledger_store.dart';
 import '../security/secret_store.dart';
 import '../servers/server_record.dart';
+import '../servers/server_resources.dart';
 import 'cloud_account.dart';
 import 'cloud_models.dart';
 import 'solusvm_adapter.dart';
@@ -241,6 +242,7 @@ class CloudController extends ChangeNotifier {
     required String alias,
     Set<String> selectedInstanceKeys = const {},
     String? v1DisplayName,
+    ServerResources? v1Resources,
     bool confirmV1Rebind = false,
   }) async {
     if (_disposed ||
@@ -271,6 +273,13 @@ class CloudController extends ChangeNotifier {
           .toSet();
       if (!available.containsAll(selection)) {
         throw CloudAccountFailure.selection;
+      }
+      if (verification.provider == CloudProvider.solusVm1 &&
+          selection.isNotEmpty) {
+        final problem =
+            v1Resources?.validate() ??
+            (v1Resources == null ? '请补齐六项资源资料后导入，也可仅保存账户' : null);
+        if (problem != null) throw CloudAccountFailure(problem);
       }
       final credentials = verification._credentials;
       if (credentials == null) {
@@ -307,6 +316,7 @@ class CloudController extends ChangeNotifier {
         expected: existing,
         selectedInstanceKeys: selection,
         v1DisplayName: v1DisplayName,
+        v1Resources: v1Resources,
         confirmV1Rebind: confirmV1Rebind,
         isCancelled: () => _disposed || cancellation.isCancelled,
       );
@@ -393,6 +403,7 @@ class CloudController extends ChangeNotifier {
     CloudInventory inventory, {
     required Set<String> selectedInstanceKeys,
     String? v1DisplayName,
+    ServerResources? v1Resources,
   }) async {
     if (_disposed || _mutating || needsReload) return false;
     _mutating = true;
@@ -406,6 +417,7 @@ class CloudController extends ChangeNotifier {
         inventory,
         selectedInstanceKeys: Set.of(selectedInstanceKeys),
         v1DisplayName: v1DisplayName,
+        v1Resources: v1Resources,
         isCancelled: () => _disposed || cancellation.isCancelled,
       );
       await _afterCommit();

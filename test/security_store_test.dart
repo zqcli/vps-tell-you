@@ -579,6 +579,10 @@ void main() {
     ]) {
       await db.execute('DROP TABLE $table');
     }
+    await db.execute('DROP TRIGGER server_reminder');
+    await db.execute('DROP TABLE reminder_rules');
+    await db.execute('DROP TABLE app_settings');
+    await db.execute('ALTER TABLE servers DROP COLUMN resources_json');
     await db.setVersion(2);
     await reopen();
     expect((await store.servers()).single.toMap(), server.toMap());

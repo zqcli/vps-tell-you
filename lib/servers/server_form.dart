@@ -4,6 +4,7 @@ import '../core/app_theme.dart';
 import '../core/value_types.dart';
 import 'ledger_controller.dart';
 import 'server_record.dart';
+import 'server_resource_fields.dart';
 
 class ServerForm extends StatefulWidget {
   const ServerForm({super.key, required this.controller, this.record});
@@ -15,6 +16,7 @@ class ServerForm extends StatefulWidget {
 
 class _ServerFormState extends State<ServerForm> {
   final _form = GlobalKey<FormState>();
+  final _resources = GlobalKey<ServerResourceFieldsState>();
   late final Map<String, TextEditingController> fields;
   late BillingKind billing;
   late String currency;
@@ -119,18 +121,27 @@ class _ServerFormState extends State<ServerForm> {
   Future<void> save() async {
     if (saving || !_form.currentState!.validate()) return;
     final old = widget.record;
+    final resources = old?.resources == null
+        ? null
+        : _resources.currentState?.validateAndRead();
+    if (old?.resources != null && resources == null) return;
     final now = widget.controller.clock();
     String text(String key) => fields[key]!.text.trim();
     final s = ServerRecord(
       id: old?.id ?? newLocalId(),
       name: text('name'),
       vendor: text('vendor'),
-      host: text('host'),
+      host: resources != null && text('host') == old?.resources?.ip
+          ? resources.ip
+          : text('host'),
       region: text('region'),
       purpose: text('purpose'),
       os: text('os'),
-      spec: text('spec'),
+      spec: resources != null && text('spec') == old?.resources?.specSummary
+          ? resources.specSummary
+          : text('spec'),
       notes: text('notes'),
+      resources: resources,
       groupId: groupId,
       favorite: old?.favorite ?? false,
       billing: billing,
@@ -185,84 +196,96 @@ class _ServerFormState extends State<ServerForm> {
       ),
       body: Form(
         key: _form,
-        child: ListView(
+        // This bounded form owns nested resource state. Keep every field
+        // mounted so scrolling cannot discard edits or prevent validation.
+        child: SingleChildScrollView(
           padding: const EdgeInsets.all(20),
-          children: [
-            const InfoNote('只保存本地台账，不修改云端实例，也不需要密码或 API Key。'),
-            field('name', '服务器名称', required: true),
-            field('vendor', '厂商', required: true, hint: '例如：搬瓦工 / 自定义厂商'),
-            field('host', 'IP 或域名（选填）', hint: 'IPv4、IPv6 或域名', max: 253),
-            select<String>('用途分组', groupId ?? '', [
-              const DropdownMenuItem(value: '', child: Text('未分组')),
-              ...widget.controller.groups.map(
-                (g) => DropdownMenuItem(value: g.id, child: Text(g.name)),
-              ),
-            ], (v) => setState(() => groupId = v == '' ? null : v)),
-            field('purpose', '用途（选填）'),
-            field('region', '地区（选填）'),
-            field('os', '操作系统（选填）'),
-            field('spec', '规格（选填）', max: 200),
-            const SectionTitle('费用资料'),
-            if (termsLocked)
-              const InfoNote(
-                '已记录追加服务期，计费方式、周期和日期已锁定。更正请先安全撤销付款；调整续费价或币种不会改写历史实付。',
-              ),
-            select<BillingKind>('计费方式', billing, const [
-              DropdownMenuItem(
-                value: BillingKind.unknown,
-                child: Text('费用未知 · 稍后补充'),
-              ),
-              DropdownMenuItem(
-                value: BillingKind.prepaid,
-                child: Text('预付费 · 有服务到期日'),
-              ),
-              DropdownMenuItem(
-                value: BillingKind.metered,
-                child: Text('按量付费 · 月估算'),
-              ),
-            ], (v) => setState(() => billing = v!)),
-            if (billing != BillingKind.unknown) ...[
-              field(
-                'amount',
-                billing == BillingKind.metered ? '月费用估算' : '续费金额',
-                required: true,
-                max: 13,
-              ),
-              select<String>(
-                '原币种',
-                currency,
-                Money.currencies
-                    .map((c) => DropdownMenuItem(value: c, child: Text(c)))
-                    .toList(),
-                (v) => setState(() => currency = v!),
-              ),
-              if (billing == BillingKind.prepaid) ...[
-                select<int>(
-                  '付款周期',
-                  cycle,
-                  [1, 3, 6, 12, 24, 36]
-                      .map(
-                        (m) => DropdownMenuItem(
-                          value: m,
-                          child: Text(m == 12 ? '每年' : '每 $m 个月'),
-                        ),
-                      )
-                      .toList(),
-                  (v) => setState(() => cycle = v!),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const InfoNote('只保存本地台账，不修改云端实例，也不需要密码或 API Key。'),
+              field('name', '服务器名称', required: true),
+              field('vendor', '厂商', required: true, hint: '例如：搬瓦工 / 自定义厂商'),
+              field('host', 'IP 或域名（选填）', hint: 'IPv4、IPv6 或域名', max: 253),
+              select<String>('用途分组', groupId ?? '', [
+                const DropdownMenuItem(value: '', child: Text('未分组')),
+                ...widget.controller.groups.map(
+                  (g) => DropdownMenuItem(value: g.id, child: Text(g.name)),
                 ),
-                field('start', '服务开始日（选填）', hint: 'YYYY-MM-DD', max: 10),
-                field('due', '服务到期日（选填）', hint: 'YYYY-MM-DD', max: 10),
+              ], (v) => setState(() => groupId = v == '' ? null : v)),
+              field('purpose', '用途（选填）'),
+              field('region', '地区（选填）'),
+              field('os', '操作系统（选填）'),
+              field('spec', '规格（选填）', max: 200),
+              if (widget.record?.resources != null)
+                ServerResourceFields(
+                  key: _resources,
+                  initial: widget.record!.resources,
+                  enabled: !saving,
+                  importing: false,
+                ),
+              const SectionTitle('费用资料'),
+              if (termsLocked)
                 const InfoNote(
-                  '到期日是服务截止边界 [开始日, 到期日)。仅有到期日时反推一个日历周期并标注推算；缺少到期日保持未知。',
+                  '已记录追加服务期，计费方式、周期和日期已锁定。更正请先安全撤销付款；调整续费价或币种不会改写历史实付。',
+                ),
+              select<BillingKind>('计费方式', billing, const [
+                DropdownMenuItem(
+                  value: BillingKind.unknown,
+                  child: Text('费用未知 · 稍后补充'),
+                ),
+                DropdownMenuItem(
+                  value: BillingKind.prepaid,
+                  child: Text('预付费 · 有服务到期日'),
+                ),
+                DropdownMenuItem(
+                  value: BillingKind.metered,
+                  child: Text('按量付费 · 月估算'),
+                ),
+              ], (v) => setState(() => billing = v!)),
+              if (billing != BillingKind.unknown) ...[
+                field(
+                  'amount',
+                  billing == BillingKind.metered ? '月费用估算' : '续费金额',
+                  required: true,
+                  max: 13,
+                ),
+                select<String>(
+                  '原币种',
+                  currency,
+                  Money.currencies
+                      .map((c) => DropdownMenuItem(value: c, child: Text(c)))
+                      .toList(),
+                  (v) => setState(() => currency = v!),
+                ),
+                if (billing == BillingKind.prepaid) ...[
+                  select<int>(
+                    '付款周期',
+                    cycle,
+                    [1, 3, 6, 12, 24, 36]
+                        .map(
+                          (m) => DropdownMenuItem(
+                            value: m,
+                            child: Text(m == 12 ? '每年' : '每 $m 个月'),
+                          ),
+                        )
+                        .toList(),
+                    (v) => setState(() => cycle = v!),
+                  ),
+                  field('start', '服务开始日（选填）', hint: 'YYYY-MM-DD', max: 10),
+                  field('due', '服务到期日（选填）', hint: 'YYYY-MM-DD', max: 10),
+                  const InfoNote(
+                    '到期日是服务截止边界 [开始日, 到期日)。仅有到期日时反推一个日历周期并标注推算；缺少到期日保持未知。',
+                  ),
+                ],
+                const InfoNote(
+                  '0 元表示明确免费。费用未知请选“费用未知”。保存原币金额；参考汇率仅用于折算。修改续费价不代表已经付款。',
                 ),
               ],
-              const InfoNote(
-                '0 元表示明确免费。费用未知请选“费用未知”。保存原币金额；参考汇率仅用于折算。修改续费价不代表已经付款。',
-              ),
+              field('notes', '备注（选填）', max: 4000, lines: 4),
+              const InfoNote('不要在备注中保存密码、私钥或令牌。凭据库将在后续阶段提供。'),
             ],
-            field('notes', '备注（选填）', max: 4000, lines: 4),
-            const InfoNote('不要在备注中保存密码、私钥或令牌。凭据库将在后续阶段提供。'),
-          ],
+          ),
         ),
       ),
       bottomNavigationBar: SafeArea(
