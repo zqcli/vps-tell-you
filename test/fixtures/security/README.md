@@ -1,8 +1,10 @@
 # Synthetic SSH fixtures
 
 These keys were generated solely for local automated tests with `ssh-keygen`.
-They have never been installed in an SSH server, agent, account, or authorized
-keys file. They grant no access and must never be used for real authentication.
+They have never been installed in a real SSH server, agent, account, or
+authorized keys file. The optional loopback protocol fixture loads these keys
+only into its isolated in-memory server, which cannot execute commands. They
+grant no real access and must never be used for real authentication.
 
 - `ed25519.fixture`: unencrypted OpenSSH Ed25519
 - `ed25519_encrypted.fixture`: the same public key, encrypted OpenSSH format;

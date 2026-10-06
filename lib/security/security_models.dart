@@ -124,3 +124,15 @@ class HostTrustRecord {
     'revision': revision,
   };
 }
+
+/// Ephemeral connection data, never a database row or user-facing string.
+class SshCredential {
+  const SshCredential({
+    required this.metadata,
+    required this.secret,
+    this.passphrase,
+  });
+  final CredentialMetadata metadata;
+  final String secret;
+  final String? passphrase;
+}

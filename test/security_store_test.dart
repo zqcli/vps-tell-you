@@ -207,6 +207,7 @@ void main() {
         defaultUsername: 'root',
         secret: key,
         passphrase: 'fixture-passphrase-only',
+        savePassphrase: true,
       ),
       isTrue,
     );
@@ -331,7 +332,7 @@ void main() {
     expect(controller.cleanupPending, isFalse);
     await reopen();
     expect(controller.credentials.single.id, first.id);
-    expect(await (await raw()).getVersion(), 3);
+    expect(await (await raw()).getVersion(), LedgerStore.schemaVersion);
     expect(
       latin1.decode(await File(path).readAsBytes()),
       isNot(contains('synthetic-password')),
@@ -571,6 +572,7 @@ void main() {
       'credentials',
       'host_trust',
       'secret_cleanup',
+      'snippets',
     ]) {
       await db.execute('DROP TABLE $table');
     }
@@ -581,7 +583,7 @@ void main() {
     expect((await store.payments()).single.toMap(), payment.toMap());
     expect((await store.fxSettings()).toMap(), fx.toMap());
     expect(await store.credentials(), isEmpty);
-    expect(await (await raw()).getVersion(), 3);
+    expect(await (await raw()).getVersion(), LedgerStore.schemaVersion);
   });
 
   test('device reject or unsupported Linux never reads a secret', () async {

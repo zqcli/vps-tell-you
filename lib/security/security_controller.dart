@@ -144,6 +144,7 @@ class SecurityController extends ChangeNotifier {
     required String defaultUsername,
     String? secret,
     String? passphrase,
+    bool savePassphrase = false,
   }) async {
     if (!_startMutation()) return false;
     try {
@@ -195,7 +196,9 @@ class SecurityController extends ChangeNotifier {
           'version': 1,
           'kind': kind.name,
           'secret': secret,
-          'passphrase': kind == CredentialKind.privateKey ? passphrase : null,
+          'passphrase': kind == CredentialKind.privateKey && savePassphrase
+              ? passphrase
+              : null,
         });
         await secrets.write(ref, encoded);
         if (await secrets.read(ref) != encoded) {
@@ -311,6 +314,72 @@ class SecurityController extends ChangeNotifier {
     } finally {
       _finish();
     }
+  }
+
+  /// Connection-only read. It does not expose secrets through reveal state or
+  /// bypass the device-authenticated UI. Recheck immutable reference + revision
+  /// on both sides of the native read and stop after any cancellation.
+  Future<SshCredential> loadSshCredential(
+    String id, {
+    required bool Function() isCancelled,
+  }) async {
+    void guard() {
+      if (_disposed || needsReload || isCancelled()) {
+        throw const SecurityFailure('SSH 连接已取消或资料需重读');
+      }
+    }
+
+    try {
+      guard();
+      final records = await store.credentials();
+      guard();
+      final record = records.where((c) => c.id == id).firstOrNull;
+      if (record == null) throw const SecurityFailure('请选择可用凭据');
+      final encoded = await secrets.read(record.secretRef);
+      guard();
+      if (encoded == null || encoded.length > 1024 * 1024) {
+        throw const SecurityFailure('设备中未找到可用秘密，请重新导入');
+      }
+      final envelope = jsonDecode(encoded);
+      if (envelope is! Map<String, dynamic> ||
+          envelope['version'] != 1 ||
+          envelope['kind'] != record.kind.name ||
+          envelope['secret'] is! String ||
+          (envelope['secret'] as String).isEmpty ||
+          (envelope['secret'] as String).length > 128 * 1024 ||
+          (envelope['passphrase'] != null &&
+              (envelope['passphrase'] is! String ||
+                  (envelope['passphrase'] as String).length > 4096))) {
+        throw const SecurityFailure('安全存储资料无法读取');
+      }
+      if (!await isCredentialCurrent(record)) {
+        throw const SecurityFailure('凭据已变化，请重读后重试');
+      }
+      guard();
+      return SshCredential(
+        metadata: record,
+        secret: envelope['secret'] as String,
+        passphrase: envelope['passphrase'] as String?,
+      );
+    } on SecurityFailure {
+      rethrow;
+    } catch (_) {
+      throw const SecurityFailure('无法读取 SSH 凭据，请重试');
+    }
+  }
+
+  Future<bool> isCredentialCurrent(CredentialMetadata record) async {
+    if (_disposed || needsReload) return false;
+    final current = await store.credentials();
+    return !_disposed &&
+        !needsReload &&
+        current.any(
+          (c) =>
+              c.id == record.id &&
+              c.revision == record.revision &&
+              c.secretRef == record.secretRef &&
+              c.kind == record.kind,
+        );
   }
 
   Future<bool> reveal(CredentialMetadata record) async {
@@ -468,8 +537,7 @@ class SecurityController extends ChangeNotifier {
 }
 
 /// One connection attempt. A rejected/cancelled attempt is permanently unusable.
-/// A future SSH adapter must call this gate before sending authentication data.
-/// There are deliberately no sockets or SSH sessions in stage 3.
+/// The SSH adapter calls this gate before releasing authentication data.
 class HostVerificationAttempt {
   HostVerificationAttempt._(this._controller, this.identity, this._epoch);
   final SecurityController _controller;

@@ -1,6 +1,6 @@
 # vps tell you
 
-本地优先的个人 VPS 台账，Flutter 原生应用。当前为 **阶段 3（开发版 0.1.0）**，以 V6.2 为视觉与交互基础。Android / iOS 工程已生成，Linux 用于原生开发与验证。
+本地优先的个人 VPS 台账，Flutter 原生应用。当前为 **阶段 4（开发版 0.1.0）**，以 V6.2 为视觉与交互基础。Android / iOS 工程已生成，Linux 用于原生开发与验证。
 
 ## 当前可以做什么
 
@@ -19,10 +19,16 @@
 - 密码 / SSH 私钥导入、编辑、搜索、关联查看、替换 / 解除及删除影响确认
 - 原生 SecretStore；SQLite 仅保存元数据与不透明引用，失败不降级到明文
 - 每台独立 SSH 地址 / 端口 / 用户名，凭据默认用户名须显式采用
-- 完整主机公钥的首次核验 / 拒绝 / 变化阻断 / 重新核实；当前为离线录入，不发起 SSH
+- 完整主机公钥的首次核验 / 拒绝 / 变化阻断 / 重新核实，接入真实 SSH 握手
 - 支持设备认证的平台可短时查看密码，离开 / 后台 / 超时立即隐藏；Linux 无设备认证时拒绝查看
 
-SSH / TCP / 片段 / 电源（阶段 4），SolusVM 1/2（阶段 5），提醒 / 备份 / 移动分享（阶段 6）尚未实现。界面明确说明，未模拟成功。没有系统快照、最近使用或费用“接下来需要做什么”。
+- 原生 SSH 密码 / 私钥认证、xterm PTY 终端、窗口大小与特殊键、连接取消 / 超时 / 断线 / 手动重连
+- 加密私钥优先支持：导入时用口令本地校验，默认不保存口令；每次连接可临时输入，错误或取消不打开 SSH 连接。可明确选择把口令存入设备安全存储
+- 单目标 TCP 检测，标明本机来源 / 结束时间；连通不等于业务健康
+- 命令片段增改查删、完整转义预览；只插入独立草稿，明确确认目标与全部字节后才发送
+- 单机 SSH 重启 / 关机，经影响确认和完整目标二次核对；不开机、无 API 电源，不自动重试不确定结果
+
+SolusVM 1/2（阶段 5），提醒 / 备份 / 移动分享（阶段 6）尚未实现。界面明确说明，未模拟成功。没有系统快照、最近使用或费用“接下来需要做什么”。
 
 ## 环境与运行
 
@@ -38,7 +44,7 @@ Linux 需要 clang、CMake、Ninja、pkg-config、GTK 3 开发包、SQLite 运�
 ```sh
 dart format --output=none --set-exit-if-changed lib test
 flutter analyze
-flutter test
+VPS_SSH_FIXTURE_PYTHON="$PWD/.ssh-test-venv/bin/python" flutter test
 flutter build linux --release
 ```
 
@@ -49,10 +55,11 @@ Android / iOS 是真实 Flutter 工程，不是 Web 包装。当前没有验证�
 ## 代码结构与数据规则
 
 - `lib/core`：V6.2 视觉组件、纯 Dart 日期 / Money 值类型
-- `lib/data`：schema v3、真实 v1 / v2 升级迁移、SQLite 事务与平台打开方式
+- `lib/data`：schema v4、真实 v1 / v2 / v3 升级迁移、SQLite 事务与平台打开方式
 - `lib/servers`：本地字段模型、ChangeNotifier 控制器、列表 / 表单 / 详情
 - `lib/finance`：纯 Dart 财务 / FX、付款、计算器、白名单 PNG 导出
 - `lib/security`：凭据元数据与原生存储、密钥校验、设备认证、SSH 配置、完整主机信任
+- `lib/connections`：SSH 服务 / xterm、临时连接、单目标 TCP、片段 / 待发送区与电源确认
 - `lib/settings`：分组、归档、币种与手动汇率、能力说明
 - `lib/app.dart`：启动恢复状态和四 Tab；使用 Flutter Navigator
 
@@ -72,20 +79,43 @@ USD / CNY / EUR 金额使用整数分，0 是免费、null 是未知，不跨币
 
 数据库 `ledger.sqlite3` 位于平台的 application-support 目录，Linux 通常是 `$XDG_DATA_HOME/com.vpstellyou.vps_tell_you/`。应用没有遥测、自动上传或云同步。
 
-当前尚无备份导出。不要清除应用数据、卸载重装或删除数据库来“修复”。打不开时先检查磁盘空间、权限与应用版本，再点“重试打开”。较新 schema 会阻止旧应用打开，不执行破坏性降级。v1 → v2 → v3 事务迁移保留旧 ID、分组、归档及费用字段，只为可推断的预付资料建立初始服务期；不虚构历史实付或汇率。v2 → v3 只添加安全资料表，不读取或创建钥匙环。后续 schema 变更仍须增加事务迁移并验证旧数据。
+当前尚无备份导出。不要清除应用数据、卸载重装或删除数据库来“修复”。打不开时先检查磁盘空间、权限与应用版本，再点“重试打开”。较新 schema 会阻止旧应用打开，不执行破坏性降级。v1 → v2 → v3 → v4 事务迁移保留旧 ID、分组、归档及费用字段，只为可推断的预付资料建立初始服务期；不虚构历史实付或汇率。v2 → v3 只添加安全资料表，不读取或创建钥匙环；v3 → v4 只添加命令片段表。后续 schema 变更仍须增加事务迁移并验证旧数据。
 
 恢复开发：先读本文件、`docs/STATUS.md`、`docs/ACCEPTANCE.md` → 检查 `git status`、当前分支与远端 → 核对远端 SHA/CI → 执行分析与最小测试 → 从首个未通过项继续。不要自动 tag、强推或改变其他分支。
 
 不得提交真实密码、私钥、API Token、用户数据库或凭据文件。当前备注也不应存秘密。
 
-## 凭据安全与阶段 4 接入约束
+## 凭据安全与 SSH 连接
 
-直接依赖固定为 flutter_secure_storage 11.2.0、local_auth 3.0.2、dartssh2 4.1.0（当前只用于密钥解析 / 本地签名校验）、crypto 3.0.7、file_selector 1.1.0。支持单个 OpenSSH / PEM RSA、Ed25519、NIST P-256 / 384 / 521 私钥；格式、口令和私钥 / 公钥一致性均校验。限制文件大小和 bcrypt KDF 轮数（最多 256），解析放入 isolate；不支持的格式应先在用户设备上重新导出。
+直接依赖固定为 flutter_secure_storage 11.2.0、local_auth 3.0.2、dartssh2 4.1.0、xterm 4.0.0、crypto 3.0.7、file_selector 1.1.0。支持单个 OpenSSH / PEM RSA、Ed25519、NIST P-256 / 384 / 521 私钥；格式、口令和私钥 / 公钥一致性均校验。限制文件大小和 bcrypt KDF 轮数（最多 256），解析放入 isolate；不支持的格式应先在用户设备上重新导出。
 
 更换秘密采用可恢复顺序：先持久化未引用清理记录，再用新引用写入原生存储并读回验证，再事务提交元数据 / 引用，最后清理无引用旧秘密。跨 SQLite 与 OS 存储不是原子事务；故障时保留旧连接，遗留秘密可显式重试清理。原生操作超时后仍保持同引用串行，迟到写入不会越过清理。重读失败会保留已提交结果并阻止后续修改。
 
 查看密码需要设备验证，最多显示 20 秒。没有秘密复制 / 导出入口，私钥详情只展示公开指纹。设备认证是应用级查看门禁，不宣称把每项秘密与生物认证加密绑定；Dart 也不保证全内存安全擦除。Linux 已在隔离合成钥匙环验证实际插件读写、覆盖、应用进程重启后读回、删除与缺失，以及无服务时失败；Linux 不支持设备认证查看。
 
-主机信任按规范化 host + port 保存公钥类型、完整公钥和 SHA-256 指纹。变化不能直接继续认证；重新核实带版本 / generation 检查，旧弹窗不能覆盖删除后重建的信任。阶段 4 接入必须使用 beginHostVerification → 首次 / 变化时显式 attempt.confirm → attempt.authenticate，并在取消、离开或目标变化时取消 attempt；不能只查一次指纹后绕过该门禁。当前没有真实 SSH 握手 / 认证，协议级验证留阶段 4。
+主机信任按规范化 host + port 保存公钥类型、完整公钥和 SHA-256 指纹。变化不能直接继续认证；重新核实带版本 / generation 检查，旧弹窗不能覆盖删除后重建的信任。SSH 连接使用 beginHostVerification → 首次 / 变化时显式 attempt.confirm → attempt.authenticate，并在取消、离开或目标变化时取消 attempt；不能只查一次指纹后绕过该门禁。协议级回归使用仅监听 loopback 的独立 AsyncSSH fixture；只在内存中核验合成身份、回显输入，从不执行 shell / exec。
 
 Android 源码关闭数据备份 / 设备迁移、禁止秘密存储错误自动 reset，并配置设备认证和 FLAG_SECURE。iOS 使用解锁时可用、仅本机、不同步的 Keychain 选项，配置 entitlements 和 Face ID 文案。上述手机能力仅完成源码接线；签名、Keystore / Keychain、屏幕锁、Face ID / PIN、取消 / 锁定 / 后台和备份恢复均未做真机验证。不要把 Linux 通过当成手机通过。
+
+
+## SSH / TCP 使用边界与测试
+
+进入“工具 / SSH 快速连接”或服务器详情，明确选择单台配置并点连接。演示记录不能连接。主机信任未确认前发送零认证字节，私钥及其解密口令永不发到远端；私钥签名认证由 dartssh2 执行。秘密可在用户点连接后于本机读取 / 解密；本机读取不等于已向服务器认证。没有 SSH agent、批量连接、SFTP、端口转发或自动重连。
+
+加密私钥和登录密码是两种不同资料。导入时的私钥口令仅用于校验，默认不存储；只有勾选“在设备安全存储中保存私钥口令”才保存。未保存时连接弹出独立的隐藏输入框，本次口令取消 / 后台 / 离开 / 换目标即清空，重连重新输入。错误口令不发起网络连接；不会自动重试。已有保存口令的凭据仍兼容，重新导入可改变口令保存选择。完整 PEM 粘贴使用专门按钮保留换行，秘密字段始终隐藏；不把秘密放进终端草稿。
+
+dartssh2 的公开核验回调只返回 SHA-256 指纹。本应用仅观察首次 NEWKEYS 前的报文边界与完整公钥字段，以完整公钥 SHA-256 严格匹配库已验证握手签名的指纹；不改写报文、不自制加密、不禁用签名核验。观察器有 256 KiB 总量 / 64 KiB 报文 / 32 KiB 公钥 / 8 候选上限，不支持或无法绑定就拒绝。后续加密与 rekey 均由库处理并保持同一 pin。xterm 4.0.0 的 DECCKM 箭头映射有一处上游状态字段问题；小型公共 input handler 按 cursorKeysMode 处理无修饰箭头，其他输入全交回 xterm，不自写 ANSI 解析。
+
+终端键盘与特殊键直接发送；片段和下方草稿完全独立。预览标出 CR / LF / 控制字符 / bidi 字符，Send 再显示完整目标与实际内容，可明确追加 Enter。插入、取消、切换目标、断线或重连均不会自动发送草稿。发送后是否执行成功取决于远端，不能靠断线推断。电源只派发固定 `sudo -n shutdown -r now` 或 `sudo -n shutdown -h now`，需要服务器权限和命令存在；每次会话最多派发一次，测试只使用 spy，不实际重启或关闭机器。
+
+应用后台 / 退出会清理连接；后台常驻不受保证，长任务建议远端 tmux / screen。浏览器没有原生 TCP，不提供 SSH 中转后端。Android / iOS 键盘、IME、旋转、切网、后台与真实 VPS 兼容性仍须设备验证。
+
+完整自动测试需要独立本地 SSH fixture 的 Python 3.10+ 依赖。它不创建 OS 账户、authorized_keys 或实际访问权限：
+
+```sh
+python3 -m venv .ssh-test-venv
+.ssh-test-venv/bin/python -m pip install -r test/support/ssh_fixture/requirements.txt
+VPS_SSH_FIXTURE_PYTHON="$PWD/.ssh-test-venv/bin/python" flutter test
+```
+
+fixture 只绑定 loopback 临时端口，从不执行 shell / exec；依赖缺失会明确失败，不把跳过当通过。CI 安装同一固定 AsyncSSH 版本。所有 `.fixture` 私钥均为合成测试资料，不得用于真实访问。

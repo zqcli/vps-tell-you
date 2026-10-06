@@ -136,7 +136,7 @@ class SettingsPage extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              '阶段 3 · 凭据与主机信任',
+              '阶段 4 · SSH / TCP / 命令片段',
               style: TextStyle(fontWeight: FontWeight.w600),
             ),
             InfoNote(

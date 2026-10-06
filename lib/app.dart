@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 
 import 'core/app_theme.dart';
+import 'connections/connection_pages.dart';
+import 'connections/snippet_pages.dart';
+import 'connections/tcp_test_page.dart';
 import 'data/ledger_store.dart';
 import 'data/open_ledger.dart';
 import 'finance/finance_page.dart';
@@ -244,28 +247,35 @@ class ToolsPage extends StatelessWidget {
             SettingRow(
               icon: Icons.terminal,
               title: 'SSH 快速连接',
-              subtitle: '阶段 4 · 选择目标后进入终端',
-              onTap: () => showStage(
+              subtitle: '保存的服务器 / 临时目标 · 核验后连接',
+              onTap: () => Navigator.push<void>(
                 context,
-                'SSH 尚未接入',
-                '先完成凭据与主机信任，再提供真实 SSH 连接。当前没有网络连接。',
+                MaterialPageRoute(
+                  builder: (_) => SshConnectPage(ledger: controller),
+                ),
               ),
             ),
             const Divider(),
             SettingRow(
               icon: Icons.monitor_heart_outlined,
               title: 'TCP 连接测试',
-              subtitle: '阶段 4 · 检查单个端口',
-              onTap: () =>
-                  showStage(context, 'TCP 测试待实现', '当前不会发起测试或显示模拟连通结果。'),
+              subtitle: '从当前设备检查单个地址和端口',
+              onTap: () => Navigator.push<void>(
+                context,
+                MaterialPageRoute(builder: (_) => const TcpTestPage()),
+              ),
             ),
             const Divider(),
             SettingRow(
               icon: Icons.code,
               title: '命令片段',
-              subtitle: '阶段 4 · 预览后插入待发送区',
-              onTap: () =>
-                  showStage(context, '命令片段待实现', '片段将先进入待发送区，明确发送前不会向终端写入字节。'),
+              subtitle: '本地管理 / 预览 · 在终端插入独立草稿',
+              onTap: () => Navigator.push<void>(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => SnippetListPage(store: controller.store),
+                ),
+              ),
             ),
           ],
         ),
@@ -276,15 +286,17 @@ class ToolsPage extends StatelessWidget {
         child: SettingRow(
           icon: Icons.power_settings_new,
           title: '电源控制',
-          subtitle: '阶段 4 · SSH 单机确认操作',
-          onTap: () => showStage(
+          subtitle: 'SSH 重启 / 关机 · 单机两次确认',
+          onTap: () => Navigator.push<void>(
             context,
-            '电源控制尚未接入',
-            '当前不会执行电源操作。计划仅支持 SSH 重启和关机，不提供 API 电源控制或开机。',
+            MaterialPageRoute(
+              builder: (_) =>
+                  SshConnectPage(ledger: controller, powerMode: true),
+            ),
           ),
         ),
       ),
-      const InfoNote('后续能力在完成后开放，不提供批量命令或批量电源操作。'),
+      const InfoNote('SSH 不能为已关机主机开机。电源操作不改变账单；无批量操作。'),
     ],
   );
 }

@@ -1,0 +1,2 @@
+# Independent, real SSH protocol implementation. Install in an isolated venv.
+asyncssh==2.22.0

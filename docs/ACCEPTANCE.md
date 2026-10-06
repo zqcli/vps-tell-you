@@ -1,4 +1,4 @@
-# 阶段 1–3 验收
+# 阶段 1–4 验收
 
 日期：2026-10-06 UTC。SDK：Flutter 3.47.6 / Dart 3.13.5。
 
@@ -136,3 +136,53 @@ Android / iOS 安装、重启持久化、Android release；iOS Xcode 构建 / �
 ## 阶段 3 尚未验证
 
 Android / iOS 构建 / 签名 / 真机安装，Keychain / Keystore / 权限与备份恢复、Face ID / PIN / enrollment / lockout、手机后台及锁屏。Linux 的 keyring 锁定测试不能替代设备认证。当前没有真实 SSH 协议握手 / 身份认证；其主机-key 回调接入与端到端取消测试留阶段 4。Linux 不支持敏感内容设备认证查看，不能伪造验证成功。Dart 不保证全内存擦除，应用级设备认证也不等于每个秘密由生物认证密码学绑定。
+
+
+## 阶段 4 协议 / Widget / 安全回归（2026-10-06 UTC）
+
+本阶段全部网络验证仅限独立 AsyncSSH loopback fixture 与合成密钥。该 fixture 不调用 shell、不执行任何 exec、不配置系统账户 / authorized_keys / SSH agent。电源确认采用 spy，不重启或关闭任何机器。
+
+- 独立 AsyncSSH 2.22.0：密码成功 / 错误；加密 Ed25519 与未加密密钥；Ed25519 / RSA SHA2 / ECDSA 主机密钥的完整公钥绑定
+- 首次核验保持零认证字节、拒绝、已有正确 pin 无额外提示、changed pin 阻断、重新核实 CAS；新目标、取消 / dispose / verification timeout 后的旧弹窗不可认证
+- 私钥导入默认不存 passphrase，明确 opt-in 兼容保存口令；未保存口令正确 / 错误 / null / empty / cancelled / timed-out、每次重连重新询问、无持久化 / 日志 / draft / remote 泄漏
+- 密钥元数据与私钥不匹配、原生 envelope 畸形、秘密读取失败、凭据更新 / 迟到读取 / isolate 解析取消都 fail closed
+- 独立 review 代理破坏真实握手签名但保留完好公钥：用户核验回调为零、认证为零，不能因捕获到公钥而跳过签名
+- PTY 类型 / 初始尺寸 / resize / UTF-8 分片 / stderr / 双向字节；socket 退出、取消、握手 / 认证超时、手动重连无输入重放
+- 最后 64 KiB stdout + UTF-8 尾部 + stderr 随 channel / transport 关闭仍完整保留；额外重复 5 次通过
+- 有界公钥观察器：逐字节 / 不同分块，前置 banner，畸形 framing / padding / key length，aggregate / frame / key / candidate 大小限制，GEX 与 RSA signature-to-wire-type，NEWKEYS 后停止
+- TCP 真实 IPv4 与 IPv6 loopback 成功、refused，零应用载荷；synthetic timeout / cancel / late connect task / late socket，换目标与后台清理
+- 片段 SQLite v4 CRUD / 重启读回、CR / LF / NUL / 控制字符完整保存、revision 冲突、v3 迁移保留安全 / 财务資料；完整转义预览避免 bidi 掩盖字节
+- Widget Send 明确显示目标与完整内容，append Enter 需 opt-in；插入 / 编辑 / 取消 / 换目标 / 重连发送零字节；超长草稿受限
+- Power 两次确认、完整 escaped target 输入、重复提交 / 断线 / stale generation 不能再派发；无真实 power action
+- 私钥文件选择与专用粘贴入口保留 PEM 换行；内容隐藏、选择取消 / 迟到剪贴板与文件结果安全失效；导入 passphrase 默认不存 / 明确 opt-in 均经过界面测试
+- transient passphrase obscureText、禁自动填充 / 联想 / IME personalized learning，提交 / 取消 / 系统返回 / 后台 / 换目标清空；dialog 失效无法继续
+- xterm DECCKM cursor mode 的上游字段错误使用小型公共 handler 修正，special-key 控制字节与应用模式均覆盖；无自制 ANSI 解析
+- 390×844 / 2×文字终端、quick connect、片段、TCP 界面无布局异常；重复 pre-frame connect callback 只创建一个终端
+
+最终代码独立 Astra review APPROVE；format 60 文件 / 0 changes、analyze 无问题、全量 193 / 193、diff check、enforced offline lockfile、Linux release build 全通过。原生 UI 最终结果见下节；精确发布结果以 Git / Actions 核验。阶段 1–3 的手机未运行项继续有效；本阶段不把桌面通过换算成移动设备通过。
+
+
+## 阶段 4 原生 Linux 最终验收
+
+真实 release 和生产 NativeSecretStore，合成临时钥匙环；fixture 在桌面进程同一 loopback 命名空间运行。初次把 fixture 启动于 shell 工具所在独立命名空间时，native 127.0.0.1 连接明确失败；随后在原生 app 同侧启动相同只监听 loopback 的 fixture，未放宽监听或防火墙。
+
+- NativeSecretStore 保存加密私钥但不存 passphrase；真实进程重启仍提示本次私钥解密口令
+- 隐藏输入的错误口令 / 取消均失败并保持零网络连接；重新连接弹窗为空
+- 第一次完整主机身份拒绝：fixture 只有 connection / closed，无 auth_begin / password / public_key
+- 独立核对 fixture 完整 Ed25519 公钥后确认：真实 public_key valid、PTY xterm-256color、80×24 开启并 resize 到 91×21，xterm 中文“你好”和 stderr 正确显示
+- 插入含 LF / CR / Ctrl+C / literal backslash 的片段后与 Send 取消后，fixture input 事件为零；预览显示完整转义字节与唯一目标，append Enter 默认未选
+- 明确 Send 一次后 fixture 恰好收到 22 字节原文，无额外 Enter；草稿清空。Ctrl+C 和上箭头分别精确为 0x03 和 ESC [ A
+- 原生发现箭头标签缺字，已换为 Material icons + tooltip / semantic labels；输入行为未改，终端 Widget 23 / 23 与最终 release build 通过
+
+最终收尾已通过：
+
+- clean release 重建，确认字体 subset 含四个箭头 codepoint，真实窗口截图可见四方向 Material icons，tooltip / semantic label 正确
+- 原生 fixture 同 endpoint 改为 ECDSA：changed-pin 警告无忽略并连接入口；拒绝保持零 auth；独立重新核实完整公钥后才保存新 pin 并发送密码认证
+- 密码 valid / authenticated / PTY 成功；真正进程重启后正确 pin 持久，登录无需重复 host prompt；未存口令的加密密钥仍须每次询问
+- Native 键盘字母 / Enter 精确发送；Back 返回立即 session_closed / closed，无隐藏旧会话
+- TCP UI 对 loopback SSH 端口连接成功、相邻关闭端口被拒绝，准确显示本机来源 / 完成时间 / 目标；修改端口立即清除上次结果
+- 停止真实应用、专用 fixture 和 keyring daemon；临时 keyring home / data 移除，扫描运行日志及 QA SQLite 无合成密码、passphrase 或私钥标头
+
+证据位于本次验收环境 `vps-qa-stage4`：`screenshots/unsaved-key-prompt.jpg`、`host-before-auth.jpg`、`changed-host-blocked.jpg`、`full-byte-send-preview.jpg`、`final-native-terminal-icons.jpg`、`tcp-success.jpg` / `tcp-refused.jpg`；`logs/desktop-ssh-server.jsonl`、`clean-release-build.log` 与 `native-app.log`。截图 / 临时钥匙环不随源码提交。
+
+窗口管理器仍采用 1180×812；390px / 2×字体验收是 Widget 测试，未冒充手机真机。Android / iOS IME / 旋转 / 切网 / 后台、真实 VPS 与实际电源执行继续未运行。

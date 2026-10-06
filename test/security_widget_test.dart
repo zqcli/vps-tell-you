@@ -1,7 +1,9 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:vps_tell_you/core/app_theme.dart';
@@ -131,6 +133,69 @@ void main() {
     await tester.pumpAndSettle();
   }
 
+  for (final remember in [false, true]) {
+    testWidgets('encrypted import passphrase storage is explicit: $remember', (
+      tester,
+    ) async {
+      final key = File('test/fixtures/security/ed25519_encrypted.fixture')
+          .readAsStringSync();
+      await mount(
+        tester,
+        CredentialForm(
+          ledger: ledger,
+          kind: CredentialKind.privateKey,
+          pickKey: () async => key,
+        ),
+      );
+      await fill(tester, 'credential-name', 'Encrypted fixture');
+      if (remember) {
+        tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+          SystemChannels.platform,
+          (call) async =>
+              call.method == 'Clipboard.getData' ? {'text': key} : null,
+        );
+        addTearDown(
+          () => tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+            SystemChannels.platform,
+            null,
+          ),
+        );
+        await tap(tester, '粘贴完整私钥');
+      } else {
+        await tap(tester, '选择私钥文件');
+      }
+      await fill(tester, 'credential-passphrase', 'fixture-passphrase-only');
+      final option = find.byKey(const ValueKey('credential-save-passphrase'));
+      await tester.ensureVisible(option);
+      expect(tester.widget<CheckboxListTile>(option).value, isFalse);
+      if (remember) {
+        await tester.tap(option);
+        await tester.pump();
+      }
+      await tester.ensureVisible(find.text('保存凭据'));
+      await tester.runAsync(() async {
+        await tester.tap(find.text('保存凭据'));
+        // Key parsing is intentionally performed in an isolate. Poll metadata
+        // without pretending that fake widget time advances native work.
+        final deadline = DateTime.now().add(const Duration(seconds: 15));
+        while (security.credentials.isEmpty &&
+            DateTime.now().isBefore(deadline)) {
+          await Future<void>.delayed(const Duration(milliseconds: 25));
+        }
+      });
+      await tester.pumpAndSettle();
+      expect(security.credentials, hasLength(1), reason: security.error);
+      final encoded = await secrets.read(security.credentials.single.secretRef);
+      final envelope = jsonDecode(encoded!) as Map<String, dynamic>;
+      expect(envelope['secret'], key);
+      expect(
+        envelope['passphrase'],
+        remember ? 'fixture-passphrase-only' : isNull,
+      );
+      expect(tester.takeException(), isNull);
+    });
+  }
+
   testWidgets('password save uses native contract; search is metadata only', (
     tester,
   ) async {
@@ -222,15 +287,16 @@ void main() {
   testWidgets(
     'file chooser cancel keeps draft and late result after departure is ignored',
     (tester) async {
+      var picks = 0;
       await mount(
         tester,
         CredentialForm(
           ledger: ledger,
           kind: CredentialKind.privateKey,
-          pickKey: () async => null,
+          pickKey: () async => picks++ == 0 ? 'SYNTHETIC_KEY_DRAFT' : null,
         ),
       );
-      await fill(tester, 'credential-secret', 'SYNTHETIC_KEY_DRAFT');
+      await tap(tester, '选择私钥文件');
       await tap(tester, '选择私钥文件');
       expect(
         tester

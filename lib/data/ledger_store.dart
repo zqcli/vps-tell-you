@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:sqflite/sqflite.dart';
 
 import '../core/value_types.dart';
+import '../connections/snippet.dart';
 import '../servers/server_record.dart';
 import '../finance/finance_models.dart';
 import '../finance/finance_math.dart';
@@ -26,7 +27,7 @@ class LedgerStore {
   LedgerStore._(this._db, this.clock);
   final Database _db;
   final DateTime Function() clock;
-  static const schemaVersion = 3;
+  static const schemaVersion = 4;
 
   static Future<LedgerStore> open({
     required DatabaseFactory factory,
@@ -47,6 +48,7 @@ class LedgerStore {
           }
           if (oldVersion < 2) await _addFinanceSchema(db);
           if (oldVersion < 3) await _addSecuritySchema(db);
+          if (oldVersion < 4) await _addSnippetSchema(db);
         },
         onDowngrade: (db, oldVersion, newVersion) async {
           throw StateError('Newer ledger version; upgrade the app');
@@ -79,6 +81,7 @@ class LedgerStore {
     await db.execute('CREATE INDEX servers_archive ON servers(archived_at)');
     await _addFinanceSchema(db);
     await _addSecuritySchema(db);
+    await _addSnippetSchema(db);
   }
 
   Future<List<ServerRecord>> servers() async =>
@@ -995,6 +998,64 @@ class LedgerStore {
       ],
     );
     if (count != 1) throw const LedgerConflict();
+  }
+
+  static Future<void> _addSnippetSchema(DatabaseExecutor db) async {
+    await db.execute('''CREATE TABLE snippets (
+      id TEXT PRIMARY KEY, name TEXT NOT NULL, content TEXT NOT NULL,
+      revision INTEGER NOT NULL DEFAULT 0 CHECK(revision >= 0))''');
+  }
+
+  Future<List<CommandSnippet>> snippets() async => (await _db.query(
+    'snippets',
+    orderBy: 'name COLLATE NOCASE, id',
+  )).map(CommandSnippet.fromMap).toList(growable: false);
+
+  /// Returns the committed value without a fallible post-commit read. Content
+  /// is stored byte-for-byte as supplied, including CR, whitespace and controls.
+  Future<CommandSnippet> saveSnippet(
+    CommandSnippet snippet, {
+    required bool isNew,
+  }) async {
+    final error = snippet.validate();
+    if (error != null) throw ArgumentError(error);
+    final saved = CommandSnippet(
+      id: snippet.id,
+      name: snippet.name.trim(),
+      content: snippet.content,
+      revision: isNew ? 0 : snippet.revision + 1,
+    );
+    await _db.transaction((txn) async {
+      if (isNew) {
+        if ((await txn.query(
+          'snippets',
+          where: 'id = ?',
+          whereArgs: [saved.id],
+        )).isNotEmpty) {
+          throw const LedgerConflict();
+        }
+        await txn.insert('snippets', saved.toMap());
+      } else {
+        final map = saved.toMap()..remove('id');
+        final changed = await txn.update(
+          'snippets',
+          map,
+          where: 'id = ? AND revision = ?',
+          whereArgs: [saved.id, snippet.revision],
+        );
+        if (changed != 1) throw const LedgerConflict();
+      }
+    });
+    return saved;
+  }
+
+  Future<void> deleteSnippet(CommandSnippet snippet) async {
+    final changed = await _db.delete(
+      'snippets',
+      where: 'id = ? AND revision = ?',
+      whereArgs: [snippet.id, snippet.revision],
+    );
+    if (changed != 1) throw const LedgerConflict();
   }
 
   Future<void> close() => _db.close();

@@ -16,7 +16,7 @@ import 'package:dartssh2/src/hostkey/hostkey_rsa.dart';
 import 'host_trust.dart';
 import 'security_models.dart';
 
-/// Non-secret metadata only. Parsed private-key objects never leave this file.
+/// Non-secret import metadata.
 class KeyImportResult {
   const KeyImportResult({required this.algorithm, required this.fingerprint});
 
@@ -26,6 +26,17 @@ class KeyImportResult {
 
 /// Parses locally with dartssh2. No socket, agent, or authentication is created.
 KeyImportResult inspectPrivateKey(String privateKey, {String? passphrase}) {
+  final key = parseValidatedPrivateKey(privateKey, passphrase: passphrase);
+  return KeyImportResult(
+    algorithm: key.name,
+    fingerprint:
+        'SHA256:${base64Encode(sha256.convert(key.toPublicKey().encode()).bytes).replaceAll('=', '')}',
+  );
+}
+
+/// Used only for an explicitly initiated SSH attempt. Never persist or log
+/// this object; import and connection enforce the same bounded validation.
+SSHKeyPair parseValidatedPrivateKey(String privateKey, {String? passphrase}) {
   try {
     if (privateKey.isEmpty ||
         privateKey.length > 256 * 1024 ||
@@ -76,11 +87,7 @@ KeyImportResult inspectPrivateKey(String privateKey, {String? passphrase}) {
       publicKey: base64Encode(publicBytes),
     );
     _verifyPrivatePublicCorrespondence(key);
-    return KeyImportResult(
-      algorithm: key.name,
-      fingerprint:
-          'SHA256:${base64Encode(sha256.convert(publicBytes).bytes).replaceAll('=', '')}',
-    );
+    return key;
   } catch (_) {
     // Never surface parser exceptions: malformed PEM headers/comments can
     // contain secrets, and dependencies may put input bytes in their errors.

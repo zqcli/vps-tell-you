@@ -219,7 +219,7 @@ class _SecurityPageState extends State<SecurityPage> {
                     ),
                   ),
                   const InfoNote(
-                    '修改本地凭据不会修改远端密码或 authorized_keys。当前没有 SSH 网络连接。',
+                    '修改本地凭据不会修改远端密码或 authorized_keys。只有明确发起连接才会使用所选凭据。',
                   ),
                 ],
               ),
@@ -322,7 +322,12 @@ class _CredentialFormState extends State<CredentialForm>
   );
   final secret = TextEditingController();
   final passphrase = TextEditingController();
-  bool dirty = false, saving = false, picking = false, allowPop = false;
+  bool savePassphrase = false;
+  bool dirty = false,
+      saving = false,
+      picking = false,
+      pasting = false,
+      allowPop = false;
   int generation = 0;
   SecurityController get security => widget.ledger.security;
   @override
@@ -387,8 +392,31 @@ class _CredentialFormState extends State<CredentialForm>
     }
   }
 
+  Future<void> pasteKey() async {
+    final request = ++generation;
+    setState(() => pasting = true);
+    try {
+      final content = (await Clipboard.getData(Clipboard.kTextPlain))?.text;
+      if (!mounted || request != generation || content == null) return;
+      if (content.isEmpty || utf8.encode(content).length > 128 * 1024) {
+        throw const FormatException();
+      }
+      // Assign directly: Flutter's single-line obscured input formatter would
+      // otherwise remove PEM newlines from a normal keyboard/menu paste.
+      secret.text = content;
+      setState(() => dirty = true);
+      securityMessage(context, '已粘贴待保存的私钥；内容保持隐藏，保存时校验');
+    } catch (_) {
+      if (mounted && request == generation) {
+        securityMessage(context, '无法粘贴私钥。请复制不超过 128 KB 的完整私钥内容。');
+      }
+    } finally {
+      if (mounted) setState(() => pasting = false);
+    }
+  }
+
   Future<void> save() async {
-    if (saving || picking || !form.currentState!.validate()) return;
+    if (saving || picking || pasting || !form.currentState!.validate()) return;
     setState(() => saving = true);
     final saved = await security.saveCredential(
       existing: widget.existing,
@@ -399,6 +427,7 @@ class _CredentialFormState extends State<CredentialForm>
           ? null
           : secret.text,
       passphrase: passphrase.text,
+      savePassphrase: savePassphrase,
     );
     if (!mounted) return;
     setState(() => saving = false);
@@ -474,18 +503,27 @@ class _CredentialFormState extends State<CredentialForm>
               const SizedBox(height: 14),
               if (widget.kind == CredentialKind.privateKey) ...[
                 OutlinedButton.icon(
-                  onPressed: saving || picking ? null : import,
+                  onPressed: saving || picking || pasting ? null : import,
                   icon: const Icon(Icons.file_open_outlined),
                   label: Text(picking ? '选择文件中…' : '选择私钥文件'),
                 ),
+                OutlinedButton.icon(
+                  key: const ValueKey('credential-paste-key'),
+                  onPressed: saving || picking || pasting ? null : pasteKey,
+                  icon: const Icon(Icons.content_paste),
+                  label: const Text('粘贴完整私钥'),
+                ),
                 const InfoNote(
-                  '支持 OpenSSH / PEM 私钥。只读取所选文件，不保存文件路径。也可手动粘贴；内容默认隐藏。',
+                  '支持 OpenSSH / PEM 私钥。只读取所选文件，不保存文件路径。也可用“粘贴完整私钥”保留换行；内容始终隐藏。',
                 ),
               ],
               TextFormField(
                 key: const ValueKey('credential-secret'),
                 controller: secret,
-                enabled: !saving && !picking,
+                enabled: !saving && !picking && !pasting,
+                readOnly: widget.kind == CredentialKind.privateKey,
+                enableInteractiveSelection:
+                    widget.kind != CredentialKind.privateKey,
                 obscureText: true,
                 autocorrect: false,
                 enableSuggestions: false,
@@ -523,8 +561,23 @@ class _CredentialFormState extends State<CredentialForm>
                   autofillHints: const [],
                   decoration: const InputDecoration(
                     labelText: '私钥加密口令（如有）',
-                    helperText: '与私钥一起安全保存；更改口令须重新导入私钥',
+                    helperText: '用于本地解密校验，不是服务器登录密码。更改口令须重新导入私钥',
                     helperMaxLines: 3,
+                  ),
+                ),
+                CheckboxListTile(
+                  key: const ValueKey('credential-save-passphrase'),
+                  contentPadding: EdgeInsets.zero,
+                  value: savePassphrase,
+                  onChanged: saving
+                      ? null
+                      : (value) => setState(() {
+                          savePassphrase = value == true;
+                          dirty = true;
+                        }),
+                  title: const Text('在设备安全存储中保存私钥口令'),
+                  subtitle: const Text(
+                    '默认不保存。未保存时每次连接单独输入，取消或错误不会继续认证。仅在重新导入私钥时应用此选项。',
                   ),
                 ),
               ],
@@ -542,7 +595,11 @@ class _CredentialFormState extends State<CredentialForm>
               ],
               FilledButton(
                 onPressed:
-                    saving || picking || security.busy || security.needsReload
+                    saving ||
+                        picking ||
+                        pasting ||
+                        security.busy ||
+                        security.needsReload
                     ? null
                     : save,
                 child: Text(saving ? '保存中…' : '保存凭据'),

@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../core/app_theme.dart';
+import '../connections/connection_pages.dart';
+import '../connections/tcp_test_page.dart';
 import '../finance/calculator_page.dart';
 import '../finance/finance_math.dart';
 import '../finance/finance_widgets.dart';
@@ -234,7 +236,9 @@ class ServerDetail extends StatelessWidget {
                     '${controller.groupName(s.groupId)} · ${s.purpose.isEmpty ? '待补充' : s.purpose}',
                   ),
                   value('规格', s.spec),
-                  const InfoNote('未检测 · 本地记录\n尚未连接厂商 API 或 SSH，不能据此判断开机或业务健康。'),
+                  const InfoNote(
+                    '未检测 · 本地记录\n未接入厂商状态。SSH / TCP 连通性不能证明开机状态或业务健康。',
+                  ),
                 ],
               ),
             ),
@@ -380,7 +384,64 @@ class ServerDetail extends StatelessWidget {
                       ),
               ),
             ),
-            const InfoNote('当前仅保存配置与核验主机信任。SSH、TCP、命令片段和电源控制仍待阶段 4，不会发起网络连接。'),
+            const SizedBox(height: 12),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                FilledButton.icon(
+                  onPressed: s.archived || s.isDemo
+                      ? null
+                      : () => Navigator.push<void>(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => SshConnectPage(
+                              ledger: controller,
+                              initialServerId: s.id,
+                            ),
+                          ),
+                        ),
+                  icon: const Icon(Icons.terminal),
+                  label: const Text('连接 SSH'),
+                ),
+                OutlinedButton.icon(
+                  onPressed: s.archived || s.isDemo
+                      ? null
+                      : () => Navigator.push<void>(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => TcpTestPage(
+                              initialHost: s.host,
+                              initialPort:
+                                  controller.security.configFor(s.id)?.port ??
+                                  22,
+                            ),
+                          ),
+                        ),
+                  icon: const Icon(Icons.monitor_heart_outlined),
+                  label: const Text('TCP 测试'),
+                ),
+                OutlinedButton.icon(
+                  onPressed: s.archived || s.isDemo
+                      ? null
+                      : () => Navigator.push<void>(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => SshConnectPage(
+                              ledger: controller,
+                              initialServerId: s.id,
+                              powerMode: true,
+                            ),
+                          ),
+                        ),
+                  icon: const Icon(Icons.power_settings_new),
+                  label: const Text('单机电源'),
+                ),
+              ],
+            ),
+            const InfoNote(
+              '首次连接先核对完整主机身份；变化会阻断认证。电源操作仅支持 SSH 重启 / 关机，需两次确认，不改变厂商计费。',
+            ),
             if (s.notes.isNotEmpty) ...[
               const SectionTitle('备注'),
               LedgerCard(child: SelectableText(s.notes)),

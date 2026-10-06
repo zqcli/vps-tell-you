@@ -60,3 +60,7 @@ app.*.map.json
 *.p12
 *.keystore
 key.properties
+
+# Workspace-only protocol fixture dependencies.
+.ssh-test-venv/
+__pycache__/
