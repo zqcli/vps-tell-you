@@ -1,0 +1,344 @@
+import 'package:flutter/material.dart';
+
+import 'core/app_theme.dart';
+import 'data/ledger_store.dart';
+import 'data/open_ledger.dart';
+import 'servers/ledger_controller.dart';
+import 'servers/server_list.dart';
+import 'settings/settings_page.dart';
+
+class LedgerApp extends StatefulWidget {
+  const LedgerApp({super.key, this.openStore = openLedger});
+  final Future<LedgerStore> Function() openStore;
+  @override
+  State<LedgerApp> createState() => _LedgerAppState();
+}
+
+class _LedgerAppState extends State<LedgerApp> {
+  LedgerController? controller;
+  bool loading = true;
+  @override
+  void initState() {
+    super.initState();
+    load();
+  }
+
+  Future<void> load() async {
+    setState(() => loading = true);
+    LedgerStore? store;
+    try {
+      store = await widget.openStore();
+      final ready = LedgerController(store);
+      await ready.refresh();
+      if (!mounted) {
+        ready.dispose();
+        await store.close();
+        return;
+      }
+      setState(() {
+        controller = ready;
+        loading = false;
+      });
+    } catch (_) {
+      await store?.close();
+      if (mounted) setState(() => loading = false);
+    }
+  }
+
+  @override
+  void dispose() {
+    controller?.dispose();
+    controller?.store.close();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => MaterialApp(
+    title: 'vps tell you',
+    debugShowCheckedModeBanner: false,
+    theme: appTheme(),
+    builder: (context, child) => ColoredBox(
+      color: AppColors.canvas,
+      child: Align(
+        alignment: Alignment.topCenter,
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 760),
+          child: child!,
+        ),
+      ),
+    ),
+    home: controller != null
+        ? HomeShell(controller: controller!)
+        : Scaffold(
+            body: SafeArea(
+              child: Center(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(28),
+                  child: loading
+                      ? const CircularProgressIndicator()
+                      : Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(
+                              Icons.storage_outlined,
+                              size: 48,
+                              color: AppColors.blue,
+                            ),
+                            const SizedBox(height: 20),
+                            const Text(
+                              '无法打开本地台账',
+                              style: TextStyle(
+                                fontSize: 22,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+                            const Text(
+                              '原有数据库不会被删除或重建。请检查设备储存空间、文件权限，或恢复使用较新的应用版本后重试。',
+                              textAlign: TextAlign.center,
+                            ),
+                            const SizedBox(height: 24),
+                            FilledButton(
+                              onPressed: load,
+                              child: const Text('重试打开'),
+                            ),
+                            const InfoNote('请勿清除应用数据或卸载重装来尝试修复。'),
+                          ],
+                        ),
+                ),
+              ),
+            ),
+          ),
+  );
+}
+
+class HomeShell extends StatefulWidget {
+  const HomeShell({super.key, required this.controller});
+  final LedgerController controller;
+  @override
+  State<HomeShell> createState() => _HomeShellState();
+}
+
+class _HomeShellState extends State<HomeShell> {
+  int tab = 0;
+  @override
+  Widget build(BuildContext context) => ListenableBuilder(
+    listenable: widget.controller,
+    builder: (context, _) => Scaffold(
+      body: SafeArea(
+        bottom: false,
+        child: switch (tab) {
+          0 => ServerList(controller: widget.controller),
+          1 => const FinancePage(),
+          2 => const ToolsPage(),
+          _ => SettingsPage(controller: widget.controller),
+        },
+      ),
+      bottomNavigationBar: DecoratedBox(
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          border: Border(top: BorderSide(color: AppColors.line)),
+        ),
+        child: SafeArea(
+          top: false,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 8),
+            child: Row(
+              children: [
+                for (var i = 0; i < 4; i++)
+                  Expanded(
+                    child: Semantics(
+                      selected: tab == i,
+                      button: true,
+                      child: InkWell(
+                        key: ValueKey('tab-$i'),
+                        onTap: () => setState(() => tab = i),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(
+                            vertical: 6,
+                            horizontal: 2,
+                          ),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                [
+                                  Icons.dns_outlined,
+                                  Icons.bar_chart_rounded,
+                                  Icons.build_outlined,
+                                  Icons.settings_outlined,
+                                ][i],
+                                color: tab == i
+                                    ? AppColors.blue
+                                    : AppColors.muted,
+                                size: 23,
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                ['服务器', '费用', '工具', '设置'][i],
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: tab == i
+                                      ? FontWeight.w600
+                                      : FontWeight.normal,
+                                  color: tab == i
+                                      ? AppColors.blue
+                                      : AppColors.muted,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    ),
+  );
+}
+
+class FinancePage extends StatelessWidget {
+  const FinancePage({super.key});
+  @override
+  Widget build(BuildContext context) => ListView(
+    padding: const EdgeInsets.all(20),
+    children: [
+      const Text(
+        '费用',
+        style: TextStyle(fontSize: 28, fontWeight: FontWeight.w800),
+      ),
+      const SizedBox(height: 22),
+      Container(
+        padding: const EdgeInsets.all(22),
+        decoration: BoxDecoration(
+          color: const Color(0xFF1E355B),
+          borderRadius: BorderRadius.circular(17),
+        ),
+        child: const Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              '费用统计 · 阶段 2',
+              style: TextStyle(color: Color(0xFFC0CEE4), fontSize: 12),
+            ),
+            SizedBox(height: 16),
+            Text(
+              '原币资料，已经开始记录',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 23,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            SizedBox(height: 12),
+            Text(
+              '目前可在服务器详情编辑续费金额与服务期。费用合计、剩余价值与付款记录尚未实现。',
+              style: TextStyle(
+                color: Color(0xFFCAD5E7),
+                fontSize: 13,
+                height: 1.8,
+              ),
+            ),
+          ],
+        ),
+      ),
+      const SectionTitle('本阶段说明'),
+      const LedgerCard(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('未知金额不当作 0 元', style: TextStyle(fontWeight: FontWeight.w700)),
+            InfoNote('不同币种不会直接相加。尚未设置参考汇率，当前不显示估算合计或虚构付款。'),
+            Divider(),
+            SizedBox(height: 14),
+            Text('记录费用不等于付款', style: TextStyle(fontWeight: FontWeight.w700)),
+            InfoNote('本应用不会支付、续费或改变厂商的自动扣费设置。'),
+          ],
+        ),
+      ),
+    ],
+  );
+}
+
+class ToolsPage extends StatelessWidget {
+  const ToolsPage({super.key});
+  @override
+  Widget build(BuildContext context) => ListView(
+    padding: const EdgeInsets.all(20),
+    children: [
+      const Text(
+        '工具',
+        style: TextStyle(fontSize: 28, fontWeight: FontWeight.w800),
+      ),
+      const InfoNote('选择任务，再确认操作对象。'),
+      Container(
+        decoration: BoxDecoration(
+          color: AppColors.soft,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: const Color(0xFFDCE5FA)),
+        ),
+        child: SettingRow(
+          icon: Icons.calculate_outlined,
+          title: '剩余价值计算器',
+          subtitle: '阶段 2 · 独立试算与 PNG 分享',
+          onTap: () =>
+              showStage(context, '计算器待实现', '阶段 2 将提供独立和引用服务器的试算。当前不会生成试算结果。'),
+        ),
+      ),
+      const SectionTitle('连接与排障'),
+      LedgerCard(
+        padding: EdgeInsets.zero,
+        child: Column(
+          children: [
+            SettingRow(
+              icon: Icons.terminal,
+              title: 'SSH 快速连接',
+              subtitle: '阶段 4 · 选择目标后进入终端',
+              onTap: () => showStage(
+                context,
+                'SSH 尚未接入',
+                '先完成凭据与主机信任，再提供真实 SSH 连接。当前没有网络连接。',
+              ),
+            ),
+            const Divider(),
+            SettingRow(
+              icon: Icons.monitor_heart_outlined,
+              title: 'TCP 连接测试',
+              subtitle: '阶段 4 · 检查单个端口',
+              onTap: () =>
+                  showStage(context, 'TCP 测试待实现', '当前不会发起测试或显示模拟连通结果。'),
+            ),
+            const Divider(),
+            SettingRow(
+              icon: Icons.code,
+              title: '命令片段',
+              subtitle: '阶段 4 · 预览后插入待发送区',
+              onTap: () =>
+                  showStage(context, '命令片段待实现', '片段将先进入待发送区，明确发送前不会向终端写入字节。'),
+            ),
+          ],
+        ),
+      ),
+      const SectionTitle('单机维护'),
+      LedgerCard(
+        padding: EdgeInsets.zero,
+        child: SettingRow(
+          icon: Icons.power_settings_new,
+          title: '电源控制',
+          subtitle: '阶段 4 · SSH 单机确认操作',
+          onTap: () => showStage(
+            context,
+            '电源控制尚未接入',
+            '当前不会执行电源操作。计划仅支持 SSH 重启和关机，不提供 API 电源控制或开机。',
+          ),
+        ),
+      ),
+      const InfoNote('后续能力在完成后开放，不提供批量命令或批量电源操作。'),
+    ],
+  );
+}

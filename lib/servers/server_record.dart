@@ -1,0 +1,163 @@
+import 'dart:math';
+import 'dart:io';
+
+import '../core/value_types.dart';
+
+String newLocalId() {
+  final random = Random.secure();
+  return List.generate(
+    16,
+    (_) => random.nextInt(256).toRadixString(16).padLeft(2, '0'),
+  ).join();
+}
+
+enum BillingKind { unknown, prepaid, metered }
+
+class ServerGroup {
+  const ServerGroup({
+    required this.id,
+    required this.name,
+    required this.position,
+  });
+  final String id;
+  final String name;
+  final int position;
+  factory ServerGroup.fromMap(Map<String, Object?> row) => ServerGroup(
+    id: row['id'] as String,
+    name: row['name'] as String,
+    position: row['position'] as int,
+  );
+}
+
+/// Editable local ledger fields. Future provider observations must be separate;
+/// an API refresh must never replace this object with a provider response.
+class ServerRecord {
+  const ServerRecord({
+    required this.id,
+    required this.name,
+    required this.vendor,
+    required this.createdAt,
+    required this.updatedAt,
+    this.host = '',
+    this.region = '',
+    this.purpose = '',
+    this.os = '',
+    this.spec = '',
+    this.notes = '',
+    this.groupId,
+    this.favorite = false,
+    this.billing = BillingKind.unknown,
+    this.currency = 'USD',
+    this.amountMinor,
+    this.cycleMonths = 12,
+    this.startDate,
+    this.dueDate,
+    this.archivedAt,
+    this.revision = 0,
+    this.isDemo = false,
+  });
+  final String id, name, vendor, host, region, purpose, os, spec, notes;
+  final String? groupId;
+  final bool favorite, isDemo;
+  final BillingKind billing;
+  final String currency;
+  final int? amountMinor;
+  final int cycleMonths, revision;
+  final LedgerDate? startDate, dueDate;
+  final DateTime createdAt, updatedAt;
+  final DateTime? archivedAt;
+  bool get archived => archivedAt != null;
+  Money? get money =>
+      amountMinor == null ? null : Money(currency, amountMinor!);
+  String get mark => vendor.isEmpty
+      ? 'VPS'
+      : vendor.runes.take(2).map(String.fromCharCode).join().toUpperCase();
+  String get billingLabel => switch (billing) {
+    BillingKind.unknown => '费用未知',
+    BillingKind.metered => '${money?.formatted ?? '—'}/月估',
+    BillingKind.prepaid =>
+      '${money?.formatted ?? '—'}/${cycleMonths == 12 ? '年' : '$cycleMonths个月'}',
+  };
+  static bool validHost(String host) =>
+      host.isEmpty ||
+      InternetAddress.tryParse(host) != null ||
+      (host.length <= 253 &&
+          RegExp(
+            r'^(?:[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?)(?:\.[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?)*\.?$',
+          ).hasMatch(host));
+  String? validate() {
+    if (name.trim().isEmpty || name.length > 80) return '名称需为 1–80 个字符';
+    if (vendor.trim().isEmpty || vendor.length > 80) return '厂商需为 1–80 个字符';
+    if (!validHost(host)) return '请输入 IP 或域名，不含协议、端口、路径或用户名';
+    if (notes.length > 4000) return '备注最多 4000 个字符';
+    if (!Money.currencies.contains(currency)) return '不支持的币种';
+    if (billing != BillingKind.unknown &&
+        (amountMinor == null ||
+            amountMinor! < 0 ||
+            amountMinor! > Money.maxMinor)) {
+      return '请填写有效金额，0 表示免费';
+    }
+    if (![1, 3, 6, 12, 24, 36].contains(cycleMonths)) return '请选择有效周期';
+    if (startDate != null &&
+        dueDate != null &&
+        startDate!.compareTo(dueDate!) >= 0) {
+      return '到期日必须晚于开始日';
+    }
+    return null;
+  }
+
+  Map<String, Object?> toMap() => {
+    'id': id,
+    'name': name,
+    'vendor': vendor,
+    'host': host,
+    'region': region,
+    'purpose': purpose,
+    'os': os,
+    'spec': spec,
+    'notes': notes,
+    'group_id': groupId,
+    'favorite': favorite ? 1 : 0,
+    'billing': billing.name,
+    'currency': currency,
+    'amount_minor': amountMinor,
+    'cycle_months': cycleMonths,
+    'start_date': startDate?.toString(),
+    'due_date': dueDate?.toString(),
+    'archived_at': archivedAt?.toUtc().toIso8601String(),
+    'created_at': createdAt.toUtc().toIso8601String(),
+    'updated_at': updatedAt.toUtc().toIso8601String(),
+    'revision': revision,
+    'is_demo': isDemo ? 1 : 0,
+  };
+  factory ServerRecord.fromMap(Map<String, Object?> row) => ServerRecord(
+    id: row['id'] as String,
+    name: row['name'] as String,
+    vendor: row['vendor'] as String,
+    host: row['host'] as String,
+    region: row['region'] as String,
+    purpose: row['purpose'] as String,
+    os: row['os'] as String,
+    spec: row['spec'] as String,
+    notes: row['notes'] as String,
+    groupId: row['group_id'] as String?,
+    favorite: row['favorite'] == 1,
+    billing: BillingKind.values.byName(row['billing'] as String),
+    currency: row['currency'] as String,
+    amountMinor: row['amount_minor'] as int?,
+    cycleMonths: row['cycle_months'] as int,
+    startDate: row['start_date'] == null
+        ? null
+        : LedgerDate.tryParse(row['start_date'] as String),
+    dueDate: row['due_date'] == null
+        ? null
+        : LedgerDate.tryParse(row['due_date'] as String),
+    archivedAt: row['archived_at'] == null
+        ? null
+        : DateTime.parse(row['archived_at'] as String),
+    createdAt: DateTime.parse(row['created_at'] as String),
+    updatedAt: DateTime.parse(row['updated_at'] as String),
+    revision: row['revision'] as int? ?? 0,
+    isDemo: row['is_demo'] == 1,
+  );
+}
