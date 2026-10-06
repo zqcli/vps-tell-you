@@ -8,6 +8,7 @@ import 'finance/calculator_page.dart';
 import 'servers/ledger_controller.dart';
 import 'servers/server_list.dart';
 import 'settings/settings_page.dart';
+import 'security/security_pages.dart';
 
 class LedgerApp extends StatefulWidget {
   const LedgerApp({super.key, this.openStore = openLedger});
@@ -57,6 +58,7 @@ class _LedgerAppState extends State<LedgerApp> {
   @override
   Widget build(BuildContext context) => MaterialApp(
     title: 'vps tell you',
+    navigatorObservers: [securityRouteObserver],
     debugShowCheckedModeBanner: false,
     theme: appTheme(),
     builder: (context, child) => ColoredBox(

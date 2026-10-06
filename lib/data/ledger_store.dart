@@ -6,6 +6,7 @@ import '../core/value_types.dart';
 import '../servers/server_record.dart';
 import '../finance/finance_models.dart';
 import '../finance/finance_math.dart';
+import '../security/security_models.dart';
 
 class LedgerConflict implements Exception {
   const LedgerConflict();
@@ -25,7 +26,7 @@ class LedgerStore {
   LedgerStore._(this._db, this.clock);
   final Database _db;
   final DateTime Function() clock;
-  static const schemaVersion = 2;
+  static const schemaVersion = 3;
 
   static Future<LedgerStore> open({
     required DatabaseFactory factory,
@@ -39,11 +40,13 @@ class LedgerStore {
         onConfigure: (db) async => db.execute('PRAGMA foreign_keys = ON'),
         onCreate: (db, version) => createSchema(db),
         onUpgrade: (db, oldVersion, newVersion) async {
-          if (oldVersion == 1 && newVersion == 2) {
-            await _addFinanceSchema(db);
-          } else {
+          if (oldVersion < 1 ||
+              oldVersion > schemaVersion ||
+              newVersion != schemaVersion) {
             throw StateError('Unsupported ledger migration');
           }
+          if (oldVersion < 2) await _addFinanceSchema(db);
+          if (oldVersion < 3) await _addSecuritySchema(db);
         },
         onDowngrade: (db, oldVersion, newVersion) async {
           throw StateError('Newer ledger version; upgrade the app');
@@ -75,6 +78,7 @@ class LedgerStore {
     await db.execute('CREATE INDEX servers_group ON servers(group_id)');
     await db.execute('CREATE INDEX servers_archive ON servers(archived_at)');
     await _addFinanceSchema(db);
+    await _addSecuritySchema(db);
   }
 
   Future<List<ServerRecord>> servers() async =>
@@ -679,6 +683,318 @@ class LedgerStore {
         whereArgs: [id],
       );
     });
+  }
+
+  static Future<void> _addSecuritySchema(DatabaseExecutor db) async {
+    await db.execute('''CREATE TABLE credentials (
+      id TEXT PRIMARY KEY, name TEXT NOT NULL,
+      kind TEXT NOT NULL CHECK(kind IN ('password','privateKey')),
+      default_username TEXT NOT NULL DEFAULT '', secret_ref TEXT NOT NULL UNIQUE,
+      key_algorithm TEXT, fingerprint TEXT,
+      created_at TEXT NOT NULL, updated_at TEXT NOT NULL,
+      revision INTEGER NOT NULL DEFAULT 0)''');
+    await db.execute('''CREATE TABLE ssh_configurations (
+      server_id TEXT PRIMARY KEY REFERENCES servers(id) ON DELETE CASCADE,
+      host TEXT NOT NULL, port INTEGER NOT NULL CHECK(port BETWEEN 1 AND 65535),
+      username TEXT NOT NULL, credential_id TEXT REFERENCES credentials(id),
+      revision INTEGER NOT NULL DEFAULT 0)''');
+    await db.execute(
+      'CREATE INDEX ssh_credential ON ssh_configurations(credential_id)',
+    );
+    // Both pre-write reservations and superseded immutable references live here.
+    // No secret data is ever written into this recovery journal.
+    await db.execute('''CREATE TABLE secret_cleanup (
+      secret_ref TEXT PRIMARY KEY, created_at TEXT NOT NULL)''');
+    await db.execute('''CREATE TABLE host_trust (
+      generation TEXT NOT NULL UNIQUE, host TEXT NOT NULL, port INTEGER NOT NULL CHECK(port BETWEEN 1 AND 65535),
+      algorithm TEXT NOT NULL, public_key TEXT NOT NULL, fingerprint TEXT NOT NULL,
+      verified_at TEXT NOT NULL, revision INTEGER NOT NULL DEFAULT 0,
+      PRIMARY KEY(host, port))''');
+  }
+
+  Future<List<CredentialMetadata>> credentials() async => (await _db.query(
+    'credentials',
+    orderBy: 'name COLLATE NOCASE, id',
+  )).map(CredentialMetadata.fromMap).toList(growable: false);
+
+  Future<List<SshConfiguration>> sshConfigurations() async =>
+      (await _db.query('ssh_configurations'))
+          .map(SshConfiguration.fromMap)
+          .toList(growable: false);
+
+  Future<List<HostTrustRecord>> hostTrusts() async => (await _db.query(
+    'host_trust',
+    orderBy: 'host, port',
+  )).map(HostTrustRecord.fromMap).toList(growable: false);
+
+  Future<HostTrustRecord?> hostTrust(String host, int port) async {
+    final rows = await _db.query(
+      'host_trust',
+      where: 'host = ? AND port = ?',
+      whereArgs: [host, port],
+    );
+    return rows.isEmpty ? null : HostTrustRecord.fromMap(rows.single);
+  }
+
+  /// Must commit before native storage write. References are fresh and immutable.
+  Future<void> reserveSecret(String ref) async {
+    await _db.transaction((txn) async {
+      if ((await txn.query(
+        'credentials',
+        where: 'secret_ref = ?',
+        whereArgs: [ref],
+        limit: 1,
+      )).isNotEmpty) {
+        throw const LedgerConflict();
+      }
+      await txn.insert('secret_cleanup', {
+        'secret_ref': ref,
+        'created_at': clock().toUtc().toIso8601String(),
+      });
+    });
+  }
+
+  Future<List<String>> pendingSecretCleanup() async =>
+      (await _db.query('secret_cleanup'))
+          .map((row) => row['secret_ref'] as String)
+          .toList(growable: false);
+
+  Future<bool> secretIsReferenced(String ref) async => (await _db.query(
+    'credentials',
+    where: 'secret_ref = ?',
+    whereArgs: [ref],
+    limit: 1,
+  )).isNotEmpty;
+
+  Future<void> finishSecretCleanup(String ref) async {
+    await _db.delete(
+      'secret_cleanup',
+      where: 'secret_ref = ?',
+      whereArgs: [ref],
+    );
+  }
+
+  Future<void> saveCredential(
+    CredentialMetadata record, {
+    required int? expectedRevision,
+  }) async {
+    if (record.name.trim().isEmpty ||
+        record.name.length > 80 ||
+        record.defaultUsername.length > 128 ||
+        (record.kind == CredentialKind.password &&
+            record.defaultUsername.isEmpty) ||
+        record.secretRef.isEmpty) {
+      throw const SecurityFailure('凭据资料无效');
+    }
+    await _db.transaction((txn) async {
+      final rows = await txn.query(
+        'credentials',
+        where: 'id = ?',
+        whereArgs: [record.id],
+      );
+      final previous = rows.isEmpty
+          ? null
+          : CredentialMetadata.fromMap(rows.single);
+      if ((expectedRevision == null && previous != null) ||
+          (expectedRevision != null &&
+              previous?.revision != expectedRevision)) {
+        throw const LedgerConflict();
+      }
+      final changedRef = previous?.secretRef != record.secretRef;
+      if (changedRef &&
+          (await txn.query(
+            'secret_cleanup',
+            where: 'secret_ref = ?',
+            whereArgs: [record.secretRef],
+          )).isEmpty) {
+        throw const SecurityFailure('秘密写入未准备完成');
+      }
+      final map = record.toMap();
+      map['revision'] = expectedRevision == null ? 0 : expectedRevision + 1;
+      map['updated_at'] = clock().toUtc().toIso8601String();
+      if (previous == null) {
+        await txn.insert('credentials', map);
+      } else {
+        map.remove('id');
+        map.remove('created_at');
+        final count = await txn.update(
+          'credentials',
+          map,
+          where: 'id = ? AND revision = ?',
+          whereArgs: [record.id, expectedRevision],
+        );
+        if (count != 1) throw const LedgerConflict();
+      }
+      if (changedRef) {
+        await txn.delete(
+          'secret_cleanup',
+          where: 'secret_ref = ?',
+          whereArgs: [record.secretRef],
+        );
+        if (previous != null) {
+          await txn.insert('secret_cleanup', {
+            'secret_ref': previous.secretRef,
+            'created_at': clock().toUtc().toIso8601String(),
+          }, conflictAlgorithm: ConflictAlgorithm.ignore);
+        }
+      }
+    });
+  }
+
+  /// Replace or detach all references in the same metadata transaction. Explicit
+  /// usernames remain untouched, including those equal to an old default.
+  Future<void> deleteCredential(
+    CredentialMetadata record, {
+    String? replacementId,
+  }) async {
+    if (replacementId == record.id) throw const SecurityFailure('请选择另一份凭据');
+    await _db.transaction((txn) async {
+      final rows = await txn.query(
+        'credentials',
+        where: 'id = ? AND revision = ?',
+        whereArgs: [record.id, record.revision],
+      );
+      if (rows.length != 1) throw const LedgerConflict();
+      final current = CredentialMetadata.fromMap(rows.single);
+      if (replacementId != null &&
+          (await txn.query(
+            'credentials',
+            where: 'id = ?',
+            whereArgs: [replacementId],
+          )).isEmpty) {
+        throw const LedgerConflict();
+      }
+      await txn.rawUpdate(
+        '''UPDATE ssh_configurations
+          SET credential_id = ?, revision = revision + 1 WHERE credential_id = ?''',
+        [replacementId, record.id],
+      );
+      await txn.delete(
+        'credentials',
+        where: 'id = ? AND revision = ?',
+        whereArgs: [record.id, record.revision],
+      );
+      await txn.insert('secret_cleanup', {
+        'secret_ref': current.secretRef,
+        'created_at': clock().toUtc().toIso8601String(),
+      }, conflictAlgorithm: ConflictAlgorithm.ignore);
+    });
+  }
+
+  Future<void> saveSshConfiguration(SshConfiguration config) async {
+    if (config.host.isEmpty ||
+        !ServerRecord.validHost(config.host) ||
+        config.port < 1 ||
+        config.port > 65535 ||
+        config.username.trim().isEmpty ||
+        config.username.length > 128 ||
+        RegExp(r'[\x00-\x20\x7f]').hasMatch(config.username)) {
+      throw const SecurityFailure('请填写有效主机、端口和明确用户名');
+    }
+    await _db.transaction((txn) async {
+      if ((await txn.query(
+            'servers',
+            where: 'id = ?',
+            whereArgs: [config.serverId],
+          )).isEmpty ||
+          (config.credentialId != null &&
+              (await txn.query(
+                'credentials',
+                where: 'id = ?',
+                whereArgs: [config.credentialId],
+              )).isEmpty)) {
+        throw const LedgerConflict();
+      }
+      final map = config.toMap();
+      map['revision'] = config.revision + 1;
+      if (config.revision < 0) {
+        if ((await txn.query(
+          'ssh_configurations',
+          where: 'server_id = ?',
+          whereArgs: [config.serverId],
+        )).isNotEmpty) {
+          throw const LedgerConflict();
+        }
+        await txn.insert('ssh_configurations', map);
+      } else {
+        map.remove('server_id');
+        final count = await txn.update(
+          'ssh_configurations',
+          map,
+          where: 'server_id = ? AND revision = ?',
+          whereArgs: [config.serverId, config.revision],
+        );
+        if (count != 1) throw const LedgerConflict();
+      }
+    });
+  }
+
+  Future<void> saveHostTrust(
+    HostTrustRecord record, {
+    required HostTrustRecord? expected,
+    bool Function()? isCancelled,
+  }) async {
+    await _db.transaction((txn) async {
+      if (isCancelled?.call() ?? false) throw const SecurityFailure('核验已取消');
+      final rows = await txn.query(
+        'host_trust',
+        where: 'host = ? AND port = ?',
+        whereArgs: [record.host, record.port],
+      );
+      final previous = rows.isEmpty
+          ? null
+          : HostTrustRecord.fromMap(rows.single);
+      if ((expected == null && previous != null) ||
+          (expected != null &&
+              (previous == null || !_sameTrustSnapshot(previous, expected)))) {
+        throw const LedgerConflict();
+      }
+      if (isCancelled?.call() ?? false) throw const SecurityFailure('核验已取消');
+      final map = record.toMap();
+      map['generation'] = previous?.generation ?? newLocalId();
+      map['revision'] = previous == null ? 0 : previous.revision + 1;
+      if (previous == null) {
+        await txn.insert('host_trust', map);
+      } else {
+        await txn.update(
+          'host_trust',
+          map,
+          where: 'host = ? AND port = ?',
+          whereArgs: [record.host, record.port],
+        );
+      }
+      if (isCancelled?.call() ?? false) throw const SecurityFailure('核验已取消');
+    });
+  }
+
+  static bool _sameTrustSnapshot(HostTrustRecord a, HostTrustRecord b) =>
+      a.host == b.host &&
+      a.port == b.port &&
+      a.generation == b.generation &&
+      a.revision == b.revision &&
+      a.algorithm == b.algorithm &&
+      a.publicKey == b.publicKey &&
+      a.fingerprint == b.fingerprint &&
+      a.verifiedAt == b.verifiedAt;
+
+  Future<void> deleteHostTrust(HostTrustRecord record) async {
+    final count = await _db.delete(
+      'host_trust',
+      where:
+          'host = ? AND port = ? AND revision = ? AND generation = ? '
+          'AND algorithm = ? AND public_key = ? AND fingerprint = ? AND verified_at = ?',
+      whereArgs: [
+        record.host,
+        record.port,
+        record.revision,
+        record.generation,
+        record.algorithm,
+        record.publicKey,
+        record.fingerprint,
+        record.verifiedAt.toUtc().toIso8601String(),
+      ],
+    );
+    if (count != 1) throw const LedgerConflict();
   }
 
   Future<void> close() => _db.close();

@@ -6,6 +6,7 @@ import '../finance/calculator_page.dart';
 import '../finance/finance_math.dart';
 import '../finance/finance_widgets.dart';
 import '../finance/payment_pages.dart';
+import '../security/ssh_configuration_page.dart';
 import 'ledger_controller.dart';
 import 'refresh_failure_notice.dart';
 import 'server_form.dart';
@@ -360,20 +361,26 @@ class ServerDetail extends StatelessWidget {
               label: const Text('查看付款记录'),
             ),
             const SectionTitle('连接与控制'),
-            const LedgerCard(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'SSH 与 TCP 连接能力待接入',
-                    style: TextStyle(fontWeight: FontWeight.w600),
-                  ),
-                  InfoNote(
-                    '凭据与主机信任：阶段 3\nSSH、TCP、命令片段与单机电源：阶段 4\n当前版本不会连接或控制这台服务器。',
-                  ),
-                ],
+            LedgerCard(
+              padding: EdgeInsets.zero,
+              child: SettingRow(
+                icon: Icons.terminal,
+                title: 'SSH 连接配置',
+                subtitle: '地址、端口、用户名与凭据引用',
+                onTap: s.archived
+                    ? null
+                    : () => Navigator.push<void>(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => SshConfigurationPage(
+                            ledger: controller,
+                            serverId: s.id,
+                          ),
+                        ),
+                      ),
               ),
             ),
+            const InfoNote('当前仅保存配置与核验主机信任。SSH、TCP、命令片段和电源控制仍待阶段 4，不会发起网络连接。'),
             if (s.notes.isNotEmpty) ...[
               const SectionTitle('备注'),
               LedgerCard(child: SelectableText(s.notes)),

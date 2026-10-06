@@ -1,4 +1,4 @@
-# 阶段 1–2 验收
+# 阶段 1–3 验收
 
 日期：2026-10-06 UTC。SDK：Flutter 3.47.6 / Dart 3.13.5。
 
@@ -51,7 +51,7 @@
 - 非阻塞警告：checkout v4 的 Node20 运行时被 GitHub runner 替换为 Node24；后续可更新 action
 - 此后补充发布文档的提交不改变源码；当前分支最终 SHA / CI 应从 Git 与 Actions 实时核实
 
-## 手机与后续能力未运行
+## 阶段 1 当时未运行的手机与后续能力
 
 Android / iOS 安装、重启持久化、Android release；iOS Xcode 构建 / 签名；原生安全存储、SSH、API、通知投递、PNG 分享。当前阶段未实现这些能力，未把占位说明算通过。
 
@@ -96,3 +96,43 @@ Android / iOS 安装、重启持久化、Android release；iOS Xcode 构建 / �
 ## 阶段 2 平台边界
 
 原生手机 share sheet、Android / iOS 编译与安装均未运行。付款只记本地已支付事实，不产生真实交易。真实秘密、SSH / API、通知与设备生物认证仍属于后续阶段；本阶段未将这些占位算作成功。
+
+
+## 阶段 3 自动回归（2026-10-06 UTC）
+
+最终 104 项测试全部通过，包含前两阶段 40 项回归。独立 Astra review APPROVE，并独立重跑 format / lockfile / analyze / tests / diff check；最终 Linux release 构建通过。
+
+- 真实 v2 / v1 升级和关闭重开，保留服务器 / 财务 / ID；SQLite 只存安全元数据、公钥和引用
+- SecretStore 写入失败、读回不一致、SQL 提交失败、成功后读取失败、部分写入、迟到写入、清理失败、恢复重试与引用保护
+- 多个 SSH 引用、替换 / 解除 / 删除影响，用户名独立且默认值必须显式采用，归档记录仍计入影响
+- 合成 RSA、Ed25519、加密 OpenSSH、P-256 / 384 / 521 fixtures：格式、错误口令、完整解析、指纹、私钥 / 公钥配对、本地 sign/verify 和 KDF 工作量限制
+- 主机规范化、host + port、算法 / 完整公钥；首次核验、拒绝、变化阻断、明确 reverify、取消不调用认证，旧信任删除重建后的 ABA 防护
+- 认证取消 / 失败 / 无能力不读取秘密；20 秒隐藏、后台隐藏、返回动画 / 路由覆盖 / 延迟元数据读取中取消，迟到文件选择不复活秘密
+- 系统文件选择取消；表单保存失败保留可重试状态，错误不包含注入的秘密；删除默认不勾选
+- 390×844 / 2×文字覆盖安全相关九个页面，无 Flutter overflow
+- Android resetOnError=false、数据备份 / 设备迁移排除、认证 Activity / 主题 / FLAG_SECURE 与 iOS Keychain 配置仅静态源码审查
+
+## 阶段 3 已验证的 Linux 原生 GUI 与安全存储
+
+使用独立合成 QA 台账和经批准的临时 GNOME Keyring，真实 release bundle，窗口 1180×812。只使用保留地址和不会赋予实际访问的测试密钥。没有用户真实凭据、SSH / API 请求或生产资源。
+
+- 实际 flutter_secure_storage / NativeSecretStore：写入、读回、覆盖、新应用进程读回、删除、缺失全部通过。无 Secret Service 明确失败；专用测试 keyring Locked=true 且无交互解锁服务时写入返回 KeyringLocked。两者均无 reset / 明文 fallback
+- v2 → v3 原生启动保留两台服务器、两笔付款和一个服务期；host-trust generation 列存在
+- 真正新增密码，SQLite 只出现元数据和新 secret reference；搜索无匹配 / 默认用户名及密钥分类正确
+- 密码详情默认隐藏，Linux 点击设备验证明确提示不支持并保持隐藏；脏编辑放弃后原名保留
+- 系统文件选择器取消保留名称 / 用户名草稿；导入加密 Ed25519，错误口令明确失败，正确合成口令保存并得到预期完整 SHA-256 指纹
+- qa-one 明确保留 admin，a-qa 明确采用 ubuntu；两台引用同一密码。SSH 地址与台账分离，不覆写手工 host
+- 更新密码和默认用户名 root 后，两台实际用户名仍为 admin / ubuntu；secret reference 更新，清理队列 0
+- 删除共享密码时展示两台影响；明确替换为私钥后，两台引用一起切换，用户名 / 台账 / 付款保留，旧秘密清理队列 0
+- 主机首次核验拒绝后 SQLite 无 pin；确认保存 Ed25519 后，录入不同 ECDSA 完整公钥明确显示变化阻断和新旧完整指纹。拒绝不覆盖；点击独立重新核实并确认后才更新 pin / revision
+- 真正退出应用并核实窗口消失；最终 release 重启后凭据元数据 / 两个引用 / ECDSA 完整主机信任及时间保留。全公钥展开无裁剪
+- 最终精确源码 release 再启动后，在无 Secret Service 的原生 UI 保存密码明确失败，凭据数保持 0，仅保留可恢复的不透明清理记录；没有明文回退。重启后最后一项测试私钥的删除 / 解除也保留两台用户名与账务
+- QA SQLite 与普通运行日志未发现测试密码、更新密码、加密私钥口令或 PRIVATE KEY 头。此检查不宣称清除了运行时输入或 Dart 内存
+
+测试结束已停止专用 keyring daemon 并移除临时钥匙环 / HOME 和复制的导入文件，保留无秘密的 QA 台账、日志与截图。
+
+隔离测试 bus 有意不激活普通桌面服务，文件选择器产生的 dconf 服务不可用警告不影响导入；未为此修改系统设置。截图、运行日志和 QA 数据库仅保留于执行环境，不随源码发布。真实 secure-store 证据来自插件 release probe 与 app 原生操作，mock 合同测试未冒充原生验证。
+
+## 阶段 3 尚未验证
+
+Android / iOS 构建 / 签名 / 真机安装，Keychain / Keystore / 权限与备份恢复、Face ID / PIN / enrollment / lockout、手机后台及锁屏。Linux 的 keyring 锁定测试不能替代设备认证。当前没有真实 SSH 协议握手 / 身份认证；其主机-key 回调接入与端到端取消测试留阶段 4。Linux 不支持敏感内容设备认证查看，不能伪造验证成功。Dart 不保证全内存擦除，应用级设备认证也不等于每个秘密由生物认证密码学绑定。

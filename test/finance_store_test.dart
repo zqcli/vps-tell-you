@@ -151,7 +151,7 @@ void main() {
     expect(fx.usdToCny, isNull);
     expect(fx.eurToCny, isNull);
     expect(fx.rateDate, isNull);
-    expect(await (await raw()).getVersion(), 2);
+    expect(await (await raw()).getVersion(), LedgerStore.schemaVersion);
   });
 
   test('advance two-period payment commits once under double submit, reopen retry and stale competing key', () async {

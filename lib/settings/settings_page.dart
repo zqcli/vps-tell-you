@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../core/app_theme.dart';
 import '../data/ledger_store.dart';
 import '../finance/fx_page.dart';
+import '../security/security_pages.dart';
 import '../servers/ledger_controller.dart';
 import '../servers/refresh_failure_notice.dart';
 import '../servers/server_record.dart';
@@ -94,11 +95,12 @@ class SettingsPage extends StatelessWidget {
             SettingRow(
               icon: Icons.shield_outlined,
               title: '密钥与安全',
-              subtitle: '凭据与主机信任 · 阶段 3',
-              onTap: () => showStage(
+              subtitle: '凭据、SSH 配置与主机信任',
+              onTap: () => Navigator.push<void>(
                 context,
-                '凭据库尚未接入',
-                '当前版本不保存密码、私钥或令牌。原生安全存储与主机信任将在阶段 3 提供。',
+                MaterialPageRoute(
+                  builder: (_) => SecurityPage(ledger: controller),
+                ),
               ),
             ),
             const Divider(),
@@ -134,7 +136,7 @@ class SettingsPage extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              '阶段 2 · 费用、付款与试算',
+              '阶段 3 · 凭据与主机信任',
               style: TextStyle(fontWeight: FontWeight.w600),
             ),
             InfoNote(
@@ -144,53 +146,6 @@ class SettingsPage extends StatelessWidget {
         ),
       ),
     ],
-  );
-}
-
-class SettingRow extends StatelessWidget {
-  const SettingRow({
-    super.key,
-    required this.icon,
-    required this.title,
-    required this.subtitle,
-    required this.onTap,
-  });
-  final IconData icon;
-  final String title, subtitle;
-  final VoidCallback onTap;
-  @override
-  Widget build(BuildContext context) => InkWell(
-    onTap: onTap,
-    child: Padding(
-      padding: const EdgeInsets.all(16),
-      child: Row(
-        children: [
-          Icon(icon, size: 23, color: AppColors.blue),
-          const SizedBox(width: 13),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  subtitle,
-                  style: const TextStyle(fontSize: 11, color: AppColors.muted),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(width: 6),
-          const Icon(Icons.chevron_right, size: 18, color: AppColors.muted),
-        ],
-      ),
-    ),
   );
 }
 

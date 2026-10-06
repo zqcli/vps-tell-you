@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import '../core/value_types.dart';
 import '../data/ledger_store.dart';
 import '../finance/finance_models.dart';
+import '../security/security_controller.dart';
 import 'server_record.dart';
 
 enum ServerFilter { all, favorites, pending }
@@ -12,8 +13,20 @@ enum DueFilter { all, overdue, next30, unknown }
 enum ServerSort { favorites, due, name, updated }
 
 class LedgerController extends ChangeNotifier {
-  LedgerController(this.store, {DateTime Function()? clock})
-    : clock = clock ?? DateTime.now;
+  LedgerController(
+    this.store, {
+    DateTime Function()? clock,
+    SecurityController? security,
+  }) : clock = clock ?? DateTime.now,
+       security = security ?? SecurityController(store: store);
+  final SecurityController security;
+
+  @override
+  void dispose() {
+    security.dispose();
+    super.dispose();
+  }
+
   final LedgerStore store;
   final DateTime Function() clock;
   List<ServerRecord> records = [];
