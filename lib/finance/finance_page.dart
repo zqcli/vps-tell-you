@@ -8,6 +8,7 @@ import '../servers/ledger_controller.dart';
 import '../servers/refresh_failure_notice.dart';
 import '../servers/server_detail.dart';
 import '../servers/server_record.dart';
+import 'calculator_page.dart';
 import 'finance_math.dart';
 import 'finance_models.dart';
 import 'finance_widgets.dart';
@@ -54,6 +55,23 @@ class FinancePage extends StatefulWidget {
 class _FinancePageState extends State<FinancePage> {
   String? groupId;
   bool byVendor = true;
+  bool calculatorOpen = false;
+
+  Future<void> openCalculator() async {
+    if (calculatorOpen) return;
+    calculatorOpen = true;
+    try {
+      await Navigator.push<void>(
+        context,
+        MaterialPageRoute(
+          builder: (_) => CalculatorPage(controller: widget.controller),
+        ),
+      );
+    } finally {
+      calculatorOpen = false;
+    }
+  }
+
   void detail(
     FinanceMetric metric, {
     String? vendor,
@@ -256,6 +274,20 @@ class _FinancePageState extends State<FinancePage> {
             ),
           ),
           const SizedBox(height: 14),
+          LedgerCard(
+            key: const ValueKey('finance-calculator-entry'),
+            padding: EdgeInsets.zero,
+            child: Semantics(
+              button: true,
+              child: SettingRow(
+                icon: Icons.calculate_outlined,
+                title: context.l10n.remainingValueCalculator,
+                subtitle: context.l10n.calculatorDescription,
+                onTap: openCalculator,
+              ),
+            ),
+          ),
+          const SizedBox(height: 12),
           _MetricCard(
             title: context.l10n.financeUpcomingRenewals,
             total: renewals,
