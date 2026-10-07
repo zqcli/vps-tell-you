@@ -498,7 +498,7 @@ Android / iOS 实机安装重启、设备安全存储/设备认证、真实通�
 - `flutter build ios --simulator --debug --no-codesign`：退出码 0，Xcode build 68.3 秒；保留既有 Swift Package Manager 配置，无需新增 Podfile 或改 deployment target。
 - 产物 `build/ios/iphonesimulator/Runner.app`；Info.plist 确认 bundle ID `com.vpstellyou.vpsTellYou`、版本 `0.1.0`、build `1`，`file Runner` 确认 x86_64 / arm64 双架构。仅为 Debug 模拟器包，不是签名真机或发布候选。
 
-### 未完成：模拟器启动与实际预览
+### 前次未完成：模拟器启动与实际预览
 
 目标设备：iPhone 17 Pro，ID `223AB863-E585-4BF6-8777-5A90F000CB3A`。`simctl` 可列出设备和运行时，但启动多次超时，设备仍为 Shutdown，尚未安装或运行应用，也没有模拟器截图。
 
@@ -511,4 +511,19 @@ SimRenderServer/MetalDeviceDescriptor.swift:40: Fatal error: Attempt to initiali
 
 同期 kernel 记录 `stalling for detach from AMDRadeonX6000_AMDNavi23GraphicsAccelerator`。崩溃报告为本机 `~/Library/Logs/DiagnosticReports/SimRenderServer-2026-10-07-215049.ips`，进程为 Apple `SimRenderServer`，不是 App。已确认 CoreSimulator 从 PID 1058 重启至 PID 94225；22:14:46（UTC+8）新 `SimRenderServer` 仍出现同一 Metal 初始化崩溃。证据指向宿主 GPU / Metal 链路异常，但底层驱动故障的具体原因尚未证明。
 
-未删除/重建模拟器、未清除应用数据或降低项目约束，未改业务源码、未访问真实用户台账、秘密、SSH 或 API。没有自动重启 Mac。后续先保存工作并恢复本机 GPU / Metal 状态（系统重启是待验证的恢复候选），再按 README 命令启动模拟器并运行应用；不要将本次编译成功写成安装、实际预览或真机能力通过。
+未删除/重建模拟器、未清除应用数据或降低项目约束，未改业务源码、未访问真实用户台账、秘密、SSH 或 API。没有自动重启 Mac。当时的下一步是先恢复本机 GPU / Metal 状态，再运行模拟器；后续结果如下，不将前次编译成功写成前次安装或预览通过。
+
+### 重启后实际安装与启动（2026-10-08，UTC+8）
+
+用户自行重启 Mac 后，于 06:27–06:29 继续验证，代码基于 `ca2c2b8`，工作区及暂存区干净。保留相同的 Xcode 26.2、Flutter 3.47.6 / Dart 3.13.5、iOS 26.2 / 23C54 和上述 iPhone 17 Pro 设备 ID，未切换渲染模式。
+
+- 独立 Swift 原生检测显式链接 CoreGraphics，`MTLCopyAllDevices()` 返回 **1** 个设备，`MTLCreateSystemDefaultDevice()` 非 nil，`makeCommandQueue()` 成功。重启前相同检测为 0 / nil，说明 Metal 设备访问已恢复。
+- `xcrun simctl boot … --arch=x86_64` 和 `bootstatus … -b` 均退出码 0，启动约 **15 秒**；打开真实 Simulator 窗口。
+- `flutter pub get --enforce-lockfile` 与 `flutter build ios --simulator --debug --no-codesign --no-pub` 均退出码 0，Xcode build **10.4 秒**。产物仍为 `build/ios/iphonesimulator/Runner.app`，bundle ID `com.vpstellyou.vpsTellYou`，版本 0.1.0+1。
+- `simctl install` 和 `simctl launch` 均成功，启动进程 PID 2395，后续进程查询仍在运行；Simulator 状态为 Booted。
+- `simctl io … screenshot` 成功，真实截图 **1206×2622**，已实际查看：中文空台账首页、添加 / 面板导入 / 演示入口、服务器 / 费用 / 工具 / 设置导航项显示正常，没有台账打开失败或 Flutter 错误页面。未点击演示加载、未录入任何服务器或秘密。
+- 截图与启动日志留在被 Git 忽略的 `build/ios-simulator-preview/`：`home.png`、`stdout.log`、`stderr.log`。stderr 有一条系统 restoration marker 警告，未阻止首页显示；启动后的定向日志查询未发现 `SimRenderServer` 的 Metal fatal / IOAccelDevice 错误。
+
+本次未修改业务源码或锁文件，仅更新运行记录；未重复执行上次通过的 Widget 测试。App 和模拟器保留供用户操作。以上只证明构建、安装、启动和首屏显示，不代表四 Tab 点击、写入持久化、真实 SSH / API、Keychain / Face ID、通知、系统分享、后台或真机验收通过。
+
+同一 Xcode / iOS / App 在恢复 Metal 后正常启动，排除了“必须降级这些版本才能启动本项目”的判断；此前的直接阻碍是宿主当时无法提供 Metal 设备。驱动异常的底层诱因仍未确定，不将一次重启恢复解释为已永久修复。

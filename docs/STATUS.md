@@ -3,7 +3,19 @@
 更新：2026-10-07 UTC
 
 
-## 当前接手：macOS iOS 模拟器编译
+## 当前接手：iOS 模拟器已安装并启动
+
+2026-10-08 06:28（UTC+8），用户重启 Mac 后继续验证，源码基于 `ca2c2b8`（业务源码未变）。
+
+- 原生 Metal 检测从 0 个设备 / 默认 nil 恢复为 1 个 GPU，创建命令队列成功；渲染策略保持默认。
+- 未降级 Xcode 或切换 iOS：原 iPhone 17 Pro / iOS 26.2 在约 15 秒内启动完成。
+- 固定锁文件解析及 `flutter build ios --simulator --debug --no-codesign --no-pub` 成功，Xcode 构建 10.4 秒；`simctl install` / `launch` 成功，版本 0.1.0+1。
+- 真实模拟器截图确认中文空台账首页、添加 / 导入 / 演示入口及四个底部导航项显示正常；没有自动载入演示数据。App 和模拟器保留运行，截图为本机 `build/ios-simulator-preview/home.png`。
+- 本次只验证构建、安装、启动与首页显示，没有把之前的 12 项 Widget 测试算作本次原生交互测试；真机认证、通知、分享、SSH 等仍需专门验收。
+
+之前的直接阻碍已随宿主重启消失，不是本项目必须降级 Xcode / iOS 的证据。更底层的驱动异常成因尚未确定；详细记录见 ACCEPTANCE。
+
+## 前次接手：macOS iOS 模拟器编译
 
 基于 `61cacb36dc5528de5c6d15e631970a1fc42dd0c7`，在 Intel macOS 15.7.3 / Xcode 26.2 使用独立 Flutter 3.47.6 / Dart 3.13.5 SDK，未覆盖本机原有 Flutter 3.41.2。
 
