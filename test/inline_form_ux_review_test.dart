@@ -211,7 +211,14 @@ void main() {
         isNull,
       );
       expect(
-        tester.widget<DropdownButtonFormField<int>>(cycle()).onChanged,
+        tester
+            .widget<DropdownButton<int>>(
+              find.descendant(
+                of: cycle(),
+                matching: find.byType(DropdownButton<int>),
+              ),
+            )
+            .onChanged,
         isNull,
       );
       for (final key in ['field-start', 'field-due']) {
@@ -269,7 +276,14 @@ void main() {
         'EUR',
       );
       expect(
-        tester.widget<DropdownButtonFormField<int>>(cycle()).initialValue,
+        tester
+            .widget<DropdownButton<int>>(
+              find.descendant(
+                of: cycle(),
+                matching: find.byType(DropdownButton<int>),
+              ),
+            )
+            .value,
         3,
       );
       await tester.tap(find.text('保存服务器'));

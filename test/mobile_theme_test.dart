@@ -11,6 +11,7 @@ import 'package:vps_tell_you/cloud/cloud_pages.dart';
 import 'package:vps_tell_you/cloud/cloud_widgets.dart';
 import 'package:vps_tell_you/connections/ssh_service.dart';
 import 'package:vps_tell_you/connections/terminal_page.dart';
+import 'package:vps_tell_you/connections/terminal_widgets.dart';
 import 'package:vps_tell_you/core/app_theme.dart';
 import 'package:vps_tell_you/data/ledger_store.dart';
 import 'package:vps_tell_you/finance/finance_page.dart';
@@ -405,7 +406,7 @@ void main() {
                 final terminal = tester.widget<TerminalView>(
                   find.byType(TerminalView),
                 );
-                expect(terminal.theme, TerminalThemes.defaultTheme);
+                expect(terminal.theme, mobileTerminalTheme);
                 expect(
                   terminal.theme.background.computeLuminance(),
                   lessThan(.1),

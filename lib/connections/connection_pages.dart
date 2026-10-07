@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../core/app_theme.dart';
+import '../core/app_viewport.dart';
 import '../security/host_trust.dart';
 import '../security/security_pages.dart';
 import '../security/ssh_configuration_page.dart';
@@ -89,6 +90,7 @@ class _SshConnectPageState extends State<SshConnectPage> {
       await Navigator.push<void>(
         context,
         MaterialPageRoute(
+          settings: const RouteSettings(name: sshTerminalRouteName),
           builder: (_) => TerminalPage(
             ledger: widget.ledger,
             target: target,

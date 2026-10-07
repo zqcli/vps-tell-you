@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:xterm/xterm.dart';
@@ -199,27 +200,69 @@ void main() {
     await tester.pumpAndSettle();
   }
 
+  Future<void> openCommands(WidgetTester tester) async {
+    if (find.byKey(const ValueKey('terminal-draft')).evaluate().isNotEmpty) {
+      return;
+    }
+    await tester.tap(find.byKey(const ValueKey('terminal-commands')));
+    await tester.pumpAndSettle();
+  }
+
+  Future<void> closeCommands(WidgetTester tester) async {
+    if (find
+        .byKey(const ValueKey('terminal-commands-close'))
+        .evaluate()
+        .isEmpty) {
+      return;
+    }
+    await tester.tap(find.byKey(const ValueKey('terminal-commands-close')));
+    await tester.pumpAndSettle();
+  }
+
   Future<void> tap(WidgetTester tester, Finder finder) async {
+    final description = finder.describeMatch(Plurality.many);
+    if (finder.evaluate().isEmpty && description.contains('terminal-send')) {
+      await openCommands(tester);
+    }
+    if (description.contains('terminal-connect')) await closeCommands(tester);
+    if (finder.evaluate().isEmpty &&
+        description.contains('terminal-disconnect')) {
+      await closeCommands(tester);
+      await tester.tap(find.byTooltip('终端菜单'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('断开连接'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.widgetWithText(FilledButton, '断开连接'));
+      await tester.pumpAndSettle();
+      return;
+    }
     await tester.ensureVisible(finder);
     await tester.tap(finder);
     await tester.pumpAndSettle();
   }
 
-  Future<void> textTap(WidgetTester tester, String label) =>
-      tap(tester, find.text(label).last);
+  Future<void> textTap(WidgetTester tester, String label) async {
+    if (label == '插入片段') await openCommands(tester);
+    await tap(tester, find.text(label).last);
+  }
+
   Future<void> draft(WidgetTester tester, String value) async {
+    await openCommands(tester);
     await tester.ensureVisible(find.byKey(const ValueKey('terminal-draft')));
     await tester.enterText(find.byKey(const ValueKey('terminal-draft')), value);
     await tester.pump();
   }
 
-  String currentDraft(WidgetTester tester) => tester
-      .widget<TextField>(find.byKey(const ValueKey('terminal-draft')))
-      .controller!
-      .text;
+  Future<String> currentDraft(WidgetTester tester) async {
+    await openCommands(tester);
+    return tester
+        .widget<TextField>(find.byKey(const ValueKey('terminal-draft')))
+        .controller!
+        .text;
+  }
 
   testWidgets(
-    'opening terminal is offline unless an explicit connect was requested; exit cleans immediately',
+    'opening terminal is offline unless explicitly connected; confirmed exit cleans immediately',
     (tester) async {
       await mount(tester, connect: false);
       expect(ssh.connections, 0);
@@ -230,6 +273,9 @@ void main() {
       expect(ssh.writes, isEmpty);
       expect(ssh.sizes, isNotEmpty);
       await tester.tap(find.byTooltip('退出终端'));
+      await tester.pumpAndSettle();
+      expect(ssh.connected, isTrue);
+      await tester.tap(find.widgetWithText(FilledButton, '断开并退出'));
       await tester.pump();
       expect(ssh.connected, isFalse);
       await tester.pumpAndSettle();
@@ -250,11 +296,11 @@ void main() {
       expect(ssh.writes, isEmpty);
       await textTap(tester, '取消');
       expect(ssh.writes, isEmpty);
-      expect(currentDraft(tester), content);
+      expect(await currentDraft(tester), content);
       await tap(tester, find.byKey(const ValueKey('terminal-send')));
       await tap(tester, find.byKey(const ValueKey('draft-confirm-send')));
       expect(ssh.writes, [content]);
-      expect(currentDraft(tester), isEmpty);
+      expect(await currentDraft(tester), isEmpty);
     },
   );
 
@@ -291,12 +337,12 @@ void main() {
       expect(find.text(escapedCommandPreview(content)), findsOneWidget);
       expect(ssh.writes, isEmpty);
       await textTap(tester, '仅插入待发送草稿');
-      expect(currentDraft(tester), content);
+      expect(await currentDraft(tester), content);
       expect(ssh.writes, isEmpty);
       await tap(tester, find.byKey(const ValueKey('terminal-disconnect')));
       await tap(tester, find.byKey(const ValueKey('terminal-connect')));
       expect(ssh.connections, 2);
-      expect(currentDraft(tester), isEmpty);
+      expect(await currentDraft(tester), isEmpty);
       expect(ssh.writes, isEmpty);
     },
   );
@@ -319,7 +365,7 @@ void main() {
     await textTap(tester, '取消');
     await tap(tester, find.byKey(const ValueKey('terminal-connect')));
     expect(ssh.writes, isEmpty);
-    expect(currentDraft(tester), isEmpty);
+    expect(await currentDraft(tester), isEmpty);
   });
 
   testWidgets('special keys and xterm input work only while connected', (
@@ -465,7 +511,7 @@ void main() {
     'power is spy-only, two-stage typed-target confirmation sends once',
     (tester) async {
       await mount(tester);
-      await tap(tester, find.byTooltip('单机电源'));
+      await tap(tester, find.byTooltip('终端菜单'));
       await textTap(tester, 'SSH 重启');
       expect(find.text('重启影响确认（1/2）'), findsOneWidget);
       expect(ssh.powers, isEmpty);
@@ -495,11 +541,11 @@ void main() {
     'power cancellation and loss of connection invalidate confirmation',
     (tester) async {
       await mount(tester);
-      await tap(tester, find.byTooltip('单机电源'));
+      await tap(tester, find.byTooltip('终端菜单'));
       await textTap(tester, 'SSH 关机');
       await textTap(tester, '取消');
       expect(ssh.powers, isEmpty);
-      await tap(tester, find.byTooltip('单机电源'));
+      await tap(tester, find.byTooltip('终端菜单'));
       await textTap(tester, 'SSH 关机');
       await textTap(tester, '了解影响，继续核对');
       await tester.enterText(
@@ -619,7 +665,7 @@ void main() {
       );
       await textTap(tester, '取消');
       expect(ssh.connected, isFalse);
-      expect(currentDraft(tester), isEmpty);
+      expect(await currentDraft(tester), isEmpty);
       expect(ssh.connections, 1);
       await tap(tester, find.byKey(const ValueKey('terminal-connect')));
       expect(ssh.target?.label, next.label);
@@ -871,7 +917,7 @@ void main() {
       await draft(tester, 'small draft');
       await draft(tester, 'x' * (CommandSnippet.maxContentLength + 1));
       expect(
-        currentDraft(tester).length,
+        (await currentDraft(tester)).length,
         lessThanOrEqualTo(CommandSnippet.maxContentLength),
       );
       expect(ssh.writes, isEmpty);
@@ -938,6 +984,8 @@ void main() {
       expect(find.byType(TerminalPage, skipOffstage: false), findsOneWidget);
       await tester.tap(find.byTooltip('退出终端'));
       await tester.pumpAndSettle();
+      await tester.tap(find.widgetWithText(FilledButton, '断开并退出'));
+      await tester.pumpAndSettle();
       expect(sessions.single.disposed, isTrue);
       expect(
         tester
@@ -948,6 +996,124 @@ void main() {
       await tap(tester, find.byKey(const ValueKey('connect-start')));
       expect(sessions, hasLength(2));
       expect(sessions.last.connections, 1);
+    },
+  );
+
+  testWidgets('touch terminal opens IME; selection copies without SSH input', (
+    tester,
+  ) async {
+    await mount(tester);
+    final terminalFinder = find.byType(TerminalView);
+    ssh.events.add('selectedtext\r\n');
+    await tester.pump();
+    await tester.tap(terminalFinder);
+    await tester.pump();
+    expect(tester.testTextInput.hasAnyClients, isTrue);
+    String? clipboard;
+    tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+      SystemChannels.platform,
+      (call) async {
+        if (call.method == 'Clipboard.setData') {
+          clipboard = (call.arguments as Map)['text'] as String;
+        }
+        return null;
+      },
+    );
+    addTearDown(
+      () => tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+        SystemChannels.platform,
+        null,
+      ),
+    );
+    final view = tester.state<TerminalViewState>(terminalFinder);
+    final origin = tester.getTopLeft(terminalFinder);
+    await tester.longPressAt(
+      origin +
+          Offset(
+            8 + view.renderTerminal.cellSize.width * 2,
+            8 + view.renderTerminal.cellSize.height / 2,
+          ),
+    );
+    await tester.pumpAndSettle();
+    expect(
+      find.byKey(const ValueKey('terminal-copy-selection')),
+      findsOneWidget,
+    );
+    await tester.tap(find.byKey(const ValueKey('terminal-copy-selection')));
+    await tester.pumpAndSettle();
+    expect(clipboard, 'selectedtext');
+    expect(ssh.writes, isEmpty);
+    expect(
+      tester.widget<TerminalView>(terminalFinder).controller!.selection,
+      isNull,
+    );
+  });
+
+  testWidgets('history scroll and return-to-latest never emit terminal input', (
+    tester,
+  ) async {
+    await mount(tester);
+    ssh.events.add(List.generate(180, (i) => 'history line $i\r\n').join());
+    await tester.pumpAndSettle();
+    final view = tester.widget<TerminalView>(find.byType(TerminalView));
+    expect(view.scrollController!.position.maxScrollExtent, greaterThan(0));
+    await tester.drag(find.byType(TerminalView), const Offset(0, 250));
+    await tester.pumpAndSettle();
+    expect(
+      find.byKey(const ValueKey('terminal-scroll-bottom')),
+      findsOneWidget,
+    );
+    expect(ssh.writes, isEmpty);
+    await tester.tap(find.byKey(const ValueKey('terminal-scroll-bottom')));
+    await tester.pumpAndSettle();
+    expect(view.scrollController!.position.extentAfter, closeTo(0, .1));
+    expect(ssh.writes, isEmpty);
+  });
+
+  testWidgets('common command replacement requires choice and never sends', (
+    tester,
+  ) async {
+    await mount(tester, draft: 'existing draft');
+    await openCommands(tester);
+    await tester.tap(find.byKey(const ValueKey('builtin-pwd')));
+    await tester.pumpAndSettle();
+    expect(find.text('替换当前草稿？'), findsOneWidget);
+    await textTap(tester, '取消');
+    expect(await currentDraft(tester), 'existing draft');
+    await tester.tap(find.byKey(const ValueKey('builtin-pwd')));
+    await tester.pumpAndSettle();
+    await textTap(tester, '替换草稿');
+    expect(await currentDraft(tester), 'pwd');
+    expect(ssh.writes, isEmpty);
+  });
+
+  testWidgets(
+    'system back hides terminal keyboard before asking to disconnect',
+    (tester) async {
+      await mount(tester);
+      await tester.tap(find.byKey(const ValueKey('terminal-keyboard')));
+      tester.view.viewInsets = const FakeViewPadding(bottom: 300);
+      addTearDown(tester.view.resetViewInsets);
+      await tester.pumpAndSettle();
+      await tester.binding.handlePopRoute();
+      await tester.pumpAndSettle();
+      expect(ssh.connected, isTrue);
+      expect(find.text('断开 SSH 会话？'), findsNothing);
+      expect(
+        tester
+            .widget<TerminalView>(find.byType(TerminalView))
+            .focusNode!
+            .hasFocus,
+        isFalse,
+      );
+      tester.view.viewInsets = const FakeViewPadding();
+      await tester.pumpAndSettle();
+      await tester.binding.handlePopRoute();
+      await tester.pumpAndSettle();
+      expect(find.text('断开 SSH 会话？'), findsOneWidget);
+      await textTap(tester, '取消');
+      expect(ssh.connected, isTrue);
+      expect(ssh.writes, isEmpty);
     },
   );
 }

@@ -1,0 +1,2 @@
+# Preserve the complete third-party notice exactly as embedded in the fonts.
+assets/fonts/LICENSE-DejaVu.txt -whitespace

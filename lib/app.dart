@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 import 'core/app_theme.dart';
+import 'core/app_viewport.dart';
 import 'connections/connection_pages.dart';
 import 'connections/snippet_pages.dart';
 import 'connections/tcp_test_page.dart';
@@ -32,6 +33,7 @@ class LedgerApp extends StatefulWidget {
 class _LedgerAppState extends State<LedgerApp> with WidgetsBindingObserver {
   LedgerController? controller;
   final navigatorKey = GlobalKey<NavigatorState>();
+  final _viewport = AppViewportObserver();
   String? pendingReminder;
   bool reminderFrameQueued = false;
   bool loading = true;
@@ -137,6 +139,7 @@ class _LedgerAppState extends State<LedgerApp> with WidgetsBindingObserver {
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    _viewport.dispose();
     controller?.removeListener(ledgerChanged);
     controller?.dispose();
     controller?.store.close();
@@ -147,7 +150,7 @@ class _LedgerAppState extends State<LedgerApp> with WidgetsBindingObserver {
   Widget build(BuildContext context) => MaterialApp(
     title: 'vps tell you',
     navigatorKey: navigatorKey,
-    navigatorObservers: [securityRouteObserver],
+    navigatorObservers: [securityRouteObserver, _viewport],
     debugShowCheckedModeBanner: false,
     theme: appTheme(),
     darkTheme: appTheme(brightness: Brightness.dark),
@@ -158,12 +161,18 @@ class _LedgerAppState extends State<LedgerApp> with WidgetsBindingObserver {
     },
     builder: (context, child) => ColoredBox(
       color: Theme.of(context).scaffoldBackgroundColor,
-      child: Align(
-        alignment: Alignment.topCenter,
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 760),
-          child: child!,
+      child: ValueListenableBuilder<bool>(
+        valueListenable: _viewport.fullWidth,
+        builder: (context, fullWidth, child) => Align(
+          alignment: Alignment.topCenter,
+          child: ConstrainedBox(
+            constraints: BoxConstraints(
+              maxWidth: fullWidth ? double.infinity : 760,
+            ),
+            child: child!,
+          ),
         ),
+        child: child,
       ),
     ),
     home: controller != null

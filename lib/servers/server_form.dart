@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'dart:ui' show SemanticsValidationResult;
 
 import 'package:flutter/material.dart';
@@ -26,6 +27,7 @@ class ServerForm extends StatefulWidget {
 class _ServerFormState extends State<ServerForm> {
   final _form = GlobalKey<FormState>();
   final _resources = GlobalKey<ServerResourceFieldsState>();
+  final _cycleFocus = FocusNode();
   late final Map<String, TextEditingController> fields;
   late BillingKind billing;
   late String currency;
@@ -38,6 +40,7 @@ class _ServerFormState extends State<ServerForm> {
   @override
   void initState() {
     super.initState();
+    _cycleFocus.addListener(_refreshCycleFocus);
     final s = widget.record;
     fields = {
       'name': TextEditingController(text: s?.name),
@@ -67,8 +70,12 @@ class _ServerFormState extends State<ServerForm> {
     }
   }
 
+  void _refreshCycleFocus() => setState(() {});
+
   @override
   void dispose() {
+    _cycleFocus.removeListener(_refreshCycleFocus);
+    _cycleFocus.dispose();
     for (final field in fields.values) {
       field.dispose();
     }
@@ -259,23 +266,144 @@ class _ServerFormState extends State<ServerForm> {
     ),
   );
 
+  double _textWidth(String text, TextStyle? style) {
+    final painter = TextPainter(
+      text: TextSpan(text: text, style: style),
+      textScaler: MediaQuery.textScalerOf(context),
+      textDirection: Directionality.of(context),
+      locale: Localizations.maybeLocaleOf(context),
+    )..layout();
+    final width = painter.width;
+    painter.dispose();
+    return width;
+  }
+
+  double _floatingLabelWidth(String label) {
+    final theme = Theme.of(context);
+    final style = theme.textTheme.bodyLarge?.merge(
+      WidgetStateProperty.resolveAs(
+        theme.inputDecorationTheme.floatingLabelStyle ??
+            theme.inputDecorationTheme.labelStyle,
+        const <WidgetState>{},
+      ),
+    );
+    // Material scales the floating label after applying the text scaler.
+    return (_textWidth(label, style) * .75).ceilToDouble();
+  }
+
+  String _cycleDescription(int months) => months == 12 ? '每年' : '每 $months 个月';
+
+  Widget _cycleSelect(Map<int, String> labels) {
+    final enabled = !saving && !termsLocked;
+    final style = Theme.of(context).textTheme.bodyMedium;
+    var menuWidth = 128.0;
+    for (final months in labels.keys) {
+      menuWidth = math.max(
+        menuWidth,
+        (_textWidth(_cycleDescription(months), style) + 40).ceilToDouble(),
+      );
+    }
+    return Padding(
+      key: const ValueKey('row-cycle'),
+      padding: EdgeInsets.zero,
+      child: Semantics(
+        label: '付款周期',
+        child: InputDecorator(
+          key: const ValueKey('field-cycle'),
+          isFocused: enabled && _cycleFocus.hasFocus,
+          decoration: InputDecoration(
+            labelText: '周期',
+            enabled: enabled,
+            floatingLabelBehavior: FloatingLabelBehavior.always,
+            // Put vertical padding inside the button so tapping above or
+            // below the selected text still opens the menu. Keep the label
+            // inset aligned with the adjacent amount and currency fields.
+            contentPadding: const EdgeInsets.symmetric(horizontal: 4),
+            constraints: const BoxConstraints(minHeight: 48),
+          ),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
+            child: DropdownButtonHideUnderline(
+              child: DropdownButton<int>(
+                value: cycle,
+                focusNode: _cycleFocus,
+                isExpanded: true,
+                itemHeight: null,
+                style: style,
+                iconSize: 16,
+                icon: const Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 4),
+                  child: Icon(Icons.arrow_drop_down),
+                ),
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                // The closed field follows the short selected value. The popup
+                // independently fits the full period names at the text scale;
+                // Flutter bounds it to the available viewport for legacy values.
+                menuWidth: menuWidth,
+                borderRadius: BorderRadius.circular(12),
+                selectedItemBuilder: (context) => [
+                  for (final months in labels.keys)
+                    months == cycle
+                        ? Semantics(
+                            label: _cycleDescription(months),
+                            excludeSemantics: true,
+                            child: Text(labels[months]!),
+                          )
+                        : const SizedBox.shrink(),
+                ],
+                items: [
+                  for (final months in labels.keys)
+                    DropdownMenuItem(
+                      value: months,
+                      child: Text(_cycleDescription(months)),
+                    ),
+                ],
+                onChanged: enabled
+                    ? (months) => setState(() => cycle = months!)
+                    : null,
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _feeRow() {
     final amountLabel = billing == BillingKind.metered ? '月费用估算' : '续费金额';
+    const standardCycleLabels = {
+      1: '月',
+      3: '季',
+      6: '半年',
+      12: '年',
+      24: '2年',
+      36: '3年',
+    };
+    final cycleLabels = {
+      ...standardCycleLabels,
+      // Keep an unexpected legacy value visible until the user changes it;
+      // building the form must not assert or silently normalize stored data.
+      if (!standardCycleLabels.containsKey(cycle)) cycle: '$cycle个月',
+    };
+    final valueStyle = Theme.of(context).textTheme.bodyMedium;
     var currencyWidth = 64.0;
     for (final currency in Money.currencies) {
-      final painter = TextPainter(
-        text: TextSpan(
-          text: currency,
-          style: Theme.of(context).textTheme.bodyMedium,
-        ),
-        textScaler: MediaQuery.textScalerOf(context),
-        textDirection: Directionality.of(context),
-      )..layout();
-      if (painter.width + 44 > currencyWidth) {
-        currencyWidth = painter.width + 44;
-      }
-      painter.dispose();
+      currencyWidth = math.max(
+        currencyWidth,
+        _textWidth(currency, valueStyle) + 44,
+      );
     }
+    // Padding and outline gaps keep 8 px on each side outside the cycle's
+    // 48 px hit target. The floating labels must also remain fully visible.
+    final cycleMinWidth = math.max(64.0, _floatingLabelWidth('周期') + 16);
+    final amountMinWidth = math.max(48.0, _floatingLabelWidth('金额') + 16);
+    // Include the compact dropdown's icon, padded hit target and outline
+    // gaps, rounding up fractional text widths. The selected value, not the
+    // longest menu item or free row space, determines the closed width.
+    final cyclePreferredWidth = math.max(
+      cycleMinWidth,
+      (_textWidth(cycleLabels[cycle]!, valueStyle) + 44).ceilToDouble(),
+    );
     return Padding(
       padding: const EdgeInsets.only(bottom: 18),
       child: FormField<void>(
@@ -288,65 +416,57 @@ class _ServerFormState extends State<ServerForm> {
         builder: (field) => Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Row(
-              key: const ValueKey('row-fees'),
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(
-                  flex: 1,
-                  child: _compactInput(
-                    'amount',
-                    '金额',
-                    amountLabel,
-                    field.errorText,
+            LayoutBuilder(
+              builder: (context, constraints) {
+                // Leave the amount label and a usable editor visible at
+                // narrow widths. Longer cycle values can soft-wrap; their
+                // complete meaning also remains in the menu and summary.
+                final cycleWidth = math.max(
+                  cycleMinWidth,
+                  math.min(
+                    cyclePreferredWidth,
+                    constraints.maxWidth - currencyWidth - 12 - amountMinWidth,
                   ),
-                ),
-                const SizedBox(width: 6),
-                SizedBox(
-                  width: currencyWidth,
-                  child: select<String>(
-                    '原币种',
-                    currency,
-                    Money.currencies
-                        .map((c) => DropdownMenuItem(value: c, child: Text(c)))
-                        .toList(),
-                    (v) => setState(() => currency = v!),
-                    id: 'currency',
-                    compact: true,
-                    shortLabel: '币种',
-                  ),
-                ),
-                if (billing == BillingKind.prepaid) ...[
-                  const SizedBox(width: 6),
-                  Expanded(
-                    flex: 1,
-                    child: select<int>(
-                      '付款周期',
-                      cycle,
-                      [1, 3, 6, 12, 24, 36]
-                          .map(
-                            (m) => DropdownMenuItem(
-                              value: m,
-                              child: Text(m == 12 ? '每年' : '每 $m 个月'),
-                            ),
-                          )
-                          .toList(),
-                      (v) => setState(() => cycle = v!),
-                      id: 'cycle',
-                      compact: true,
-                      shortLabel: '周期',
-                      selectedLabels: const {
-                        1: '月',
-                        3: '季',
-                        6: '半年',
-                        12: '年',
-                        24: '2年',
-                        36: '3年',
-                      },
+                );
+                return Row(
+                  key: const ValueKey('row-fees'),
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: _compactInput(
+                        'amount',
+                        '金额',
+                        amountLabel,
+                        field.errorText,
+                      ),
                     ),
-                  ),
-                ],
-              ],
+                    const SizedBox(width: 6),
+                    SizedBox(
+                      width: currencyWidth,
+                      child: select<String>(
+                        '原币种',
+                        currency,
+                        Money.currencies
+                            .map(
+                              (c) => DropdownMenuItem(value: c, child: Text(c)),
+                            )
+                            .toList(),
+                        (v) => setState(() => currency = v!),
+                        id: 'currency',
+                        compact: true,
+                        shortLabel: '币种',
+                      ),
+                    ),
+                    if (billing == BillingKind.prepaid) ...[
+                      const SizedBox(width: 6),
+                      SizedBox(
+                        width: cycleWidth,
+                        child: _cycleSelect(cycleLabels),
+                      ),
+                    ],
+                  ],
+                );
+              },
             ),
             if (field.errorText case final error?) _rowError(error),
             const SizedBox(height: 6),

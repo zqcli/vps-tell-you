@@ -71,6 +71,7 @@ class _PowerTargetDialogState extends State<_PowerTargetDialog> {
           widget.service.connected &&
           widget.service.generation == widget.generation;
       return AlertDialog(
+        scrollable: true,
         title: Text('最终确认${widget.label}（2/2）'),
         content: SingleChildScrollView(
           child: Column(

@@ -363,3 +363,29 @@ Android / iOS 实机安装重启、设备安全存储/设备认证、真实通�
 - 真实字体测试使用一次加载的Noto第0face子集；777个支持字符轮廓和advance与原字体逐一相同，保留layout features与hinting。字体子集只用于证据，不进入生产App；默认测试字体路径不变。早期宿主compiler被SIGKILL的运行未计入通过，后续标准工具完整25项通过，无SDK替换或结果过滤。
 - 最终全量669/669（52个文件、单并发，合成localhost SSH/TLS），format 116文件/0改动、analyze及diff检查通过；锁文件离线解析与独立目录生产Linux release成功。全量最终退出码0；早期OOM/SIGKILL未计通过，保留本任务临时缓存到磁盘并使用官方compiler的1024 MB堆上限后完整重跑，无跳过、断言弱化或SDK修改。
 - 当前运行的73f7b8d预览bundle未覆盖，libapp.so哈希复核不变；用户台账/钥匙环/SSH未操作。新预览交主会话协调；不构建新APK或进行手机真机验收。
+
+
+# 全屏 SSH 与周期内容宽度候选（2026-10-07）
+
+源基线：已发布 `fada6cf16d4003d7f11bfb44976d5205df76b755`。最终候选commit/tree见本轮Git与交接manifest；不把本地构建当作推送/CI/手机验收。
+
+## 本轮已通过
+
+- Astra max独立UX/code review APPROVE；最终27项真实字体与本地PTY回归，最终截图与生产文件SHA绑定。
+- 全量715/715（56个测试文件，单worker），所有阶段保留原始退出码0；format123文件0改动，analyze零问题，git diff --check，锁文件离线解析，生产Linux release。
+- 周期新12项+既有25项：标准37/37、真实Noto字体37/37；320/360/390和2×字体、半年/多年/旧18个月、独立菜单一行完整文字、48px点击范围、焦点、历史付款锁定、精度与完整摘要。
+- 终端320×568、390×844、844×390各1×/2×，1200px宽屏解除限宽并在退出后恢复；键盘inset改变PTY行列，无外层终端页面滚动。
+- 真实TextInputClient：普通文本、中文组合/提交、软退格、done回车与底栏Enter、一次性Ctrl；关闭未完成中文组合后按钮/正文重新打开输入，方向键正常；可见IME中点正文不丢组合。
+- 长按/拖动选择复制与历史滚动不写SSH；命令/片段/菜单与硬件粘贴仅入草稿；替换与发送须确认，默认不加Enter；模态期间旧快捷键callback不写入，但ANSI DSR应答保持。
+- 真实独立AsyncSSH仅loopback fixture：软键盘字节→实际SSH channel→合成回显；窗口resize到达真实PTY。fixture不执行shell/exec，不创建OS账户或访问真实VPS。
+- 私钥口令、主机信任、断线/换目标、返回重复激活、后台清理与单机电源原有门禁回归。短横屏、大字、键盘占位下口令/发送/电源确认可滚动。
+- DejaVu Sans Mono 2.37 Book/Bold：两个未修改字体677,408字节；已验证哈希、许可、ASCII/框线相同advance、0/O/1/l/I不同glyph，禁用编码连字/kerning，中文双cell真实截图。生产FontManifest登记正确，打包TTF哈希与源码一致。
+
+生产Linux libapp.so SHA-256：`3bdd9f31496a634cfeec93dff7180814ea04f9b2f7f5e79359c860e560ee2d62`。构建后仅补完成文档，生产源码/字体/平台输入文件SHA复核不变；该bundle不再重编覆盖运行中的预览。
+
+## 本轮边界与设备验收
+
+- Android/iOS新构建、签名、安装、真实设备键盘/IME/旋转/切网/后台、真实VPS兼容性均未在本轮执行。用户之前测试过的APK属于上一源码版本。
+- 下一轮手机优先核对：中文候选未提交时收起/重开键盘；正文点按；键盘Enter的newline/done差异；方向/Tab/Ctrl；横屏键盘遮挡；长按选择；断网/后台重连不重放。底栏Enter是明确回车入口。
+- xterm4既有CPR坐标回复兼容性问题未在UI轮扩写ANSI逻辑；本轮以DSR验证模态期间协议通路，不能据此宣称所有TUI/emoji/脚本已兼容。中文fallback具体字体由设备提供。
+- 无真实用户SSH/API、真实秘密/钥匙环、用户数据库或窗口操作，无APK、远端提交/分支/tag或强推。云预览的独立资料与本地演示由主会话另外安排。

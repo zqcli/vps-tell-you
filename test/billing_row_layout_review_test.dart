@@ -496,7 +496,14 @@ void main() {
       isNull,
     );
     expect(
-      tester.widget<DropdownButtonFormField<int>>(field('cycle')).onChanged,
+      tester
+          .widget<DropdownButton<int>>(
+            find.descendant(
+              of: field('cycle'),
+              matching: find.byType(DropdownButton<int>),
+            ),
+          )
+          .onChanged,
       isNull,
     );
     for (final id in ['start', 'due']) {
