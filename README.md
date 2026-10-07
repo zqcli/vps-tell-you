@@ -61,7 +61,21 @@ flutter build linux --release
 
 Linux 可执行文件：`build/linux/x64/release/bundle/vps_tell_you`。运行时需保留整个 bundle。
 
-Android / iOS 是真实 Flutter 工程，不是 Web 包装。当前没有验证手机安装、Android 构建、iOS 构建 / 签名；后续阶段进行，不能以 Linux 通过替代真机结果。当前无生产 Web 数据库适配。
+Android / iOS 是真实 Flutter 工程，不是 Web 包装。2026-10-07 已在 macOS / Xcode 26.2 编译通过 iOS Debug 模拟器版；本机模拟器因 GPU / Metal 初始化失败而未能启动，因此尚未验证安装、实际界面或真机签名。Android 测试 APK 与其他平台验收记录见 `docs/STATUS.md` / `docs/ACCEPTANCE.md`，不能以构建通过替代真机结果。当前无生产 Web 数据库适配。
+
+Mac 上需使用符合上述约束的 Flutter SDK；本次单独安装在 `/Users/zzq/Develops/flutter/3.47.6`，未覆盖原有 SDK。模拟器恢复正常后可运行：
+
+```sh
+export PATH="/Users/zzq/Develops/flutter/3.47.6/bin:$PATH"
+flutter pub get --enforce-lockfile
+flutter build ios --simulator --debug --no-codesign
+open -a Simulator
+flutter devices
+# 使用 flutter devices 列出的 iOS 模拟器 ID
+flutter run -d <simulator-id>
+```
+
+模拟器产物：`build/ios/iphonesimulator/Runner.app`；不用于真机安装。本次构建与模拟器阻碍的准确验证范围见 [ACCEPTANCE](docs/ACCEPTANCE.md#macos-ios-模拟器编译2026-10-07-utc)。
 
 ## 代码结构与数据规则
 

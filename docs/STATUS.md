@@ -3,7 +3,18 @@
 更新：2026-10-07 UTC
 
 
-## 当前增量：英文界面与持久化语言设置
+## 当前接手：macOS iOS 模拟器编译
+
+基于 `61cacb36dc5528de5c6d15e631970a1fc42dd0c7`，在 Intel macOS 15.7.3 / Xcode 26.2 使用独立 Flutter 3.47.6 / Dart 3.13.5 SDK，未覆盖本机原有 Flutter 3.41.2。
+
+- `flutter pub get --enforce-lockfile`、`flutter analyze`、基础界面与语言设置 **12/12** 测试通过；依赖锁文件和业务源码未变。
+- `flutter build ios --simulator --debug --no-codesign` 成功，产物 `build/ios/iphonesimulator/Runner.app`，版本 0.1.0+1，主程序包含 x86_64 / arm64。
+- **模拟器界面预览未完成**：iPhone 17 Pro / iOS 26.2 启动超时；本机 `SimRenderServer` 因 Metal 设备初始化失败崩溃，伴随 AMD accelerator / IOAccelDevice 错误。确认重启 CoreSimulator 服务后仍复现；没有修改 App 来绕过宿主故障。
+- 未删除模拟器或台账、未访问真实凭据 / API / SSH、未自动重启 Mac。需先恢复本机 GPU / Metal 状态，再继续模拟器安装与实际界面检查；真机能力仍未验收。
+
+复现命令见 README，环境与日志证据见 [ACCEPTANCE](ACCEPTANCE.md#macos-ios-模拟器编译2026-10-07-utc)。
+
+## 前一增量：英文界面与持久化语言设置
 
 基于已发布 `9be096fcc1ffbca5136ead81c6acc660cc2175f9`。官方 Flutter ARB / gen-l10n 提供简体中文与 English，共1356个成对消息；设置立即切换并持久化，默认保留中文，可明确选择跟随系统。系统首选语言均不支持时回退英文。规则详见 [LOCALIZATION](LOCALIZATION.md)。
 

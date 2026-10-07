@@ -482,3 +482,33 @@ Android / iOS 实机安装重启、设备安全存储/设备认证、真实通�
 ### 尚未验证的设备边界
 
 本轮没有 Android/iOS 构建、签名、安装升级或真机 IME / 原生认证 / 系统分享 / 通知实际送达验证。系统自有权限窗口由 OS 语言管理，iOS 包内加入英文与简体中文 Face ID 用途说明，不承诺应用内语言覆盖 OS 自有文字。真实用户数据库、API、SSH、原生剪贴板和钥匙环均未访问；网络测试只使用既有合成 loopback fixture。本地提交、完整 Git bundle 与验证资料交主会话协调发布和预览，不将本轮 Linux 成功当作远端 CI 或手机结果。
+
+
+## macOS iOS 模拟器编译（2026-10-07 UTC）
+
+源码基线：`61cacb36dc5528de5c6d15e631970a1fc42dd0c7`，`dev` 分支，接手时工作区及暂存区干净。
+
+### 环境与已通过项
+
+- Intel x86_64，macOS 15.7.3 / 24G419；Xcode 26.2 / 17C52；iOS 26.2 / 23C54 模拟器运行时。
+- 本机原 SDK 为 Flutter 3.41.2 / Dart 3.11.0，不满足项目约束。由官方 Flutter Git 仓库的 `3.47.6` tag 独立安装 SDK 至 `/Users/zzq/Develops/flutter/3.47.6`，framework `5fc346839b5d0eef006ed8404392afb4dfae428d`、Dart 3.13.5；未覆盖原 SDK 或修改全局 PATH。
+- `flutter pub get --enforce-lockfile`：退出码 0，`pubspec.lock` 未变化。
+- `flutter analyze`：退出码 0，No issues found。
+- `flutter test test/widget_test.dart test/locale_preference_test.dart --concurrency=1`：退出码 0，**12/12** 通过，覆盖空台账、新增/取消、重读恢复、归档撤销、390px / 2 倍文字、分组与持久化语言切换。没有在本次接手中重跑全部测试，也不将 Widget 测试当作模拟器实际界面验证。
+- `flutter build ios --simulator --debug --no-codesign`：退出码 0，Xcode build 68.3 秒；保留既有 Swift Package Manager 配置，无需新增 Podfile 或改 deployment target。
+- 产物 `build/ios/iphonesimulator/Runner.app`；Info.plist 确认 bundle ID `com.vpstellyou.vpsTellYou`、版本 `0.1.0`、build `1`，`file Runner` 确认 x86_64 / arm64 双架构。仅为 Debug 模拟器包，不是签名真机或发布候选。
+
+### 未完成：模拟器启动与实际预览
+
+目标设备：iPhone 17 Pro，ID `223AB863-E585-4BF6-8777-5A90F000CB3A`。`simctl` 可列出设备和运行时，但启动多次超时，设备仍为 Shutdown，尚未安装或运行应用，也没有模拟器截图。
+
+2026-10-07 21:50:49（UTC+8）本机统一日志确认：
+
+```text
+Failed to create an IOAccelDevice... IOServiceOpen returned kIOReturn(0xE00002C7)
+SimRenderServer/MetalDeviceDescriptor.swift:40: Fatal error: Attempt to initialize MetalDeviceDescriptor on a host that doesn't support Metal
+```
+
+同期 kernel 记录 `stalling for detach from AMDRadeonX6000_AMDNavi23GraphicsAccelerator`。崩溃报告为本机 `~/Library/Logs/DiagnosticReports/SimRenderServer-2026-10-07-215049.ips`，进程为 Apple `SimRenderServer`，不是 App。已确认 CoreSimulator 从 PID 1058 重启至 PID 94225；22:14:46（UTC+8）新 `SimRenderServer` 仍出现同一 Metal 初始化崩溃。证据指向宿主 GPU / Metal 链路异常，但底层驱动故障的具体原因尚未证明。
+
+未删除/重建模拟器、未清除应用数据或降低项目约束，未改业务源码、未访问真实用户台账、秘密、SSH 或 API。没有自动重启 Mac。后续先保存工作并恢复本机 GPU / Metal 状态（系统重启是待验证的恢复候选），再按 README 命令启动模拟器并运行应用；不要将本次编译成功写成安装、实际预览或真机能力通过。
