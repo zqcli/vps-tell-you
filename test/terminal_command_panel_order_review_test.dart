@@ -262,7 +262,9 @@ void main() {
     final target = tester.getRect(keyed('terminal-send-target'));
     final warning = tester.getRect(keyed('draft-control-warning'));
     final preview = tester.getRect(keyed('draft-exact-preview'));
-    final description = tester.getRect(find.text('发送不额外回车；发送并执行追加一个回车。'));
+    final description = tester.getRect(
+      find.text('“发送”不追加回车；“发送并执行”追加回车，由当前终端程序处理。'),
+    );
     final send = tester.getRect(keyed('terminal-send'));
     final execute = tester.getRect(keyed('terminal-send-execute'));
     expect(choices.bottom, lessThanOrEqualTo(snippets.top));

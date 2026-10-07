@@ -14,7 +14,7 @@ import 'host_trust_pages.dart';
 final securityRouteObserver = RouteObserver<ModalRoute<dynamic>>();
 
 String credentialKind(CredentialMetadata credential) =>
-    credential.kind == CredentialKind.password ? '用户与密码' : 'SSH 密钥';
+    credential.kind == CredentialKind.password ? '用户名与密码' : 'SSH 密钥';
 
 void securityMessage(BuildContext context, String message) =>
     ScaffoldMessenger.of(context)
@@ -95,7 +95,7 @@ class _SecurityPageState extends State<SecurityPage> {
               ),
               SettingRow(
                 icon: Icons.person_outline,
-                title: '保存用户与密码',
+                title: '保存用户名与密码',
                 subtitle: '可供多台服务器引用',
                 onTap: () => Navigator.pop(context, CredentialKind.password),
               ),
@@ -158,7 +158,7 @@ class _SecurityPageState extends State<SecurityPage> {
                       for (final entry in <CredentialKind?, String>{
                         null: '全部',
                         CredentialKind.privateKey: 'SSH 密钥',
-                        CredentialKind.password: '用户与密码',
+                        CredentialKind.password: '用户名与密码',
                       }.entries)
                         ChoiceChip(
                           label: Text(entry.value),
@@ -470,7 +470,7 @@ class _CredentialFormState extends State<CredentialForm>
             padding: const EdgeInsets.all(20),
             children: [
               InfoNote(
-                widget.kind == CredentialKind.password ? '用户与密码' : '导入 SSH 密钥',
+                widget.kind == CredentialKind.password ? '用户名与密码' : '导入 SSH 密钥',
               ),
               SecurityNotice(controller: security),
               TextFormField(
@@ -539,7 +539,9 @@ class _CredentialFormState extends State<CredentialForm>
                 ),
                 validator: (value) =>
                     widget.existing == null && (value == null || value.isEmpty)
-                    ? '请填写秘密内容或导入私钥'
+                    ? widget.kind == CredentialKind.password
+                          ? '请填写登录密码'
+                          : '请选择私钥文件或粘贴完整私钥'
                     : null,
               ),
               if (widget.kind == CredentialKind.privateKey) ...[
@@ -550,7 +552,7 @@ class _CredentialFormState extends State<CredentialForm>
                       widget.existing != null &&
                           secret.text.isEmpty &&
                           (value?.isNotEmpty ?? false)
-                      ? '更改口令请同时重新导入私钥'
+                      ? '更新已保存的口令时，请同时重新导入对应私钥'
                       : null,
                   controller: passphrase,
                   enabled: !saving,
@@ -561,7 +563,7 @@ class _CredentialFormState extends State<CredentialForm>
                   autofillHints: const [],
                   decoration: const InputDecoration(
                     labelText: '私钥加密口令（如有）',
-                    helperText: '用于本地解密校验，不是服务器登录密码。更改口令须重新导入私钥',
+                    helperText: '用于解密所选私钥，不是服务器登录密码。本页不会更改私钥的加密口令',
                     helperMaxLines: 3,
                   ),
                 ),
@@ -577,7 +579,7 @@ class _CredentialFormState extends State<CredentialForm>
                         }),
                   title: const Text('在设备安全存储中保存私钥口令'),
                   subtitle: const Text(
-                    '默认不保存。未保存时每次连接单独输入，取消或错误不会继续认证。仅在重新导入私钥时应用此选项。',
+                    '默认不保存。加密私钥未保存口令时，每次连接都需输入。取消或口令错误会停止连接。仅在导入私钥时应用此选项。',
                   ),
                 ),
               ],

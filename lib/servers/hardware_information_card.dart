@@ -37,13 +37,13 @@ class HardwareInformationCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          value('IP', data?.ip),
-          value('Hostname', data?.hostname),
-          value('磁盘额度', bytes(data?.diskBytes)),
+          value('IP 地址', data?.ip),
+          value('主机名', data?.hostname),
+          value('磁盘容量', bytes(data?.diskBytes)),
           value('流量额度', '$traffic / ${period(data?.trafficPeriodMonths)}'),
           value('内存容量', bytes(data?.ramBytes)),
-          value('vCPU', data?.vcpu?.toString()),
-          const InfoNote('创建后仅手动维护；云账户刷新不会改动硬件信息。未知项可稍后补充。'),
+          value('vCPU 核数', data?.vcpu?.toString()),
+          const InfoNote('仅保存本地硬件资料，面板刷新不会覆盖。未填写的项目可稍后补充。'),
         ],
       ),
     );

@@ -436,3 +436,20 @@ Android / iOS 实机安装重启、设备安全存储/设备认证、真实通�
 
 - 生产 Linux release 最终退出码0；构建后147个生产源码/字体/平台/锁文件输入 SHA-256 与构建前一致。早期 kernel 构建异常不计通过，成功重跑使用同一生产代码。
 - 生产 `libapp.so` SHA-256：`d8eb8ab0d2aed2fda1a910d62355ed3d2ed800c037c1901967db58e759ee5d13`。独立新目录产物冻结，未覆盖现有用户App或演示bundle；本阶段不创建APK。
+
+
+## 全界面中文文案审查（2026-10-07）
+
+基线：已发布 `132cd8e5f3b95d2422ec01635cb453232de8f15e`。范围、术语和逐模块审定见 [UI_COPY_REVIEW](UI_COPY_REVIEW.md)。
+
+- 独立 Astra max：APPROVE，静态检查全部 diff、回归与说明，并目视抽查22张真实CJK截图。审查提出的错误导航、续费撤销承诺、导入选择状态、终端复制失败及BufferRange值比较均修复后复审通过。
+- `flutter pub get --enforce-lockfile --offline`：通过。
+- `dart format --output=none --set-exit-if-changed lib test`：129文件、0变化。
+- `flutter analyze --no-pub`：No issues found。
+- `git diff --check`：通过。
+- 完整测试：**777/777，61文件，无遗漏、重复或跳过**。八批每批退出码0：105、67、74、90、221、74、81、65。最终代码未在聚合验证中途再修改；源码哈希核对一致。
+- 新增22项文案/19页逐段布局与估值边界测试；另新增API凭据丢失提示和终端复制失败→保留选区→重试成功测试。既有授权、主机核验、网络隔离、发送字节、付款与数据回滚断言保留。
+- 真实NotoCJK字体额外验证：文案审查22项及命令面板8项，覆盖320px/2倍、正常/短视口、IME和完整目标可达性。截图为隔离Widget/engine渲染，不是用户桌面或移动端真机截图。
+- `flutter build linux --release --no-pub`：通过，产物为本轮独立checkout的生产bundle。没有启动应用或替换已运行bundle。
+- 编译器使用官方snapshot，测试堆上限1024 MiB、单worker、磁盘TMPDIR，Linux单worker；早期768 MiB冷编译不足及过时文案断言失败均未计入最终通过结果。未通过修改SDK、过滤失败、跳过用例或弱化断言取得成功。
+- 仍为schema v8、开发测试版0.1.0，无英文locale、语言设置、新依赖或真实服务连接。Android/iOS安装、原生IME、权限与系统分享仍需既定真机验证。

@@ -162,7 +162,7 @@ class SecurityController extends ChangeNotifier {
         throw const SecurityFailure('请提供秘密内容');
       }
       if (secret == null && (passphrase?.isNotEmpty ?? false)) {
-        throw const SecurityFailure('修改口令时请同时重新导入私钥');
+        throw const SecurityFailure('更新已保存的口令时，请同时重新导入对应私钥');
       }
       if (kind == CredentialKind.password &&
           (passphrase?.isNotEmpty ?? false)) {
@@ -342,7 +342,7 @@ class SecurityController extends ChangeNotifier {
       final encoded = await secrets.read(record.secretRef);
       guard();
       if (encoded == null || encoded.length > 1024 * 1024) {
-        throw const SecurityFailure('设备中未找到可用秘密，请重新导入');
+        throw const SecurityFailure('未找到此凭据的密码或私钥，请到“管理凭据”重新保存密码或导入私钥');
       }
       final envelope = jsonDecode(encoded);
       if (envelope is! Map<String, dynamic> ||
@@ -413,7 +413,9 @@ class SecurityController extends ChangeNotifier {
       }
       final encoded = await secrets.read(record.secretRef);
       if (_disposed || epoch != _sensitiveEpoch) return false;
-      if (encoded == null) throw const SecurityFailure('设备中未找到秘密，请重新导入');
+      if (encoded == null) {
+        throw const SecurityFailure('未找到已保存的密码，请编辑此凭据并重新保存密码');
+      }
       final envelope = jsonDecode(encoded);
       if (envelope is! Map<String, dynamic> ||
           envelope['version'] != 1 ||

@@ -367,9 +367,18 @@ class _TerminalPageState extends State<TerminalPage>
     final selection = _terminalController.selection;
     if (selection == null) return;
     final text = _terminal.buffer.getText(selection);
-    await Clipboard.setData(ClipboardData(text: text));
+    try {
+      await Clipboard.setData(ClipboardData(text: text));
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context)
+          .showSnackBar(const SnackBar(content: Text('未能复制终端内容，请重试。')));
+      return;
+    }
     if (!mounted) return;
-    _terminalController.clearSelection();
+    if (_terminalController.selection == selection) {
+      _terminalController.clearSelection();
+    }
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
         content: Text('已复制所选终端内容'),
@@ -542,7 +551,7 @@ class _TerminalPageState extends State<TerminalPage>
             const Text('点按终端输入；长按并拖动选择，使用“复制”复制。向上滚动查看历史，向下箭头回到最新输出。'),
             const SizedBox(height: 12),
             const Text(
-              '键盘和特殊键直接发送到 SSH。常用命令、片段和粘贴先进入独立草稿；“发送”不额外回车，“发送并执行”追加一个回车。正文原有换行仍可能执行。Ctrl 作用于下一个按键，再点可取消。',
+              '键盘和特殊键直接发送到 SSH。常用命令、片段和粘贴先进入独立草稿；“发送”不追加回车，“发送并执行”追加回车，由当前终端程序处理。正文原有换行仍可能执行。Ctrl 作用于下一个按键，再点可取消。',
             ),
             const SizedBox(height: 12),
             const Text('离开或进入后台会断开会话；不会自动重连或重放输入。长任务建议在远端使用 tmux / screen。'),
@@ -627,7 +636,7 @@ class _TerminalPageState extends State<TerminalPage>
         _createTerminal();
         setState(() {
           _targetInvalidated = false;
-          _notice = '目标已变化，连接和草稿已清空。请显式连接新目标。';
+          _notice = '目标已变化，连接和草稿已清空。请手动连接新目标。';
         });
       });
     }
@@ -845,7 +854,7 @@ class _TerminalPageState extends State<TerminalPage>
       _powerIssuedGeneration = generation;
       setState(
         () => _notice = result == PowerResult.failed
-            ? '电源指令未提交或被拒绝。请核实连接、远端权限及厂商控制台状态；不会自动重发。'
+            ? '电源指令未能确认成功。请核实连接、远端权限及厂商控制台状态，避免重复执行；不会自动重发。'
             : '电源指令已尝试提交，结果未知。连接断开不证明操作完成；请到厂商控制台核实，不会自动重发。',
       );
     } finally {
@@ -1090,7 +1099,7 @@ class _TerminalPageState extends State<TerminalPage>
                                     child: Padding(
                                       padding: const EdgeInsets.all(24),
                                       child: Text(
-                                        '点按终端开始输入',
+                                        '点按终端输入，按键直接发送',
                                         style: Theme.of(context)
                                             .textTheme
                                             .bodySmall,
@@ -1244,7 +1253,7 @@ class _TerminalPageState extends State<TerminalPage>
             else if (!_connecting)
               Text(
                 _service.status == SshStatus.idle
-                    ? '连接后点按终端即可输入。'
+                    ? '连接后点按终端输入，按键会直接发送到服务器。'
                     : '输出已保留。重连会清空终端和草稿，不重放输入。',
                 style: Theme.of(context).textTheme.bodySmall,
               ),
@@ -1385,7 +1394,7 @@ class _VerifyHostDialogState extends State<_VerifyHostDialog> {
                     Navigator.pop(context, true);
                   }
                 : null,
-            child: Text(changed ? '确认更新此主机信任' : '确认信任并认证'),
+            child: Text(changed ? '更新信任并继续认证' : '确认信任并认证'),
           ),
         ],
       );

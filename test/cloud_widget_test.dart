@@ -299,7 +299,7 @@ void main() {
       await tapKey(tester, 'verify-cloud');
       expect(calls, 1);
       expect(endpoints.single, 'https://panel.example:5656');
-      expect(find.text('无稳定实例 ID · 请核对下方六项资源'), findsOneWidget);
+      expect(find.text('无稳定实例 ID · 按此独立连接识别'), findsOneWidget);
       await reveal(tester, find.byKey(const ValueKey('cloud-import-submit')));
       expect(
         tester
@@ -564,7 +564,7 @@ void main() {
         ),
       );
       await authorize(tester);
-      expect(find.text('API 授权失效，请检查或重新授权'), findsOneWidget);
+      expect(find.text('API 凭据未通过验证，请检查凭据或重新授权'), findsOneWidget);
       expect(cloud.accounts, isEmpty);
       expect(find.byType(CloudImportPage), findsNothing);
       expect(
@@ -578,7 +578,7 @@ void main() {
           throw const CloudFailure(CloudFailureKind.timeout);
       await fill(tester, 'cloud-token', 'SYNTHETIC_TOKEN');
       await tapKey(tester, 'verify-cloud');
-      expect(find.text('读取超时，已有服务器状态保持不变'), findsOneWidget);
+      expect(find.text('读取超时，保留上次读取的信息；请稍后重试'), findsOneWidget);
       expect(secrets.writes, 0);
       expect(tester.takeException(), isNull);
     },
@@ -693,7 +693,7 @@ void main() {
       await mount(tester, CloudAccountsPage(ledger: ledger), scale: 2.0);
       await tapKey(tester, 'cloud-account-${saved.id}');
       await tapText(tester, '查看账户详情');
-      expect(find.text('云账户详情'), findsOneWidget);
+      expect(find.text('面板账户详情'), findsOneWidget);
       expect(find.text('已验证用户账户 7 · 项目与实例'), findsOneWidget);
       await tester.pageBack();
       await tester.pumpAndSettle();
@@ -734,6 +734,8 @@ void main() {
       await tapKey(tester, 'verify-cloud');
       await tapKey(tester, 'cloud-select-single');
       await reveal(tester, find.byKey(const ValueKey('cloud-import-submit')));
+      expect(find.text('更新授权并解除旧关联'), findsOneWidget);
+      expect(find.text('仅更新授权'), findsNothing);
       expect(
         tester
             .widget<FilledButton>(
@@ -815,7 +817,7 @@ void main() {
         400,
         scrollable: find.byType(Scrollable).first,
       );
-      expect(find.text('API 观测'), findsNothing);
+      expect(find.text('API 返回信息'), findsNothing);
       expect(find.text('远端变化的名称'), findsNothing);
       expect(find.text('未知（API 未提供）'), findsNothing);
       expect(find.text('管理关联'), findsOneWidget);
@@ -893,7 +895,7 @@ void main() {
     tester,
   ) async {
     await mount(tester, Scaffold(body: SettingsPage(controller: ledger)));
-    final entry = find.text('云账户');
+    final entry = find.text('面板账户');
     await reveal(tester, entry);
     await tester.tap(entry);
     await tester.tap(entry, warnIfMissed: false);

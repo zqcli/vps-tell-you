@@ -202,7 +202,7 @@ class _LedgerAppState extends State<LedgerApp> with WidgetsBindingObserver {
                             ),
                             const SizedBox(height: 12),
                             const Text(
-                              '原有数据库不会被删除或重建。请检查设备储存空间、文件权限，或恢复使用较新的应用版本后重试。',
+                              '原有数据仍保留。请检查设备存储空间和文件权限；如果曾使用较新版本，请用相同或更新版本重试。',
                               textAlign: TextAlign.center,
                             ),
                             const SizedBox(height: 24),
@@ -330,7 +330,7 @@ class ToolsPage extends StatelessWidget {
         '工具',
         style: TextStyle(fontSize: 28, fontWeight: FontWeight.w800),
       ),
-      const InfoNote('选择任务，再确认操作对象。'),
+      const InfoNote('计算费用、连接服务器或管理常用命令。'),
       Container(
         decoration: BoxDecoration(
           color: Theme.of(context).colorScheme.primaryContainer,
@@ -342,7 +342,7 @@ class ToolsPage extends StatelessWidget {
         child: SettingRow(
           icon: Icons.calculate_outlined,
           title: '剩余价值计算器',
-          subtitle: '独立 / 引用试算 · PNG 预览与保存',
+          subtitle: '独立试算或引用服务器资料 · 可导出图片',
           onTap: () => Navigator.push<void>(
             context,
             MaterialPageRoute(
@@ -359,7 +359,7 @@ class ToolsPage extends StatelessWidget {
             SettingRow(
               icon: Icons.terminal,
               title: 'SSH 快速连接',
-              subtitle: '保存的服务器 / 临时目标 · 核验后连接',
+              subtitle: '选择服务器或临时目标 · 核验主机后登录',
               onTap: () => Navigator.push<void>(
                 context,
                 MaterialPageRoute(
@@ -381,7 +381,7 @@ class ToolsPage extends StatelessWidget {
             SettingRow(
               icon: Icons.code,
               title: '命令片段',
-              subtitle: '本地管理 / 预览 · 在终端插入独立草稿',
+              subtitle: '保存常用命令 · 插入终端草稿后发送',
               onTap: () => Navigator.push<void>(
                 context,
                 MaterialPageRoute(
@@ -398,7 +398,7 @@ class ToolsPage extends StatelessWidget {
         child: SettingRow(
           icon: Icons.power_settings_new,
           title: '电源控制',
-          subtitle: 'SSH 重启 / 关机 · 单机两次确认',
+          subtitle: '通过 SSH 重启或关机 · 操作前核对目标',
           onTap: () => Navigator.push<void>(
             context,
             MaterialPageRoute(
@@ -408,7 +408,7 @@ class ToolsPage extends StatelessWidget {
           ),
         ),
       ),
-      const InfoNote('SSH 不能为已关机主机开机。电源操作不改变账单；无批量操作。'),
+      const InfoNote('关机后无法通过 SSH 开机，需使用厂商面板。重启或关机不会停止厂商计费。'),
     ],
   );
 }

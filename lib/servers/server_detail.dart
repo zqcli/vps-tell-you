@@ -26,10 +26,10 @@ class ServerDetail extends StatelessWidget {
   Future<void> archive(BuildContext context, ServerRecord record) async {
     final confirmed = await confirmAction(
       context,
-      title: '移除本地服务器记录？',
+      title: '归档这台服务器？',
       message:
-          '${record.name}\n\n不会销毁云主机，也不会停止厂商扣费。记录将归档，保留同一 ID，可撤销或在“设置 / 已归档记录”中恢复。',
-      action: '仅归档本地记录',
+          '${record.name}\n\n归档后将从服务器列表和当前费用统计中隐藏，历史付款保留。可在“设置 / 已归档记录”中恢复。不会关闭或销毁服务器，也不会停止厂商扣费。',
+      action: '归档本地记录',
       dangerous: true,
     );
     if (!confirmed || !context.mounted) return;
@@ -130,7 +130,7 @@ class ServerDetail extends StatelessWidget {
                 PopupMenuItem(
                   value: 'archive',
                   child: Text(
-                    '移除本地记录',
+                    '归档本地记录',
                     style: TextStyle(
                       color: Theme.of(context).colorScheme.error,
                     ),
@@ -237,7 +237,11 @@ class ServerDetail extends StatelessWidget {
                                   }
                                 } catch (error) {
                                   if (context.mounted) {
-                                    showFailure(context, error);
+                                    showFailure(
+                                      context,
+                                      error,
+                                      fallbackMessage: '未能复制主机地址，请重试。',
+                                    );
                                   }
                                 }
                               },
@@ -253,7 +257,7 @@ class ServerDetail extends StatelessWidget {
                     '${controller.groupName(s.groupId)} · ${s.purpose.isEmpty ? '待补充' : s.purpose}',
                   ),
                   value(context, '规格', s.spec),
-                  InfoNote('以上资料保存在本地，云账户刷新不会覆盖。SSH / TCP 连通性不能证明开机状态或业务健康。'),
+                  InfoNote('以上是本地资料，面板刷新不会覆盖。连接测试结果不代表服务持续可用。'),
                 ],
               ),
             ),
@@ -276,18 +280,18 @@ class ServerDetail extends StatelessWidget {
               ),
             ),
             HardwareInformationCard(s.resources),
-            const SectionTitle('云厂商关联'),
+            const SectionTitle('面板关联'),
             LedgerCard(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   Text(
-                    cloudAccount?.alias ?? '未关联云账户',
+                    cloudAccount?.alias ?? '未关联面板账户',
                     style: const TextStyle(fontWeight: FontWeight.w700),
                   ),
                   if (cloudAccount != null)
                     Text(cloudProviderName(cloudAccount.provider)),
-                  const InfoNote('关联已保存的云账户及实例，仅管理本地对应关系。硬件信息需手动编辑。'),
+                  const InfoNote('关联已保存的面板账户与实例。关联或刷新均不会更改本地硬件信息，请在上方手动编辑。'),
                   OutlinedButton.icon(
                     key: const ValueKey('server-cloud-binding'),
                     onPressed:
@@ -306,19 +310,19 @@ class ServerDetail extends StatelessWidget {
                             ),
                           ),
                     icon: const Icon(Icons.link),
-                    label: Text(binding == null ? '关联云账户' : '管理关联'),
+                    label: Text(binding == null ? '关联面板账户' : '管理关联'),
                   ),
                   if (controller.cloud.needsReload)
                     TextButton(
                       onPressed: controller.cloud.busy
                           ? null
                           : () => controller.cloud.reload(),
-                      child: const Text('重新读取云账户资料'),
+                      child: const Text('重新读取面板账户资料'),
                     ),
                 ],
               ),
             ),
-            const SectionTitle('续费信息'),
+            const SectionTitle('费用与到期'),
             LedgerCard(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -351,13 +355,13 @@ class ServerDetail extends StatelessWidget {
                       ],
                     ),
                   if (s.billing == BillingKind.prepaid) ...[
-                    value(context, '付款周期', '${s.cycleMonths} 个月'),
+                    value(context, '续费周期', '${s.cycleMonths} 个月'),
                     value(context, '服务开始日', s.startDate?.toString() ?? '未知'),
                     value(context, '服务到期日', s.dueDate?.toString() ?? '未知'),
                   ],
                   InfoNote(
                     s.billing == BillingKind.unknown
-                        ? '未知金额不会当作 0 元。可通过“编辑”补充费用资料。'
+                        ? '未知金额不会按 0 计算。可在“基本信息 / 编辑”中补充费用资料。'
                         : s.billing == BillingKind.metered
                         ? '按量费用作为月估算，不产生剩余价值。可在编辑服务器时维护费用资料。'
                         : '按当前续费价折算已知服务期；历史实付另计，不覆盖续费价。',
@@ -367,7 +371,7 @@ class ServerDetail extends StatelessWidget {
                       icon: Icons.notifications_none,
                       title: '到期提醒与使用计划',
                       subtitle:
-                          '${usagePlanLabel(rule.usagePlan)} · ${rule.enabled ? '${rule.leadDays.join(' / ')} 天前 · ${reminderTime(rule.minuteOfDay)}' : '已关闭本条提醒'}',
+                          '${usagePlanLabel(rule.usagePlan)} · ${rule.enabled ? '${reminderDaysLabel(rule.leadDays)} · ${reminderTime(rule.minuteOfDay)}' : '提醒已关闭'}',
                       onTap: () => Navigator.push<void>(
                         context,
                         MaterialPageRoute(
@@ -392,7 +396,7 @@ class ServerDetail extends StatelessWidget {
                   );
                   if (valuation == null) {
                     return const LedgerCard(
-                      child: InfoNote('日期或费用资料不足，剩余价值未知，不按 0 元计。'),
+                      child: InfoNote('日期或费用资料不足，剩余价值未知，不按 0 计算。'),
                     );
                   }
                   return ValuationCard(
@@ -462,7 +466,7 @@ class ServerDetail extends StatelessWidget {
               child: SettingRow(
                 icon: Icons.terminal,
                 title: 'SSH 连接配置',
-                subtitle: '地址、端口、用户名与凭据引用',
+                subtitle: '连接地址、端口、用户名和登录凭据',
                 onTap: s.archived
                     ? null
                     : () => Navigator.push<void>(
@@ -531,9 +535,7 @@ class ServerDetail extends StatelessWidget {
                 ),
               ],
             ),
-            const InfoNote(
-              '首次连接先核对完整主机身份；变化会阻断认证。电源操作仅支持 SSH 重启 / 关机，需两次确认，不改变厂商计费。',
-            ),
+            const InfoNote('首次连接需核对主机指纹；指纹变化会暂停登录。重启或关机需再次核对目标，且不会停止厂商计费。'),
             if (s.notes.isNotEmpty) ...[
               const SectionTitle('备注'),
               LedgerCard(child: SelectableText(s.notes)),

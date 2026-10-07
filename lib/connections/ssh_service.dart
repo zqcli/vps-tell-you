@@ -404,7 +404,7 @@ class NativeSshService extends SshService {
     try {
       _session?.write(Uint8List.fromList(utf8.encode(value)));
     } catch (_) {
-      _fail('SSH 输入未能发送；请重连后核实');
+      _fail('SSH 输入发送未确认；请重连后核实，避免重复执行');
     }
   }
 
@@ -509,7 +509,7 @@ SSHKeyPair _parseCredentialKey((SshCredential, String?) input) {
   );
   if (identity.algorithm != credential.metadata.keyAlgorithm ||
       identity.fingerprint != credential.metadata.fingerprint) {
-    throw const SecurityFailure('密钥与已保存的公开资料不一致');
+    throw const SecurityFailure('私钥与已保存的公钥信息不一致，请重新导入私钥后再连接');
   }
   return key;
 }

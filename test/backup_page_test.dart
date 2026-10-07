@@ -314,7 +314,7 @@ void main() {
         transfer.mobile = true;
         await mount(tester);
         await tap(tester, '生成导出预览');
-        await tap(tester, '系统分享明文备份');
+        await tap(tester, '分享未加密备份');
         expect(transfer.shares, 1);
         expect(transfer.saves, 0);
         expect(find.text('导出预览'), findsOneWidget);

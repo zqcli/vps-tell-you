@@ -1,6 +1,6 @@
 # vps tell you
 
-本地优先的个人 VPS 台账，Flutter 原生应用。当前为 **阶段 6 移动端候选（开发版 0.1.0）**，以 V6.2 为视觉与交互基础。Android / iOS 工程已生成，Linux 用于原生开发与验证。
+本地优先的个人 VPS 台账，Flutter 原生应用。当前为 **开发测试版 0.1.0**，以 V6.2 为视觉与交互基础。Android / iOS 工程已生成，Linux 用于原生开发与验证。
 
 ## 当前可以做什么
 
@@ -36,6 +36,8 @@
 - API 秘密只进设备安全存储，失败重新授权保留旧引用；V1 换凭据需明确解除旧关联再重新选择导入
 
 每台到期提醒 / 使用计划、原生通知权限接线、PNG 系统分享、台账 JSON 导出 / 空台账恢复、深浅色与跟随系统外观已实现。手机实际投递 / 分享与安装持久化仍须真机验证，不以云端测试代替。没有系统快照、最近使用或费用“接下来需要做什么”。
+
+中文界面用语与行为边界见 [UI_COPY_REVIEW](docs/UI_COPY_REVIEW.md)。
 
 最新服务器资料交互与兼容规则见 [SERVER_MANAGEMENT_UX](docs/SERVER_MANAGEMENT_UX.md)，全屏终端、快捷输入与字体说明见 [SSH_TERMINAL_UX](docs/SSH_TERMINAL_UX.md)。
 

@@ -39,7 +39,7 @@ bool incompleteFinance(LedgerController c, ServerRecord s) =>
 void showFinanceRules(BuildContext context) => showStage(
   context,
   '这些数字如何计算',
-  '合计月参考 = 有效预付续费价 ÷ 周期月数 + 按量月估算。预付到期日 ≤ 今天或未知时不计入月参考。\n\n剩余价值按已知服务期间 [开始日, 到期日) 逐期折算当前续费价。未来整期计整价，过期为真实 0；按量不适用，资料缺失为未知。历史实付独立保存。\n\n未来 30 天包含今天，不含第 30 天；已过期项目不补推。六个月为本月起六个自然月，预测从今天开始，不包含按量账单。\n\n近 30 天实付包含今天及前 29 天。全部范围保留归档付款，历史账户账单只计一次；分组不分摊账户账单。\n\n缺汇率只展示可转换部分，不补 0。原币小计保留。先精确求和，再四舍五入到分，中点远离 0。参考折算不是银行卡扣款额。',
+  '月费用参考：未到期的预付续费价 ÷ 周期月数，加上按量月估算。到期当天及已过期的预付服务不计入；缺少日期或费用时标记为未知。\n\n剩余价值：按各个已知服务期的未用天数折算当前续费价，包含开始日、不含结束日。尚未开始的整期计整价，已结束的期间计 0；按量付费不适用，资料不足时为未知。它不是可退款金额或成交价。\n\n续费预测：假设继续按当前周期和价格续费。未来 30 天含今天及后 29 天；六个月指本月剩余日期和后五个自然月。已过期项目不补推，不包含按量账单；本地使用计划不会改变预测。\n\n近 30 天实付：包含今天及前 29 天已记录的付款。全部范围保留归档服务器的付款，独立账户账单只计一次；按分组查看时不分摊账户账单。\n\n跨币种缺少汇率时，仅合计可折算的部分，并保留原币小计。先精确求和，再四舍五入到分；参考折算不等于实际扣款。',
 );
 
 class FinancePage extends StatefulWidget {
@@ -155,7 +155,7 @@ class _FinancePageState extends State<FinancePage> {
               ),
             ],
           ),
-          const InfoNote('每月花多少，还剩多少。'),
+          const InfoNote('查看月费用参考、剩余价值和已记录付款。'),
           if (c.refreshFailed) RefreshFailureNotice(controller: c),
           DropdownButtonFormField<String>(
             key: ValueKey('finance-group-${groupId ?? 'all'}'),
@@ -194,7 +194,7 @@ class _FinancePageState extends State<FinancePage> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const Text(
-                  '合计费用 · 折合每月',
+                  '月费用参考',
                   style: TextStyle(color: Color(0xFFCAD5E7), fontSize: 12),
                 ),
                 const SizedBox(height: 12),
@@ -233,7 +233,7 @@ class _FinancePageState extends State<FinancePage> {
                 ),
                 const SizedBox(height: 14),
                 const Text(
-                  '预付摊月 + 按量估算 · 非实际本月账单',
+                  '预付续费价摊月 + 按量月估算，不等于本月实付',
                   style: TextStyle(fontSize: 12, color: Color(0xFFCAD5E7)),
                 ),
               ],
@@ -243,7 +243,7 @@ class _FinancePageState extends State<FinancePage> {
           _MetricCard(
             title: '未来 30 天预计续费',
             total: renewals,
-            note: '${events.length} 笔预付续费 · [今天, 今天 + 30 天)',
+            note: '${events.length} 笔预付续费 · 今天及后 29 天',
             onTap: () => Navigator.push<void>(
               context,
               MaterialPageRoute(
@@ -256,7 +256,7 @@ class _FinancePageState extends State<FinancePage> {
             title: '近 30 天已记录实付',
             total: paid,
             note: payments.isEmpty
-                ? '尚无已录付款，非完整历史账单'
+                ? '尚无已记录付款，不代表没有支出'
                 : '${payments.length} 笔 · 今天及前 29 天',
             empty: payments.isEmpty,
             onTap: () => Navigator.push<void>(
@@ -391,7 +391,7 @@ class _FinancePageState extends State<FinancePage> {
                             '${f.month.year} 年 ${f.month.month} 月 · ${f.events.length} 笔',
                           ),
                           Text(
-                            '${f.total.formatted} ${c.fx.displayCurrency}${f.total.missingFx > 0 ? ' · 缺汇率 ${f.total.missingFx} 项' : ''}',
+                            '${f.total.formatted} ${c.fx.displayCurrency}${f.total.missingFx > 0 ? ' · 缺汇率 ${f.total.missingFx} 项' : ''}${f.total.unknown > 0 ? ' · 金额未知 ${f.total.unknown} 项' : ''}',
                             style: const TextStyle(fontWeight: FontWeight.w700),
                           ),
                           const SizedBox(height: 7),
@@ -415,7 +415,7 @@ class _FinancePageState extends State<FinancePage> {
             ),
           ),
           const InfoNote(
-            '从今天起按当前续费价与原锚点推演，到第七个月月初截止。图表与月度下钻使用同一批事件；不包含按量账单或已过期项目。',
+            '按当前续费价和周期预测本月剩余日期及后五个自然月。假设继续续费，使用计划不改变预测；不包含按量账单或已过期项目。',
           ),
         ],
       );
@@ -487,7 +487,7 @@ class FinanceDetailPage extends StatelessWidget {
             FinanceMetric.monthly => '月费用明细',
             FinanceMetric.value => '剩余价值明细',
             FinanceMetric.inventory => '服务器构成',
-            FinanceMetric.incomplete => '费用资料待完善',
+            FinanceMetric.incomplete => '费用与到期核对',
           }),
           actions: [
             IconButton(
@@ -502,7 +502,7 @@ class FinanceDetailPage extends StatelessWidget {
           children: [
             if (c.refreshFailed) RefreshFailureNotice(controller: c),
             InfoNote(
-              '${label ?? (groupId == null ? '全部分组' : c.groupName(groupId))} · ${records.length} 台活动服务器',
+              '${label ?? (groupId == null ? '全部分组' : c.groupName(groupId))} · ${records.length} 台未归档服务器',
             ),
             for (final s in records)
               Padding(
@@ -541,7 +541,9 @@ class FinanceDetailPage extends StatelessWidget {
                                   : s.billing == BillingKind.metered &&
                                         metric == FinanceMetric.value
                                   ? '按量计费 · 剩余价值不适用'
-                                  : '日期 / 费用未知或已到期，未纳入',
+                                  : amount.status == AmountStatus.notApplicable
+                                  ? '已到期，未计入月费用参考'
+                                  : '日期或费用资料不足，金额未知',
                             ),
                             Text(
                               convertedAmount(amount, c.fx),
@@ -551,7 +553,7 @@ class FinanceDetailPage extends StatelessWidget {
                                     .onSurfaceVariant,
                               ),
                             ),
-                            if (s.dueDate != null) Text('服务至 ${s.dueDate}'),
+                            if (s.dueDate != null) Text('到期日：${s.dueDate}'),
                           ],
                         );
                       },
@@ -560,7 +562,7 @@ class FinanceDetailPage extends StatelessWidget {
                 ),
               ),
             if (records.isEmpty) const InfoNote('此范围没有服务器。'),
-            const InfoNote('“—”是未知或不适用，不代表免费。已知 0 元会明确显示 0.00。'),
+            const InfoNote('“—”表示未知或不适用，不代表免费。已知金额为 0 时会显示 0.00。'),
           ],
         ),
       );

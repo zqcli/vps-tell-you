@@ -255,6 +255,9 @@ class _BackupPageState extends State<BackupPage> {
     }
   }
 
+  String _backupTime(String value) =>
+      '${DateTime.parse(value).toLocal().toString().substring(0, 19)}（设备时间）';
+
   String _counts(Map<String, int> counts) =>
       '${counts['servers']} 台服务器 · ${counts['groups']} 个分组\n'
       '${counts['payments']} 笔付款（含撤销） · ${counts['service_periods']} 个服务期';
@@ -278,7 +281,7 @@ class _BackupPageState extends State<BackupPage> {
                   style: TextStyle(fontWeight: FontWeight.w700),
                 ),
                 InfoNote(
-                  '包含服务器名称、厂商、地址、地区、用途、系统、规格、分组、金额、日期、付款和手动汇率。文件未加密，请自行保管，只分享到可信位置。普通文字字段若被写入秘密，也会随文件导出。',
+                  '包含服务器名称、厂商、地址、地区、用途、系统、规格、硬件信息、分组、金额、日期、付款和手动汇率。文件未加密，请妥善保管，只分享到可信位置。上述字段若填写了敏感内容，也会随文件导出。',
                 ),
                 Text('不包含：'),
                 for (final item in LedgerBackupSnapshot.exclusions)
@@ -299,16 +302,14 @@ class _BackupPageState extends State<BackupPage> {
                 children: [
                   const Text('导出预览'),
                   Text(_counts(exportSnapshot!.counts)),
-                  Text('快照时间：${exportSnapshot!.exportedAt}'),
+                  Text('备份生成时间：${_backupTime(exportSnapshot!.exportedAt)}'),
                   Builder(
                     builder: (buttonContext) => FilledButton.icon(
                       onPressed: busy ? null : () => writeExport(buttonContext),
                       icon: Icon(
                         transfer.canShare ? Icons.ios_share : Icons.save_alt,
                       ),
-                      label: Text(
-                        transfer.canShare ? '系统分享明文备份' : '保存 JSON 备份',
-                      ),
+                      label: Text(transfer.canShare ? '分享未加密备份' : '保存 JSON 备份'),
                     ),
                   ),
                 ],
@@ -333,7 +334,9 @@ class _BackupPageState extends State<BackupPage> {
                 children: [
                   const Text('恢复预览'),
                   Text(_counts(restorePreview!.counts)),
-                  Text('备份时间：${restorePreview!.snapshot.exportedAt}'),
+                  Text(
+                    '备份时间：${_backupTime(restorePreview!.snapshot.exportedAt)}',
+                  ),
                   const InfoNote('将导入上述台账记录与手动汇率。上方列出的安全资料、备注、提醒和应用偏好均不在备份内。'),
                   for (final conflict in restorePreview!.conflicts)
                     Text(

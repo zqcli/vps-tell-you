@@ -78,7 +78,7 @@ class _ServerListState extends State<ServerList> {
               DropdownButtonFormField<String>(
                 initialValue: group ?? '__all',
                 isExpanded: true,
-                decoration: const InputDecoration(labelText: '用途分组'),
+                decoration: const InputDecoration(labelText: '分组'),
                 items: [
                   const DropdownMenuItem(value: '__all', child: Text('全部分组')),
                   const DropdownMenuItem(value: '', child: Text('未分组')),
@@ -206,7 +206,7 @@ class _ServerListState extends State<ServerList> {
           key: const ValueKey('import-cloud-server'),
           onPressed: c.canMutate ? importCloud : null,
           icon: const Icon(Icons.cloud_download_outlined),
-          label: const Text('从云账户导入'),
+          label: const Text('从面板账户导入'),
         ),
         if (all.isEmpty && c.records.isEmpty) ...[
           const SizedBox(height: 78),
@@ -232,7 +232,7 @@ class _ServerListState extends State<ServerList> {
           ),
           const SizedBox(height: 14),
           Text(
-            '把机器、费用和连接放在一起。\n无须安装 Agent，也不必先授权云账户。',
+            '把机器、费用和连接放在一起。\n无需安装监控程序，也可直接手动记录。',
             textAlign: TextAlign.center,
             style: TextStyle(
               color: Theme.of(context).colorScheme.onSurfaceVariant,
@@ -253,8 +253,7 @@ class _ServerListState extends State<ServerList> {
                     final ok = await confirmAction(
                       context,
                       title: '载入演示数据？',
-                      message:
-                          '将写入 4 条带“演示”标记的本地记录，地址均为保留地址。不会连接服务器。你可以在设置中归档这些记录。',
+                      message: '将写入 4 条带“演示”标记的本地记录，地址均为保留地址。不会连接服务器。可在各服务器详情中归档这些记录。',
                       action: '载入演示',
                     );
                     if (ok) {
@@ -275,7 +274,7 @@ class _ServerListState extends State<ServerList> {
             controller: search,
             onChanged: (value) => c.updateFilters(query: value),
             decoration: InputDecoration(
-              hintText: '搜索名称、IP 或厂商',
+              hintText: '搜索名称、地址、厂商、用途或地区',
               prefixIcon: const Icon(Icons.search, size: 21),
               suffixIcon: c.search.isEmpty
                   ? null
@@ -297,7 +296,7 @@ class _ServerListState extends State<ServerList> {
               ...[
                 (ServerFilter.all, '全部'),
                 (ServerFilter.favorites, '常用'),
-                (ServerFilter.pending, '待处理'),
+                (ServerFilter.pending, '到期核对'),
               ].map(
                 (entry) => ChoiceChip(
                   label: Text(entry.$2),
@@ -354,7 +353,7 @@ class _ServerListState extends State<ServerList> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                '续费资料待核实',
+                                '到期待核对',
                                 style: TextStyle(
                                   fontWeight: FontWeight.w700,
                                   color: Theme.of(context)
@@ -364,7 +363,7 @@ class _ServerListState extends State<ServerList> {
                               ),
                               const SizedBox(height: 3),
                               Text(
-                                '$overdue 笔已过期 · ${pending.length - overdue} 笔 30 天内到期',
+                                '$overdue 台已过期 · ${pending.length - overdue} 台 30 天内到期',
                                 style: TextStyle(
                                   fontSize: 11,
                                   color: Theme.of(context)
@@ -391,7 +390,7 @@ class _ServerListState extends State<ServerList> {
             c.filter == ServerFilter.favorites
                 ? '常用服务器'
                 : c.filter == ServerFilter.pending
-                ? '账单待处理'
+                ? '到期待核对'
                 : '所有服务器',
             action: PopupMenuButton<ServerSort>(
               tooltip: '排序',
@@ -443,7 +442,7 @@ class _ServerListState extends State<ServerList> {
                     color: Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
                   const SizedBox(height: 12),
-                  Text(all.isEmpty ? '没有活动服务器' : '没有符合条件的记录'),
+                  Text(all.isEmpty ? '没有未归档服务器' : '没有符合条件的记录'),
                   const InfoNote('试试调整筛选；已归档记录可在设置中恢复。'),
                   TextButton(
                     onPressed: () {
@@ -468,7 +467,7 @@ class _ServerListState extends State<ServerList> {
               ),
             ),
           const InfoNote(
-            '显示本地资料与最近 API 观测 · 无后台持续监控\n到期日按设备今天计算，未来 30 天不含第 30 天。',
+            '显示本地资料和最近一次面板查询结果，不持续监控。\n到期天数按设备日期计算；未来 30 天包含今天及后 29 天。',
           ),
         ],
       ],
@@ -591,7 +590,7 @@ class ServerRow extends StatelessWidget {
                     Text(
                       binding != null
                           ? cloudBindingSummary(binding)
-                          : '● 未检测 · 本地记录',
+                          : '本地记录 · 未查询运行状态',
                       style: TextStyle(
                         color: Theme.of(context).colorScheme.onSurfaceVariant,
                         fontSize: 10,

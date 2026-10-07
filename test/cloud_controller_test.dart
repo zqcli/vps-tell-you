@@ -378,6 +378,19 @@ void main() {
     expect(controller.bindings.single.stale, false);
   });
   test(
+    'missing saved API credentials gives a read-specific recovery message',
+    () async {
+      final account = await add();
+      final callsBefore = adapterCalls;
+      secrets.values.remove(account.secretRef);
+      expect(await controller.refreshAccount(account), isNull);
+      expect(controller.error, CloudAccountFailure.secretRead.message);
+      expect(adapterCalls, callsBefore);
+      expect(controller.accounts.single.id, account.id);
+      expect(controller.bindings.single.power, CloudPower.running);
+    },
+  );
+  test(
     'newer refresh wins even when previous adapter ignores cancellation',
     () async {
       final account = await add();
@@ -553,7 +566,7 @@ void main() {
       secrets.failRead = true;
       expect(await controller.refreshAccount(account), isNull);
       expect(adapterCalls, calls);
-      expect(controller.error, contains('安全存储'));
+      expect(controller.error, CloudAccountFailure.secretRead.message);
       expect(controller.error, isNot(contains('DO-NOT-LEAK')));
       expect(secrets.values.containsKey(account.secretRef), true);
     },

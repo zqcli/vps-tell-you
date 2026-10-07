@@ -180,11 +180,11 @@ class ReminderScheduler extends ChangeNotifier {
 
   String get description => switch (state) {
     ReminderSyncState.idle => '尚未检查系统通知',
-    ReminderSyncState.syncing => '正在核对系统排程…',
-    ReminderSyncState.ready => '系统待排程 $submitted 条 · 未覆盖 $uncovered 条',
-    ReminderSyncState.denied => '系统通知未允许或此通知渠道已关闭；规则仍保留',
-    ReminderSyncState.unsupported => '此平台不支持定时通知；已保存规则，未排程',
-    ReminderSyncState.failed => '排程核对失败，可能仍有旧提醒；请重试或检查系统设置',
+    ReminderSyncState.syncing => '正在核对系统提醒…',
+    ReminderSyncState.ready => '已安排 $submitted 条提醒 · 未安排 $uncovered 条',
+    ReminderSyncState.denied => '系统通知未获允许或通知渠道已关闭；已保存规则仍保留',
+    ReminderSyncState.unsupported => '此平台不支持定时通知；已保存规则不会在此设备触发提醒',
+    ReminderSyncState.failed => '提醒状态核对失败，可能仍有旧提醒；请重试或检查系统设置',
   };
 
   Future<void> requestPermission() async {

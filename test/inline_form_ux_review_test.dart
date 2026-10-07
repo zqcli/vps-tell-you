@@ -401,7 +401,7 @@ void main() {
         await mount(tester);
         for (final entry in [
           (currency(), '原币种', 'USD'),
-          (cycle(), '付款周期', '每年'),
+          (cycle(), '续费周期', '每年'),
           (billing(), '计费方式', '预付费'),
         ]) {
           await tester.ensureVisible(entry.$1);

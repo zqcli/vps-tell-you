@@ -25,7 +25,7 @@ Future<bool> _preview(
               textDirection: TextDirection.ltr,
               style: const TextStyle(fontFamily: 'monospace'),
             ),
-            const InfoNote('不会执行或发送任何内容。插入后仍需在终端核对目标、完整草稿并明确 Send。'),
+            const InfoNote('预览和插入都不会发送内容。请在终端核对目标与完整草稿，再选择“发送”或“发送并执行”。'),
           ],
         ),
         actions: [
@@ -328,7 +328,7 @@ class _SnippetEditorPageState extends State<SnippetEditorPage> {
         child: ListView(
           padding: const EdgeInsets.all(20),
           children: [
-            const InfoNote('本地普通文本，不加密保存。请勿填写秘密。保存不会执行或发送内容。'),
+            const InfoNote('本地普通文本，不加密保存。请勿填写密码、私钥或令牌。保存不会执行或发送内容。'),
             TextFormField(
               key: const Key('snippet-name'),
               controller: name,

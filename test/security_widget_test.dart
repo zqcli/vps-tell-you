@@ -475,6 +475,8 @@ void main() {
           previous: security.hostTrusts.single,
         ),
       );
+      expect(find.text('主机公钥与记录不一致'), findsOneWidget);
+      expect(find.textContaining('已阻断认证'), findsNothing);
       expect(find.text('重新核实并替换信任'), findsNothing);
       await tap(tester, '开始独立重新核实');
       await tester.ensureVisible(find.text('重新核实并替换信任'));

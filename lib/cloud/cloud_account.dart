@@ -172,10 +172,15 @@ class CloudAccountFailure implements Exception {
   );
   static const selection = CloudAccountFailure('导入列表已变化或选择无效，请重新读取');
   static const alias = CloudAccountFailure('账户别名需为 1–80 个字符');
-  static const secret = CloudAccountFailure('原生安全存储未完成，原授权保持不变；请检查设备后重试');
+  static const secret = CloudAccountFailure(
+    'API 凭据未能保存到设备安全存储，原授权保持不变；请解锁设备后重试',
+  );
+  static const secretRead = CloudAccountFailure(
+    '无法读取此账户已保存的 API 凭据，请解锁设备后重试；仍失败时请从账户菜单重新授权',
+  );
   static const bindingTaken = CloudAccountFailure('该实例已关联其他服务器，不能覆盖；请重新读取本地列表');
   static const bindingUnavailable = CloudAccountFailure(
-    '实例观测已失效或本次未返回，请到云账户手动刷新后重新选择',
+    '实例信息暂不可用于关联，请到“面板账户”手动刷新后重新选择',
   );
 }
 

@@ -293,7 +293,7 @@ void main() {
             await reveal(tester);
             expectFeeRow(tester, width, entry.value);
             final spoken = tester.getSemantics(field('cycle')).label;
-            expect(spoken, contains('付款周期'));
+            expect(spoken, contains('续费周期'));
             expect(
               spoken,
               contains(entry.key == 12 ? '每年' : '每 ${entry.key} 个月'),

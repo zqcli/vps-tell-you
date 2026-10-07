@@ -15,6 +15,10 @@ String usagePlanLabel(UsagePlan plan) => switch (plan) {
 String reminderTime(int minutes) =>
     '${(minutes ~/ 60).toString().padLeft(2, '0')}:${(minutes % 60).toString().padLeft(2, '0')}';
 
+String reminderDaysLabel(Iterable<int> days) => days.isEmpty
+    ? '未选择提醒日期'
+    : days.map((day) => day == 0 ? '到期当天' : '提前 $day 天').join('、');
+
 class NotificationPage extends StatefulWidget {
   const NotificationPage({super.key, required this.controller});
   final LedgerController controller;
@@ -41,7 +45,7 @@ class _NotificationPageState extends State<NotificationPage> {
     builder: (context, _) {
       final reminders = widget.controller.reminders;
       return Scaffold(
-        appBar: AppBar(title: const Text('通知权限与排程')),
+        appBar: AppBar(title: const Text('通知权限与提醒状态')),
         body: ListView(
           padding: const EdgeInsets.all(20),
           children: [
@@ -54,33 +58,33 @@ class _NotificationPageState extends State<NotificationPage> {
                     key: const ValueKey('reminder-status'),
                   ),
                   if (reminders.timezoneName != null)
-                    InfoNote('最近排程时区：${reminders.timezoneName}'),
+                    InfoNote('最近安排提醒时使用的时区：${reminders.timezoneName}'),
                 ],
               ),
             ),
             const InfoNote(
-              '系统权限和每台服务器的提醒规则是两回事。拒绝通知仍可保存规则。各服务器的提前天数、时间和使用计划在详情中编辑。',
+              '需同时开启系统通知和服务器提醒。各服务器的提前天数、时间和使用计划可在详情中编辑；未允许通知时仍可保存规则。',
             ),
             if (reminders.platform.supported) ...[
               FilledButton(
                 onPressed: requesting ? null : request,
                 child: Text(requesting ? '正在申请…' : '申请系统通知权限'),
               ),
-              const InfoNote('已拒绝或关闭通知渠道时，请到设备系统设置中调整；这里不会假定授权成功。'),
+              const InfoNote('已拒绝或关闭通知渠道时，请到设备系统设置中调整；修改后返回应用，重新核对提醒状态。'),
             ],
             OutlinedButton(
               onPressed:
                   requesting || reminders.state == ReminderSyncState.syncing
                   ? null
                   : reminders.reconcile,
-              child: const Text('重新核对排程'),
+              child: const Text('重新核对提醒状态'),
             ),
             const SectionTitle('提醒范围'),
             const InfoNote(
-              '只提交未来 366 天内已知的到期提醒；过去的提醒时间不补发。iOS 最多排入最近 64 条，Android 最多 256 条，其余显示为未覆盖。请定期打开应用补充排程。',
+              '只提交未来 366 天内已知的到期提醒；过去的提醒时间不补发。iOS 最多排入最近 64 条，Android 最多 256 条，其余显示为未安排。请定期打开应用更新提醒。',
             ),
             const InfoNote(
-              '应用回到前台会重新读取权限和设备时区。旅行后请打开应用核对；未打开时已提交的提醒可能仍按旧时区投递。系统节电、专注模式及厂商限制可能延迟或阻止提醒，排程成功不代表已经送达。',
+              '应用回到前台会重新读取权限和设备时区。旅行后请打开应用核对；未打开时已提交的提醒可能仍按旧时区投递。系统节电、专注模式及厂商限制可能延迟或阻止提醒，已安排不代表已经送达。',
             ),
             const InfoNote(
               '提醒内容只包含到期日期和核对提示，不包含服务器名称、地址、账户或金额。不自动付款、不修改厂商续费设置。',
@@ -133,7 +137,7 @@ class _ReminderPageState extends State<ReminderPage> {
         draft = widget.controller.reminderFor(widget.serverId) ?? draft;
       }
       messenger.showSnackBar(
-        const SnackBar(content: Text('本机提醒规则已保存；系统排程状态请以通知设置为准。')),
+        const SnackBar(content: Text('提醒规则已保存。请在“设置 / 通知权限”查看系统提醒状态。')),
       );
     } catch (error) {
       if (mounted) showFailure(context, error);
@@ -161,7 +165,7 @@ class _ReminderPageState extends State<ReminderPage> {
           appBar: AppBar(
             title: const Text('本机到期提醒'),
             leading: IconButton(
-              tooltip: MaterialLocalizations.of(context).backButtonTooltip,
+              tooltip: '返回',
               icon: const Icon(Icons.arrow_back),
               onPressed: saving
                   ? null
@@ -178,13 +182,15 @@ class _ReminderPageState extends State<ReminderPage> {
                       ScrollViewKeyboardDismissBehavior.onDrag,
                   children: [
                     Text('${server.name} · ${server.dueDate ?? '未填写到期日'}'),
-                    const InfoNote('修改后点保存生效；返回或取消不保存。到期不再使用仍保留取消续费核对提醒。'),
+                    const InfoNote(
+                      '修改后点“保存提醒规则”生效。若启用提醒并选择“到期不再使用”，仍会提醒核对厂商的续费设置。',
+                    ),
                     if (server.isDemo) const InfoNote('演示数据不会提交真实系统通知。'),
                     if (server.archived) const InfoNote('已归档记录不会排程提醒。'),
                     LedgerCard(
                       child: SwitchListTile.adaptive(
                         contentPadding: EdgeInsets.zero,
-                        title: const Text('启用本条提醒'),
+                        title: const Text('启用此服务器的提醒'),
                         subtitle: const Text('仅提醒，不自动续费或取消服务'),
                         value: rule.enabled,
                         onChanged: editable
@@ -226,6 +232,17 @@ class _ReminderPageState extends State<ReminderPage> {
                               FocusScope.of(context).unfocus();
                               final time = await showTimePicker(
                                 context: context,
+                                helpText: '选择提醒时间',
+                                cancelText: '取消',
+                                confirmText: '确定',
+                                hourLabelText: '时',
+                                minuteLabelText: '分',
+                                errorInvalidText: '请输入有效时间',
+                                builder: (context, child) => MediaQuery(
+                                  data: MediaQuery.of(context)
+                                      .copyWith(alwaysUse24HourFormat: true),
+                                  child: child!,
+                                ),
                                 initialTime: TimeOfDay(
                                   hour: rule.minuteOfDay ~/ 60,
                                   minute: rule.minuteOfDay % 60,
@@ -266,10 +283,10 @@ class _ReminderPageState extends State<ReminderPage> {
                       ),
                     ),
                     const InfoNote('使用计划只是本地记录。计划到期停用不会停止厂商扣费，请另行向厂商确认取消续费。'),
-                    const SectionTitle('当前已保存规则的排程'),
+                    const SectionTitle('已保存规则的提醒安排'),
                     Text(scheduler.description),
                     if (scheduler.state == ReminderSyncState.ready) ...[
-                      Text('本服务器已排程 ${plans.length} 条'),
+                      Text('本服务器已安排 ${plans.length} 条'),
                       for (final item in plans)
                         Text(
                           '${item.at.year}-${item.at.month.toString().padLeft(2, '0')}-${item.at.day.toString().padLeft(2, '0')} ${reminderTime(item.at.hour * 60 + item.at.minute)}',

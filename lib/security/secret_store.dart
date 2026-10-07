@@ -105,7 +105,7 @@ class NativeDeviceAuthenticator implements DeviceAuthenticator {
       }
       return await _authentication
           .authenticate(
-            localizedReason: '验证设备身份后短时查看凭据',
+            localizedReason: '验证你的身份以查看已保存的密码',
             biometricOnly: false,
             sensitiveTransaction: true,
             persistAcrossBackgrounding: false,

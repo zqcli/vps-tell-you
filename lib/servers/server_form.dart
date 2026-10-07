@@ -155,7 +155,7 @@ class _ServerFormState extends State<ServerForm> {
     String? shortLabel,
   }) {
     final enabled =
-        !saving && !(termsLocked && (label == '计费方式' || label == '付款周期'));
+        !saving && !(termsLocked && (label == '计费方式' || label == '续费周期'));
     final dropdown = Semantics(
       label: compact ? label : null,
       child: DropdownButtonFormField<T>(
@@ -307,7 +307,7 @@ class _ServerFormState extends State<ServerForm> {
       key: const ValueKey('row-cycle'),
       padding: EdgeInsets.zero,
       child: Semantics(
-        label: '付款周期',
+        label: '续费周期',
         child: InputDecorator(
           key: const ValueKey('field-cycle'),
           isFocused: enabled && _cycleFocus.hasFocus,
@@ -499,7 +499,7 @@ class _ServerFormState extends State<ServerForm> {
     for (final id in ['start', 'due']) {
       final error = _validateField(
         id,
-        id == 'start' ? '开始日期' : '结束日期',
+        id == 'start' ? '开始日期' : '到期日期',
         fields[id]!.text,
       );
       if (error != null) {
@@ -533,7 +533,7 @@ class _ServerFormState extends State<ServerForm> {
               Expanded(
                 child: _compactInput(
                   'due',
-                  '结束日期',
+                  '到期日期',
                   '服务到期日（选填）',
                   errors['due'],
                   date: true,
@@ -544,7 +544,7 @@ class _ServerFormState extends State<ServerForm> {
           for (final error in errors.entries)
             _rowError(
               error.value,
-              label: error.key == 'start' ? '开始日期' : '结束日期',
+              label: error.key == 'start' ? '开始日期' : '到期日期',
             ),
         ],
       );
@@ -645,13 +645,18 @@ class _ServerFormState extends State<ServerForm> {
               const SectionTitle('基本资料'),
               field('name', '服务器名称', required: true),
               field('vendor', '厂商', required: true, hint: '例如：搬瓦工 / 自定义厂商'),
-              field('host', '主机地址（选填）', hint: '独立保存的 IPv4、IPv6 或域名', max: 253),
+              field(
+                'host',
+                '主机地址（选填）',
+                hint: 'IPv4、IPv6 或域名，不含协议或端口',
+                max: 253,
+              ),
               InfoNote(
                 widget.record == null
-                    ? '留空时采用硬件 IP 或 Hostname；SSH 连接地址另行设置。'
+                    ? '新建时留空会采用硬件信息中的 IP 或主机名；SSH 连接地址另行设置。'
                     : '此地址独立保存，修改硬件不会更改它；SSH 连接地址另行设置。',
               ),
-              select<String>('用途分组', groupId ?? '', [
+              select<String>('分组', groupId ?? '', [
                 const DropdownMenuItem(value: '', child: Text('未分组')),
                 ...widget.controller.groups.map(
                   (g) => DropdownMenuItem(value: g.id, child: Text(g.name)),
@@ -671,7 +676,7 @@ class _ServerFormState extends State<ServerForm> {
               const SectionTitle('费用资料'),
               if (termsLocked)
                 const InfoNote(
-                  '已记录追加服务期，计费方式、周期和日期已锁定。更正请先安全撤销付款；调整续费价或币种不会改写历史实付。',
+                  '存在续费生成的服务期时，计费方式、周期和日期不可直接修改。请在付款详情核对可撤销范围；后续资料已改变时可能无法撤销。续费价和币种仍可调整，历史实付不变。',
                 ),
               select<BillingKind>(
                 '计费方式',
@@ -683,7 +688,7 @@ class _ServerFormState extends State<ServerForm> {
                   ),
                   DropdownMenuItem(
                     value: BillingKind.prepaid,
-                    child: Text('预付费 · 有服务到期日'),
+                    child: Text('预付费 · 按周期续费'),
                   ),
                   DropdownMenuItem(
                     value: BillingKind.metered,
@@ -702,10 +707,12 @@ class _ServerFormState extends State<ServerForm> {
                 _feeRow(),
                 if (billing == BillingKind.prepaid) ...[
                   _dateRow(),
-                  const InfoNote('日期选填。结束日期当天不计入服务期；只填结束日期会推算一个付款周期，不填则保留未知。'),
+                  const InfoNote(
+                    '日期选填，到期当天不计入服务期。只填到期日期时，会按续费周期推算开始日期；未填到期日期则无法计算剩余价值。',
+                  ),
                 ],
                 const InfoNote(
-                  '0 元表示明确免费。费用未知请选“费用未知”。保存原币金额；参考汇率仅用于折算。修改续费价不代表已经付款。',
+                  '金额填 0 表示免费；金额未知请选择“费用未知”。按所选币种保存，参考汇率仅用于折算。保存费用不会记录付款。',
                 ),
               ],
               field('notes', '备注（选填）', max: 4000, lines: 4),

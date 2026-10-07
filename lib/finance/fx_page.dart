@@ -104,7 +104,7 @@ class _FxPageState extends State<FxPage> {
                   ),
                   decoration: InputDecoration(
                     labelText: entry.$2,
-                    hintText: '留空不折算',
+                    hintText: '留空表示汇率未知',
                   ),
                   validator: (value) {
                     final text = value!.trim();
@@ -123,7 +123,7 @@ class _FxPageState extends State<FxPage> {
                 controller: date,
                 enabled: !saving,
                 decoration: const InputDecoration(
-                  labelText: '手动报价日期',
+                  labelText: '汇率参考日期',
                   hintText: 'YYYY-MM-DD',
                 ),
                 validator: (v) {

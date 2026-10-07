@@ -179,7 +179,7 @@ void main() {
       await tester.tap(find.text('申请系统通知权限'));
       await tester.pumpAndSettle();
       expect(platform.requests, 1);
-      expect(find.textContaining('系统通知未允许'), findsOneWidget);
+      expect(find.textContaining('系统通知未获允许'), findsOneWidget);
       expect((await store.reminderRules()).single.enabled, isTrue);
       expect(tester.takeException(), isNull);
     },

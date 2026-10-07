@@ -339,7 +339,7 @@ void main() {
       await save(tester);
       expect(field('start').hitTestable(), findsOneWidget);
       expect(find.text('开始日期：'), findsOneWidget);
-      expect(find.text('结束日期：'), findsOneWidget);
+      expect(find.text('到期日期：'), findsOneWidget);
       final dateErrors = find.text('请使用有效日期，例如 2026-10-06');
       expect(dateErrors, findsNWidgets(2));
       for (final error in dateErrors.evaluate()) {
@@ -361,7 +361,7 @@ void main() {
       await fill(tester, 'due', '2026-10-06');
       await save(tester);
       expect(find.text('开始日期：'), findsNothing);
-      expect(find.text('结束日期：'), findsOneWidget);
+      expect(find.text('到期日期：'), findsOneWidget);
       expect(find.text('到期日必须晚于开始日').hitTestable(), findsOneWidget);
       node = tester.getSemantics(field('start'));
       expect(node.validationResult, ui.SemanticsValidationResult.valid);
@@ -388,7 +388,7 @@ void main() {
       for (final months in [1, 3, 6, 12, 24, 36]) {
         await select(tester, 'cycle', months);
         final node = tester.getSemantics(field('cycle'));
-        expect(node.label, contains('付款周期'));
+        expect(node.label, contains('续费周期'));
         expect(node.label, contains(months == 12 ? '每年' : '每 $months 个月'));
         final amountRect = tester.getRect(field('amount'));
         final currencyRect = tester.getRect(field('currency'));

@@ -83,7 +83,7 @@ class _SshConfigurationPageState extends State<SshConfigurationPage> {
               const SectionTitle('选择登录凭据'),
               SettingRow(
                 icon: Icons.link_off,
-                title: '解除当前凭据',
+                title: '解除当前凭据关联',
                 subtitle: '保留连接配置，之后再选择',
                 onTap: () => Navigator.pop(context, ''),
               ),
@@ -222,7 +222,7 @@ class _SshConfigurationPageState extends State<SshConfigurationPage> {
                         maxLength: 64,
                         decoration: const InputDecoration(labelText: '当前连接用户名'),
                         validator: (v) => v == null || v.trim().isEmpty
-                            ? '请显式填写用户名或采用凭据默认值'
+                            ? '请填写登录用户名，或使用凭据的默认用户名'
                             : null,
                       ),
                       SectionTitle(
@@ -260,7 +260,7 @@ class _SshConfigurationPageState extends State<SshConfigurationPage> {
                         '用户名属于本台连接。换凭据时只有明确选择“采用默认用户名”才更改它，取消和相同用户名都不会修改其他连接。',
                       ),
                       const InfoNote(
-                        '首次连接必须先核对主机身份，变化时阻断认证。本阶段没有网络连接或“测试成功”占位。',
+                        '此页只保存连接配置。建立连接时先核验主机身份，再进行登录认证；主机公钥变化时会暂停认证，等待重新核实。',
                       ),
                       FilledButton(
                         onPressed:

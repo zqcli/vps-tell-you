@@ -101,7 +101,7 @@ class _ServerCloudBindingPageState extends State<ServerCloudBindingPage> {
 
   String _accountName(String id) {
     final account = _options?.accounts.where((a) => a.id == id).firstOrNull;
-    return account == null ? '云账户' : '${account.alias} · ${account.endpoint}';
+    return account == null ? '面板账户' : '${account.alias} · ${account.endpoint}';
   }
 
   String _instanceName(CloudBindingChoice choice) {
@@ -140,11 +140,11 @@ class _ServerCloudBindingPageState extends State<ServerCloudBindingPage> {
       setState(() => _confirming = true);
       final confirmed = await confirmAction(
         context,
-        title: unlink ? '解除这台服务器的云关联？' : '更换这台服务器的云关联？',
+        title: unlink ? '解除这台服务器的面板关联？' : '更换这台服务器的面板关联？',
         message:
             '${options.server.name}\n当前：${_accountName(options.current!.accountId)} · ${_instanceName(options.current!)}'
             '${unlink ? '' : '\n更换为：${_accountName(choice!.accountId)} · ${_instanceName(choice)}'}'
-            '\n\n仅修改本地关联，保留服务器资料、硬件、费用、付款、SSH、云账户及授权。不会操作远端实例或停止扣费。',
+            '\n\n仅修改本地关联，保留服务器资料、硬件、费用、付款、SSH、面板账户及授权。不会操作远端实例或停止扣费。',
         action: unlink ? '仅解除这台关联' : '确认更换关联',
         dangerous: unlink,
       );
@@ -171,7 +171,7 @@ class _ServerCloudBindingPageState extends State<ServerCloudBindingPage> {
     if (!saved) return;
     if (widget.ledger.cloud.needsReload) return;
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(unlink ? '已解除这台服务器的云关联' : '已保存云账户关联')),
+      SnackBar(content: Text(unlink ? '已解除这台服务器的面板关联' : '已保存面板账户关联')),
     );
     Navigator.pop(context, true);
   }
@@ -188,7 +188,7 @@ class _ServerCloudBindingPageState extends State<ServerCloudBindingPage> {
       return PopScope<bool>(
         canPop: !_saving,
         child: Scaffold(
-          appBar: AppBar(title: const Text('关联云账户')),
+          appBar: AppBar(title: const Text('关联面板账户')),
           body: Center(
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 760),
@@ -196,7 +196,7 @@ class _ServerCloudBindingPageState extends State<ServerCloudBindingPage> {
                 padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
                 children: [
                   const InfoNote(
-                    '这里只使用已保存的实例观测，不会访问云端。列表缺失或观测失效时，请到“云账户”手动刷新，再返回重新读取本地列表。',
+                    '这里只使用已保存的 API 返回信息，不会连接面板。没有可选实例或上次读取失败时，请到“面板账户”手动刷新，再返回重新读取本地列表。',
                   ),
                   if (_loading)
                     const Padding(
@@ -219,7 +219,7 @@ class _ServerCloudBindingPageState extends State<ServerCloudBindingPage> {
                       style: Theme.of(context).textTheme.titleLarge,
                     ),
                     if (options.server.archived || options.server.isDemo)
-                      const CloudNotice('已归档或演示记录不能修改云关联。', error: true),
+                      const CloudNotice('已归档或演示记录不能修改面板关联。', error: true),
                     if (current != null) ...[
                       const SectionTitle('当前关联'),
                       LedgerCard(
@@ -240,9 +240,9 @@ class _ServerCloudBindingPageState extends State<ServerCloudBindingPage> {
                         ),
                       ),
                     ],
-                    const SectionTitle('选择云账户'),
+                    const SectionTitle('选择面板账户'),
                     if (options.accounts.isEmpty)
-                      const CloudNotice('还没有已保存的云账户。请先到“云账户”添加并验证账户。'),
+                      const CloudNotice('还没有已保存的面板账户。请先到“面板账户”添加并验证账户。'),
                     for (final account in options.accounts)
                       ListTile(
                         key: ValueKey('server-cloud-account-${account.id}'),
@@ -267,9 +267,9 @@ class _ServerCloudBindingPageState extends State<ServerCloudBindingPage> {
                               }),
                       ),
                     if (_accountId != null) ...[
-                      const SectionTitle('选择已观测实例'),
+                      const SectionTitle('选择已读取的实例'),
                       if (choices?.isEmpty ?? true)
-                        const CloudNotice('这个账户没有已保存的实例观测。请到云账户手动刷新。'),
+                        const CloudNotice('这个账户没有已保存的实例信息。请到“面板账户”手动刷新。'),
                       for (final choice in choices!)
                         Padding(
                           padding: const EdgeInsets.only(bottom: 10),
@@ -290,18 +290,18 @@ class _ServerCloudBindingPageState extends State<ServerCloudBindingPage> {
                                     choice.observation.ipv4!,
                                   if (choice.observation.projectName != null)
                                     choice.observation.projectName!,
-                                  '观测于 ${cloudTime(choice.observation.observedAt)}',
+                                  '读取时间：${cloudTime(choice.observation.observedAt)}',
                                   if (choice.serverId == widget.serverId)
                                     '当前关联',
                                   if (choice.serverId != null &&
                                       choice.serverId != widget.serverId)
                                     '已关联：${widget.ledger.byId(choice.serverId!)?.name ?? '其他服务器'} · 不可覆盖',
                                   if (choice.missing)
-                                    '本次未返回 · 请到云账户手动刷新'
+                                    '本次未返回 · 请到面板账户手动刷新'
                                   else if (choice.stale ||
                                       !_available(choice) &&
                                           choice.serverId == null)
-                                    '观测失效 · 请到云账户手动刷新',
+                                    '上次读取失败 · 请到面板账户手动刷新',
                                 ].join('\n'),
                               ),
                             ),

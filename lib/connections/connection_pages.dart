@@ -126,7 +126,7 @@ class _SshConnectPageState extends State<SshConnectPage> {
                 children: [
                   const InfoNote('一次只连接一台。核对主机身份后，才向服务器发送所选凭据的认证信息。'),
                   if (kIsWeb)
-                    const InfoNote('Web 预览不支持原生 SSH / TCP，也不接受真实秘密。请使用原生应用。'),
+                    const InfoNote('Web 预览不支持原生 SSH / TCP，也不接受真实登录凭据。请使用原生应用。'),
                   if (_error != null) ...[
                     InfoNote(_error!),
                     TextButton(onPressed: _load, child: const Text('重新读取连接资料')),
@@ -200,7 +200,7 @@ class _SshConnectPageState extends State<SshConnectPage> {
                         value == null ||
                             value.trim().isEmpty ||
                             RegExp(r'[\x00-\x20\x7f]').hasMatch(value.trim())
-                        ? '请显式填写有效用户名'
+                        ? '请填写有效的登录用户名'
                         : null,
                   ),
                   DropdownButtonFormField<String>(
@@ -229,7 +229,7 @@ class _SshConnectPageState extends State<SshConnectPage> {
                       onPressed: () => setState(
                         () => _username.text = credential.defaultUsername,
                       ),
-                      child: Text('显式采用默认用户名：${credential.defaultUsername}'),
+                      child: Text('使用默认用户名：${credential.defaultUsername}'),
                     ),
                   TextButton(
                     onPressed: () async {
@@ -260,7 +260,7 @@ class _SshConnectPageState extends State<SshConnectPage> {
                       child: const Text('编辑并保存此服务器的 SSH 配置'),
                     ),
                   const InfoNote(
-                    '本页改动只用于本次连接。秘密从原生凭据库读取，不在这里输入或另存。后台可能断开；长任务建议在远端使用 tmux / screen。',
+                    '本页改动只用于本次连接。密码或私钥从已保存的凭据中读取，不在这里输入或另存。进入后台会断开连接；长任务建议在远端使用 tmux / screen。',
                   ),
                   if (widget.initialDraft.isNotEmpty)
                     const InfoNote('片段将放入独立待发送区。连接、核验、认证都不会发送片段。'),

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../core/app_theme.dart';
 import '../core/value_types.dart';
 import 'finance_models.dart';
+import 'valuation_copy.dart';
 
 class FinanceLine extends StatelessWidget {
   const FinanceLine(this.label, this.value, {super.key});
@@ -70,7 +71,7 @@ class FinanceTotalView extends StatelessWidget {
         ),
       if (total.missingFx > 0)
         Text(
-          '仅为可转换部分，缺失部分未补 0',
+          '仅合计有汇率的部分，缺失部分未按 0 计算',
           style: TextStyle(
             fontSize: 12,
             color: dark
@@ -121,63 +122,70 @@ class ValuationCard extends StatelessWidget {
   final LedgerDate due, asOf;
   final FxSettings fx;
   @override
-  Widget build(BuildContext context) => LedgerCard(
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          '剩余价值 · 续费价口径',
-          style: TextStyle(
-            color: Theme.of(context).colorScheme.onSurfaceVariant,
-            fontSize: 12,
+  Widget build(BuildContext context) {
+    final periodLabel = valuationPeriodLabel(
+      asOf: asOf,
+      start: value.activePeriod.start,
+      end: value.activePeriod.end,
+    );
+    return LedgerCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            '剩余价值 · 按当前续费价折算',
+            style: TextStyle(
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+              fontSize: 12,
+            ),
           ),
-        ),
-        const SizedBox(height: 12),
-        Text(
-          '${value.amount.formatted} ${value.amount.currency}',
-          style: const TextStyle(fontSize: 32, fontWeight: FontWeight.w700),
-        ),
-        Text(
-          convertedAmount(value.amount, fx),
-          style: TextStyle(
-            color: Theme.of(context).colorScheme.onSurfaceVariant,
+          const SizedBox(height: 12),
+          Text(
+            '${value.amount.formatted} ${value.amount.currency}',
+            style: const TextStyle(fontSize: 32, fontWeight: FontWeight.w700),
           ),
-        ),
-        const SizedBox(height: 22),
-        Text(
-          '本周期剩余 ${(value.ratio.toDouble() * 100).toStringAsFixed(1)}% · ${value.activeRemaining} / ${value.days} 天',
-        ),
-        const SizedBox(height: 9),
-        LinearProgressIndicator(
-          value: value.ratio.toDouble().clamp(0, 1),
-          borderRadius: BorderRadius.circular(5),
-          minHeight: 7,
-          backgroundColor: Theme.of(context).colorScheme.outlineVariant,
-        ),
-        const SizedBox(height: 8),
-        Text(
-          '${value.activePeriod.start} 至 ${value.activePeriod.end}',
-          style: TextStyle(
-            fontSize: 12,
-            color: Theme.of(context).colorScheme.onSurfaceVariant,
+          Text(
+            convertedAmount(value.amount, fx),
+            style: TextStyle(
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
           ),
-        ),
-        const SizedBox(height: 12),
-        FinanceLine('估值日 / 服务到期日', '$asOf / $due'),
-        FinanceLine('剩余有效期', '${value.remainingDays} 天'),
-        FinanceLine(
-          '续费 / 周期',
-          '${renewal.formatted} ${renewal.currency} / $cycleMonths 个月',
-        ),
-        FinanceLine(
-          '本周期日均',
-          '${formatRational(value.dailyMinor, digits: 4)} ${renewal.currency}',
-        ),
-        if (value.futurePeriods > 0)
-          InfoNote('含 ${value.futurePeriods} 个未来周期，进度条只表示当前周期。'),
-        if (value.inferred) const InfoNote('部分服务起点由到期日与日历周期反推；不代表历史付款证明。'),
-        const InfoNote('仅表示服务时长的价格折算，不是退款承诺或成交价。'),
-      ],
-    ),
-  );
+          const SizedBox(height: 22),
+          Text(
+            '$periodLabel剩余 ${(value.ratio.toDouble() * 100).toStringAsFixed(1)}% · ${value.activeRemaining} / ${value.days} 天',
+          ),
+          const SizedBox(height: 9),
+          LinearProgressIndicator(
+            value: value.ratio.toDouble().clamp(0, 1),
+            borderRadius: BorderRadius.circular(5),
+            minHeight: 7,
+            backgroundColor: Theme.of(context).colorScheme.outlineVariant,
+          ),
+          const SizedBox(height: 8),
+          Text(
+            '${value.activePeriod.start} 至 ${value.activePeriod.end}（不含结束日）',
+            style: TextStyle(
+              fontSize: 12,
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
+          ),
+          const SizedBox(height: 12),
+          FinanceLine('估值日 / 服务到期日', '$asOf / $due'),
+          FinanceLine('剩余服务天数', '${value.remainingDays} 天'),
+          FinanceLine(
+            '续费 / 周期',
+            '${renewal.formatted} ${renewal.currency} / $cycleMonths 个月',
+          ),
+          FinanceLine(
+            '所示周期日均',
+            '${formatRational(value.dailyMinor, digits: 4)} ${renewal.currency}',
+          ),
+          if (value.futurePeriods > 0)
+            InfoNote('剩余价值含 ${value.futurePeriods} 个尚未开始的周期；进度条仅显示上述周期。'),
+          if (value.inferred) const InfoNote('部分服务起点由到期日与日历周期反推；不代表历史付款证明。'),
+          const InfoNote('仅表示服务时长的价格折算，不是退款承诺或成交价。'),
+        ],
+      ),
+    );
+  }
 }

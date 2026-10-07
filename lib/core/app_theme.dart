@@ -235,13 +235,17 @@ Future<bool> confirmAction(
     ) ??
     false;
 
-void showFailure(BuildContext context, Object error) {
+void showFailure(
+  BuildContext context,
+  Object error, {
+  String fallbackMessage = '操作未完成，请重试。已保存的资料仍保留。',
+}) {
   // Never render driver errors: they can include SQL or private record values.
   final message = error is ArgumentError
       ? error.message.toString()
       : error.toString().contains('记录已发生变化')
       ? '记录已发生变化，请返回后重试'
-      : '操作未完成，已保存的记录仍保留。请检查输入后重试（分组名称不能重复）。';
+      : fallbackMessage;
   ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
 }
 

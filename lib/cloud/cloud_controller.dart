@@ -119,7 +119,7 @@ class CloudController extends ChangeNotifier {
       return true;
     } catch (_) {
       needsReload = true;
-      error = '无法读取云账户资料，请重试';
+      error = '无法读取面板账户资料，请重试';
       _notify();
       return false;
     }
@@ -153,8 +153,8 @@ class CloudController extends ChangeNotifier {
         : problem is CloudAccountFailure
         ? problem.message
         : problem is LedgerConflict
-        ? '云账户资料已变化，请重新读取后重试'
-        : '云账户操作未完成，请重试';
+        ? '面板账户资料已变化，请重新读取后重试'
+        : '面板账户操作未完成，请重试';
   }
 
   Future<CloudVerification?> verifyConnection({
@@ -278,7 +278,7 @@ class CloudController extends ChangeNotifier {
           selection.isNotEmpty) {
         final problem =
             v1Resources?.validate(requireComplete: true) ??
-            (v1Resources == null ? '请补齐六项资源资料后导入，也可仅保存账户' : null);
+            (v1Resources == null ? '请补齐六项硬件信息后导入；未知项目请先向厂商确认' : null);
         if (problem != null) throw CloudAccountFailure(problem);
       }
       final credentials = verification._credentials;
@@ -543,10 +543,10 @@ class CloudController extends ChangeNotifier {
   Future<CloudCredentials> _readSecret(CloudAccount account) async {
     try {
       final raw = await secrets.read(account.secretRef);
-      if (raw == null) throw CloudAccountFailure.secret;
+      if (raw == null) throw CloudAccountFailure.secretRead;
       final value = jsonDecode(raw) as Map<String, dynamic>;
       if (value['version'] != 1 || value['provider'] != account.provider.name) {
-        throw CloudAccountFailure.secret;
+        throw CloudAccountFailure.secretRead;
       }
       return switch (account.provider) {
         CloudProvider.solusVm1 => SolusVm1Credentials(
@@ -556,7 +556,7 @@ class CloudController extends ChangeNotifier {
         CloudProvider.solusVm2 => SolusVm2Credentials(value['token'] as String),
       };
     } catch (_) {
-      throw CloudAccountFailure.secret;
+      throw CloudAccountFailure.secretRead;
     }
   }
 

@@ -126,7 +126,7 @@ class _CalculatorPageState extends State<CalculatorPage> {
       if (value == null) {
         showFailure(
           context,
-          ArgumentError('引用资料缺少有效服务期。请补充服务器日期，或改到期日切换为独立假设。'),
+          ArgumentError('引用资料缺少有效服务期。请先补充服务器日期，或修改到期日、周期后使用独立试算。'),
         );
         return;
       }
@@ -170,9 +170,9 @@ class _CalculatorPageState extends State<CalculatorPage> {
           ),
           InfoNote(
             referencedPeriods != null
-                ? '引用 $sourceName 的已知期间。修改估值日、金额或币种仍保留期间；不回写资料。'
+                ? '引用 $sourceName 的已知期间。修改估值日、金额或币种不会改变已知服务期，也不会修改原服务器。'
                 : rebuilt
-                ? '已切换为独立假设：修改了到期日或周期，按新到期日重建期间。假设到期日前服务连续有效。'
+                ? '已切换为独立试算：按当前到期日和周期重新推算服务期，假设到期日前服务连续有效。'
                 : '独立试算，无需添加服务器。假设到期日前服务连续有效。',
           ),
           TextFormField(
@@ -407,7 +407,7 @@ class _CalculationResultPageState extends State<CalculationResultPage> {
             key: const ValueKey('quote-panel'),
             maintainState: true,
             tilePadding: EdgeInsets.zero,
-            title: const Text('转让结算 · 可选'),
+            title: const Text('转让报价试算 · 可选'),
             children: [
               Form(
                 key: quoteForm,
@@ -415,7 +415,7 @@ class _CalculationResultPageState extends State<CalculationResultPage> {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     const InfoNote(
-                      '仅比较报价，不判断服务是否可转让。不包含中介、税费或支付手续费；请自行确认转移条款。',
+                      '仅按报价和下方填写的转移手续费试算，不执行交易。其他费用未计入；请自行确认厂商是否允许转让及相关条款。',
                     ),
                     TextFormField(
                       key: const ValueKey('quote-offer'),
@@ -439,7 +439,7 @@ class _CalculationResultPageState extends State<CalculationResultPage> {
                         decimal: true,
                       ),
                       decoration: const InputDecoration(
-                        labelText: 'Push / 转移手续费',
+                        labelText: '转移手续费（Push）',
                       ),
                       validator: (v) =>
                           Money.parseMinor(v!) == null ? '请输入 0 或正数手续费' : null,
@@ -483,20 +483,31 @@ class _CalculationResultPageState extends State<CalculationResultPage> {
                         setState(() => payer = v!);
                       },
                     ),
-                    const InfoNote('手续费先折算到显示币种的分，再分摊；奇数分余数归买方。双方手续费之和等于总手续费。'),
+                    const InfoNote(
+                      '手续费先折算到显示币种的分，再分摊；不足均分的 0.01 由买方承担。双方手续费之和等于总手续费。',
+                    ),
                     OutlinedButton(
                       onPressed: settle,
-                      child: const Text('计算转让结算'),
+                      child: const Text('计算报价与费用'),
                     ),
                     if (quoteError != null) InfoNote(quoteError!),
                     if (quote != null) ...[
-                      FinanceLine('报价与参考价值差额（溢价 / 折价）', quote!.premium),
+                      FinanceLine(
+                        '报价与参考价值差额（溢价 / 折价）',
+                        '${quote!.premium} ${quote!.currency}',
+                      ),
                       FinanceLine(
                         '买方 / 卖方手续费',
-                        '${quote!.buyerFee} / ${quote!.sellerFee}',
+                        '${quote!.buyerFee} / ${quote!.sellerFee} ${quote!.currency}',
                       ),
-                      FinanceLine('买方最终总支出', quote!.buyerTotal),
-                      FinanceLine('卖方净收款', quote!.sellerNet),
+                      FinanceLine(
+                        '买方预计支出',
+                        '${quote!.buyerTotal} ${quote!.currency}',
+                      ),
+                      FinanceLine(
+                        '卖方预计净收款',
+                        '${quote!.sellerNet} ${quote!.currency}',
+                      ),
                     ],
                   ],
                 ),
@@ -504,7 +515,9 @@ class _CalculationResultPageState extends State<CalculationResultPage> {
             ],
           ),
         ),
-        InfoNote('${shareData.fx}\n${shareData.fxSource}。先求和后四舍五入到分，中点远离 0。'),
+        InfoNote(
+          '${shareData.fx}\n${shareData.fxSource}。先精确计算，再四舍五入到分；折算结果仅供参考。',
+        ),
       ],
     ),
   );

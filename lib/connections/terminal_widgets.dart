@@ -500,7 +500,7 @@ class _TerminalCommandSheetState extends State<TerminalCommandSheet> {
                               ? '会话已变化，请返回终端后重新打开。草稿不会自动发送。'
                               : !widget.service.acceptsInput
                               ? '当前不可发送。重连会清空草稿，不重放输入。'
-                              : '发送不额外回车；发送并执行追加一个回车。',
+                              : '“发送”不追加回车；“发送并执行”追加回车，由当前终端程序处理。',
                           style: Theme.of(context).textTheme.bodySmall,
                         ),
                         const SizedBox(height: 12),

@@ -38,7 +38,7 @@ class HostTrustPage extends StatelessWidget {
           if (ledger.security.hostTrusts.isEmpty)
             const LedgerCard(
               child: InfoNote(
-                '尚无已信任主机。可录入从独立可信渠道取得的主机公钥进行核验。当前不会连接服务器或获取网络指纹。',
+                '尚无已信任主机。可在此录入从厂商控制台或管理员等独立可信渠道取得的公钥，也可在首次 SSH 连接时核对。此页面不会连接服务器。',
               ),
             ),
           for (final pin in ledger.security.hostTrusts)
@@ -204,7 +204,7 @@ class _HostTrustFormState extends State<HostTrustForm> {
         padding: const EdgeInsets.all(20),
         children: [
           const InfoNote(
-            '输入从厂商控制台或管理员等独立可信渠道取得的主机公钥。本页面不会向服务器发请求，也不会展示模拟网络结果。',
+            '输入从厂商控制台或管理员等独立可信渠道取得的主机公钥。此页面只校验输入内容并保存本机信任，不会连接服务器。',
           ),
           TextField(
             key: const ValueKey('trust-host'),
@@ -299,7 +299,7 @@ class _HostVerificationPageState extends State<HostVerificationPage> {
           ),
           title: Text(
             changed
-                ? '主机密钥已变化'
+                ? '主机公钥与记录不一致'
                 : widget.previous == null
                 ? '首次主机核验'
                 : '重新核实主机',
@@ -309,7 +309,7 @@ class _HostVerificationPageState extends State<HostVerificationPage> {
           padding: const EdgeInsets.all(20),
           children: [
             LedgerBadge(
-              changed ? '已阻断认证 · 必须独立重新核实' : '发送任何登录凭据前先核实身份',
+              changed ? '公钥不一致 · 请独立重新核实' : '请先核实主机身份，再保存信任',
               danger: changed,
             ),
             const SizedBox(height: 16),

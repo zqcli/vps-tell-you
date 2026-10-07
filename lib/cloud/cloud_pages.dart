@@ -66,10 +66,10 @@ class _CloudAccountsPageState extends State<CloudAccountsPage> {
     listenable: cloud,
     builder: (context, _) => Scaffold(
       appBar: AppBar(
-        title: const Text('云账户'),
+        title: const Text('面板账户'),
         actions: [
           IconButton(
-            tooltip: '添加云账户',
+            tooltip: '添加面板账户',
             onPressed: cloud.busy || cloud.needsReload ? null : add,
             icon: const Icon(Icons.add),
           ),
@@ -81,15 +81,15 @@ class _CloudAccountsPageState extends State<CloudAccountsPage> {
           const LedgerBadge('SolusVM 1 / 2 · 面板读取'),
           const SizedBox(height: 16),
           const Text(
-            '你的云，统一整理',
+            '管理面板连接与实例',
             style: TextStyle(fontSize: 26, fontWeight: FontWeight.w700),
           ),
           const InfoNote('每个连接独立管理授权与实例。\n同一面板可以添加多个独立账户或 VPS 连接。'),
           if (cloud.needsReload) ...[
-            const CloudNotice('云账户资料读取未完成，请重读后继续。', error: true),
+            const CloudNotice('面板账户资料读取未完成，请重读后继续。', error: true),
             OutlinedButton(
               onPressed: cloud.busy ? null : cloud.reload,
-              child: const Text('重读云账户资料'),
+              child: const Text('重读面板账户资料'),
             ),
           ] else if (cloud.error != null)
             CloudNotice(cloud.error!, error: true),
@@ -115,7 +115,7 @@ class _CloudAccountsPageState extends State<CloudAccountsPage> {
                   ),
                   const SizedBox(height: 16),
                   const Text(
-                    '添加第一个云账户',
+                    '添加第一个面板账户',
                     style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
                   ),
                   const InfoNote('从内置模板开始，验证面板授权后，再选择要加入台账的实例。'),
@@ -187,10 +187,10 @@ class _CloudAccountsPageState extends State<CloudAccountsPage> {
             OutlinedButton.icon(
               onPressed: cloud.busy || cloud.needsReload ? null : add,
               icon: const Icon(Icons.add),
-              label: const Text('添加云账户'),
+              label: const Text('添加面板账户'),
             ),
           const InfoNote(
-            '本 App 仅使用读取能力，不代表 Token 本身只有读取权限。\n云账户授权与 SSH 凭据分开管理。解除关联保留台账、费用、付款与 SSH。',
+            '本 App 仅使用读取能力，不代表 API 凭据本身只有读取权限。\n面板账户授权与 SSH 凭据分开管理。解除关联保留台账、费用、付款与 SSH。',
           ),
         ],
       ),
@@ -223,7 +223,7 @@ class _CloudTemplatesPageState extends State<CloudTemplatesPage> {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(title: const Text('添加云账户')),
+    appBar: AppBar(title: const Text('添加面板账户')),
     body: ListView(
       padding: const EdgeInsets.all(20),
       children: [
@@ -248,7 +248,9 @@ class _CloudTemplatesPageState extends State<CloudTemplatesPage> {
               ),
             ),
           ),
-        const InfoNote('首期支持这两个内置模板。不提供 API 电源控制，也不会修改云资源或厂商扣费。'),
+        const InfoNote(
+          '支持 SolusVM 1 和 SolusVM 2 面板读取。不提供 API 电源控制，也不会修改远端资源或停止服务商计费。',
+        ),
       ],
     ),
   );
@@ -623,7 +625,7 @@ class _CloudImportPageState extends State<CloudImportPage>
       );
       if (resources == null) {
         revealFirstInvalidField(invalid);
-        setState(() => error = '请补齐并核对六项资源资料；不知道的项目请向服务商核实，也可仅保存账户。');
+        setState(() => error = '请核对并补齐六项硬件信息；未知项目请先向厂商确认，补齐后再导入。');
         return;
       }
     } else {
@@ -710,7 +712,7 @@ class _CloudImportPageState extends State<CloudImportPage>
       body: _importBody([
         const CloudSteps(3),
         CloudNotice(
-          '完整读取已完成 · ${snapshot.instances.length} 台\n观测于 ${cloudTime(snapshot.completedAt)}${widget.verification != null ? '\n尚未保存这次授权' : ''}',
+          '完整读取已完成 · ${snapshot.instances.length} 台\n读取时间：${cloudTime(snapshot.completedAt)}${widget.verification != null ? '\n尚未保存这次授权' : ''}',
         ),
         Text(
           widget.alias ?? account!.alias,
@@ -770,7 +772,7 @@ class _CloudImportPageState extends State<CloudImportPage>
                       ),
                     Text(
                       v1
-                          ? '无稳定实例 ID · 请核对下方六项资源'
+                          ? '无稳定实例 ID · 按此独立连接识别'
                           : [
                               instance.ipv4,
                               instance.ipv6,
@@ -781,7 +783,7 @@ class _CloudImportPageState extends State<CloudImportPage>
                               instance.ipv6,
                             ].whereType<String>().join(' / '),
                     ),
-                    Text('电源${cloudPowerLabel(instance.power)} · 缓存观测'),
+                    Text('电源${cloudPowerLabel(instance.power)} · 上次读取'),
                   ],
                 ),
               ),
@@ -834,11 +836,11 @@ class _CloudImportPageState extends State<CloudImportPage>
             onChanged: saving || expired
                 ? null
                 : (value) => setState(() => confirmRebind = value ?? false),
-            title: const Text('我确认解除旧关联，并按本次选择重新绑定'),
+            title: const Text('我确认保存新授权会解除旧实例关联'),
           ),
         ],
-        const InfoNote(
-          '导入不会覆盖已有本地名称、费用、付款、备注或 SSH 配置。去重依据独立连接与远端 ID，不按 IP 或名称合并。已归档的关联也不会重复导入。',
+        InfoNote(
+          '导入不会覆盖已有本地名称、费用、付款、备注或 SSH 配置。${v1 ? '同一连接下已关联的实例不会重复导入；不同连接不会自动合并。' : '去重依据独立连接与远端 ID，不按 IP 或名称合并。'}已归档的关联也不会重复导入。',
         ),
         if (error != null) CloudNotice(error!, error: true),
         if (needsV1Selection && !saving && !expired)
@@ -861,8 +863,8 @@ class _CloudImportPageState extends State<CloudImportPage>
           label: Text(
             saving
                 ? '正在保存…'
-                : needsV1Selection
-                ? '尚未选择实例'
+                : selected.isEmpty
+                ? '尚未选择新实例'
                 : '${widget.verification == null ? '导入' : '保存账户并导入'} ${selected.length} 台',
           ),
         ),
@@ -874,7 +876,11 @@ class _CloudImportPageState extends State<CloudImportPage>
                 ? null
                 : () => save(accountOnly: true),
             child: Text(
-              widget.verification!.existingAccount == null ? '仅保存账户' : '仅更新授权',
+              widget.verification!.existingAccount == null
+                  ? '仅保存账户'
+                  : rebind
+                  ? '更新授权并解除旧关联'
+                  : '仅更新授权',
             ),
           ),
         ],
@@ -945,7 +951,7 @@ class _CloudReadPageState extends State<CloudReadPage>
     if (update && mounted) {
       setState(() {
         reading = false;
-        error = '读取已取消，原有观测保留';
+        error = '读取已取消，保留上次读取的信息';
       });
     }
   }
@@ -971,7 +977,7 @@ class _CloudReadPageState extends State<CloudReadPage>
     setState(() {
       reading = false;
       result = inventory;
-      error = inventory == null ? cloud.error ?? '读取未完成，原有观测保留' : null;
+      error = inventory == null ? cloud.error ?? '读取未完成，保留上次读取的信息' : null;
     });
     if (inventory != null && widget.importAfterRead) {
       final imported = await Navigator.push<bool>(
@@ -1016,9 +1022,9 @@ class _CloudReadPageState extends State<CloudReadPage>
           ],
           if (result != null && !reading && error == null) ...[
             CloudNotice(
-              '完整读取已完成 · ${result!.snapshot.instances.length} 台\n观测于 ${cloudTime(result!.snapshot.completedAt)}',
+              '完整读取已完成 · ${result!.snapshot.instances.length} 台\n读取时间：${cloudTime(result!.snapshot.completedAt)}',
             ),
-            const InfoNote('只更新此账户的 API 观测。本地资料、费用、付款与 SSH 没有被覆盖。'),
+            const InfoNote('只更新此账户的 API 返回信息。本地资料、费用、付款与 SSH 没有被覆盖。'),
             FilledButton(
               onPressed: () => Navigator.pop(context),
               child: const Text('完成'),
@@ -1127,9 +1133,9 @@ Future<void> cloudAccountMenu(
   } else if (action == 'unbind') {
     final ok = await confirmAction(
       context,
-      title: '解除云账户关联？',
+      title: '解除面板账户关联？',
       message:
-          '${current.alias}\n\n仅解除此连接，保留服务器、费用、付款与 SSH 配置。不会销毁云资源或停止扣费。\n\n${current.provider == CloudProvider.solusVm1 ? '还需到面板禁用该 VPS 的 Client API 或重置 Key / Hash。' : '还需到面板撤销已签发的 Token。'}',
+          '${current.alias}\n\n移除此面板连接，并解除其所有本地实例关联。再次添加时需重新填写 API 凭据。服务器、费用、付款与 SSH 配置仍保留。不会销毁远端资源或停止扣费。\n\n${current.provider == CloudProvider.solusVm1 ? '还需到面板禁用该 VPS 的 Client API 或重置 Key / Hash。' : '还需到面板撤销已签发的 Token。'}',
       action: '解除本地关联',
       dangerous: true,
     );
@@ -1166,7 +1172,7 @@ class CloudAccountDetailsPage extends StatelessWidget {
           .where((b) => b.accountId == accountId)
           .toList();
       return Scaffold(
-        appBar: AppBar(title: Text(associationsOnly ? '关联服务器' : '云账户详情')),
+        appBar: AppBar(title: Text(associationsOnly ? '关联服务器' : '面板账户详情')),
         body: ListView(
           padding: const EdgeInsets.all(20),
           children: [
@@ -1188,7 +1194,7 @@ class CloudAccountDetailsPage extends StatelessWidget {
                     children: [
                       CloudValue('接入模板', cloudProviderName(account.provider)),
                       CloudValue('面板地址', account.endpoint),
-                      CloudValue('连接状态', cloudAccountStatus(account)),
+                      CloudValue('读取状态', cloudAccountStatus(account)),
                       CloudValue(
                         '最近读取尝试',
                         account.lastAttemptAt == null
@@ -1196,18 +1202,18 @@ class CloudAccountDetailsPage extends StatelessWidget {
                             : cloudTime(account.lastAttemptAt!),
                       ),
                       CloudValue(
-                        '授权范围',
+                        '已验证的读取范围',
                         account.provider == CloudProvider.solusVm1
                             ? '单台 VPS · Client API，无稳定实例身份'
                             : '已验证用户账户 ${account.remoteAccountId} · 项目与实例',
                       ),
                       const CloudValue('App 能力', '仅使用读取能力；无 API 电源控制'),
-                      const CloudValue('授权存储', '设备安全存储；不显示或导出秘密'),
+                      const CloudValue('授权存储', '设备安全存储；不显示或导出 API 凭据'),
                     ],
                   ),
                 ),
                 const InfoNote(
-                  'Token 本身可能拥有更多权限，请在服务商面板核对。没有后台持续监控，读取结果只代表观测时刻。',
+                  'API 凭据本身可能拥有更多权限，请在服务商面板核对。没有后台持续监控，读取结果只代表读取时刻。',
                 ),
               ],
               SectionTitle('已关联 ${bindings.length} 台'),
@@ -1223,7 +1229,7 @@ class CloudAccountDetailsPage extends StatelessWidget {
                       title:
                           '${ledger.byId(binding.serverId)?.name ?? '本地记录'}${ledger.byId(binding.serverId)?.archived == true ? ' · 已归档' : ''}',
                       subtitle:
-                          '${cloudBindingSummary(binding)}\n观测于 ${cloudTime(binding.observedAt)}',
+                          '${cloudBindingSummary(binding)}\n读取时间：${cloudTime(binding.observedAt)}',
                       onTap: ledger.byId(binding.serverId) == null
                           ? null
                           : () => Navigator.push<void>(

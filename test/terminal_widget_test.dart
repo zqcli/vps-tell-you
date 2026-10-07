@@ -484,7 +484,7 @@ void main() {
       );
       await tap(tester, find.byKey(const ValueKey('host-verified-check')));
       expect(ssh.authentications, 0);
-      await textTap(tester, '确认更新此主机信任');
+      await textTap(tester, '更新信任并继续认证');
       expect(ssh.authentications, 1);
     },
   );
@@ -783,7 +783,7 @@ void main() {
             .text,
         'deploy',
       );
-      await textTap(tester, '显式采用默认用户名：root');
+      await textTap(tester, '使用默认用户名：root');
       expect(
         tester
             .widget<TextFormField>(find.byKey(const ValueKey('connect-user')))
@@ -1062,6 +1062,63 @@ void main() {
       isNull,
     );
   });
+
+  testWidgets(
+    'failed terminal copy preserves selection and gives a safe retry message',
+    (tester) async {
+      var failCopy = true;
+      String? clipboard;
+      final messenger = tester.binding.defaultBinaryMessenger;
+      messenger.setMockMethodCallHandler(SystemChannels.platform, (call) async {
+        if (call.method == 'Clipboard.setData') {
+          if (failCopy) {
+            throw PlatformException(
+              code: 'denied',
+              message: 'PRIVATE PLATFORM DETAIL',
+            );
+          }
+          clipboard = (call.arguments as Map)['text'] as String;
+        }
+        return null;
+      });
+      addTearDown(
+        () => messenger.setMockMethodCallHandler(SystemChannels.platform, null),
+      );
+      await mount(tester);
+      final terminalFinder = find.byType(TerminalView);
+      ssh.events.add('copyretry\r\n');
+      await tester.pumpAndSettle();
+      final view = tester.state<TerminalViewState>(terminalFinder);
+      await tester.longPressAt(
+        tester.getTopLeft(terminalFinder) +
+            Offset(
+              8 + view.renderTerminal.cellSize.width * 2,
+              8 + view.renderTerminal.cellSize.height / 2,
+            ),
+      );
+      await tester.pumpAndSettle();
+      final controller = tester
+          .widget<TerminalView>(terminalFinder)
+          .controller!;
+      final selection = controller.selection;
+      expect(selection, isNotNull);
+      await tester.tap(find.byKey(const ValueKey('terminal-copy-selection')));
+      await tester.pumpAndSettle();
+      expect(find.text('未能复制终端内容，请重试。'), findsOneWidget);
+      expect(find.textContaining('PRIVATE'), findsNothing);
+      expect(controller.selection, equals(selection));
+      expect(clipboard, isNull);
+      expect(ssh.writes, isEmpty);
+      expect(tester.takeException(), isNull);
+      failCopy = false;
+      await tester.tap(find.byKey(const ValueKey('terminal-copy-selection')));
+      await tester.pumpAndSettle();
+      expect(clipboard, 'copyretry');
+      expect(controller.selection, isNull);
+      expect(ssh.writes, isEmpty);
+      expect(tester.takeException(), isNull);
+    },
+  );
 
   testWidgets('history scroll and return-to-latest never emit terminal input', (
     tester,

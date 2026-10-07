@@ -78,6 +78,7 @@ class _PaymentFormState extends State<PaymentForm> {
         labelText: label,
         hintText: hint,
         counterText: '',
+        errorMaxLines: 4,
       ),
       validator: (raw) {
         final value = raw!.trim();
@@ -211,12 +212,12 @@ class _PaymentFormState extends State<PaymentForm> {
                       ),
                     if (account)
                       const InfoNote(
-                        '独立记录整份账户账单，仅计一次。不要求连接云账户，不分摊到实例，也不产生服务期或剩余价值。',
+                        '独立记录整份账户账单，仅计一次。不要求连接面板账户，不分摊到实例，也不产生服务期或剩余价值。',
                       ),
                     const SizedBox(height: 18),
                     if (account)
                       field('account', '账户显示名称', hint: '例如：厂商 · 个人账户'),
-                    field('amount', '本次实际支付'),
+                    field('amount', '本次实付金额'),
                     DropdownButtonFormField<String>(
                       initialValue: currency,
                       isExpanded: true,
@@ -237,6 +238,7 @@ class _PaymentFormState extends State<PaymentForm> {
                         initialValue: count,
                         isExpanded: true,
                         decoration: const InputDecoration(labelText: '本次续费周期数'),
+                        itemHeight: null,
                         items: [1, 2, 3]
                             .where((n) => canRenew(widget.server!, cycles: n))
                             .map(
@@ -260,9 +262,9 @@ class _PaymentFormState extends State<PaymentForm> {
                               }),
                       ),
                       InfoNote(
-                        '从原到期日 ${widget.server!.dueDate} 延长，保留当前未用时长。日期按原锚点推算。',
+                        '从原到期日 ${widget.server!.dueDate} 延长，保留当前未用时长。按原续费日推算，并保留月底日期规则。',
                       ),
-                      field('until', '新的服务到期日', hint: '按厂商结果核对'),
+                      field('until', '新到期日', hint: '须与所选周期推算的日期一致'),
                       LedgerCard(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -271,7 +273,7 @@ class _PaymentFormState extends State<PaymentForm> {
                               '下次续费价：${widget.server!.billingLabel} ${widget.server!.currency}',
                             ),
                             const InfoNote(
-                              '本次实付独立保存，不覆盖续费金额。特殊赠送期请先核对，不以虚构周期记账。',
+                              '本次实付独立保存，不覆盖续费金额。目前仅支持整周期续费；厂商含赠送期或到期日不同的，请先核对，不要填写虚构周期。',
                             ),
                           ],
                         ),
@@ -306,7 +308,7 @@ class _PaymentFormState extends State<PaymentForm> {
                       title: Text(
                         account
                             ? '我已在厂商完成付款，并核对账单金额与日期。'
-                            : '我已在厂商完成付款，并核对实付金额与新的服务到期日。',
+                            : '我已在厂商完成付款，并核对实付金额与新到期日。',
                       ),
                     ),
                     if (confirmationError != null)
@@ -413,7 +415,7 @@ class _PaymentListPageState extends State<PaymentListPage> {
                 ),
               ],
             ),
-            const SectionTitle('已记录实付 · 原币合计'),
+            const SectionTitle('已记录实付合计'),
             LedgerCard(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -459,7 +461,7 @@ class _PaymentListPageState extends State<PaymentListPage> {
                           ),
                         ),
                         Text(
-                          '${p.paidDate} · ${p.serverId == null ? '历史账户账单，只计一次' : '服务至 ${p.until}'}',
+                          '${p.paidDate} · ${p.serverId == null ? '历史账户账单，只计一次' : '到期日：${p.until}'}',
                         ),
                         if (p.serverId != null &&
                             c.byId(p.serverId!)?.archived == true)
@@ -469,7 +471,7 @@ class _PaymentListPageState extends State<PaymentListPage> {
                   ),
                 ),
               ),
-            if (rows.isEmpty) const InfoNote('此范围暂无付款记录。请从服务器详情记录续费付款。'),
+            if (rows.isEmpty) const InfoNote('此范围暂无付款记录。可从服务器详情记录已完成的续费付款。'),
           ],
         ),
       );
@@ -557,7 +559,9 @@ class PaymentDetailPage extends StatelessWidget {
                   ],
                 ),
               ),
-              const InfoNote('这是原币历史实付，不随续费价或参考汇率重写。更正需先安全撤销，再重新录入。'),
+              const InfoNote(
+                '这是原币历史实付，不随续费价或参考汇率重写。如需更正，可撤销后重新录入；后续资料已改变时可能无法撤销。',
+              ),
               if (!p.voided) ...[
                 OutlinedButton(
                   onPressed:

@@ -211,7 +211,7 @@ void main() {
         find.byKey(const ValueKey('finance-slice-vendor-Vendor One')),
       );
       await tester.pumpAndSettle();
-      expect(find.text('Vendor One · 1 台活动服务器'), findsOneWidget);
+      expect(find.text('Vendor One · 1 台未归档服务器'), findsOneWidget);
       await tester.pageBack();
       await tester.pumpAndSettle();
       await reveal(tester, find.byKey(const ValueKey('forecast-2027-01-01')));
@@ -265,19 +265,19 @@ void main() {
       expect(copied, isNot(contains(server.name)));
       expect(copied, isNot(contains(server.host)));
       expect(copied, isNot(contains(server.notes)));
-      await reveal(tester, find.text('转让结算 · 可选'));
-      await tester.tap(find.text('转让结算 · 可选'));
+      await reveal(tester, find.text('转让报价试算 · 可选'));
+      await tester.tap(find.text('转让报价试算 · 可选'));
       await tester.pumpAndSettle();
       await fill(tester, 'quote-offer', '0.01');
       await fill(tester, 'quote-fee', '0.05');
-      await reveal(tester, find.text('计算转让结算'));
-      await tester.tap(find.text('计算转让结算'));
+      await reveal(tester, find.text('计算报价与费用'));
+      await tester.tap(find.text('计算报价与费用'));
       await tester.pumpAndSettle();
       expect(find.text('缺少对应汇率，不能计算参考价值与结算金额。'), findsOneWidget);
-      await reveal(tester, find.text('转让结算 · 可选'));
-      await tester.tap(find.text('转让结算 · 可选'));
+      await reveal(tester, find.text('转让报价试算 · 可选'));
+      await tester.tap(find.text('转让报价试算 · 可选'));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('转让结算 · 可选'));
+      await tester.tap(find.text('转让报价试算 · 可选'));
       await tester.pumpAndSettle();
       await reveal(tester, find.byKey(const ValueKey('quote-offer')));
       expect(
@@ -391,16 +391,16 @@ void main() {
         ),
         scale: 2,
       );
-      await reveal(tester, find.text('转让结算 · 可选'));
-      await tester.tap(find.text('转让结算 · 可选'));
+      await reveal(tester, find.text('转让报价试算 · 可选'));
+      await tester.tap(find.text('转让报价试算 · 可选'));
       await tester.pumpAndSettle();
       for (final key in ['quote-offer', 'quote-fee']) {
         await fill(tester, key, '9999999999.99');
       }
-      await reveal(tester, find.text('计算转让结算'));
-      await tester.tap(find.text('计算转让结算'));
+      await reveal(tester, find.text('计算报价与费用'));
+      await tester.tap(find.text('计算报价与费用'));
       await tester.pumpAndSettle();
-      await reveal(tester, find.text('卖方净收款'));
+      await reveal(tester, find.text('卖方预计净收款'));
       expect(find.textContaining('缺少对应汇率'), findsNothing);
       expect(tester.takeException(), isNull);
     },

@@ -93,7 +93,7 @@ class _SettingsPageState extends State<SettingsPage> {
                     style: TextStyle(fontSize: 19, fontWeight: FontWeight.w700),
                   ),
                   Text(
-                    '个人 VPS 管理 · 本地优先',
+                    '个人 VPS 台账 · 本地优先',
                     style: TextStyle(
                       fontSize: 12,
                       color: Theme.of(context).colorScheme.onSurfaceVariant,
@@ -143,7 +143,7 @@ class _SettingsPageState extends State<SettingsPage> {
           children: [
             SettingRow(
               icon: Icons.cloud_outlined,
-              title: '云账户',
+              title: '面板账户',
               subtitle:
                   'SolusVM 1 / 2 · ${controller.cloud.accounts.length} 个连接',
               onTap: openCloud,
@@ -218,10 +218,11 @@ class _SettingsPageState extends State<SettingsPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('阶段 6 · 移动端候选', style: TextStyle(fontWeight: FontWeight.w600)),
-            InfoNote(
-              'V6.2 视觉基础 · 本地优先\n无需 App 登录 · 不安装监控 Agent\n删除本地记录不会取消服务或停止扣费。',
+            Text(
+              '开发测试版 · 0.1.0',
+              style: TextStyle(fontWeight: FontWeight.w600),
             ),
+            InfoNote('数据保存在当前设备，无需应用账号。\n归档记录不会取消服务器服务或停止扣费。'),
           ],
         ),
       ),
@@ -243,7 +244,9 @@ class GroupsPage extends StatelessWidget {
           () => controller.store.saveGroup(result, id: group?.id),
         );
       } catch (error) {
-        if (context.mounted) showFailure(context, error);
+        if (context.mounted) {
+          showFailure(context, error, fallbackMessage: '未能保存分组。请检查名称是否重复，再重试。');
+        }
       }
     }
   }
@@ -258,7 +261,7 @@ class GroupsPage extends StatelessWidget {
       final ok = await confirmAction(
         context,
         title: '删除“${group.name}”？',
-        message: '组内活动和归档服务器都将移到“未分组”，服务器资料与稳定 ID 保留。不会修改远端机器。',
+        message: '组内所有服务器（含已归档）将移到“未分组”，服务器资料和历史付款保留。不会修改远端服务器。',
         action: '删除分组',
         dangerous: true,
       );
@@ -294,7 +297,7 @@ class GroupsPage extends StatelessWidget {
         children: [
           if (controller.refreshFailed)
             RefreshFailureNotice(controller: controller),
-          const InfoNote('按用途整理机器。重命名、调整顺序或删除分组，不修改服务器端内容。'),
+          const InfoNote('按用途整理服务器。分组变更仅影响本地台账。'),
           if (controller.groups.isEmpty)
             const LedgerCard(child: Text('还没有自定义分组，点右上角 + 新建。')),
           for (final g in controller.groups)
@@ -317,7 +320,7 @@ class GroupsPage extends StatelessWidget {
                             style: const TextStyle(fontWeight: FontWeight.w600),
                           ),
                           Text(
-                            '${controller.active.where((s) => s.groupId == g.id).length} 台活动服务器',
+                            '${controller.active.where((s) => s.groupId == g.id).length} 台未归档服务器',
                             style: TextStyle(
                               fontSize: 11,
                               color: Theme.of(context)
@@ -353,7 +356,7 @@ class GroupsPage extends StatelessWidget {
                   style: TextStyle(fontWeight: FontWeight.w600),
                 ),
                 InfoNote(
-                  '${controller.active.where((s) => s.groupId == null).length} 台活动服务器 · 默认分组，不可删除',
+                  '${controller.active.where((s) => s.groupId == null).length} 台未归档服务器 · 默认分组，不可删除',
                 ),
               ],
             ),

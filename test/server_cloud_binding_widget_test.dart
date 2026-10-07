@@ -165,8 +165,8 @@ void main() {
     tester,
   ) async {
     await mount(tester);
-    expect(find.textContaining('还没有已保存的云账户'), findsOneWidget);
-    expect(find.textContaining('不会访问云端'), findsOneWidget);
+    expect(find.textContaining('还没有已保存的面板账户'), findsOneWidget);
+    expect(find.textContaining('不会连接面板'), findsOneWidget);
     expect(await store.cloudBindings(), isEmpty);
   });
 
@@ -225,7 +225,7 @@ void main() {
       await tapKey(tester, 'server-cloud-account-b');
       await tapKey(tester, 'server-cloud-instance-b-7/2/3');
       await tapKey(tester, 'server-cloud-save');
-      expect(find.text('更换这台服务器的云关联？'), findsOneWidget);
+      expect(find.text('更换这台服务器的面板关联？'), findsOneWidget);
       await tester.tap(find.text('取消'));
       await tester.pumpAndSettle();
       expect((await store.cloudBindings()).single.accountId, 'a');
@@ -245,7 +245,7 @@ void main() {
       await bind('local', 'a');
       await mount(tester);
       await tapKey(tester, 'server-cloud-unbind');
-      expect(find.text('解除这台服务器的云关联？'), findsOneWidget);
+      expect(find.text('解除这台服务器的面板关联？'), findsOneWidget);
       await tester.tap(find.text('取消'));
       await tester.pumpAndSettle();
       expect(await store.cloudBindings(), hasLength(1));

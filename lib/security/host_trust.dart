@@ -31,7 +31,7 @@ String normalizedHost(String value) {
     }
     return host;
   } catch (_) {
-    throw const SecurityFailure('主机地址无效');
+    throw const SecurityFailure('主机地址无效，请填写 IP 或域名，不含协议、用户名、端口或路径');
   }
 }
 
@@ -57,7 +57,7 @@ class HostKeyIdentity {
   }) {
     final normalized = normalizedHost(host);
     if (port < 1 || port > 65535) {
-      throw const SecurityFailure('SSH 端口无效');
+      throw const SecurityFailure('SSH 端口应为 1–65535');
     }
     try {
       if (publicKey.length > 32 * 1024) throw const FormatException();
@@ -125,7 +125,7 @@ class HostKeyIdentity {
             'SHA256:${base64Encode(sha256.convert(bytes).bytes).replaceAll('=', '')}',
       );
     } catch (_) {
-      throw const SecurityFailure('主机公钥格式或算法无效');
+      throw const SecurityFailure('无法识别主机公钥，请检查完整公钥内容及所选类型');
     }
   }
 

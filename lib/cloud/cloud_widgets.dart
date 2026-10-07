@@ -18,18 +18,18 @@ String cloudTime(DateTime time) => time.toLocal().toString().substring(0, 16);
 
 String cloudBindingSummary(CloudBinding binding) {
   final freshness = binding.missing
-      ? '本次未返回 · 旧观测'
+      ? '本次未返回 · 保留上次信息'
       : binding.stale
-      ? '读取失败 · 旧观测'
-      : '缓存观测';
+      ? '读取失败 · 保留上次信息'
+      : '上次读取';
   return '$freshness · 电源${cloudPowerLabel(binding.power)}';
 }
 
 String cloudAccountStatus(CloudAccount account) =>
     account.lastFailure == CloudFailureKind.unauthorized
-    ? '授权失效 · 原台账保留'
+    ? '授权验证失败 · 原台账保留'
     : account.lastFailure != null
-    ? '读取失败 · 保留上次观测'
+    ? '读取失败 · 保留上次信息'
     : '已验证 · 手动读取';
 
 class CloudSteps extends StatelessWidget {

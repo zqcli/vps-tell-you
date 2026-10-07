@@ -18,7 +18,7 @@ Matcher get invalidPrivateKey => throwsA(
   isA<SecurityFailure>().having(
     (error) => error.toString(),
     'safe message',
-    '密钥格式或口令无效',
+    '无法读取私钥，请检查完整内容、支持格式和解密口令',
   ),
 );
 

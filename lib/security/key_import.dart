@@ -91,7 +91,7 @@ SSHKeyPair parseValidatedPrivateKey(String privateKey, {String? passphrase}) {
   } catch (_) {
     // Never surface parser exceptions: malformed PEM headers/comments can
     // contain secrets, and dependencies may put input bytes in their errors.
-    throw const SecurityFailure('密钥格式或口令无效');
+    throw const SecurityFailure('无法读取私钥，请检查完整内容、支持格式和解密口令');
   }
 }
 

@@ -149,7 +149,7 @@ void main() {
       await tester.ensureVisible(field);
       await tester.pumpAndSettle();
       final node = tester.getSemantics(field);
-      expect(node.label, contains('磁盘额度'));
+      expect(node.label, contains('磁盘容量'));
       expect(node.hint, contains('请填写大于 0 的容量，精确到整字节'));
       expect(
         node.validationResult,

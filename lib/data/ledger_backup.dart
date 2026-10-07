@@ -17,8 +17,8 @@ class LedgerBackupSnapshot {
   static const maxBytes = 10 * 1024 * 1024;
   static const maxRows = 20000;
   static const exclusions = [
-    '密码、私钥、口令、Token、凭据元数据及秘密引用',
-    'SSH 配置、主机信任、云账户、云关联与 API 观测',
+    '密码、私钥、口令、Token、凭据元数据及安全存储引用',
+    'SSH 配置、主机信任、面板账户、实例关联与 API 返回信息',
     '命令片段、服务器备注和付款备注',
     '提醒规则、通知排程及应用偏好（格式 v1）',
   ];

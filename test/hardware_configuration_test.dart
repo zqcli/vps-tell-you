@@ -161,7 +161,7 @@ void main() {
       final importing = await mount(tester, importing: true);
       expect(importing.currentState!.validateAndRead(), isNull);
       await tester.pump();
-      expect(find.text('资源资料 · 六项必填'), findsOneWidget);
+      expect(find.text('硬件信息 · 六项必填'), findsOneWidget);
     });
 
     testWidgets(

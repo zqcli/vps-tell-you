@@ -9,6 +9,7 @@ import 'package:path_provider/path_provider.dart';
 import '../core/app_theme.dart';
 import '../core/value_types.dart';
 import 'png_share.dart';
+import 'valuation_copy.dart';
 
 /// Explicit export whitelist. Never accepts a server, payment or account object.
 /// Quotation / settlement information is deliberately absent.
@@ -40,15 +41,17 @@ class CalculationShareData {
   final int activeRemaining, days, remaining, futurePeriods;
   static const disclaimer = '仅表示服务时长的价格折算，不代表退款承诺或成交价。';
   String get percent => '${(ratio.clamp(0, 1) * 100).toStringAsFixed(1)}%';
+  String get periodLabel =>
+      valuationPeriodLabel(asOf: asOf, start: start, end: end);
   String get plainText => [
     '剩余价值：$amount $currency',
     converted,
     '估值日期：$asOf',
-    '本周期：${start ?? '未知'} 至 ${end ?? '未知'}',
-    '本周期剩余：$activeRemaining / $days 天 · $percent',
-    '服务到期日：$due；剩余有效期：$remaining 天',
-    '续费 / 周期：$renewal；本周期日均：$daily',
-    if (futurePeriods > 0) '含 $futurePeriods 个未来周期，进度仅表示当前周期。',
+    '$periodLabel：${start ?? '未知'} 至 ${end ?? '未知'}（不含结束日）',
+    '$periodLabel剩余：$activeRemaining / $days 天 · $percent',
+    '服务到期日：$due；剩余服务天数：$remaining 天',
+    '续费 / 周期：$renewal；所示周期日均：$daily',
+    if (futurePeriods > 0) '含 $futurePeriods 个尚未开始的周期，进度仅显示上述周期。',
     periodBasis,
     fx,
     fxSource,
@@ -90,15 +93,17 @@ Future<Uint8List> renderCalculationPng(CalculationShareData data) async {
 
   line('vps tell you · 试算 · 不入账', size: 16, bold: true);
   y += 22;
-  line('剩余价值 · 续费价口径', size: 20, bold: true);
+  line('剩余价值 · 按当前续费价折算', size: 20, bold: true);
   line('${data.amount} ${data.currency}', size: 36, bold: true);
   line(data.converted, color: AppColors.muted);
   y += 12;
-  line('本周期剩余 ${data.percent} · ${data.activeRemaining} / ${data.days} 天');
+  line(
+    '${data.periodLabel}剩余 ${data.percent} · ${data.activeRemaining} / ${data.days} 天',
+  );
   final progressY = y;
   y += 22;
   line(
-    '${data.start ?? '未知'} 至 ${data.end ?? '未知'}',
+    '${data.start ?? '未知'} 至 ${data.end ?? '未知'}（不含结束日）',
     size: 12,
     color: AppColors.muted,
   );
@@ -106,15 +111,15 @@ Future<Uint8List> renderCalculationPng(CalculationShareData data) async {
   for (final row in [
     '估值日期：${data.asOf}',
     '服务到期日：${data.due}',
-    '剩余有效期：${data.remaining} 天',
+    '剩余服务天数：${data.remaining} 天',
     '续费 / 周期：${data.renewal}',
-    '本周期日均：${data.daily}',
+    '所示周期日均：${data.daily}',
   ]) {
     line(row);
   }
   if (data.futurePeriods > 0) {
     line(
-      '含 ${data.futurePeriods} 个未来周期；进度仅表示当前周期。',
+      '含 ${data.futurePeriods} 个尚未开始的周期；进度仅显示上述周期。',
       size: 12,
       color: AppColors.muted,
     );
@@ -354,7 +359,7 @@ class _CalculationPreviewState extends State<CalculationPreview> {
     body: ListView(
       padding: const EdgeInsets.all(20),
       children: [
-        const InfoNote('仅含金额、日期、周期和参考汇率。图片不含服务器名称、地址、账户、备注或转让结算。'),
+        const InfoNote('仅含金额、日期、周期和参考汇率。图片不含服务器名称、地址、账户、备注或转让报价试算。'),
         if (generating)
           const Center(
             child: Padding(

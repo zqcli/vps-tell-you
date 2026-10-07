@@ -140,9 +140,9 @@ class ServerResourceFieldsState extends State<ServerResourceFields> {
     }
     if (_apiSource(key)) return '来源：API';
     if (widget.initial != null) return '来源：手动填写';
-    if (key == 'trafficBytes' && _unlimited) return '来源：手动确认无限流量';
+    if (key == 'trafficBytes' && _unlimited) return '来源：手动确认不限量';
     if (_fields[key]!.text.trim().isEmpty) return '待补填：API 未提供有效值';
-    return widget.observed[key] == null ? '来源：手动补填' : '来源：手动覆盖 API';
+    return widget.observed[key] == null ? '来源：手动补填' : '来源：手动修改 API 预填值';
   }
 
   ServerResources? validateAndRead({
@@ -184,7 +184,7 @@ class ServerResourceFieldsState extends State<ServerResourceFields> {
     if (key == 'hostname') {
       return ServerResources.validHostname(value as String)
           ? null
-          : '请填写有效 hostname，不含协议、端口或路径';
+          : '请填写有效主机名，不含协议、端口或路径';
     }
     return value is int &&
             value > 0 &&
@@ -402,15 +402,15 @@ class ServerResourceFieldsState extends State<ServerResourceFields> {
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        SectionTitle(widget.importing ? '资源资料 · 六项必填' : '硬件信息'),
+        SectionTitle(widget.importing ? '硬件信息 · 六项必填' : '硬件信息'),
         InfoNote(
           widget.importing
-              ? '核对并补齐六项后导入；容量按 1024 进制，0 不代表不限量。未知项可先仅保存账户，稍后补填。'
+              ? '核对并补齐六项后导入；容量按 1024 进制，0 不代表不限量。资料不全时可暂不选择此实例，待补齐后再导入。'
               : '未知可留空，容量按 1024 进制。仅维护本地硬件，API 刷新不会覆盖，也不更改远端配置或 SSH 地址。',
         ),
         _field('ip', 'IP 地址'),
-        _field('hostname', 'Hostname'),
-        _capacityField('diskBytes', '磁盘额度'),
+        _field('hostname', '主机名'),
+        _capacityField('diskBytes', '磁盘容量'),
         _capacityField('trafficBytes', '流量额度', traffic: true),
         SwitchListTile(
           key: const ValueKey('resource-traffic-unlimited'),
