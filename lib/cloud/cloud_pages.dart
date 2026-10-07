@@ -248,9 +248,12 @@ class _CloudTemplatesPageState extends State<CloudTemplatesPage> {
               child: SettingRow(
                 icon: Icons.cloud_outlined,
                 title: cloudProviderName(provider),
-                subtitle: provider == CloudProvider.solusVm1
-                    ? context.l10n.cloudV1TemplateInfo
-                    : context.l10n.cloudV2TemplateInfo,
+                subtitle: switch (provider) {
+                  CloudProvider.solusVm1 => context.l10n.cloudV1TemplateInfo,
+                  CloudProvider.solusVm2 => context.l10n.cloudV2TemplateInfo,
+                  CloudProvider.rackNerd =>
+                    context.l10n.cloudRackNerdTemplateInfo,
+                },
                 onTap: () => choose(context, provider),
               ),
             ),
@@ -288,13 +291,18 @@ class _CloudAuthorizationPageState extends State<CloudAuthorizationPage>
   final hashField = TextEditingController();
   final token = TextEditingController();
   CloudController get cloud => widget.ledger.cloud;
-  bool get v1 => widget.provider == CloudProvider.solusVm1;
+  bool get singleInstance => widget.provider.isSingleInstance;
+  bool get rackNerd => widget.provider == CloudProvider.rackNerd;
   bool reading = false, navigating = false;
   int serial = 0;
   LocalizedMessage? error;
   CloudEndpoint? get parsedEndpoint {
     try {
-      return CloudEndpoint.parse(endpoint.text, allowSolusVm1ConsolePath: v1);
+      return CloudEndpoint.parse(
+        endpoint.text,
+        allowSolusVm1ConsolePath: widget.provider == CloudProvider.solusVm1,
+        allowRackNerdApiPath: rackNerd,
+      );
     } on CloudFailure {
       return null;
     }
@@ -381,9 +389,17 @@ class _CloudAuthorizationPageState extends State<CloudAuthorizationPage>
     });
     CloudVerification? verified;
     try {
-      final credentials = v1
-          ? SolusVm1Credentials(key: keyField.text, hash: hashField.text)
-          : SolusVm2Credentials(token.text);
+      final credentials = switch (widget.provider) {
+        CloudProvider.solusVm1 => SolusVm1Credentials(
+          key: keyField.text,
+          hash: hashField.text,
+        ),
+        CloudProvider.solusVm2 => SolusVm2Credentials(token.text),
+        CloudProvider.rackNerd => RackNerdCredentials(
+          key: keyField.text,
+          hash: hashField.text,
+        ),
+      };
       verified = await cloud.verifyConnection(
         provider: widget.provider,
         endpoint: endpoint.text,
@@ -474,7 +490,7 @@ class _CloudAuthorizationPageState extends State<CloudAuthorizationPage>
             const CloudSteps(2),
             LedgerCard(
               child: Text(
-                '${cloudProviderName(widget.provider)} · ${v1 ? context.l10n.cloudSingleVpsApi : context.l10n.cloudUserAccountApi}',
+                '${cloudProviderName(widget.provider)} · ${singleInstance ? context.l10n.cloudSingleVpsApi : context.l10n.cloudUserAccountApi}',
                 style: const TextStyle(fontWeight: FontWeight.w700),
               ),
             ),
@@ -506,38 +522,50 @@ class _CloudAuthorizationPageState extends State<CloudAuthorizationPage>
               decoration: InputDecoration(
                 labelText: context.l10n.cloudEndpointLabel,
                 errorMaxLines: 6,
-                hintText: v1
+                hintText: widget.provider == CloudProvider.solusVm1
                     ? 'https://panel.example.com:5656'
                     : 'https://panel.example.com',
               ),
               onChanged: (_) => setState(() => error = null),
               validator: (_) => parsedEndpoint == null
-                  ? context.l10n.cloudEndpointValidation
+                  ? rackNerd
+                        ? context.l10n.cloudRackNerdEndpointValidation
+                        : context.l10n.cloudEndpointValidation
                   : null,
             ),
-            InfoNote(context.l10n.cloudEndpointInfo),
+            InfoNote(
+              rackNerd
+                  ? context.l10n.cloudRackNerdEndpointInfo
+                  : context.l10n.cloudEndpointInfo,
+            ),
             if (parsedEndpoint case final target?)
               CloudNotice(
                 context.l10n.cloudVerifyTarget(
                   target.normalizedConsolePath
                       ? context.l10n.cloudConsolePathRemoved
+                      : target.normalizedApiPath
+                      ? context.l10n.cloudRackNerdApiPathRemoved
                       : '',
                   target.origin.toString(),
                 ),
               ),
             if (widget.existing != null)
               InfoNote(context.l10n.cloudEndpointIdentityInfo),
-            if (v1) ...[
+            if (singleInstance) ...[
               secretField(keyField, 'API Key', 'cloud-key'),
               secretField(hashField, 'API Hash', 'cloud-hash'),
-              InfoNote(context.l10n.cloudV1CredentialsInfo),
+              InfoNote(
+                rackNerd
+                    ? context.l10n.cloudRackNerdCredentialsInfo
+                    : context.l10n.cloudV1CredentialsInfo,
+              ),
             ] else ...[
               secretField(token, 'API Token', 'cloud-token'),
               InfoNote(context.l10n.cloudV2CredentialsInfo),
             ],
-            if (v1 && widget.existing != null)
+            if (singleInstance && widget.existing != null)
               CloudNotice(context.l10n.cloudV1ReauthorizationInfo, error: true),
-            if (!v1 && widget.existing != null)
+            if (!singleInstance && widget.existing != null)
               InfoNote(context.l10n.cloudV2ReauthorizationInfo),
             CloudNotice(context.l10n.cloudVerifyScopeInfo),
             if (error != null) CloudNotice(error!, error: true),
@@ -590,12 +618,13 @@ class _CloudImportPageState extends State<CloudImportPage>
       widget.verification?.snapshot ?? widget.inventory!.snapshot;
   CloudAccount? get account =>
       widget.verification?.existingAccount ?? widget.inventory?.account;
-  bool get v1 => snapshot.provider == CloudProvider.solusVm1;
-  bool get rebind => v1 && widget.verification?.existingAccount != null;
+  bool get singleInstance => snapshot.provider.isSingleInstance;
+  bool get rebind =>
+      singleInstance && widget.verification?.existingAccount != null;
   final selected = <String>{};
   final displayName = TextEditingController();
   final resourceForm = GlobalKey<ServerResourceFieldsState>();
-  final v1Selection = GlobalKey();
+  final singleSelection = GlobalKey();
   bool saving = false,
       confirmRebind = false,
       committed = false,
@@ -649,7 +678,7 @@ class _CloudImportPageState extends State<CloudImportPage>
     if (saving || expired || (rebind && !confirmRebind)) return;
     if (!accountOnly && selected.isEmpty) return;
     final ServerResources? resources;
-    if (v1 && !accountOnly && selected.isNotEmpty) {
+    if (singleInstance && !accountOnly && selected.isNotEmpty) {
       final invalid = <FormFieldState<Object?>>{};
       resources = resourceForm.currentState?.validateAndRead(
         invalidFields: invalid,
@@ -709,15 +738,15 @@ class _CloudImportPageState extends State<CloudImportPage>
     }
   }
 
-  bool get needsV1Selection =>
-      v1 &&
+  bool get needsSingleSelection =>
+      singleInstance &&
       selected.isEmpty &&
       snapshot.instances.isNotEmpty &&
       linked(snapshot.instances.single) == null;
 
-  void revealV1Selection() {
+  void revealSingleSelection() {
     FocusScope.of(context).unfocus();
-    final target = v1Selection.currentContext;
+    final target = singleSelection.currentContext;
     if (target != null) {
       Scrollable.ensureVisible(
         target,
@@ -728,10 +757,10 @@ class _CloudImportPageState extends State<CloudImportPage>
   }
 
   Widget _importBody(List<Widget> children) {
-    // V1 is exactly one instance and owns a nested completion form. Eagerly
-    // mount that bounded form so validation and edits survive any scroll.
+    // Single-instance APIs own a bounded nested completion form. Eagerly mount
+    // that form so validation and edits survive any scroll.
     // V2 inventories may be large and continue using lazy list children.
-    return v1
+    return singleInstance
         ? SingleChildScrollView(
             padding: const EdgeInsets.all(20),
             child: Column(
@@ -777,7 +806,7 @@ class _CloudImportPageState extends State<CloudImportPage>
           ),
         for (final instance in snapshot.instances)
           Padding(
-            key: v1 ? v1Selection : null,
+            key: singleInstance ? singleSelection : null,
             padding: const EdgeInsets.only(bottom: 12),
             child: LedgerCard(
               padding: EdgeInsets.zero,
@@ -801,7 +830,7 @@ class _CloudImportPageState extends State<CloudImportPage>
                   vertical: 8,
                 ),
                 title: Text(
-                  v1
+                  singleInstance
                       ? context.l10n.cloudV1Instance
                       : instance.name ??
                             context.l10n.cloudInstanceFallback(
@@ -814,7 +843,7 @@ class _CloudImportPageState extends State<CloudImportPage>
                   children: [
                     if (linked(instance) != null)
                       LedgerBadge(context.l10n.cloudAlreadyLinked),
-                    if (!v1)
+                    if (!singleInstance)
                       Text(
                         context.l10n.cloudProjectInstance(
                           (instance.projectName ?? instance.projectId)
@@ -825,7 +854,7 @@ class _CloudImportPageState extends State<CloudImportPage>
                         ),
                       ),
                     Text(
-                      v1
+                      singleInstance
                           ? context.l10n.cloudV1Identity
                           : [
                               instance.ipv4,
@@ -847,8 +876,8 @@ class _CloudImportPageState extends State<CloudImportPage>
               ),
             ),
           ),
-        if (v1) ...[
-          if (needsV1Selection)
+        if (singleInstance) ...[
+          if (needsSingleSelection)
             InfoNote(context.l10n.cloudSelectBeforeComplete),
           const SizedBox(height: 6),
           TextField(
@@ -879,7 +908,11 @@ class _CloudImportPageState extends State<CloudImportPage>
                 'vcpu': snapshot.instances.single.vcpu,
               },
             ),
-          InfoNote(context.l10n.cloudV1ResourcesInfo),
+          InfoNote(
+            snapshot.provider == CloudProvider.rackNerd
+                ? context.l10n.cloudRackNerdResourcesInfo
+                : context.l10n.cloudV1ResourcesInfo,
+          ),
         ],
         if (rebind) ...[
           CloudNotice(context.l10n.cloudRebindWarning, error: true),
@@ -896,16 +929,16 @@ class _CloudImportPageState extends State<CloudImportPage>
         ],
         InfoNote(
           context.l10n.cloudImportBoundary(
-            v1
+            singleInstance
                 ? context.l10n.cloudV1Deduplication
                 : context.l10n.cloudV2Deduplication,
           ),
         ),
         if (error != null) CloudNotice(error!, error: true),
-        if (needsV1Selection && !saving && !expired)
+        if (needsSingleSelection && !saving && !expired)
           TextButton.icon(
             key: const ValueKey('cloud-return-to-instance'),
-            onPressed: revealV1Selection,
+            onPressed: revealSingleSelection,
             icon: const Icon(Icons.arrow_upward),
             label: Text(context.l10n.cloudReturnSelect),
           ),
@@ -1229,7 +1262,7 @@ Future<void> cloudAccountMenu(
       message: LocalizedText(
         (l10n) => l10n.cloudUnlinkAccountMessage(
           current.alias,
-          current.provider == CloudProvider.solusVm1
+          current.provider.isSingleInstance
               ? l10n.cloudRevokeV1
               : l10n.cloudRevokeV2,
         ),
@@ -1319,7 +1352,7 @@ class CloudAccountDetailsPage extends StatelessWidget {
                       ),
                       CloudValue(
                         context.l10n.cloudVerifiedScope,
-                        account.provider == CloudProvider.solusVm1
+                        account.provider.isSingleInstance
                             ? context.l10n.cloudV1Scope
                             : context.l10n.cloudV2Scope(
                                 account.remoteAccountId?.toString() ??

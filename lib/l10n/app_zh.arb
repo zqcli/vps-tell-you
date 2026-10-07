@@ -258,7 +258,7 @@
   },
   "accountsPreferences": "账户与偏好",
   "panelAccounts": "面板账户",
-  "panelConnectionCount": "SolusVM 1 / 2 · {p0} 个连接",
+  "panelConnectionCount": "已保存 {p0} 个面板连接",
   "@panelConnectionCount": {
     "placeholders": {
       "p0": {
@@ -1212,7 +1212,7 @@
   "@cloudAddAccount": {
     "description": "Panel accounts: add account"
   },
-  "cloudPanelReadBadge": "SolusVM 1 / 2 · 面板读取",
+  "cloudPanelReadBadge": "面板只读接入",
   "@cloudPanelReadBadge": {
     "description": "Panel accounts: panel read badge"
   },
@@ -1256,7 +1256,7 @@
   "@cloudReadOnlyBoundary": {
     "description": "Panel accounts: read only boundary"
   },
-  "cloudTemplateInfo": "按面板版本选择授权方式。面板软件不等于销售厂商，真实服务商和费用可稍后补充。",
+  "cloudTemplateInfo": "按面板类型选择授权方式。面板软件不等于销售厂商，真实服务商和费用可稍后补充。",
   "@cloudTemplateInfo": {
     "description": "Panel accounts: template info"
   },
@@ -1268,7 +1268,11 @@
   "@cloudV2TemplateInfo": {
     "description": "Panel accounts: v2 template info"
   },
-  "cloudSupportedPanels": "支持 SolusVM 1 和 SolusVM 2 面板读取。不提供 API 电源控制，也不会修改远端资源或停止服务商计费。",
+  "cloudRackNerdTemplateInfo": "ctrl 面板 Client API Key + Hash\n通过兼容客户端接口读取单台 VPS",
+  "@cloudRackNerdTemplateInfo": {
+    "description": "Panel accounts: RackNerd ctrl single-instance protocol template, without identifying the underlying panel product"
+  },
+  "cloudSupportedPanels": "支持 SolusVM 1、SolusVM 2 和 RackNerd ctrl 读取。不提供 API 电源控制，也不会修改远端资源或停止服务商计费。",
   "@cloudSupportedPanels": {
     "description": "Panel accounts: supported panels"
   },
@@ -1308,6 +1312,14 @@
   "@cloudEndpointInfo": {
     "description": "Panel accounts: endpoint info"
   },
+  "cloudRackNerdEndpointValidation": "请输入 HTTPS 面板首页地址，或精确的 /api/client/command.php 地址，不含凭据、参数或其他路径",
+  "@cloudRackNerdEndpointValidation": {
+    "description": "Panel accounts: RackNerd ctrl-only endpoint validation"
+  },
+  "cloudRackNerdEndpointInfo": "使用面板首页 HTTPS 地址，可以保留服务商指定端口。仅 RackNerd ctrl 可移除精确的 /api/client/command.php 路径；请核对下方最终地址。不会忽略证书错误或跟随重定向。",
+  "@cloudRackNerdEndpointInfo": {
+    "description": "Panel accounts: narrow RackNerd ctrl API-path normalization explanation"
+  },
   "cloudEndpointIdentityInfo": "面板地址与连接身份绑定。不同面板请另建连接，旧授权不会显示在此处。",
   "@cloudEndpointIdentityInfo": {
     "description": "Panel accounts: endpoint identity info"
@@ -1315,6 +1327,10 @@
   "cloudV1CredentialsInfo": "填写该 VPS 的 Client API Key / Hash。不是管理员 API 凭据或登录密码；需服务商开放 Client API。每组凭据只读取单台 VPS 的状态。",
   "@cloudV1CredentialsInfo": {
     "description": "Panel accounts: v1 credentials info"
+  },
+  "cloudRackNerdCredentialsInfo": "填写 RackNerd ctrl 面板中该 VPS 的 Client API Key / Hash，不是登录密码或管理员凭据。此连接仅通过兼容客户端接口读取单台 VPS，不据此认定底层面板产品。",
+  "@cloudRackNerdCredentialsInfo": {
+    "description": "Panel accounts: RackNerd ctrl Key/Hash credential scope"
   },
   "cloudV2CredentialsInfo": "使用 SolusVM 2 用户区 Account → API Tokens 的 Token。不要使用管理员 Token；可读取范围取决于服务商设置。",
   "@cloudV2CredentialsInfo": {
@@ -1391,6 +1407,10 @@
   "cloudV1ResourcesInfo": "SolusVM 1 不提供稳定实例 ID。资源字段依厂商开放情况而异；已填资料只存本机，不会触发 SSH、TCP 或远端配置修改。",
   "@cloudV1ResourcesInfo": {
     "description": "Panel accounts: v1 resources info"
+  },
+  "cloudRackNerdResourcesInfo": "RackNerd ctrl 不提供稳定实例 ID。导入前需补齐六项硬件信息，API 未返回的 CPU 核数不能猜测。已填资料只存本机，不会触发 SSH、TCP 或远端配置修改。",
+  "@cloudRackNerdResourcesInfo": {
+    "description": "Panel accounts: RackNerd ctrl anonymous identity and required local resource completion"
   },
   "cloudRebindWarning": "保存新授权将解除此连接的所有旧实例关联。旧记录、费用、付款和 SSH 原样保留；选择导入会新增本地记录，不自动覆盖或重连旧记录。",
   "@cloudRebindWarning": {
@@ -1828,7 +1848,7 @@
   "@cloudAccountFailureIdentity": {
     "description": "Panel accounts: account failure identity"
   },
-  "cloudAccountFailureV1Rebind": "SolusVM 1 无法证明新凭据仍属于原实例；请明确确认解除旧关联并重新选择导入，旧台账会保留",
+  "cloudAccountFailureV1Rebind": "单 VPS API 无法证明新凭据仍属于原实例；请明确确认解除旧关联并重新选择导入，旧台账会保留",
   "@cloudAccountFailureV1Rebind": {
     "description": "Panel accounts: account failure v1 rebind"
   },
@@ -2001,6 +2021,10 @@
   "cloudConsolePathRemoved": "已移除 /home.php。\n",
   "@cloudConsolePathRemoved": {
     "description": "Panel accounts: console path removed"
+  },
+  "cloudRackNerdApiPathRemoved": "已为 RackNerd ctrl 移除 /api/client/command.php。\n",
+  "@cloudRackNerdApiPathRemoved": {
+    "description": "Panel accounts: explicit RackNerd ctrl-only API-path normalization notice"
   },
   "cloudAuthorizationUnsaved": "\n尚未保存这次授权",
   "@cloudAuthorizationUnsaved": {

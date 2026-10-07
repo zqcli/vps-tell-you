@@ -3,7 +3,18 @@
 更新：2026-10-07 UTC
 
 
-## 当前接手：iOS 模拟器已安装并启动
+## 当前增量：RackNerd ctrl 独立面板支持
+
+2026-10-08（UTC+8），基于 `1a7b35e`。RackNerd 的 `<ctrl>` XML 包装与仅返回状态的 `status` 接口不符合原 SolusVM 1 读取合同；新增 **RackNerd ctrl** 模板，使用独立 form `info` / JSON 协议，不改变其他厂商的 V1 multipart / status / XML 或 V2 GET 行为。操作说明与架构判断边界见 [RACKNERD](RACKNERD.md)。
+
+- 用户授权的真实生产 `RackNerdAdapter` 只读验证 **1/1 通过**：取得 IP、hostname、内存、磁盘、流量，CPU 未返回并保持未知；不执行电源操作、不存真实响应或凭据到仓库。
+- 新类型贯通双语 UI、Key/Hash 安全存储、六资源补全、仅保存再导入、刷新、离线关联与明确重授权。没有伪造远端实例 ID，旧台账 / 费用 / SSH 保护保持。
+- schema **v10** 无损事务迁移旧云表约束与完整外键关系；真实 v9 DDL / 数据保持、晚期失败回滚、重开与原凭据引用保护有独立回归。JSON 备份仍 v1，仍排除云连接和秘密。
+- 指定 `cus-resp/gpt-6.1-sol:xhigh` 的四成员 Team 完成实施与独立审查，无未解决高风险问题。最终全量 **1007 passed / 2 failed**；两项 `mobile_theme_test.dart` golden 失败在未修改基线同环境复现，实际图片 SHA-256 与本轮相同，未改 golden / 断言。不是全绿；详见 ACCEPTANCE。
+- 官方 gen-l10n、format149文件 / 0改动、analyze无问题、diff检查与最终 iOS Debug 模拟器构建通过。已原位更新 iPhone 17 Pro / iOS 26.2，数据库9→10、既有4条演示记录保留，外键检查无异常，App保持运行。
+- 真实 RackNerd 账户尚未代用户保存到模拟器；在「从面板账户导入 → RackNerd ctrl」验证后核实 CPU 再导入。真机安全存储和系统行为仍须专门验收。
+
+## 前次接手：iOS 模拟器已安装并启动
 
 2026-10-08 06:28（UTC+8），用户重启 Mac 后继续验证，源码基于 `ca2c2b8`（业务源码未变）。
 

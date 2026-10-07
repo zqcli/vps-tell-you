@@ -24,6 +24,17 @@ import 'cloud_controller_test.dart' show CallbackCloudAdapter, CloudTestSecrets;
 import 'cloud_store_test.dart' show cloudTestTime, snapshot;
 import 'support/reminder_platform.dart';
 
+CloudSnapshot _localizedSnapshot(CloudProvider provider) {
+  final original = snapshot(v1: provider.isSingleInstance);
+  return CloudSnapshot(
+    provider: provider,
+    completedAt: original.completedAt,
+    remoteAccountId: original.remoteAccountId,
+    instances: original.instances,
+    projects: original.projects,
+  );
+}
+
 void main() {
   final english = AppLocalizationsEn();
   final chinese = AppLocalizationsZh();
@@ -47,7 +58,7 @@ void main() {
     secrets = CloudTestSecrets();
     calls = 0;
     cancellations.clear();
-    read = (provider) async => snapshot(v1: provider == CloudProvider.solusVm1);
+    read = (provider) async => _localizedSnapshot(provider);
     cloud = CloudController(
       store: store,
       secrets: secrets,
@@ -137,14 +148,28 @@ void main() {
     await tester.pumpAndSettle();
   }
 
-  Future<CloudVerification> verify({bool v1 = false}) async =>
-      (await cloud.verifyConnection(
-        provider: v1 ? CloudProvider.solusVm1 : CloudProvider.solusVm2,
-        endpoint: 'https://panel.example:8443',
-        credentials: v1
-            ? SolusVm1Credentials(key: 'fixture-key', hash: 'fixture-hash')
-            : SolusVm2Credentials('fixture-token'),
-      ))!;
+  Future<CloudVerification> verify({
+    bool v1 = false,
+    CloudProvider? provider,
+  }) async {
+    final selected =
+        provider ?? (v1 ? CloudProvider.solusVm1 : CloudProvider.solusVm2);
+    return (await cloud.verifyConnection(
+      provider: selected,
+      endpoint: 'https://panel.example:8443',
+      credentials: switch (selected) {
+        CloudProvider.solusVm1 => SolusVm1Credentials(
+          key: 'fixture-key',
+          hash: 'fixture-hash',
+        ),
+        CloudProvider.solusVm2 => SolusVm2Credentials('fixture-token'),
+        CloudProvider.rackNerd => RackNerdCredentials(
+          key: 'fixture-key',
+          hash: 'fixture-hash',
+        ),
+      },
+    ))!;
+  }
 
   Future<CloudAccount> account({String? alias}) async {
     final verification = await verify();
@@ -203,6 +228,87 @@ void main() {
       english.cloudPowerRunning,
     );
   });
+
+  test('RackNerd copy is bilingual and identifies only its ctrl interface', () {
+    expect(cloudProviderName(CloudProvider.rackNerd), 'RackNerd ctrl');
+    for (final strings in [english, chinese]) {
+      expect(strings.cloudSupportedPanels, contains('RackNerd ctrl'));
+      expect(strings.panelConnectionCount('2'), contains('2'));
+      expect(strings.panelConnectionCount('2'), isNot(contains('SolusVM')));
+      expect(strings.cloudPanelReadBadge, isNot(contains('SolusVM')));
+      for (final text in [
+        strings.cloudRackNerdTemplateInfo,
+        strings.cloudRackNerdEndpointInfo,
+        strings.cloudRackNerdCredentialsInfo,
+        strings.cloudRackNerdResourcesInfo,
+      ]) {
+        expect(text, isNot(contains('SolusVM')));
+      }
+      expect(strings.cloudAccountFailureV1Rebind, isNot(contains('SolusVM 1')));
+    }
+    expect(
+      english.cloudRackNerdCredentialsInfo,
+      isNot(chinese.cloudRackNerdCredentialsInfo),
+    );
+    expect(
+      english.cloudRackNerdResourcesInfo,
+      isNot(chinese.cloudRackNerdResourcesInfo),
+    );
+  });
+
+  testWidgets(
+    'RackNerd endpoint review and Key Hash drafts translate without API or secret access',
+    (tester) async {
+      await mount(
+        tester,
+        CloudAuthorizationPage(
+          ledger: ledger,
+          provider: CloudProvider.rackNerd,
+        ),
+      );
+      await fill(tester, 'cloud-endpoint', 'invalid');
+      await fill(tester, 'cloud-key', 'synthetic-draft-key');
+      await fill(tester, 'cloud-hash', 'synthetic-draft-hash');
+      await tapKey(tester, 'verify-cloud');
+      await language(tester, LocalePreference.english);
+      await reveal(tester, find.byKey(const ValueKey('cloud-endpoint')));
+      expect(
+        find.text(english.cloudRackNerdEndpointValidation),
+        findsOneWidget,
+      );
+      await fill(
+        tester,
+        'cloud-endpoint',
+        'https://panel.example:8443/api/client/command.php',
+      );
+      final englishTarget = english.cloudVerifyTarget(
+        english.cloudRackNerdApiPathRemoved,
+        'https://panel.example:8443',
+      );
+      await reveal(tester, find.text(englishTarget));
+      expect(find.text(englishTarget), findsOneWidget);
+      await language(tester, LocalePreference.chinese);
+      final chineseTarget = chinese.cloudVerifyTarget(
+        chinese.cloudRackNerdApiPathRemoved,
+        'https://panel.example:8443',
+      );
+      expect(find.text(chineseTarget), findsOneWidget);
+      for (final item in {
+        'cloud-key': 'synthetic-draft-key',
+        'cloud-hash': 'synthetic-draft-hash',
+      }.entries) {
+        final target = find.byKey(ValueKey(item.key));
+        await reveal(tester, target);
+        expect(
+          tester.widget<TextFormField>(target).controller!.text,
+          item.value,
+        );
+      }
+      expect(calls, 0);
+      expect(secrets.reads + secrets.writes + secrets.deletes, 0);
+      expect(await store.cloudAccounts(), isEmpty);
+    },
+  );
 
   testWidgets(
     'authorization draft and validation survive persisted language change',
@@ -387,57 +493,59 @@ void main() {
     },
   );
 
-  testWidgets(
-    'V1 selection and incomplete hardware draft survive language change',
-    (tester) async {
-      final verified = await verify(v1: true);
-      await mount(
-        tester,
-        CloudImportPage(
-          ledger: ledger,
-          verification: verified,
-          alias: 'User alias',
-        ),
-      );
-      await tapKey(tester, 'cloud-select-single');
-      await fill(tester, 'cloud-v1-name', '用户本地名称 Local draft');
-      await fill(tester, 'resource-ip', '192.0.2.77');
-      await fill(tester, 'resource-hostname', 'User-Hostname.example');
-      await tapKey(tester, 'cloud-import-submit');
-      expect(calls, 1);
-      await language(tester, LocalePreference.english);
-      for (final item in {
-        'cloud-v1-name': '用户本地名称 Local draft',
-        'resource-ip': '192.0.2.77',
-        'resource-hostname': 'User-Hostname.example',
-      }.entries) {
-        final target = find.byKey(ValueKey(item.key));
-        await reveal(tester, target);
-        final widget = tester.widget(target);
-        final controller = widget is TextField
-            ? widget.controller
-            : (widget as TextFormField).controller;
-        expect(controller!.text, item.value);
-      }
-      await reveal(tester, find.byKey(const ValueKey('cloud-select-single')));
-      expect(
-        tester
-            .widget<CheckboxListTile>(
-              find.byKey(const ValueKey('cloud-select-single')),
-            )
-            .value,
-        isTrue,
-      );
-      expect(find.text(english.resourceFieldValidVcpu), findsOneWidget);
-      expect(find.text(english.resourceFieldValidBytes), findsWidgets);
-      expect(find.text(chinese.resourceFieldValidVcpu), findsNothing);
-      await reveal(tester, find.text(english.cloudResourcesIncomplete));
-      expect(find.text(english.cloudResourcesIncomplete), findsOneWidget);
-      expect(calls, 1);
-      expect(secrets.reads + secrets.writes + secrets.deletes, 0);
-      expect(await store.cloudAccounts(), isEmpty);
-    },
-  );
+  for (final provider in [CloudProvider.solusVm1, CloudProvider.rackNerd]) {
+    testWidgets(
+      '${provider.name} selection and incomplete hardware draft survive language change',
+      (tester) async {
+        final verified = await verify(provider: provider);
+        await mount(
+          tester,
+          CloudImportPage(
+            ledger: ledger,
+            verification: verified,
+            alias: 'User alias',
+          ),
+        );
+        await tapKey(tester, 'cloud-select-single');
+        await fill(tester, 'cloud-v1-name', '用户本地名称 Local draft');
+        await fill(tester, 'resource-ip', '192.0.2.77');
+        await fill(tester, 'resource-hostname', 'User-Hostname.example');
+        await tapKey(tester, 'cloud-import-submit');
+        expect(calls, 1);
+        await language(tester, LocalePreference.english);
+        for (final item in {
+          'cloud-v1-name': '用户本地名称 Local draft',
+          'resource-ip': '192.0.2.77',
+          'resource-hostname': 'User-Hostname.example',
+        }.entries) {
+          final target = find.byKey(ValueKey(item.key));
+          await reveal(tester, target);
+          final widget = tester.widget(target);
+          final controller = widget is TextField
+              ? widget.controller
+              : (widget as TextFormField).controller;
+          expect(controller!.text, item.value);
+        }
+        await reveal(tester, find.byKey(const ValueKey('cloud-select-single')));
+        expect(
+          tester
+              .widget<CheckboxListTile>(
+                find.byKey(const ValueKey('cloud-select-single')),
+              )
+              .value,
+          isTrue,
+        );
+        expect(find.text(english.resourceFieldValidVcpu), findsOneWidget);
+        expect(find.text(english.resourceFieldValidBytes), findsWidgets);
+        expect(find.text(chinese.resourceFieldValidVcpu), findsNothing);
+        await reveal(tester, find.text(english.cloudResourcesIncomplete));
+        expect(find.text(english.cloudResourcesIncomplete), findsOneWidget);
+        expect(calls, 1);
+        expect(secrets.reads + secrets.writes + secrets.deletes, 0);
+        expect(await store.cloudAccounts(), isEmpty);
+      },
+    );
+  }
 
   testWidgets(
     'local binding selection uses no API and keeps IDs across language change',
@@ -510,13 +618,26 @@ void main() {
       ),
       snapshot: snapshot(v1: true),
     );
+    final rack = CloudInventory(
+      account: CloudAccount(
+        id: 'rack',
+        provider: CloudProvider.rackNerd,
+        alias: longName,
+        endpoint: 'https://panel.example:8443',
+        secretRef: 'synthetic-only',
+        createdAt: cloudTestTime,
+      ),
+      snapshot: _localizedSnapshot(CloudProvider.rackNerd),
+    );
     for (final page in <Widget>[
       CloudAccountsPage(ledger: ledger),
       CloudTemplatesPage(ledger: ledger),
       CloudAuthorizationPage(ledger: ledger, provider: CloudProvider.solusVm1),
       CloudAuthorizationPage(ledger: ledger, provider: CloudProvider.solusVm2),
+      CloudAuthorizationPage(ledger: ledger, provider: CloudProvider.rackNerd),
       CloudImportPage(ledger: ledger, inventory: inventory),
       CloudImportPage(ledger: ledger, inventory: v1),
+      CloudImportPage(ledger: ledger, inventory: rack),
       CloudAccountDetailsPage(ledger: ledger, accountId: saved.id),
       ServerCloudBindingPage(ledger: ledger, serverId: 'local'),
     ]) {

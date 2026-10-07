@@ -52,6 +52,11 @@ Future<void> main() async {
           credentials: credentials as SolusVm2Credentials,
           clientFactory: clientFactory,
         ),
+        CloudProvider.rackNerd => RackNerdAdapter(
+          endpoint: endpoint,
+          credentials: credentials as RackNerdCredentials,
+          clientFactory: clientFactory,
+        ),
       };
     },
   );

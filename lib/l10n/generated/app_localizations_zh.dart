@@ -455,7 +455,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String panelConnectionCount(String p0) {
-    return 'SolusVM 1 / 2 · $p0 个连接';
+    return '已保存 $p0 个面板连接';
   }
 
   @override
@@ -1737,7 +1737,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get cloudAddAccount => '添加面板账户';
 
   @override
-  String get cloudPanelReadBadge => 'SolusVM 1 / 2 · 面板读取';
+  String get cloudPanelReadBadge => '面板只读接入';
 
   @override
   String get cloudManageConnections => '管理面板连接与实例';
@@ -1771,7 +1771,7 @@ class AppLocalizationsZh extends AppLocalizations {
       '本 App 仅使用读取能力，不代表 API 凭据本身只有读取权限。\n面板账户授权与 SSH 凭据分开管理。解除关联保留台账、费用、付款与 SSH。';
 
   @override
-  String get cloudTemplateInfo => '按面板版本选择授权方式。面板软件不等于销售厂商，真实服务商和费用可稍后补充。';
+  String get cloudTemplateInfo => '按面板类型选择授权方式。面板软件不等于销售厂商，真实服务商和费用可稍后补充。';
 
   @override
   String get cloudV1TemplateInfo => 'Client API Key + Hash\n每组凭据只对应单台 VPS';
@@ -1780,8 +1780,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get cloudV2TemplateInfo => '用户 API Token\n读取当前用户的项目与实例';
 
   @override
+  String get cloudRackNerdTemplateInfo =>
+      'ctrl 面板 Client API Key + Hash\n通过兼容客户端接口读取单台 VPS';
+
+  @override
   String get cloudSupportedPanels =>
-      '支持 SolusVM 1 和 SolusVM 2 面板读取。不提供 API 电源控制，也不会修改远端资源或停止服务商计费。';
+      '支持 SolusVM 1、SolusVM 2 和 RackNerd ctrl 读取。不提供 API 电源控制，也不会修改远端资源或停止服务商计费。';
 
   @override
   String get cloudReauthorize => '重新授权';
@@ -1811,11 +1815,23 @@ class AppLocalizationsZh extends AppLocalizations {
   String get cloudEndpointInfo => '使用面板首页 HTTPS 地址，可以保留服务商指定端口。不会忽略证书错误或跟随重定向。';
 
   @override
+  String get cloudRackNerdEndpointValidation =>
+      '请输入 HTTPS 面板首页地址，或精确的 /api/client/command.php 地址，不含凭据、参数或其他路径';
+
+  @override
+  String get cloudRackNerdEndpointInfo =>
+      '使用面板首页 HTTPS 地址，可以保留服务商指定端口。仅 RackNerd ctrl 可移除精确的 /api/client/command.php 路径；请核对下方最终地址。不会忽略证书错误或跟随重定向。';
+
+  @override
   String get cloudEndpointIdentityInfo => '面板地址与连接身份绑定。不同面板请另建连接，旧授权不会显示在此处。';
 
   @override
   String get cloudV1CredentialsInfo =>
       '填写该 VPS 的 Client API Key / Hash。不是管理员 API 凭据或登录密码；需服务商开放 Client API。每组凭据只读取单台 VPS 的状态。';
+
+  @override
+  String get cloudRackNerdCredentialsInfo =>
+      '填写 RackNerd ctrl 面板中该 VPS 的 Client API Key / Hash，不是登录密码或管理员凭据。此连接仅通过兼容客户端接口读取单台 VPS，不据此认定底层面板产品。';
 
   @override
   String get cloudV2CredentialsInfo =>
@@ -1878,6 +1894,10 @@ class AppLocalizationsZh extends AppLocalizations {
   @override
   String get cloudV1ResourcesInfo =>
       'SolusVM 1 不提供稳定实例 ID。资源字段依厂商开放情况而异；已填资料只存本机，不会触发 SSH、TCP 或远端配置修改。';
+
+  @override
+  String get cloudRackNerdResourcesInfo =>
+      'RackNerd ctrl 不提供稳定实例 ID。导入前需补齐六项硬件信息，API 未返回的 CPU 核数不能猜测。已填资料只存本机，不会触发 SSH、TCP 或远端配置修改。';
 
   @override
   String get cloudRebindWarning =>
@@ -2213,7 +2233,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get cloudAccountFailureV1Rebind =>
-      'SolusVM 1 无法证明新凭据仍属于原实例；请明确确认解除旧关联并重新选择导入，旧台账会保留';
+      '单 VPS API 无法证明新凭据仍属于原实例；请明确确认解除旧关联并重新选择导入，旧台账会保留';
 
   @override
   String get cloudAccountFailureSelection => '导入列表已变化或选择无效，请重新读取';
@@ -2305,6 +2325,10 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get cloudConsolePathRemoved => '已移除 /home.php。\n';
+
+  @override
+  String get cloudRackNerdApiPathRemoved =>
+      '已为 RackNerd ctrl 移除 /api/client/command.php。\n';
 
   @override
   String get cloudAuthorizationUnsaved => '\n尚未保存这次授权';

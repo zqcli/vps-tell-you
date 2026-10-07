@@ -527,3 +527,30 @@ SimRenderServer/MetalDeviceDescriptor.swift:40: Fatal error: Attempt to initiali
 本次未修改业务源码或锁文件，仅更新运行记录；未重复执行上次通过的 Widget 测试。App 和模拟器保留供用户操作。以上只证明构建、安装、启动和首屏显示，不代表四 Tab 点击、写入持久化、真实 SSH / API、Keychain / Face ID、通知、系统分享、后台或真机验收通过。
 
 同一 Xcode / iOS / App 在恢复 Metal 后正常启动，排除了“必须降级这些版本才能启动本项目”的判断；此前的直接阻碍是宿主当时无法提供 Metal 设备。驱动异常的底层诱因仍未确定，不将一次重启恢复解释为已永久修复。
+
+
+## RackNerd ctrl 独立面板与回归（2026-10-08，UTC+8）
+
+基于 `1a7b35e`。用户提供该 VPS 客户端 API 文档并授权诊断；只调用 `status` / `info`，没有电源、SSH 或远端配置写入。真实凭据仅用于主会话进程内诊断，不交给 Team、不保存到代码、fixture、数据库或提交；真实响应只在内存解析，输出限协议结构及非敏感验证结果。
+
+### 根因及实现
+
+- 真实 multipart `status` 响应为 XML 声明加 `<ctrl>` 根节点，只有 status/statusmsg/vmstat；现有 V1 只接受字段片段或 `<response>`，因此正确拒绝不匹配的协议。form `info` 才返回 IP、hostname 和三个资源四元组；`rdtype=json` 得到顶层字符串字段 JSON。
+- 新增稳定 `CloudProvider.rackNerd`、独立 Key/Hash 凭据及 adapter，固定一次 form-urlencoded POST `action=info` / `rdtype=json` / 五资源标志。旧 V1 请求与 XML 校验、V2 请求与分页校验未改；共享的资源投影保持地址/字节/零值/秘密反射语义。
+- 保留默认严格 TLS、禁止重定向、超时取消与预算；RackNerd 响应限制16 KiB / 16层 / 2048节点，拒绝重复JSON键和嵌套权威字段。HTTP200 API错误不变成成功；未提供CPU和稳定ID时不猜测。
+- schema10 在升级事务内复制完整账户/观测/关联图、保留FK开启、按依赖顺序重建云表约束；不动服务器/账务/SSH/偏好/秘密。真实v9表结构及晚期失败回滚、旧数据重开、非云schema不变均有测试。V1/RackNerd匿名重授权仍需明确解绑确认。
+- 双语新增入口、Key/Hash表单、已规范化目标地址、六资源补填与仅保存流程。完整API路径只允许RackNerd专用的精确`/api/client/command.php`，不接收尾句号、query或任意路径。设置和面板页公共标题改为通用面板文案，不再误称只支持SolusVM。
+
+### 实际验证
+
+- 四成员 Team 均使用用户指定模型 `cus-resp/gpt-6.1-sol:xhigh`，分工为核心协议/控制器、无损迁移、UI、本轮独立审查。独立审查无未解决高风险问题；所有成员仅使用合成或loopback资料。
+- Flutter **3.47.6 / Dart 3.13.5**；官方gen-l10n通过，`dart format --output=none --set-exit-if-changed lib test` **149文件 / 0变化**，`flutter analyze --no-pub` 无问题，`git diff --check`通过。
+- 主会话最终全量：`VPS_SSH_FIXTURE_PYTHON="$PWD/.ssh-test-venv/bin/python" flutter test --no-pub --concurrency=4 --reporter expanded`，**1007通过、2失败，退出码1**，约78秒。覆盖原V1/V2、RackNerd、TLS、安全存储合成合同、SQLite迁移、账务/备份/SSH、双语UI；没有跳过主题测试来声称全绿。完整日志在本机`build/racknerd-final-test.log`。
+- 两项失败是原`test/mobile_theme_test.dart`的浅/深色golden，均为**1.87% / 3287px**差异。Team在独立`git archive HEAD`基线`1a7b35e`、同SDK和同Mac环境复现相同失败；主会话也核验实际PNG字节相同：light SHA-256 `d813d6a32fb4c54ce6dd794421a656e01c07341d19c5688b0e76ae685bb7d4ed`，dark `6883eb39f84cdc5534098b0968c19210aee8a58684686c052dbac367093f23fd`。没有修改golden、主题源码或弱化断言；基线证据在本机`/tmp/vps-rack-baseline.cJjL0f/`，本轮失败图片保留在build下，不提交。
+- 主会话额外使用**生产RackNerdAdapter / 默认HTTP客户端及证书验证**读取真实面板一次，独立检查**1/1通过**：匿名单实例、IP、hostname、内存、磁盘、流量有效，CPU/远端实例ID为空。未调用保存账户或导入，没有把真实凭据写入应用安全存储。
+- 最终`flutter build ios --simulator --debug --no-codesign --no-pub`退出码0，Xcode构建**10.8秒**。原位安装/启动iPhone17Pro iOS26.2，未卸载清数据；SQLite只读核对schema9→10、原4条演示记录保留、`foreign_key_check`为空。最终启动PID6472，模拟器与App保持运行。
+- 本机原生截图和启动日志在`build/racknerd-verification/`，首页正常；没有代替用户点击真实RackNerd账户保存、输入未知CPU或导入。真实读取成功、合成完整导入回归和模拟器运行是分别验证的，不合并宣称真实VPS已导入。
+
+### 剩余边界
+
+RackNerd ctrl是已核对的接口标识，不能仅凭兼容路径判断底层一定是SolusVM1或2。新类型的真机安全存储保存、通知/分享/后台仍需设备验收；既有主题golden的跨环境一致性问题单独保留，不属于本轮RackNerd协议回归。没有推送、发布或任何真实VPS电源操作。

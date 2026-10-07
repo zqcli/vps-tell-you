@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Loopback-only synthetic SolusVM HTTPS fixture; never executes power actions.
+"""Loopback-only synthetic SolusVM/RackNerd HTTPS fixture; no power actions.
 
 Only the fixed SYNTHETIC_* credentials below are accepted. Logs retain method,
 path, query and result only; headers/form data are neither printed nor saved.
@@ -51,12 +51,51 @@ class Handler(BaseHTTPRequestHandler):
             self.send(400, '{}')
             return
         content_type = self.headers.get('Content-Type', '')
-        mime = BytesParser().parsebytes(('Content-Type: ' + content_type + '\r\n\r\n').encode() + self.rfile.read(size))
+        body = self.rfile.read(size)
+        mime = BytesParser().parsebytes(('Content-Type: ' + content_type + '\r\n\r\n').encode() + body)
         fields = {}
         if mime.is_multipart():
             for part in mime.get_payload():
-                fields[part.get_param('name', header='content-disposition')] = part.get_payload(decode=True).decode()
-        if set(fields) != {'key', 'hash', 'action'} or fields['action'] != 'status':
+                name = part.get_param('name', header='content-disposition')
+                if name in fields:
+                    self.send(400, '{}')
+                    return
+                fields[name] = part.get_payload(decode=True).decode()
+        elif content_type.split(';')[0] == 'application/x-www-form-urlencoded':
+            parsed = parse_qs(body.decode(), keep_blank_values=True)
+            if any(len(values) != 1 for values in parsed.values()):
+                self.send(400, '{}')
+                return
+            fields = {name: values[0] for name, values in parsed.items()}
+        else:
+            self.send(400, '{}')
+            return
+        flags = {'status', 'ipaddr', 'bw', 'hdd', 'mem'}
+        if fields.get('action') == 'info':
+            if (mime.is_multipart() or
+                    set(fields) != {'key', 'hash', 'action', 'rdtype'} | flags or
+                    fields['rdtype'] != 'json' or
+                    any(fields[name] != 'true' for name in flags)):
+                self.send(400, '{}')
+                return
+            if (fields['key'] != 'SYNTHETIC_RACK_KEY+ /&=' or
+                    fields['hash'] != 'SYNTHETIC_RACK_HASH+ /&='):
+                self.send(200, '{"status":"error","statusmsg":"Synthetic rejection"}')
+                return
+            self.send(200, json.dumps({
+                'status': 'success', 'statusmsg': '', 'vmstat': 'online',
+                'hostname': 'synthetic-rack.example',
+                'ipaddress': '192.0.2.45', 'ipaddr': '192.0.2.45',
+                'template': 'Synthetic Linux', 'os': 'linux',
+                'bw': '1099511627776,1073741824,1098437885952,0.1',
+                'hdd': '21474836480,1073741824,20401094656,5',
+                'mem': '2147483648,536870912,1610612736,25',
+            }))
+            return
+        old_fields = {'key', 'hash', 'action'}
+        if (not mime.is_multipart() or fields.get('action') != 'status' or
+                set(fields) not in (old_fields, old_fields | flags) or
+                any(fields[name] != 'true' for name in flags if name in fields)):
             self.send(400, '{}')
             return
         if fields['key'] == 'SYNTHETIC_SLOW':

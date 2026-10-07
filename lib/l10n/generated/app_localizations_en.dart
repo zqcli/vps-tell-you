@@ -500,7 +500,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String panelConnectionCount(String p0) {
-    return 'SolusVM 1 / 2 · Connections: $p0';
+    return 'Saved panel connections: $p0';
   }
 
   @override
@@ -2016,7 +2016,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get cloudAddAccount => 'Add panel account';
 
   @override
-  String get cloudPanelReadBadge => 'SolusVM 1 / 2 · Panel reads';
+  String get cloudPanelReadBadge => 'Read-only panel connections';
 
   @override
   String get cloudManageConnections => 'Manage panel connections and instances';
@@ -2055,7 +2055,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get cloudTemplateInfo =>
-      'Choose the authorization method for your panel version. Panel software is separate from the seller; you can add the actual provider and costs later.';
+      'Choose the authorization method for your panel type. Panel software is separate from the seller; you can add the actual provider and costs later.';
 
   @override
   String get cloudV1TemplateInfo =>
@@ -2066,8 +2066,12 @@ class AppLocalizationsEn extends AppLocalizations {
       'User API Token\nRead the current user’s projects and instances';
 
   @override
+  String get cloudRackNerdTemplateInfo =>
+      'ctrl panel Client API Key + Hash\nRead one VPS through the compatible client interface';
+
+  @override
   String get cloudSupportedPanels =>
-      'Supports reads from SolusVM 1 and SolusVM 2 panels. There is no API power control, remote resource editing, or cancellation of provider billing.';
+      'Supports reads from SolusVM 1, SolusVM 2, and RackNerd ctrl. There is no API power control, remote resource editing, or cancellation of provider billing.';
 
   @override
   String get cloudReauthorize => 'Authorize again';
@@ -2100,12 +2104,24 @@ class AppLocalizationsEn extends AppLocalizations {
       'Use the HTTPS panel home address, including a provider-specified port if needed. Certificate errors are not bypassed and redirects are not followed.';
 
   @override
+  String get cloudRackNerdEndpointValidation =>
+      'Enter the HTTPS panel home address, or the exact /api/client/command.php address, without credentials, parameters, or other paths';
+
+  @override
+  String get cloudRackNerdEndpointInfo =>
+      'Use the HTTPS panel home address, including a provider-specified port if needed. Only for RackNerd ctrl, the exact /api/client/command.php path may be removed; review the final address below. Certificate errors are not bypassed and redirects are not followed.';
+
+  @override
   String get cloudEndpointIdentityInfo =>
       'The panel address is tied to this connection’s identity. Add a new connection for another panel. Saved credentials are not shown here.';
 
   @override
   String get cloudV1CredentialsInfo =>
       'Enter this VPS’s Client API Key / Hash, not administrator API credentials or a login password. The provider must enable Client API. Each pair reads the status of one VPS.';
+
+  @override
+  String get cloudRackNerdCredentialsInfo =>
+      'Enter the Client API Key / Hash for this VPS from the RackNerd ctrl panel, not a login password or administrator credentials. This connection reads one VPS through the compatible client interface; the underlying panel product is not identified.';
 
   @override
   String get cloudV2CredentialsInfo =>
@@ -2175,6 +2191,10 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get cloudV1ResourcesInfo =>
       'SolusVM 1 does not provide a stable instance ID. Available resource fields depend on the provider. Entered details stay on this device and do not trigger SSH, TCP, or remote configuration changes.';
+
+  @override
+  String get cloudRackNerdResourcesInfo =>
+      'RackNerd ctrl does not provide a stable instance ID. Complete all six hardware details before import; do not guess a CPU count that the API does not return. Entered details stay on this device and do not trigger SSH, TCP, or remote configuration changes.';
 
   @override
   String get cloudRebindWarning =>
@@ -2560,7 +2580,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get cloudAccountFailureV1Rebind =>
-      'SolusVM 1 cannot prove that new credentials belong to the original instance. Explicitly confirm unlinking old associations and select instances to import again. Existing ledger records are kept.';
+      'A single-VPS API cannot prove that new credentials belong to the original instance. Explicitly confirm unlinking old associations and select instances to import again. Existing ledger records are kept.';
 
   @override
   String get cloudAccountFailureSelection =>
@@ -2674,6 +2694,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get cloudConsolePathRemoved => 'Removed /home.php.\n';
+
+  @override
+  String get cloudRackNerdApiPathRemoved =>
+      'Removed /api/client/command.php for RackNerd ctrl.\n';
 
   @override
   String get cloudAuthorizationUnsaved =>

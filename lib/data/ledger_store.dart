@@ -42,7 +42,7 @@ class LedgerStore {
   LedgerStore._(this._db, this.clock);
   final Database _db;
   final DateTime Function() clock;
-  static const schemaVersion = 9;
+  static const schemaVersion = 10;
   // Shared by both credential controllers using this store. A durable journal
   // reservation is not an orphan while its native write/DB commit is active.
   final Set<String> _activeSecretReservations = {};
@@ -87,6 +87,9 @@ class LedgerStore {
           // version fence prevents older readers from accepting the new shape.
           if (oldVersion < 9) {
             await _addLanguageSchema(db);
+          }
+          if (oldVersion >= 5 && oldVersion < 10) {
+            await _migrateCloudProviderSchema(db);
           }
         },
         onDowngrade: (db, oldVersion, newVersion) async {
@@ -1213,29 +1216,66 @@ class LedgerStore {
     }
   }
 
-  static Future<void> _addCloudSchema(DatabaseExecutor db) async {
-    await db.execute('''CREATE TABLE cloud_accounts (
-      id TEXT PRIMARY KEY, provider TEXT NOT NULL CHECK(provider IN ('solusVm1','solusVm2')),
+  static Future<void> _addCloudSchema(
+    DatabaseExecutor db, {
+    String suffix = '',
+  }) async {
+    await db.execute(
+      '''CREATE TABLE cloud_accounts$suffix (
+      id TEXT PRIMARY KEY, provider TEXT NOT NULL CHECK(provider IN ('solusVm1','solusVm2','rackNerd')),
       alias TEXT NOT NULL, endpoint TEXT NOT NULL, secret_ref TEXT NOT NULL UNIQUE,
       remote_account_id INTEGER, revision INTEGER NOT NULL DEFAULT 0,
       generation INTEGER NOT NULL DEFAULT 0, created_at TEXT NOT NULL,
       last_attempt_at TEXT, last_failure TEXT,
-      CHECK((provider = 'solusVm1' AND remote_account_id IS NULL) OR
-            (provider = 'solusVm2' AND remote_account_id > 0)))''');
-    await db.execute('''CREATE TABLE cloud_observations (
-      account_id TEXT NOT NULL REFERENCES cloud_accounts(id) ON DELETE CASCADE,
+      CHECK((provider IN ('solusVm1','rackNerd') AND remote_account_id IS NULL) OR
+            (provider = 'solusVm2' AND remote_account_id IS NOT NULL AND remote_account_id > 0)))''',
+    );
+    await db.execute('''CREATE TABLE cloud_observations$suffix (
+      account_id TEXT NOT NULL REFERENCES cloud_accounts$suffix(id) ON DELETE CASCADE,
       instance_key TEXT NOT NULL, identity_uuid TEXT, observation TEXT NOT NULL,
       stale INTEGER NOT NULL DEFAULT 0 CHECK(stale IN (0,1)),
       missing INTEGER NOT NULL DEFAULT 0 CHECK(missing IN (0,1)),
       PRIMARY KEY(account_id, instance_key))''');
     await db.execute(
-      '''CREATE TABLE cloud_bindings (
+      '''CREATE TABLE cloud_bindings$suffix (
       server_id TEXT PRIMARY KEY REFERENCES servers(id) ON DELETE CASCADE,
       account_id TEXT NOT NULL, instance_key TEXT NOT NULL,
       UNIQUE(account_id, instance_key),
       FOREIGN KEY(account_id, instance_key)
-        REFERENCES cloud_observations(account_id, instance_key) ON DELETE CASCADE)''',
+        REFERENCES cloud_observations$suffix(account_id, instance_key) ON DELETE CASCADE)''',
     );
+  }
+
+  static Future<void> _migrateCloudProviderSchema(DatabaseExecutor db) async {
+    // onUpgrade already runs in sqflite's transaction. Keep foreign keys on and
+    // copy the entire cloud FK graph before dropping any old child/parent table;
+    // rebuilding only accounts would cascade-delete observations and bindings.
+    const suffix = '_v10';
+    const columns = {
+      'cloud_accounts':
+          'id, provider, alias, endpoint, secret_ref, remote_account_id, revision, '
+          'generation, created_at, last_attempt_at, last_failure',
+      'cloud_observations': 'account_id, instance_key, identity_uuid, observation, stale, missing',
+      'cloud_bindings': 'server_id, account_id, instance_key',
+    };
+    await _addCloudSchema(db, suffix: suffix);
+    for (final table in columns.entries) {
+      await db.execute(
+        'INSERT INTO ${table.key}$suffix (${table.value}) '
+        'SELECT ${table.value} FROM ${table.key}',
+      );
+    }
+    for (final table in columns.keys.toList().reversed) {
+      await db.execute('DROP TABLE $table');
+    }
+    // SQLite updates the replacement graph's FK references as each parent is
+    // renamed. No user server, finance, SSH, preference or journal row is edited.
+    for (final table in columns.keys) {
+      await db.execute('ALTER TABLE $table$suffix RENAME TO $table');
+    }
+    if ((await db.rawQuery('PRAGMA foreign_key_check')).isNotEmpty) {
+      throw StateError('Invalid ledger migration references');
+    }
   }
 
   Future<List<CloudAccount>> cloudAccounts() async => (await _db.query(
@@ -1430,8 +1470,7 @@ class LedgerStore {
         snapshot.remoteAccountId != account.remoteAccountId) {
       throw CloudAccountFailure.identity;
     }
-    if (snapshot.provider == CloudProvider.solusVm1 &&
-        snapshot.instances.length != 1) {
+    if (snapshot.provider.isSingleInstance && snapshot.instances.length != 1) {
       throw const CloudFailure(CloudFailureKind.invalidResponse);
     }
     if (snapshot.provider == CloudProvider.solusVm2 &&
@@ -1575,7 +1614,7 @@ class LedgerStore {
           account.remoteAccountId != expected.remoteAccountId) {
         throw CloudAccountFailure.identity;
       }
-      if (account.provider == CloudProvider.solusVm1 && !confirmV1Rebind) {
+      if (account.provider.isSingleInstance && !confirmV1Rebind) {
         throw CloudAccountFailure.v1Rebind;
       }
     }
@@ -1601,7 +1640,7 @@ class LedgerStore {
         where: 'id = ?',
         whereArgs: [account.id],
       );
-      if (account.provider == CloudProvider.solusVm1) {
+      if (account.provider.isSingleInstance) {
         // Cascades only local cloud links. The old server, payments and SSH stay.
         await txn.delete(
           'cloud_observations',
@@ -1689,10 +1728,8 @@ class LedgerStore {
       final instance = decodeCloudInstance(
         rows.single['observation'] as String,
       );
-      final resources = account.provider == CloudProvider.solusVm1
-          ? v1Resources
-          : null;
-      if (account.provider == CloudProvider.solusVm1) {
+      final resources = account.provider.isSingleInstance ? v1Resources : null;
+      if (account.provider.isSingleInstance) {
         final error = resources?.validate(requireComplete: true);
         if (resources == null || error != null) {
           throw CloudAccountFailure(
@@ -1706,7 +1743,7 @@ class LedgerStore {
       }
       final now = clock().toUtc();
       final host = resources?.ip ?? instance.ipv4 ?? instance.ipv6 ?? '';
-      final name = account.provider == CloudProvider.solusVm1
+      final name = account.provider.isSingleInstance
           ? v1DisplayName?.trim() ?? account.alias
           : (instance.name?.trim().isNotEmpty ?? false)
           ? instance.name!

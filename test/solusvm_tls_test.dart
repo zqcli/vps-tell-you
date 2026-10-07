@@ -36,6 +36,12 @@ void main() {
       '/CN=localhost',
       '-addext',
       'subjectAltName=DNS:localhost',
+      '-addext',
+      'basicConstraints=critical,CA:FALSE',
+      '-addext',
+      'keyUsage=critical,digitalSignature,keyEncipherment',
+      '-addext',
+      'extendedKeyUsage=serverAuth',
     ]);
     if (created.exitCode != 0) {
       throw StateError('Local TLS fixture certificate generation failed');
@@ -216,6 +222,127 @@ void main() {
       await assertion;
     },
   );
+  group('RackNerd native TLS and bounded form transport', () {
+    RackNerdAdapter rackNerd({
+      bool trustFixture = true,
+      String host = 'localhost',
+      CloudReadLimits? limits,
+    }) => RackNerdAdapter(
+      endpoint: CloudEndpoint.parse('https://$host:${server.port}'),
+      credentials: RackNerdCredentials(
+        key: 'SYNTHETIC+KEY/&=',
+        hash: 'SYNTHETIC+HASH/&=',
+      ),
+      limits: limits,
+      clientFactory: trustFixture
+          ? () => IOClient(HttpClient(context: trusted))
+          : null,
+    );
+    test('verified TLS sends exactly one encoded form info request', () async {
+      handler = (request) async {
+        expect(
+          request.headers.contentType?.mimeType,
+          'application/x-www-form-urlencoded',
+        );
+        request.response.headers.contentType = ContentType.json;
+        request.response.write(
+          '{"status":"success","statusmsg":"","vmstat":"online"}',
+        );
+        await request.response.close();
+      };
+      final result = await rackNerd().read(cancellation: CloudCancellation());
+      expect(result.provider, CloudProvider.rackNerd);
+      expect(result.instances.single.power, CloudPower.running);
+      expect(requests, hasLength(1));
+      expect(requests.single.method, 'POST');
+      expect(requests.single.uri.toString(), '/api/client/command.php');
+      expect(requests.single.auth, isNull);
+      expect(Uri.splitQueryString(requests.single.body), {
+        'key': 'SYNTHETIC+KEY/&=',
+        'hash': 'SYNTHETIC+HASH/&=',
+        'action': 'info',
+        'rdtype': 'json',
+        'status': 'true',
+        'ipaddr': 'true',
+        'bw': 'true',
+        'hdd': 'true',
+        'mem': 'true',
+      });
+    });
+    test(
+      'default trust rejects self-signed TLS before sending secrets',
+      () async {
+        await expectLater(
+          rackNerd(trustFixture: false).read(cancellation: CloudCancellation()),
+          failure(CloudFailureKind.connection),
+        );
+        expect(requests, isEmpty);
+      },
+    );
+    test('trusted certificate still rejects a wrong hostname', () async {
+      await expectLater(
+        rackNerd(host: '127.0.0.1').read(cancellation: CloudCancellation()),
+        failure(CloudFailureKind.connection),
+      );
+      expect(requests, isEmpty);
+    });
+    test('same-origin redirect is not followed or retried', () async {
+      handler = (request) async {
+        request.response.statusCode = 307;
+        request.response.headers.set(
+          HttpHeaders.locationHeader,
+          'https://localhost:${server.port}/api/client/command.php',
+        );
+        await request.response.close();
+      };
+      await expectLater(
+        rackNerd().read(cancellation: CloudCancellation()),
+        failure(CloudFailureKind.redirect),
+      );
+      expect(requests, hasLength(1));
+    });
+    test('chunked body enforces 16 KiB before JSON decoding', () async {
+      handler = (request) async {
+        request.response.write('{"unused":"${'x' * 17000}"}');
+        await request.response.close();
+      };
+      await expectLater(
+        rackNerd().read(cancellation: CloudCancellation()),
+        failure(CloudFailureKind.responseTooLarge),
+      );
+      expect(requests, hasLength(1));
+    });
+    for (final cancelled in [true, false]) {
+      test(
+        'native body stall ${cancelled ? 'cancels' : 'times out'}',
+        () async {
+          final arrived = Completer<void>();
+          handler = (request) async {
+            request.response.write('{');
+            await request.response.flush();
+            arrived.complete();
+          };
+          final cancellation = CloudCancellation();
+          final pending = rackNerd(
+            limits: CloudReadLimits(
+              requestTimeout: const Duration(milliseconds: 300),
+            ),
+          ).read(cancellation: cancellation);
+          final check = expectLater(
+            pending,
+            failure(
+              cancelled ? CloudFailureKind.cancelled : CloudFailureKind.timeout,
+            ),
+          );
+          await arrived.future;
+          if (cancelled) cancellation.cancel();
+          await check;
+          expect(requests, hasLength(1));
+        },
+      );
+    }
+  });
+
   test('native V2 token stays in header with project GET allowlist', () async {
     handler = (request) async {
       final payload = switch (request.uri.path) {

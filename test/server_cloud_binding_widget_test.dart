@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:vps_tell_you/cloud/cloud_controller.dart';
+import 'package:vps_tell_you/cloud/cloud_models.dart';
 import 'package:vps_tell_you/cloud/server_cloud_binding_page.dart';
 import 'package:vps_tell_you/core/app_theme.dart';
 import 'package:vps_tell_you/data/ledger_store.dart';
@@ -73,8 +74,23 @@ void main() {
     await directory.delete(recursive: true);
   });
 
-  Future<void> addAccount(String id) async {
-    final data = snapshot(name: 'Observed $id');
+  Future<void> addAccount(
+    String id, {
+    CloudProvider provider = CloudProvider.solusVm2,
+  }) async {
+    final data = provider.isSingleInstance
+        ? CloudSnapshot(
+            provider: provider,
+            completedAt: cloudTestTime,
+            instances: [
+              CloudInstance(
+                observedAt: cloudTestTime,
+                power: CloudPower.running,
+                ipv4: '192.0.2.45',
+              ),
+            ],
+          )
+        : snapshot(name: 'Observed $id');
     final account = CloudAccount(
       id: id,
       provider: data.provider,
@@ -204,6 +220,31 @@ void main() {
       isNull,
     );
   });
+
+  testWidgets(
+    'RackNerd saved anonymous instance binds locally without credentials or API',
+    (tester) async {
+      await addAccount('rack', provider: CloudProvider.rackNerd);
+      final before = (await store.servers())
+          .singleWhere((server) => server.id == 'local')
+          .toMap();
+      await mount(tester, scale: 2);
+      expect(find.textContaining('RackNerd ctrl'), findsOneWidget);
+      await tapKey(tester, 'server-cloud-instance-rack-single');
+      await tapKey(tester, 'server-cloud-save');
+      expect(result, isTrue);
+      expect(cloud.bindingFor('local')!.instanceKey, 'single');
+      expect(cloud.bindingFor('local')!.observation.serverId, isNull);
+      expect(cloud.bindingFor('local')!.observation.projectId, isNull);
+      expect(
+        (await store.servers())
+            .singleWhere((server) => server.id == 'local')
+            .toMap(),
+        before,
+      );
+      expect(tester.takeException(), isNull);
+    },
+  );
 
   testWidgets('leaving a selected draft makes no binding', (tester) async {
     await addAccount('a');

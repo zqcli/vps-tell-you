@@ -28,12 +28,12 @@
 - 命令片段增改查删、完整转义预览；只插入独立草稿，就地编辑并选择“发送”或“发送并执行”
 - 单机 SSH 重启 / 关机，经影响确认和完整目标二次核对；不开机、无 API 电源，不自动重试不确定结果
 
-- SolusVM 1 单 VPS Key/Hash 与 SolusVM 2 用户 Token 的原生只读接入；严格 HTTPS、证书验证、取消 / 超时 / 响应及分页上界
+- SolusVM 1、RackNerd ctrl 单 VPS Key/Hash 与 SolusVM 2 用户 Token 的原生只读接入；各协议独立，严格 HTTPS、证书验证、取消 / 超时 / 响应及分页上界
 - 云账户独立别名、验证后选择导入或仅保存、继续导入去重、手动刷新、重新授权、解除本地关联
 - 相同面板可有多个独立连接；V1 单次只读获取六项资源、缺失或零配额在导入时补填，不伪造实例 ID；V2 以账户 / 项目 / 实例 ID 隔离
 - 服务器详情统一硬件信息，六项可手动维护并记录流量月/季/年周期；API 观测保留后台，不再铺满详情
 - 服务器和云账户两端可解除本地关联；服务器可关联/更换已有账户实例，保留服务器、授权、账务和 SSH
-- API 秘密只进设备安全存储，失败重新授权保留旧引用；V1 换凭据需明确解除旧关联再重新选择导入
+- API 秘密只进设备安全存储，失败重新授权保留旧引用；SolusVM 1 / RackNerd ctrl 换凭据需明确解除旧关联再重新选择导入
 
 每台到期提醒 / 使用计划、原生通知权限接线、PNG 系统分享、台账 JSON 导出 / 空台账恢复、深浅色与跟随系统外观已实现。手机实际投递 / 分享与安装持久化仍须真机验证，不以云端测试代替。没有系统快照、最近使用或费用“接下来需要做什么”。
 
@@ -80,12 +80,12 @@ flutter run -d <simulator-id>
 ## 代码结构与数据规则
 
 - `lib/core`：V6.2 视觉组件、纯 Dart 日期 / Money 值类型
-- `lib/data`：schema v9、真实 v1–v8 升级迁移、SQLite 事务与平台打开方式
+- `lib/data`：schema v10、真实 v1–v9 升级迁移、SQLite 事务与平台打开方式
 - `lib/servers`：本地字段模型、ChangeNotifier 控制器、列表 / 表单 / 详情
 - `lib/finance`：纯 Dart 财务 / FX、付款、计算器、白名单 PNG 导出
 - `lib/security`：凭据元数据与原生存储、密钥校验、设备认证、SSH 配置、完整主机信任
 - `lib/connections`：SSH 服务 / xterm、临时连接、单目标 TCP、片段 / 待发送区与电源确认
-- `lib/cloud`：SolusVM 只读协议、独立账户 / API 观测、验证 / 导入 / 刷新 / 重新授权 / 解绑
+- `lib/cloud`：SolusVM / RackNerd ctrl 只读协议、独立账户 / API 观测、验证 / 导入 / 刷新 / 重新授权 / 解绑
 - `lib/settings`：分组、归档、币种与手动汇率、提醒纯逻辑 / 原生调度、权限、外观与备份
 - `lib/l10n`：官方 ARB / gen-l10n、简体中文与英文、稳定语言偏好和显示时本地化消息
 - `lib/app.dart`：启动恢复状态和四 Tab；使用 Flutter Navigator
@@ -106,7 +106,7 @@ USD / CNY / EUR 金额使用整数分，0 是免费、null 是未知，不跨币
 
 数据库 `ledger.sqlite3` 位于平台的 application-support 目录，Linux 通常是 `$XDG_DATA_HOME/com.vpstellyou.vps_tell_you/`。应用没有遥测、自动上传或云同步。
 
-可在“设置 / 台账备份与恢复”导出未加密 JSON，范围见下节；凭据不在其中。不要清除应用数据、卸载重装或删除数据库来“修复”。打不开时先检查磁盘空间、权限与应用版本，再点“重试打开”。较新 schema 会阻止旧应用打开，不执行破坏性降级。v1 → v2 → v3 → v4 → v5 → v6 → v7 → v8 → v9 事务迁移保留旧 ID、分组、归档及费用字段，只为可推断的预付资料建立初始服务期；不虚构历史实付或汇率。v2 → v3 只添加安全资料表，不读取或创建钥匙环；v3 → v4 只添加命令片段表；v4 → v5 添加云账户、观测和关联表，保留现有台账、账务与 SSH 配置。v5 → v6 仅添加提醒规则、服务器创建触发器与外观设置。v6 → v7 仅添加可空的本地资源配置 JSON，保留全部既有资料。v7 → v8 为可空硬件字段与独立流量周期提供版本围栏，不重写旧数据。v8 → v9 只添加默认中文的界面语言偏好，不改变业务资料或 JSON 备份格式。后续 schema 变更仍须增加事务迁移并验证旧数据。
+可在“设置 / 台账备份与恢复”导出未加密 JSON，范围见下节；凭据不在其中。不要清除应用数据、卸载重装或删除数据库来“修复”。打不开时先检查磁盘空间、权限与应用版本，再点“重试打开”。较新 schema 会阻止旧应用打开，不执行破坏性降级。v1 → v2 → v3 → v4 → v5 → v6 → v7 → v8 → v9 → v10 事务迁移保留旧 ID、分组、归档及费用字段，只为可推断的预付资料建立初始服务期；不虚构历史实付或汇率。v2 → v3 只添加安全资料表，不读取或创建钥匙环；v3 → v4 只添加命令片段表；v4 → v5 添加云账户、观测和关联表，保留现有台账、账务与 SSH 配置。v5 → v6 仅添加提醒规则、服务器创建触发器与外观设置。v6 → v7 仅添加可空的本地资源配置 JSON，保留全部既有资料。v7 → v8 为可空硬件字段与独立流量周期提供版本围栏，不重写旧数据。v8 → v9 只添加默认中文的界面语言偏好，不改变业务资料或 JSON 备份格式。v9 → v10 扩展云账户面板类型约束，事务内保留原账户、观测、关联、秘密引用与其他台账资料；不自动把旧 SolusVM 1 连接改为 RackNerd，不改 JSON 备份 v1。后续 schema 变更仍须增加事务迁移并验证旧数据。
 
 恢复开发：先读本文件、`docs/STATUS.md`、`docs/ACCEPTANCE.md` → 检查 `git status`、当前分支与远端 → 核对远端 SHA/CI → 执行分析与最小测试 → 从首个未通过项继续。不要自动 tag、强推或改变其他分支。
 
@@ -147,7 +147,9 @@ VPS_SSH_FIXTURE_PYTHON="$PWD/.ssh-test-venv/bin/python" flutter test
 
 fixture 只绑定 loopback 临时端口，从不执行 shell / exec；依赖缺失会明确失败，不把跳过当通过。CI 安装同一固定 AsyncSSH 版本。所有 `.fixture` 私钥均为合成测试资料，不得用于真实访问。
 
-## SolusVM 验证边界
+## SolusVM / RackNerd 验证边界
+
+RackNerd `ctrl.racknerd.com` 应选择新增的 **RackNerd ctrl**，不是 SolusVM 1/2；支持面板首页或精确 `/api/client/command.php` 地址（末尾不加句号）。它的兼容客户端接口通过 `info` 读取资源，现有 SolusVM 1 的 `status` / XML 行为保持不变。真实只读验证已取得 IP、hostname、内存、磁盘、流量，API 未返回的 CPU 核数必须手动核实补填；也可先仅保存连接。操作步骤、协议差异与验证范围见 [RACKNERD](docs/RACKNERD.md)。
 
 协议与身份说明见 [docs/SOLUSVM.md](docs/SOLUSVM.md)。自动测试只用官方协议形状的合成数据及本地 HTTPS fixture。实际服务商的面板版本、Client API 开放、Token 权限、字段缺失、证书与手机平台兼容性仍须真机验收；先前用户本人提交的 VirMach 只读诊断确认 IP、hostname、磁盘与流量可得，内存和 CPU 仍未知；不索取或记录真实秘密。正式六资源导入规则和实测边界见 [docs/SOLUSVM_RESOURCES.md](docs/SOLUSVM_RESOURCES.md)。
 

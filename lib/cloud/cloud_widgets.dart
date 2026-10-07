@@ -9,6 +9,7 @@ import 'cloud_models.dart';
 String cloudProviderName(CloudProvider provider) => switch (provider) {
   CloudProvider.solusVm1 => 'SolusVM 1',
   CloudProvider.solusVm2 => 'SolusVM 2',
+  CloudProvider.rackNerd => 'RackNerd ctrl',
 };
 
 String cloudPowerLabel(CloudPower power, {AppLocalizations? l10n}) {

@@ -134,7 +134,7 @@
   "archiveCountHelp": "Records: {p0} · Can be restored to the server list",
   "accountsPreferences": "Accounts and preferences",
   "panelAccounts": "Panel accounts",
-  "panelConnectionCount": "SolusVM 1 / 2 · Connections: {p0}",
+  "panelConnectionCount": "Saved panel connections: {p0}",
   "keysSecurity": "Keys and security",
   "keysSecurityDescription": "Credentials, SSH settings, and host trust",
   "currenciesReferenceRates": "Currencies and reference rates",
@@ -1012,7 +1012,7 @@
   "@cloudAddAccount": {
     "description": "Panel accounts: add account"
   },
-  "cloudPanelReadBadge": "SolusVM 1 / 2 · Panel reads",
+  "cloudPanelReadBadge": "Read-only panel connections",
   "@cloudPanelReadBadge": {
     "description": "Panel accounts: panel read badge"
   },
@@ -1056,7 +1056,7 @@
   "@cloudReadOnlyBoundary": {
     "description": "Panel accounts: read only boundary"
   },
-  "cloudTemplateInfo": "Choose the authorization method for your panel version. Panel software is separate from the seller; you can add the actual provider and costs later.",
+  "cloudTemplateInfo": "Choose the authorization method for your panel type. Panel software is separate from the seller; you can add the actual provider and costs later.",
   "@cloudTemplateInfo": {
     "description": "Panel accounts: template info"
   },
@@ -1068,7 +1068,11 @@
   "@cloudV2TemplateInfo": {
     "description": "Panel accounts: v2 template info"
   },
-  "cloudSupportedPanels": "Supports reads from SolusVM 1 and SolusVM 2 panels. There is no API power control, remote resource editing, or cancellation of provider billing.",
+  "cloudRackNerdTemplateInfo": "ctrl panel Client API Key + Hash\nRead one VPS through the compatible client interface",
+  "@cloudRackNerdTemplateInfo": {
+    "description": "Panel accounts: RackNerd ctrl single-instance protocol template, without identifying the underlying panel product"
+  },
+  "cloudSupportedPanels": "Supports reads from SolusVM 1, SolusVM 2, and RackNerd ctrl. There is no API power control, remote resource editing, or cancellation of provider billing.",
   "@cloudSupportedPanels": {
     "description": "Panel accounts: supported panels"
   },
@@ -1108,6 +1112,14 @@
   "@cloudEndpointInfo": {
     "description": "Panel accounts: endpoint info"
   },
+  "cloudRackNerdEndpointValidation": "Enter the HTTPS panel home address, or the exact /api/client/command.php address, without credentials, parameters, or other paths",
+  "@cloudRackNerdEndpointValidation": {
+    "description": "Panel accounts: RackNerd ctrl-only endpoint validation"
+  },
+  "cloudRackNerdEndpointInfo": "Use the HTTPS panel home address, including a provider-specified port if needed. Only for RackNerd ctrl, the exact /api/client/command.php path may be removed; review the final address below. Certificate errors are not bypassed and redirects are not followed.",
+  "@cloudRackNerdEndpointInfo": {
+    "description": "Panel accounts: narrow RackNerd ctrl API-path normalization explanation"
+  },
   "cloudEndpointIdentityInfo": "The panel address is tied to this connection’s identity. Add a new connection for another panel. Saved credentials are not shown here.",
   "@cloudEndpointIdentityInfo": {
     "description": "Panel accounts: endpoint identity info"
@@ -1115,6 +1127,10 @@
   "cloudV1CredentialsInfo": "Enter this VPS’s Client API Key / Hash, not administrator API credentials or a login password. The provider must enable Client API. Each pair reads the status of one VPS.",
   "@cloudV1CredentialsInfo": {
     "description": "Panel accounts: v1 credentials info"
+  },
+  "cloudRackNerdCredentialsInfo": "Enter the Client API Key / Hash for this VPS from the RackNerd ctrl panel, not a login password or administrator credentials. This connection reads one VPS through the compatible client interface; the underlying panel product is not identified.",
+  "@cloudRackNerdCredentialsInfo": {
+    "description": "Panel accounts: RackNerd ctrl Key/Hash credential scope"
   },
   "cloudV2CredentialsInfo": "Use a token from Account → API Tokens in the SolusVM 2 user area. Do not use an administrator token. The readable scope depends on provider settings.",
   "@cloudV2CredentialsInfo": {
@@ -1191,6 +1207,10 @@
   "cloudV1ResourcesInfo": "SolusVM 1 does not provide a stable instance ID. Available resource fields depend on the provider. Entered details stay on this device and do not trigger SSH, TCP, or remote configuration changes.",
   "@cloudV1ResourcesInfo": {
     "description": "Panel accounts: v1 resources info"
+  },
+  "cloudRackNerdResourcesInfo": "RackNerd ctrl does not provide a stable instance ID. Complete all six hardware details before import; do not guess a CPU count that the API does not return. Entered details stay on this device and do not trigger SSH, TCP, or remote configuration changes.",
+  "@cloudRackNerdResourcesInfo": {
+    "description": "Panel accounts: RackNerd ctrl anonymous identity and required local resource completion"
   },
   "cloudRebindWarning": "Saving new authorization unlinks all old instance associations for this connection. Existing records, costs, payments, and SSH settings are kept. Importing creates new local records; it does not overwrite or relink old ones.",
   "@cloudRebindWarning": {
@@ -1628,7 +1648,7 @@
   "@cloudAccountFailureIdentity": {
     "description": "Panel accounts: account failure identity"
   },
-  "cloudAccountFailureV1Rebind": "SolusVM 1 cannot prove that new credentials belong to the original instance. Explicitly confirm unlinking old associations and select instances to import again. Existing ledger records are kept.",
+  "cloudAccountFailureV1Rebind": "A single-VPS API cannot prove that new credentials belong to the original instance. Explicitly confirm unlinking old associations and select instances to import again. Existing ledger records are kept.",
   "@cloudAccountFailureV1Rebind": {
     "description": "Panel accounts: account failure v1 rebind"
   },
@@ -1801,6 +1821,10 @@
   "cloudConsolePathRemoved": "Removed /home.php.\n",
   "@cloudConsolePathRemoved": {
     "description": "Panel accounts: console path removed"
+  },
+  "cloudRackNerdApiPathRemoved": "Removed /api/client/command.php for RackNerd ctrl.\n",
+  "@cloudRackNerdApiPathRemoved": {
+    "description": "Panel accounts: explicit RackNerd ctrl-only API-path normalization notice"
   },
   "cloudAuthorizationUnsaved": "\nThis authorization has not been saved",
   "@cloudAuthorizationUnsaved": {

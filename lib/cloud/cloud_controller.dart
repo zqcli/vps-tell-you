@@ -81,6 +81,10 @@ class CloudController extends ChangeNotifier {
       endpoint: endpoint,
       credentials: credentials as SolusVm2Credentials,
     ),
+    CloudProvider.rackNerd => RackNerdAdapter(
+      endpoint: endpoint,
+      credentials: credentials as RackNerdCredentials,
+    ),
   };
   void _notify() {
     if (!_disposed) notifyListeners();
@@ -99,10 +103,12 @@ class CloudController extends ChangeNotifier {
     CloudProvider provider,
     CloudCredentials credentials,
   ) {
-    if ((provider == CloudProvider.solusVm1 &&
-            credentials is! SolusVm1Credentials) ||
-        (provider == CloudProvider.solusVm2 &&
-            credentials is! SolusVm2Credentials)) {
+    final valid = switch (provider) {
+      CloudProvider.solusVm1 => credentials is SolusVm1Credentials,
+      CloudProvider.solusVm2 => credentials is SolusVm2Credentials,
+      CloudProvider.rackNerd => credentials is RackNerdCredentials,
+    };
+    if (!valid) {
       throw const CloudFailure(CloudFailureKind.invalidCredentials);
     }
   }
@@ -183,6 +189,7 @@ class CloudController extends ChangeNotifier {
       final parsed = CloudEndpoint.parse(
         endpoint,
         allowSolusVm1ConsolePath: provider == CloudProvider.solusVm1,
+        allowRackNerdApiPath: provider == CloudProvider.rackNerd,
       );
       CloudAccount? expected;
       if (existing != null) {
@@ -209,8 +216,7 @@ class CloudController extends ChangeNotifier {
       }
       if (provider == CloudProvider.solusVm2 &&
               (snapshot.remoteAccountId ?? 0) <= 0 ||
-          provider == CloudProvider.solusVm1 &&
-              snapshot.instances.length != 1) {
+          provider.isSingleInstance && snapshot.instances.length != 1) {
         throw const CloudFailure(CloudFailureKind.invalidResponse);
       }
       final keys = <String>{};
@@ -269,7 +275,7 @@ class CloudController extends ChangeNotifier {
       if (clean.isEmpty || clean.length > 80) throw CloudAccountFailure.alias;
       final existing = verification.existingAccount;
       if (existing != null &&
-          verification.provider == CloudProvider.solusVm1 &&
+          verification.provider.isSingleInstance &&
           !confirmV1Rebind) {
         throw CloudAccountFailure.v1Rebind;
       }
@@ -279,8 +285,7 @@ class CloudController extends ChangeNotifier {
       if (!available.containsAll(selection)) {
         throw CloudAccountFailure.selection;
       }
-      if (verification.provider == CloudProvider.solusVm1 &&
-          selection.isNotEmpty) {
+      if (verification.provider.isSingleInstance && selection.isNotEmpty) {
         if (v1Resources == null ||
             v1Resources.validate(requireComplete: true) != null) {
           throw CloudAccountFailure(
@@ -565,6 +570,10 @@ class CloudController extends ChangeNotifier {
           hash: value['hash'] as String,
         ),
         CloudProvider.solusVm2 => SolusVm2Credentials(value['token'] as String),
+        CloudProvider.rackNerd => RackNerdCredentials(
+          key: value['key'] as String,
+          hash: value['hash'] as String,
+        ),
       };
     } catch (_) {
       throw CloudAccountFailure.secretRead;
@@ -576,6 +585,12 @@ class CloudController extends ChangeNotifier {
         SolusVm1Credentials() => jsonEncode({
           'version': 1,
           'provider': CloudProvider.solusVm1.name,
+          'key': credentials.key,
+          'hash': credentials.hash,
+        }),
+        RackNerdCredentials() => jsonEncode({
+          'version': 1,
+          'provider': CloudProvider.rackNerd.name,
           'key': credentials.key,
           'hash': credentials.hash,
         }),

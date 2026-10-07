@@ -2,7 +2,17 @@ import '../l10n/generated/app_localizations.dart';
 import '../l10n/locale_preference.dart';
 import '../l10n/localized_message.dart';
 
-enum CloudProvider { solusVm1, solusVm2 }
+enum CloudProvider {
+  solusVm1,
+  solusVm2,
+  rackNerd;
+
+  /// Anonymous client credentials identify one VPS, not a remote account.
+  bool get isSingleInstance => switch (this) {
+    CloudProvider.solusVm1 || CloudProvider.rackNerd => true,
+    CloudProvider.solusVm2 => false,
+  };
+}
 
 enum CloudPower { running, stopped, unknown }
 
@@ -52,13 +62,18 @@ class CloudFailure implements Exception, LocalizedMessage {
   String toString() => message;
 }
 
-/// An origin, never an arbitrary API URL. Known V1 console normalization is
-/// exposed so the form can show the final address before using credentials.
+/// An origin, never an arbitrary API URL. Provider-specific, exact known paths
+/// expose normalization so the form can show the address before using secrets.
 class CloudEndpoint {
-  const CloudEndpoint._(this.origin, this.normalizedConsolePath);
+  const CloudEndpoint._(
+    this.origin,
+    this.normalizedConsolePath,
+    this.normalizedApiPath,
+  );
   factory CloudEndpoint.parse(
     String value, {
     bool allowSolusVm1ConsolePath = false,
+    bool allowRackNerdApiPath = false,
   }) {
     try {
       final text = value.trim();
@@ -70,18 +85,20 @@ class CloudEndpoint {
       final rawPath = rawPathStart < 0 ? '' : text.substring(rawPathStart);
       if (rawPath.isNotEmpty &&
           rawPath != '/' &&
-          !(allowSolusVm1ConsolePath && rawPath == '/home.php')) {
+          !(allowSolusVm1ConsolePath && rawPath == '/home.php') &&
+          !(allowRackNerdApiPath && rawPath == '/api/client/command.php')) {
         throw const CloudFailure(CloudFailureKind.invalidEndpoint);
       }
       final uri = Uri.parse(text);
       final console = allowSolusVm1ConsolePath && uri.path == '/home.php';
+      final api = allowRackNerdApiPath && uri.path == '/api/client/command.php';
       if (uri.scheme != 'https' ||
           !uri.hasAuthority ||
           uri.host.isEmpty ||
           uri.authority.contains('@') ||
           uri.hasQuery ||
           uri.hasFragment ||
-          (uri.path.isNotEmpty && uri.path != '/' && !console) ||
+          (uri.path.isNotEmpty && uri.path != '/' && !console && !api) ||
           uri.port < 1 ||
           uri.port > 65535 ||
           uri.host.contains('%')) {
@@ -90,13 +107,14 @@ class CloudEndpoint {
       return CloudEndpoint._(
         Uri(scheme: 'https', host: uri.host.toLowerCase(), port: uri.port),
         console,
+        api,
       );
     } catch (_) {
       throw const CloudFailure(CloudFailureKind.invalidEndpoint);
     }
   }
   final Uri origin;
-  final bool normalizedConsolePath;
+  final bool normalizedConsolePath, normalizedApiPath;
   Uri uri(String path, {int? page}) => origin.replace(
     path: path,
     queryParameters: page == null ? null : {'page': '$page'},
@@ -113,6 +131,15 @@ sealed class CloudCredentials {
 
 class SolusVm1Credentials extends CloudCredentials {
   SolusVm1Credentials({required this.key, required this.hash}) {
+    if (!_validSecret(key) || !_validSecret(hash)) {
+      throw const CloudFailure(CloudFailureKind.invalidCredentials);
+    }
+  }
+  final String key, hash;
+}
+
+class RackNerdCredentials extends CloudCredentials {
+  RackNerdCredentials({required this.key, required this.hash}) {
     if (!_validSecret(key) || !_validSecret(hash)) {
       throw const CloudFailure(CloudFailureKind.invalidCredentials);
     }
@@ -196,7 +223,7 @@ class CloudInstance {
   });
   final DateTime observedAt;
   final CloudPower power;
-  // Null for V1: its documented client API provides no stable remote ID.
+  // Null for single-instance APIs: they provide no stable remote identity.
   final int? projectId, serverId;
   final String? uuid, name, projectName, ipv4, ipv6, location, osImage;
   final String? hostname;
@@ -208,7 +235,7 @@ class CloudInstance {
 
 /// Returned only after all pages succeed. Consumers must separately fence late
 /// results against account generation/unlink and preserve prior observations on
-/// failure. A successful V1 snapshot always contains exactly one anonymous VPS.
+/// failure. Single-instance snapshots contain exactly one anonymous VPS.
 class CloudSnapshot {
   CloudSnapshot({
     required this.provider,

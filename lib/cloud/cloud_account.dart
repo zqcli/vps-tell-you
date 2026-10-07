@@ -141,10 +141,10 @@ class ServerCloudBindingOptions {
       choices.where((choice) => choice.serverId == server.id).firstOrNull;
 }
 
-/// V1's anonymous singleton is scoped by the local connection ID in every DB
-/// key. V2 additionally includes the verified remote user and project/server IDs.
+/// Anonymous singletons are scoped by the local connection ID in every DB key.
+/// V2 additionally includes the verified remote user and project/server IDs.
 String cloudInstanceKey(CloudSnapshot snapshot, CloudInstance instance) {
-  if (snapshot.provider == CloudProvider.solusVm1) {
+  if (snapshot.provider.isSingleInstance) {
     if (snapshot.remoteAccountId != null ||
         snapshot.instances.length != 1 ||
         instance.projectId != null ||

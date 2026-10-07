@@ -905,7 +905,7 @@ abstract class AppLocalizations {
   /// No description provided for @panelConnectionCount.
   ///
   /// In zh, this message translates to:
-  /// **'SolusVM 1 / 2 · {p0} 个连接'**
+  /// **'已保存 {p0} 个面板连接'**
   String panelConnectionCount(String p0);
 
   /// No description provided for @keysSecurity.
@@ -3086,7 +3086,7 @@ abstract class AppLocalizations {
   /// Panel accounts: panel read badge
   ///
   /// In zh, this message translates to:
-  /// **'SolusVM 1 / 2 · 面板读取'**
+  /// **'面板只读接入'**
   String get cloudPanelReadBadge;
 
   /// Panel accounts: manage connections
@@ -3152,7 +3152,7 @@ abstract class AppLocalizations {
   /// Panel accounts: template info
   ///
   /// In zh, this message translates to:
-  /// **'按面板版本选择授权方式。面板软件不等于销售厂商，真实服务商和费用可稍后补充。'**
+  /// **'按面板类型选择授权方式。面板软件不等于销售厂商，真实服务商和费用可稍后补充。'**
   String get cloudTemplateInfo;
 
   /// Panel accounts: v1 template info
@@ -3167,10 +3167,16 @@ abstract class AppLocalizations {
   /// **'用户 API Token\n读取当前用户的项目与实例'**
   String get cloudV2TemplateInfo;
 
+  /// Panel accounts: RackNerd ctrl single-instance protocol template, without identifying the underlying panel product
+  ///
+  /// In zh, this message translates to:
+  /// **'ctrl 面板 Client API Key + Hash\n通过兼容客户端接口读取单台 VPS'**
+  String get cloudRackNerdTemplateInfo;
+
   /// Panel accounts: supported panels
   ///
   /// In zh, this message translates to:
-  /// **'支持 SolusVM 1 和 SolusVM 2 面板读取。不提供 API 电源控制，也不会修改远端资源或停止服务商计费。'**
+  /// **'支持 SolusVM 1、SolusVM 2 和 RackNerd ctrl 读取。不提供 API 电源控制，也不会修改远端资源或停止服务商计费。'**
   String get cloudSupportedPanels;
 
   /// Panel accounts: reauthorize
@@ -3227,6 +3233,18 @@ abstract class AppLocalizations {
   /// **'使用面板首页 HTTPS 地址，可以保留服务商指定端口。不会忽略证书错误或跟随重定向。'**
   String get cloudEndpointInfo;
 
+  /// Panel accounts: RackNerd ctrl-only endpoint validation
+  ///
+  /// In zh, this message translates to:
+  /// **'请输入 HTTPS 面板首页地址，或精确的 /api/client/command.php 地址，不含凭据、参数或其他路径'**
+  String get cloudRackNerdEndpointValidation;
+
+  /// Panel accounts: narrow RackNerd ctrl API-path normalization explanation
+  ///
+  /// In zh, this message translates to:
+  /// **'使用面板首页 HTTPS 地址，可以保留服务商指定端口。仅 RackNerd ctrl 可移除精确的 /api/client/command.php 路径；请核对下方最终地址。不会忽略证书错误或跟随重定向。'**
+  String get cloudRackNerdEndpointInfo;
+
   /// Panel accounts: endpoint identity info
   ///
   /// In zh, this message translates to:
@@ -3238,6 +3256,12 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'填写该 VPS 的 Client API Key / Hash。不是管理员 API 凭据或登录密码；需服务商开放 Client API。每组凭据只读取单台 VPS 的状态。'**
   String get cloudV1CredentialsInfo;
+
+  /// Panel accounts: RackNerd ctrl Key/Hash credential scope
+  ///
+  /// In zh, this message translates to:
+  /// **'填写 RackNerd ctrl 面板中该 VPS 的 Client API Key / Hash，不是登录密码或管理员凭据。此连接仅通过兼容客户端接口读取单台 VPS，不据此认定底层面板产品。'**
+  String get cloudRackNerdCredentialsInfo;
 
   /// Panel accounts: v2 credentials info
   ///
@@ -3352,6 +3376,12 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'SolusVM 1 不提供稳定实例 ID。资源字段依厂商开放情况而异；已填资料只存本机，不会触发 SSH、TCP 或远端配置修改。'**
   String get cloudV1ResourcesInfo;
+
+  /// Panel accounts: RackNerd ctrl anonymous identity and required local resource completion
+  ///
+  /// In zh, this message translates to:
+  /// **'RackNerd ctrl 不提供稳定实例 ID。导入前需补齐六项硬件信息，API 未返回的 CPU 核数不能猜测。已填资料只存本机，不会触发 SSH、TCP 或远端配置修改。'**
+  String get cloudRackNerdResourcesInfo;
 
   /// Panel accounts: rebind warning
   ///
@@ -4010,7 +4040,7 @@ abstract class AppLocalizations {
   /// Panel accounts: account failure v1 rebind
   ///
   /// In zh, this message translates to:
-  /// **'SolusVM 1 无法证明新凭据仍属于原实例；请明确确认解除旧关联并重新选择导入，旧台账会保留'**
+  /// **'单 VPS API 无法证明新凭据仍属于原实例；请明确确认解除旧关联并重新选择导入，旧台账会保留'**
   String get cloudAccountFailureV1Rebind;
 
   /// Panel accounts: account failure selection
@@ -4138,6 +4168,12 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'已移除 /home.php。\n'**
   String get cloudConsolePathRemoved;
+
+  /// Panel accounts: explicit RackNerd ctrl-only API-path normalization notice
+  ///
+  /// In zh, this message translates to:
+  /// **'已为 RackNerd ctrl 移除 /api/client/command.php。\n'**
+  String get cloudRackNerdApiPathRemoved;
 
   /// Panel accounts: authorization unsaved
   ///

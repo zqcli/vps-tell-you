@@ -78,6 +78,62 @@ class SolusVm1Adapter implements CloudAdapter {
   }
 }
 
+/// RackNerd ctrl has a separate form/JSON protocol, despite its Key/Hash shape.
+/// No status probe or fallback resends credentials to discover that protocol.
+class RackNerdAdapter implements CloudAdapter {
+  RackNerdAdapter({
+    required this.endpoint,
+    required this.credentials,
+    CloudReadLimits? limits,
+    DateTime Function()? clock,
+    http.Client Function()? clientFactory,
+  }) : _limits = limits ?? CloudReadLimits(),
+       _clock = clock ?? DateTime.now,
+       _clientFactory = clientFactory ?? http.Client.new;
+  final CloudEndpoint endpoint;
+  final RackNerdCredentials credentials;
+  final CloudReadLimits _limits;
+  final DateTime Function() _clock;
+  final http.Client Function() _clientFactory;
+
+  @override
+  Future<CloudSnapshot> read({required CloudCancellation cancellation}) async {
+    final session = _ReadSession(_limits, cancellation, _clientFactory);
+    final request =
+        http.Request('POST', endpoint.uri('/api/client/command.php'))
+          ..bodyFields = {
+            'key': credentials.key,
+            'hash': credentials.hash,
+            'action': 'info',
+            'rdtype': 'json',
+            'status': 'true',
+            'ipaddr': 'true',
+            'bw': 'true',
+            'hdd': 'true',
+            'mem': 'true',
+          };
+    final body = await session.send(request, responseLimit: 16 * 1024);
+    final fields = _RackNerdJsonFields(body).parse();
+    if (fields['status'] == 'error') {
+      throw const CloudFailure(CloudFailureKind.apiRejected);
+    }
+    if (fields['status'] != 'success' || !fields.containsKey('statusmsg')) {
+      _invalid();
+    }
+    final now = _clock().toUtc();
+    final instance = _clientInstance(fields, [
+      credentials.key,
+      credentials.hash,
+    ], now);
+    session.check();
+    return CloudSnapshot(
+      provider: CloudProvider.rackNerd,
+      completedAt: now,
+      instances: [instance],
+    );
+  }
+}
+
 class SolusVm2Adapter implements CloudAdapter {
   SolusVm2Adapter({
     required this.endpoint,
@@ -483,10 +539,21 @@ CloudInstance _v1Instance(
   if (fields['status'] != 'success' || !fields.containsKey('statusmsg')) {
     _invalid();
   }
-  bool reflected(String value) => [
+  return _clientInstance(fields, [
     credentials.key,
     credentials.hash,
-  ].any((secret) => value.toLowerCase().contains(secret.toLowerCase()));
+  ], observedAt);
+}
+
+/// Shared Client API resource units and secret filtering, not shared protocols.
+CloudInstance _clientInstance(
+  Map<String, String> fields,
+  List<String> secrets,
+  DateTime observedAt,
+) {
+  bool reflected(String value) => secrets.any(
+    (secret) => value.toLowerCase().contains(secret.toLowerCase()),
+  );
   // Even a syntactically valid hostname, address or numeric credential echo
   // must never enter a snapshot or persistent observation.
   String? resource(String name) {
@@ -576,6 +643,123 @@ CloudInstance _v1Instance(
     // quota semantics. Missing quota requires an explicit manual choice.
     trafficUnlimited: false,
   );
+}
+
+/// A small bounded JSON reader validates before projecting the flat allowlist.
+/// jsonDecode alone silently accepts duplicate object keys. Detect them before
+/// they lose their authority, including escaped keys and nested field shadows.
+class _RackNerdJsonFields {
+  _RackNerdJsonFields(this.body);
+  final String body;
+  int position = 0, nodes = 0;
+  final fields = <String, String>{};
+  static const names = {
+    'status',
+    'statusmsg',
+    'hostname',
+    'ipaddress',
+    'template',
+    'os',
+    'vmstat',
+    'ipaddr',
+    'bw',
+    'hdd',
+    'mem',
+  };
+
+  Map<String, String> parse() {
+    try {
+      _space();
+      if (position >= body.length || body[position] != '{') _invalid();
+      _value(0);
+      _space();
+      if (position != body.length) _invalid();
+      return fields;
+    } on CloudFailure {
+      rethrow;
+    } catch (_) {
+      _invalid();
+    }
+  }
+
+  void _space() {
+    while (position < body.length &&
+        const [' ', '\t', '\r', '\n'].contains(body[position])) {
+      position++;
+    }
+  }
+
+  bool _take(String token) {
+    _space();
+    if (position >= body.length || body[position] != token) return false;
+    position++;
+    return true;
+  }
+
+  void _expect(String token) {
+    if (!_take(token)) _invalid();
+  }
+
+  String _string() {
+    _space();
+    final start = position;
+    _expect('"');
+    while (position < body.length) {
+      final char = body[position++];
+      if (char == '"') {
+        return jsonDecode(body.substring(start, position)) as String;
+      }
+      if (char == r'\') position++;
+    }
+    _invalid();
+  }
+
+  Object? _value(int depth) {
+    if (depth > 16 || ++nodes > 2048) _invalid();
+    _space();
+    if (position >= body.length) _invalid();
+    if (body[position] == '{') {
+      position++;
+      final keys = <String>{};
+      if (_take('}')) return null;
+      do {
+        final key = _string();
+        if (!keys.add(key) || (depth != 0 && names.contains(key))) _invalid();
+        _expect(':');
+        final value = _value(depth + 1);
+        if (depth == 0 && names.contains(key)) {
+          if (value is! String) _invalid();
+          fields[key] = value.trim();
+        }
+        if (_take('}')) return null;
+        _expect(',');
+      } while (true);
+    }
+    if (body[position] == '[') {
+      position++;
+      if (_take(']')) return null;
+      do {
+        _value(depth + 1);
+        if (_take(']')) return null;
+        _expect(',');
+      } while (true);
+    }
+    if (body[position] == '"') return _string();
+    final start = position;
+    while (position < body.length &&
+        !const [
+          ' ',
+          '\t',
+          '\r',
+          '\n',
+          ',',
+          '}',
+          ']',
+        ].contains(body[position])) {
+      position++;
+    }
+    return jsonDecode(body.substring(start, position));
+  }
 }
 
 int? _nextPage(Map<String, dynamic> response, Uri current, int page) {

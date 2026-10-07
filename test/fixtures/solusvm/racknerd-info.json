@@ -1,0 +1,13 @@
+{
+  "status": "success",
+  "statusmsg": "",
+  "hostname": "synthetic-vps.example.test",
+  "ipaddress": "192.0.2.40",
+  "template": "Synthetic Linux template",
+  "os": "synthetic-linux",
+  "vmstat": "online",
+  "ipaddr": "192.0.2.41,2001:db8::40",
+  "bw": "1099511627776,0,1099511627776,0",
+  "hdd": "32212254720,0,32212254720,0",
+  "mem": "2147483648,1073741824,1073741824,50"
+}

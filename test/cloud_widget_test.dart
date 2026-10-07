@@ -1,12 +1,16 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:http/http.dart' as http;
+import 'package:http/testing.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:vps_tell_you/cloud/cloud_controller.dart';
 import 'package:vps_tell_you/cloud/cloud_models.dart';
 import 'package:vps_tell_you/cloud/cloud_pages.dart';
+import 'package:vps_tell_you/cloud/solusvm_adapter.dart';
 import 'package:vps_tell_you/core/app_theme.dart';
 import 'package:vps_tell_you/core/value_types.dart';
 import 'package:vps_tell_you/data/ledger_store.dart';
@@ -40,8 +44,8 @@ CloudSnapshot _snapshot(
   return CloudSnapshot(
     provider: provider,
     completedAt: time,
-    remoteAccountId: provider == CloudProvider.solusVm1 ? null : account,
-    instances: provider == CloudProvider.solusVm1
+    remoteAccountId: provider.isSingleInstance ? null : account,
+    instances: provider.isSingleInstance
         ? [CloudInstance(observedAt: time, power: power)]
         : [
             for (final id in ids)
@@ -67,6 +71,8 @@ void main() {
   behavior;
   final cancellations = <CloudCancellation>[];
   final endpoints = <String>[];
+  final receivedCredentials = <CloudCredentials>[];
+  CloudAdapterFactory? fixtureAdapterFactory;
   var calls = 0;
   setUp(() async {
     sqfliteFfiInit();
@@ -79,17 +85,24 @@ void main() {
     behavior = (provider, _) async => _snapshot(provider);
     cancellations.clear();
     endpoints.clear();
+    receivedCredentials.clear();
+    fixtureAdapterFactory = null;
     calls = 0;
     cloud = CloudController(
       store: store,
       secrets: secrets,
-      adapterFactory: (provider, endpoint, credentials) =>
-          _Adapter((cancellation) {
-            calls++;
-            endpoints.add(endpoint.toString());
-            cancellations.add(cancellation);
-            return behavior(provider, cancellation);
-          }),
+      adapterFactory: (provider, endpoint, credentials) {
+        receivedCredentials.add(credentials);
+        if (fixtureAdapterFactory case final factory?) {
+          return factory(provider, endpoint, credentials);
+        }
+        return _Adapter((cancellation) {
+          calls++;
+          endpoints.add(endpoint.toString());
+          cancellations.add(cancellation);
+          return behavior(provider, cancellation);
+        });
+      },
     );
     ledger = LedgerController(
       store,
@@ -213,14 +226,12 @@ void main() {
     WidgetTester tester, {
     CloudProvider provider = CloudProvider.solusVm2,
   }) async {
-    await fill(
-      tester,
-      'cloud-endpoint',
-      provider == CloudProvider.solusVm1
-          ? 'https://panel.example:5656/home.php'
-          : 'https://panel.example',
-    );
-    if (provider == CloudProvider.solusVm1) {
+    await fill(tester, 'cloud-endpoint', switch (provider) {
+      CloudProvider.solusVm1 => 'https://panel.example:5656/home.php',
+      CloudProvider.solusVm2 => 'https://panel.example',
+      CloudProvider.rackNerd => 'https://panel.example/api/client/command.php',
+    });
+    if (provider.isSingleInstance) {
       await fill(tester, 'cloud-key', 'SYNTHETIC_KEY');
       await fill(tester, 'cloud-hash', 'SYNTHETIC_HASH');
     } else {
@@ -236,17 +247,23 @@ void main() {
     final verification = (await cloud.verifyConnection(
       provider: provider,
       endpoint: 'https://panel.example',
-      credentials: provider == CloudProvider.solusVm1
-          ? SolusVm1Credentials(key: 'SYNTHETIC_KEY', hash: 'SYNTHETIC_HASH')
-          : SolusVm2Credentials('SYNTHETIC_TOKEN'),
+      credentials: switch (provider) {
+        CloudProvider.solusVm1 => SolusVm1Credentials(
+          key: 'SYNTHETIC_KEY',
+          hash: 'SYNTHETIC_HASH',
+        ),
+        CloudProvider.solusVm2 => SolusVm2Credentials('SYNTHETIC_TOKEN'),
+        CloudProvider.rackNerd => RackNerdCredentials(
+          key: 'SYNTHETIC_KEY',
+          hash: 'SYNTHETIC_HASH',
+        ),
+      },
     ))!;
     expect(
       await cloud.saveAccount(
         verification,
         alias: 'Fixture account',
-        v1Resources: provider == CloudProvider.solusVm1
-            ? completedResources()
-            : null,
+        v1Resources: provider.isSingleInstance ? completedResources() : null,
         selectedInstanceKeys: import
             ? {verification.keyFor(verification.snapshot.instances.first)}
             : {},
@@ -321,6 +338,187 @@ void main() {
       expect(ledger.active.single.resources!.apiFields, isEmpty);
       expect(ledger.active.single.billing, BillingKind.unknown);
       expect(cloud.bindings.single.observation.name, isNull);
+      expect(tester.takeException(), isNull);
+    },
+  );
+
+  testWidgets(
+    'RackNerd entry uses its real form adapter and requires manual CPU completion before import',
+    (tester) async {
+      final requests = <http.Request>[];
+      fixtureAdapterFactory = (provider, endpoint, credentials) {
+        expect(provider, CloudProvider.rackNerd);
+        expect(credentials, isA<RackNerdCredentials>());
+        return RackNerdAdapter(
+          endpoint: endpoint,
+          credentials: credentials as RackNerdCredentials,
+          clientFactory: () => MockClient((request) async {
+            requests.add(request);
+            return http.Response(
+              jsonEncode({
+                'status': 'success',
+                'statusmsg': '',
+                'hostname': 'synthetic-rack.example',
+                'ipaddress': '192.0.2.45',
+                'template': 'Synthetic Linux',
+                'os': 'linux',
+                'vmstat': 'online',
+                'ipaddr': '192.0.2.45',
+                'bw': '1099511627776,1073741824,1098437885952,0.1',
+                'hdd': '21474836480,1073741824,20401094656,5',
+                'mem': '2147483648,536870912,1610612736,25',
+              }),
+              200,
+              headers: {'content-type': 'application/json'},
+            );
+          }),
+        );
+      };
+      await mount(tester, CloudTemplatesPage(ledger: ledger), scale: 2);
+      await tapText(tester, 'RackNerd ctrl');
+      expect(find.byType(CloudAuthorizationPage), findsOneWidget);
+      await fill(
+        tester,
+        'cloud-endpoint',
+        'https://panel.example/api/client/command.php',
+      );
+      expect(
+        find.text(
+          '已为 RackNerd ctrl 移除 /api/client/command.php。\n验证将连接：https://panel.example',
+        ),
+        findsOneWidget,
+      );
+      await fill(tester, 'cloud-key', 'SYNTHETIC_KEY+ /&=');
+      await fill(tester, 'cloud-hash', 'SYNTHETIC_HASH+ /&=');
+      expect(find.byKey(const ValueKey('cloud-token')), findsNothing);
+      for (final key in ['cloud-key', 'cloud-hash']) {
+        final field = find.byKey(ValueKey(key));
+        await reveal(tester, field);
+        final editable = find.descendant(
+          of: field,
+          matching: find.byType(EditableText),
+        );
+        expect(tester.widget<EditableText>(editable).obscureText, isTrue);
+      }
+      await tapKey(tester, 'verify-cloud');
+      expect(requests, hasLength(1));
+      expect(requests.single.method, 'POST');
+      expect(
+        requests.single.url.toString(),
+        'https://panel.example/api/client/command.php',
+      );
+      expect(
+        requests.single.headers['content-type'],
+        startsWith('application/x-www-form-urlencoded'),
+      );
+      expect(requests.single.bodyFields, {
+        'key': 'SYNTHETIC_KEY+ /&=',
+        'hash': 'SYNTHETIC_HASH+ /&=',
+        'action': 'info',
+        'rdtype': 'json',
+        'status': 'true',
+        'ipaddr': 'true',
+        'bw': 'true',
+        'hdd': 'true',
+        'mem': 'true',
+      });
+      await tapKey(tester, 'cloud-select-single');
+      await tapKey(tester, 'cloud-import-submit');
+      expect(cloud.accounts, isEmpty);
+      expect(ledger.active, isEmpty);
+      expect(secrets.writes, 0);
+      final cpu = find.byKey(const ValueKey('resource-vcpu'));
+      await reveal(tester, cpu);
+      expect(tester.widget<TextFormField>(cpu).controller!.text, isEmpty);
+      await fill(tester, 'resource-vcpu', '2');
+      await fill(tester, 'cloud-v1-name', 'Synthetic Rack VPS');
+      await tapKey(tester, 'cloud-import-submit');
+      expect(requests, hasLength(1));
+      expect(cloud.accounts.single.provider, CloudProvider.rackNerd);
+      expect(cloud.accounts.single.remoteAccountId, isNull);
+      expect(cloud.bindings.single.instanceKey, 'single');
+      expect(cloud.bindings.single.observation.serverId, isNull);
+      expect(cloud.bindings.single.observation.vcpu, isNull);
+      expect(ledger.active.single.name, 'Synthetic Rack VPS');
+      final resources = ledger.active.single.resources!;
+      expect(resources.vcpu, 2);
+      expect(resources.ramBytes, 2147483648);
+      expect(resources.diskBytes, 21474836480);
+      expect(resources.trafficBytes, 1099511627776);
+      expect(resources.apiFields, {
+        'ip',
+        'hostname',
+        'diskBytes',
+        'trafficBytes',
+        'ramBytes',
+      });
+      expect(ledger.active.single.billing, BillingKind.unknown);
+      expect(await store.sshConfigurations(), isEmpty);
+      expect(await store.payments(), isEmpty);
+      expect(secrets.writes, 1);
+      expect(tester.takeException(), isNull);
+    },
+  );
+
+  testWidgets(
+    'RackNerd can save only the account without hardware and import later',
+    (tester) async {
+      await mount(
+        tester,
+        CloudAuthorizationPage(
+          ledger: ledger,
+          provider: CloudProvider.rackNerd,
+        ),
+      );
+      await authorize(tester, provider: CloudProvider.rackNerd);
+      expect(receivedCredentials.single, isA<RackNerdCredentials>());
+      await tapKey(tester, 'cloud-save-only');
+      expect(cloud.accounts.single.provider, CloudProvider.rackNerd);
+      expect(cloud.accounts.single.remoteAccountId, isNull);
+      expect(await store.servers(), isEmpty);
+      expect(cloud.bindings, isEmpty);
+      final saved = cloud.accounts.single;
+      await mount(tester, CloudAccountsPage(ledger: ledger));
+      await tapKey(tester, 'cloud-account-${saved.id}');
+      await tapText(tester, '继续导入实例');
+      await tapKey(tester, 'cloud-select-single');
+      await fillResources(tester);
+      await tapKey(tester, 'cloud-import-submit');
+      expect(calls, 2);
+      expect(secrets.writes, 1);
+      expect(ledger.active, hasLength(1));
+      expect(cloud.bindings.single.instanceKey, 'single');
+      expect(tester.takeException(), isNull);
+    },
+  );
+
+  testWidgets(
+    'RackNerd endpoint form rejects arbitrary paths and does not trim a trailing dot',
+    (tester) async {
+      await mount(
+        tester,
+        CloudAuthorizationPage(
+          ledger: ledger,
+          provider: CloudProvider.rackNerd,
+        ),
+      );
+      await fill(tester, 'cloud-key', 'SYNTHETIC_KEY');
+      await fill(tester, 'cloud-hash', 'SYNTHETIC_HASH');
+      for (final value in [
+        'https://panel.example/api/client/command.php.',
+        'https://panel.example/home.php',
+        'https://panel.example/api/client/command.php?x=1',
+      ]) {
+        await fill(tester, 'cloud-endpoint', value);
+        await tapKey(tester, 'verify-cloud');
+        expect(calls, 0);
+        expect(secrets.writes, 0);
+        expect(find.byType(CloudImportPage), findsNothing);
+      }
+      await fill(tester, 'cloud-endpoint', 'https://panel.example.');
+      await tapKey(tester, 'verify-cloud');
+      expect(endpoints.single, 'https://panel.example.');
+      expect(cloud.accounts, isEmpty);
       expect(tester.takeException(), isNull);
     },
   );
@@ -715,54 +913,80 @@ void main() {
     },
   );
 
-  testWidgets(
-    'V1 reauthorization requires detach confirmation, preserves old record, and imports separately',
-    (tester) async {
-      final saved = await account(provider: CloudProvider.solusVm1);
-      final oldServerId = ledger.active.single.id;
-      await mount(
-        tester,
-        CloudAuthorizationPage(
-          ledger: ledger,
-          provider: CloudProvider.solusVm1,
-          existing: saved,
-        ),
-        scale: 2.0,
-      );
-      await fill(tester, 'cloud-key', 'REPLACEMENT_SYNTHETIC_KEY');
-      await fill(tester, 'cloud-hash', 'REPLACEMENT_SYNTHETIC_HASH');
-      await tapKey(tester, 'verify-cloud');
-      await tapKey(tester, 'cloud-select-single');
-      await reveal(tester, find.byKey(const ValueKey('cloud-import-submit')));
-      expect(find.text('更新授权并解除旧关联'), findsOneWidget);
-      expect(find.text('仅更新授权'), findsNothing);
-      expect(
-        tester
-            .widget<FilledButton>(
-              find.byKey(const ValueKey('cloud-import-submit')),
-            )
-            .onPressed,
-        isNull,
-      );
-      expect(
-        tester
-            .widget<OutlinedButton>(
-              find.byKey(const ValueKey('cloud-save-only')),
-            )
-            .onPressed,
-        isNull,
-      );
-      await tapKey(tester, 'cloud-confirm-rebind');
-      await fillResources(tester);
-      await tapKey(tester, 'cloud-import-submit');
-      expect(ledger.active, hasLength(2));
-      expect(ledger.byId(oldServerId), isNotNull);
-      expect(cloud.bindingFor(oldServerId), isNull);
-      expect(cloud.bindings.single.serverId, isNot(oldServerId));
-      expect(cloud.accounts.single.id, saved.id);
-      expect(tester.takeException(), isNull);
-    },
-  );
+  for (final provider in [CloudProvider.solusVm1, CloudProvider.rackNerd]) {
+    testWidgets(
+      '${provider.name} reauthorization requires detach confirmation and keeps old ledger, payments and SSH',
+      (tester) async {
+        final saved = await account(provider: provider);
+        final oldServerId = ledger.active.single.id;
+        final previousServer = ledger.active.single.toMap();
+        await store.saveSshConfiguration(
+          SshConfiguration(
+            serverId: oldServerId,
+            host: 'ssh.example',
+            port: 2222,
+            username: 'synthetic-user',
+            revision: -1,
+          ),
+        );
+        await store.recordAccountPayment(
+          id: 'synthetic-payment',
+          accountLabel: 'Synthetic account',
+          amount: Money('USD', 1234),
+          paidDate: const LedgerDate(2026, 10, 6),
+        );
+        final previousSsh = (await store.sshConfigurations()).single.toMap();
+        final previousPayment = (await store.payments()).single.toMap();
+        final previousSecret = secrets.values[saved.secretRef];
+        await mount(
+          tester,
+          CloudAuthorizationPage(
+            ledger: ledger,
+            provider: provider,
+            existing: saved,
+          ),
+          scale: 2.0,
+        );
+        await fill(tester, 'cloud-key', 'REPLACEMENT_SYNTHETIC_KEY');
+        await fill(tester, 'cloud-hash', 'REPLACEMENT_SYNTHETIC_HASH');
+        await tapKey(tester, 'verify-cloud');
+        await tapKey(tester, 'cloud-select-single');
+        await reveal(tester, find.byKey(const ValueKey('cloud-import-submit')));
+        expect(find.text('更新授权并解除旧关联'), findsOneWidget);
+        expect(find.text('仅更新授权'), findsNothing);
+        expect(
+          tester
+              .widget<FilledButton>(
+                find.byKey(const ValueKey('cloud-import-submit')),
+              )
+              .onPressed,
+          isNull,
+        );
+        expect(
+          tester
+              .widget<OutlinedButton>(
+                find.byKey(const ValueKey('cloud-save-only')),
+              )
+              .onPressed,
+          isNull,
+        );
+        expect(cloud.bindingFor(oldServerId), isNotNull);
+        expect(secrets.values[saved.secretRef], previousSecret);
+        await tapKey(tester, 'cloud-confirm-rebind');
+        await fillResources(tester);
+        await tapKey(tester, 'cloud-import-submit');
+        expect(ledger.active, hasLength(2));
+        expect(ledger.byId(oldServerId), isNotNull);
+        expect(cloud.bindingFor(oldServerId), isNull);
+        expect(cloud.bindings.single.serverId, isNot(oldServerId));
+        expect(cloud.accounts.single.id, saved.id);
+        expect(ledger.byId(oldServerId)!.toMap(), previousServer);
+        expect((await store.sshConfigurations()).single.toMap(), previousSsh);
+        expect((await store.payments()).single.toMap(), previousPayment);
+        expect(tester.takeException(), isNull);
+      },
+    );
+  }
 
   testWidgets(
     'V2 changed identity reauthorization cannot replace old secret or binding',
