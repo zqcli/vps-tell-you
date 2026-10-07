@@ -1,3 +1,5 @@
+import '../l10n/localized_message.dart';
+
 import 'dart:async';
 import 'dart:convert';
 import 'dart:typed_data';
@@ -22,29 +24,47 @@ class SshHostKeyCapture {
   int _total = 0;
 
   void add(Uint8List data) {
-    if (_finished) return;
+    if (_finished) {
+      return;
+    }
     for (final byte in data) {
-      if (_finished) break;
-      if (++_total > 256 * 1024) _invalid();
+      if (_finished) {
+        break;
+      }
+      if (++_total > 256 * 1024) {
+        _invalid();
+      }
       _buffer.add(byte);
       if (!_versionSeen) {
-        if (_buffer.length > 8192) _invalid();
-        if (byte != 10) continue;
+        if (_buffer.length > 8192) {
+          _invalid();
+        }
+        if (byte != 10) {
+          continue;
+        }
         if (_buffer.length >= 4 &&
             _buffer[0] == 83 &&
             _buffer[1] == 83 &&
             _buffer[2] == 72 &&
             _buffer[3] == 45) {
-          if (_buffer.length > 255) _invalid();
+          if (_buffer.length > 255) {
+            _invalid();
+          }
           _versionSeen = true;
         }
         _buffer.clear();
         continue;
       }
-      if (_buffer.length < 4) continue;
+      if (_buffer.length < 4) {
+        continue;
+      }
       final length = _uint32(_buffer, 0);
-      if (length < 6 || length > 64 * 1024) _invalid();
-      if (_buffer.length < length + 4) continue;
+      if (length < 6 || length > 64 * 1024) {
+        _invalid();
+      }
+      if (_buffer.length < length + 4) {
+        continue;
+      }
       final padding = _buffer[4];
       final payloadEnd = length + 4 - padding;
       if (padding < 4 || payloadEnd <= 5 || (length + 4) % 8 != 0) {
@@ -54,10 +74,16 @@ class SshHostKeyCapture {
       if (message == 21) {
         _finished = true;
       } else if (message == 31 || message == 33) {
-        if (payloadEnd < 10) _invalid();
+        if (payloadEnd < 10) {
+          _invalid();
+        }
         final keyLength = _uint32(_buffer, 6);
-        if (keyLength > 32 * 1024 || keyLength > payloadEnd - 10) _invalid();
-        if (_candidates.length >= 8) _invalid();
+        if (keyLength > 32 * 1024 || keyLength > payloadEnd - 10) {
+          _invalid();
+        }
+        if (_candidates.length >= 8) {
+          _invalid();
+        }
         // For group-exchange message 31 this is a DH prime, not a key. It
         // cannot pass full key parsing + the verified SHA256 binding below.
         _candidates.add(
@@ -86,12 +112,16 @@ class SshHostKeyCapture {
           algorithm: wireType,
           publicKey: base64Encode(bytes),
         );
-        if (key.fingerprint == expected) return key;
+        if (key.fingerprint == expected) {
+          return key;
+        }
       } on SecurityFailure {
         // A guessed KEX packet or group prime is never accepted as a key.
       }
     }
-    throw const SecurityFailure('无法核实完整主机公钥，连接已阻止');
+    throw SecurityFailure(
+      LocalizedText((l10n) => l10n.connectionHostKeyUnverified),
+    );
   }
 
   static int _uint32(List<int> bytes, int offset) =>
@@ -103,7 +133,9 @@ class SshHostKeyCapture {
     _finished = true;
     _buffer.clear();
     _candidates.clear();
-    throw const SecurityFailure('SSH 握手格式或大小不受支持');
+    throw SecurityFailure(
+      LocalizedText((l10n) => l10n.connectionHandshakeUnsupported),
+    );
   }
 }
 

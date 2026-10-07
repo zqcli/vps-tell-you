@@ -4,6 +4,8 @@ import '../core/app_theme.dart';
 import '../servers/ledger_controller.dart';
 import 'security_models.dart';
 import 'security_pages.dart';
+import '../l10n/locale_preference.dart';
+import '../l10n/localized_message.dart';
 
 class SshConfigurationPage extends StatefulWidget {
   const SshConfigurationPage({
@@ -24,6 +26,22 @@ class _SshConfigurationPageState extends State<SshConfigurationPage> {
       username = TextEditingController();
   String? credentialId;
   int revision = -1;
+  bool validationAttempted = false;
+  String? validationLocale;
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final next = context.l10n.localeName;
+    if (validationLocale != null &&
+        validationLocale != next &&
+        validationAttempted) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) form.currentState?.validate();
+      });
+    }
+    validationLocale = next;
+  }
+
   bool loading = true, dirty = false, saving = false, allowPop = false;
   @override
   void initState() {
@@ -56,9 +74,9 @@ class _SshConfigurationPageState extends State<SshConfigurationPage> {
     if (dirty &&
         !await confirmAction(
           context,
-          title: '放弃连接配置？',
-          message: '未保存的地址、用户名与凭据选择不会生效。',
-          action: '放弃修改',
+          title: LocalizedText((l10n) => l10n.securityDiscardSshTitle),
+          message: LocalizedText((l10n) => l10n.securityDiscardSshMessage),
+          action: LocalizedText((l10n) => l10n.securityDiscardChanges),
         )) {
       return;
     }
@@ -80,11 +98,11 @@ class _SshConfigurationPageState extends State<SshConfigurationPage> {
             controller: scroll,
             padding: const EdgeInsets.all(20),
             children: [
-              const SectionTitle('选择登录凭据'),
+              SectionTitle(context.l10n.securityChooseCredential),
               SettingRow(
                 icon: Icons.link_off,
-                title: '解除当前凭据关联',
-                subtitle: '保留连接配置，之后再选择',
+                title: context.l10n.securityUnlinkCurrentCredential,
+                subtitle: context.l10n.securityChooseCredentialLater,
                 onTap: () => Navigator.pop(context, ''),
               ),
               for (final c in security.credentials)
@@ -93,12 +111,16 @@ class _SshConfigurationPageState extends State<SshConfigurationPage> {
                       ? Icons.key_outlined
                       : Icons.person_outline,
                   title: c.name,
-                  subtitle:
-                      '${credentialKind(c)} · 默认 ${c.defaultUsername.isEmpty ? '未设置' : c.defaultUsername}',
+                  subtitle: context.l10n.securityCredentialChoiceSubtitle(
+                    credentialKind(c, l10n: context.l10n),
+                    c.defaultUsername.isEmpty
+                        ? context.l10n.securityNotSet
+                        : c.defaultUsername,
+                  ),
                   onTap: () => Navigator.pop(context, c.id),
                 ),
               if (security.credentials.isEmpty)
-                const InfoNote('尚无凭据。先返回，使用“管理凭据”新增。'),
+                InfoNote(context.l10n.securityNoCredentialsToChoose),
             ],
           ),
         ),
@@ -119,16 +141,22 @@ class _SshConfigurationPageState extends State<SshConfigurationPage> {
     }
     final adopt = await confirmAction(
       context,
-      title: '使用凭据的默认用户名？',
-      message:
-          '当前连接用户名：${username.text.isEmpty ? '未填写' : username.text}\n凭据默认用户名：${credential.defaultUsername}\n\n只影响本台连接；取消将保留当前用户名。',
-      action: '采用默认用户名',
+      title: LocalizedText((l10n) => l10n.securityAdoptUsernameTitle),
+      message: LocalizedText(
+        (l10n) => l10n.securityAdoptUsernameMessage(
+          username.text.isEmpty ? l10n.securityNotEntered : username.text,
+          credential.defaultUsername,
+        ),
+      ),
+      action: LocalizedText((l10n) => l10n.securityAdoptUsername),
     );
     if (mounted && adopt) username.text = credential.defaultUsername;
   }
 
   Future<void> save() async {
-    if (saving || !form.currentState!.validate()) return;
+    if (saving) return;
+    validationAttempted = true;
+    if (!form.currentState!.validate()) return;
     setState(() => saving = true);
     final saved = await widget.ledger.security.saveSshConfiguration(
       SshConfiguration(
@@ -145,7 +173,10 @@ class _SshConfigurationPageState extends State<SshConfigurationPage> {
     if (saved) {
       setState(() => allowPop = true);
       Navigator.pop(context);
-      securityMessage(context, 'SSH 配置已保存，未建立网络连接');
+      securityMessage(
+        context,
+        LocalizedText((l10n) => l10n.securitySshConfigurationSaved),
+      );
     }
   }
 
@@ -164,9 +195,9 @@ class _SshConfigurationPageState extends State<SshConfigurationPage> {
         },
         child: Scaffold(
           appBar: AppBar(
-            title: const Text('SSH 连接配置'),
+            title: Text(context.l10n.securitySshConfiguration),
             leading: IconButton(
-              tooltip: '取消连接配置',
+              tooltip: context.l10n.securityCancelSshConfiguration,
               icon: const Icon(Icons.arrow_back),
               onPressed: saving ? null : cancel,
             ),
@@ -182,22 +213,25 @@ class _SshConfigurationPageState extends State<SshConfigurationPage> {
                     padding: const EdgeInsets.all(20),
                     children: [
                       Text(
-                        widget.ledger.byId(widget.serverId)?.name ?? '服务器',
+                        widget.ledger.byId(widget.serverId)?.name ??
+                            context.l10n.securityServerFallback,
                         style: Theme.of(context).textTheme.headlineSmall,
                       ),
-                      const InfoNote('连接配置和台账地址分别保存。不会修改云主机设置。'),
+                      InfoNote(context.l10n.securitySshConfigurationNotice),
                       SecurityNotice(controller: security),
                       TextFormField(
                         key: const ValueKey('ssh-host'),
                         controller: host,
                         enabled: !saving,
                         autocorrect: false,
-                        decoration: const InputDecoration(
-                          labelText: '主机地址',
-                          hintText: 'IPv4 / IPv6 / 域名，不含协议',
+                        decoration: InputDecoration(
+                          errorMaxLines: 8,
+                          labelText: context.l10n.securityHostAddress,
+                          hintText: context.l10n.securityHostHint,
                         ),
-                        validator: (v) =>
-                            v == null || v.trim().isEmpty ? '请填写主机地址' : null,
+                        validator: (v) => v == null || v.trim().isEmpty
+                            ? context.l10n.securityHostRequired
+                            : null,
                       ),
                       const SizedBox(height: 16),
                       TextFormField(
@@ -205,11 +239,14 @@ class _SshConfigurationPageState extends State<SshConfigurationPage> {
                         controller: port,
                         enabled: !saving,
                         keyboardType: TextInputType.number,
-                        decoration: const InputDecoration(labelText: '端口'),
+                        decoration: InputDecoration(
+                          errorMaxLines: 8,
+                          labelText: context.l10n.securityPort,
+                        ),
                         validator: (v) {
                           final n = int.tryParse(v ?? '');
                           return n == null || n < 1 || n > 65535
-                              ? '端口应为 1–65535'
+                              ? context.l10n.securityPortRequired
                               : null;
                         },
                       ),
@@ -220,13 +257,16 @@ class _SshConfigurationPageState extends State<SshConfigurationPage> {
                         enabled: !saving,
                         autocorrect: false,
                         maxLength: 64,
-                        decoration: const InputDecoration(labelText: '当前连接用户名'),
+                        decoration: InputDecoration(
+                          errorMaxLines: 8,
+                          labelText: context.l10n.securityConnectionUsername,
+                        ),
                         validator: (v) => v == null || v.trim().isEmpty
-                            ? '请填写登录用户名，或使用凭据的默认用户名'
+                            ? context.l10n.securityConnectionUsernameRequired
                             : null,
                       ),
                       SectionTitle(
-                        '登录凭据',
+                        context.l10n.securityLoginCredential,
                         action: TextButton(
                           onPressed: saving
                               ? null
@@ -240,34 +280,43 @@ class _SshConfigurationPageState extends State<SshConfigurationPage> {
                                   );
                                   if (mounted) setState(() {});
                                 },
-                          child: const Text('管理凭据'),
+                          child: Text(context.l10n.securityManageCredentials),
                         ),
                       ),
                       LedgerCard(
                         padding: EdgeInsets.zero,
                         child: SettingRow(
                           icon: Icons.key_outlined,
-                          title: credential?.name ?? '凭据待配置',
+                          title:
+                              credential?.name ??
+                              context.l10n.securityCredentialNotConfigured,
                           subtitle: credential == null
-                              ? '可先保存配置，连接前必须选择凭据'
-                              : '${credentialKind(credential)} · 点击更换或解除',
+                              ? context
+                                    .l10n
+                                    .securityCredentialRequiredBeforeConnect
+                              : context.l10n.securityChangeCredentialSubtitle(
+                                  credentialKind(
+                                    credential,
+                                    l10n: context.l10n,
+                                  ),
+                                ),
                           onTap: saving || security.needsReload
                               ? null
                               : chooseCredential,
                         ),
                       ),
-                      const InfoNote(
-                        '用户名属于本台连接。换凭据时只有明确选择“采用默认用户名”才更改它，取消和相同用户名都不会修改其他连接。',
-                      ),
-                      const InfoNote(
-                        '此页只保存连接配置。建立连接时先核验主机身份，再进行登录认证；主机公钥变化时会暂停认证，等待重新核实。',
-                      ),
+                      InfoNote(context.l10n.securityConnectionUsernameNotice),
+                      InfoNote(context.l10n.securityConfigurationOnlyNotice),
                       FilledButton(
                         onPressed:
                             saving || security.busy || security.needsReload
                             ? null
                             : save,
-                        child: Text(saving ? '保存中…' : '保存 SSH 配置'),
+                        child: Text(
+                          saving
+                              ? context.l10n.securitySaving
+                              : context.l10n.securitySaveSshConfiguration,
+                        ),
                       ),
                       const SizedBox(height: 24),
                     ],

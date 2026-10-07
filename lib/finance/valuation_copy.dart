@@ -1,3 +1,5 @@
+import '../l10n/locale_preference.dart';
+import '../l10n/generated/app_localizations.dart';
 import '../core/value_types.dart';
 
 /// Describes the displayed period without implying it is active on the
@@ -6,9 +8,11 @@ String valuationPeriodLabel({
   required LedgerDate asOf,
   LedgerDate? start,
   LedgerDate? end,
+  AppLocalizations? l10n,
 }) {
-  if (start == null || end == null) return '所示周期';
-  if (asOf.compareTo(start) < 0) return '尚未开始的周期';
-  if (asOf.compareTo(end) >= 0) return '已结束的周期';
-  return '当前周期';
+  final messages = l10n ?? defaultLocalizations;
+  if (start == null || end == null) return messages.financeShownPeriod;
+  if (asOf.compareTo(start) < 0) return messages.financeFuturePeriod;
+  if (asOf.compareTo(end) >= 0) return messages.financeEndedPeriod;
+  return messages.financeCurrentPeriod;
 }

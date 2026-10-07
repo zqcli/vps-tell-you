@@ -8,6 +8,7 @@ import 'package:http/http.dart' as http;
 import 'package:xml/xml.dart';
 import 'package:xml/xml_events.dart';
 
+import '../l10n/localized_message.dart';
 import '../servers/server_resources.dart';
 import 'cloud_models.dart';
 
@@ -26,7 +27,7 @@ class CloudReadLimits {
         totalBytes < 1 ||
         pages < 1 ||
         items < 1) {
-      throw ArgumentError('读取限制必须大于 0');
+      throw LocalizedArgumentError((l10n) => l10n.cloudReadLimitPositive);
     }
   }
   final Duration requestTimeout, operationTimeout;

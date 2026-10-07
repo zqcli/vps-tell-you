@@ -3,6 +3,9 @@ import 'dart:convert';
 import 'package:sqflite/sqflite.dart';
 
 import '../core/value_types.dart';
+import '../l10n/locale_preference.dart';
+import '../l10n/generated/app_localizations.dart';
+import '../l10n/localized_message.dart';
 import '../cloud/cloud_account.dart';
 import '../cloud/cloud_models.dart';
 import '../connections/snippet.dart';
@@ -16,11 +19,16 @@ import '../settings/reminder_rule.dart';
 part 'ledger_settings.dart';
 part 'ledger_backup.dart';
 
-class LedgerConflict implements Exception {
+class LedgerConflict implements Exception, LocalizedMessage {
   const LedgerConflict();
   @override
-  String toString() => '记录已发生变化，请返回后重试';
+  String toString() => messageFor(defaultLocalizations);
+  @override
+  String messageFor(AppLocalizations l10n) => l10n.recordChanged;
 }
+
+// Historical user-input constraint, never a translated group/state identity.
+const legacyReservedGroupName = '未分组';
 
 class ArchiveUndo {
   const ArchiveUndo(this.id, this.revision);
@@ -34,7 +42,7 @@ class LedgerStore {
   LedgerStore._(this._db, this.clock);
   final Database _db;
   final DateTime Function() clock;
-  static const schemaVersion = 8;
+  static const schemaVersion = 9;
   // Shared by both credential controllers using this store. A durable journal
   // reservation is not an orphan while its native write/DB commit is active.
   final Set<String> _activeSecretReservations = {};
@@ -56,15 +64,30 @@ class LedgerStore {
               newVersion != schemaVersion) {
             throw StateError('Unsupported ledger migration');
           }
-          if (oldVersion < 2) await _addFinanceSchema(db);
-          if (oldVersion < 3) await _addSecuritySchema(db);
-          if (oldVersion < 4) await _addSnippetSchema(db);
-          if (oldVersion < 5) await _addCloudSchema(db);
-          if (oldVersion < 6) await _addSettingsSchema(db);
-          if (oldVersion < 7) await _addResourcesSchema(db);
+          if (oldVersion < 2) {
+            await _addFinanceSchema(db);
+          }
+          if (oldVersion < 3) {
+            await _addSecuritySchema(db);
+          }
+          if (oldVersion < 4) {
+            await _addSnippetSchema(db);
+          }
+          if (oldVersion < 5) {
+            await _addCloudSchema(db);
+          }
+          if (oldVersion < 6) {
+            await _addSettingsSchema(db);
+          }
+          if (oldVersion < 7) {
+            await _addResourcesSchema(db);
+          }
           // v8 permits partial local resources and a traffic period in JSON.
           // Existing v7 rows are already valid and must not be rewritten; the
           // version fence prevents older readers from accepting the new shape.
+          if (oldVersion < 9) {
+            await _addLanguageSchema(db);
+          }
         },
         onDowngrade: (db, oldVersion, newVersion) async {
           throw StateError('Newer ledger version; upgrade the app');
@@ -101,6 +124,7 @@ class LedgerStore {
     await _addCloudSchema(db);
     await _addSettingsSchema(db);
     await _addResourcesSchema(db);
+    await _addLanguageSchema(db);
   }
 
   /// Nullable by design: old/manual records are not populated with fabricated
@@ -119,7 +143,9 @@ class LedgerStore {
 
   Future<void> saveServer(ServerRecord record, {required bool isNew}) async {
     final error = record.validate();
-    if (error != null) throw ArgumentError(error);
+    if (error != null) {
+      throw LocalizedArgumentError((l10n) => record.validate(l10n: l10n)!);
+    }
     await _db.transaction((txn) async {
       final map = record.toMap();
       if (record.groupId != null &&
@@ -137,7 +163,9 @@ class LedgerStore {
           where: 'id = ?',
           whereArgs: [record.id],
         );
-        if (rows.isEmpty) throw const LedgerConflict();
+        if (rows.isEmpty) {
+          throw const LedgerConflict();
+        }
         previous = ServerRecord.fromMap(rows.single);
         if (previous.archived || previous.revision != record.revision) {
           throw const LedgerConflict();
@@ -157,7 +185,7 @@ class LedgerStore {
             whereArgs: [record.id],
             limit: 1,
           )).isNotEmpty) {
-        throw ArgumentError('已有付款服务期，不能直接修改日期、周期或计费方式；请先核对并安全撤销付款');
+        throw LocalizedArgumentError((l10n) => l10n.paymentPeriodsLockFields);
       }
       map['renewal_anchor_date'] = termsChanged
           ? (record.billing == BillingKind.prepaid
@@ -180,9 +208,13 @@ class LedgerStore {
           where: 'id = ? AND revision = ? AND archived_at IS NULL',
           whereArgs: [record.id, record.revision],
         );
-        if (count != 1) throw const LedgerConflict();
+        if (count != 1) {
+          throw const LedgerConflict();
+        }
       }
-      if (termsChanged) await _replaceInitialPeriod(txn, record);
+      if (termsChanged) {
+        await _replaceInitialPeriod(txn, record);
+      }
     });
   }
 
@@ -197,7 +229,9 @@ class LedgerStore {
       where: 'id = ? AND revision = ? AND archived_at IS NULL',
       whereArgs: [record.id, record.revision],
     );
-    if (count != 1) throw const LedgerConflict();
+    if (count != 1) {
+      throw const LedgerConflict();
+    }
   }
 
   Future<ArchiveUndo> archive(ServerRecord record) async {
@@ -208,7 +242,9 @@ class LedgerStore {
       where: 'id = ? AND revision = ? AND archived_at IS NULL',
       whereArgs: [record.id, record.revision],
     );
-    if (count != 1) throw const LedgerConflict();
+    if (count != 1) {
+      throw const LedgerConflict();
+    }
     return ArchiveUndo(record.id, record.revision + 1);
   }
 
@@ -223,13 +259,17 @@ class LedgerStore {
       where: 'id = ? AND revision = ? AND archived_at IS NOT NULL',
       whereArgs: [undo.id, undo.revision],
     );
-    if (count != 1) throw const LedgerConflict();
+    if (count != 1) {
+      throw const LedgerConflict();
+    }
   }
 
   Future<void> saveGroup(String name, {String? id}) async {
     final trimmed = name.trim();
-    if (trimmed.isEmpty || trimmed.length > 40 || trimmed == '未分组') {
-      throw ArgumentError('请输入 1–40 字的分组名，不能使用“未分组”');
+    if (trimmed.isEmpty ||
+        trimmed.length > 40 ||
+        trimmed == legacyReservedGroupName) {
+      throw LocalizedArgumentError((l10n) => l10n.invalidGroupName);
     }
     await _db.transaction((txn) async {
       if (id == null) {
@@ -248,7 +288,9 @@ class LedgerStore {
           where: 'id = ?',
           whereArgs: [id],
         );
-        if (count != 1) throw const LedgerConflict();
+        if (count != 1) {
+          throw const LedgerConflict();
+        }
       }
     });
   }
@@ -269,7 +311,9 @@ class LedgerStore {
       final rows = await txn.query('server_groups', orderBy: 'position, name');
       final index = rows.indexWhere((g) => g['id'] == id);
       final target = index + delta;
-      if (index < 0 || target < 0 || target >= rows.length) return;
+      if (index < 0 || target < 0 || target >= rows.length) {
+        return;
+      }
       final ordered = [...rows];
       final item = ordered.removeAt(index);
       ordered.insert(target, item);
@@ -287,7 +331,7 @@ class LedgerStore {
   Future<void> loadDemo() async {
     await _db.transaction((txn) async {
       if ((await txn.query('servers', limit: 1)).isNotEmpty) {
-        throw StateError('演示数据仅能载入空台账');
+        throw LocalizedStateError((l10n) => l10n.demoRequiresEmptyLedger);
       }
       final existing = await txn.query(
         'server_groups',
@@ -454,7 +498,9 @@ class LedgerStore {
         knownStart.isValid &&
         knownStart.compareTo(due) < 0;
     final start = hasStart ? knownStart : due.addMonths(-record.cycleMonths);
-    if (!start.isValid || start.compareTo(due) >= 0) return;
+    if (!start.isValid || start.compareTo(due) >= 0) {
+      return;
+    }
     await db.insert(
       'service_periods',
       ServicePeriod(
@@ -480,10 +526,12 @@ class LedgerStore {
   );
   Future<void> saveFx(FxSettings settings) async {
     final error = settings.validate();
-    if (error != null) throw ArgumentError(error);
+    if (error != null) {
+      throw LocalizedArgumentError((l10n) => settings.validate(l10n: l10n)!);
+    }
     if (settings.rateDate != null &&
         settings.rateDate!.compareTo(LedgerDate.today(clock())) > 0) {
-      throw ArgumentError('汇率日期不能晚于今天');
+      throw LocalizedArgumentError((l10n) => l10n.futureRateDate);
     }
     await _db.update('finance_settings', settings.toMap(), where: 'id = 1');
   }
@@ -494,17 +542,21 @@ class LedgerStore {
     LedgerDate paidDate,
     String note,
   ) {
-    if (id.isEmpty || id.length > 128) throw ArgumentError('付款标识无效');
+    if (id.isEmpty || id.length > 128) {
+      throw LocalizedArgumentError((l10n) => l10n.invalidPaymentId);
+    }
     if (!Money.currencies.contains(amount.currency) ||
         amount.minor < 0 ||
         amount.minor > Money.maxMinor) {
-      throw ArgumentError('请输入有效实付金额，0 表示免费');
+      throw LocalizedArgumentError((l10n) => l10n.invalidPaidAmount);
     }
     if (!paidDate.isValid ||
         paidDate.compareTo(LedgerDate.today(clock())) > 0) {
-      throw ArgumentError('付款日期不能晚于今天');
+      throw LocalizedArgumentError((l10n) => l10n.futurePaymentDate);
     }
-    if (note.length > 4000) throw ArgumentError('备注最多 4000 个字符');
+    if (note.length > 4000) {
+      throw LocalizedArgumentError((l10n) => l10n.notesTooLong);
+    }
   }
 
   Future<PaymentRecord?> _existingPayment(
@@ -513,11 +565,15 @@ class LedgerStore {
     String fingerprint,
   ) async {
     final rows = await txn.query('payments', where: 'id = ?', whereArgs: [id]);
-    if (rows.isEmpty) return null;
+    if (rows.isEmpty) {
+      return null;
+    }
     final existing = PaymentRecord.fromMap(rows.single);
-    if (existing.voided) throw ArgumentError('此付款已撤销，请重新核对后创建新记录');
+    if (existing.voided) {
+      throw LocalizedArgumentError((l10n) => l10n.paymentAlreadyVoided);
+    }
     if (existing.requestFingerprint != fingerprint) {
-      throw ArgumentError('相同付款标识的内容不同，请勿重复录入');
+      throw LocalizedArgumentError((l10n) => l10n.paymentIdContentMismatch);
     }
     return existing;
   }
@@ -532,7 +588,9 @@ class LedgerStore {
     required bool confirmed,
     String note = '',
   }) async {
-    if (!confirmed) throw ArgumentError('请确认已在厂商付款并核对金额与期限');
+    if (!confirmed) {
+      throw LocalizedArgumentError((l10n) => l10n.confirmProviderPayment);
+    }
     final fingerprint = jsonEncode([
       'server',
       server.id,
@@ -545,33 +603,37 @@ class LedgerStore {
     ]);
     return _db.transaction((txn) async {
       final existing = await _existingPayment(txn, id, fingerprint);
-      if (existing != null) return existing;
+      if (existing != null) {
+        return existing;
+      }
       _validatePayment(id, amount, paidDate, note);
       if (!const [1, 2, 3].contains(cycleCount) || !until.isValid) {
-        throw ArgumentError('请选择 1–3 个有效续费周期');
+        throw LocalizedArgumentError((l10n) => l10n.invalidRenewalCycleCount);
       }
       final rows = await txn.query(
         'servers',
         where: 'id = ?',
         whereArgs: [server.id],
       );
-      if (rows.isEmpty) throw const LedgerConflict();
+      if (rows.isEmpty) {
+        throw const LedgerConflict();
+      }
       final current = ServerRecord.fromMap(rows.single);
       if (current.archived || current.revision != server.revision) {
         throw const LedgerConflict();
       }
       if (current.billing != BillingKind.prepaid || current.dueDate == null) {
-        throw ArgumentError('仅有明确到期日的预付服务可以续期');
+        throw LocalizedArgumentError((l10n) => l10n.renewalNeedsPrepaidDate);
       }
       if (renewalDate(current, cycleCount) != until) {
-        throw ArgumentError('新到期日与所选周期及原续费锚点不一致');
+        throw LocalizedArgumentError((l10n) => l10n.renewalDateMismatch);
       }
       if ((await txn.query(
         'payments',
         where: 'server_id = ? AND until_date = ? AND voided_at IS NULL',
         whereArgs: [current.id, until.toString()],
       )).isNotEmpty) {
-        throw ArgumentError('该服务到期日已有付款记录，请勿重复录入');
+        throw LocalizedArgumentError((l10n) => l10n.duplicateExpiryPayment);
       }
       final now = clock().toUtc();
       final payment = PaymentRecord(
@@ -614,7 +676,9 @@ class LedgerStore {
         where: 'id = ? AND revision = ? AND archived_at IS NULL',
         whereArgs: [current.id, current.revision],
       );
-      if (count != 1) throw const LedgerConflict();
+      if (count != 1) {
+        throw const LedgerConflict();
+      }
       return payment;
     });
   }
@@ -641,17 +705,21 @@ class LedgerStore {
     ]);
     return _db.transaction((txn) async {
       final existing = await _existingPayment(txn, id, fingerprint);
-      if (existing != null) return existing;
+      if (existing != null) {
+        return existing;
+      }
       _validatePayment(id, amount, paidDate, note);
       if (label.isEmpty || label.length > 80) {
-        throw ArgumentError('账户名称需为 1–80 个字符');
+        throw LocalizedArgumentError((l10n) => l10n.invalidAccountName);
       }
       if ((from == null) != (until == null) ||
           (from != null &&
               (!from.isValid ||
                   !until!.isValid ||
                   from.compareTo(until) >= 0))) {
-        throw ArgumentError('可选账期需填写有效起止日期，结束日必须晚于开始日');
+        throw LocalizedArgumentError(
+          (l10n) => l10n.invalidOptionalBillingPeriod,
+        );
       }
       final payment = PaymentRecord(
         id: id,
@@ -677,9 +745,13 @@ class LedgerStore {
         where: 'id = ?',
         whereArgs: [id],
       );
-      if (rows.isEmpty) throw const LedgerConflict();
+      if (rows.isEmpty) {
+        throw const LedgerConflict();
+      }
       final payment = PaymentRecord.fromMap(rows.single);
-      if (payment.voided) return;
+      if (payment.voided) {
+        return;
+      }
       final now = clock().toUtc().toIso8601String();
       if (!payment.isAccount) {
         final count = await txn.update(
@@ -696,7 +768,9 @@ class LedgerStore {
             payment.until.toString(),
           ],
         );
-        if (count != 1) throw const LedgerConflict();
+        if (count != 1) {
+          throw const LedgerConflict();
+        }
         await txn.delete(
           'service_periods',
           where: 'payment_id = ?',
@@ -770,14 +844,18 @@ class LedgerStore {
     }
     try {
       await _db.transaction((txn) async {
-        if (await _secretIsReferenced(txn, ref)) throw const LedgerConflict();
+        if (await _secretIsReferenced(txn, ref)) {
+          throw const LedgerConflict();
+        }
         await txn.insert('secret_cleanup', {
           'secret_ref': ref,
           'created_at': clock().toUtc().toIso8601String(),
         });
       });
     } catch (_) {
-      if (active) _activeSecretReservations.remove(ref);
+      if (active) {
+        _activeSecretReservations.remove(ref);
+      }
       rethrow;
     }
   }
@@ -828,7 +906,9 @@ class LedgerStore {
         (record.kind == CredentialKind.password &&
             record.defaultUsername.isEmpty) ||
         record.secretRef.isEmpty) {
-      throw const SecurityFailure('凭据资料无效');
+      throw SecurityFailure(
+        LocalizedText((l10n) => l10n.invalidCredentialDetails),
+      );
     }
     await _db.transaction((txn) async {
       final rows = await txn.query(
@@ -851,7 +931,9 @@ class LedgerStore {
             where: 'secret_ref = ?',
             whereArgs: [record.secretRef],
           )).isEmpty) {
-        throw const SecurityFailure('秘密写入未准备完成');
+        throw SecurityFailure(
+          LocalizedText((l10n) => l10n.secretWriteNotPrepared),
+        );
       }
       final map = record.toMap();
       map['revision'] = expectedRevision == null ? 0 : expectedRevision + 1;
@@ -867,7 +949,9 @@ class LedgerStore {
           where: 'id = ? AND revision = ?',
           whereArgs: [record.id, expectedRevision],
         );
-        if (count != 1) throw const LedgerConflict();
+        if (count != 1) {
+          throw const LedgerConflict();
+        }
       }
       if (changedRef) {
         await txn.delete(
@@ -891,14 +975,20 @@ class LedgerStore {
     CredentialMetadata record, {
     String? replacementId,
   }) async {
-    if (replacementId == record.id) throw const SecurityFailure('请选择另一份凭据');
+    if (replacementId == record.id) {
+      throw SecurityFailure(
+        LocalizedText((l10n) => l10n.chooseOtherCredential),
+      );
+    }
     await _db.transaction((txn) async {
       final rows = await txn.query(
         'credentials',
         where: 'id = ? AND revision = ?',
         whereArgs: [record.id, record.revision],
       );
-      if (rows.length != 1) throw const LedgerConflict();
+      if (rows.length != 1) {
+        throw const LedgerConflict();
+      }
       final current = CredentialMetadata.fromMap(rows.single);
       if (replacementId != null &&
           (await txn.query(
@@ -933,7 +1023,9 @@ class LedgerStore {
         config.username.trim().isEmpty ||
         config.username.length > 128 ||
         RegExp(r'[\x00-\x20\x7f]').hasMatch(config.username)) {
-      throw const SecurityFailure('请填写有效主机、端口和明确用户名');
+      throw SecurityFailure(
+        LocalizedText((l10n) => l10n.invalidSshConfiguration),
+      );
     }
     await _db.transaction((txn) async {
       if ((await txn.query(
@@ -968,7 +1060,9 @@ class LedgerStore {
           where: 'server_id = ? AND revision = ?',
           whereArgs: [config.serverId, config.revision],
         );
-        if (count != 1) throw const LedgerConflict();
+        if (count != 1) {
+          throw const LedgerConflict();
+        }
       }
     });
   }
@@ -979,7 +1073,11 @@ class LedgerStore {
     bool Function()? isCancelled,
   }) async {
     await _db.transaction((txn) async {
-      if (isCancelled?.call() ?? false) throw const SecurityFailure('核验已取消');
+      if (isCancelled?.call() ?? false) {
+        throw SecurityFailure(
+          LocalizedText((l10n) => l10n.verificationCancelled),
+        );
+      }
       final rows = await txn.query(
         'host_trust',
         where: 'host = ? AND port = ?',
@@ -993,7 +1091,11 @@ class LedgerStore {
               (previous == null || !_sameTrustSnapshot(previous, expected)))) {
         throw const LedgerConflict();
       }
-      if (isCancelled?.call() ?? false) throw const SecurityFailure('核验已取消');
+      if (isCancelled?.call() ?? false) {
+        throw SecurityFailure(
+          LocalizedText((l10n) => l10n.verificationCancelled),
+        );
+      }
       final map = record.toMap();
       map['generation'] = previous?.generation ?? newLocalId();
       map['revision'] = previous == null ? 0 : previous.revision + 1;
@@ -1007,7 +1109,11 @@ class LedgerStore {
           whereArgs: [record.host, record.port],
         );
       }
-      if (isCancelled?.call() ?? false) throw const SecurityFailure('核验已取消');
+      if (isCancelled?.call() ?? false) {
+        throw SecurityFailure(
+          LocalizedText((l10n) => l10n.verificationCancelled),
+        );
+      }
     });
   }
 
@@ -1038,7 +1144,9 @@ class LedgerStore {
         record.verifiedAt.toUtc().toIso8601String(),
       ],
     );
-    if (count != 1) throw const LedgerConflict();
+    if (count != 1) {
+      throw const LedgerConflict();
+    }
   }
 
   static Future<void> _addSnippetSchema(DatabaseExecutor db) async {
@@ -1059,7 +1167,9 @@ class LedgerStore {
     required bool isNew,
   }) async {
     final error = snippet.validate();
-    if (error != null) throw ArgumentError(error);
+    if (error != null) {
+      throw LocalizedArgumentError((l10n) => snippet.validate(l10n: l10n)!);
+    }
     final saved = CommandSnippet(
       id: snippet.id,
       name: snippet.name.trim(),
@@ -1084,7 +1194,9 @@ class LedgerStore {
           where: 'id = ? AND revision = ?',
           whereArgs: [saved.id, snippet.revision],
         );
-        if (changed != 1) throw const LedgerConflict();
+        if (changed != 1) {
+          throw const LedgerConflict();
+        }
       }
     });
     return saved;
@@ -1096,7 +1208,9 @@ class LedgerStore {
       where: 'id = ? AND revision = ?',
       whereArgs: [snippet.id, snippet.revision],
     );
-    if (changed != 1) throw const LedgerConflict();
+    if (changed != 1) {
+      throw const LedgerConflict();
+    }
   }
 
   static Future<void> _addCloudSchema(DatabaseExecutor db) async {
@@ -1142,7 +1256,9 @@ class LedgerStore {
       where: 'id = ?',
       whereArgs: [serverId],
     );
-    if (rows.length != 1) throw const LedgerConflict();
+    if (rows.length != 1) {
+      throw const LedgerConflict();
+    }
     return ServerCloudBindingOptions(
       server: ServerRecord.fromMap(rows.single),
       accounts: (await txn.query(
@@ -1171,7 +1287,9 @@ class LedgerStore {
       where: 'id = ?',
       whereArgs: [expected.server.id],
     );
-    if (servers.length != 1) throw const LedgerConflict();
+    if (servers.length != 1) {
+      throw const LedgerConflict();
+    }
     final server = ServerRecord.fromMap(servers.single);
     if (server.revision != expected.server.revision ||
         server.archived ||
@@ -1264,7 +1382,9 @@ class LedgerStore {
       where: 'id = ?',
       whereArgs: [expected.id],
     );
-    if (rows.length != 1) throw const LedgerConflict();
+    if (rows.length != 1) {
+      throw const LedgerConflict();
+    }
     final current = CloudAccount.fromMap(rows.single);
     if (current.revision != expected.revision ||
         (checkGeneration && current.generation != expected.generation) ||
@@ -1521,7 +1641,9 @@ class LedgerStore {
   }) => _db.transaction((txn) async {
     _checkCloudCancellation(isCancelled);
     final current = await _currentCloud(txn, inventory.account);
-    if (current.lastFailure != null) throw CloudAccountFailure.selection;
+    if (current.lastFailure != null) {
+      throw CloudAccountFailure.selection;
+    }
     final count = await _importCloud(
       txn,
       current,
@@ -1542,7 +1664,9 @@ class LedgerStore {
   }) async {
     if (v1DisplayName != null &&
         (v1DisplayName.trim().isEmpty || v1DisplayName.length > 80)) {
-      throw const CloudAccountFailure('服务器名称需为 1–80 个字符');
+      throw CloudAccountFailure(
+        LocalizedText((l10n) => l10n.invalidServerName),
+      );
     }
     var count = 0;
     for (final key in selected) {
@@ -1552,7 +1676,9 @@ class LedgerStore {
             'account_id = ? AND instance_key = ? AND stale = 0 AND missing = 0',
         whereArgs: [account.id, key],
       );
-      if (rows.length != 1) throw CloudAccountFailure.selection;
+      if (rows.length != 1) {
+        throw CloudAccountFailure.selection;
+      }
       if ((await txn.query(
         'cloud_bindings',
         where: 'account_id = ? AND instance_key = ?',
@@ -1569,7 +1695,13 @@ class LedgerStore {
       if (account.provider == CloudProvider.solusVm1) {
         final error = resources?.validate(requireComplete: true);
         if (resources == null || error != null) {
-          throw CloudAccountFailure(error ?? '请先补全并确认六项本地资源配置');
+          throw CloudAccountFailure(
+            LocalizedText(
+              (l10n) =>
+                  resources?.validate(requireComplete: true, l10n: l10n) ??
+                  l10n.completeLocalResources,
+            ),
+          );
         }
       }
       final now = clock().toUtc();
@@ -1589,7 +1721,9 @@ class LedgerStore {
         createdAt: now,
         updatedAt: now,
       );
-      if (server.validate() != null) throw CloudAccountFailure.selection;
+      if (server.validate() != null) {
+        throw CloudAccountFailure.selection;
+      }
       await txn.insert('servers', server.toMap());
       await txn.insert('cloud_bindings', {
         'server_id': server.id,
@@ -1603,7 +1737,9 @@ class LedgerStore {
 
   static String _cloudImportName(String value) {
     final name = value.trim();
-    if (name.length <= 80) return name;
+    if (name.length <= 80) {
+      return name;
+    }
     // ServerRecord bounds UTF-16 units. Keep surrogate pairs intact.
     final unit = name.codeUnitAt(79);
     return name.substring(0, unit >= 0xd800 && unit <= 0xdbff ? 79 : 80);
@@ -1612,7 +1748,9 @@ class LedgerStore {
   Future<void> renameCloudAccount(CloudAccount expected, String alias) =>
       _db.transaction((txn) async {
         final clean = alias.trim();
-        if (clean.isEmpty || clean.length > 80) throw CloudAccountFailure.alias;
+        if (clean.isEmpty || clean.length > 80) {
+          throw CloudAccountFailure.alias;
+        }
         final current = await _currentCloud(
           txn,
           expected,

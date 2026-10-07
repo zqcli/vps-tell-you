@@ -1,3 +1,6 @@
+import '../l10n/locale_preference.dart';
+import '../l10n/generated/app_localizations.dart';
+
 /// A local text template. Loading or selecting it never writes to a terminal.
 class CommandSnippet {
   const CommandSnippet({
@@ -12,13 +15,16 @@ class CommandSnippet {
   final String id, name, content;
   final int revision;
 
-  String? validate() {
-    if (id.isEmpty || id.length > 128 || revision < 0) return '片段标识无效';
+  String? validate({AppLocalizations? l10n}) {
+    l10n ??= defaultLocalizations;
+    if (id.isEmpty || id.length > 128 || revision < 0) {
+      return l10n.snippetInvalidId;
+    }
     if (name.trim().isEmpty || name.length > maxNameLength) {
-      return '名称需为 1–80 个字符';
+      return l10n.serverNameRange;
     }
     if (content.trim().isEmpty || content.length > maxContentLength) {
-      return '内容不能为空，最多 16384 个字符';
+      return l10n.snippetContentRange;
     }
     return null;
   }

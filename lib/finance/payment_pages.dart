@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../l10n/locale_preference.dart';
+import '../l10n/localized_message.dart';
 import '../core/app_theme.dart';
 import '../core/value_types.dart';
 import '../servers/ledger_controller.dart';
@@ -20,13 +22,30 @@ class PaymentForm extends StatefulWidget {
 }
 
 class _PaymentFormState extends State<PaymentForm> {
+  bool validationAttempted = false;
+  String? validationLocale;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final locale = context.l10n.localeName;
+    if (validationLocale != null &&
+        validationLocale != locale &&
+        validationAttempted) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) form.currentState?.validate();
+      });
+    }
+    validationLocale = locale;
+  }
+
   final form = GlobalKey<FormState>();
   final requestId = newLocalId();
   late final Map<String, TextEditingController> fields;
   late String currency;
   int count = 1;
   bool confirmed = false, saving = false;
-  String? confirmationError;
+  LocalizedText? confirmationError;
   bool get account => widget.server == null;
   @override
   void initState() {
@@ -84,19 +103,25 @@ class _PaymentFormState extends State<PaymentForm> {
         final value = raw!.trim();
         if (id == 'note') return null;
         if (optional && value.isEmpty) return null;
-        if (id == 'account') return value.isEmpty ? '请填写账户显示名称' : null;
+        if (id == 'account') {
+          return value.isEmpty ? context.l10n.financeAccountNameError : null;
+        }
         if (id == 'amount') {
-          return Money.parseMinor(value) == null ? '请输入有效实付金额，0 表示免费' : null;
+          return Money.parseMinor(value) == null
+              ? context.l10n.financePaidAmountError
+              : null;
         }
         final date = LedgerDate.tryParse(value);
-        if (date == null) return '请输入有效日期，例如 2026-10-06';
+        if (date == null) return context.l10n.financeDateError;
         if (id == 'date' && date.compareTo(widget.controller.today) > 0) {
-          return '付款日期不能晚于今天';
+          return context.l10n.financePaymentFutureError;
         }
         if (id == 'until' &&
             !account &&
             date.toString() != renewalDate(widget.server!, count).toString()) {
-          return '所选周期应至 ${renewalDate(widget.server!, count)}';
+          return context.l10n.financeCycleEndError(
+            renewalDate(widget.server!, count).toString(),
+          );
         }
         return null;
       },
@@ -104,15 +129,23 @@ class _PaymentFormState extends State<PaymentForm> {
   );
   Future<void> save() async {
     if (saving) return;
+    validationAttempted = true;
     final valid = form.currentState!.validate();
-    setState(() => confirmationError = confirmed ? null : '请确认已完成厂商付款并核对资料');
+    setState(
+      () => confirmationError = confirmed
+          ? null
+          : LocalizedText((l10n) => l10n.financePaymentConfirmError),
+    );
     if (!valid || !confirmed) return;
     final from = LedgerDate.tryParse(fields['from']!.text.trim());
     final until = LedgerDate.tryParse(fields['until']!.text.trim());
     if (account &&
         ((from == null) != (until == null) ||
             (from != null && from.compareTo(until!) >= 0))) {
-      showFailure(context, ArgumentError('账期起止需同时填写，且结束日应晚于开始日'));
+      showFailure(
+        context,
+        LocalizedArgumentError((l10n) => l10n.financeBillPeriodError),
+      );
       return;
     }
     setState(() => saving = true);
@@ -145,12 +178,14 @@ class _PaymentFormState extends State<PaymentForm> {
       Navigator.pop(context, true);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(
-            widget.controller.refreshFailed
-                ? '付款已保存，显示暂未更新，请重新读取。'
-                : account
-                ? '账户账单已记录一次，实例期限未改变'
-                : '付款已记录，服务期与统计已更新',
+          content: Builder(
+            builder: (context) => Text(
+              widget.controller.refreshFailed
+                  ? context.l10n.financePaymentSavedRefresh
+                  : account
+                  ? context.l10n.financeAccountPaymentSaved
+                  : context.l10n.financePaymentSaved,
+            ),
           ),
         ),
       );
@@ -166,10 +201,10 @@ class _PaymentFormState extends State<PaymentForm> {
   Widget build(BuildContext context) =>
       widget.server != null && !canRenew(widget.server!)
       ? Scaffold(
-          appBar: AppBar(title: const Text('记录已付款')),
-          body: const Padding(
+          appBar: AppBar(title: Text(context.l10n.financeRecordPayment)),
+          body: Padding(
             padding: EdgeInsets.all(20),
-            child: InfoNote('当前记录没有可用的续期日期。请核对预付类型、到期日与支持的日期范围。'),
+            child: InfoNote(context.l10n.financeNoRenewalDate),
           ),
         )
       : ListenableBuilder(
@@ -178,11 +213,15 @@ class _PaymentFormState extends State<PaymentForm> {
             canPop: !saving,
             child: Scaffold(
               appBar: AppBar(
-                title: Text(account ? '记录账户账单' : '记录已付款'),
+                title: Text(
+                  account
+                      ? context.l10n.financeRecordAccountBill
+                      : context.l10n.financeRecordPayment,
+                ),
                 actions: [
                   TextButton(
                     onPressed: saving ? null : () => Navigator.pop(context),
-                    child: const Text('取消'),
+                    child: Text(context.l10n.financeCancel),
                   ),
                 ],
               ),
@@ -206,22 +245,26 @@ class _PaymentFormState extends State<PaymentForm> {
                               ),
                             ),
                             Text(widget.server!.vendor),
-                            const InfoNote('仅本地记账，不向厂商发起支付。'),
+                            InfoNote(context.l10n.financeLocalPaymentOnly),
                           ],
                         ),
                       ),
-                    if (account)
-                      const InfoNote(
-                        '独立记录整份账户账单，仅计一次。不要求连接面板账户，不分摊到实例，也不产生服务期或剩余价值。',
-                      ),
+                    if (account) InfoNote(context.l10n.financeAccountBillNote),
                     const SizedBox(height: 18),
                     if (account)
-                      field('account', '账户显示名称', hint: '例如：厂商 · 个人账户'),
-                    field('amount', '本次实付金额'),
+                      field(
+                        'account',
+                        context.l10n.financeAccountName,
+                        hint: context.l10n.financeAccountNameHint,
+                      ),
+                    field('amount', context.l10n.financePaidAmount),
                     DropdownButtonFormField<String>(
                       initialValue: currency,
                       isExpanded: true,
-                      decoration: const InputDecoration(labelText: '实付币种'),
+                      itemHeight: null,
+                      decoration: InputDecoration(
+                        labelText: context.l10n.financePaidCurrency,
+                      ),
                       items: Money.currencies
                           .map(
                             (c) => DropdownMenuItem(value: c, child: Text(c)),
@@ -232,20 +275,31 @@ class _PaymentFormState extends State<PaymentForm> {
                           : (c) => setState(() => currency = c!),
                     ),
                     const SizedBox(height: 18),
-                    field('date', '实际付款日期', hint: 'YYYY-MM-DD'),
+                    field(
+                      'date',
+                      context.l10n.financePaidDate,
+                      hint: 'YYYY-MM-DD',
+                    ),
                     if (!account) ...[
                       DropdownButtonFormField<int>(
                         initialValue: count,
                         isExpanded: true,
-                        decoration: const InputDecoration(labelText: '本次续费周期数'),
                         itemHeight: null,
+                        decoration: InputDecoration(
+                          labelText: context.l10n.financeRenewalCount,
+                        ),
                         items: [1, 2, 3]
                             .where((n) => canRenew(widget.server!, cycles: n))
                             .map(
                               (n) => DropdownMenuItem(
                                 value: n,
-                                child: Text(
-                                  '$n 个周期 · 每周期 ${widget.server!.cycleMonths} 个月',
+                                child: Builder(
+                                  builder: (context) => Text(
+                                    context.l10n.financeCycleCountOption(
+                                      n,
+                                      widget.server!.cycleMonths,
+                                    ),
+                                  ),
                                 ),
                               ),
                             )
@@ -262,38 +316,50 @@ class _PaymentFormState extends State<PaymentForm> {
                               }),
                       ),
                       InfoNote(
-                        '从原到期日 ${widget.server!.dueDate} 延长，保留当前未用时长。按原续费日推算，并保留月底日期规则。',
+                        context.l10n.financeExtendFromDue(
+                          widget.server!.dueDate.toString(),
+                        ),
                       ),
-                      field('until', '新到期日', hint: '须与所选周期推算的日期一致'),
+                      field(
+                        'until',
+                        context.l10n.financeNewDue,
+                        hint: context.l10n.financeNewDueHint,
+                      ),
                       LedgerCard(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              '下次续费价：${widget.server!.billingLabel} ${widget.server!.currency}',
+                              context.l10n.financeNextRenewalPrice(
+                                widget.server!.billingLabelFor(context.l10n),
+                                widget.server!.currency,
+                              ),
                             ),
-                            const InfoNote(
-                              '本次实付独立保存，不覆盖续费金额。目前仅支持整周期续费；厂商含赠送期或到期日不同的，请先核对，不要填写虚构周期。',
-                            ),
+                            InfoNote(context.l10n.financePaymentRenewalNote),
                           ],
                         ),
                       ),
                     ] else ...[
                       field(
                         'from',
-                        '账期开始日（选填）',
+                        context.l10n.financeBillStart,
                         hint: 'YYYY-MM-DD',
                         optional: true,
                       ),
                       field(
                         'until',
-                        '账期结束日（选填）',
+                        context.l10n.financeBillEnd,
                         hint: 'YYYY-MM-DD',
                         optional: true,
                       ),
                     ],
                     const SizedBox(height: 18),
-                    field('note', '备注（选填）', lines: 3, optional: true),
+                    field(
+                      'note',
+                      context.l10n.financeOptionalNote,
+                      lines: 3,
+                      optional: true,
+                    ),
                     CheckboxListTile(
                       key: const ValueKey('pay-confirm'),
                       contentPadding: EdgeInsets.zero,
@@ -307,13 +373,13 @@ class _PaymentFormState extends State<PaymentForm> {
                             }),
                       title: Text(
                         account
-                            ? '我已在厂商完成付款，并核对账单金额与日期。'
-                            : '我已在厂商完成付款，并核对实付金额与新到期日。',
+                            ? context.l10n.financeConfirmAccountPaid
+                            : context.l10n.financeConfirmServerPaid,
                       ),
                     ),
                     if (confirmationError != null)
                       Text(
-                        confirmationError!,
+                        confirmationError!.messageFor(context.l10n),
                         style: TextStyle(
                           color: Theme.of(context).colorScheme.error,
                         ),
@@ -324,9 +390,13 @@ class _PaymentFormState extends State<PaymentForm> {
                       onPressed: saving || !widget.controller.canMutate
                           ? null
                           : save,
-                      child: Text(saving ? '正在保存…' : '保存付款记录'),
+                      child: Text(
+                        saving
+                            ? context.l10n.financeSaving
+                            : context.l10n.financeSavePayment,
+                      ),
                     ),
-                    const InfoNote('这不是厂商支付回执，不改变自动续费设置。'),
+                    InfoNote(context.l10n.financeNotReceipt),
                   ],
                 ),
               ),
@@ -376,7 +446,7 @@ class _PaymentListPageState extends State<PaymentListPage> {
         c.fx,
       );
       return Scaffold(
-        appBar: AppBar(title: const Text('付款记录')),
+        appBar: AppBar(title: Text(context.l10n.financePayments)),
         body: ListView(
           padding: const EdgeInsets.all(20),
           children: [
@@ -384,15 +454,28 @@ class _PaymentListPageState extends State<PaymentListPage> {
             DropdownButtonFormField<String>(
               initialValue: serverId ?? '',
               isExpanded: true,
-              decoration: const InputDecoration(labelText: '付款对象'),
+              itemHeight: null,
+              decoration: InputDecoration(
+                labelText: context.l10n.financePaymentTarget,
+              ),
               items: [
-                const DropdownMenuItem(value: '', child: Text('全部付款记录')),
+                DropdownMenuItem(
+                  value: '',
+                  child: Builder(
+                    builder: (context) => Text(context.l10n.financeAllPayments),
+                  ),
+                ),
                 ...c.records.map(
                   (s) => DropdownMenuItem(
                     value: s.id,
-                    child: Text(
-                      '${s.name}${s.archived ? ' · 已归档' : ''}',
-                      overflow: TextOverflow.ellipsis,
+                    child: Builder(
+                      builder: (context) => Text(
+                        context.l10n.financeArchivedName(
+                          s.name,
+                          s.archived ? 'yes' : 'no',
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ),
                   ),
                 ),
@@ -404,35 +487,39 @@ class _PaymentListPageState extends State<PaymentListPage> {
               spacing: 10,
               children: [
                 FilterChip(
-                  label: const Text('近 30 天'),
+                  label: Text(context.l10n.financeRecent30),
                   selected: recent,
                   onSelected: (v) => setState(() => recent = v),
                 ),
                 FilterChip(
-                  label: const Text('显示已撤销'),
+                  label: Text(context.l10n.financeShowVoided),
                   selected: showVoided,
                   onSelected: (v) => setState(() => showVoided = v),
                 ),
               ],
             ),
-            const SectionTitle('已记录实付合计'),
+            SectionTitle(context.l10n.financeRecordedPaidTotal),
             LedgerCard(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   if (counted.isEmpty)
-                    const Text('— 尚无付款记录')
+                    Text(context.l10n.financeNoPayments)
                   else
                     FinanceTotalView(total: total),
-                  InfoNote('${counted.length} 笔有效记录，不代表完整历史账单。已撤销记录不计入。'),
+                  InfoNote(
+                    context.l10n.financeValidPaymentsNote(counted.length),
+                  ),
                 ],
               ),
             ),
             if (widget.groupId != null)
               InfoNote(
-                '当前分组：${c.groupName(widget.groupId)}。不分摊账户账单；历史记录保留归档付款。',
+                context.l10n.financePaymentGroupNote(
+                  c.groupName(widget.groupId, l10n: context.l10n),
+                ),
               ),
-            const SectionTitle('付款明细'),
+            SectionTitle(context.l10n.financePaymentDetails),
             for (final p in rows)
               Padding(
                 padding: const EdgeInsets.only(bottom: 10),
@@ -449,7 +536,10 @@ class _PaymentListPageState extends State<PaymentListPage> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          '${p.targetName}${p.voided ? ' · 已撤销' : ''}',
+                          context.l10n.financeVoidedName(
+                            p.targetName,
+                            p.voided ? 'yes' : 'no',
+                          ),
                           style: const TextStyle(fontWeight: FontWeight.w700),
                         ),
                         const SizedBox(height: 5),
@@ -461,17 +551,21 @@ class _PaymentListPageState extends State<PaymentListPage> {
                           ),
                         ),
                         Text(
-                          '${p.paidDate} · ${p.serverId == null ? '历史账户账单，只计一次' : '到期日：${p.until}'}',
+                          context.l10n.financePaymentSummary(
+                            p.paidDate.toString(),
+                            p.serverId == null ? 'yes' : 'no',
+                            p.until?.toString() ?? context.l10n.financeUnknown,
+                          ),
                         ),
                         if (p.serverId != null &&
                             c.byId(p.serverId!)?.archived == true)
-                          const LedgerBadge('服务器已归档 · 历史实付保留'),
+                          LedgerBadge(context.l10n.financeArchivedPayment),
                       ],
                     ),
                   ),
                 ),
               ),
-            if (rows.isEmpty) const InfoNote('此范围暂无付款记录。可从服务器详情记录已完成的续费付款。'),
+            if (rows.isEmpty) InfoNote(context.l10n.financeNoPaymentsInRange),
           ],
         ),
       );
@@ -490,19 +584,24 @@ class PaymentDetailPage extends StatelessWidget {
   Future<void> undo(BuildContext context, PaymentRecord payment) async {
     final confirmed = await confirmAction(
       context,
-      title: '撤销此次本地记录？',
+      title: LocalizedText((l10n) => l10n.financeVoidTitle),
       message: payment.serverId == null
-          ? '将此账单标记为已撤销，不向厂商申请退款。'
-          : '仅还原本次增加的服务期间与到期日，并将实付标记为已撤销。不会向厂商退款或取消服务。',
-      action: '撤销记录',
+          ? LocalizedText((l10n) => l10n.financeVoidAccountNote)
+          : LocalizedText((l10n) => l10n.financeVoidServerNote),
+      action: LocalizedText((l10n) => l10n.financeVoidRecord),
       dangerous: true,
     );
     if (!confirmed || !context.mounted) return;
     try {
       await controller.mutate(() => controller.store.undoPayment(id));
       if (context.mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(const SnackBar(content: Text('本次本地付款记录已撤销')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Builder(
+              builder: (context) => Text(context.l10n.financePaymentVoided),
+            ),
+          ),
+        );
       }
     } catch (error) {
       if (context.mounted) showFailure(context, error);
@@ -515,14 +614,14 @@ class PaymentDetailPage extends StatelessWidget {
     builder: (context, _) {
       final p = controller.payments.where((p) => p.id == id).firstOrNull;
       return Scaffold(
-        appBar: AppBar(title: const Text('付款详情')),
+        appBar: AppBar(title: Text(context.l10n.financePaymentDetail)),
         body: ListView(
           padding: const EdgeInsets.all(20),
           children: [
             if (controller.refreshFailed)
               RefreshFailureNotice(controller: controller),
             if (p == null)
-              const InfoNote('记录暂不可用，请返回重新读取')
+              InfoNote(context.l10n.financePaymentUnavailable)
             else ...[
               LedgerCard(
                 child: Column(
@@ -543,35 +642,51 @@ class PaymentDetailPage extends StatelessWidget {
                         fontWeight: FontWeight.w700,
                       ),
                     ),
-                    FinanceLine('付款日', '${p.paidDate}'),
                     FinanceLine(
-                      '类型',
+                      context.l10n.financePaymentDateLabel,
+                      '${p.paidDate}',
+                    ),
+                    FinanceLine(
+                      context.l10n.financeType,
                       p.serverId == null
-                          ? '账户账单'
-                          : '预付续期 · ${p.cycleCount} 个周期',
+                          ? context.l10n.financeAccountBill
+                          : context.l10n.financePrepaidRenewalType(
+                              p.cycleCount,
+                            ),
                     ),
                     FinanceLine(
-                      '对应账期 / 服务期',
-                      p.from == null ? '未填写' : '${p.from} 至 ${p.until}',
+                      context.l10n.financeBillServicePeriod,
+                      p.from == null
+                          ? context.l10n.financeNotEntered
+                          : context.l10n.financePaymentPeriodRange(
+                              p.from.toString(),
+                              p.until.toString(),
+                            ),
                     ),
-                    FinanceLine('备注', p.note.isEmpty ? '未填写' : p.note),
-                    FinanceLine('状态', p.voided ? '已撤销，不计入实付统计' : '已记录'),
+                    FinanceLine(
+                      context.l10n.financeNote,
+                      p.note.isEmpty ? context.l10n.financeNotEntered : p.note,
+                    ),
+                    FinanceLine(
+                      context.l10n.financeStatus,
+                      p.voided
+                          ? context.l10n.financeVoidedStatus
+                          : context.l10n.financeRecordedStatus,
+                    ),
                   ],
                 ),
               ),
-              const InfoNote(
-                '这是原币历史实付，不随续费价或参考汇率重写。如需更正，可撤销后重新录入；后续资料已改变时可能无法撤销。',
-              ),
+              InfoNote(context.l10n.financePaymentHistoryNote),
               if (!p.voided) ...[
                 OutlinedButton(
                   onPressed:
                       controller.canMutate && controller.canUndoPayment(p)
                       ? () => undo(context, p)
                       : null,
-                  child: const Text('撤销此次记录'),
+                  child: Text(context.l10n.financeVoidThisRecord),
                 ),
                 if (!controller.canUndoPayment(p))
-                  const InfoNote('资料已改变，请核对。后续编辑、付款或归档后不能用旧记录覆盖现有资料。'),
+                  InfoNote(context.l10n.financeVoidBlocked),
               ],
             ],
           ],

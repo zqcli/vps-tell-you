@@ -3,8 +3,14 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:local_auth/local_auth.dart';
+import 'package:local_auth_android/local_auth_android.dart';
+import 'package:local_auth_darwin/local_auth_darwin.dart';
+import 'package:local_auth_darwin/types/auth_messages_macos.dart';
 
 import 'security_models.dart';
+import '../l10n/generated/app_localizations.dart';
+import '../l10n/locale_preference.dart';
+import '../l10n/localized_message.dart';
 
 abstract interface class SecretStore {
   Future<String?> read(String reference);
@@ -42,7 +48,9 @@ class NativeSecretStore implements SecretStore {
           TargetPlatform.macOS,
           TargetPlatform.windows,
         }.contains(defaultTargetPlatform)) {
-      throw const SecurityFailure('此平台没有原生安全存储');
+      throw SecurityFailure(
+        LocalizedText((l10n) => l10n.securityNativeStorageUnsupported),
+      );
     }
     final previous = _tails[ref] ?? Future<void>.value();
     final actual = previous.then((_) => action());
@@ -59,7 +67,9 @@ class NativeSecretStore implements SecretStore {
     try {
       return await actual.timeout(timeout);
     } catch (_) {
-      throw const SecurityFailure('原生安全存储不可用或未完成，请检查设备后重试');
+      throw SecurityFailure(
+        LocalizedText((l10n) => l10n.securityNativeStorageUnavailable),
+      );
     }
   }
 
@@ -79,9 +89,16 @@ abstract interface class DeviceAuthenticator {
   Future<void> cancel();
 }
 
+/// Optional explicit-locale contract; existing test and external adapters keep
+/// implementing DeviceAuthenticator without mutable locale state.
+abstract interface class LocalizedDeviceAuthenticator {
+  Future<bool> authenticateWithLocalizations(AppLocalizations l10n);
+}
+
 /// An application-level reveal gate. This is not a claim that each keychain
 /// item is cryptographically bound to biometrics or protected from rooted OSes.
-class NativeDeviceAuthenticator implements DeviceAuthenticator {
+class NativeDeviceAuthenticator
+    implements DeviceAuthenticator, LocalizedDeviceAuthenticator {
   NativeDeviceAuthenticator({LocalAuthentication? authentication})
     : _authentication = authentication ?? LocalAuthentication();
   final LocalAuthentication _authentication;
@@ -95,8 +112,16 @@ class NativeDeviceAuthenticator implements DeviceAuthenticator {
       }.contains(defaultTargetPlatform);
 
   @override
-  Future<bool> authenticate() async {
-    if (!supportedPlatform) throw const SecurityFailure('此平台不支持设备认证，无法显示秘密');
+  Future<bool> authenticate() =>
+      authenticateWithLocalizations(defaultLocalizations);
+
+  @override
+  Future<bool> authenticateWithLocalizations(AppLocalizations l10n) async {
+    if (!supportedPlatform) {
+      throw SecurityFailure(
+        LocalizedText((l10n) => l10n.securityDeviceAuthUnsupported),
+      );
+    }
     try {
       if (!await _authentication.isDeviceSupported().timeout(
         const Duration(seconds: 3),
@@ -105,7 +130,16 @@ class NativeDeviceAuthenticator implements DeviceAuthenticator {
       }
       return await _authentication
           .authenticate(
-            localizedReason: '验证你的身份以查看已保存的密码',
+            localizedReason: l10n.securityDeviceAuthReason,
+            authMessages: [
+              AndroidAuthMessages(
+                cancelButton: l10n.securityAuthCancel,
+                signInTitle: l10n.securityAuthSignInTitle,
+                signInHint: l10n.securityAuthBiometricHint,
+              ),
+              IOSAuthMessages(cancelButton: l10n.securityAuthCancel),
+              MacOSAuthMessages(cancelButton: l10n.securityAuthCancel),
+            ],
             biometricOnly: false,
             sensitiveTransaction: true,
             persistAcrossBackgrounding: false,
@@ -113,7 +147,9 @@ class NativeDeviceAuthenticator implements DeviceAuthenticator {
           .timeout(const Duration(seconds: 60));
     } catch (_) {
       await cancel();
-      throw const SecurityFailure('设备认证未完成');
+      throw SecurityFailure(
+        LocalizedText((l10n) => l10n.securityDeviceAuthIncomplete),
+      );
     }
   }
 

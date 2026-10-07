@@ -1,3 +1,6 @@
+import '../l10n/localized_message.dart';
+import '../l10n/locale_preference.dart';
+
 import 'package:flutter/material.dart';
 
 import '../core/app_theme.dart';
@@ -20,6 +23,24 @@ class TcpTestPage extends StatefulWidget {
 
 class _TcpTestPageState extends State<TcpTestPage> with WidgetsBindingObserver {
   final form = GlobalKey<FormState>();
+  bool _hasValidated = false;
+  String? _validationLocale;
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final next = context.l10n.localeName;
+    if (_validationLocale != null &&
+        _validationLocale != next &&
+        _hasValidated) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          form.currentState?.validate();
+        }
+      });
+    }
+    _validationLocale = next;
+  }
+
   late final TextEditingController host;
   late final TextEditingController port;
   late final TcpTestController controller;
@@ -35,7 +56,9 @@ class _TcpTestPageState extends State<TcpTestPage> with WidgetsBindingObserver {
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state != AppLifecycleState.resumed) controller.cancel();
+    if (state != AppLifecycleState.resumed) {
+      controller.cancel();
+    }
   }
 
   @override
@@ -52,7 +75,13 @@ class _TcpTestPageState extends State<TcpTestPage> with WidgetsBindingObserver {
   }
 
   void start() {
-    if (controller.running || !form.currentState!.validate()) return;
+    if (controller.running) {
+      return;
+    }
+    _hasValidated = true;
+    if (!form.currentState!.validate()) {
+      return;
+    }
     controller.test(
       TcpTarget(host: host.text, port: int.parse(port.text.trim())),
     );
@@ -64,28 +93,26 @@ class _TcpTestPageState extends State<TcpTestPage> with WidgetsBindingObserver {
     builder: (context, _) {
       final result = controller.result;
       return Scaffold(
-        appBar: AppBar(title: const Text('单目标 TCP 测试')),
+        appBar: AppBar(title: Text(context.l10n.tcpSingleTarget)),
         body: Form(
           key: form,
           child: ListView(
             padding: const EdgeInsets.all(20),
             children: [
-              const InfoNote(
-                '从当前设备测试一个地址和端口，仅建立并关闭 TCP 连接，不发送应用数据。成功不代表 SSH 可登录、服务器开机状态或业务健康。',
-              ),
+              InfoNote(context.l10n.tcpTestExplanation),
               TextFormField(
                 key: const Key('tcp-host'),
                 controller: host,
                 autocorrect: false,
                 enableSuggestions: false,
-                decoration: const InputDecoration(labelText: 'IP / 域名'),
+                decoration: InputDecoration(labelText: context.l10n.tcpAddress),
                 onChanged: (_) => controller.clearTarget(),
                 validator: (value) {
                   try {
                     TcpTarget(host: value ?? '', port: 22);
                     return null;
                   } on ArgumentError catch (error) {
-                    return error.message.toString();
+                    return localizedText(error, context.l10n);
                   }
                 },
               ),
@@ -94,12 +121,14 @@ class _TcpTestPageState extends State<TcpTestPage> with WidgetsBindingObserver {
                 key: const Key('tcp-port'),
                 controller: port,
                 keyboardType: TextInputType.number,
-                decoration: const InputDecoration(labelText: '端口'),
+                decoration: InputDecoration(
+                  labelText: context.l10n.connectionPort,
+                ),
                 onChanged: (_) => controller.clearTarget(),
                 validator: (value) {
                   final parsed = int.tryParse(value?.trim() ?? '');
                   return parsed == null || parsed < 1 || parsed > 65535
-                      ? '端口需为 1–65535'
+                      ? context.l10n.tcpValidPort
                       : null;
                 },
               ),
@@ -107,16 +136,23 @@ class _TcpTestPageState extends State<TcpTestPage> with WidgetsBindingObserver {
               if (controller.running) ...[
                 const LinearProgressIndicator(),
                 const SizedBox(height: 12),
-                Text('正在测试 ${controller.target!.label}'),
+                Text(
+                  context.l10n.tcpTestingTarget(
+                    (controller.target!.label).toString(),
+                  ),
+                ),
                 const SizedBox(height: 12),
                 OutlinedButton(
                   onPressed: controller.cancel,
-                  child: const Text('取消测试'),
+                  child: Text(context.l10n.tcpCancel),
                 ),
               ] else
-                FilledButton(onPressed: start, child: const Text('开始测试')),
+                FilledButton(
+                  onPressed: start,
+                  child: Text(context.l10n.tcpStart),
+                ),
               InfoNote(
-                '单次最多 ${controller.timeout.inSeconds} 秒；修改目标、离开页面或进入后台会取消测试。',
+                context.l10n.tcpTimeoutHelp(controller.timeout.inSeconds),
               ),
               if (result != null)
                 LedgerCard(
@@ -124,19 +160,38 @@ class _TcpTestPageState extends State<TcpTestPage> with WidgetsBindingObserver {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        result.label,
+                        result.labelFor(context.l10n),
                         style: Theme.of(context).textTheme.titleLarge,
                       ),
                       const SizedBox(height: 10),
-                      SelectableText('目标：${result.target.label}'),
-                      if (result.remoteAddress != null)
-                        SelectableText('实际地址：${result.remoteAddress}'),
-                      Text('来源：${result.source}'),
-                      Text(
-                        '结束时间：${result.finishedAt.toLocal().toIso8601String()}（本机时间）',
+                      SelectableText(
+                        context.l10n.tcpTarget(
+                          (result.target.label).toString(),
+                        ),
                       ),
-                      Text('耗时：${result.elapsed.inMilliseconds} ms'),
-                      const InfoNote('此结果仅反映当次观察，不是持续状态。'),
+                      if (result.remoteAddress != null)
+                        SelectableText(
+                          context.l10n.tcpActualAddress(
+                            (result.remoteAddress).toString(),
+                          ),
+                        ),
+                      Text(
+                        context.l10n.tcpResultSource(
+                          result.sourceFor(context.l10n),
+                        ),
+                      ),
+                      Text(
+                        context.l10n.tcpFinished(
+                          (result.finishedAt.toLocal().toIso8601String())
+                              .toString(),
+                        ),
+                      ),
+                      Text(
+                        context.l10n.tcpElapsed(
+                          (result.elapsed.inMilliseconds).toString(),
+                        ),
+                      ),
+                      InfoNote(context.l10n.tcpOneObservation),
                     ],
                   ),
                 ),

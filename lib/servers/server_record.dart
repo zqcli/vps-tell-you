@@ -2,6 +2,8 @@ import 'dart:math';
 import 'dart:io';
 
 import '../core/value_types.dart';
+import '../l10n/generated/app_localizations.dart';
+import '../l10n/locale_preference.dart';
 import 'server_resources.dart';
 
 String newLocalId() {
@@ -76,12 +78,23 @@ class ServerRecord {
   String get mark => vendor.isEmpty
       ? 'VPS'
       : vendor.runes.take(2).map(String.fromCharCode).join().toUpperCase();
-  String get billingLabel => switch (billing) {
-    BillingKind.unknown => '费用未知',
-    BillingKind.metered => '${money?.formatted ?? '—'}/月估',
-    BillingKind.prepaid =>
-      '${money?.formatted ?? '—'}/${cycleMonths == 12 ? '年' : '$cycleMonths个月'}',
-  };
+  String get billingLabel => billingLabelFor(defaultLocalizations);
+  String billingLabelFor(AppLocalizations l10n) {
+    final amount = money == null
+        ? (l10n.localeName.startsWith('zh') ? '—' : '— $currency')
+        : l10n.localeName.startsWith('zh')
+        ? money!.formatted
+        : '${money!.decimal} $currency';
+    return switch (billing) {
+      BillingKind.unknown => l10n.billingCostUnknown,
+      BillingKind.metered => l10n.billingMeteredAmount(amount),
+      BillingKind.prepaid =>
+        cycleMonths == 12
+            ? l10n.billingAnnualAmount(amount)
+            : l10n.billingMonthlyAmount(amount, cycleMonths),
+    };
+  }
+
   static bool validHost(String host) =>
       host.isEmpty ||
       InternetAddress.tryParse(host) != null ||
@@ -89,32 +102,47 @@ class ServerRecord {
           RegExp(
             r'^(?:[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?)(?:\.[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?)*\.?$',
           ).hasMatch(host));
-  String? validate() {
-    if (name.trim().isEmpty || name.length > 80) return '名称需为 1–80 个字符';
-    if (vendor.trim().isEmpty || vendor.length > 80) return '厂商需为 1–80 个字符';
-    if (!validHost(host)) return '请输入 IP 或域名，不含协议、端口、路径或用户名';
-    final resourceError = resources?.validate();
-    if (resourceError != null) return resourceError;
-    if (notes.length > 4000) return '备注最多 4000 个字符';
-    if (!Money.currencies.contains(currency)) return '不支持的币种';
+  String? validate({AppLocalizations? l10n}) {
+    l10n ??= defaultLocalizations;
+    if (name.trim().isEmpty || name.length > 80) {
+      return l10n.serverNameRange;
+    }
+    if (vendor.trim().isEmpty || vendor.length > 80) {
+      return l10n.serverVendorRange;
+    }
+    if (!validHost(host)) {
+      return l10n.serverHostFormat;
+    }
+    final resourceError = resources?.validate(l10n: l10n);
+    if (resourceError != null) {
+      return resourceError;
+    }
+    if (notes.length > 4000) {
+      return l10n.notesTooLong;
+    }
+    if (!Money.currencies.contains(currency)) {
+      return l10n.serverUnsupportedCurrency;
+    }
     if (billing != BillingKind.unknown &&
         (amountMinor == null ||
             amountMinor! < 0 ||
             amountMinor! > Money.maxMinor)) {
-      return '请填写有效金额，0 表示免费';
+      return l10n.serverValidAmount;
     }
-    if (![1, 3, 6, 12, 24, 36].contains(cycleMonths)) return '请选择有效周期';
+    if (![1, 3, 6, 12, 24, 36].contains(cycleMonths)) {
+      return l10n.serverValidCycle;
+    }
     if ([
       startDate,
       dueDate,
       renewalAnchorDate,
     ].any((d) => d != null && !d.isValid)) {
-      return '日期无效';
+      return l10n.serverInvalidDate;
     }
     if (startDate != null &&
         dueDate != null &&
         startDate!.compareTo(dueDate!) >= 0) {
-      return '到期日必须晚于开始日';
+      return l10n.serverDueAfterStart;
     }
     return null;
   }

@@ -1,0 +1,3324 @@
+{
+  "@@locale": "en",
+  "language": "Language",
+  "languageDescription": "Switch the interface immediately. Drafts and connections are kept.",
+  "languageSystem": "Follow system",
+  "languageSystemDescription": "Supports Simplified Chinese and English. Other system languages use English.",
+  "languageChinese": "简体中文",
+  "languageEnglish": "English",
+  "languageSaveFailed": "Could not save the language setting. The current language is unchanged. Try again.",
+  "ledgerOpenFailed": "Could not open the local ledger",
+  "ledgerOpenHelp": "Your existing data is kept. Check device storage and file permissions. If you previously used a newer version, try that version or a later one.",
+  "retryOpen": "Try opening again",
+  "ledgerDoNotErase": "Do not clear app data or uninstall the app to try to fix this.",
+  "servers": "Servers",
+  "costs": "Costs",
+  "tools": "Tools",
+  "settings": "Settings",
+  "toolsDescription": "Calculate costs, connect to servers, or manage saved commands.",
+  "remainingValueCalculator": "Remaining value calculator",
+  "calculatorDescription": "Calculate from scratch or use server details. Export an image.",
+  "connectionsTroubleshooting": "Connections and troubleshooting",
+  "sshQuickConnect": "SSH quick connect",
+  "sshQuickConnectDescription": "Choose a saved server or a one-time target. Verify the host before signing in.",
+  "tcpConnectionTest": "TCP connection test",
+  "tcpConnectionDescription": "Test one address and port from this device.",
+  "commandSnippets": "Command snippets",
+  "commandSnippetsDescription": "Save commands and insert them into a terminal draft before sending.",
+  "singleServerMaintenance": "Server maintenance",
+  "powerControl": "Power control",
+  "powerControlDescription": "Restart or shut down over SSH. Check the target before proceeding.",
+  "powerControlWarning": "After shutdown, use the provider panel to power on. SSH cannot power on a stopped server. Restarting or shutting down does not stop provider billing.",
+  "usageContinue": "Keep using",
+  "usageUndecided": "Undecided",
+  "usageStop": "Stop using at expiry",
+  "reminderNoDays": "No reminder days selected",
+  "reminderOnDueDate": "On the expiry date",
+  "reminderDaysBefore": "{p0, plural, one{1 day before} other{{p0} days before}}",
+  "notificationStatus": "Notification access and reminder status",
+  "reminderLastTimezone": "Time zone last used to schedule reminders: {p0}",
+  "reminderEnableHelp": "Enable both system notifications and reminders for each server. Edit reminder days, time, and usage plans in server details. Rules can be saved even without notification permission.",
+  "requestingPermission": "Requesting…",
+  "requestNotificationPermission": "Request notification permission",
+  "notificationPermissionHelp": "If permission was denied or the notification channel is off, change it in device settings. Then return to the app and check reminder status again.",
+  "checkReminderStatus": "Check reminder status again",
+  "reminderCoverage": "Reminder coverage",
+  "reminderHorizonHelp": "Only known expiry reminders within the next 366 days are submitted. Past reminder times are not retried. Up to 64 upcoming reminders on iOS or 256 on Android can be scheduled; the rest are shown as not scheduled. Open the app regularly to update them.",
+  "reminderDeliveryHelp": "The app checks permission and the device time zone when reopened. Open it after travel; otherwise, existing reminders may still use the previous time zone. Power saving, focus modes, and device restrictions may delay or block reminders. Scheduled does not mean delivered.",
+  "reminderPrivacyHelp": "Reminders contain only the expiry date and a prompt to check it. They omit server names, addresses, accounts, and amounts. They do not make payments or change provider renewal settings.",
+  "reminderRulesSaved": "Reminder rules saved. Check system reminder status under Settings / Notification access.",
+  "localExpiryReminders": "Expiry reminders on this device",
+  "back": "Back",
+  "recordMissingReload": "This record no longer exists. Go back and reload.",
+  "dueDateNotEntered": "No expiry date entered",
+  "reminderSaveHelp": "Tap Save reminder rules to apply changes. If reminders are enabled and you choose Stop using at expiry, reminders will still prompt you to check provider renewal settings.",
+  "demoNoNotifications": "Demo records do not schedule real system notifications.",
+  "archivedNoReminders": "Archived records do not schedule reminders.",
+  "enableServerReminders": "Enable reminders for this server",
+  "reminderOnlyHelp": "Reminders only. No automatic renewal or cancellation.",
+  "daysBefore": "Days before expiry",
+  "sameDay": "Same day",
+  "dayCount": "{p0, plural, one{1 day} other{{p0} days}}",
+  "reminderTime": "Reminder time",
+  "selectReminderTime": "Select reminder time",
+  "cancel": "Cancel",
+  "confirm": "OK",
+  "hour": "Hour",
+  "minute": "Minute",
+  "invalidTime": "Enter a valid time",
+  "reminderDstHelp": "Uses the current device time zone. Times skipped by daylight saving move forward; repeated times trigger only once. Entirely skipped calendar dates are not scheduled.",
+  "myUsagePlan": "My usage plan",
+  "usagePlanWarning": "Usage plans are local records only. Planning to stop at expiry does not stop provider billing. Confirm renewal cancellation separately with the provider.",
+  "savedRuleSchedule": "Schedule for saved rules",
+  "serverScheduledCount": "Scheduled for this server: {p0}",
+  "viewReminderCoverage": "View notification access and coverage",
+  "saving": "Saving…",
+  "saveReminderRules": "Save reminder rules",
+  "expiryNotificationTitle": "Check VPS expiry",
+  "notificationDueDate": "expires on {p0}",
+  "notificationStopBody": "A service {p0}. Check that renewal has been cancelled with the provider. A local plan does not stop billing.",
+  "notificationContinueBody": "A service {p0}. Check the provider bill and your usage plan. This reminder does not make payments.",
+  "expiryChecks": "Expiry checks",
+  "expiryChannelDescription": "Local expiry reminders. No automatic renewal or payment.",
+  "reminderNotChecked": "System notifications have not been checked",
+  "reminderChecking": "Checking system reminders…",
+  "reminderScheduleCounts": "Scheduled: {p0} · Not scheduled: {p1}",
+  "reminderPermissionDenied": "Notifications are not allowed or the channel is off. Saved rules are kept.",
+  "reminderUnsupported": "This platform does not support scheduled notifications. Saved rules will not trigger reminders on this device.",
+  "reminderCheckFailed": "Could not check reminder status. Older reminders may remain. Try again or check device settings.",
+  "jsonLedgerBackup": "JSON ledger backup",
+  "backupTooLarge": "The backup exceeds the 10 MiB limit",
+  "backupExportInvalid": "Export validation failed. No backup was saved or shared. The ledger is unchanged.",
+  "backupShareSelected": "A system sharing action was selected. Check the destination app to confirm the file was saved or delivered.",
+  "backupShareCancelled": "Sharing cancelled. The backup preview is kept.",
+  "backupShareUnknown": "No sharing result was received. The backup preview is kept.",
+  "systemShareUnsupported": "System sharing is not supported on this platform.",
+  "completeCurrentShare": "Finish the current sharing action first.",
+  "backupShareFailed": "Sharing did not complete. The backup preview is kept.",
+  "backupSaveCancelled": "Saving cancelled. The backup preview is kept.",
+  "backupSavedPath": "Backup saved:\n{p0}",
+  "backupSaveFailed": "The backup could not be saved. Check storage and permissions, then try again.",
+  "backupSelectionCancelled": "Backup selection cancelled.",
+  "backupReadInvalid": "Reading or validation failed. Choose a complete version 1 JSON ledger backup no larger than 10 MiB. Existing data is unchanged.",
+  "restoreEmptyLedgerQuestion": "Restore to this empty ledger?",
+  "restoreConfirmation": "{p0}\nOriginal IDs, amounts, and payment void status are kept. Manual reference exchange rates are replaced. Notes, connections, security data, and reminder rules are not restored. Reminders for imported servers stay off. Restoring does not connect to or renew servers.",
+  "confirmRestore": "Confirm restore",
+  "ledgerRestored": "Ledger restored. Set up connections and reminders again. No servers were connected.",
+  "restoreFailed": "Restore did not complete. Existing data is unchanged. Only empty ledgers can be restored. Select and check the backup again.",
+  "deviceTime": "{p0} (device time)",
+  "backupCounts": "Servers: {p0} · Groups: {p1}\nPayments (including voided): {p2} · Service periods: {p3}",
+  "ledgerBackupRestore": "Ledger backup and restore",
+  "plainJsonVersion": "Unencrypted JSON · Format v1",
+  "backupContentsWarning": "Includes server names, providers, addresses, regions, purposes, operating systems, specifications, hardware details, groups, amounts, dates, payments, and manual exchange rates. The file is unencrypted. Store it safely and share it only with trusted destinations. Sensitive content entered in these fields is also exported.",
+  "notIncluded": "Not included:",
+  "generateBackupPreview": "Generate export preview",
+  "exportPreview": "Export preview",
+  "backupGeneratedTime": "Backup created: {p0}",
+  "shareUnencryptedBackup": "Share unencrypted backup",
+  "saveJsonBackup": "Save JSON backup",
+  "restoreEmptyOnlyHelp": "Restore is supported only when the ledger has no servers, groups, payments, or service periods. Existing data is never overwritten or merged. Imported server reminders default to off. App preferences stay unchanged.",
+  "chooseJsonPreviewRestore": "Choose JSON and preview restore",
+  "restorePreview": "Restore preview",
+  "backupTime": "Backup time: {p0}",
+  "restoreContentsHelp": "The ledger records and manual exchange rates above will be imported. The security data, notes, reminders, and app preferences listed as excluded are not in the backup.",
+  "restoreToEmptyLedger": "Restore to empty ledger",
+  "appearance": "Appearance",
+  "followSystem": "Follow system",
+  "lightTheme": "Light",
+  "darkTheme": "Dark",
+  "appDescription": "Personal VPS ledger · Local-first",
+  "organizationData": "Organization and data",
+  "manageGroups": "Manage groups",
+  "groupCountHelp": "Groups: {p0} · Deleting a group keeps its records",
+  "archivedRecords": "Archived records",
+  "archiveCountHelp": "Records: {p0} · Can be restored to the server list",
+  "accountsPreferences": "Accounts and preferences",
+  "panelAccounts": "Panel accounts",
+  "panelConnectionCount": "SolusVM 1 / 2 · Connections: {p0}",
+  "keysSecurity": "Keys and security",
+  "keysSecurityDescription": "Credentials, SSH settings, and host trust",
+  "currenciesReferenceRates": "Currencies and reference rates",
+  "currencyRateSummary": "{p0} · Manual rates: {p1}",
+  "notSet": "Not set",
+  "notificationAccess": "Notification access",
+  "backupExclusionsSummary": "Excludes credentials and host trust · Unencrypted JSON",
+  "about": "About",
+  "developmentVersion": "Development build · 0.1.0",
+  "appLocalDataHelp": "Data is stored on this device. No app account is needed.\nArchiving a record does not cancel the server service or stop billing.",
+  "groupSaveFailed": "Could not save the group. Check for a duplicate name, then try again.",
+  "deleteGroupQuestion": "Delete “{p0}”?",
+  "deleteGroupHelp": "All servers in this group, including archived ones, will move to Ungrouped. Server details and payment history are kept. Remote servers are unchanged.",
+  "deleteGroup": "Delete group",
+  "addGroup": "Add group",
+  "groupsHelp": "Organize servers by purpose. Group changes affect only the local ledger.",
+  "noGroupsHelp": "No custom groups yet. Tap + at the top right to create one.",
+  "unarchivedServerCount": "Unarchived servers: {p0}",
+  "actionsForGroup": "Actions for {p0}",
+  "rename": "Rename",
+  "moveUp": "Move up",
+  "moveDown": "Move down",
+  "ungrouped": "Ungrouped",
+  "ungroupedCountHelp": "Unarchived servers: {p0} · Default group, cannot be deleted",
+  "archiveHelp": "Archiving keeps server details and IDs. Restoring does not connect to, start, or renew the service.",
+  "noArchivedRecords": "No archived records",
+  "restoreRecord": "Restore record",
+  "renameGroup": "Rename group",
+  "groupName": "Group name",
+  "save": "Save",
+  "operationFailed": "The operation did not complete. Try again. Saved details are kept.",
+  "recordChanged": "This record has changed. Go back and try again.",
+  "gotIt": "Got it",
+  "financeCancel": "Cancel",
+  "financeSaving": "Saving…",
+  "financeUnknown": "Unknown",
+  "financeNotSet": "Not set",
+  "financeDateNotSet": "Date not set",
+  "financePayments": "Payment records",
+  "financeCalculationRules": "Calculation basis",
+  "financeAllGroups": "All groups",
+  "financeUngrouped": "Ungrouped",
+  "financeNotEntered": "Not entered",
+  "financeNote": "Note",
+  "financeStatus": "Status",
+  "financeEstimatedOnly": "Estimate · No ledger entry",
+  "financeValueTitle": "Remaining value · At the current renewal price",
+  "financeNotApplicable": "Not applicable / Excluded",
+  "financeDataUnknown": "Information unknown",
+  "financeMissingFxPreserved": "Exchange rate missing · Original currency retained",
+  "financeMissingFxExcluded": "Only amounts with an exchange rate are totaled. Missing amounts are not treated as zero.",
+  "financeValuationAndDue": "Valuation date / Service expiry date",
+  "financeRemainingDays": "Remaining service days",
+  "financeRenewalCycle": "Renewal price / Cycle",
+  "financeDailyShown": "Daily average for the shown period",
+  "financeInferredPeriods": "Some service start dates are inferred from the expiry date and calendar cycle. They are not proof of past payment.",
+  "financeValueDisclaimer": "This is a price-based estimate of unused service time, not a refund promise or sale price.",
+  "financeShownPeriod": "Shown period",
+  "financeFuturePeriod": "Future period",
+  "financeEndedPeriod": "Ended period",
+  "financeCurrentPeriod": "Current period",
+  "financeFxTitle": "Currencies and reference exchange rates",
+  "financeFxScope": "Only reference conversions change. Renewal prices and past payments stay in their original currencies. No live rates are requested. Leave a rate blank if it is unknown.",
+  "financeDisplayCurrency": "Currency for totals",
+  "financeUsdRate": "1 USD = how many CNY",
+  "financeEurRate": "1 EUR = how many CNY",
+  "financeUnknownRateHint": "Leave blank if the rate is unknown",
+  "financeRateError": "Enter a rate greater than 0, with up to 8 decimal places",
+  "financeRateDate": "Reference rate date",
+  "financePastDateError": "Enter a valid date that is no later than today",
+  "financeFxBasis": "CNY is the base currency: 1 CNY = 1 CNY. Same-currency amounts need no exchange rate. When cross-currency rates are missing, only convertible amounts and conversion coverage are shown.",
+  "financeSaveFx": "Save reference rates",
+  "financeReferenceTitle": "Use server details",
+  "financeReferenceNote": "Copies the current renewal details and known service periods only. The original server is not changed.",
+  "financeNoPrepaid": "No prepaid servers are available. You can calculate an independent estimate.",
+  "financeDateRangeError": "Check the dates. Estimates are limited to a 100-year range.",
+  "financeMissingPeriodsError": "The referenced details have no valid service period. Add the server dates first, or change the expiry date or cycle to calculate an independent estimate.",
+  "financeCalculatorTitle": "Remaining value calculator",
+  "financeReferenceServer": "Use a server",
+  "financeIndependentRebuilt": "Switched to an independent estimate. Service periods are recalculated from the current expiry date and cycle, assuming continuous service before expiry.",
+  "financeIndependentNote": "Calculate an independent estimate without adding a server. Assumes continuous service before expiry.",
+  "financeRenewalAmount": "Renewal price per cycle",
+  "financeAmountError": "Enter a valid amount. Use 0 only when the service is known to be free.",
+  "financeOriginalCurrency": "Original currency",
+  "financeCycle": "Renewal cycle",
+  "financeValuationDate": "Valuation date",
+  "financeValuationDateError": "Enter a valid valuation date",
+  "financeServiceDue": "Service expiry date",
+  "financeDueError": "Enter a valid expiry date",
+  "financeAlgorithmTitle": "Periods and calculation method",
+  "financeAlgorithmNote": "Remaining value = Σ (renewal price per cycle × fraction of unused days in that cycle).\nCalendar cycles use actual day counts, not fixed 30-day months. Month-end dates are calculated backward from the original expiry anchor, with leap years handled for yearly cycles. Valuing a period before its known start does not exceed its full price.\nIndependent mode works backward to cover the valuation date, up to 100 years. Value is 0 on the expiry date. Transferability and refund eligibility are not checked.",
+  "financeCalculateValue": "Calculate remaining value",
+  "financeEstimateNoWrite": "Estimates are separate from the ledger. Changing inputs does not change any server or payment.",
+  "financeReferenceRateMissing": "Reference exchange rate missing",
+  "financeIndependentBasis": "Independent assumption: service is continuous before expiry, with periods calculated backward from the expiry date.",
+  "financeQuoteFxError": "The required exchange rate is missing. Reference value and settlement amounts cannot be calculated.",
+  "financeCopied": "Result copied. It contains calculation information only.",
+  "financeCopyError": "Could not write to the clipboard. Please try again.",
+  "financeResultTitle": "Calculation result",
+  "financeEditInputs": "Edit inputs",
+  "financeCopyResult": "Copy result",
+  "financePreviewPng": "Preview / Save PNG",
+  "financeQuoteTitle": "Transfer quote estimate · Optional",
+  "financeQuoteNote": "This estimates the quote and transfer fee entered below only. No transaction is made, and other charges are excluded. Check whether the provider allows transfers and review its terms.",
+  "financeQuoteAmountError": "Enter a quote of 0 or a positive amount",
+  "financeTransferFee": "Transfer fee (Push)",
+  "financeQuoteFeeError": "Enter a fee of 0 or a positive amount",
+  "financeFeeCurrency": "Fee currency",
+  "financeFeePayer": "Who pays the fee",
+  "financeBuyerPays": "Buyer",
+  "financeSellerPays": "Seller",
+  "financeSplitFee": "Split equally",
+  "financeSplitFeeNote": "The fee is converted to minor units of the display currency before splitting. Any indivisible 0.01 is paid by the buyer. Both shares add up to the total fee.",
+  "financeCalculateQuote": "Calculate quote and fees",
+  "financePremiumLabel": "Quote minus reference value (premium / discount)",
+  "financeBuyerSellerFee": "Buyer / Seller fee",
+  "financeBuyerEstimate": "Estimated buyer outlay",
+  "financeSellerEstimate": "Estimated seller net proceeds",
+  "financeAccountNameError": "Enter an account display name",
+  "financePaidAmountError": "Enter a valid amount paid. 0 means free.",
+  "financeDateError": "Enter a valid date, for example 2026-10-06",
+  "financePaymentFutureError": "The payment date cannot be later than today",
+  "financePaymentConfirmError": "Confirm that you have paid the provider and checked the details",
+  "financeBillPeriodError": "Enter both billing period dates together. The end must be later than the start.",
+  "financePaymentSavedRefresh": "Payment saved, but the display has not updated. Please reload.",
+  "financeAccountPaymentSaved": "Account bill recorded once. Instance expiry dates are unchanged.",
+  "financePaymentSaved": "Payment recorded. Service periods and totals are updated.",
+  "financeRecordPayment": "Record a completed payment",
+  "financeNoRenewalDate": "This record has no usable renewal date. Check the prepaid billing type, expiry date, and supported date range.",
+  "financeRecordAccountBill": "Record an account bill",
+  "financeLocalPaymentOnly": "Records a local ledger entry only. No payment is made to the provider.",
+  "financeAccountBillNote": "Records the whole account bill separately and counts it once. No panel account connection is needed. It is not allocated to instances and does not create service periods or remaining value.",
+  "financeAccountName": "Account display name",
+  "financeAccountNameHint": "For example: Provider · Personal account",
+  "financePaidAmount": "Amount paid",
+  "financePaidCurrency": "Payment currency",
+  "financePaidDate": "Actual payment date",
+  "financeRenewalCount": "Number of renewal cycles",
+  "financeNewDue": "New expiry date",
+  "financeNewDueHint": "Must match the date calculated from the selected cycles",
+  "financePaymentRenewalNote": "The amount paid is saved separately and does not replace the renewal price. Only whole-cycle renewals are supported. If the provider includes bonus time or a different expiry date, check it first rather than inventing cycles.",
+  "financeBillStart": "Billing period start (optional)",
+  "financeBillEnd": "Billing period end (optional)",
+  "financeOptionalNote": "Note (optional)",
+  "financeConfirmAccountPaid": "I have paid the provider and checked the bill amount and dates.",
+  "financeConfirmServerPaid": "I have paid the provider and checked the amount paid and new expiry date.",
+  "financeSavePayment": "Save payment record",
+  "financeNotReceipt": "This is not a provider payment receipt and does not change auto-renewal settings.",
+  "financePaymentTarget": "Payment target",
+  "financeAllPayments": "All payment records",
+  "financeRecent30": "Last 30 days",
+  "financeShowVoided": "Show voided records",
+  "financeRecordedPaidTotal": "Total recorded payments",
+  "financeNoPayments": "— No payment records yet",
+  "financePaymentDetails": "Payment breakdown",
+  "financeArchivedPayment": "Server archived · Past payments retained",
+  "financeNoPaymentsInRange": "No payments in this range. Record completed renewal payments from the server details page.",
+  "financeVoidTitle": "Void this local record?",
+  "financeVoidAccountNote": "Marks this bill as voided. No refund is requested from the provider.",
+  "financeVoidServerNote": "Reverts only the service periods and expiry date added by this record and marks the payment as voided. It does not request a provider refund or cancel service.",
+  "financeVoidRecord": "Void record",
+  "financePaymentVoided": "This local payment record has been voided",
+  "financePaymentDetail": "Payment details",
+  "financePaymentUnavailable": "This record is unavailable. Go back and reload.",
+  "financePaymentDateLabel": "Payment date",
+  "financeType": "Type",
+  "financeAccountBill": "Account bill",
+  "financeBillServicePeriod": "Billing / Service period",
+  "financeVoidedStatus": "Voided, excluded from payment totals",
+  "financeRecordedStatus": "Recorded",
+  "financePaymentHistoryNote": "This is a past payment in its original currency. Changes to renewal prices or reference rates do not rewrite it. To correct it, void it and enter it again. Voiding may be unavailable if related details have since changed.",
+  "financeVoidThisRecord": "Void this record",
+  "financeVoidBlocked": "Details have changed. Please check them. After later edits, payments, or archiving, an old record cannot overwrite the current details.",
+  "financeRulesTitle": "How these figures are calculated",
+  "financeTitle": "Costs",
+  "financeOverview": "View monthly cost references, remaining value, and recorded payments.",
+  "financeScope": "Scope",
+  "financeMonthlyReference": "Monthly cost reference",
+  "financeTotalRemaining": "Total remaining value  ›",
+  "financeMonthlyNotPaid": "Monthly prepaid renewal equivalent + metered monthly estimate. This is not the amount paid this month.",
+  "financeUpcomingRenewals": "Expected renewals in the next 30 days",
+  "financeRecentPayments": "Recorded payments in the last 30 days",
+  "financeUnrecordedNotZero": "No payments recorded yet. This does not mean there has been no spending.",
+  "financeMonthlyDistribution": "Monthly cost breakdown",
+  "financeByVendor": "By provider",
+  "financeByGroup": "By group",
+  "financeDistributionEmpty": "Add cost details to see the breakdown.",
+  "financeDistributionNote": "Tap a category to see server details using the same calculation basis. Maintain cost details and renewal records from each server’s details page.",
+  "financeGroupDistributionNote": "Account-level payments are not allocated to this group. Tap a category for details.",
+  "financeSixMonthTitle": "Six months from this month · Prepaid renewals",
+  "financeForecastNote": "Forecasts the rest of this month and the next five calendar months at the current renewal price and cycle. Assumes continued renewal; usage plans do not change the forecast. Metered bills and expired services are excluded.",
+  "financeMonthlyDetail": "Monthly cost details",
+  "financeValueDetail": "Remaining value details",
+  "financeInventoryDetail": "Server breakdown",
+  "financeIncompleteDetail": "Check costs and expiry dates",
+  "financeMeteredValueNa": "Metered billing · Remaining value is not applicable",
+  "financeExpiredMonthlyExcluded": "Expired, excluded from the monthly cost reference",
+  "financeUnknownAmount": "Date or cost details are incomplete; amount unknown",
+  "financeNoServersInRange": "No servers in this range.",
+  "financeUnknownZeroNote": "“—” means unknown or not applicable, not free. A known zero amount is shown as 0.00.",
+  "financeRenewals30Title": "Renewals in the next 30 days",
+  "financeNoKnownRenewals": "No known prepaid renewals in this range.",
+  "financeExpiredCheck": "Expired · Verify first",
+  "financeMeteredRenewalNote": "Maintain the monthly estimate for metered costs in server details. Metered costs do not create prepaid renewal events.",
+  "financePngRenderFailed": "Image generation failed. The original calculation result is preserved.",
+  "financePngSaveFailed": "Saving did not finish. The preview is preserved. Check storage space and permissions, then try again.",
+  "financePngShareSelected": "A system share action was selected. Check delivery in the destination app.",
+  "financePngShareDismissed": "Sharing canceled. The preview is preserved.",
+  "financePngShareUnknown": "No system share result was received. The preview is preserved.",
+  "financePngShareUnsupported": "System sharing of PNG files is not supported on this platform. You can save the file locally.",
+  "financePngShareBusy": "Finish the current system share action first.",
+  "financePngShareFailed": "Sharing did not finish. The preview is preserved. Please try again.",
+  "financePngPreview": "Image preview",
+  "financePngPrivacy": "Contains only amounts, dates, periods, and reference exchange rates. The image excludes server names, addresses, accounts, notes, and transfer quote estimates.",
+  "financePngSemantic": "Remaining value calculation result PNG",
+  "financeRegenerate": "Generate again",
+  "financeSavePng": "Save PNG",
+  "financeSharing": "Sharing…",
+  "financeSharePng": "Share PNG",
+  "financePngLocationNote": "The save location may be an app-private folder, rather than Photos or a public Downloads folder. On mobile, use system sharing to save elsewhere. Canceling sharing keeps the preview open.",
+  "financeRulesBody": "Monthly cost reference: unexpired prepaid renewal prices divided by the cycle length in months, plus metered monthly estimates. Prepaid services are excluded on and after their expiry date. Missing dates or costs are marked unknown.\n\nRemaining value: the current renewal price prorated by unused days in each known service period. The start date is included and the end date excluded. Future whole periods count at full price; ended periods count as 0. Not applicable to metered billing; unknown when details are insufficient. This is not a refundable amount or sale price.\n\nRenewal forecast: assumes continued renewal at the current price and cycle. The next 30 days includes today and the following 29 days. Six months means the rest of this month and the next five calendar months. Expired services are not projected forward. Metered bills are excluded. Local usage plans do not change the forecast.\n\nPayments in the last 30 days: recorded payments from today and the preceding 29 days. The all-groups scope retains payments for archived servers and counts each independent account bill once. Account bills are not allocated to groups.\n\nWhen cross-currency rates are missing, only convertible amounts are totaled, while original-currency subtotals are retained. Exact amounts are summed before rounding to minor units. Reference conversions are not actual charges.",
+  "financeApproxAmount": "Approx. {amount} {currency}",
+  "@financeApproxAmount": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      },
+      "currency": {
+        "type": "String"
+      }
+    }
+  },
+  "financeTotalAmount": "{covered, select, yes{Approx. {amount} {currency}} other{{amount} {currency}}}",
+  "@financeTotalAmount": {
+    "placeholders": {
+      "covered": {
+        "type": "String"
+      },
+      "amount": {
+        "type": "String"
+      },
+      "currency": {
+        "type": "String"
+      }
+    }
+  },
+  "financeCoverage": "Conversion coverage {covered} / {total}{missing, plural, =0{} one{ · 1 item missing an exchange rate} other{ · {missing} items missing exchange rates}}",
+  "@financeCoverage": {
+    "placeholders": {
+      "covered": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      },
+      "missing": {
+        "type": "int"
+      }
+    }
+  },
+  "financeUnknownExcluded": "{unknown} unknown · {excluded} not applicable / excluded",
+  "@financeUnknownExcluded": {
+    "placeholders": {
+      "unknown": {
+        "type": "int"
+      },
+      "excluded": {
+        "type": "int"
+      }
+    }
+  },
+  "financeOriginalSubtotals": "Original-currency subtotals: {amounts}",
+  "@financeOriginalSubtotals": {
+    "placeholders": {
+      "amounts": {
+        "type": "String"
+      }
+    }
+  },
+  "financePeriodProgress": "{period}: {percent}% remaining · {remaining} / {days} days",
+  "@financePeriodProgress": {
+    "placeholders": {
+      "period": {
+        "type": "String"
+      },
+      "percent": {
+        "type": "String"
+      },
+      "remaining": {
+        "type": "int"
+      },
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "financePeriodDates": "{start} to {end} (end date excluded)",
+  "@financePeriodDates": {
+    "placeholders": {
+      "start": {
+        "type": "String"
+      },
+      "end": {
+        "type": "String"
+      }
+    }
+  },
+  "financeDaysValue": "{days, plural, one{1 day} other{{days} days}}",
+  "@financeDaysValue": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "financeRenewalValue": "{amount} {currency} / {months, plural, one{1 month} other{{months} months}}",
+  "@financeRenewalValue": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      },
+      "currency": {
+        "type": "String"
+      },
+      "months": {
+        "type": "int"
+      }
+    }
+  },
+  "financeFuturePeriodsNote": "Remaining value includes {count, plural, one{1 future period} other{{count} future periods}}. The progress bar shows only the period above.",
+  "@financeFuturePeriodsNote": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "financeReferenceServerSubtitle": "{billing} · Until {due}",
+  "@financeReferenceServerSubtitle": {
+    "placeholders": {
+      "billing": {
+        "type": "String"
+      },
+      "due": {
+        "type": "String"
+      }
+    }
+  },
+  "financeReferenceBasis": "Uses known periods from {name}. Changing the valuation date, amount, or currency does not change the known service periods or the original server.",
+  "@financeReferenceBasis": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "financeEveryMonths": "{months, plural, one{Every month} other{Every {months} months}}",
+  "@financeEveryMonths": {
+    "placeholders": {
+      "months": {
+        "type": "int"
+      }
+    }
+  },
+  "financeFxSource": "Manual exchange rate · {date} · Not a live quote",
+  "@financeFxSource": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "financeKnownPeriodsBasis": "{inferred, select, yes{Known service periods copied when referenced; some start dates are inferred. The ledger is unchanged.} other{Known service periods copied when referenced. The ledger is unchanged.}}",
+  "@financeKnownPeriodsBasis": {
+    "placeholders": {
+      "inferred": {
+        "type": "String"
+      }
+    }
+  },
+  "financeSellerQuote": "Seller quote · {currency}",
+  "@financeSellerQuote": {
+    "placeholders": {
+      "currency": {
+        "type": "String"
+      }
+    }
+  },
+  "financeRoundingNote": "{rate}\n{source}. Calculated exactly before rounding to minor units. Conversions are for reference only.",
+  "@financeRoundingNote": {
+    "placeholders": {
+      "rate": {
+        "type": "String"
+      },
+      "source": {
+        "type": "String"
+      }
+    }
+  },
+  "financeCycleEndError": "The selected cycles must end on {date}",
+  "@financeCycleEndError": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "financeCycleCountOption": "{count, plural, one{1 cycle} other{{count} cycles}} · {months, plural, one{1 month per cycle} other{{months} months per cycle}}",
+  "@financeCycleCountOption": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "months": {
+        "type": "int"
+      }
+    }
+  },
+  "financeExtendFromDue": "Extends from the original expiry date, {date}, preserving unused time. Dates follow the original renewal anchor and month-end rules.",
+  "@financeExtendFromDue": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "financeNextRenewalPrice": "Next renewal price: {billing}",
+  "@financeNextRenewalPrice": {
+    "placeholders": {
+      "billing": {
+        "type": "String"
+      },
+      "currency": {
+        "type": "String"
+      }
+    }
+  },
+  "financeArchivedName": "{archived, select, yes{{name} · Archived} other{{name}}}",
+  "@financeArchivedName": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "archived": {
+        "type": "String"
+      }
+    }
+  },
+  "financeValidPaymentsNote": "{count, plural, one{1 valid record} other{{count} valid records}}; this may not be your complete billing history. Voided records are excluded.",
+  "@financeValidPaymentsNote": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "financePaymentGroupNote": "Current group: {group}. Account bills are not allocated to groups. Payment history retains payments for archived servers.",
+  "@financePaymentGroupNote": {
+    "placeholders": {
+      "group": {
+        "type": "String"
+      }
+    }
+  },
+  "financeVoidedName": "{voided, select, yes{{name} · Voided} other{{name}}}",
+  "@financeVoidedName": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "voided": {
+        "type": "String"
+      }
+    }
+  },
+  "financePaymentSummary": "{account, select, yes{{date} · Past account bill, counted once} other{{date} · Expiry date: {due}}}",
+  "@financePaymentSummary": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      },
+      "account": {
+        "type": "String"
+      },
+      "due": {
+        "type": "String"
+      }
+    }
+  },
+  "financePrepaidRenewalType": "Prepaid renewal · {count, plural, one{1 cycle} other{{count} cycles}}",
+  "@financePrepaidRenewalType": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "financePaymentPeriodRange": "{start} to {end}",
+  "@financePaymentPeriodRange": {
+    "placeholders": {
+      "start": {
+        "type": "String"
+      },
+      "end": {
+        "type": "String"
+      }
+    }
+  },
+  "financeFxOverview": "{currency} reference · Manual rates {date}",
+  "@financeFxOverview": {
+    "placeholders": {
+      "currency": {
+        "type": "String"
+      },
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "financeManagedCount": "Unarchived servers: {count}  ›",
+  "@financeManagedCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "financeRenewalEventNote": "{count, plural, one{1 prepaid renewal} other{{count} prepaid renewals}} · Today and the next 29 days",
+  "@financeRenewalEventNote": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "financeRecentPaymentNote": "{count, plural, one{1 payment} other{{count} payments}} · Today and the previous 29 days",
+  "@financeRecentPaymentNote": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "financeIncompleteCount": "{count, plural, one{1 server with incomplete costs / expired service} other{{count} servers with incomplete costs / expired service}}",
+  "@financeIncompleteCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "financeSliceLabel": "{label} · {count, plural, one{1 server} other{{count} servers}}",
+  "@financeSliceLabel": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "financeForecastMonth": "{year}-{month} · {count, plural, one{1 renewal} other{{count} renewals}}",
+  "@financeForecastMonth": {
+    "placeholders": {
+      "year": {
+        "type": "int"
+      },
+      "month": {
+        "type": "int"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "financeForecastTotal": "{amount} {currency}{missing, plural, =0{} one{ · 1 item missing an exchange rate} other{ · {missing} items missing exchange rates}}{unknown, plural, =0{} one{ · 1 unknown amount} other{ · {unknown} unknown amounts}}",
+  "@financeForecastTotal": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      },
+      "currency": {
+        "type": "String"
+      },
+      "missing": {
+        "type": "int"
+      },
+      "unknown": {
+        "type": "int"
+      }
+    }
+  },
+  "financeDetailScope": "{label} · {count, plural, one{1 unarchived server} other{{count} unarchived servers}}",
+  "@financeDetailScope": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "financeAmountMetric": "{metric, select, value{{amount} {currency} remaining value} other{{amount} {currency} / month reference}}",
+  "@financeAmountMetric": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      },
+      "currency": {
+        "type": "String"
+      },
+      "metric": {
+        "type": "String"
+      }
+    }
+  },
+  "financeDueDateValue": "Expiry date: {date}",
+  "@financeDueDateValue": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "financeRenewalsMonthTitle": "Renewals in {year}-{month}",
+  "@financeRenewalsMonthTitle": {
+    "placeholders": {
+      "year": {
+        "type": "int"
+      },
+      "month": {
+        "type": "int"
+      }
+    }
+  },
+  "financeRenewalsScopeNote": "{count, plural, one{1 renewal} other{{count} renewals}} · {group} · Forecast at current renewal prices, not recorded payments.",
+  "@financeRenewalsScopeNote": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "group": {
+        "type": "String"
+      }
+    }
+  },
+  "financeRenewalEventDate": "{date} · {months, plural, one{1-month cycle} other{{months}-month cycle}}",
+  "@financeRenewalEventDate": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      },
+      "months": {
+        "type": "int"
+      }
+    }
+  },
+  "financeExpiredDate": "Expired on {date}. This does not imply downtime.",
+  "@financeExpiredDate": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "financePngSavedPath": "PNG saved:\n{path}",
+  "@financePngSavedPath": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
+  "financeRenewalDateError": "Renewal requires a valid cycle and original expiry date.",
+  "financeAnchorMismatch": "The service-period anchor does not match the expiry date. Check the details.",
+  "financeDueRangeError": "The expiry date is outside the supported range.",
+  "financeTrialInputError": "Choose valid dates and a cycle. Estimates are limited to a 100-year range.",
+  "financePeriodRangeError": "The service period is outside the supported range.",
+  "financeTrialRangeError": "Estimates are limited to a 100-year range.",
+  "financeUnsupportedCurrency": "The display currency is not supported.",
+  "financeInvalidRate": "Exchange rates must be positive, with at most 9 integer digits and 8 decimal places.",
+  "financeMissingRateDate": "Enter the manual exchange rate date.",
+  "financeExportDisclaimer": "This is a price-based estimate of unused service time, not a refund promise or sale price.",
+  "financeExportHeading": "vps tell you · Estimate · No ledger entry",
+  "financeExportFooter": "Independent estimate · Image contains calculation information only",
+  "financeExportValue": "Remaining value: {amount} {currency}",
+  "@financeExportValue": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      },
+      "currency": {
+        "type": "String"
+      }
+    }
+  },
+  "financeExportValuationDate": "Valuation date: {date}",
+  "@financeExportValuationDate": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "financeExportPeriod": "{period}: {start} to {end} (end date excluded)",
+  "@financeExportPeriod": {
+    "placeholders": {
+      "period": {
+        "type": "String"
+      },
+      "start": {
+        "type": "String"
+      },
+      "end": {
+        "type": "String"
+      }
+    }
+  },
+  "financeExportPeriodRemaining": "{period}: {remaining} / {days} days remaining · {percent}",
+  "@financeExportPeriodRemaining": {
+    "placeholders": {
+      "period": {
+        "type": "String"
+      },
+      "remaining": {
+        "type": "int"
+      },
+      "days": {
+        "type": "int"
+      },
+      "percent": {
+        "type": "String"
+      }
+    }
+  },
+  "financeExportServiceRemaining": "Service expiry date: {due}; remaining service days: {days}",
+  "@financeExportServiceRemaining": {
+    "placeholders": {
+      "due": {
+        "type": "String"
+      },
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "financeExportRenewalDaily": "Renewal price / Cycle: {renewal}; daily average for the shown period: {daily}",
+  "@financeExportRenewalDaily": {
+    "placeholders": {
+      "renewal": {
+        "type": "String"
+      },
+      "daily": {
+        "type": "String"
+      }
+    }
+  },
+  "financeExportFuturePeriods": "Includes {count, plural, one{1 future period} other{{count} future periods}}. Progress shows only the period above.",
+  "@financeExportFuturePeriods": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "financeExportDue": "Service expiry date: {date}",
+  "@financeExportDue": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "financeExportRemainingDays": "Remaining service days: {days}",
+  "@financeExportRemainingDays": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "financeExportRenewal": "Renewal price / Cycle: {renewal}",
+  "@financeExportRenewal": {
+    "placeholders": {
+      "renewal": {
+        "type": "String"
+      }
+    }
+  },
+  "financeExportDaily": "Daily average for the shown period: {daily}",
+  "@financeExportDaily": {
+    "placeholders": {
+      "daily": {
+        "type": "String"
+      }
+    }
+  },
+  "billingCostUnknown": "Cost unknown",
+  "billingMeteredAmount": "{amount}/mo est.",
+  "billingAnnualAmount": "{amount}/year",
+  "billingMonthlyAmount": "{amount}/{months, plural, one{1 month} other{{months} months}}",
+  "backupExcludedSecrets": "Passwords, private keys, passphrases, tokens, credential metadata, and secure-storage references",
+  "backupExcludedConnections": "SSH settings, host trust, panel accounts, instance links, and API-returned information",
+  "backupExcludedNotes": "Command snippets, server notes, and payment notes",
+  "backupExcludedPreferences": "Reminder rules, notification schedules, and app preferences (format v1)",
+  "backupInvalidJson": "The backup is not valid JSON",
+  "backupUnsupportedFormat": "Unsupported ledger backup format or version",
+  "backupInvalidCollections": "Invalid backup collection types or counts",
+  "backupDuplicateIds": "The backup contains duplicate record IDs",
+  "backupGroupNameConflict": "Conflicting group names in the backup",
+  "backupMissingGroup": "A server refers to a group that does not exist",
+  "backupInvalidServer": "Server field validation failed",
+  "backupAnchorMismatch": "The renewal anchor and expiry date do not match",
+  "backupInvalidPaymentPeriod": "Invalid payment service period",
+  "backupAccountBillMismatch": "Inconsistent independent account bill fields",
+  "backupInvalidServerPayment": "Invalid server payment link",
+  "backupPaymentDateConflict": "An active payment conflicts with the server dates",
+  "backupServiceDateMismatch": "Service periods do not match the server dates",
+  "backupDuplicateInitialPeriod": "A server has duplicate initial service periods",
+  "backupInvalidPeriodPayment": "Invalid service-period payment link",
+  "backupOverlappingPeriods": "A server has overlapping service periods",
+  "backupIncompletePaymentPeriod": "An active payment is missing its complete service period",
+  "backupPaymentCycleMismatch": "A payment service period does not match the renewal cycle",
+  "backupInitialPeriodMismatch": "The initial service period is missing or does not match the original dates",
+  "backupInitialPeriodOutOfRange": "The initial service period is outside the supported date range",
+  "backupPeriodsNotContinuous": "Active service periods must be continuous",
+  "backupPeriodsDoNotCoverDue": "Active service periods do not cover the current expiry date",
+  "backupInvalidRates": "Invalid reference exchange rates",
+  "restoreRequiresEmptyLedger": "Restore requires an empty ledger. Existing data is unchanged.",
+  "restoreMissingRateSettings": "Reference rate settings are missing. The restore was rolled back.",
+  "backupGroups": "groups",
+  "backupServersIncludingArchived": "servers (including archived)",
+  "backupPaymentsIncludingVoided": "payments (including voided)",
+  "backupServicePeriods": "service periods",
+  "restoreExistingRecords": "The destination ledger already contains {p0}",
+  "backupInvalidFields": "Backup fields are missing, unknown, or have the wrong type",
+  "backupInvalidText": "Invalid text field in the backup",
+  "backupNumberOutOfRange": "An integer or amount in the backup is out of range",
+  "backupInvalidEnum": "Invalid enum value in the backup",
+  "backupInvalidDate": "Invalid date in the backup",
+  "backupTimeRequiresUtc": "Backup timestamps must use canonical UTC format",
+  "backupInvalidTime": "Invalid timestamp in the backup",
+  "paymentPeriodsLockFields": "Payment service periods exist, so dates, cycles, and billing type cannot be edited directly. Review the payments and safely void eligible records first.",
+  "invalidGroupName": "Enter a group name of 1–40 characters. The reserved name “未分组” is not allowed.",
+  "demoRequiresEmptyLedger": "Demo data can be loaded only into an empty ledger",
+  "futureRateDate": "The exchange-rate date cannot be in the future",
+  "invalidPaymentId": "Invalid payment ID",
+  "invalidPaidAmount": "Enter a valid amount actually paid. Enter 0 for free.",
+  "futurePaymentDate": "The payment date cannot be in the future",
+  "notesTooLong": "Notes can contain up to 4,000 characters",
+  "paymentAlreadyVoided": "This payment is already voided. Check the details and create a new record.",
+  "paymentIdContentMismatch": "This payment ID has different details. Do not enter it again.",
+  "confirmProviderPayment": "Confirm that you paid the provider and checked the amount and dates",
+  "invalidRenewalCycleCount": "Select 1–3 valid renewal cycles",
+  "renewalNeedsPrepaidDate": "Only prepaid services with a known expiry date can be renewed",
+  "renewalDateMismatch": "The new expiry date does not match the selected cycles and original renewal anchor",
+  "duplicateExpiryPayment": "A payment already exists for this service expiry date. Do not enter it again.",
+  "invalidAccountName": "The account name must contain 1–80 characters",
+  "invalidOptionalBillingPeriod": "For an optional billing period, enter valid start and end dates. The end must be after the start.",
+  "invalidCredentialDetails": "Invalid credential details",
+  "secretWriteNotPrepared": "The secret write is not ready",
+  "chooseOtherCredential": "Choose a different credential",
+  "invalidSshConfiguration": "Enter a valid host, port, and explicit username",
+  "verificationCancelled": "Verification cancelled",
+  "invalidServerName": "The server name must contain 1–80 characters",
+  "completeLocalResources": "Complete and confirm all six local resource fields first",
+  "securityOperationIncomplete": "The security operation did not complete. Try again.",
+  "cloudAccounts": "Panel accounts",
+  "@cloudAccounts": {
+    "description": "Panel accounts: accounts"
+  },
+  "cloudAddAccount": "Add panel account",
+  "@cloudAddAccount": {
+    "description": "Panel accounts: add account"
+  },
+  "cloudPanelReadBadge": "SolusVM 1 / 2 · Panel reads",
+  "@cloudPanelReadBadge": {
+    "description": "Panel accounts: panel read badge"
+  },
+  "cloudManageConnections": "Manage panel connections and instances",
+  "@cloudManageConnections": {
+    "description": "Panel accounts: manage connections"
+  },
+  "cloudConnectionsInfo": "Each connection has its own authorization and instances.\nYou can add multiple separate account or VPS connections to the same panel.",
+  "@cloudConnectionsInfo": {
+    "description": "Panel accounts: connections info"
+  },
+  "cloudMetadataIncomplete": "Panel account details could not be fully loaded. Reload them to continue.",
+  "@cloudMetadataIncomplete": {
+    "description": "Panel accounts: metadata incomplete"
+  },
+  "cloudReloadMetadata": "Reload panel account details",
+  "@cloudReloadMetadata": {
+    "description": "Panel accounts: reload metadata"
+  },
+  "cloudCleanupNotice": "Old credentials awaiting cleanup may still be in secure storage on this device. Retry cleanup; revoke remote authorization in the panel.",
+  "@cloudCleanupNotice": {
+    "description": "Panel accounts: cleanup notice"
+  },
+  "cloudRetryCleanup": "Retry old credential cleanup",
+  "@cloudRetryCleanup": {
+    "description": "Panel accounts: retry cleanup"
+  },
+  "cloudFirstAccount": "Add your first panel account",
+  "@cloudFirstAccount": {
+    "description": "Panel accounts: first account"
+  },
+  "cloudFirstAccountInfo": "Start with a built-in template, verify panel authorization, then select instances to add to the ledger.",
+  "@cloudFirstAccountInfo": {
+    "description": "Panel accounts: first account info"
+  },
+  "cloudChooseTemplate": "Choose a connection template",
+  "@cloudChooseTemplate": {
+    "description": "Panel accounts: choose template"
+  },
+  "cloudReadOnlyBoundary": "This app only reads data; the API credentials themselves may have other permissions.\nPanel authorization and SSH credentials are managed separately. Unlinking keeps ledger records, costs, payments, and SSH settings.",
+  "@cloudReadOnlyBoundary": {
+    "description": "Panel accounts: read only boundary"
+  },
+  "cloudTemplateInfo": "Choose the authorization method for your panel version. Panel software is separate from the seller; you can add the actual provider and costs later.",
+  "@cloudTemplateInfo": {
+    "description": "Panel accounts: template info"
+  },
+  "cloudV1TemplateInfo": "Client API Key + Hash\nEach credential pair corresponds to one VPS",
+  "@cloudV1TemplateInfo": {
+    "description": "Panel accounts: v1 template info"
+  },
+  "cloudV2TemplateInfo": "User API Token\nRead the current user’s projects and instances",
+  "@cloudV2TemplateInfo": {
+    "description": "Panel accounts: v2 template info"
+  },
+  "cloudSupportedPanels": "Supports reads from SolusVM 1 and SolusVM 2 panels. There is no API power control, remote resource editing, or cancellation of provider billing.",
+  "@cloudSupportedPanels": {
+    "description": "Panel accounts: supported panels"
+  },
+  "cloudReauthorize": "Authorize again",
+  "@cloudReauthorize": {
+    "description": "Panel accounts: reauthorize"
+  },
+  "cloudSingleVpsApi": "Single VPS / Client API",
+  "@cloudSingleVpsApi": {
+    "description": "Panel accounts: single vps api"
+  },
+  "cloudUserAccountApi": "User account / API Token",
+  "@cloudUserAccountApi": {
+    "description": "Panel accounts: user account api"
+  },
+  "cloudWebPreviewNotice": "Web preview does not accept real API credentials. Connect in the native app.",
+  "@cloudWebPreviewNotice": {
+    "description": "Panel accounts: web preview notice"
+  },
+  "cloudAliasLabel": "Account alias",
+  "@cloudAliasLabel": {
+    "description": "Panel accounts: alias label"
+  },
+  "cloudAliasRequired": "Enter an account alias",
+  "@cloudAliasRequired": {
+    "description": "Panel accounts: alias required"
+  },
+  "cloudEndpointLabel": "HTTPS panel address",
+  "@cloudEndpointLabel": {
+    "description": "Panel accounts: endpoint label"
+  },
+  "cloudEndpointValidation": "Enter the HTTPS panel home address without credentials, parameters, or an API path",
+  "@cloudEndpointValidation": {
+    "description": "Panel accounts: endpoint validation"
+  },
+  "cloudEndpointInfo": "Use the HTTPS panel home address, including a provider-specified port if needed. Certificate errors are not bypassed and redirects are not followed.",
+  "@cloudEndpointInfo": {
+    "description": "Panel accounts: endpoint info"
+  },
+  "cloudEndpointIdentityInfo": "The panel address is tied to this connection’s identity. Add a new connection for another panel. Saved credentials are not shown here.",
+  "@cloudEndpointIdentityInfo": {
+    "description": "Panel accounts: endpoint identity info"
+  },
+  "cloudV1CredentialsInfo": "Enter this VPS’s Client API Key / Hash, not administrator API credentials or a login password. The provider must enable Client API. Each pair reads the status of one VPS.",
+  "@cloudV1CredentialsInfo": {
+    "description": "Panel accounts: v1 credentials info"
+  },
+  "cloudV2CredentialsInfo": "Use a token from Account → API Tokens in the SolusVM 2 user area. Do not use an administrator token. The readable scope depends on provider settings.",
+  "@cloudV2CredentialsInfo": {
+    "description": "Panel accounts: v2 credentials info"
+  },
+  "cloudV1ReauthorizationInfo": "This API cannot prove that new credentials belong to the original VPS. After verification, explicitly confirm unlinking old associations, then choose whether to import new records. Existing ledger records, costs, and SSH settings are kept.",
+  "@cloudV1ReauthorizationInfo": {
+    "description": "Panel accounts: v1 reauthorization info"
+  },
+  "cloudV2ReauthorizationInfo": "Reauthorization must verify the same remote user account. Otherwise the original authorization and links are kept.",
+  "@cloudV2ReauthorizationInfo": {
+    "description": "Panel accounts: v2 reauthorization info"
+  },
+  "cloudVerifyScopeInfo": "This app only reads data; the credentials themselves may have other permissions. Verification reads status or projects and instances. Credentials enter secure device storage only when you save in the next step.",
+  "@cloudVerifyScopeInfo": {
+    "description": "Panel accounts: verify scope info"
+  },
+  "cloudVerifyingInfo": "Verifying and reading the complete list. Requests have a timeout. Going back or cancelling stops this read.",
+  "@cloudVerifyingInfo": {
+    "description": "Panel accounts: verifying info"
+  },
+  "cloudCancelVerification": "Cancel verification",
+  "@cloudCancelVerification": {
+    "description": "Panel accounts: cancel verification"
+  },
+  "cloudVerifyRead": "Verify and read",
+  "@cloudVerifyRead": {
+    "description": "Panel accounts: verify read"
+  },
+  "cloudCredentialMemoryInfo": "Credential fields are cleared after verification or on leaving. They are not written to the ledger, logs, or exports. Dart does not guarantee secure memory erasure.",
+  "@cloudCredentialMemoryInfo": {
+    "description": "Panel accounts: credential memory info"
+  },
+  "cloudChooseInstances": "Choose instances to import",
+  "@cloudChooseInstances": {
+    "description": "Panel accounts: choose instances"
+  },
+  "cloudEmptyVerification": "No instances can be imported with this authorization. You can save the account and import later.",
+  "@cloudEmptyVerification": {
+    "description": "Panel accounts: empty verification"
+  },
+  "cloudEmptyInventory": "The complete list returned no instances to import. The account is saved; you can read it again later.",
+  "@cloudEmptyInventory": {
+    "description": "Panel accounts: empty inventory"
+  },
+  "cloudV1Instance": "The single VPS for these credentials",
+  "@cloudV1Instance": {
+    "description": "Panel accounts: v1 instance"
+  },
+  "cloudAlreadyLinked": "Already linked · Duplicate import skipped",
+  "@cloudAlreadyLinked": {
+    "description": "Panel accounts: already linked"
+  },
+  "cloudV1Identity": "No stable instance ID · Identified by this separate connection",
+  "@cloudV1Identity": {
+    "description": "Panel accounts: v1 identity"
+  },
+  "cloudIpNotProvided": "IP not provided",
+  "@cloudIpNotProvided": {
+    "description": "Panel accounts: ip not provided"
+  },
+  "cloudSelectBeforeComplete": "Select the instance above, then complete the details below. Filling in details alone does not import it.",
+  "@cloudSelectBeforeComplete": {
+    "description": "Panel accounts: select before complete"
+  },
+  "cloudLocalDisplayName": "Local display name (optional)",
+  "@cloudLocalDisplayName": {
+    "description": "Panel accounts: local display name"
+  },
+  "cloudLocalNameInfo": "Used only for the new ledger record, not as the instance identity",
+  "@cloudLocalNameInfo": {
+    "description": "Panel accounts: local name info"
+  },
+  "cloudV1ResourcesInfo": "SolusVM 1 does not provide a stable instance ID. Available resource fields depend on the provider. Entered details stay on this device and do not trigger SSH, TCP, or remote configuration changes.",
+  "@cloudV1ResourcesInfo": {
+    "description": "Panel accounts: v1 resources info"
+  },
+  "cloudRebindWarning": "Saving new authorization unlinks all old instance associations for this connection. Existing records, costs, payments, and SSH settings are kept. Importing creates new local records; it does not overwrite or relink old ones.",
+  "@cloudRebindWarning": {
+    "description": "Panel accounts: rebind warning"
+  },
+  "cloudConfirmRebind": "I confirm that saving new authorization will unlink old instances",
+  "@cloudConfirmRebind": {
+    "description": "Panel accounts: confirm rebind"
+  },
+  "cloudReturnSelect": "Return to instance selection",
+  "@cloudReturnSelect": {
+    "description": "Panel accounts: return select"
+  },
+  "cloudSaving": "Saving…",
+  "@cloudSaving": {
+    "description": "Panel accounts: saving"
+  },
+  "cloudNoneSelected": "No new instances selected",
+  "@cloudNoneSelected": {
+    "description": "Panel accounts: none selected"
+  },
+  "cloudSaveOnly": "Save account only",
+  "@cloudSaveOnly": {
+    "description": "Panel accounts: save only"
+  },
+  "cloudUpdateUnlink": "Update authorization and unlink old instances",
+  "@cloudUpdateUnlink": {
+    "description": "Panel accounts: update unlink"
+  },
+  "cloudUpdateOnly": "Update authorization only",
+  "@cloudUpdateOnly": {
+    "description": "Panel accounts: update only"
+  },
+  "cloudReturnVerify": "Go back to verify again",
+  "@cloudReturnVerify": {
+    "description": "Panel accounts: return verify"
+  },
+  "cloudSavingInfo": "Saving to this device. Please wait until it finishes before going back.",
+  "@cloudSavingInfo": {
+    "description": "Panel accounts: saving info"
+  },
+  "cloudReadImportable": "Read importable instances",
+  "@cloudReadImportable": {
+    "description": "Panel accounts: read importable"
+  },
+  "cloudRefreshAccount": "Refresh account status",
+  "@cloudRefreshAccount": {
+    "description": "Panel accounts: refresh account"
+  },
+  "cloudReadingInfo": "Reading the complete list and status with a timeout. Cancelling or going back stops this read without changing ledger records, costs, or SSH settings.",
+  "@cloudReadingInfo": {
+    "description": "Panel accounts: reading info"
+  },
+  "cloudCancelRead": "Cancel read",
+  "@cloudCancelRead": {
+    "description": "Panel accounts: cancel read"
+  },
+  "cloudReadAgain": "Read again",
+  "@cloudReadAgain": {
+    "description": "Panel accounts: read again"
+  },
+  "cloudReadCompleteInfo": "Only the API-returned information for this account was updated. Local details, costs, payments, and SSH settings were not overwritten.",
+  "@cloudReadCompleteInfo": {
+    "description": "Panel accounts: read complete info"
+  },
+  "cloudDone": "Done",
+  "@cloudDone": {
+    "description": "Panel accounts: done"
+  },
+  "cloudViewDetails": "View account details",
+  "@cloudViewDetails": {
+    "description": "Panel accounts: view details"
+  },
+  "cloudRenameAccount": "Edit account name",
+  "@cloudRenameAccount": {
+    "description": "Panel accounts: rename account"
+  },
+  "cloudContinueImport": "Import more instances",
+  "@cloudContinueImport": {
+    "description": "Panel accounts: continue import"
+  },
+  "cloudLinkedServers": "Linked servers",
+  "@cloudLinkedServers": {
+    "description": "Panel accounts: linked servers"
+  },
+  "cloudUnlinkAccount": "Unlink account",
+  "@cloudUnlinkAccount": {
+    "description": "Panel accounts: unlink account"
+  },
+  "cloudUnlinkAccountTitle": "Unlink this panel account?",
+  "@cloudUnlinkAccountTitle": {
+    "description": "Panel accounts: unlink account title"
+  },
+  "cloudUnlinkLocal": "Unlink locally",
+  "@cloudUnlinkLocal": {
+    "description": "Panel accounts: unlink local"
+  },
+  "cloudAccountDetails": "Panel account details",
+  "@cloudAccountDetails": {
+    "description": "Panel accounts: account details"
+  },
+  "cloudAccountRemovedNotice": "The account has been unlinked. Existing ledger records are kept.",
+  "@cloudAccountRemovedNotice": {
+    "description": "Panel accounts: account removed notice"
+  },
+  "cloudTemplateLabel": "Connection template",
+  "@cloudTemplateLabel": {
+    "description": "Panel accounts: template label"
+  },
+  "cloudPanelAddress": "Panel address",
+  "@cloudPanelAddress": {
+    "description": "Panel accounts: panel address"
+  },
+  "cloudReadStatus": "Read status",
+  "@cloudReadStatus": {
+    "description": "Panel accounts: read status"
+  },
+  "cloudLastAttempt": "Last read attempt",
+  "@cloudLastAttempt": {
+    "description": "Panel accounts: last attempt"
+  },
+  "cloudNoAttempts": "No attempts yet",
+  "@cloudNoAttempts": {
+    "description": "Panel accounts: no attempts"
+  },
+  "cloudVerifiedScope": "Verified read scope",
+  "@cloudVerifiedScope": {
+    "description": "Panel accounts: verified scope"
+  },
+  "cloudV1Scope": "Single VPS · Client API, without stable instance identity",
+  "@cloudV1Scope": {
+    "description": "Panel accounts: v1 scope"
+  },
+  "cloudAppCapabilities": "App capabilities",
+  "@cloudAppCapabilities": {
+    "description": "Panel accounts: app capabilities"
+  },
+  "cloudReadCapabilities": "Reads data only; no API power control",
+  "@cloudReadCapabilities": {
+    "description": "Panel accounts: read capabilities"
+  },
+  "cloudAuthorizationStorage": "Credential storage",
+  "@cloudAuthorizationStorage": {
+    "description": "Panel accounts: authorization storage"
+  },
+  "cloudSecureStorageInfo": "Secure device storage; API credentials are not shown or exported",
+  "@cloudSecureStorageInfo": {
+    "description": "Panel accounts: secure storage info"
+  },
+  "cloudScopeNotice": "The API credentials themselves may have more permissions; check in the provider’s panel. There is no continuous background monitoring. Results reflect only the time of the read.",
+  "@cloudScopeNotice": {
+    "description": "Panel accounts: scope notice"
+  },
+  "cloudNoLinkedInstances": "No linked instances yet. Import more from the account menu.",
+  "@cloudNoLinkedInstances": {
+    "description": "Panel accounts: no linked instances"
+  },
+  "cloudLocalRecord": "Local record",
+  "@cloudLocalRecord": {
+    "description": "Panel accounts: local record"
+  },
+  "cloudCancel": "Cancel",
+  "@cloudCancel": {
+    "description": "Panel accounts: cancel"
+  },
+  "cloudSaveName": "Save name",
+  "@cloudSaveName": {
+    "description": "Panel accounts: save name"
+  },
+  "cloudLinkPanelAccount": "Link panel account",
+  "@cloudLinkPanelAccount": {
+    "description": "Panel accounts: link panel account"
+  },
+  "cloudLocalBindingInfo": "This page uses saved API-returned information and does not connect to the panel. If no instances are available or the last read failed, refresh manually in Panel accounts, then return and reload this local list.",
+  "@cloudLocalBindingInfo": {
+    "description": "Panel accounts: local binding info"
+  },
+  "cloudBindingCommitted": "Link changes were saved. Reload the details before continuing; do not submit again.",
+  "@cloudBindingCommitted": {
+    "description": "Panel accounts: binding committed"
+  },
+  "cloudLedgerNotUpdated": "The displayed ledger has not been updated. Reload it first.",
+  "@cloudLedgerNotUpdated": {
+    "description": "Panel accounts: ledger not updated"
+  },
+  "cloudReloadLocal": "Reload local list",
+  "@cloudReloadLocal": {
+    "description": "Panel accounts: reload local"
+  },
+  "cloudBindingReadOnly": "Panel links cannot be changed for archived or demo records.",
+  "@cloudBindingReadOnly": {
+    "description": "Panel accounts: binding read only"
+  },
+  "cloudCurrentLink": "Current link",
+  "@cloudCurrentLink": {
+    "description": "Panel accounts: current link"
+  },
+  "cloudUnlinkThis": "Unlink this server",
+  "@cloudUnlinkThis": {
+    "description": "Panel accounts: unlink this"
+  },
+  "cloudSelectAccount": "Select a panel account",
+  "@cloudSelectAccount": {
+    "description": "Panel accounts: select account"
+  },
+  "cloudNoSavedAccounts": "No panel accounts have been saved. Add and verify an account in Panel accounts first.",
+  "@cloudNoSavedAccounts": {
+    "description": "Panel accounts: no saved accounts"
+  },
+  "cloudSelectReadInstance": "Select a previously read instance",
+  "@cloudSelectReadInstance": {
+    "description": "Panel accounts: select read instance"
+  },
+  "cloudNoSavedInstances": "This account has no saved instance information. Refresh it manually in Panel accounts.",
+  "@cloudNoSavedInstances": {
+    "description": "Panel accounts: no saved instances"
+  },
+  "cloudOtherServer": "Another server",
+  "@cloudOtherServer": {
+    "description": "Panel accounts: other server"
+  },
+  "cloudMissingRefresh": "Not returned in this read · Refresh manually in Panel accounts",
+  "@cloudMissingRefresh": {
+    "description": "Panel accounts: missing refresh"
+  },
+  "cloudFailedRefresh": "Last read failed · Refresh manually in Panel accounts",
+  "@cloudFailedRefresh": {
+    "description": "Panel accounts: failed refresh"
+  },
+  "cloudSaveLink": "Save link",
+  "@cloudSaveLink": {
+    "description": "Panel accounts: save link"
+  },
+  "cloudChangeLink": "Change link",
+  "@cloudChangeLink": {
+    "description": "Panel accounts: change link"
+  },
+  "cloudLocalLinkBoundary": "Only the local link changes. Server details, hardware, finances, and SSH settings are kept.",
+  "@cloudLocalLinkBoundary": {
+    "description": "Panel accounts: local link boundary"
+  },
+  "cloudSingleAccountInstance": "This account’s single instance",
+  "@cloudSingleAccountInstance": {
+    "description": "Panel accounts: single account instance"
+  },
+  "cloudUnlinkServerTitle": "Unlink this server from the panel?",
+  "@cloudUnlinkServerTitle": {
+    "description": "Panel accounts: unlink server title"
+  },
+  "cloudChangeServerTitle": "Change this server’s panel link?",
+  "@cloudChangeServerTitle": {
+    "description": "Panel accounts: change server title"
+  },
+  "cloudOnlyUnlinkThis": "Unlink only this server",
+  "@cloudOnlyUnlinkThis": {
+    "description": "Panel accounts: only unlink this"
+  },
+  "cloudConfirmChangeLink": "Confirm link change",
+  "@cloudConfirmChangeLink": {
+    "description": "Panel accounts: confirm change link"
+  },
+  "cloudMetadataReadFailed": "Could not load panel account details. Try again.",
+  "@cloudMetadataReadFailed": {
+    "description": "Panel accounts: metadata read failed"
+  },
+  "cloudSavedReloadFailed": "Saved, but the details could not be reloaded. Reload before making changes.",
+  "@cloudSavedReloadFailed": {
+    "description": "Panel accounts: saved reload failed"
+  },
+  "cloudAccountConflict": "Panel account details have changed. Reload them and try again.",
+  "@cloudAccountConflict": {
+    "description": "Panel accounts: account conflict"
+  },
+  "cloudOperationFailed": "The panel account operation did not finish. Try again.",
+  "@cloudOperationFailed": {
+    "description": "Panel accounts: operation failed"
+  },
+  "cloudCompleteResources": "Complete all six hardware details before importing. Confirm unknown items with the provider first.",
+  "@cloudCompleteResources": {
+    "description": "Panel accounts: complete resources"
+  },
+  "cloudCleanupIncomplete": "Credential cleanup has not finished. Try again later.",
+  "@cloudCleanupIncomplete": {
+    "description": "Panel accounts: cleanup incomplete"
+  },
+  "cloudCleanupStatusFailed": "Could not read the cleanup status. Try again.",
+  "@cloudCleanupStatusFailed": {
+    "description": "Panel accounts: cleanup status failed"
+  },
+  "cloudVerifyCancelled": "Verification cancelled. Authorization was not saved.",
+  "@cloudVerifyCancelled": {
+    "description": "Panel accounts: verify cancelled"
+  },
+  "cloudAliasInvalid": "The account alias must be 1–80 characters.",
+  "@cloudAliasInvalid": {
+    "description": "Panel accounts: alias invalid"
+  },
+  "cloudVerifyFailed": "Verification did not finish. Check the panel address, credentials, and network, then try again.",
+  "@cloudVerifyFailed": {
+    "description": "Panel accounts: verify failed"
+  },
+  "cloudVerifyNotSaved": "Verification did not finish. Authorization was not saved.",
+  "@cloudVerifyNotSaved": {
+    "description": "Panel accounts: verify not saved"
+  },
+  "cloudVerifyAgainRequired": "Authorization was not saved. Verify again before importing.",
+  "@cloudVerifyAgainRequired": {
+    "description": "Panel accounts: verify again required"
+  },
+  "cloudAuthorizationExpired": "This authorization was cleared when you left the app. Go back and verify again. Any uncommitted save was cancelled.",
+  "@cloudAuthorizationExpired": {
+    "description": "Panel accounts: authorization expired"
+  },
+  "cloudResourcesIncomplete": "Check and complete all six hardware details. Confirm unknown items with the provider, then import once they are complete.",
+  "@cloudResourcesIncomplete": {
+    "description": "Panel accounts: resources incomplete"
+  },
+  "cloudSaveFailed": "Saving did not finish. Try again.",
+  "@cloudSaveFailed": {
+    "description": "Panel accounts: save failed"
+  },
+  "cloudAccountSavedOnly": "Account authorization saved. No new instances were imported.",
+  "@cloudAccountSavedOnly": {
+    "description": "Panel accounts: account saved only"
+  },
+  "cloudInstancesSaved": "Saved. The selected instances were added to the local ledger.",
+  "@cloudInstancesSaved": {
+    "description": "Panel accounts: instances saved"
+  },
+  "cloudReadCancelled": "Read cancelled. Previously read information is kept.",
+  "@cloudReadCancelled": {
+    "description": "Panel accounts: read cancelled"
+  },
+  "cloudAccountUnlinkedReturn": "The account has been unlinked. Go back to continue.",
+  "@cloudAccountUnlinkedReturn": {
+    "description": "Panel accounts: account unlinked return"
+  },
+  "cloudReadIncomplete": "The read did not finish. Previously read information is kept.",
+  "@cloudReadIncomplete": {
+    "description": "Panel accounts: read incomplete"
+  },
+  "cloudAliasSaved": "Account alias saved.",
+  "@cloudAliasSaved": {
+    "description": "Panel accounts: alias saved"
+  },
+  "cloudNameSaveFailed": "The name was not saved. Try again.",
+  "@cloudNameSaveFailed": {
+    "description": "Panel accounts: name save failed"
+  },
+  "cloudAccountUnlinked": "Unlinked. Ledger records, costs, and SSH settings are kept.",
+  "@cloudAccountUnlinked": {
+    "description": "Panel accounts: account unlinked"
+  },
+  "cloudUnlinkFailed": "Unlinking did not finish. Try again.",
+  "@cloudUnlinkFailed": {
+    "description": "Panel accounts: unlink failed"
+  },
+  "cloudAliasRange": "Enter an account alias of 1–80 characters.",
+  "@cloudAliasRange": {
+    "description": "Panel accounts: alias range"
+  },
+  "cloudBindingReadFailed": "Could not load local link details. Try again.",
+  "@cloudBindingReadFailed": {
+    "description": "Panel accounts: binding read failed"
+  },
+  "cloudServerUnlinked": "This server’s panel link was removed.",
+  "@cloudServerUnlinked": {
+    "description": "Panel accounts: server unlinked"
+  },
+  "cloudBindingSaved": "Panel account link saved.",
+  "@cloudBindingSaved": {
+    "description": "Panel accounts: binding saved"
+  },
+  "cloudFailureInvalidEndpoint": "Enter the HTTPS panel home address without login details, query parameters, or an API path.",
+  "@cloudFailureInvalidEndpoint": {
+    "description": "Panel accounts: failure invalid endpoint"
+  },
+  "cloudFailureInvalidCredentials": "Enter valid API credentials for this template.",
+  "@cloudFailureInvalidCredentials": {
+    "description": "Panel accounts: failure invalid credentials"
+  },
+  "cloudFailureUnauthorized": "The API credentials could not be verified. Check them or authorize again.",
+  "@cloudFailureUnauthorized": {
+    "description": "Panel accounts: failure unauthorized"
+  },
+  "cloudFailureApiRejected": "The panel rejected the API read. Check the credentials, API availability, and service status.",
+  "@cloudFailureApiRejected": {
+    "description": "Panel accounts: failure api rejected"
+  },
+  "cloudFailureForbidden": "The panel denied the read. Check API permissions and provider settings.",
+  "@cloudFailureForbidden": {
+    "description": "Panel accounts: failure forbidden"
+  },
+  "cloudFailureRateLimited": "Too many panel requests. Retry manually later.",
+  "@cloudFailureRateLimited": {
+    "description": "Panel accounts: failure rate limited"
+  },
+  "cloudFailureUnavailable": "The panel is temporarily unable to serve API reads.",
+  "@cloudFailureUnavailable": {
+    "description": "Panel accounts: failure unavailable"
+  },
+  "cloudFailureConnection": "Connection failed. Check the network, panel address, and HTTPS certificate.",
+  "@cloudFailureConnection": {
+    "description": "Panel accounts: failure connection"
+  },
+  "cloudFailureTimeout": "The read timed out. Previously read information is kept. Try again later.",
+  "@cloudFailureTimeout": {
+    "description": "Panel accounts: failure timeout"
+  },
+  "cloudFailureCancelled": "Read cancelled.",
+  "@cloudFailureCancelled": {
+    "description": "Panel accounts: failure cancelled"
+  },
+  "cloudFailureRedirect": "The panel returned a redirect. The request stopped to protect credentials. Check the panel address.",
+  "@cloudFailureRedirect": {
+    "description": "Panel accounts: failure redirect"
+  },
+  "cloudFailureInvalidResponse": "The panel response did not match the read protocol. Local details were not updated.",
+  "@cloudFailureInvalidResponse": {
+    "description": "Panel accounts: failure invalid response"
+  },
+  "cloudFailureResponseTooLarge": "The panel response exceeds the safe size limit.",
+  "@cloudFailureResponseTooLarge": {
+    "description": "Panel accounts: failure response too large"
+  },
+  "cloudFailureInventoryTooLarge": "The number of instances or pages exceeds this read’s limit. The incomplete list was not imported.",
+  "@cloudFailureInventoryTooLarge": {
+    "description": "Panel accounts: failure inventory too large"
+  },
+  "cloudFailureUnsupportedPlatform": "This preview platform does not accept real API credentials. Use the native app.",
+  "@cloudFailureUnsupportedPlatform": {
+    "description": "Panel accounts: failure unsupported platform"
+  },
+  "cloudAccountFailureIdentity": "The remote account or instance identity changed. Existing links were not changed. Create a separate account connection.",
+  "@cloudAccountFailureIdentity": {
+    "description": "Panel accounts: account failure identity"
+  },
+  "cloudAccountFailureV1Rebind": "SolusVM 1 cannot prove that new credentials belong to the original instance. Explicitly confirm unlinking old associations and select instances to import again. Existing ledger records are kept.",
+  "@cloudAccountFailureV1Rebind": {
+    "description": "Panel accounts: account failure v1 rebind"
+  },
+  "cloudAccountFailureSelection": "The import list changed or the selection is invalid. Read it again.",
+  "@cloudAccountFailureSelection": {
+    "description": "Panel accounts: account failure selection"
+  },
+  "cloudAccountFailureAlias": "The account alias must be 1–80 characters.",
+  "@cloudAccountFailureAlias": {
+    "description": "Panel accounts: account failure alias"
+  },
+  "cloudAccountFailureSecret": "API credentials could not be saved to secure device storage. Original authorization is unchanged. Unlock the device and try again.",
+  "@cloudAccountFailureSecret": {
+    "description": "Panel accounts: account failure secret"
+  },
+  "cloudAccountFailureSecretRead": "Could not read this account’s saved API credentials. Unlock the device and try again. If it still fails, authorize again from the account menu.",
+  "@cloudAccountFailureSecretRead": {
+    "description": "Panel accounts: account failure secret read"
+  },
+  "cloudAccountFailureBindingTaken": "This instance is linked to another server and cannot be overwritten. Reload the local list.",
+  "@cloudAccountFailureBindingTaken": {
+    "description": "Panel accounts: account failure binding taken"
+  },
+  "cloudAccountFailureBindingUnavailable": "Instance information is not currently available for linking. Refresh manually in Panel accounts, then select it again.",
+  "@cloudAccountFailureBindingUnavailable": {
+    "description": "Panel accounts: account failure binding unavailable"
+  },
+  "cloudReadLimitPositive": "Read limits must be greater than zero.",
+  "@cloudReadLimitPositive": {
+    "description": "Panel accounts: read limit positive"
+  },
+  "cloudProviderLinks": "{provider} · {count, plural, =1{1 linked server} other{{count} linked servers}}",
+  "@cloudProviderLinks": {
+    "description": "Panel accounts: provider links",
+    "placeholders": {
+      "provider": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "cloudRequiredField": "Enter {label}",
+  "@cloudRequiredField": {
+    "description": "Panel accounts: required field",
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "cloudConnectProvider": "Connect {provider}",
+  "@cloudConnectProvider": {
+    "description": "Panel accounts: connect provider",
+    "placeholders": {
+      "provider": {
+        "type": "String"
+      }
+    }
+  },
+  "cloudVerifyTarget": "{normalization}Verification will connect to: {origin}",
+  "@cloudVerifyTarget": {
+    "description": "Panel accounts: verify target",
+    "placeholders": {
+      "normalization": {
+        "type": "String"
+      },
+      "origin": {
+        "type": "String"
+      }
+    }
+  },
+  "cloudInventoryComplete": "Complete read finished · {count, plural, =1{1 instance} other{{count} instances}}\nRead at: {time}{authorization}",
+  "@cloudInventoryComplete": {
+    "description": "Panel accounts: inventory complete",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "time": {
+        "type": "String"
+      },
+      "authorization": {
+        "type": "String"
+      }
+    }
+  },
+  "cloudInstanceFallback": "Instance {id}",
+  "@cloudInstanceFallback": {
+    "description": "Panel accounts: instance fallback",
+    "placeholders": {
+      "id": {
+        "type": "String"
+      }
+    }
+  },
+  "cloudProjectInstance": "Project {project} · Instance ID {id}",
+  "@cloudProjectInstance": {
+    "description": "Panel accounts: project instance",
+    "placeholders": {
+      "project": {
+        "type": "String"
+      },
+      "id": {
+        "type": "String"
+      }
+    }
+  },
+  "cloudPowerLastRead": "Power: {power} · Last read",
+  "@cloudPowerLastRead": {
+    "description": "Panel accounts: power last read",
+    "placeholders": {
+      "power": {
+        "type": "String"
+      }
+    }
+  },
+  "cloudImportBoundary": "Importing does not overwrite existing local names, costs, payments, notes, or SSH settings. {deduplication} Archived linked records are also not imported again.",
+  "@cloudImportBoundary": {
+    "description": "Panel accounts: import boundary",
+    "placeholders": {
+      "deduplication": {
+        "type": "String"
+      }
+    }
+  },
+  "cloudV2Scope": "Verified user account {id} · Projects and instances",
+  "@cloudV2Scope": {
+    "description": "Panel accounts: v2 scope",
+    "placeholders": {
+      "id": {
+        "type": "String"
+      }
+    }
+  },
+  "cloudLinkedCount": "{count, plural, =1{1 linked server} other{{count} linked servers}}",
+  "@cloudLinkedCount": {
+    "description": "Panel accounts: linked count",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "cloudRecordWithState": "{name}{state}",
+  "@cloudRecordWithState": {
+    "description": "Panel accounts: record with state",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "state": {
+        "type": "String"
+      }
+    }
+  },
+  "cloudBindingWithTime": "{summary}\nRead at: {time}",
+  "@cloudBindingWithTime": {
+    "description": "Panel accounts: binding with time",
+    "placeholders": {
+      "summary": {
+        "type": "String"
+      },
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "cloudConsolePathRemoved": "Removed /home.php.\n",
+  "@cloudConsolePathRemoved": {
+    "description": "Panel accounts: console path removed"
+  },
+  "cloudAuthorizationUnsaved": "\nThis authorization has not been saved",
+  "@cloudAuthorizationUnsaved": {
+    "description": "Panel accounts: authorization unsaved"
+  },
+  "cloudV1Deduplication": "Already linked instances in this connection are not imported twice; separate connections are not merged automatically.",
+  "@cloudV1Deduplication": {
+    "description": "Panel accounts: v1 deduplication"
+  },
+  "cloudV2Deduplication": "Duplicates are identified by the separate connection and remote IDs, not by IP or name.",
+  "@cloudV2Deduplication": {
+    "description": "Panel accounts: v2 deduplication"
+  },
+  "cloudArchivedSuffix": " · Archived",
+  "@cloudArchivedSuffix": {
+    "description": "Panel accounts: archived suffix"
+  },
+  "cloudImportCount": "Import {count, plural, =1{1 instance} other{{count} instances}}",
+  "@cloudImportCount": {
+    "description": "Panel accounts: import count",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "cloudSaveImportCount": "Save account and import {count, plural, =1{1 instance} other{{count} instances}}",
+  "@cloudSaveImportCount": {
+    "description": "Panel accounts: save import count",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "cloudUnlinkAccountMessage": "{alias}\n\nRemove this panel connection and all its local instance links. You will need to enter API credentials again to add it back. Server records, costs, payments, and SSH settings are kept. Remote resources are not destroyed and billing does not stop.\n\n{remoteAction}",
+  "@cloudUnlinkAccountMessage": {
+    "description": "Panel accounts: unlink account message",
+    "placeholders": {
+      "alias": {
+        "type": "String"
+      },
+      "remoteAction": {
+        "type": "String"
+      }
+    }
+  },
+  "cloudRevokeV1": "You must also disable this VPS’s Client API or reset its Key / Hash in the panel.",
+  "@cloudRevokeV1": {
+    "description": "Panel accounts: revoke v1"
+  },
+  "cloudRevokeV2": "You must also revoke the issued token in the panel.",
+  "@cloudRevokeV2": {
+    "description": "Panel accounts: revoke v2"
+  },
+  "cloudSuggestedAlias": "My {provider} panel",
+  "@cloudSuggestedAlias": {
+    "description": "Panel accounts: suggested alias",
+    "placeholders": {
+      "provider": {
+        "type": "String"
+      }
+    }
+  },
+  "cloudReadAt": "Read at: {time}",
+  "@cloudReadAt": {
+    "description": "Panel accounts: read at",
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "cloudAlreadyLinkedTo": "Linked to: {name} · Cannot overwrite",
+  "@cloudAlreadyLinkedTo": {
+    "description": "Panel accounts: already linked to",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "cloudChangeLinkMessage": "{server}\nCurrent: {account} · {instance}{replacement}\n\nOnly the local link changes. Server details, hardware, costs, payments, SSH settings, the panel account, and authorization are kept. No remote instances are changed and billing does not stop.",
+  "@cloudChangeLinkMessage": {
+    "description": "Panel accounts: change link message",
+    "placeholders": {
+      "server": {
+        "type": "String"
+      },
+      "account": {
+        "type": "String"
+      },
+      "instance": {
+        "type": "String"
+      },
+      "replacement": {
+        "type": "String"
+      }
+    }
+  },
+  "cloudReplacementLink": "\nReplace with: {account} · {instance}",
+  "@cloudReplacementLink": {
+    "description": "Panel accounts: replacement link",
+    "placeholders": {
+      "account": {
+        "type": "String"
+      },
+      "instance": {
+        "type": "String"
+      }
+    }
+  },
+  "cloudPowerRunning": "Running",
+  "@cloudPowerRunning": {
+    "description": "Panel accounts: power running"
+  },
+  "cloudPowerStopped": "Stopped",
+  "@cloudPowerStopped": {
+    "description": "Panel accounts: power stopped"
+  },
+  "cloudPowerUnknown": "Unknown",
+  "@cloudPowerUnknown": {
+    "description": "Panel accounts: power unknown"
+  },
+  "cloudMissingKept": "Not returned in this read · Previous information kept",
+  "@cloudMissingKept": {
+    "description": "Panel accounts: missing kept"
+  },
+  "cloudFailedKept": "Read failed · Previous information kept",
+  "@cloudFailedKept": {
+    "description": "Panel accounts: failed kept"
+  },
+  "cloudLastRead": "Last read",
+  "@cloudLastRead": {
+    "description": "Panel accounts: last read"
+  },
+  "cloudAuthorizationFailedKept": "Authorization verification failed · Existing ledger kept",
+  "@cloudAuthorizationFailedKept": {
+    "description": "Panel accounts: authorization failed kept"
+  },
+  "cloudVerifiedManual": "Verified · Manual reads",
+  "@cloudVerifiedManual": {
+    "description": "Panel accounts: verified manual"
+  },
+  "cloudStepTemplate": "Template",
+  "@cloudStepTemplate": {
+    "description": "Panel accounts: step template"
+  },
+  "cloudStepCredentials": "Credentials",
+  "@cloudStepCredentials": {
+    "description": "Panel accounts: step credentials"
+  },
+  "cloudStepInstances": "Instances",
+  "@cloudStepInstances": {
+    "description": "Panel accounts: step instances"
+  },
+  "cloudApiUnknown": "Unknown (not provided by API)",
+  "@cloudApiUnknown": {
+    "description": "Panel accounts: api unknown"
+  },
+  "cloudBindingSummary": "{freshness} · Power: {power}",
+  "@cloudBindingSummary": {
+    "description": "Panel accounts: binding summary",
+    "placeholders": {
+      "freshness": {
+        "type": "String"
+      },
+      "power": {
+        "type": "String"
+      }
+    }
+  },
+  "cloudStepLabel": "0{number} {label}",
+  "@cloudStepLabel": {
+    "description": "Panel accounts: step label",
+    "placeholders": {
+      "number": {
+        "type": "int"
+      },
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "serverNameRange": "The name must contain 1–80 characters",
+  "serverVendorRange": "The provider must contain 1–80 characters",
+  "serverHostFormat": "Enter an IP address or domain without a protocol, port, path, or username",
+  "serverUnsupportedCurrency": "Unsupported currency",
+  "serverValidAmount": "Enter a valid amount. Enter 0 for free.",
+  "serverValidCycle": "Select a valid cycle",
+  "serverInvalidDate": "Invalid date",
+  "serverDueAfterStart": "The expiry date must be after the start date",
+  "resourceMonth": "Month",
+  "resourceQuarter": "Quarter",
+  "resourceYear": "Year",
+  "resourceValidIp": "Enter a valid IPv4 or IPv6 address. Unspecified addresses are not allowed.",
+  "resourceValidHostname": "Enter a valid hostname without a protocol, port, or path",
+  "resourceValidVcpu": "vCPU count must be a whole number from 1 to 65,536",
+  "resourceValidRam": "Memory capacity must be a valid positive number",
+  "resourceValidDisk": "Disk capacity must be a valid positive number",
+  "resourceValidTraffic": "Enter a valid positive traffic quota, or explicitly select unlimited",
+  "resourceValidPeriod": "Choose a monthly, quarterly, yearly, or unset traffic period",
+  "resourceInvalidSources": "Invalid resource-source fields",
+  "resourceUnknownApiSource": "Unknown resources cannot be marked as API-sourced",
+  "resourceTooLarge": "Local resource configuration is too large",
+  "resourceInvalidFields": "Invalid local resource fields",
+  "resourceInvalidSourceFields": "Invalid local resource-source fields",
+  "resourceUnlimitedTraffic": "Unlimited traffic",
+  "resourceUnknownTraffic": "Traffic unknown",
+  "resourceTrafficQuota": "{p0} traffic",
+  "resourcePeriodNotSet": "Period not set",
+  "resourceEveryPeriod": "Per {p0}",
+  "resourceDiskQuota": "{p0} disk",
+  "resourceSourceManual": "Source: entered manually",
+  "resourceSourceApi": "Source: API",
+  "resourceSourceUnlimited": "Source: unlimited confirmed manually",
+  "resourceSourceMissing": "Needs input: the API did not return a valid value",
+  "resourceSourceCompleted": "Source: completed manually",
+  "resourceSourceEditedApi": "Source: API value edited manually",
+  "resourceFieldValidIp": "Enter a valid IPv4 or IPv6 address, not an all-zero address",
+  "resourceFieldValidVcpu": "Enter a whole-number core count from 1 to 65,536",
+  "resourceFieldValidBytes": "Enter a positive capacity that resolves to a whole number of bytes",
+  "resourceCapacity": "Capacity",
+  "resourceUnitSemantics": "{p0} unit, base 1024",
+  "resourceUnit": "Unit",
+  "resourceTrafficPeriod": "Traffic period",
+  "resourcePeriod": "Period",
+  "resourceNewPeriodHelp": "New records default to monthly. Check your plan, or choose Not set.",
+  "resourcePeriodHelp": "The period is separate from the capacity unit. Choose Not set if unknown.",
+  "resourceSixRequired": "Hardware details · All six fields required",
+  "resourceHardware": "Hardware details",
+  "resourceImportHelp": "Check and complete all six fields before importing. Capacities use base 1024; 0 does not mean unlimited. Skip this instance for now if details are missing, then import it once they are complete.",
+  "resourceLocalHelp": "Leave unknown values blank. Capacities use base 1024. These are local hardware details only: API refreshes do not overwrite them, and they do not change remote settings or the SSH address.",
+  "resourceIpAddress": "IP address",
+  "resourceHostname": "Hostname",
+  "resourceDiskCapacity": "Disk capacity",
+  "resourceTrafficQuotaLabel": "Traffic quota",
+  "resourceUnlimitedHelp": "Enable only if the plan explicitly includes unlimited traffic. Leave off when unknown or when the API returns 0.",
+  "resourceMemoryCapacity": "Memory capacity",
+  "resourceVcpuCount": "vCPU count",
+  "serverFilterTitle": "Filter servers",
+  "serverGroup": "Group",
+  "serverAllGroups": "All groups",
+  "serverDueStatus": "Expiry status",
+  "serverAllStatuses": "All statuses",
+  "serverExpired": "Expired",
+  "serverDueNext30": "Expires in the next 30 days",
+  "serverCostDateUnknown": "Cost / Expiry date unknown",
+  "serverApplyFilters": "Apply filters",
+  "serverLedgerCount": "Servers: {p0} · Local ledger",
+  "serverReloadLocal": "Reload local ledger",
+  "serverReloadedLocal": "Local ledger reloaded. Remote status was not checked.",
+  "serverAdd": "Add server",
+  "serverImportPanel": "Import from panel account",
+  "serverFirstTitle": "Your first VPS\nstarts here",
+  "serverFirstDescription": "Keep servers, costs, and connections together.\nStart with manual records. No monitoring agent is needed.",
+  "serverAddFirst": "Add your first server",
+  "serverLoadDemoQuestion": "Load demo data?",
+  "serverLoadDemoHelp": "Adds 4 local records marked Demo, all using reserved addresses. No servers will be connected. You can archive these records in each server’s details.",
+  "serverLoadDemo": "Load demo",
+  "serverViewDemo": "View demo data first",
+  "serverManualStartHelp": "Already have servers? Start by recording them manually.",
+  "serverSearchHint": "Search name, address, provider, purpose, or region",
+  "serverClearSearch": "Clear search",
+  "serverAll": "All",
+  "serverFavorites": "Favorites",
+  "serverFilterLabel": "Filters{p0}",
+  "serverFilterSelectedSuffix": " · Applied",
+  "serverExpiryNeedsCheck": "Expiry needs checking",
+  "serverExpiryCounts": "Expired: {p0} · Expiring within 30 days: {p1}",
+  "serverFavoriteServers": "Favorite servers",
+  "serverAllServers": "All servers",
+  "serverSort": "Sort",
+  "serverSortFavorites": "Favorites first",
+  "serverSortDue": "By expiry date",
+  "serverSortName": "By name",
+  "serverSortUpdated": "By last updated",
+  "serverNoUnarchived": "No unarchived servers",
+  "serverNoMatches": "No matching records",
+  "serverNoMatchesHelp": "Try adjusting the filters. Restore archived records in Settings.",
+  "serverClearFilters": "Clear filters",
+  "serverListObservationHelp": "Shows local details and the latest panel response, without continuous monitoring.\nDays to expiry use the device date. The next 30 days includes today and the following 29 days.",
+  "serverCostsMissing": "Add cost details",
+  "serverMeteredBilling": "Metered billing",
+  "serverDueUnknown": "Expiry date unknown",
+  "serverExpiredDays": "{p0, plural, one{Expired 1 day ago · Check status} other{Expired {p0} days ago · Check status}}",
+  "serverDueToday": "Expires today",
+  "serverDueInDays": "{p0, plural, one{Expires in 1 day} other{Expires in {p0} days}}",
+  "serverDemo": "Demo",
+  "serverLocalUnqueried": "Local record · Runtime status not checked",
+  "serverNotEntered": "Not entered",
+  "resourceUnlimitedConfirmed": "Unlimited (confirmed)",
+  "resourceCardHelp": "Only local hardware details are saved. Panel refreshes do not overwrite them. Add missing details later.",
+  "serverSavedDisplayStale": "Changes saved; displayed details are not yet updated",
+  "serverReloadBeforeEditing": "Reload the local ledger before making more changes. Do not submit again. Existing data will not be cleared.",
+  "serverReloadStillFailed": "Reload did not complete. Saved changes are kept. Try reloading later.",
+  "serverReload": "Reload",
+  "serverArchiveQuestion": "Archive this server record?",
+  "serverArchiveHelp": "{p0}\n\nArchiving hides the record from the server list and current cost statistics. Payment history is kept. Restore it under Settings / Archived records. This does not stop or destroy the server, or stop provider billing.",
+  "serverArchiveLocal": "Archive local record",
+  "serverArchived": "Archived. Remote resources and billing are unchanged.",
+  "serverUndo": "Undo",
+  "serverUndoArchiveFailed": "Could not undo. Check Archived records in Settings.",
+  "serverMissingDetails": "Not yet added",
+  "serverDetails": "Server details",
+  "serverRecordUnavailable": "This record is unavailable. Go back and try again.",
+  "serverRemoveFavorite": "Remove from favorites",
+  "serverSetFavorite": "Add to favorites",
+  "serverMoreActions": "More actions",
+  "serverDemoWarning": "Demo record · Reserved address; no real server connection",
+  "serverBasicInfo": "Basic details",
+  "serverEdit": "Edit",
+  "serverHostAddress": "Host address",
+  "serverCopyHost": "Copy host address",
+  "serverHostCopied": "Host address copied",
+  "serverCopyHostFailed": "Could not copy the host address. Try again.",
+  "serverOperatingSystem": "Operating system",
+  "serverGroupPurpose": "Group / Purpose",
+  "serverSpecifications": "Specifications",
+  "serverLocalInfoHelp": "These are local details. Panel refreshes do not overwrite them. A connection test does not prove ongoing service availability.",
+  "serverEditHardware": "Edit hardware",
+  "serverPanelLink": "Panel link",
+  "serverNoPanelLink": "No linked panel account",
+  "serverPanelLinkHelp": "Link a saved panel account and instance. Linking or refreshing does not change local hardware details. Edit them manually above.",
+  "serverLinkPanel": "Link panel account",
+  "serverManageLink": "Manage link",
+  "serverReloadPanelDetails": "Reload panel account details",
+  "serverCostExpiry": "Costs and expiry",
+  "serverMonthlyEstimate": "Monthly cost estimate",
+  "serverRenewalAmount": "Renewal amount",
+  "serverRenewalCycle": "Renewal cycle",
+  "serverMonths": "{p0, plural, one{1 month} other{{p0} months}}",
+  "serverServiceStart": "Service start date",
+  "serverUnknown": "Unknown",
+  "serverServiceDue": "Service expiry date",
+  "serverUnknownCostHelp": "Unknown amounts are not treated as 0. Add cost details under Basic details / Edit.",
+  "serverMeteredValueHelp": "Metered costs are monthly estimates and have no remaining value calculation. Maintain cost details by editing the server.",
+  "serverRenewalValueHelp": "Values known service periods at the current renewal price. Historical payments are tracked separately and do not replace that price.",
+  "serverReminderPlan": "Expiry reminders and usage plan",
+  "serverRemindersOff": "Reminders off",
+  "serverRemainingValue": "Remaining value",
+  "serverUnknownValueHelp": "Dates or cost details are incomplete. Remaining value is unknown, not 0.",
+  "serverRecordPayment": "Record a payment made",
+  "serverUseForCalculation": "Calculate using these details",
+  "serverViewPayments": "View payment records",
+  "serverConnectionsControl": "Connections and controls",
+  "serverSshSettings": "SSH connection settings",
+  "serverSshSettingsDescription": "Connection address, port, username, and credentials",
+  "serverConnectSsh": "Connect with SSH",
+  "serverTcpTest": "TCP test",
+  "serverPower": "Server power",
+  "serverConnectionSafety": "Verify the host fingerprint on first connection. A changed fingerprint pauses sign-in. Check the target again before restarting or shutting down. Neither action stops provider billing.",
+  "serverNotes": "Notes",
+  "serverSavedMetadata": "Saved locally: {p0}\nServer ID: {p1}",
+  "serverRequiredField": "Enter {p0}",
+  "serverAmountPrecision": "Enter a valid amount with up to two decimal places",
+  "serverDateExample": "Enter a valid date, for example 2026-10-06",
+  "serverPlainHost": "Enter an IP address or domain without a protocol, port, or path",
+  "serverBillingType": "Billing type",
+  "serverEveryYear": "Every year",
+  "serverEveryMonths": "{p0, plural, one{Every month} other{Every {p0} months}}",
+  "serverHalfYear": "6 mo",
+  "serverTwoYears": "2 yr",
+  "serverThreeYears": "3 yr",
+  "serverAmount": "Amount",
+  "serverOriginalCurrency": "Original currency",
+  "serverCurrency": "Currency",
+  "serverMonthlyCostEstimate": "Monthly cost estimate",
+  "serverRenewalPriceHelp": "Renewal amount: {p0}. Record actual payments separately.",
+  "serverStartDate": "Start date",
+  "serverDueDate": "Expiry date",
+  "serverOptionalStart": "Service start date (optional)",
+  "serverOptionalDue": "Service expiry date (optional)",
+  "serverManualAdd": "Add manually",
+  "serverEditTitle": "Edit server",
+  "serverFormHelp": "Name and provider are required. Add hardware and cost details later. Saves only to the local ledger; remote servers are unchanged.",
+  "serverBasicData": "Basic details",
+  "serverName": "Server name",
+  "serverProvider": "Provider",
+  "serverProviderExample": "For example: BandwagonHost / Your provider",
+  "serverOptionalHost": "Host address (optional)",
+  "serverHostExample": "IPv4, IPv6, or domain; no protocol or port",
+  "serverNewHostHelp": "For new records, leaving this blank uses the IP or hostname from hardware details. Set the SSH connection address separately.",
+  "serverSavedHostHelp": "This address is saved separately. Editing hardware does not change it. Set the SSH connection address separately.",
+  "serverOptionalPurpose": "Purpose (optional)",
+  "serverOptionalRegion": "Region (optional)",
+  "serverOptionalOs": "Operating system (optional)",
+  "serverOptionalSpec": "Additional specifications (optional)",
+  "serverSpecExample": "For example: CPU model, network bandwidth",
+  "serverCostDetails": "Cost details",
+  "serverPaymentLockHelp": "When renewal-generated service periods exist, billing type, cycle, and dates cannot be edited directly. Check which payments can be voided in payment details; later changes may prevent voiding. Renewal price and currency can still be changed. Historical payments remain unchanged.",
+  "serverCostUnknownOption": "Cost unknown · Add later",
+  "serverPrepaidOption": "Prepaid · Renew by cycle",
+  "serverMeteredOption": "Metered · Monthly estimate",
+  "serverPrepaid": "Prepaid",
+  "serverMetered": "Metered",
+  "serverDatesHelp": "Dates are optional. The expiry date is excluded from the service period. If only the expiry date is entered, the start date is calculated from the renewal cycle. Remaining value cannot be calculated without an expiry date.",
+  "serverAmountHelp": "Enter 0 for free. Choose Cost unknown if the amount is unknown. Amounts are saved in the selected currency; reference rates are only for conversion. Saving a cost does not record a payment.",
+  "serverOptionalNotes": "Notes (optional)",
+  "serverNotesSafety": "Do not save passwords, private keys, or tokens in notes. Manage login credentials under Keys and security.",
+  "serverSave": "Save server",
+  "serverWaitForOperation": "Wait for the current operation to finish",
+  "serverReloadSavedFirst": "Reload the saved ledger first",
+  "connectionBrowserTcpUnsupported": "Browsers do not provide native TCP. Use the native app.",
+  "connectionHostKeyUnverified": "Could not verify the complete host public key. Connection blocked.",
+  "connectionHandshakeUnsupported": "Unsupported SSH handshake format or size",
+  "tcpValidIpv6": "Enter a valid IPv6 address",
+  "tcpValidHost": "Enter an IP address or domain without a protocol, port, or path",
+  "tcpValidPort": "The port must be between 1 and 65,535",
+  "tcpSource": "TCP connection test from this device",
+  "tcpConnected": "TCP connection succeeded",
+  "tcpRefused": "Connection refused",
+  "tcpTimedOut": "Connection timed out",
+  "tcpCancelled": "Test cancelled",
+  "tcpFailed": "Connection failed (network or address unavailable)",
+  "tcpTimeoutPositive": "Timeout must be greater than 0",
+  "tcpSingleTarget": "Single-target TCP test",
+  "tcpTestExplanation": "Tests one address and port from this device by opening and closing a TCP connection. No application data is sent. Success does not prove SSH sign-in is possible, the server’s power state, or application health.",
+  "tcpAddress": "IP / Domain",
+  "connectionPort": "Port",
+  "tcpTestingTarget": "Testing {p0}",
+  "tcpCancel": "Cancel test",
+  "tcpStart": "Start test",
+  "tcpTimeoutHelp": "Each test lasts up to {p0, plural, one{1 second} other{{p0} seconds}}. Changing the target, leaving this page, or putting the app in the background cancels it.",
+  "tcpTarget": "Target: {p0}",
+  "tcpActualAddress": "Actual address: {p0}",
+  "tcpResultSource": "Source: {p0}",
+  "tcpFinished": "Finished: {p0} (device time)",
+  "tcpElapsed": "Elapsed: {p0} ms",
+  "tcpOneObservation": "This result reflects only this test, not ongoing status.",
+  "terminalCurrentDirectory": "Current directory",
+  "terminalListFiles": "List files",
+  "terminalUptime": "Uptime",
+  "terminalDiskUsage": "Disk usage",
+  "terminalMemoryUsage": "Memory usage",
+  "terminalCommandsWithDraft": "Commands and snippets · Unsent draft",
+  "terminalCommandsSnippets": "Commands and snippets",
+  "terminalCommands": "Commands",
+  "terminalControlHelp": "Ctrl applies to the next key. Tap again to cancel.",
+  "terminalControlPaste": "Ctrl V · Paste into draft without sending",
+  "terminalArrowUp": "Up arrow",
+  "terminalArrowDown": "Down arrow",
+  "terminalArrowLeft": "Left arrow",
+  "terminalArrowRight": "Right arrow",
+  "terminalSendUnconfirmed": "Sending was not confirmed. The draft is kept. Check the remote state before trying again to avoid duplicate execution.",
+  "terminalSend": "Send",
+  "terminalSendExecute": "Send and execute",
+  "terminalBack": "Back to terminal",
+  "terminalQuickCommands": "Quick commands",
+  "terminalInsertSnippet": "Insert snippet",
+  "terminalDraft": "Draft to send",
+  "terminalDraftHint": "Edit the content to send here",
+  "terminalPaste": "Paste",
+  "terminalSendTo": "Send to",
+  "terminalControlCharacterWarning": "The content contains newlines, carriage returns, or control characters. It may execute immediately even without appending Enter.",
+  "terminalSessionChanged": "The session has changed. Return to the terminal and reopen this panel. The draft is not sent automatically.",
+  "terminalCannotSend": "Sending is unavailable. Reconnecting clears the draft and does not replay input.",
+  "terminalSendMeaning": "Send sends the exact text. Send and execute appends Enter, which is handled by the current terminal program.",
+  "connectionReadFailed": "Could not read connection details. Try again.",
+  "connectionTemporary": "Temporary connection",
+  "connectionInvalidDetails": "Invalid connection details. Check the address, port, and credentials.",
+  "connectionChoosePowerTarget": "Choose a server for power control",
+  "connectionIdentityFirst": "Connect to one server at a time. Authentication using the selected credentials is sent only after the host identity is verified.",
+  "connectionWebPreviewWarning": "The web preview does not support native SSH / TCP or accept real login credentials. Use the native app.",
+  "connectionReloadDetails": "Reload connection details",
+  "connectionTargetServer": "Target server",
+  "connectionTemporaryTarget": "Temporary target · Settings are not saved",
+  "connectionDemoSuffix": " · Demo, no connection",
+  "connectionDemoBlocked": "Demo servers use reserved addresses and cannot make network connections.",
+  "connectionAddressHint": "IPv4 / IPv6 / Domain",
+  "connectionValidHost": "Enter a valid host without a protocol, username, or port",
+  "connectionPortRange": "The port must be between 1 and 65,535",
+  "connectionUsername": "Login username",
+  "connectionValidUsername": "Enter a valid login username",
+  "connectionSavedCredentials": "Saved login credentials",
+  "connectionChooseCredentials": "Choose login credentials",
+  "connectionUseDefaultUsername": "Use default username: {p0}",
+  "connectionManageCredentials": "Manage credentials",
+  "connectionEditSavedSettings": "Edit and save SSH settings for this server",
+  "connectionTemporaryChangesHelp": "Changes on this page apply only to this connection. Passwords or private keys come from saved credentials and are not entered or saved again here. The connection ends when the app enters the background. Use tmux / screen on the remote server for long-running tasks.",
+  "connectionSnippetDraftOnly": "The snippet goes into a separate draft. Connecting, verification, and authentication do not send it.",
+  "connectionPowerAfterConnect": "After connecting, choose restart or shutdown and complete both confirmations. SSH power-on and API power controls are not available.",
+  "connectionReviewConnect": "Review and connect",
+  "snippetFullEscapedPreview": "Full content preview (escaped)",
+  "snippetEscapeLegend": "Newlines appear as \\n, carriage returns as \\r, tabs as \\t, and other control characters as \\u'{'…'}'. Backslashes are also escaped.",
+  "snippetPreviewNoSend": "Previewing and inserting do not send content. Check the target and full draft in the terminal, then choose Send or Send and execute.",
+  "connectionClose": "Close",
+  "snippetInsertDraftOnly": "Insert into draft only",
+  "snippetChanged": "The snippet was edited or deleted. Reopen the list and try again.",
+  "snippetOperationFailed": "The snippet operation did not complete. Try again. Saved content is kept.",
+  "snippetDeleteQuestion": "Delete this local snippet?",
+  "snippetDeleteHelp": "Deletes the local template “{p0}”. Servers and already-inserted drafts are unchanged.",
+  "snippetDelete": "Delete snippet",
+  "snippetChoose": "Choose a snippet for the draft",
+  "snippetReadFailed": "Could not read snippets. Local data is unchanged.",
+  "snippetSelectPreviewHelp": "Preview the full content after selecting it. It is inserted only into the draft. Nothing is sent and Enter is not pressed automatically.",
+  "snippetPlaintextHelp": "Snippets are local plain text. Do not save passwords, private keys, or tokens. Choose Insert snippet in the terminal to add one to a draft.",
+  "snippetAdd": "Add snippet",
+  "snippetEmptyHelp": "No snippets yet. Add templates for commands you use often.",
+  "snippetCharacterCount": "Characters: {p0} · Local template",
+  "snippetPreviewInsert": "Preview and insert into draft",
+  "snippetFullPreview": "Full preview",
+  "connectionDelete": "Delete",
+  "snippetDiscardQuestion": "Discard snippet changes?",
+  "snippetDiscardHelp": "Unsaved content will not be written to the local snippet.",
+  "connectionDiscardChanges": "Discard changes",
+  "snippetEdit": "Edit snippet",
+  "snippetCancelEdit": "Cancel snippet editing",
+  "snippetSaveSafety": "Saved locally as unencrypted plain text. Do not enter passwords, private keys, or tokens. Saving does not execute or send content.",
+  "snippetName": "Snippet name",
+  "snippetFullContent": "Full content (preserves original newlines and control characters)",
+  "snippetContentRange": "Content is required and can contain up to 16,384 characters",
+  "snippetExactContentHelp": "Saving preserves the exact content, including leading and trailing whitespace, multiple lines, carriage returns, and control characters. Check it in the full preview.",
+  "connectionSaving": "Saving…",
+  "snippetSave": "Save snippet",
+  "terminalCopyFailed": "Could not copy terminal content. Try again.",
+  "terminalSelectionCopied": "Selected terminal content copied",
+  "terminalDraftChangedPaste": "The draft has changed. Tap Paste again.",
+  "terminalClipboardEmpty": "The clipboard has no text to paste.",
+  "terminalPasteTooLong": "Pasting would exceed 16,384 characters. The draft is unchanged.",
+  "terminalClipboardReadFailed": "Could not read the clipboard. The draft is unchanged. Tap Paste again.",
+  "terminalReplaceDraftQuestion": "Replace the current draft?",
+  "terminalReplaceDraftHelp": "The current unsent draft will be replaced. Nothing will be sent over SSH.",
+  "terminalReplaceDraft": "Replace draft",
+  "terminalCurrentSession": "Current SSH session",
+  "terminalDimensions": "{p0} · {p1} columns × {p2} rows",
+  "terminalSelectionHelp": "Tap the terminal to type. Touch and hold, then drag to select, and use Copy. Scroll up for history; the down arrow returns to the latest output.",
+  "terminalInputHelp": "Keyboard input and special keys go directly to SSH. Quick commands, snippets, and pasted text go into a separate draft first. Send does not append Enter; Send and execute does, for the current terminal program to handle. Newlines already in the content may still execute. Ctrl applies to the next key; tap it again to cancel.",
+  "terminalBackgroundHelp": "Leaving the terminal or putting the app in the background disconnects the session. It does not reconnect or replay input automatically. Use tmux / screen remotely for long-running tasks.",
+  "terminalOfflineFont": "Offline font: DejaVu Sans Mono · Chinese uses device font fallback",
+  "terminalLicenses": "Open-source licenses",
+  "terminalDisconnectQuestion": "Disconnect the SSH session?",
+  "terminalDiscardExitQuestion": "Discard the draft and exit?",
+  "terminalDisconnectHelp": "{p0}\nRemote tasks outside tmux / screen may be interrupted. {p1}",
+  "terminalDraftKeptUntilReconnect": "The draft is kept for now and cleared on reconnect.",
+  "terminalDraftWillClear": "The unsent draft will be cleared.",
+  "terminalUnsentDraftExit": "The current draft has not been sent. It will be cleared on exit.",
+  "terminalDisconnect": "Disconnect",
+  "terminalDisconnectExit": "Disconnect and exit",
+  "terminalDiscardExit": "Discard and exit",
+  "terminalBackgroundDisconnected": "The app entered the background and the connection was closed. Reconnect manually. Input is not replayed.",
+  "terminalTargetChanged": "The target changed. The connection and draft were cleared. Connect to the new target manually.",
+  "terminalPowerMenuHelp": "After connecting, choose SSH restart or shutdown in the Terminal menu and complete both confirmations.",
+  "terminalHostChanged": "Host key changed · Authentication blocked",
+  "terminalHostChangedHelp": "This may be a reinstall or a man-in-the-middle attack. Login credentials have not been sent. Verify the reason and new public key through an independent source such as the provider console.",
+  "terminalPreviousFingerprint": "Previous fingerprint",
+  "terminalNoRecord": "No record",
+  "terminalCurrentFingerprint": "Current fingerprint",
+  "terminalRejectConnection": "Reject connection",
+  "terminalReverify": "Start independent verification",
+  "terminalPowerFailed": "The power command could not be confirmed successful. Check the connection, remote permissions, and provider console before trying again. It will not be resent automatically.",
+  "terminalPowerUnknown": "Submission of the power command was attempted, but the result is unknown. Disconnection does not prove completion. Check the provider console. It will not be resent automatically.",
+  "terminalNotConnected": "Not connected",
+  "terminalConnecting": "Connecting",
+  "terminalVerifying": "Verifying host identity",
+  "terminalAuthenticating": "Authenticating",
+  "terminalConnected": "Connected · SSH PTY",
+  "terminalDisconnected": "Disconnected",
+  "terminalFailed": "Connection failed",
+  "terminalExit": "Exit terminal",
+  "terminalSessionSemantics": "Session details, {p0}, {p1}",
+  "terminalHideKeyboard": "Hide keyboard",
+  "terminalOpenKeyboard": "Open keyboard",
+  "terminalMenu": "Terminal menu",
+  "terminalSessionDetails": "Session details and help",
+  "terminalPasteIntoDraft": "Paste into draft",
+  "terminalReconnectClear": "Reconnect and clear draft",
+  "terminalCancelConnection": "Cancel connection",
+  "terminalSshRestart": "SSH restart",
+  "terminalSshShutdown": "SSH shutdown",
+  "terminalTypeDirectly": "Tap to type. Keys are sent directly.",
+  "terminalCopy": "Copy",
+  "terminalClearSelection": "Clear selection",
+  "terminalLatestOutput": "Return to latest output",
+  "terminalEstablishingSecure": "Establishing a secure connection…",
+  "terminalOffline": "Terminal disconnected",
+  "terminalConnect": "Connect",
+  "terminalReconnectShort": "Reconnect · Clear draft",
+  "terminalBrowserUnsupported": "Browsers do not support native SSH. Use the native app.",
+  "terminalConnectedInputHelp": "After connecting, tap the terminal to type. Keys are sent directly to the server.",
+  "terminalRetainedOutputHelp": "Output is kept. Reconnecting clears the terminal and draft without replaying input.",
+  "terminalDismissNotice": "Dismiss notice",
+  "terminalVerifyNewHost": "Verify the new host public key",
+  "terminalFirstHostVerification": "First connection · Verify host identity",
+  "terminalHostIdentity": "Host: {p0}\nPort: {p1}\nAlgorithm: {p2}",
+  "terminalSha256Fingerprint": "SHA-256 fingerprint",
+  "terminalFullHostKey": "Full host public key",
+  "terminalIndependentVerificationHelp": "Check against the provider console or another independent trusted source. Seeing this dialog does not establish trust.",
+  "terminalConfirmedChangedHost": "I independently verified the reason for the change and the full new public key",
+  "terminalConfirmedHost": "I verified the full host identity through an independent source",
+  "terminalVerificationExpired": "The connection was cancelled or timed out. This verification is no longer valid.",
+  "terminalUpdateTrustAuthenticate": "Update trust and continue authentication",
+  "terminalTrustAuthenticate": "Trust and authenticate",
+  "terminalUnlockKey": "Unlock the SSH private key for this connection",
+  "terminalCredentialName": "Credential: {p0}",
+  "terminalPassphraseHelp": "This passphrase decrypts the private key; it is not the server login password. It is used only for this connection and is not saved. Enter it again next time.",
+  "terminalKeyPassphrase": "Private key passphrase for this connection",
+  "terminalPassphraseCleared": "The connection was cancelled or the app entered the background, so the passphrase was cleared. Cancel and reconnect.",
+  "terminalUnlockOnce": "Unlock for this connection only",
+  "powerRestart": "Restart",
+  "powerShutdown": "Shut down",
+  "powerImpactTitle": "{p0} (1/2)",
+  "powerImpactHelp": "{p0}\n{p1}\n\nRun through this single SSH connection:\n{p2}\n\nThis may immediately interrupt services and the SSH session, and requires appropriate remote permissions. Shutdown does not stop provider billing, and SSH cannot power the server on again. After a disconnect or timeout, the result is unknown. Check the provider console rather than retrying blindly.",
+  "powerUnderstandContinue": "Review target",
+  "powerFinalTitle": "{p0} (2/2)",
+  "powerEnterTarget": "Enter the full target to confirm sending this command once:",
+  "powerTargetFormat": "username@host:port",
+  "powerConfirmationInvalidated": "The connection changed. This confirmation is no longer valid, and no command was sent.",
+  "powerExecuteOnce": "{p0} once",
+  "snippetInvalidId": "Invalid snippet ID",
+  "sshCheckTarget": "Check the SSH port, username, and credentials",
+  "sshConnectionCancelled": "SSH connection cancelled",
+  "sshBrowserUnsupported": "Browsers do not support native SSH. Use the native app.",
+  "sshCredentialReadTimeout": "Reading SSH credentials timed out",
+  "sshKeyNeedsPassphrase": "This private key needs a passphrase. Reconnect and enter it.",
+  "sshPassphraseInputTimeout": "Private-key passphrase entry timed out. No connection was made.",
+  "sshPassphraseCancelled": "Private-key passphrase entry was cancelled. No connection was made.",
+  "sshPassphraseTooLong": "The private-key passphrase exceeds the length limit",
+  "sshKeyDecryptionTimeout": "Private-key decryption timed out. No connection was made.",
+  "sshTcpTimeout": "SSH TCP connection timed out",
+  "sshHandshakeTimeout": "SSH handshake timed out",
+  "sshIdentityChanged": "Host verification or credentials changed. Authentication was blocked.",
+  "sshVerificationCancelled": "SSH verification cancelled",
+  "sshVerificationTimeout": "Host verification timed out. Authentication did not start.",
+  "sshCredentialChanged": "Credentials changed. Reconnect.",
+  "sshAuthenticationTimeout": "SSH authentication timed out",
+  "sshTerminalOpenTimeout": "Opening the SSH terminal timed out",
+  "sshAuthenticationFailed": "SSH authentication failed. Check the username and credentials.",
+  "sshHostNotTrusted": "The host was not trusted. Authentication did not start.",
+  "sshConnectionIncomplete": "SSH connection did not complete. Check the address, network, and service.",
+  "sshSessionEnded": "The SSH session ended. Reconnect to check whether the command completed.",
+  "sshInputUnconfirmed": "SSH input delivery was not confirmed. Reconnect and check before retrying to avoid duplicate execution.",
+  "sshResizeFailed": "Could not resize the SSH terminal. Reconnect.",
+  "sshPrivatePublicMismatch": "The private key does not match the saved public-key details. Import the private key again before connecting.",
+  "securityReadFailed": "Could not read security data. Try again.",
+  "@securityReadFailed": {
+    "description": "Security: ReadFailed. App-authored UI text; do not translate user data or protocol tokens."
+  },
+  "securitySavedReloadFailed": "Saved, but the data could not be reloaded. Reload before making more changes.",
+  "@securitySavedReloadFailed": {
+    "description": "Security: SavedReloadFailed. App-authored UI text; do not translate user data or protocol tokens."
+  },
+  "securityDataChanged": "The data has changed. Reload and try again.",
+  "@securityDataChanged": {
+    "description": "Security: DataChanged. App-authored UI text; do not translate user data or protocol tokens."
+  },
+  "securityMutationFailed": "The security action did not complete. Existing data is unchanged. Try again.",
+  "@securityMutationFailed": {
+    "description": "Security: MutationFailed. App-authored UI text; do not translate user data or protocol tokens."
+  },
+  "securityInvalidCredentialIdentity": "Enter a name of 1–80 characters and a valid default username.",
+  "@securityInvalidCredentialIdentity": {
+    "description": "Security: InvalidCredentialIdentity. App-authored UI text; do not translate user data or protocol tokens."
+  },
+  "securitySecretRequired": "Provide the password or private key.",
+  "@securitySecretRequired": {
+    "description": "Security: SecretRequired. App-authored UI text; do not translate user data or protocol tokens."
+  },
+  "securityReimportForPassphrase": "To update the saved passphrase, also reimport the matching private key.",
+  "@securityReimportForPassphrase": {
+    "description": "Security: ReimportForPassphrase. App-authored UI text; do not translate user data or protocol tokens."
+  },
+  "securityPasswordNoPassphrase": "Password credentials do not use a private-key passphrase.",
+  "@securityPasswordNoPassphrase": {
+    "description": "Security: PasswordNoPassphrase. App-authored UI text; do not translate user data or protocol tokens."
+  },
+  "securitySecretSizeInvalid": "The secret is empty or exceeds the size limit.",
+  "@securitySecretSizeInvalid": {
+    "description": "Security: SecretSizeInvalid. App-authored UI text; do not translate user data or protocol tokens."
+  },
+  "securitySecretWriteUnverified": "The secret write could not be verified. The existing credential is unchanged.",
+  "@securitySecretWriteUnverified": {
+    "description": "Security: SecretWriteUnverified. App-authored UI text; do not translate user data or protocol tokens."
+  },
+  "securityCleanupIncomplete": "Secret cleanup is incomplete. You can retry later.",
+  "@securityCleanupIncomplete": {
+    "description": "Security: CleanupIncomplete. App-authored UI text; do not translate user data or protocol tokens."
+  },
+  "securityCleanupReadFailed": "Could not read pending cleanup data. Try again.",
+  "@securityCleanupReadFailed": {
+    "description": "Security: CleanupReadFailed. App-authored UI text; do not translate user data or protocol tokens."
+  },
+  "securitySshCancelled": "The SSH connection was canceled, or the data needs to be reloaded.",
+  "@securitySshCancelled": {
+    "description": "Security: SshCancelled. App-authored UI text; do not translate user data or protocol tokens."
+  },
+  "securityChooseAvailableCredential": "Select an available credential.",
+  "@securityChooseAvailableCredential": {
+    "description": "Security: ChooseAvailableCredential. App-authored UI text; do not translate user data or protocol tokens."
+  },
+  "securityCredentialSecretMissing": "This credential’s password or private key was not found. Open Manage credentials to save the password again or import the private key.",
+  "@securityCredentialSecretMissing": {
+    "description": "Security: CredentialSecretMissing. App-authored UI text; do not translate user data or protocol tokens."
+  },
+  "securityStoredSecretUnreadable": "The data in secure storage could not be read.",
+  "@securityStoredSecretUnreadable": {
+    "description": "Security: StoredSecretUnreadable. App-authored UI text; do not translate user data or protocol tokens."
+  },
+  "securityCredentialChanged": "The credential has changed. Reload and try again.",
+  "@securityCredentialChanged": {
+    "description": "Security: CredentialChanged. App-authored UI text; do not translate user data or protocol tokens."
+  },
+  "securitySshCredentialReadFailed": "Could not read the SSH credential. Try again.",
+  "@securitySshCredentialReadFailed": {
+    "description": "Security: SshCredentialReadFailed. App-authored UI text; do not translate user data or protocol tokens."
+  },
+  "securityAuthenticationHidden": "Device authentication did not complete. The secret remains hidden.",
+  "@securityAuthenticationHidden": {
+    "description": "Security: AuthenticationHidden. App-authored UI text; do not translate user data or protocol tokens."
+  },
+  "securitySavedPasswordMissing": "The saved password was not found. Edit this credential and save the password again.",
+  "@securitySavedPasswordMissing": {
+    "description": "Security: SavedPasswordMissing. App-authored UI text; do not translate user data or protocol tokens."
+  },
+  "securityRevealFailed": "Could not display the secret. Try again.",
+  "@securityRevealFailed": {
+    "description": "Security: RevealFailed. App-authored UI text; do not translate user data or protocol tokens."
+  },
+  "securityHostTargetMismatch": "The host verification targets do not match.",
+  "@securityHostTargetMismatch": {
+    "description": "Security: HostTargetMismatch. App-authored UI text; do not translate user data or protocol tokens."
+  },
+  "securityHostAuthenticationIncomplete": "Host verification or authentication did not complete.",
+  "@securityHostAuthenticationIncomplete": {
+    "description": "Security: HostAuthenticationIncomplete. App-authored UI text; do not translate user data or protocol tokens."
+  },
+  "securityInvalidHost": "Invalid host address. Enter an IP address or domain without a scheme, username, port, or path.",
+  "@securityInvalidHost": {
+    "description": "Security: InvalidHost. App-authored UI text; do not translate user data or protocol tokens."
+  },
+  "securityInvalidSshPort": "The SSH port must be between 1 and 65535.",
+  "@securityInvalidSshPort": {
+    "description": "Security: InvalidSshPort. App-authored UI text; do not translate user data or protocol tokens."
+  },
+  "securityHostKeyUnreadable": "The host public key was not recognized. Check the complete public key and the selected type.",
+  "@securityHostKeyUnreadable": {
+    "description": "Security: HostKeyUnreadable. App-authored UI text; do not translate user data or protocol tokens."
+  },
+  "securityPrivateKeyUnreadable": "Could not read the private key. Check its complete content, supported format, and decryption passphrase.",
+  "@securityPrivateKeyUnreadable": {
+    "description": "Security: PrivateKeyUnreadable. App-authored UI text; do not translate user data or protocol tokens."
+  },
+  "securityNativeStorageUnsupported": "Native secure storage is not available on this platform.",
+  "@securityNativeStorageUnsupported": {
+    "description": "Security: NativeStorageUnsupported. App-authored UI text; do not translate user data or protocol tokens."
+  },
+  "securityNativeStorageUnavailable": "Native secure storage is unavailable or the operation did not complete. Check your device and try again.",
+  "@securityNativeStorageUnavailable": {
+    "description": "Security: NativeStorageUnavailable. App-authored UI text; do not translate user data or protocol tokens."
+  },
+  "securityDeviceAuthUnsupported": "Device authentication is not supported on this platform, so secrets cannot be displayed.",
+  "@securityDeviceAuthUnsupported": {
+    "description": "Security: DeviceAuthUnsupported. App-authored UI text; do not translate user data or protocol tokens."
+  },
+  "securityDeviceAuthReason": "Verify your identity to view the saved password",
+  "@securityDeviceAuthReason": {
+    "description": "Security: DeviceAuthReason. App-authored UI text; do not translate user data or protocol tokens."
+  },
+  "securityDeviceAuthIncomplete": "Device authentication did not complete.",
+  "@securityDeviceAuthIncomplete": {
+    "description": "Security: DeviceAuthIncomplete. App-authored UI text; do not translate user data or protocol tokens."
+  },
+  "securityPasswordKind": "Username and password",
+  "@securityPasswordKind": {
+    "description": "Security: PasswordKind. App-authored UI text; do not translate user data or protocol tokens."
+  },
+  "securityPrivateKeyKind": "SSH key",
+  "@securityPrivateKeyKind": {
+    "description": "Security: PrivateKeyKind. App-authored UI text; do not translate user data or protocol tokens."
+  },
+  "securityReloadSaved": "Reload saved data",
+  "@securityReloadSaved": {
+    "description": "Security: ReloadSaved. App-authored UI text; do not translate user data or protocol tokens."
+  },
+  "securityCleanupNotice": "Secure-storage cleanup is incomplete. Current connection references are preserved. Retry when system secure storage is available. Secrets still in use will not be deleted.",
+  "@securityCleanupNotice": {
+    "description": "Security: CleanupNotice. App-authored UI text; do not translate user data or protocol tokens."
+  },
+  "securityRetryCleanup": "Retry unused-secret cleanup",
+  "@securityRetryCleanup": {
+    "description": "Security: RetryCleanup. App-authored UI text; do not translate user data or protocol tokens."
+  },
+  "securityAddLoginCredential": "Add login credential",
+  "@securityAddLoginCredential": {
+    "description": "Security: AddLoginCredential. App-authored UI text; do not translate user data or protocol tokens."
+  },
+  "securityImportKey": "Import SSH key",
+  "@securityImportKey": {
+    "description": "Security: ImportKey. App-authored UI text; do not translate user data or protocol tokens."
+  },
+  "securityImportKeySubtitle": "Choose a file or paste · Validate format and passphrase",
+  "@securityImportKeySubtitle": {
+    "description": "Security: ImportKeySubtitle. App-authored UI text; do not translate user data or protocol tokens."
+  },
+  "securitySaveUsernamePassword": "Save username and password",
+  "@securitySaveUsernamePassword": {
+    "description": "Security: SaveUsernamePassword. App-authored UI text; do not translate user data or protocol tokens."
+  },
+  "securityReusableCredential": "Can be used by multiple servers",
+  "@securityReusableCredential": {
+    "description": "Security: ReusableCredential. App-authored UI text; do not translate user data or protocol tokens."
+  },
+  "securityTitle": "Keys and security",
+  "@securityTitle": {
+    "description": "Security: Title. App-authored UI text; do not translate user data or protocol tokens."
+  },
+  "securityAddCredential": "Add credential",
+  "@securityAddCredential": {
+    "description": "Security: AddCredential. App-authored UI text; do not translate user data or protocol tokens."
+  },
+  "securityCredentialStorageNotice": "Credentials are managed separately and referenced by connections. Secrets are stored only in system secure storage.",
+  "@securityCredentialStorageNotice": {
+    "description": "Security: CredentialStorageNotice. App-authored UI text; do not translate user data or protocol tokens."
+  },
+  "securitySearchCredentials": "Search name or default username",
+  "@securitySearchCredentials": {
+    "description": "Security: SearchCredentials. App-authored UI text; do not translate user data or protocol tokens."
+  },
+  "securityAll": "All",
+  "@securityAll": {
+    "description": "Security: All. App-authored UI text; do not translate user data or protocol tokens."
+  },
+  "securityCredentialCount": "Saved login credentials · {count}",
+  "@securityCredentialCount": {
+    "description": "Security: CredentialCount. App-authored UI text; do not translate user data or protocol tokens.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "securityNoMatchingCredentials": "No matching credentials. Change the filter or add one.",
+  "@securityNoMatchingCredentials": {
+    "description": "Security: NoMatchingCredentials. App-authored UI text; do not translate user data or protocol tokens."
+  },
+  "securityLinkedServerCount": "{count, plural, =1{1 linked server} other{{count} linked servers}}",
+  "@securityLinkedServerCount": {
+    "description": "Security: LinkedServerCount. App-authored UI text; do not translate user data or protocol tokens.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "securityDeviceConnectionSecurity": "Device and connection security",
+  "@securityDeviceConnectionSecurity": {
+    "description": "Security: DeviceConnectionSecurity. App-authored UI text; do not translate user data or protocol tokens."
+  },
+  "securityTrustedHosts": "Trusted hosts",
+  "@securityTrustedHosts": {
+    "description": "Security: TrustedHosts. App-authored UI text; do not translate user data or protocol tokens."
+  },
+  "securityTrustedHostsSubtitle": "Host, port, algorithm, and complete host public key",
+  "@securityTrustedHostsSubtitle": {
+    "description": "Security: TrustedHostsSubtitle. App-authored UI text; do not translate user data or protocol tokens."
+  },
+  "securityCredentialProtection": "Credential protection",
+  "@securityCredentialProtection": {
+    "description": "Security: CredentialProtection. App-authored UI text; do not translate user data or protocol tokens."
+  },
+  "securityCredentialProtectionSubtitle": "Device verification, brief reveal, and platform limits",
+  "@securityCredentialProtectionSubtitle": {
+    "description": "Security: CredentialProtectionSubtitle. App-authored UI text; do not translate user data or protocol tokens."
+  },
+  "securityCredentialProtectionDetail": "Passwords, private keys, and key passphrases are excluded from the ledger database, exports, and logs. Viewing a password requires system device verification. It is hidden after 20 seconds or when you leave the page. This app does not support device verification on Linux, so secrets cannot be viewed there.\n\nDevice authentication gates display in the app; it does not mean each secret is separately encrypted by biometric hardware. Security behavior still needs verification on physical iOS / Android devices. Dart does not guarantee secure memory erasure. Copying or exporting secrets is currently unavailable.",
+  "@securityCredentialProtectionDetail": {
+    "description": "Security: CredentialProtectionDetail. App-authored UI text; do not translate user data or protocol tokens."
+  },
+  "securityLocalCredentialNotice": "Changing a local credential does not change the remote password or authorized_keys. The selected credential is used only when you explicitly start a connection.",
+  "@securityLocalCredentialNotice": {
+    "description": "Security: LocalCredentialNotice. App-authored UI text; do not translate user data or protocol tokens."
+  },
+  "securityViewDetails": "View details",
+  "@securityViewDetails": {
+    "description": "Security: ViewDetails. App-authored UI text; do not translate user data or protocol tokens."
+  },
+  "securityPrivateKeyDetailsSubtitle": "Public-key fingerprint and metadata; private key hidden",
+  "@securityPrivateKeyDetailsSubtitle": {
+    "description": "Security: PrivateKeyDetailsSubtitle. App-authored UI text; do not translate user data or protocol tokens."
+  },
+  "securityPasswordDetailsSubtitle": "Password hidden by default; device verification required to view",
+  "@securityPasswordDetailsSubtitle": {
+    "description": "Security: PasswordDetailsSubtitle. App-authored UI text; do not translate user data or protocol tokens."
+  },
+  "securityEditCredential": "Edit credential",
+  "@securityEditCredential": {
+    "description": "Security: EditCredential. App-authored UI text; do not translate user data or protocol tokens."
+  },
+  "securityKeepSecret": "Leave blank to keep the saved secret",
+  "@securityKeepSecret": {
+    "description": "Security: KeepSecret. App-authored UI text; do not translate user data or protocol tokens."
+  },
+  "securityLinkedServers": "Linked servers",
+  "@securityLinkedServers": {
+    "description": "Security: LinkedServers. App-authored UI text; do not translate user data or protocol tokens."
+  },
+  "securityIndependentUsernames": "Connection usernames are stored separately",
+  "@securityIndependentUsernames": {
+    "description": "Security: IndependentUsernames. App-authored UI text; do not translate user data or protocol tokens."
+  },
+  "securityDeleteCredential": "Delete credential",
+  "@securityDeleteCredential": {
+    "description": "Security: DeleteCredential. App-authored UI text; do not translate user data or protocol tokens."
+  },
+  "securityReviewDeleteImpact": "Review the impact of replacing or unlinking first",
+  "@securityReviewDeleteImpact": {
+    "description": "Security: ReviewDeleteImpact. App-authored UI text; do not translate user data or protocol tokens."
+  },
+  "securityDiscardCredentialTitle": "Discard these edits?",
+  "@securityDiscardCredentialTitle": {
+    "description": "Security: DiscardCredentialTitle. App-authored UI text; do not translate user data or protocol tokens."
+  },
+  "securityDiscardCredentialMessage": "Unsaved credential content will be cleared.",
+  "@securityDiscardCredentialMessage": {
+    "description": "Security: DiscardCredentialMessage. App-authored UI text; do not translate user data or protocol tokens."
+  },
+  "securityDiscardChanges": "Discard changes",
+  "@securityDiscardChanges": {
+    "description": "Security: DiscardChanges. App-authored UI text; do not translate user data or protocol tokens."
+  },
+  "securityKeyImported": "Private key imported into the draft. Its format and passphrase will be validated when saved.",
+  "@securityKeyImported": {
+    "description": "Security: KeyImported. App-authored UI text; do not translate user data or protocol tokens."
+  },
+  "securityKeyFileReadFailed": "Could not read the private-key file. Choose a UTF-8 private-key file no larger than 128 KB.",
+  "@securityKeyFileReadFailed": {
+    "description": "Security: KeyFileReadFailed. App-authored UI text; do not translate user data or protocol tokens."
+  },
+  "securityKeyPasted": "Private key pasted into the draft. It remains hidden and will be validated when saved.",
+  "@securityKeyPasted": {
+    "description": "Security: KeyPasted. App-authored UI text; do not translate user data or protocol tokens."
+  },
+  "securityKeyPasteFailed": "Could not paste the private key. Copy the complete private key, no larger than 128 KB.",
+  "@securityKeyPasteFailed": {
+    "description": "Security: KeyPasteFailed. App-authored UI text; do not translate user data or protocol tokens."
+  },
+  "securityCredentialSaved": "Credential saved. Remote authentication details are unchanged.",
+  "@securityCredentialSaved": {
+    "description": "Security: CredentialSaved. App-authored UI text; do not translate user data or protocol tokens."
+  },
+  "securityCancelCredentialEdit": "Cancel credential editing",
+  "@securityCancelCredentialEdit": {
+    "description": "Security: CancelCredentialEdit. App-authored UI text; do not translate user data or protocol tokens."
+  },
+  "securityCredentialName": "Credential name",
+  "@securityCredentialName": {
+    "description": "Security: CredentialName. App-authored UI text; do not translate user data or protocol tokens."
+  },
+  "securityCredentialNameRequired": "Enter a credential name.",
+  "@securityCredentialNameRequired": {
+    "description": "Security: CredentialNameRequired. App-authored UI text; do not translate user data or protocol tokens."
+  },
+  "securityDefaultLoginUsername": "Default login username",
+  "@securityDefaultLoginUsername": {
+    "description": "Security: DefaultLoginUsername. App-authored UI text; do not translate user data or protocol tokens."
+  },
+  "securityOptionalDefaultUsername": "Default username (optional)",
+  "@securityOptionalDefaultUsername": {
+    "description": "Security: OptionalDefaultUsername. App-authored UI text; do not translate user data or protocol tokens."
+  },
+  "securityDefaultUsernameRequired": "Enter a default username.",
+  "@securityDefaultUsernameRequired": {
+    "description": "Security: DefaultUsernameRequired. App-authored UI text; do not translate user data or protocol tokens."
+  },
+  "securityChoosingFile": "Choosing file…",
+  "@securityChoosingFile": {
+    "description": "Security: ChoosingFile. App-authored UI text; do not translate user data or protocol tokens."
+  },
+  "securityChoosePrivateKeyFile": "Choose private-key file",
+  "@securityChoosePrivateKeyFile": {
+    "description": "Security: ChoosePrivateKeyFile. App-authored UI text; do not translate user data or protocol tokens."
+  },
+  "securityPasteCompleteKey": "Paste complete private key",
+  "@securityPasteCompleteKey": {
+    "description": "Security: PasteCompleteKey. App-authored UI text; do not translate user data or protocol tokens."
+  },
+  "securityPrivateKeyImportNotice": "OpenSSH / PEM private keys are supported. Only the selected file is read; its path is not saved. Use “Paste complete private key” to preserve line breaks. The content stays hidden.",
+  "@securityPrivateKeyImportNotice": {
+    "description": "Security: PrivateKeyImportNotice. App-authored UI text; do not translate user data or protocol tokens."
+  },
+  "securityLoginPassword": "Login password",
+  "@securityLoginPassword": {
+    "description": "Security: LoginPassword. App-authored UI text; do not translate user data or protocol tokens."
+  },
+  "securityPrivateKeyContent": "Private-key content",
+  "@securityPrivateKeyContent": {
+    "description": "Security: PrivateKeyContent. App-authored UI text; do not translate user data or protocol tokens."
+  },
+  "securityKeepSecretHidden": "Leave blank to keep saved content. The existing secret is never shown here.",
+  "@securityKeepSecretHidden": {
+    "description": "Security: KeepSecretHidden. App-authored UI text; do not translate user data or protocol tokens."
+  },
+  "securityLoginPasswordRequired": "Enter the login password.",
+  "@securityLoginPasswordRequired": {
+    "description": "Security: LoginPasswordRequired. App-authored UI text; do not translate user data or protocol tokens."
+  },
+  "securityPrivateKeyRequired": "Choose a private-key file or paste the complete private key.",
+  "@securityPrivateKeyRequired": {
+    "description": "Security: PrivateKeyRequired. App-authored UI text; do not translate user data or protocol tokens."
+  },
+  "securityPrivateKeyPassphrase": "Private-key passphrase (if any)",
+  "@securityPrivateKeyPassphrase": {
+    "description": "Security: PrivateKeyPassphrase. App-authored UI text; do not translate user data or protocol tokens."
+  },
+  "securityPrivateKeyPassphraseHelp": "Used to decrypt the selected private key, not to log in to the server. This page does not change the key’s encryption passphrase.",
+  "@securityPrivateKeyPassphraseHelp": {
+    "description": "Security: PrivateKeyPassphraseHelp. App-authored UI text; do not translate user data or protocol tokens."
+  },
+  "securityStoreKeyPassphrase": "Save the private-key passphrase in device secure storage",
+  "@securityStoreKeyPassphrase": {
+    "description": "Security: StoreKeyPassphrase. App-authored UI text; do not translate user data or protocol tokens."
+  },
+  "securityStoreKeyPassphraseHelp": "Not saved by default. If an encrypted key’s passphrase is not saved, you must enter it for each connection. Canceling or entering a wrong passphrase stops the connection. This option applies only when importing a private key.",
+  "@securityStoreKeyPassphraseHelp": {
+    "description": "Security: StoreKeyPassphraseHelp. App-authored UI text; do not translate user data or protocol tokens."
+  },
+  "securityCredentialEditNotice": "The username is a suggestion for new connections and does not overwrite existing ones. Updating a credential affects future logins only; it does not change server passwords or keys. Moving the app to the background clears unsaved secrets.",
+  "@securityCredentialEditNotice": {
+    "description": "Security: CredentialEditNotice. App-authored UI text; do not translate user data or protocol tokens."
+  },
+  "securityCurrentLinkImpact": "Impact on current links",
+  "@securityCurrentLinkImpact": {
+    "description": "Security: CurrentLinkImpact. App-authored UI text; do not translate user data or protocol tokens."
+  },
+  "securityServerFallback": "Server",
+  "@securityServerFallback": {
+    "description": "Security: ServerFallback. App-authored UI text; do not translate user data or protocol tokens."
+  },
+  "securitySaving": "Saving…",
+  "@securitySaving": {
+    "description": "Security: Saving. App-authored UI text; do not translate user data or protocol tokens."
+  },
+  "securitySaveCredential": "Save credential",
+  "@securitySaveCredential": {
+    "description": "Security: SaveCredential. App-authored UI text; do not translate user data or protocol tokens."
+  },
+  "securityCredentialDetails": "Credential details",
+  "@securityCredentialDetails": {
+    "description": "Security: CredentialDetails. App-authored UI text; do not translate user data or protocol tokens."
+  },
+  "securityCredentialDeleted": "Credential deleted",
+  "@securityCredentialDeleted": {
+    "description": "Security: CredentialDeleted. App-authored UI text; do not translate user data or protocol tokens."
+  },
+  "securityCredentialDefaultUsername": "{kind}\nDefault username: {username}",
+  "@securityCredentialDefaultUsername": {
+    "description": "Security: CredentialDefaultUsername. App-authored UI text; do not translate user data or protocol tokens.",
+    "placeholders": {
+      "kind": {
+        "type": "String"
+      },
+      "username": {
+        "type": "String"
+      }
+    }
+  },
+  "securityUsernamePerConnection": "Set separately for each connection",
+  "@securityUsernamePerConnection": {
+    "description": "Security: UsernamePerConnection. App-authored UI text; do not translate user data or protocol tokens."
+  },
+  "securityPublicKeyFingerprint": "Public-key fingerprint",
+  "@securityPublicKeyFingerprint": {
+    "description": "Security: PublicKeyFingerprint. App-authored UI text; do not translate user data or protocol tokens."
+  },
+  "securityPublicKeyFingerprintNotice": "Private keys are not displayed or exported here. The public-key fingerprint identifies a login key and is different from the server’s host fingerprint.",
+  "@securityPublicKeyFingerprintNotice": {
+    "description": "Security: PublicKeyFingerprintNotice. App-authored UI text; do not translate user data or protocol tokens."
+  },
+  "securityFingerprintCopied": "Public-key fingerprint copied",
+  "@securityFingerprintCopied": {
+    "description": "Security: FingerprintCopied. App-authored UI text; do not translate user data or protocol tokens."
+  },
+  "securityCopyFailed": "Copying did not complete. Try again.",
+  "@securityCopyFailed": {
+    "description": "Security: CopyFailed. App-authored UI text; do not translate user data or protocol tokens."
+  },
+  "securityCopyFingerprint": "Copy public-key fingerprint",
+  "@securityCopyFingerprint": {
+    "description": "Security: CopyFingerprint. App-authored UI text; do not translate user data or protocol tokens."
+  },
+  "securityProtectedPassword": "Protected password",
+  "@securityProtectedPassword": {
+    "description": "Security: ProtectedPassword. App-authored UI text; do not translate user data or protocol tokens."
+  },
+  "securityPasswordRevealNotice": "Hidden after 20 seconds, or immediately when you leave this page or move the app to the background.",
+  "@securityPasswordRevealNotice": {
+    "description": "Security: PasswordRevealNotice. App-authored UI text; do not translate user data or protocol tokens."
+  },
+  "securityPasswordHiddenNotice": "Shown briefly after successful verification. It stays hidden if device authentication is unavailable. Viewing is currently unavailable on Linux.",
+  "@securityPasswordHiddenNotice": {
+    "description": "Security: PasswordHiddenNotice. App-authored UI text; do not translate user data or protocol tokens."
+  },
+  "securityHidePassword": "Hide password",
+  "@securityHidePassword": {
+    "description": "Security: HidePassword. App-authored UI text; do not translate user data or protocol tokens."
+  },
+  "securityVerifyViewPassword": "Verify device to view password",
+  "@securityVerifyViewPassword": {
+    "description": "Security: VerifyViewPassword. App-authored UI text; do not translate user data or protocol tokens."
+  },
+  "securityCancelVerifyHide": "Cancel verification and hide",
+  "@securityCancelVerifyHide": {
+    "description": "Security: CancelVerifyHide. App-authored UI text; do not translate user data or protocol tokens."
+  },
+  "securityCredentialReferenceCount": "{count, plural, =1{1 server uses this credential} other{{count} servers use this credential}}, including archived records. Connection usernames are stored separately.",
+  "@securityCredentialReferenceCount": {
+    "description": "Security: CredentialReferenceCount. App-authored UI text; do not translate user data or protocol tokens.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "securityNoCredentialReferences": "No links yet. Select this credential in SSH configuration on a server’s details page.",
+  "@securityNoCredentialReferences": {
+    "description": "Security: NoCredentialReferences. App-authored UI text; do not translate user data or protocol tokens."
+  },
+  "securityCredentialDeleteImpact": "{count, plural, =1{1 server will be affected} other{{count} servers will be affected}}, including archived records. Review each item below.",
+  "@securityCredentialDeleteImpact": {
+    "description": "Security: CredentialDeleteImpact. App-authored UI text; do not translate user data or protocol tokens.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "securityManageLinks": "How to handle links",
+  "@securityManageLinks": {
+    "description": "Security: ManageLinks. App-authored UI text; do not translate user data or protocol tokens."
+  },
+  "securityReplaceOrUnlink": "Replace or unlink",
+  "@securityReplaceOrUnlink": {
+    "description": "Security: ReplaceOrUnlink. App-authored UI text; do not translate user data or protocol tokens."
+  },
+  "securityUnlinkAll": "Unlink all",
+  "@securityUnlinkAll": {
+    "description": "Security: UnlinkAll. App-authored UI text; do not translate user data or protocol tokens."
+  },
+  "securityReplaceWith": "Replace with {name}",
+  "@securityReplaceWith": {
+    "description": "Security: ReplaceWith. App-authored UI text; do not translate user data or protocol tokens.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "securityUnlinkCredentialNotice": "Unlinking keeps servers, usernames, and payments. Select a credential again before the next connection.",
+  "@securityUnlinkCredentialNotice": {
+    "description": "Security: UnlinkCredentialNotice. App-authored UI text; do not translate user data or protocol tokens."
+  },
+  "securityReplaceCredentialNotice": "Only credential references are replaced. All current server usernames stay unchanged.",
+  "@securityReplaceCredentialNotice": {
+    "description": "Security: ReplaceCredentialNotice. App-authored UI text; do not translate user data or protocol tokens."
+  },
+  "securityDeleteLocalCredentialNotice": "Only the local credential is deleted and it cannot be restored from this page. Remote passwords and authorized_keys are unchanged. Cloud services are not canceled.",
+  "@securityDeleteLocalCredentialNotice": {
+    "description": "Security: DeleteLocalCredentialNotice. App-authored UI text; do not translate user data or protocol tokens."
+  },
+  "securityConfirmCredentialImpact": "I have reviewed the linked-server impact and want to delete the local credential",
+  "@securityConfirmCredentialImpact": {
+    "description": "Security: ConfirmCredentialImpact. App-authored UI text; do not translate user data or protocol tokens."
+  },
+  "securityLocalCredentialDeleted": "Local credential deleted. Remote authentication details are unchanged.",
+  "@securityLocalCredentialDeleted": {
+    "description": "Security: LocalCredentialDeleted. App-authored UI text; do not translate user data or protocol tokens."
+  },
+  "securityConfirmDelete": "Confirm deletion",
+  "@securityConfirmDelete": {
+    "description": "Security: ConfirmDelete. App-authored UI text; do not translate user data or protocol tokens."
+  },
+  "securityVerifyHostKey": "Verify host public key",
+  "@securityVerifyHostKey": {
+    "description": "Security: VerifyHostKey. App-authored UI text; do not translate user data or protocol tokens."
+  },
+  "securityHostTrustNotice": "Trust is bound to the host address and port, with the algorithm and complete public key recorded. Login credentials and server host public keys are separate.",
+  "@securityHostTrustNotice": {
+    "description": "Security: HostTrustNotice. App-authored UI text; do not translate user data or protocol tokens."
+  },
+  "securityNoTrustedHosts": "No trusted hosts yet. Enter a public key obtained through an independent trusted source, such as the provider’s console or an administrator, or verify it on the first SSH connection. This page does not connect to the server.",
+  "@securityNoTrustedHosts": {
+    "description": "Security: NoTrustedHosts. App-authored UI text; do not translate user data or protocol tokens."
+  },
+  "securityHostVerifiedAt": "{algorithm}\nVerified at {date}",
+  "@securityHostVerifiedAt": {
+    "description": "Security: HostVerifiedAt. App-authored UI text; do not translate user data or protocol tokens.",
+    "placeholders": {
+      "algorithm": {
+        "type": "String"
+      },
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "securityCompleteHostKey": "Complete host public key",
+  "@securityCompleteHostKey": {
+    "description": "Security: CompleteHostKey. App-authored UI text; do not translate user data or protocol tokens."
+  },
+  "securityReverifyHost": "Reverify host",
+  "@securityReverifyHost": {
+    "description": "Security: ReverifyHost. App-authored UI text; do not translate user data or protocol tokens."
+  },
+  "securityRemoveHostTrustTitle": "Remove host trust?",
+  "@securityRemoveHostTrustTitle": {
+    "description": "Security: RemoveHostTrustTitle. App-authored UI text; do not translate user data or protocol tokens."
+  },
+  "securityRemoveHostTrustMessage": "{host}:{port}\n{fingerprint}\n\nThe host’s identity must be verified again on the next connection. The server and login credentials will not be deleted.",
+  "@securityRemoveHostTrustMessage": {
+    "description": "Security: RemoveHostTrustMessage. App-authored UI text; do not translate user data or protocol tokens.",
+    "placeholders": {
+      "host": {
+        "type": "String"
+      },
+      "port": {
+        "type": "int"
+      },
+      "fingerprint": {
+        "type": "String"
+      }
+    }
+  },
+  "securityRemoveHostTrust": "Remove trust",
+  "@securityRemoveHostTrust": {
+    "description": "Security: RemoveHostTrust. App-authored UI text; do not translate user data or protocol tokens."
+  },
+  "securityHostChangedNotice": "If the host key changes, authentication must stop until the host is verified again through an independent source. There is no “ignore and connect” option.",
+  "@securityHostChangedNotice": {
+    "description": "Security: HostChangedNotice. App-authored UI text; do not translate user data or protocol tokens."
+  },
+  "securityHostTrustReadFailed": "Could not read host trust data. Try again.",
+  "@securityHostTrustReadFailed": {
+    "description": "Security: HostTrustReadFailed. App-authored UI text; do not translate user data or protocol tokens."
+  },
+  "securityHostTrustInputNotice": "Enter the host public key obtained through an independent trusted source, such as the provider’s console or an administrator. This page only validates your input and saves local trust. It does not connect to the server.",
+  "@securityHostTrustInputNotice": {
+    "description": "Security: HostTrustInputNotice. App-authored UI text; do not translate user data or protocol tokens."
+  },
+  "securityHostAddress": "Host address",
+  "@securityHostAddress": {
+    "description": "Security: HostAddress. App-authored UI text; do not translate user data or protocol tokens."
+  },
+  "securityPort": "Port",
+  "@securityPort": {
+    "description": "Security: Port. App-authored UI text; do not translate user data or protocol tokens."
+  },
+  "securityHostKeyType": "Host public-key type",
+  "@securityHostKeyType": {
+    "description": "Security: HostKeyType. App-authored UI text; do not translate user data or protocol tokens."
+  },
+  "securityHostKeyHelp": "A public-key line or complete Base64, not a private key or just a fingerprint",
+  "@securityHostKeyHelp": {
+    "description": "Security: HostKeyHelp. App-authored UI text; do not translate user data or protocol tokens."
+  },
+  "securityRsaHostKeyNotice": "rsa-sha2-256 / rsa-sha2-512 are signature algorithms. Select ssh-rsa for their RSA public-key type. Only structurally complete keys of supported host-key types are accepted.",
+  "@securityRsaHostKeyNotice": {
+    "description": "Security: RsaHostKeyNotice. App-authored UI text; do not translate user data or protocol tokens."
+  },
+  "securityChecking": "Validating…",
+  "@securityChecking": {
+    "description": "Security: Checking. App-authored UI text; do not translate user data or protocol tokens."
+  },
+  "securityCheckFingerprint": "Check and verify fingerprint",
+  "@securityCheckFingerprint": {
+    "description": "Security: CheckFingerprint. App-authored UI text; do not translate user data or protocol tokens."
+  },
+  "securityHostKeyMismatch": "Host public key differs from the saved record",
+  "@securityHostKeyMismatch": {
+    "description": "Security: HostKeyMismatch. App-authored UI text; do not translate user data or protocol tokens."
+  },
+  "securityFirstHostVerification": "First host verification",
+  "@securityFirstHostVerification": {
+    "description": "Security: FirstHostVerification. App-authored UI text; do not translate user data or protocol tokens."
+  },
+  "securityHostMismatchBadge": "Public key differs · Reverify independently",
+  "@securityHostMismatchBadge": {
+    "description": "Security: HostMismatchBadge. App-authored UI text; do not translate user data or protocol tokens."
+  },
+  "securityHostVerifyBeforeSave": "Verify the host’s identity before saving trust",
+  "@securityHostVerifyBeforeSave": {
+    "description": "Security: HostVerifyBeforeSave. App-authored UI text; do not translate user data or protocol tokens."
+  },
+  "securitySavedHostFingerprint": "Saved host fingerprint",
+  "@securitySavedHostFingerprint": {
+    "description": "Security: SavedHostFingerprint. App-authored UI text; do not translate user data or protocol tokens."
+  },
+  "securityCandidateHostFingerprint": "Host fingerprint to verify",
+  "@securityCandidateHostFingerprint": {
+    "description": "Security: CandidateHostFingerprint. App-authored UI text; do not translate user data or protocol tokens."
+  },
+  "securityHostVerificationWarning": "Verify the complete fingerprint and target address through an independent source. A change may be due to a reinstall, a wrong host, or a man-in-the-middle attack. Reject it if you cannot verify it.",
+  "@securityHostVerificationWarning": {
+    "description": "Security: HostVerificationWarning. App-authored UI text; do not translate user data or protocol tokens."
+  },
+  "securityBeginHostReverification": "Start independent reverification",
+  "@securityBeginHostReverification": {
+    "description": "Security: BeginHostReverification. App-authored UI text; do not translate user data or protocol tokens."
+  },
+  "securityConfirmHostVerified": "I have verified the host, port, and complete fingerprint through an independent source",
+  "@securityConfirmHostVerified": {
+    "description": "Security: ConfirmHostVerified. App-authored UI text; do not translate user data or protocol tokens."
+  },
+  "securityHostTrustSaved": "Host trust saved. No connection or authentication was started.",
+  "@securityHostTrustSaved": {
+    "description": "Security: HostTrustSaved. App-authored UI text; do not translate user data or protocol tokens."
+  },
+  "securityReverifyReplaceTrust": "Reverify and replace trust",
+  "@securityReverifyReplaceTrust": {
+    "description": "Security: ReverifyReplaceTrust. App-authored UI text; do not translate user data or protocol tokens."
+  },
+  "securitySaveVerifiedHostTrust": "Save verified host trust",
+  "@securitySaveVerifiedHostTrust": {
+    "description": "Security: SaveVerifiedHostTrust. App-authored UI text; do not translate user data or protocol tokens."
+  },
+  "securityRejectBack": "Reject and go back",
+  "@securityRejectBack": {
+    "description": "Security: RejectBack. App-authored UI text; do not translate user data or protocol tokens."
+  },
+  "securitySavingHostTrust": "Saving confirmed trust. You cannot go back until this finishes.",
+  "@securitySavingHostTrust": {
+    "description": "Security: SavingHostTrust. App-authored UI text; do not translate user data or protocol tokens."
+  },
+  "securityLocalHostTrustOnly": "Only local trust is recorded; no server connection is made here. Rejecting, canceling, or going back does not save trust or send authentication details.",
+  "@securityLocalHostTrustOnly": {
+    "description": "Security: LocalHostTrustOnly. App-authored UI text; do not translate user data or protocol tokens."
+  },
+  "securityDiscardSshTitle": "Discard connection configuration?",
+  "@securityDiscardSshTitle": {
+    "description": "Security: DiscardSshTitle. App-authored UI text; do not translate user data or protocol tokens."
+  },
+  "securityDiscardSshMessage": "Unsaved address, username, and credential choices will not take effect.",
+  "@securityDiscardSshMessage": {
+    "description": "Security: DiscardSshMessage. App-authored UI text; do not translate user data or protocol tokens."
+  },
+  "securityChooseCredential": "Select login credential",
+  "@securityChooseCredential": {
+    "description": "Security: ChooseCredential. App-authored UI text; do not translate user data or protocol tokens."
+  },
+  "securityUnlinkCurrentCredential": "Unlink current credential",
+  "@securityUnlinkCurrentCredential": {
+    "description": "Security: UnlinkCurrentCredential. App-authored UI text; do not translate user data or protocol tokens."
+  },
+  "securityChooseCredentialLater": "Keep connection configuration and select later",
+  "@securityChooseCredentialLater": {
+    "description": "Security: ChooseCredentialLater. App-authored UI text; do not translate user data or protocol tokens."
+  },
+  "securityCredentialChoiceSubtitle": "{kind} · Default: {username}",
+  "@securityCredentialChoiceSubtitle": {
+    "description": "Security: CredentialChoiceSubtitle. App-authored UI text; do not translate user data or protocol tokens.",
+    "placeholders": {
+      "kind": {
+        "type": "String"
+      },
+      "username": {
+        "type": "String"
+      }
+    }
+  },
+  "securityNotSet": "Not set",
+  "@securityNotSet": {
+    "description": "Security: NotSet. App-authored UI text; do not translate user data or protocol tokens."
+  },
+  "securityNoCredentialsToChoose": "No credentials yet. Go back and use Manage credentials to add one.",
+  "@securityNoCredentialsToChoose": {
+    "description": "Security: NoCredentialsToChoose. App-authored UI text; do not translate user data or protocol tokens."
+  },
+  "securityAdoptUsernameTitle": "Use the credential’s default username?",
+  "@securityAdoptUsernameTitle": {
+    "description": "Security: AdoptUsernameTitle. App-authored UI text; do not translate user data or protocol tokens."
+  },
+  "securityAdoptUsernameMessage": "Current connection username: {current}\nCredential default username: {suggested}\n\nOnly this connection is affected. Canceling keeps the current username.",
+  "@securityAdoptUsernameMessage": {
+    "description": "Security: AdoptUsernameMessage. App-authored UI text; do not translate user data or protocol tokens.",
+    "placeholders": {
+      "current": {
+        "type": "String"
+      },
+      "suggested": {
+        "type": "String"
+      }
+    }
+  },
+  "securityNotEntered": "Not entered",
+  "@securityNotEntered": {
+    "description": "Security: NotEntered. App-authored UI text; do not translate user data or protocol tokens."
+  },
+  "securityAdoptUsername": "Use default username",
+  "@securityAdoptUsername": {
+    "description": "Security: AdoptUsername. App-authored UI text; do not translate user data or protocol tokens."
+  },
+  "securitySshConfigurationSaved": "SSH configuration saved. No network connection was made.",
+  "@securitySshConfigurationSaved": {
+    "description": "Security: SshConfigurationSaved. App-authored UI text; do not translate user data or protocol tokens."
+  },
+  "securitySshConfiguration": "SSH connection configuration",
+  "@securitySshConfiguration": {
+    "description": "Security: SshConfiguration. App-authored UI text; do not translate user data or protocol tokens."
+  },
+  "securityCancelSshConfiguration": "Cancel connection configuration",
+  "@securityCancelSshConfiguration": {
+    "description": "Security: CancelSshConfiguration. App-authored UI text; do not translate user data or protocol tokens."
+  },
+  "securitySshConfigurationNotice": "Connection configuration and the ledger address are stored separately. Cloud server settings are not changed.",
+  "@securitySshConfigurationNotice": {
+    "description": "Security: SshConfigurationNotice. App-authored UI text; do not translate user data or protocol tokens."
+  },
+  "securityHostHint": "IPv4 / IPv6 / domain, without a scheme",
+  "@securityHostHint": {
+    "description": "Security: HostHint. App-authored UI text; do not translate user data or protocol tokens."
+  },
+  "securityHostRequired": "Enter a host address.",
+  "@securityHostRequired": {
+    "description": "Security: HostRequired. App-authored UI text; do not translate user data or protocol tokens."
+  },
+  "securityPortRequired": "The port must be between 1 and 65535.",
+  "@securityPortRequired": {
+    "description": "Security: PortRequired. App-authored UI text; do not translate user data or protocol tokens."
+  },
+  "securityConnectionUsername": "Current connection username",
+  "@securityConnectionUsername": {
+    "description": "Security: ConnectionUsername. App-authored UI text; do not translate user data or protocol tokens."
+  },
+  "securityConnectionUsernameRequired": "Enter a login username, or use the credential’s default username.",
+  "@securityConnectionUsernameRequired": {
+    "description": "Security: ConnectionUsernameRequired. App-authored UI text; do not translate user data or protocol tokens."
+  },
+  "securityLoginCredential": "Login credential",
+  "@securityLoginCredential": {
+    "description": "Security: LoginCredential. App-authored UI text; do not translate user data or protocol tokens."
+  },
+  "securityManageCredentials": "Manage credentials",
+  "@securityManageCredentials": {
+    "description": "Security: ManageCredentials. App-authored UI text; do not translate user data or protocol tokens."
+  },
+  "securityCredentialNotConfigured": "Credential not configured",
+  "@securityCredentialNotConfigured": {
+    "description": "Security: CredentialNotConfigured. App-authored UI text; do not translate user data or protocol tokens."
+  },
+  "securityCredentialRequiredBeforeConnect": "You can save the configuration now, but must select a credential before connecting",
+  "@securityCredentialRequiredBeforeConnect": {
+    "description": "Security: CredentialRequiredBeforeConnect. App-authored UI text; do not translate user data or protocol tokens."
+  },
+  "securityChangeCredentialSubtitle": "{kind} · Tap to change or unlink",
+  "@securityChangeCredentialSubtitle": {
+    "description": "Security: ChangeCredentialSubtitle. App-authored UI text; do not translate user data or protocol tokens.",
+    "placeholders": {
+      "kind": {
+        "type": "String"
+      }
+    }
+  },
+  "securityConnectionUsernameNotice": "The username belongs to this connection. Changing credentials changes it only if you explicitly select “Use default username.” Canceling or selecting the same username does not change other connections.",
+  "@securityConnectionUsernameNotice": {
+    "description": "Security: ConnectionUsernameNotice. App-authored UI text; do not translate user data or protocol tokens."
+  },
+  "securityConfigurationOnlyNotice": "This page only saves connection configuration. When connecting, the host’s identity is verified before login authentication. If the host public key changes, authentication pauses until it is verified again.",
+  "@securityConfigurationOnlyNotice": {
+    "description": "Security: ConfigurationOnlyNotice. App-authored UI text; do not translate user data or protocol tokens."
+  },
+  "securitySaveSshConfiguration": "Save SSH configuration",
+  "@securitySaveSshConfiguration": {
+    "description": "Security: SaveSshConfiguration. App-authored UI text; do not translate user data or protocol tokens."
+  },
+  "securityOpenKeyFile": "Import",
+  "@securityOpenKeyFile": {
+    "description": "Security: OpenKeyFile. App-authored UI text; do not translate user data or protocol tokens."
+  },
+  "securityAuthCancel": "Cancel",
+  "@securityAuthCancel": {
+    "description": "Security: AuthCancel. App-authored UI text; do not translate user data or protocol tokens."
+  },
+  "securityAuthSignInTitle": "Verify identity",
+  "@securityAuthSignInTitle": {
+    "description": "Security: AuthSignInTitle. App-authored UI text; do not translate user data or protocol tokens."
+  },
+  "securityAuthBiometricHint": "Verify your identity",
+  "@securityAuthBiometricHint": {
+    "description": "Security: AuthBiometricHint. App-authored UI text; do not translate user data or protocol tokens."
+  },
+  "securityAuthBiometricNotRecognized": "Not recognized. Try again.",
+  "@securityAuthBiometricNotRecognized": {
+    "description": "Security: AuthBiometricNotRecognized. App-authored UI text; do not translate user data or protocol tokens."
+  },
+  "securityAuthBiometricSuccess": "Verified",
+  "@securityAuthBiometricSuccess": {
+    "description": "Security: AuthBiometricSuccess. App-authored UI text; do not translate user data or protocol tokens."
+  },
+  "securityAuthRequiredTitle": "Biometric verification required",
+  "@securityAuthRequiredTitle": {
+    "description": "Security: AuthRequiredTitle. App-authored UI text; do not translate user data or protocol tokens."
+  },
+  "securityAuthSetupDescription": "Enable biometric verification in your device settings.",
+  "@securityAuthSetupDescription": {
+    "description": "Security: AuthSetupDescription. App-authored UI text; do not translate user data or protocol tokens."
+  },
+  "securityAuthGoToSettings": "Go to settings",
+  "@securityAuthGoToSettings": {
+    "description": "Security: AuthGoToSettings. App-authored UI text; do not translate user data or protocol tokens."
+  },
+  "securityAuthDeviceSetupDescription": "Enable device authentication in your device settings.",
+  "@securityAuthDeviceSetupDescription": {
+    "description": "Security: AuthDeviceSetupDescription. App-authored UI text; do not translate user data or protocol tokens."
+  },
+  "securityAuthDeviceRequiredTitle": "Device verification required",
+  "@securityAuthDeviceRequiredTitle": {
+    "description": "Security: AuthDeviceRequiredTitle. App-authored UI text; do not translate user data or protocol tokens."
+  },
+  "securityAuthIosLockout": "Biometric verification is locked. Lock and unlock your device, then try again.",
+  "@securityAuthIosLockout": {
+    "description": "Security: AuthIosLockout. App-authored UI text; do not translate user data or protocol tokens."
+  },
+  "securityAuthIosSetupDescription": "Enable Face ID or Touch ID in your device settings.",
+  "@securityAuthIosSetupDescription": {
+    "description": "Security: AuthIosSetupDescription. App-authored UI text; do not translate user data or protocol tokens."
+  },
+  "serverCompactMonths": "{months} mo",
+  "resourceTrafficPeriodUnsetShort": "—",
+  "resourceTrafficPeriodMonthShort": "M",
+  "resourceTrafficPeriodQuarterShort": "Q",
+  "resourceTrafficPeriodYearShort": "Y"
+}

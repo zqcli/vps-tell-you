@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../l10n/locale_preference.dart';
+import '../l10n/localized_message.dart';
 import '../core/app_theme.dart';
 import '../core/value_types.dart';
 import '../servers/ledger_controller.dart';
@@ -19,6 +21,23 @@ class CalculatorPage extends StatefulWidget {
 }
 
 class _CalculatorPageState extends State<CalculatorPage> {
+  bool validationAttempted = false;
+  String? validationLocale;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final locale = context.l10n.localeName;
+    if (validationLocale != null &&
+        validationLocale != locale &&
+        validationAttempted) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) form.currentState?.validate();
+      });
+    }
+    validationLocale = locale;
+  }
+
   final form = GlobalKey<FormState>();
   late final TextEditingController price, asOf, due;
   late String currency;
@@ -68,11 +87,11 @@ class _CalculatorPageState extends State<CalculatorPage> {
           child: ListView(
             padding: const EdgeInsets.all(20),
             children: [
-              const Text(
-                '引用服务器资料',
+              Text(
+                context.l10n.financeReferenceTitle,
                 style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
               ),
-              const InfoNote('只复制此刻的续费资料和已知期间。不会修改原服务器。'),
+              InfoNote(context.l10n.financeReferenceNote),
               ...widget.controller.active
                   .where((s) => s.billing == BillingKind.prepaid)
                   .map(
@@ -80,7 +99,10 @@ class _CalculatorPageState extends State<CalculatorPage> {
                       contentPadding: EdgeInsets.zero,
                       title: Text(s.name),
                       subtitle: Text(
-                        '${s.billingLabel} · 至 ${s.dueDate ?? '未知'}',
+                        context.l10n.financeReferenceServerSubtitle(
+                          s.billingLabelFor(context.l10n),
+                          s.dueDate?.toString() ?? context.l10n.financeUnknown,
+                        ),
                       ),
                       onTap: () => Navigator.pop(context, s),
                     ),
@@ -88,7 +110,7 @@ class _CalculatorPageState extends State<CalculatorPage> {
               if (!widget.controller.active.any(
                 (s) => s.billing == BillingKind.prepaid,
               ))
-                const InfoNote('暂无预付费服务器，可使用独立试算。'),
+                InfoNote(context.l10n.financeNoPrepaid),
             ],
           ),
         ),
@@ -107,11 +129,15 @@ class _CalculatorPageState extends State<CalculatorPage> {
   }
 
   void calculate() {
+    validationAttempted = true;
     if (!form.currentState!.validate()) return;
     final estimateDate = LedgerDate.tryParse(asOf.text.trim())!;
     final end = LedgerDate.tryParse(due.text.trim())!;
     if (estimateDate.daysUntil(end).abs() > 36600) {
-      showFailure(context, ArgumentError('请核对日期，试算范围限制为 100 年'));
+      showFailure(
+        context,
+        LocalizedArgumentError((l10n) => l10n.financeDateRangeError),
+      );
       return;
     }
     try {
@@ -126,7 +152,7 @@ class _CalculatorPageState extends State<CalculatorPage> {
       if (value == null) {
         showFailure(
           context,
-          ArgumentError('引用资料缺少有效服务期。请先补充服务器日期，或修改到期日、周期后使用独立试算。'),
+          LocalizedArgumentError((l10n) => l10n.financeMissingPeriodsError),
         );
         return;
       }
@@ -151,7 +177,7 @@ class _CalculatorPageState extends State<CalculatorPage> {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(title: const Text('剩余价值计算器')),
+    appBar: AppBar(title: Text(context.l10n.financeCalculatorTitle)),
     body: Form(
       key: form,
       child: ListView(
@@ -161,34 +187,42 @@ class _CalculatorPageState extends State<CalculatorPage> {
             crossAxisAlignment: WrapCrossAlignment.center,
             spacing: 8,
             children: [
-              const LedgerBadge('试算 · 不入账'),
+              LedgerBadge(context.l10n.financeEstimatedOnly),
               TextButton(
                 onPressed: chooseReference,
-                child: const Text('引用服务器'),
+                child: Text(context.l10n.financeReferenceServer),
               ),
             ],
           ),
           InfoNote(
             referencedPeriods != null
-                ? '引用 $sourceName 的已知期间。修改估值日、金额或币种不会改变已知服务期，也不会修改原服务器。'
+                ? context.l10n.financeReferenceBasis(sourceName ?? '')
                 : rebuilt
-                ? '已切换为独立试算：按当前到期日和周期重新推算服务期，假设到期日前服务连续有效。'
-                : '独立试算，无需添加服务器。假设到期日前服务连续有效。',
+                ? context.l10n.financeIndependentRebuilt
+                : context.l10n.financeIndependentNote,
           ),
           TextFormField(
             key: const ValueKey('calc-price'),
             controller: price,
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
-            decoration: const InputDecoration(labelText: '每周期续费金额'),
-            validator: (v) =>
-                Money.parseMinor(v!) == null ? '请填写有效金额，明确免费可填 0' : null,
+            decoration: InputDecoration(
+              errorMaxLines: 5,
+              labelText: context.l10n.financeRenewalAmount,
+            ),
+            validator: (v) => Money.parseMinor(v!) == null
+                ? context.l10n.financeAmountError
+                : null,
           ),
           const SizedBox(height: 18),
           DropdownButtonFormField<String>(
             key: ValueKey('calc-currency-$currency'),
             initialValue: currency,
             isExpanded: true,
-            decoration: const InputDecoration(labelText: '原币种'),
+            itemHeight: null,
+            decoration: InputDecoration(
+              errorMaxLines: 5,
+              labelText: context.l10n.financeOriginalCurrency,
+            ),
             items: Money.currencies
                 .map((c) => DropdownMenuItem(value: c, child: Text(c)))
                 .toList(),
@@ -199,9 +233,21 @@ class _CalculatorPageState extends State<CalculatorPage> {
             key: ValueKey('calc-cycle-$cycle'),
             initialValue: cycle,
             isExpanded: true,
-            decoration: const InputDecoration(labelText: '续费周期'),
+            itemHeight: null,
+            decoration: InputDecoration(
+              errorMaxLines: 5,
+              labelText: context.l10n.financeCycle,
+            ),
             items: [1, 3, 6, 12, 24, 36]
-                .map((c) => DropdownMenuItem(value: c, child: Text('每 $c 个月')))
+                .map(
+                  (c) => DropdownMenuItem(
+                    value: c,
+                    child: Builder(
+                      builder: (context) =>
+                          Text(context.l10n.financeEveryMonths(c)),
+                    ),
+                  ),
+                )
                 .toList(),
             onChanged: (v) {
               if (v != cycle) {
@@ -214,42 +260,42 @@ class _CalculatorPageState extends State<CalculatorPage> {
           TextFormField(
             key: const ValueKey('calc-asof'),
             controller: asOf,
-            decoration: const InputDecoration(
-              labelText: '估值日期',
+            decoration: InputDecoration(
+              errorMaxLines: 5,
+              labelText: context.l10n.financeValuationDate,
               hintText: 'YYYY-MM-DD',
             ),
-            validator: (v) =>
-                LedgerDate.tryParse(v!.trim()) == null ? '请输入有效估值日' : null,
+            validator: (v) => LedgerDate.tryParse(v!.trim()) == null
+                ? context.l10n.financeValuationDateError
+                : null,
           ),
           const SizedBox(height: 18),
           TextFormField(
             key: const ValueKey('calc-due'),
             controller: due,
             onChanged: (_) => changePeriod(),
-            decoration: const InputDecoration(
-              labelText: '服务到期日',
+            decoration: InputDecoration(
+              errorMaxLines: 5,
+              labelText: context.l10n.financeServiceDue,
               hintText: 'YYYY-MM-DD',
             ),
-            validator: (v) =>
-                LedgerDate.tryParse(v!.trim()) == null ? '请输入有效到期日' : null,
+            validator: (v) => LedgerDate.tryParse(v!.trim()) == null
+                ? context.l10n.financeDueError
+                : null,
           ),
           const SizedBox(height: 16),
-          const ExpansionTile(
+          ExpansionTile(
             tilePadding: EdgeInsets.zero,
-            title: Text('周期与算法说明'),
-            children: [
-              InfoNote(
-                '剩余价值 = Σ（每周期续费金额 × 该周期未用天数比例）。\n日历周期按真实天数计算，不固定每月 30 天；月底由原到期日锚点倒推，年度处理闰年。估值早于已知开始日不会超过该期整价。\n独立模式向前倒推至覆盖估值日，限制 100 年。到期当天为 0，不检查服务能否转让或退款。',
-              ),
-            ],
+            title: Text(context.l10n.financeAlgorithmTitle),
+            children: [InfoNote(context.l10n.financeAlgorithmNote)],
           ),
           const SizedBox(height: 16),
           FilledButton(
             key: const ValueKey('calculate-value'),
             onPressed: calculate,
-            child: const Text('计算剩余价值'),
+            child: Text(context.l10n.financeCalculateValue),
           ),
-          const InfoNote('试算与记账分离，修改输入不会更改任何服务器或付款。'),
+          InfoNote(context.l10n.financeEstimateNoWrite),
         ],
       ),
     ),
@@ -278,13 +324,30 @@ class CalculationResultPage extends StatefulWidget {
 }
 
 class _CalculationResultPageState extends State<CalculationResultPage> {
+  bool validationAttempted = false;
+  String? validationLocale;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final locale = context.l10n.localeName;
+    if (validationLocale != null &&
+        validationLocale != locale &&
+        validationAttempted) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) quoteForm.currentState?.validate();
+      });
+    }
+    validationLocale = locale;
+  }
+
   final quoteForm = GlobalKey<FormState>();
   final offer = TextEditingController();
   final fee = TextEditingController(text: '0');
   late String feeCurrency = widget.fx.displayCurrency;
   FeePayer payer = FeePayer.buyer;
   QuoteResult? quote;
-  String? quoteError;
+  LocalizedText? quoteError;
   @override
   void dispose() {
     offer.dispose();
@@ -296,9 +359,10 @@ class _CalculationResultPageState extends State<CalculationResultPage> {
     final v = widget.value, fx = widget.fx;
     final rate = fx.convert(Rational.of(100), widget.renewal.currency);
     return CalculationShareData(
+      localizations: context.l10n,
       amount: v.amount.formatted,
       currency: widget.renewal.currency,
-      converted: convertedAmount(v.amount, fx),
+      converted: convertedAmount(v.amount, fx, l10n: context.l10n),
       asOf: widget.asOf,
       start: v.activePeriod.start,
       end: v.activePeriod.end,
@@ -307,18 +371,23 @@ class _CalculationResultPageState extends State<CalculationResultPage> {
       activeRemaining: v.activeRemaining,
       days: v.days,
       remaining: v.remainingDays,
-      renewal:
-          '${widget.renewal.formatted} ${widget.renewal.currency} / ${widget.cycleMonths} 个月',
+      renewal: context.l10n.financeRenewalValue(
+        widget.renewal.formatted,
+        widget.renewal.currency,
+        widget.cycleMonths,
+      ),
       daily:
           '${formatRational(v.dailyMinor, digits: 4)} ${widget.renewal.currency}',
       futurePeriods: v.futurePeriods,
       fx: rate == null
-          ? '参考汇率缺失'
+          ? context.l10n.financeReferenceRateMissing
           : '1 ${widget.renewal.currency} = ${formatRational(rate, digits: 8)} ${fx.displayCurrency}',
-      fxSource: '手动汇率 · ${fx.rateDate ?? '未设置日期'} · 非实时报价',
+      fxSource: context.l10n.financeFxSource(
+        fx.rateDate?.toString() ?? context.l10n.financeDateNotSet,
+      ),
       periodBasis: widget.usesKnownPeriods
-          ? '引用时复制的已知服务期${v.inferred ? '；部分起点为推算' : ''}，未回写台账。'
-          : '独立假设：到期日前服务连续有效，期间按到期日倒推。',
+          ? context.l10n.financeKnownPeriodsBasis(v.inferred ? 'yes' : 'no')
+          : context.l10n.financeIndependentBasis,
     );
   }
 
@@ -327,6 +396,7 @@ class _CalculationResultPageState extends State<CalculationResultPage> {
     quoteError = null;
   });
   void settle() {
+    validationAttempted = true;
     if (!quoteForm.currentState!.validate()) return;
     final result = calculateQuote(
       offer: Money(widget.fx.displayCurrency, Money.parseMinor(offer.text)!),
@@ -337,7 +407,9 @@ class _CalculationResultPageState extends State<CalculationResultPage> {
     );
     setState(() {
       quote = result;
-      quoteError = result == null ? '缺少对应汇率，不能计算参考价值与结算金额。' : null;
+      quoteError = result == null
+          ? LocalizedText((l10n) => l10n.financeQuoteFxError)
+          : null;
     });
   }
 
@@ -345,24 +417,34 @@ class _CalculationResultPageState extends State<CalculationResultPage> {
     try {
       await Clipboard.setData(ClipboardData(text: shareData.plainText));
       if (mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(const SnackBar(content: Text('计算结果已复制，仅包含计算信息')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Builder(
+              builder: (context) => Text(context.l10n.financeCopied),
+            ),
+          ),
+        );
       }
     } catch (_) {
       if (mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(const SnackBar(content: Text('未能写入剪贴板，请重试')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Builder(
+              builder: (context) => Text(context.l10n.financeCopyError),
+            ),
+          ),
+        );
       }
     }
   }
 
   @override
   Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(title: const Text('计算结果')),
+    appBar: AppBar(title: Text(context.l10n.financeResultTitle)),
     body: ListView(
       padding: const EdgeInsets.all(20),
       children: [
-        const LedgerBadge('试算 · 不入账'),
+        LedgerBadge(context.l10n.financeEstimatedOnly),
         const SizedBox(height: 16),
         ValuationCard(
           value: widget.value,
@@ -380,26 +462,29 @@ class _CalculationResultPageState extends State<CalculationResultPage> {
             OutlinedButton.icon(
               onPressed: () => Navigator.pop(context),
               icon: const Icon(Icons.edit_outlined),
-              label: const Text('修改条件'),
+              label: Text(context.l10n.financeEditInputs),
             ),
             OutlinedButton.icon(
               onPressed: copy,
               icon: const Icon(Icons.copy_outlined),
-              label: const Text('复制结果'),
+              label: Text(context.l10n.financeCopyResult),
             ),
           ],
         ),
         const SizedBox(height: 16),
         FilledButton.icon(
           key: const ValueKey('preview-png'),
-          onPressed: () => Navigator.push<void>(
-            context,
-            MaterialPageRoute(
-              builder: (_) => CalculationPreview(data: shareData),
-            ),
-          ),
+          onPressed: () {
+            final snapshot = shareData;
+            Navigator.push<void>(
+              context,
+              MaterialPageRoute(
+                builder: (_) => CalculationPreview(data: snapshot),
+              ),
+            );
+          },
           icon: const Icon(Icons.image_outlined),
-          label: const Text('预览 / 保存 PNG'),
+          label: Text(context.l10n.financePreviewPng),
         ),
         const SizedBox(height: 20),
         LedgerCard(
@@ -407,16 +492,14 @@ class _CalculationResultPageState extends State<CalculationResultPage> {
             key: const ValueKey('quote-panel'),
             maintainState: true,
             tilePadding: EdgeInsets.zero,
-            title: const Text('转让报价试算 · 可选'),
+            title: Text(context.l10n.financeQuoteTitle),
             children: [
               Form(
                 key: quoteForm,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    const InfoNote(
-                      '仅按报价和下方填写的转移手续费试算，不执行交易。其他费用未计入；请自行确认厂商是否允许转让及相关条款。',
-                    ),
+                    InfoNote(context.l10n.financeQuoteNote),
                     TextFormField(
                       key: const ValueKey('quote-offer'),
                       controller: offer,
@@ -425,10 +508,14 @@ class _CalculationResultPageState extends State<CalculationResultPage> {
                         decimal: true,
                       ),
                       decoration: InputDecoration(
-                        labelText: '卖家报价 · ${widget.fx.displayCurrency}',
+                        errorMaxLines: 5,
+                        labelText: context.l10n.financeSellerQuote(
+                          widget.fx.displayCurrency,
+                        ),
                       ),
-                      validator: (v) =>
-                          Money.parseMinor(v!) == null ? '请输入 0 或正数报价' : null,
+                      validator: (v) => Money.parseMinor(v!) == null
+                          ? context.l10n.financeQuoteAmountError
+                          : null,
                     ),
                     const SizedBox(height: 18),
                     TextFormField(
@@ -438,17 +525,23 @@ class _CalculationResultPageState extends State<CalculationResultPage> {
                       keyboardType: const TextInputType.numberWithOptions(
                         decimal: true,
                       ),
-                      decoration: const InputDecoration(
-                        labelText: '转移手续费（Push）',
+                      decoration: InputDecoration(
+                        errorMaxLines: 5,
+                        labelText: context.l10n.financeTransferFee,
                       ),
-                      validator: (v) =>
-                          Money.parseMinor(v!) == null ? '请输入 0 或正数手续费' : null,
+                      validator: (v) => Money.parseMinor(v!) == null
+                          ? context.l10n.financeQuoteFeeError
+                          : null,
                     ),
                     const SizedBox(height: 18),
                     DropdownButtonFormField<String>(
                       initialValue: feeCurrency,
                       isExpanded: true,
-                      decoration: const InputDecoration(labelText: '手续费币种'),
+                      itemHeight: null,
+                      decoration: InputDecoration(
+                        errorMaxLines: 5,
+                        labelText: context.l10n.financeFeeCurrency,
+                      ),
                       items: Money.currencies
                           .map(
                             (c) => DropdownMenuItem(value: c, child: Text(c)),
@@ -463,19 +556,32 @@ class _CalculationResultPageState extends State<CalculationResultPage> {
                     DropdownButtonFormField<FeePayer>(
                       initialValue: payer,
                       isExpanded: true,
-                      decoration: const InputDecoration(labelText: '手续费承担'),
-                      items: const [
+                      itemHeight: null,
+                      decoration: InputDecoration(
+                        errorMaxLines: 5,
+                        labelText: context.l10n.financeFeePayer,
+                      ),
+                      items: [
                         DropdownMenuItem(
                           value: FeePayer.buyer,
-                          child: Text('买家承担'),
+                          child: Builder(
+                            builder: (context) =>
+                                Text(context.l10n.financeBuyerPays),
+                          ),
                         ),
                         DropdownMenuItem(
                           value: FeePayer.seller,
-                          child: Text('卖家承担'),
+                          child: Builder(
+                            builder: (context) =>
+                                Text(context.l10n.financeSellerPays),
+                          ),
                         ),
                         DropdownMenuItem(
                           value: FeePayer.split,
-                          child: Text('各承担一半'),
+                          child: Builder(
+                            builder: (context) =>
+                                Text(context.l10n.financeSplitFee),
+                          ),
                         ),
                       ],
                       onChanged: (v) {
@@ -483,29 +589,28 @@ class _CalculationResultPageState extends State<CalculationResultPage> {
                         setState(() => payer = v!);
                       },
                     ),
-                    const InfoNote(
-                      '手续费先折算到显示币种的分，再分摊；不足均分的 0.01 由买方承担。双方手续费之和等于总手续费。',
-                    ),
+                    InfoNote(context.l10n.financeSplitFeeNote),
                     OutlinedButton(
                       onPressed: settle,
-                      child: const Text('计算报价与费用'),
+                      child: Text(context.l10n.financeCalculateQuote),
                     ),
-                    if (quoteError != null) InfoNote(quoteError!),
+                    if (quoteError != null)
+                      InfoNote(quoteError!.messageFor(context.l10n)),
                     if (quote != null) ...[
                       FinanceLine(
-                        '报价与参考价值差额（溢价 / 折价）',
+                        context.l10n.financePremiumLabel,
                         '${quote!.premium} ${quote!.currency}',
                       ),
                       FinanceLine(
-                        '买方 / 卖方手续费',
+                        context.l10n.financeBuyerSellerFee,
                         '${quote!.buyerFee} / ${quote!.sellerFee} ${quote!.currency}',
                       ),
                       FinanceLine(
-                        '买方预计支出',
+                        context.l10n.financeBuyerEstimate,
                         '${quote!.buyerTotal} ${quote!.currency}',
                       ),
                       FinanceLine(
-                        '卖方预计净收款',
+                        context.l10n.financeSellerEstimate,
                         '${quote!.sellerNet} ${quote!.currency}',
                       ),
                     ],
@@ -516,7 +621,7 @@ class _CalculationResultPageState extends State<CalculationResultPage> {
           ),
         ),
         InfoNote(
-          '${shareData.fx}\n${shareData.fxSource}。先精确计算，再四舍五入到分；折算结果仅供参考。',
+          context.l10n.financeRoundingNote(shareData.fx, shareData.fxSource),
         ),
       ],
     ),

@@ -1,3 +1,7 @@
+import '../l10n/locale_preference.dart';
+import '../l10n/localized_message.dart';
+import '../l10n/generated/app_localizations.dart';
+
 import 'dart:convert';
 import 'dart:io';
 
@@ -24,7 +28,13 @@ class ServerResources {
 
   /// Quota period is independent from its capacity. Null means not confirmed.
   final int? trafficPeriodMonths;
-  static const trafficPeriods = {1: '月', 3: '季', 12: '年'};
+  static Map<int, String> get trafficPeriods =>
+      trafficPeriodsFor(defaultLocalizations);
+  static Map<int, String> trafficPeriodsFor(AppLocalizations l10n) => {
+    1: l10n.resourceMonth,
+    3: l10n.resourceQuarter,
+    12: l10n.resourceYear,
+  };
 
   /// The six allowed keys mark reviewed values originally supplied by the API.
   /// A manually completed or overridden value must not retain its API marker.
@@ -82,28 +92,35 @@ class ServerResources {
   }
 
   /// Local editing permits unknown values; import must require all six fields.
-  String? validate({bool requireComplete = false}) {
+  String? validate({bool requireComplete = false, AppLocalizations? l10n}) {
+    l10n ??= defaultLocalizations;
     if ((requireComplete || ip.isNotEmpty) && !validIp(ip)) {
-      return '请填写有效的 IPv4 或 IPv6 地址，不能使用未指定地址';
+      return l10n.resourceValidIp;
     }
     if ((requireComplete || hostname.isNotEmpty) && !validHostname(hostname)) {
-      return '请填写有效主机名，不含协议、端口或路径';
+      return l10n.resourceValidHostname;
     }
     if (vcpu == null ? requireComplete : vcpu! < 1 || vcpu! > maxVcpu) {
-      return 'vCPU 需为 1–65536 的整数';
+      return l10n.resourceValidVcpu;
     }
     bool invalidBytes(int? value) =>
         value == null ? requireComplete : value < 1 || value > maxBytes;
-    if (invalidBytes(ramBytes)) return '内存配额需为有效正数';
-    if (invalidBytes(diskBytes)) return '硬盘配额需为有效正数';
+    if (invalidBytes(ramBytes)) {
+      return l10n.resourceValidRam;
+    }
+    if (invalidBytes(diskBytes)) {
+      return l10n.resourceValidDisk;
+    }
     if (trafficUnlimited ? trafficBytes != null : invalidBytes(trafficBytes)) {
-      return '流量需填写有效正数配额，或明确选择不限量';
+      return l10n.resourceValidTraffic;
     }
     if (trafficPeriodMonths != null &&
         !trafficPeriods.containsKey(trafficPeriodMonths)) {
-      return '流量周期需选择月、季、年或未设置';
+      return l10n.resourceValidPeriod;
     }
-    if (!fieldKeys.containsAll(apiFields)) return '资源来源字段无效';
+    if (!fieldKeys.containsAll(apiFields)) {
+      return l10n.resourceInvalidSources;
+    }
     final values = {
       'ip': ip.isEmpty ? null : ip,
       'hostname': hostname.isEmpty ? null : hostname,
@@ -113,7 +130,7 @@ class ServerResources {
       'trafficBytes': trafficUnlimited ? true : trafficBytes,
     };
     if (apiFields.any((key) => values[key] == null)) {
-      return '未知资源不能标记为 API 来源';
+      return l10n.resourceUnknownApiSource;
     }
     return null;
   }
@@ -134,14 +151,14 @@ class ServerResources {
 
   factory ServerResources.decode(String source) {
     if (source.length > 4096) {
-      throw const FormatException('本地资源配置过大');
+      throw LocalizedFormatException((l10n) => l10n.resourceTooLarge);
     }
     return ServerResources.fromJson(jsonDecode(source));
   }
 
   factory ServerResources.fromJson(Object? value) {
     if (value is! Map) {
-      throw const FormatException('本地资源配置字段无效');
+      throw LocalizedFormatException((l10n) => l10n.resourceInvalidFields);
     }
     final legacy = !value.containsKey('trafficPeriodMonths');
     final keys = legacy ? _legacyJsonKeys : _jsonKeys;
@@ -157,12 +174,14 @@ class ServerResources {
             value['trafficPeriodMonths'] is! int) ||
         value['trafficUnlimited'] is! bool ||
         value['apiFields'] is! List) {
-      throw const FormatException('本地资源配置字段无效');
+      throw LocalizedFormatException((l10n) => l10n.resourceInvalidFields);
     }
     final sources = value['apiFields'] as List;
     if (sources.any((field) => field is! String) ||
         sources.toSet().length != sources.length) {
-      throw const FormatException('本地资源来源字段无效');
+      throw LocalizedFormatException(
+        (l10n) => l10n.resourceInvalidSourceFields,
+      );
     }
     final result = ServerResources(
       ip: value['ip'] as String,
@@ -176,7 +195,11 @@ class ServerResources {
       apiFields: sources.cast<String>().toSet(),
     );
     final error = result.validate(requireComplete: legacy);
-    if (error != null) throw FormatException(error);
+    if (error != null) {
+      throw LocalizedFormatException(
+        (l10n) => result.validate(requireComplete: legacy, l10n: l10n)!,
+      );
+    }
     return result;
   }
 
@@ -189,27 +212,32 @@ class ServerResources {
       trafficBytes == null &&
       !trafficUnlimited;
 
-  String get trafficPeriodLabel => trafficPeriods[trafficPeriodMonths] ?? '未设置';
+  String get trafficPeriodLabel => trafficPeriodLabelFor(defaultLocalizations);
+  String trafficPeriodLabelFor(AppLocalizations l10n) =>
+      trafficPeriodsFor(l10n)[trafficPeriodMonths] ?? l10n.notSet;
 
-  String get trafficSummary {
+  String get trafficSummary => trafficSummaryFor(defaultLocalizations);
+  String trafficSummaryFor(AppLocalizations l10n) {
     final quota = trafficUnlimited
-        ? '流量不限量'
+        ? l10n.resourceUnlimitedTraffic
         : trafficBytes == null
-        ? '流量未知'
-        : '${formatBytes(trafficBytes!)} 流量';
-    return '$quota · ${trafficPeriodMonths == null ? '周期未设置' : '每$trafficPeriodLabel'}';
+        ? l10n.resourceUnknownTraffic
+        : l10n.resourceTrafficQuota((formatBytes(trafficBytes!)).toString());
+    return '$quota · ${trafficPeriodMonths == null ? l10n.resourcePeriodNotSet : l10n.resourceEveryPeriod(trafficPeriodLabelFor(l10n).toLowerCase())}';
   }
 
-  String get specSummary => [
+  String get specSummary => specSummaryFor(defaultLocalizations);
+  String specSummaryFor(AppLocalizations l10n) => [
     if (vcpu != null) '$vcpu vCPU',
     if (ramBytes != null) '${formatBytes(ramBytes!)} RAM',
-    if (diskBytes != null) '${formatBytes(diskBytes!)} 硬盘',
+    if (diskBytes != null)
+      l10n.resourceDiskQuota((formatBytes(diskBytes!)).toString()),
     // Keep the established automatic summary stable for existing records.
     // The separately stored period is shown in the hardware section.
     if (trafficUnlimited)
-      '流量不限量'
+      l10n.resourceUnlimitedTraffic
     else if (trafficBytes != null)
-      '${formatBytes(trafficBytes!)} 流量',
+      l10n.resourceTrafficQuota((formatBytes(trafficBytes!)).toString()),
   ].join(' · ');
 
   static String formatBytes(int bytes, {bool exact = false}) {
@@ -220,7 +248,9 @@ class ServerResources {
       divisor *= 1024;
       unit++;
     }
-    if (exact && bytes % divisor != 0) return '$bytes B';
+    if (exact && bytes % divisor != 0) {
+      return '$bytes B';
+    }
     final amount = bytes % divisor == 0
         ? (bytes ~/ divisor).toString()
         : (bytes / divisor)

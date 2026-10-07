@@ -1,3 +1,6 @@
+import '../l10n/localized_message.dart';
+import '../l10n/locale_preference.dart';
+
 import 'package:flutter/material.dart';
 
 import '../core/app_theme.dart';
@@ -18,25 +21,29 @@ Future<bool> _preview(
         content: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('完整内容预览（转义显示）'),
-            const InfoNote(r'换行显示为 \n；回车为 \r；制表为 \t；其他控制字符显示为 \u{…}。反斜线也已转义。'),
+            Text(context.l10n.snippetFullEscapedPreview),
+            InfoNote(context.l10n.snippetEscapeLegend),
             SelectableText(
               escapedCommandPreview(snippet.content),
               textDirection: TextDirection.ltr,
               style: const TextStyle(fontFamily: 'monospace'),
             ),
-            const InfoNote('预览和插入都不会发送内容。请在终端核对目标与完整草稿，再选择“发送”或“发送并执行”。'),
+            InfoNote(context.l10n.snippetPreviewNoSend),
           ],
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: Text(selectForDraft ? '取消' : '关闭'),
+            child: Text(
+              selectForDraft
+                  ? context.l10n.cancel
+                  : context.l10n.connectionClose,
+            ),
           ),
           if (selectForDraft)
             FilledButton(
               onPressed: () => Navigator.pop(context, true),
-              child: const Text('仅插入待发送草稿'),
+              child: Text(context.l10n.snippetInsertDraftOnly),
             ),
         ],
       ),
@@ -44,12 +51,21 @@ Future<bool> _preview(
     false;
 
 void _failure(BuildContext context, Object error) {
-  final message = error is LedgerConflict
-      ? '片段已被修改或删除，请重新打开列表后重试。'
-      : error is ArgumentError
-      ? error.message.toString()
-      : '片段操作未完成，请重试。已保存的内容仍保留。';
-  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+  ScaffoldMessenger.of(context).showSnackBar(
+    SnackBar(
+      content: Builder(
+        builder: (context) => Text(
+          error is LedgerConflict
+              ? context.l10n.snippetChanged
+              : error is LocalizedMessage
+              ? error.messageFor(context.l10n)
+              : error is ArgumentError
+              ? localizedText(error.message ?? '', context.l10n)
+              : context.l10n.snippetOperationFailed,
+        ),
+      ),
+    ),
+  );
 }
 
 class SnippetListPage extends StatefulWidget {
@@ -81,7 +97,9 @@ class _SnippetListPageState extends State<SnippetListPage> {
     });
     try {
       final items = await widget.store.snippets();
-      if (!mounted) return;
+      if (!mounted) {
+        return;
+      }
       setState(() {
         snippets = items;
         loading = false;
@@ -97,7 +115,9 @@ class _SnippetListPageState extends State<SnippetListPage> {
   }
 
   Future<void> edit([CommandSnippet? snippet]) async {
-    if (busy) return;
+    if (busy) {
+      return;
+    }
     setState(() => busy = true);
     final saved = await Navigator.push<CommandSnippet>(
       context,
@@ -106,7 +126,9 @@ class _SnippetListPageState extends State<SnippetListPage> {
             SnippetEditorPage(store: widget.store, snippet: snippet),
       ),
     );
-    if (!mounted) return;
+    if (!mounted) {
+      return;
+    }
     setState(() {
       busy = false;
       if (saved != null) {
@@ -119,50 +141,75 @@ class _SnippetListPageState extends State<SnippetListPage> {
   }
 
   Future<void> preview(CommandSnippet snippet) async {
-    if (busy) return;
+    if (busy) {
+      return;
+    }
     setState(() => busy = true);
     final selected = await _preview(
       context,
       snippet,
       selectForDraft: widget.selectForDraft,
     );
-    if (!mounted) return;
+    if (!mounted) {
+      return;
+    }
     setState(() => busy = false);
-    if (selected && widget.selectForDraft) Navigator.pop(context, snippet);
+    if (selected && widget.selectForDraft) {
+      Navigator.pop(context, snippet);
+    }
   }
 
   Future<void> remove(CommandSnippet snippet) async {
-    if (busy) return;
+    if (busy) {
+      return;
+    }
     setState(() => busy = true);
     final confirmed = await confirmAction(
       context,
-      title: '删除本地片段？',
-      message:
-          '将删除“${escapedCommandPreview(snippet.name)}”的本地模板，不影响服务器或已插入的草稿。',
-      action: '删除片段',
+      title: LocalizedText((l10n) => l10n.snippetDeleteQuestion),
+      message: LocalizedText(
+        (l10n) => l10n.snippetDeleteHelp(
+          (escapedCommandPreview(snippet.name)).toString(),
+        ),
+      ),
+      action: LocalizedText((l10n) => l10n.snippetDelete),
       dangerous: true,
     );
-    if (!mounted) return;
+    if (!mounted) {
+      return;
+    }
     if (!confirmed) {
       setState(() => busy = false);
       return;
     }
     try {
       await widget.store.deleteSnippet(snippet);
-      if (!mounted) return;
+      if (!mounted) {
+        return;
+      }
       setState(
         () => snippets = snippets.where((s) => s.id != snippet.id).toList(),
       );
     } catch (error) {
-      if (mounted) _failure(context, error);
+      if (mounted) {
+        _failure(context, error);
+      }
     } finally {
-      if (mounted) setState(() => busy = false);
+      if (mounted) {
+        setState(() => busy = false);
+      }
     }
   }
 
   @override
   Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(title: Text(widget.selectForDraft ? '选择片段插入草稿' : '命令片段')),
+    appBar: AppBar(
+      title: Text(
+        widget.selectForDraft
+            ? context.l10n.snippetChoose
+            : context.l10n.commandSnippets,
+      ),
+    ),
     body: loading
         ? const Center(child: CircularProgressIndicator())
         : failed
@@ -170,8 +217,11 @@ class _SnippetListPageState extends State<SnippetListPage> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Text('片段读取失败，未修改本地数据'),
-                TextButton(onPressed: load, child: const Text('重新读取')),
+                Text(context.l10n.snippetReadFailed),
+                TextButton(
+                  onPressed: load,
+                  child: Text(context.l10n.serverReload),
+                ),
               ],
             ),
           )
@@ -180,16 +230,16 @@ class _SnippetListPageState extends State<SnippetListPage> {
             children: [
               InfoNote(
                 widget.selectForDraft
-                    ? '选择后先预览完整内容，只插入待发送草稿。不会自动发送或回车。'
-                    : '片段是本地普通文本，请勿保存密码、私钥或令牌。从终端“插入片段”可选入待发送草稿。',
+                    ? context.l10n.snippetSelectPreviewHelp
+                    : context.l10n.snippetPlaintextHelp,
               ),
               FilledButton.icon(
                 onPressed: busy ? null : () => edit(),
                 icon: const Icon(Icons.add),
-                label: const Text('新增片段'),
+                label: Text(context.l10n.snippetAdd),
               ),
               const SizedBox(height: 16),
-              if (snippets.isEmpty) const InfoNote('还没有片段。新增自己的常用命令模板。'),
+              if (snippets.isEmpty) InfoNote(context.l10n.snippetEmptyHelp),
               for (final snippet in snippets) ...[
                 LedgerCard(
                   child: Column(
@@ -199,7 +249,11 @@ class _SnippetListPageState extends State<SnippetListPage> {
                         escapedCommandPreview(snippet.name),
                         style: Theme.of(context).textTheme.titleMedium,
                       ),
-                      Text('${snippet.content.length} 个字符 · 本地模板'),
+                      Text(
+                        context.l10n.snippetCharacterCount(
+                          (snippet.content.length).toString(),
+                        ),
+                      ),
                       const SizedBox(height: 8),
                       Wrap(
                         spacing: 8,
@@ -208,16 +262,18 @@ class _SnippetListPageState extends State<SnippetListPage> {
                           OutlinedButton(
                             onPressed: busy ? null : () => preview(snippet),
                             child: Text(
-                              widget.selectForDraft ? '预览并插入草稿' : '完整预览',
+                              widget.selectForDraft
+                                  ? context.l10n.snippetPreviewInsert
+                                  : context.l10n.snippetFullPreview,
                             ),
                           ),
                           TextButton(
                             onPressed: busy ? null : () => edit(snippet),
-                            child: const Text('编辑'),
+                            child: Text(context.l10n.serverEdit),
                           ),
                           TextButton(
                             onPressed: busy ? null : () => remove(snippet),
-                            child: const Text('删除'),
+                            child: Text(context.l10n.connectionDelete),
                           ),
                         ],
                       ),
@@ -241,6 +297,24 @@ class SnippetEditorPage extends StatefulWidget {
 
 class _SnippetEditorPageState extends State<SnippetEditorPage> {
   final form = GlobalKey<FormState>();
+  bool _hasValidated = false;
+  String? _validationLocale;
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final next = context.l10n.localeName;
+    if (_validationLocale != null &&
+        _validationLocale != next &&
+        _hasValidated) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          form.currentState?.validate();
+        }
+      });
+    }
+    _validationLocale = next;
+  }
+
   late final TextEditingController name, content;
   late final String id;
   bool saving = false, dirty = false, allowPop = false;
@@ -268,30 +342,42 @@ class _SnippetEditorPageState extends State<SnippetEditorPage> {
   );
 
   Future<void> cancel() async {
-    if (saving) return;
+    if (saving) {
+      return;
+    }
     if (dirty &&
         !await confirmAction(
           context,
-          title: '放弃片段修改？',
-          message: '未保存的内容不会写入本地片段。',
-          action: '放弃修改',
+          title: LocalizedText((l10n) => l10n.snippetDiscardQuestion),
+          message: LocalizedText((l10n) => l10n.snippetDiscardHelp),
+          action: LocalizedText((l10n) => l10n.connectionDiscardChanges),
         )) {
       return;
     }
-    if (!mounted) return;
+    if (!mounted) {
+      return;
+    }
     setState(() => allowPop = true);
     Navigator.pop(context);
   }
 
   Future<void> save() async {
-    if (saving || !form.currentState!.validate()) return;
+    if (saving) {
+      return;
+    }
+    _hasValidated = true;
+    if (!form.currentState!.validate()) {
+      return;
+    }
     setState(() => saving = true);
     try {
       final saved = await widget.store.saveSnippet(
         draft,
         isNew: widget.snippet == null,
       );
-      if (!mounted) return;
+      if (!mounted) {
+        return;
+      }
       setState(() {
         allowPop = true;
         saving = false;
@@ -309,13 +395,19 @@ class _SnippetEditorPageState extends State<SnippetEditorPage> {
   Widget build(BuildContext context) => PopScope(
     canPop: allowPop || (!dirty && !saving),
     onPopInvokedWithResult: (didPop, result) {
-      if (!didPop) cancel();
+      if (!didPop) {
+        cancel();
+      }
     },
     child: Scaffold(
       appBar: AppBar(
-        title: Text(widget.snippet == null ? '新增片段' : '编辑片段'),
+        title: Text(
+          widget.snippet == null
+              ? context.l10n.snippetAdd
+              : context.l10n.snippetEdit,
+        ),
         leading: IconButton(
-          tooltip: '取消片段编辑',
+          tooltip: context.l10n.snippetCancelEdit,
           onPressed: saving ? null : cancel,
           icon: const Icon(Icons.arrow_back),
         ),
@@ -323,23 +415,25 @@ class _SnippetEditorPageState extends State<SnippetEditorPage> {
       body: Form(
         key: form,
         onChanged: () {
-          if (!dirty) setState(() => dirty = true);
+          if (!dirty) {
+            setState(() => dirty = true);
+          }
         },
         child: ListView(
           padding: const EdgeInsets.all(20),
           children: [
-            const InfoNote('本地普通文本，不加密保存。请勿填写密码、私钥或令牌。保存不会执行或发送内容。'),
+            InfoNote(context.l10n.snippetSaveSafety),
             TextFormField(
               key: const Key('snippet-name'),
               controller: name,
               enabled: !saving,
               maxLength: CommandSnippet.maxNameLength,
-              decoration: const InputDecoration(labelText: '片段名称'),
+              decoration: InputDecoration(labelText: context.l10n.snippetName),
               validator: (value) =>
                   value == null ||
                       value.trim().isEmpty ||
                       value.length > CommandSnippet.maxNameLength
-                  ? '名称需为 1–80 个字符'
+                  ? context.l10n.serverNameRange
                   : null,
             ),
             const SizedBox(height: 12),
@@ -355,23 +449,29 @@ class _SnippetEditorPageState extends State<SnippetEditorPage> {
               smartDashesType: SmartDashesType.disabled,
               smartQuotesType: SmartQuotesType.disabled,
               keyboardType: TextInputType.multiline,
-              decoration: const InputDecoration(labelText: '完整内容（保留原始换行与控制字符）'),
+              decoration: InputDecoration(
+                labelText: context.l10n.snippetFullContent,
+              ),
               validator: (value) =>
                   value == null ||
                       value.trim().isEmpty ||
                       value.length > CommandSnippet.maxContentLength
-                  ? '内容不能为空，最多 16384 个字符'
+                  ? context.l10n.snippetContentRange
                   : null,
             ),
-            const InfoNote('保存会原样保留内容，包括前后空白、多行、回车及控制字符。请使用完整预览核对。'),
+            InfoNote(context.l10n.snippetExactContentHelp),
             OutlinedButton(
               onPressed: saving ? null : () => _preview(context, draft),
-              child: const Text('完整预览'),
+              child: Text(context.l10n.snippetFullPreview),
             ),
             const SizedBox(height: 12),
             FilledButton(
               onPressed: saving ? null : save,
-              child: Text(saving ? '保存中…' : '保存片段'),
+              child: Text(
+                saving
+                    ? context.l10n.connectionSaving
+                    : context.l10n.snippetSave,
+              ),
             ),
           ],
         ),

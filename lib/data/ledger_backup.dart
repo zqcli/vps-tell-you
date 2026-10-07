@@ -16,11 +16,12 @@ class LedgerBackupSnapshot {
   static const version = 1;
   static const maxBytes = 10 * 1024 * 1024;
   static const maxRows = 20000;
-  static const exclusions = [
-    '密码、私钥、口令、Token、凭据元数据及安全存储引用',
-    'SSH 配置、主机信任、面板账户、实例关联与 API 返回信息',
-    '命令片段、服务器备注和付款备注',
-    '提醒规则、通知排程及应用偏好（格式 v1）',
+  static List<String> get exclusions => exclusionsFor(defaultLocalizations);
+  static List<String> exclusionsFor(AppLocalizations l10n) => [
+    l10n.backupExcludedSecrets,
+    l10n.backupExcludedConnections,
+    l10n.backupExcludedNotes,
+    l10n.backupExcludedPreferences,
   ];
   final String exportedAt;
   final List<Map<String, Object?>> groups, servers, payments, servicePeriods;
@@ -46,13 +47,13 @@ class LedgerBackupSnapshot {
 
   factory LedgerBackupSnapshot.decode(String source) {
     if (source.length > maxBytes || utf8.encode(source).length > maxBytes) {
-      throw const FormatException('备份超过 10 MiB 上限');
+      throw LocalizedFormatException((l10n) => l10n.backupTooLarge);
     }
     Object? decoded;
     try {
       decoded = jsonDecode(source);
     } catch (_) {
-      throw const FormatException('备份不是有效 JSON');
+      throw LocalizedFormatException((l10n) => l10n.backupInvalidJson);
     }
     return LedgerBackupSnapshot._validated(decoded);
   }
@@ -71,13 +72,13 @@ class LedgerBackupSnapshot {
     if (root['format'] != format ||
         root['version'] is! int ||
         root['version'] != version) {
-      throw const FormatException('不支持的台账备份格式或版本');
+      throw LocalizedFormatException((l10n) => l10n.backupUnsupportedFormat);
     }
     _backupInstant(root, 'exported_at');
     List<Map<String, Object?>> rows(String key, List<String> columns) {
       final value = root[key];
       if (value is! List || value.length > maxRows) {
-        throw const FormatException('备份集合类型或数量无效');
+        throw LocalizedFormatException((l10n) => l10n.backupInvalidCollections);
       }
       final ids = <String>{};
       return List.unmodifiable(
@@ -89,7 +90,7 @@ class LedgerBackupSnapshot {
           );
           _backupText(row, 'id', max: 160, nonempty: true);
           if (!ids.add(row['id'] as String)) {
-            throw const FormatException('备份包含重复记录标识');
+            throw LocalizedFormatException((l10n) => l10n.backupDuplicateIds);
           }
           return Map<String, Object?>.unmodifiable(row);
         }),
@@ -111,8 +112,10 @@ class LedgerBackupSnapshot {
         RegExp('[A-Z]'),
         (m) => m[0]!.toLowerCase(),
       );
-      if (name == '未分组' || name != name.trim() || !names.add(folded)) {
-        throw const FormatException('备份分组名称冲突');
+      if (name == legacyReservedGroupName ||
+          name != name.trim() ||
+          !names.add(folded)) {
+        throw LocalizedFormatException((l10n) => l10n.backupGroupNameConflict);
       }
     }
     final groupIds = groups.map((r) => r['id']).toSet();
@@ -141,20 +144,20 @@ class LedgerBackupSnapshot {
       _backupInstant(row, 'updated_at');
       _backupInstant(row, 'archived_at', nullable: true);
       if (row['group_id'] != null && !groupIds.contains(row['group_id'])) {
-        throw const FormatException('服务器引用不存在的分组');
+        throw LocalizedFormatException((l10n) => l10n.backupMissingGroup);
       }
       _backupText(row, 'resources_json', max: 4096, nullable: true);
       // Strict decoding also prevents private/unknown fields from hitchhiking
       // inside an otherwise whitelisted local resources blob.
       final server = ServerRecord.fromMap({...row, 'notes': ''});
       if (server.validate() != null) {
-        throw const FormatException('服务器字段校验失败');
+        throw LocalizedFormatException((l10n) => l10n.backupInvalidServer);
       }
       if (server.billing == BillingKind.prepaid && server.dueDate != null) {
         try {
           renewalDate(server, 0);
         } catch (_) {
-          throw const FormatException('续费锚点与到期日不一致');
+          throw LocalizedFormatException((l10n) => l10n.backupAnchorMismatch);
         }
       }
       byServer[server.id] = server;
@@ -187,7 +190,9 @@ class LedgerBackupSnapshot {
           until = row['until_date'] as String?;
       if ((from == null) != (until == null) ||
           (from != null && from.compareTo(until!) >= 0)) {
-        throw const FormatException('付款服务期无效');
+        throw LocalizedFormatException(
+          (l10n) => l10n.backupInvalidPaymentPeriod,
+        );
       }
       if (row['server_id'] == null) {
         if (row['account_label'] == null ||
@@ -196,7 +201,9 @@ class LedgerBackupSnapshot {
             row['cycle_count'] != 0 ||
             row['previous_due'] != null ||
             row['applied_server_revision'] != null) {
-          throw const FormatException('独立账户账单字段不一致');
+          throw LocalizedFormatException(
+            (l10n) => l10n.backupAccountBillMismatch,
+          );
         }
       } else {
         final server = byServer[row['server_id']];
@@ -207,14 +214,18 @@ class LedgerBackupSnapshot {
             row['cycle_count'] == 0 ||
             row['applied_server_revision'] == null ||
             (row['applied_server_revision'] as int) > server.revision) {
-          throw const FormatException('服务器付款关联无效');
+          throw LocalizedFormatException(
+            (l10n) => l10n.backupInvalidServerPayment,
+          );
         }
         if (row['voided_at'] == null &&
             (server.billing != BillingKind.prepaid ||
                 server.dueDate == null ||
                 until!.compareTo(server.dueDate.toString()) > 0 ||
                 !activeUntil.add(jsonEncode([server.id, until])))) {
-          throw const FormatException('有效付款与服务器期限冲突');
+          throw LocalizedFormatException(
+            (l10n) => l10n.backupPaymentDateConflict,
+          );
         }
       }
       byPayment[row['id'] as String] = row;
@@ -237,13 +248,17 @@ class LedgerBackupSnapshot {
               0 ||
           (row['end_date'] as String).compareTo(server.dueDate.toString()) >
               0) {
-        throw const FormatException('服务期与服务器期限不一致');
+        throw LocalizedFormatException(
+          (l10n) => l10n.backupServiceDateMismatch,
+        );
       }
       (periodsByServer[server.id] ??= []).add(row);
       final paymentId = row['payment_id'];
       if (paymentId == null) {
         if (!initialServers.add(server.id)) {
-          throw const FormatException('同一服务器包含重复初始服务期');
+          throw LocalizedFormatException(
+            (l10n) => l10n.backupDuplicateInitialPeriod,
+          );
         }
       } else {
         final payment = byPayment[paymentId];
@@ -251,7 +266,9 @@ class LedgerBackupSnapshot {
             payment['server_id'] != server.id ||
             payment['voided_at'] != null ||
             row['inferred'] != 0) {
-          throw const FormatException('服务期付款关联无效');
+          throw LocalizedFormatException(
+            (l10n) => l10n.backupInvalidPeriodPayment,
+          );
         }
         (periodsByPayment[paymentId as String] ??= []).add(row);
       }
@@ -266,7 +283,9 @@ class LedgerBackupSnapshot {
               list[i]['start_date'] as String,
             ) >
             0) {
-          throw const FormatException('同一服务器存在重叠服务期');
+          throw LocalizedFormatException(
+            (l10n) => l10n.backupOverlappingPeriods,
+          );
         }
       }
     }
@@ -282,7 +301,9 @@ class LedgerBackupSnapshot {
       if (list.length != payment['cycle_count'] ||
           list.first['start_date'] != payment['from_date'] ||
           list.last['end_date'] != payment['until_date']) {
-        throw const FormatException('有效付款缺少完整服务期');
+        throw LocalizedFormatException(
+          (l10n) => l10n.backupIncompletePaymentPeriod,
+        );
       }
       final server = byServer[payment['server_id']]!;
       final anchor = server.renewalAnchorDate ?? server.dueDate!;
@@ -296,7 +317,9 @@ class LedgerBackupSnapshot {
             anchor.addMonths(months) != start ||
             anchor.addMonths(months + server.cycleMonths).toString() !=
                 list[i]['end_date']) {
-          throw const FormatException('付款服务期与续费周期不一致');
+          throw LocalizedFormatException(
+            (l10n) => l10n.backupPaymentCycleMismatch,
+          );
         }
       }
     }
@@ -323,19 +346,27 @@ class LedgerBackupSnapshot {
             initial.single['start_date'] != start.toString() ||
             initial.single['end_date'] != firstDue.toString() ||
             initial.single['inferred'] != (hasStart ? 0 : 1)) {
-          throw const FormatException('初始服务期缺失或与原始期限不一致');
+          throw LocalizedFormatException(
+            (l10n) => l10n.backupInitialPeriodMismatch,
+          );
         }
       } else if (initial.isNotEmpty) {
-        throw const FormatException('初始服务期超出有效日期范围');
+        throw LocalizedFormatException(
+          (l10n) => l10n.backupInitialPeriodOutOfRange,
+        );
       }
       for (var i = 1; i < chain.length; i++) {
         if (chain[i - 1]['end_date'] != chain[i]['start_date']) {
-          throw const FormatException('有效服务期必须连续');
+          throw LocalizedFormatException(
+            (l10n) => l10n.backupPeriodsNotContinuous,
+          );
         }
       }
       if (chain.isNotEmpty &&
           chain.last['end_date'] != server.dueDate.toString()) {
-        throw const FormatException('有效服务期未覆盖当前到期日');
+        throw LocalizedFormatException(
+          (l10n) => l10n.backupPeriodsDoNotCoverDue,
+        );
       }
     }
     _backupEnum(fx, 'display_currency', Money.currencies);
@@ -344,7 +375,7 @@ class LedgerBackupSnapshot {
     }
     _backupDate(fx, 'rate_date', nullable: true);
     if (FxSettings.fromMap(fx).validate() != null) {
-      throw const FormatException('参考汇率无效');
+      throw LocalizedFormatException((l10n) => l10n.backupInvalidRates);
     }
     return LedgerBackupSnapshot._(
       exportedAt: root['exported_at'] as String,
@@ -358,10 +389,14 @@ class LedgerBackupSnapshot {
 }
 
 class LedgerRestorePreview {
-  LedgerRestorePreview(this.snapshot, Iterable<String> conflicts)
-    : conflicts = List.unmodifiable(conflicts);
+  LedgerRestorePreview(this.snapshot, Iterable<LocalizedText> conflicts)
+    : _conflicts = List.unmodifiable(conflicts);
   final LedgerBackupSnapshot snapshot;
-  final List<String> conflicts;
+  final List<LocalizedText> _conflicts;
+  List<String> get conflicts => conflictsFor(defaultLocalizations);
+  List<String> conflictsFor(AppLocalizations l10n) => [
+    for (final conflict in _conflicts) conflict.messageFor(l10n),
+  ];
   Map<String, int> get counts => snapshot.counts;
   List<String> get exclusions => LedgerBackupSnapshot.exclusions;
   bool get canRestore => conflicts.isEmpty;
@@ -394,7 +429,7 @@ extension LedgerBackupStore on LedgerStore {
       )).single,
     });
     if (utf8.encode(snapshot.encode()).length > LedgerBackupSnapshot.maxBytes) {
-      throw const FormatException('备份超过 10 MiB 上限');
+      throw LocalizedFormatException((l10n) => l10n.backupTooLarge);
     }
     return snapshot;
   });
@@ -412,7 +447,7 @@ extension LedgerBackupStore on LedgerStore {
     final checked = LedgerBackupSnapshot.decode(snapshot.encode());
     await _db.transaction((txn) async {
       if ((await _backupConflicts(txn)).isNotEmpty) {
-        throw StateError('仅支持恢复到空台账；现有数据未改动');
+        throw LocalizedStateError((l10n) => l10n.restoreRequiresEmptyLedger);
       }
       var inserted = 0;
       Future<void> insert(String table, Map<String, Object?> row) async {
@@ -455,21 +490,25 @@ extension LedgerBackupStore on LedgerStore {
         checked.fx,
         where: 'id = 1',
       );
-      if (updated != 1) throw StateError('参考汇率设置缺失；恢复已回滚');
+      if (updated != 1) {
+        throw LocalizedStateError((l10n) => l10n.restoreMissingRateSettings);
+      }
     });
   }
 }
 
-Future<List<String>> _backupConflicts(DatabaseExecutor db) async {
-  final conflicts = <String>[];
-  for (final entry in const {
-    'server_groups': '分组',
-    'servers': '服务器（含归档）',
-    'payments': '付款（含撤销）',
-    'service_periods': '服务期',
+Future<List<LocalizedText>> _backupConflicts(DatabaseExecutor db) async {
+  final conflicts = <LocalizedText>[];
+  for (final entry in {
+    'server_groups': (AppLocalizations l10n) => l10n.backupGroups,
+    'servers': (AppLocalizations l10n) => l10n.backupServersIncludingArchived,
+    'payments': (AppLocalizations l10n) => l10n.backupPaymentsIncludingVoided,
+    'service_periods': (AppLocalizations l10n) => l10n.backupServicePeriods,
   }.entries) {
     if ((await db.query(entry.key, columns: ['id'], limit: 1)).isNotEmpty) {
-      conflicts.add('目标台账已有${entry.value}');
+      conflicts.add(
+        LocalizedText((l10n) => l10n.restoreExistingRecords(entry.value(l10n))),
+      );
     }
   }
   return conflicts;
@@ -564,7 +603,7 @@ Map<String, Object?> _backupObject(
   if (value is! Map ||
       value.keys.any((k) => k is! String || !keys.contains(k)) ||
       !keys.where((key) => !optional.contains(key)).every(value.containsKey)) {
-    throw const FormatException('备份字段缺失、未知或类型错误');
+    throw LocalizedFormatException((l10n) => l10n.backupInvalidFields);
   }
   return Map<String, Object?>.from(value);
 }
@@ -577,12 +616,14 @@ void _backupText(
   bool nonempty = false,
 }) {
   final value = row[key];
-  if (value == null && nullable) return;
+  if (value == null && nullable) {
+    return;
+  }
   if (value is! String ||
       value.length > max ||
       (nonempty && value.trim().isEmpty) ||
       value.contains('\u0000')) {
-    throw const FormatException('备份文字字段无效');
+    throw LocalizedFormatException((l10n) => l10n.backupInvalidText);
   }
 }
 
@@ -594,15 +635,17 @@ void _backupInt(
   bool nullable = false,
 }) {
   final value = row[key];
-  if (value == null && nullable) return;
+  if (value == null && nullable) {
+    return;
+  }
   if (value is! int || value < min || value > max) {
-    throw const FormatException('备份整数或金额超出范围');
+    throw LocalizedFormatException((l10n) => l10n.backupNumberOutOfRange);
   }
 }
 
 void _backupEnum(Map<String, Object?> row, String key, List<String> values) {
   if (row[key] is! String || !values.contains(row[key])) {
-    throw const FormatException('备份枚举字段无效');
+    throw LocalizedFormatException((l10n) => l10n.backupInvalidEnum);
   }
 }
 
@@ -612,9 +655,11 @@ void _backupDate(
   bool nullable = false,
 }) {
   final value = row[key];
-  if (value == null && nullable) return;
+  if (value == null && nullable) {
+    return;
+  }
   if (value is! String || LedgerDate.tryParse(value) == null) {
-    throw const FormatException('备份日期无效');
+    throw LocalizedFormatException((l10n) => l10n.backupInvalidDate);
   }
 }
 
@@ -624,15 +669,17 @@ void _backupInstant(
   bool nullable = false,
 }) {
   final value = row[key];
-  if (value == null && nullable) return;
+  if (value == null && nullable) {
+    return;
+  }
   if (value is! String ||
       value.length > 32 ||
       !RegExp(r'^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}(\d{3})?Z$')
           .hasMatch(value)) {
-    throw const FormatException('备份时间需为规范 UTC 时间');
+    throw LocalizedFormatException((l10n) => l10n.backupTimeRequiresUtc);
   }
   final parsed = DateTime.tryParse(value);
   if (parsed == null || parsed.year < 1 || parsed.toIso8601String() != value) {
-    throw const FormatException('备份时间无效');
+    throw LocalizedFormatException((l10n) => l10n.backupInvalidTime);
   }
 }

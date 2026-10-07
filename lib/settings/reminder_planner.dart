@@ -1,9 +1,12 @@
+import '../l10n/generated/app_localizations.dart';
+import '../l10n/locale_preference.dart';
+
 import 'package:timezone/timezone.dart' as tz;
 
 import '../core/value_types.dart';
 import 'reminder_rule.dart';
 
-/// The ledger supplies this snapshot; no Flutter, database or API dependency.
+/// The ledger supplies this snapshot; planning performs no database or API work.
 class ReminderInput {
   const ReminderInput({
     required this.rule,
@@ -26,6 +29,7 @@ class PlannedReminder {
     required this.dueDate,
     required this.at,
     required this.usagePlan,
+    this.localizations,
   });
 
   final int notificationId, leadDays;
@@ -33,16 +37,18 @@ class PlannedReminder {
   final LedgerDate dueDate;
   final tz.TZDateTime at;
   final UsagePlan usagePlan;
+  final AppLocalizations? localizations;
+  AppLocalizations get l10n => localizations ?? defaultLocalizations;
 
   // Deliberately omit machine names, addresses, accounts and prices.
-  String get title => 'VPS 到期核对';
+  String get title => l10n.expiryNotificationTitle;
   String get body {
     // Absolute dates remain accurate if the OS delays delivery or a gap crosses
     // midnight. Relative "today / in N days" wording would then be misleading.
-    final when = '到期日为 $dueDate';
+    final when = l10n.notificationDueDate((dueDate).toString());
     return usagePlan == UsagePlan.stopAtExpiry
-        ? '有服务$when，请核对厂商是否已取消续费。本地计划不会停止扣费。'
-        : '有服务$when，请核对厂商账单与使用计划。本提醒不会自动付款。';
+        ? l10n.notificationStopBody((when).toString())
+        : l10n.notificationContinueBody((when).toString());
   }
 }
 
@@ -68,8 +74,11 @@ ReminderPlan planReminders({
   required DateTime now,
   required tz.Location location,
   required int capacity,
+  AppLocalizations? localizations,
 }) {
-  if (capacity < 0) throw ArgumentError('Negative notification capacity');
+  if (capacity < 0) {
+    throw ArgumentError('Negative notification capacity');
+  }
   final candidates = <PlannedReminder>[];
   final ruleIds = <int>{};
   final serverIds = <String>{};
@@ -91,7 +100,9 @@ ReminderPlan planReminders({
     }
     for (final leadDays in rule.leadDays) {
       final date = due.addDays(-leadDays);
-      if (!date.isValid) continue;
+      if (!date.isValid) {
+        continue;
+      }
       final at = tz.TZDateTime(
         location,
         date.year,
@@ -124,13 +135,16 @@ ReminderPlan planReminders({
           dueDate: due,
           at: at,
           usagePlan: rule.usagePlan,
+          localizations: localizations,
         ),
       );
     }
   }
   candidates.sort((a, b) {
     final timeOrder = a.at.compareTo(b.at);
-    if (timeOrder != 0) return timeOrder;
+    if (timeOrder != 0) {
+      return timeOrder;
+    }
     final serverOrder = a.serverId.compareTo(b.serverId);
     return serverOrder != 0
         ? serverOrder

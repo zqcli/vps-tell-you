@@ -1,3 +1,7 @@
+import '../l10n/localized_message.dart';
+import '../l10n/locale_preference.dart';
+import '../l10n/generated/app_localizations.dart';
+
 import 'dart:async';
 import 'dart:io';
 
@@ -20,13 +24,15 @@ class TcpTarget {
       normalized = normalized.substring(1, normalized.length - 1);
       if (InternetAddress.tryParse(normalized)?.type !=
           InternetAddressType.IPv6) {
-        throw ArgumentError('请输入有效的 IPv6 地址');
+        throw LocalizedArgumentError((l10n) => l10n.tcpValidIpv6);
       }
     }
     if (normalized.isEmpty || !ServerRecord.validHost(normalized)) {
-      throw ArgumentError('请输入 IP 或域名，不含协议、端口或路径');
+      throw LocalizedArgumentError((l10n) => l10n.tcpValidHost);
     }
-    if (port < 1 || port > 65535) throw ArgumentError('端口需为 1–65535');
+    if (port < 1 || port > 65535) {
+      throw LocalizedArgumentError((l10n) => l10n.tcpValidPort);
+    }
     final address = InternetAddress.tryParse(normalized);
     return TcpTarget._(address?.address ?? normalized.toLowerCase(), port);
   }
@@ -48,13 +54,15 @@ class TcpTestResult {
   final DateTime finishedAt;
   final Duration elapsed;
   final String? remoteAddress;
-  String get source => '本机 TCP 连接测试';
-  String get label => switch (outcome) {
-    TcpOutcome.connected => 'TCP 连接成功',
-    TcpOutcome.refused => '连接被拒绝',
-    TcpOutcome.timedOut => '连接超时',
-    TcpOutcome.cancelled => '测试已取消',
-    TcpOutcome.failed => '连接失败（网络或地址不可用）',
+  String get source => sourceFor(defaultLocalizations);
+  String sourceFor(AppLocalizations l10n) => l10n.tcpSource;
+  String get label => labelFor(defaultLocalizations);
+  String labelFor(AppLocalizations l10n) => switch (outcome) {
+    TcpOutcome.connected => l10n.tcpConnected,
+    TcpOutcome.refused => l10n.tcpRefused,
+    TcpOutcome.timedOut => l10n.tcpTimedOut,
+    TcpOutcome.cancelled => l10n.tcpCancelled,
+    TcpOutcome.failed => l10n.tcpFailed,
   };
 }
 
@@ -79,7 +87,9 @@ class TcpTestController extends ChangeNotifier {
   }) : _connector =
            connector ?? ((host, port) => Socket.startConnect(host, port)),
        _clock = clock ?? DateTime.now {
-    if (timeout <= Duration.zero) throw ArgumentError('超时必须大于 0');
+    if (timeout <= Duration.zero) {
+      throw LocalizedArgumentError((l10n) => l10n.tcpTimeoutPositive);
+    }
   }
   final TcpConnector _connector;
   final DateTime Function() _clock;
@@ -91,7 +101,9 @@ class TcpTestController extends ChangeNotifier {
   bool get running => _attempt != null && !_attempt!.ended;
 
   Future<void> test(TcpTarget next) {
-    if (_disposed) throw StateError('TCP controller disposed');
+    if (_disposed) {
+      throw StateError('TCP controller disposed');
+    }
     _stopCurrent(publish: false);
     final attempt = _TcpAttempt(next);
     _attempt = attempt;
@@ -123,13 +135,19 @@ class TcpTestController extends ChangeNotifier {
           }
         },
         onError: (Object error, StackTrace stack) {
-          if (!attempt.ended) _finish(attempt, _failureOutcome(error));
+          if (!attempt.ended) {
+            _finish(attempt, _failureOutcome(error));
+          }
         },
       );
-      if (attempt.ended) task.cancel();
+      if (attempt.ended) {
+        task.cancel();
+      }
       await socketResult;
     } catch (error) {
-      if (!attempt.ended) _finish(attempt, _failureOutcome(error));
+      if (!attempt.ended) {
+        _finish(attempt, _failureOutcome(error));
+      }
     }
   }
 
@@ -147,11 +165,15 @@ class TcpTestController extends ChangeNotifier {
     String? remoteAddress,
     bool publish = true,
   }) {
-    if (attempt.ended) return;
+    if (attempt.ended) {
+      return;
+    }
     attempt.ended = true;
     attempt.timer?.cancel();
     attempt.watch.stop();
-    if (outcome != TcpOutcome.connected) attempt.task?.cancel();
+    if (outcome != TcpOutcome.connected) {
+      attempt.task?.cancel();
+    }
     if (!_disposed && identical(attempt, _attempt) && publish) {
       result = TcpTestResult(
         target: attempt.target,
@@ -180,7 +202,9 @@ class TcpTestController extends ChangeNotifier {
     _attempt = null;
     target = null;
     result = null;
-    if (!_disposed) notifyListeners();
+    if (!_disposed) {
+      notifyListeners();
+    }
   }
 
   @override

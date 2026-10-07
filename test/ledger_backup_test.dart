@@ -333,6 +333,8 @@ void main() {
     );
     final raw = await databaseFactoryFfiNoIsolate.openDatabase(sourcePath);
     await raw.update('servers', {'resources_json': legacyJson});
+    // Reconstruct the actual pre-language v7 preference schema.
+    await raw.execute('ALTER TABLE app_settings DROP COLUMN language');
     await raw.setVersion(7);
     final before = await raw.query('servers');
     await raw.close();

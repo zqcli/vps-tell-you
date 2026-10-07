@@ -1,9 +1,12 @@
+import '../l10n/localized_message.dart';
+
 import 'package:flutter/material.dart';
 
 import '../cloud/cloud_pages.dart';
 import '../core/app_theme.dart';
 import '../data/ledger_store.dart';
 import '../finance/fx_page.dart';
+import '../l10n/locale_preference.dart';
 import '../security/security_pages.dart';
 import '../servers/ledger_controller.dart';
 import '../servers/refresh_failure_notice.dart';
@@ -20,16 +23,78 @@ class SettingsPage extends StatefulWidget {
 
 class _SettingsPageState extends State<SettingsPage> {
   LedgerController get controller => widget.controller;
+
+  Future<void> language(BuildContext context) async {
+    final preference = await showDialog<LocalePreference>(
+      context: context,
+      builder: (context) => SimpleDialog(
+        title: Text(context.l10n.language),
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(24, 0, 24, 12),
+            child: Text(context.l10n.languageDescription),
+          ),
+          for (final preference in LocalePreference.values)
+            Semantics(
+              checked: controller.languagePreference == preference,
+              inMutuallyExclusiveGroup: true,
+              child: SimpleDialogOption(
+                key: ValueKey('language-${preference.storageValue}'),
+                onPressed: () => Navigator.pop(context, preference),
+                child: Row(
+                  children: [
+                    Icon(
+                      controller.languagePreference == preference
+                          ? Icons.radio_button_checked
+                          : Icons.radio_button_unchecked,
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(child: Text(languageName(context, preference))),
+                  ],
+                ),
+              ),
+            ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(24, 12, 24, 12),
+            child: Text(context.l10n.languageSystemDescription),
+          ),
+        ],
+      ),
+    );
+    if (preference == null) {
+      return;
+    }
+    try {
+      await controller.setLanguage(preference);
+    } catch (_) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Builder(
+              builder: (context) => Text(context.l10n.languageSaveFailed),
+            ),
+          ),
+        );
+      }
+    }
+  }
+
+  String languageName(BuildContext context, LocalePreference preference) =>
+      switch (preference) {
+        LocalePreference.chinese => context.l10n.languageChinese,
+        LocalePreference.english => context.l10n.languageEnglish,
+        LocalePreference.system => context.l10n.languageSystem,
+      };
   Future<void> appearance(BuildContext context) async {
     final mode = await showDialog<String>(
       context: context,
       builder: (context) => SimpleDialog(
-        title: const Text('外观'),
+        title: Text(context.l10n.appearance),
         children: [
-          for (final entry in const {
-            'system': '跟随系统',
-            'light': '浅色',
-            'dark': '深色',
+          for (final entry in {
+            'system': context.l10n.followSystem,
+            'light': context.l10n.lightTheme,
+            'dark': context.l10n.darkTheme,
           }.entries)
             SimpleDialogOption(
               onPressed: () => Navigator.pop(context, entry.key),
@@ -40,17 +105,23 @@ class _SettingsPageState extends State<SettingsPage> {
         ],
       ),
     );
-    if (mode == null) return;
+    if (mode == null) {
+      return;
+    }
     try {
       await controller.mutate(() => controller.store.saveThemeMode(mode));
     } catch (error) {
-      if (context.mounted) showFailure(context, error);
+      if (context.mounted) {
+        showFailure(context, error);
+      }
     }
   }
 
   bool openingCloud = false;
   Future<void> openCloud() async {
-    if (openingCloud) return;
+    if (openingCloud) {
+      return;
+    }
     openingCloud = true;
     try {
       await Navigator.push<void>(
@@ -68,8 +139,8 @@ class _SettingsPageState extends State<SettingsPage> {
   Widget build(BuildContext context) => ListView(
     padding: const EdgeInsets.all(20),
     children: [
-      const Text(
-        '设置',
+      Text(
+        context.l10n.settings,
         style: TextStyle(fontSize: 28, fontWeight: FontWeight.w800),
       ),
       const SizedBox(height: 22),
@@ -93,7 +164,7 @@ class _SettingsPageState extends State<SettingsPage> {
                     style: TextStyle(fontSize: 19, fontWeight: FontWeight.w700),
                   ),
                   Text(
-                    '个人 VPS 台账 · 本地优先',
+                    context.l10n.appDescription,
                     style: TextStyle(
                       fontSize: 12,
                       color: Theme.of(context).colorScheme.onSurfaceVariant,
@@ -105,15 +176,17 @@ class _SettingsPageState extends State<SettingsPage> {
           ],
         ),
       ),
-      const SectionTitle('组织与数据'),
+      SectionTitle(context.l10n.organizationData),
       LedgerCard(
         padding: EdgeInsets.zero,
         child: Column(
           children: [
             SettingRow(
               icon: Icons.folder_outlined,
-              title: '分组管理',
-              subtitle: '${controller.groups.length} 个分组 · 删除分组保留记录',
+              title: context.l10n.manageGroups,
+              subtitle: context.l10n.groupCountHelp(
+                (controller.groups.length).toString(),
+              ),
               onTap: () => Navigator.push<void>(
                 context,
                 MaterialPageRoute(
@@ -124,8 +197,10 @@ class _SettingsPageState extends State<SettingsPage> {
             const Divider(),
             SettingRow(
               icon: Icons.inventory_2_outlined,
-              title: '已归档记录',
-              subtitle: '${controller.archived.length} 条 · 可恢复到服务器列表',
+              title: context.l10n.archivedRecords,
+              subtitle: context.l10n.archiveCountHelp(
+                (controller.archived.length).toString(),
+              ),
               onTap: () => Navigator.push<void>(
                 context,
                 MaterialPageRoute(
@@ -136,23 +211,24 @@ class _SettingsPageState extends State<SettingsPage> {
           ],
         ),
       ),
-      const SectionTitle('账户与偏好'),
+      SectionTitle(context.l10n.accountsPreferences),
       LedgerCard(
         padding: EdgeInsets.zero,
         child: Column(
           children: [
             SettingRow(
               icon: Icons.cloud_outlined,
-              title: '面板账户',
-              subtitle:
-                  'SolusVM 1 / 2 · ${controller.cloud.accounts.length} 个连接',
+              title: context.l10n.panelAccounts,
+              subtitle: context.l10n.panelConnectionCount(
+                (controller.cloud.accounts.length).toString(),
+              ),
               onTap: openCloud,
             ),
             const Divider(),
             SettingRow(
               icon: Icons.shield_outlined,
-              title: '密钥与安全',
-              subtitle: '凭据、SSH 配置与主机信任',
+              title: context.l10n.keysSecurity,
+              subtitle: context.l10n.keysSecurityDescription,
               onTap: () => Navigator.push<void>(
                 context,
                 MaterialPageRoute(
@@ -163,9 +239,11 @@ class _SettingsPageState extends State<SettingsPage> {
             const Divider(),
             SettingRow(
               icon: Icons.currency_exchange,
-              title: '币种与参考汇率',
-              subtitle:
-                  '${controller.fx.displayCurrency} · 手动汇率 ${controller.fx.rateDate ?? '未设置'}',
+              title: context.l10n.currenciesReferenceRates,
+              subtitle: context.l10n.currencyRateSummary(
+                (controller.fx.displayCurrency).toString(),
+                (controller.fx.rateDate ?? context.l10n.notSet).toString(),
+              ),
               onTap: () => Navigator.push<void>(
                 context,
                 MaterialPageRoute(
@@ -176,8 +254,8 @@ class _SettingsPageState extends State<SettingsPage> {
             const Divider(),
             SettingRow(
               icon: Icons.notifications_none,
-              title: '通知权限',
-              subtitle: controller.reminders.description,
+              title: context.l10n.notificationAccess,
+              subtitle: controller.reminders.descriptionFor(context.l10n),
               onTap: () => Navigator.push<void>(
                 context,
                 MaterialPageRoute(
@@ -188,21 +266,31 @@ class _SettingsPageState extends State<SettingsPage> {
             const Divider(),
             SettingRow(
               icon: Icons.brightness_6_outlined,
-              title: '外观',
+              title: context.l10n.appearance,
               subtitle:
-                  const {
-                    'system': '跟随系统',
-                    'light': '浅色',
-                    'dark': '深色',
+                  {
+                    'system': context.l10n.followSystem,
+                    'light': context.l10n.lightTheme,
+                    'dark': context.l10n.darkTheme,
                   }[controller.themeMode] ??
-                  '跟随系统',
+                  context.l10n.followSystem,
               onTap: controller.canMutate ? () => appearance(context) : null,
             ),
             const Divider(),
             SettingRow(
+              key: const ValueKey('language-setting'),
+              icon: Icons.language,
+              title: context.l10n.language,
+              subtitle: languageName(context, controller.languagePreference),
+              onTap: controller.canMutate && !controller.savingLanguage
+                  ? () => language(context)
+                  : null,
+            ),
+            const Divider(),
+            SettingRow(
               icon: Icons.save_alt,
-              title: '台账备份与恢复',
-              subtitle: '不含凭据与主机信任 · 未加密 JSON',
+              title: context.l10n.ledgerBackupRestore,
+              subtitle: context.l10n.backupExclusionsSummary,
               onTap: () => Navigator.push<void>(
                 context,
                 MaterialPageRoute(
@@ -213,16 +301,16 @@ class _SettingsPageState extends State<SettingsPage> {
           ],
         ),
       ),
-      const SectionTitle('关于'),
-      const LedgerCard(
+      SectionTitle(context.l10n.about),
+      LedgerCard(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              '开发测试版 · 0.1.0',
+              context.l10n.developmentVersion,
               style: TextStyle(fontWeight: FontWeight.w600),
             ),
-            InfoNote('数据保存在当前设备，无需应用账号。\n归档记录不会取消服务器服务或停止扣费。'),
+            InfoNote(context.l10n.appLocalDataHelp),
           ],
         ),
       ),
@@ -245,7 +333,11 @@ class GroupsPage extends StatelessWidget {
         );
       } catch (error) {
         if (context.mounted) {
-          showFailure(context, error, fallbackMessage: '未能保存分组。请检查名称是否重复，再重试。');
+          showFailure(
+            context,
+            error,
+            fallbackMessage: LocalizedText((l10n) => l10n.groupSaveFailed),
+          );
         }
       }
     }
@@ -256,16 +348,22 @@ class GroupsPage extends StatelessWidget {
     ServerGroup group,
     String action,
   ) async {
-    if (action == 'rename') return edit(context, group);
+    if (action == 'rename') {
+      return edit(context, group);
+    }
     if (action == 'delete') {
       final ok = await confirmAction(
         context,
-        title: '删除“${group.name}”？',
-        message: '组内所有服务器（含已归档）将移到“未分组”，服务器资料和历史付款保留。不会修改远端服务器。',
-        action: '删除分组',
+        title: LocalizedText(
+          (l10n) => l10n.deleteGroupQuestion((group.name).toString()),
+        ),
+        message: LocalizedText((l10n) => l10n.deleteGroupHelp),
+        action: LocalizedText((l10n) => l10n.deleteGroup),
         dangerous: true,
       );
-      if (!ok) return;
+      if (!ok) {
+        return;
+      }
     }
     try {
       await controller.mutate(
@@ -274,7 +372,9 @@ class GroupsPage extends StatelessWidget {
             : controller.store.moveGroup(group.id, action == 'up' ? -1 : 1),
       );
     } catch (error) {
-      if (context.mounted) showFailure(context, error);
+      if (context.mounted) {
+        showFailure(context, error);
+      }
     }
   }
 
@@ -283,10 +383,10 @@ class GroupsPage extends StatelessWidget {
     listenable: controller,
     builder: (context, _) => Scaffold(
       appBar: AppBar(
-        title: const Text('分组管理'),
+        title: Text(context.l10n.manageGroups),
         actions: [
           IconButton(
-            tooltip: '新增分组',
+            tooltip: context.l10n.addGroup,
             onPressed: controller.canMutate ? () => edit(context) : null,
             icon: const Icon(Icons.add),
           ),
@@ -297,9 +397,9 @@ class GroupsPage extends StatelessWidget {
         children: [
           if (controller.refreshFailed)
             RefreshFailureNotice(controller: controller),
-          const InfoNote('按用途整理服务器。分组变更仅影响本地台账。'),
+          InfoNote(context.l10n.groupsHelp),
           if (controller.groups.isEmpty)
-            const LedgerCard(child: Text('还没有自定义分组，点右上角 + 新建。')),
+            LedgerCard(child: Text(context.l10n.noGroupsHelp)),
           for (final g in controller.groups)
             Padding(
               padding: const EdgeInsets.only(bottom: 10),
@@ -320,7 +420,12 @@ class GroupsPage extends StatelessWidget {
                             style: const TextStyle(fontWeight: FontWeight.w600),
                           ),
                           Text(
-                            '${controller.active.where((s) => s.groupId == g.id).length} 台未归档服务器',
+                            context.l10n.unarchivedServerCount(
+                              (controller.active
+                                      .where((s) => s.groupId == g.id)
+                                      .length)
+                                  .toString(),
+                            ),
                             style: TextStyle(
                               fontSize: 11,
                               color: Theme.of(context)
@@ -332,14 +437,37 @@ class GroupsPage extends StatelessWidget {
                       ),
                     ),
                     PopupMenuButton<String>(
-                      tooltip: '${g.name}的操作',
+                      tooltip: context.l10n.actionsForGroup(
+                        (g.name).toString(),
+                      ),
                       enabled: controller.canMutate,
                       onSelected: (a) => menu(context, g, a),
-                      itemBuilder: (_) => const [
-                        PopupMenuItem(value: 'rename', child: Text('重命名')),
-                        PopupMenuItem(value: 'up', child: Text('上移')),
-                        PopupMenuItem(value: 'down', child: Text('下移')),
-                        PopupMenuItem(value: 'delete', child: Text('删除分组')),
+                      itemBuilder: (_) => [
+                        PopupMenuItem(
+                          value: 'rename',
+                          child: Builder(
+                            builder: (context) => Text(context.l10n.rename),
+                          ),
+                        ),
+                        PopupMenuItem(
+                          value: 'up',
+                          child: Builder(
+                            builder: (context) => Text(context.l10n.moveUp),
+                          ),
+                        ),
+                        PopupMenuItem(
+                          value: 'down',
+                          child: Builder(
+                            builder: (context) => Text(context.l10n.moveDown),
+                          ),
+                        ),
+                        PopupMenuItem(
+                          value: 'delete',
+                          child: Builder(
+                            builder: (context) =>
+                                Text(context.l10n.deleteGroup),
+                          ),
+                        ),
                       ],
                     ),
                   ],
@@ -351,12 +479,15 @@ class GroupsPage extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  '未分组',
+                Text(
+                  context.l10n.ungrouped,
                   style: TextStyle(fontWeight: FontWeight.w600),
                 ),
                 InfoNote(
-                  '${controller.active.where((s) => s.groupId == null).length} 台未归档服务器 · 默认分组，不可删除',
+                  context.l10n.ungroupedCountHelp(
+                    (controller.active.where((s) => s.groupId == null).length)
+                        .toString(),
+                  ),
                 ),
               ],
             ),
@@ -374,15 +505,15 @@ class ArchivePage extends StatelessWidget {
   Widget build(BuildContext context) => ListenableBuilder(
     listenable: controller,
     builder: (context, _) => Scaffold(
-      appBar: AppBar(title: const Text('已归档记录')),
+      appBar: AppBar(title: Text(context.l10n.archivedRecords)),
       body: ListView(
         padding: const EdgeInsets.all(20),
         children: [
           if (controller.refreshFailed)
             RefreshFailureNotice(controller: controller),
-          const InfoNote('归档保留服务器资料和 ID。恢复不会连接云主机，也不会启动或续费服务。'),
+          InfoNote(context.l10n.archiveHelp),
           if (controller.archived.isEmpty)
-            const LedgerCard(child: Text('没有已归档记录')),
+            LedgerCard(child: Text(context.l10n.noArchivedRecords)),
           for (final s in controller.archived)
             Padding(
               padding: const EdgeInsets.only(bottom: 12),
@@ -422,7 +553,7 @@ class ArchivePage extends StatelessWidget {
                               }
                             },
                       icon: const Icon(Icons.restore, size: 18),
-                      label: const Text('恢复记录'),
+                      label: Text(context.l10n.restoreRecord),
                     ),
                   ],
                 ),
@@ -454,22 +585,24 @@ class _GroupNameDialogState extends State<_GroupNameDialog> {
   @override
   Widget build(BuildContext context) => AlertDialog(
     scrollable: true,
-    title: Text(widget.name == null ? '新增分组' : '重命名分组'),
+    title: Text(
+      widget.name == null ? context.l10n.addGroup : context.l10n.renameGroup,
+    ),
     content: TextField(
       key: const ValueKey('group-name'),
       controller: field,
       autofocus: true,
       maxLength: 40,
-      decoration: const InputDecoration(labelText: '分组名称'),
+      decoration: InputDecoration(labelText: context.l10n.groupName),
     ),
     actions: [
       TextButton(
         onPressed: () => Navigator.pop(context),
-        child: const Text('取消'),
+        child: Text(context.l10n.cancel),
       ),
       FilledButton(
         onPressed: () => Navigator.pop(context, field.text),
-        child: const Text('保存'),
+        child: Text(context.l10n.save),
       ),
     ],
   );

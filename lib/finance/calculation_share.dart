@@ -6,6 +6,9 @@ import 'package:flutter/material.dart';
 import 'package:path/path.dart' as path;
 import 'package:path_provider/path_provider.dart';
 
+import '../l10n/locale_preference.dart';
+import '../l10n/generated/app_localizations.dart';
+import '../l10n/localized_message.dart';
 import '../core/app_theme.dart';
 import '../core/value_types.dart';
 import 'png_share.dart';
@@ -15,6 +18,7 @@ import 'valuation_copy.dart';
 /// Quotation / settlement information is deliberately absent.
 class CalculationShareData {
   const CalculationShareData({
+    this.localizations,
     required this.amount,
     required this.currency,
     required this.converted,
@@ -33,29 +37,42 @@ class CalculationShareData {
     required this.fxSource,
     required this.periodBasis,
   });
+
+  /// Captured when the export is requested; changing the UI locale cannot mix
+  /// languages inside an in-flight image or previously created text export.
+  final AppLocalizations? localizations;
+  AppLocalizations get l10n => localizations ?? defaultLocalizations;
   final String amount, currency, converted, renewal, daily, fx, fxSource;
   final String periodBasis;
   final LedgerDate asOf, due;
   final LedgerDate? start, end;
   final double ratio;
   final int activeRemaining, days, remaining, futurePeriods;
-  static const disclaimer = '仅表示服务时长的价格折算，不代表退款承诺或成交价。';
   String get percent => '${(ratio.clamp(0, 1) * 100).toStringAsFixed(1)}%';
   String get periodLabel =>
-      valuationPeriodLabel(asOf: asOf, start: start, end: end);
+      valuationPeriodLabel(asOf: asOf, start: start, end: end, l10n: l10n);
   String get plainText => [
-    '剩余价值：$amount $currency',
+    l10n.financeExportValue(amount, currency),
     converted,
-    '估值日期：$asOf',
-    '$periodLabel：${start ?? '未知'} 至 ${end ?? '未知'}（不含结束日）',
-    '$periodLabel剩余：$activeRemaining / $days 天 · $percent',
-    '服务到期日：$due；剩余服务天数：$remaining 天',
-    '续费 / 周期：$renewal；所示周期日均：$daily',
-    if (futurePeriods > 0) '含 $futurePeriods 个尚未开始的周期，进度仅显示上述周期。',
+    l10n.financeExportValuationDate(asOf.toString()),
+    l10n.financeExportPeriod(
+      periodLabel,
+      start?.toString() ?? l10n.financeUnknown,
+      end?.toString() ?? l10n.financeUnknown,
+    ),
+    l10n.financeExportPeriodRemaining(
+      periodLabel,
+      activeRemaining,
+      days,
+      percent,
+    ),
+    l10n.financeExportServiceRemaining(due.toString(), remaining),
+    l10n.financeExportRenewalDaily(renewal, daily),
+    if (futurePeriods > 0) l10n.financeExportFuturePeriods(futurePeriods),
     periodBasis,
     fx,
     fxSource,
-    disclaimer,
+    l10n.financeExportDisclaimer,
   ].join('\n');
 }
 
@@ -65,6 +82,7 @@ typedef CalculationSaver = Future<String> Function(Uint8List, LedgerDate);
 /// TextPainter performs both layout and drawing, so Chinese and long values
 /// determine the real image height rather than being clipped by a fixed canvas.
 Future<Uint8List> renderCalculationPng(CalculationShareData data) async {
+  final l10n = data.l10n;
   const width = 540.0;
   const margin = 32.0;
   final blocks = <({TextPainter painter, double y})>[];
@@ -86,40 +104,49 @@ Future<Uint8List> renderCalculationPng(CalculationShareData data) async {
         ),
       ),
       textDirection: TextDirection.ltr,
+      locale: Locale(l10n.localeName),
     )..layout(maxWidth: width - margin * 2);
     blocks.add((painter: painter, y: y));
     y += painter.height + 10;
   }
 
-  line('vps tell you · 试算 · 不入账', size: 16, bold: true);
+  line(l10n.financeExportHeading, size: 16, bold: true);
   y += 22;
-  line('剩余价值 · 按当前续费价折算', size: 20, bold: true);
+  line(l10n.financeValueTitle, size: 20, bold: true);
   line('${data.amount} ${data.currency}', size: 36, bold: true);
   line(data.converted, color: AppColors.muted);
   y += 12;
   line(
-    '${data.periodLabel}剩余 ${data.percent} · ${data.activeRemaining} / ${data.days} 天',
+    l10n.financePeriodProgress(
+      data.periodLabel,
+      (data.ratio.clamp(0, 1) * 100).toStringAsFixed(1),
+      data.activeRemaining,
+      data.days,
+    ),
   );
   final progressY = y;
   y += 22;
   line(
-    '${data.start ?? '未知'} 至 ${data.end ?? '未知'}（不含结束日）',
+    l10n.financePeriodDates(
+      data.start?.toString() ?? l10n.financeUnknown,
+      data.end?.toString() ?? l10n.financeUnknown,
+    ),
     size: 12,
     color: AppColors.muted,
   );
   y += 12;
   for (final row in [
-    '估值日期：${data.asOf}',
-    '服务到期日：${data.due}',
-    '剩余服务天数：${data.remaining} 天',
-    '续费 / 周期：${data.renewal}',
-    '所示周期日均：${data.daily}',
+    l10n.financeExportValuationDate(data.asOf.toString()),
+    l10n.financeExportDue(data.due.toString()),
+    l10n.financeExportRemainingDays(data.remaining),
+    l10n.financeExportRenewal(data.renewal),
+    l10n.financeExportDaily(data.daily),
   ]) {
     line(row);
   }
   if (data.futurePeriods > 0) {
     line(
-      '含 ${data.futurePeriods} 个尚未开始的周期；进度仅显示上述周期。',
+      l10n.financeExportFuturePeriods(data.futurePeriods),
       size: 12,
       color: AppColors.muted,
     );
@@ -130,12 +157,12 @@ Future<Uint8List> renderCalculationPng(CalculationShareData data) async {
   line(data.fxSource, size: 12, color: AppColors.muted);
   y += 14;
   line(
-    CalculationShareData.disclaimer,
+    l10n.financeExportDisclaimer,
     size: 14,
     bold: true,
     color: AppColors.blue,
   );
-  line('独立试算 · 图片仅含计算信息', size: 12, color: AppColors.muted);
+  line(l10n.financeExportFooter, size: 12, color: AppColors.muted);
   final height = (y + 24).ceil();
   final recorder = ui.PictureRecorder();
   final canvas = Canvas(recorder)..scale(2);
@@ -248,7 +275,7 @@ class CalculationPreview extends StatefulWidget {
 
 class _CalculationPreviewState extends State<CalculationPreview> {
   Uint8List? bytes;
-  String? status;
+  LocalizedText? status;
   bool generating = true, saving = false, sharing = false;
   late final MobilePngShare sharer;
   int generation = 0;
@@ -290,7 +317,7 @@ class _CalculationPreviewState extends State<CalculationPreview> {
       if (!mounted || ticket != generation) return;
       setState(() {
         generating = false;
-        status = '图片生成失败，原计算结果已保留。';
+        status = LocalizedText((l10n) => l10n.financePngRenderFailed);
       });
     }
   }
@@ -305,10 +332,16 @@ class _CalculationPreviewState extends State<CalculationPreview> {
     try {
       final savedPath = await widget.saver(bytes!, widget.data.asOf);
       if (!mounted || ticket != generation) return;
-      setState(() => status = 'PNG 已保存：\n$savedPath');
+      setState(
+        () => status = LocalizedText(
+          (l10n) => l10n.financePngSavedPath(savedPath),
+        ),
+      );
     } catch (_) {
       if (!mounted || ticket != generation) return;
-      setState(() => status = '保存未完成。预览仍保留，请检查空间与权限后重试。');
+      setState(
+        () => status = LocalizedText((l10n) => l10n.financePngSaveFailed),
+      );
     } finally {
       if (mounted && ticket == generation) setState(() => saving = false);
     }
@@ -334,17 +367,31 @@ class _CalculationPreviewState extends State<CalculationPreview> {
       if (!mounted || ticket != generation) return;
       setState(
         () => status = switch (result) {
-          PngShareOutcome.selected => '已选择系统分享操作，请在目标应用核对是否送达。',
-          PngShareOutcome.dismissed => '已取消分享，预览仍保留。',
-          PngShareOutcome.unknown => '未收到系统分享结果，预览仍保留。',
-          PngShareOutcome.unsupported => '此平台不支持 PNG 系统分享，可保存到本地。',
-          PngShareOutcome.busy => '请先完成当前系统分享操作。',
-          PngShareOutcome.failed => '分享未完成，预览仍保留，请重试。',
+          PngShareOutcome.selected => LocalizedText(
+            (l10n) => l10n.financePngShareSelected,
+          ),
+          PngShareOutcome.dismissed => LocalizedText(
+            (l10n) => l10n.financePngShareDismissed,
+          ),
+          PngShareOutcome.unknown => LocalizedText(
+            (l10n) => l10n.financePngShareUnknown,
+          ),
+          PngShareOutcome.unsupported => LocalizedText(
+            (l10n) => l10n.financePngShareUnsupported,
+          ),
+          PngShareOutcome.busy => LocalizedText(
+            (l10n) => l10n.financePngShareBusy,
+          ),
+          PngShareOutcome.failed => LocalizedText(
+            (l10n) => l10n.financePngShareFailed,
+          ),
         },
       );
     } catch (_) {
       if (mounted && ticket == generation) {
-        setState(() => status = '分享未完成，预览仍保留，请重试。');
+        setState(
+          () => status = LocalizedText((l10n) => l10n.financePngShareFailed),
+        );
       }
     } finally {
       // A newer render must not inherit a permanently busy button from this
@@ -355,11 +402,11 @@ class _CalculationPreviewState extends State<CalculationPreview> {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(title: const Text('图片预览')),
+    appBar: AppBar(title: Text(context.l10n.financePngPreview)),
     body: ListView(
       padding: const EdgeInsets.all(20),
       children: [
-        const InfoNote('仅含金额、日期、周期和参考汇率。图片不含服务器名称、地址、账户、备注或转让报价试算。'),
+        InfoNote(context.l10n.financePngPrivacy),
         if (generating)
           const Center(
             child: Padding(
@@ -371,21 +418,26 @@ class _CalculationPreviewState extends State<CalculationPreview> {
           Image.memory(
             bytes!,
             key: const ValueKey('calculation-png'),
-            semanticLabel: '剩余价值计算结果 PNG',
+            semanticLabel: context.l10n.financePngSemantic,
           ),
         if (status != null)
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 16),
-            child: SelectableText(status!),
+            child: SelectableText(status!.messageFor(context.l10n)),
           ),
         if (!generating && bytes == null)
-          FilledButton(onPressed: generate, child: const Text('重新生成')),
+          FilledButton(
+            onPressed: generate,
+            child: Text(context.l10n.financeRegenerate),
+          ),
         if (bytes != null) ...[
           const SizedBox(height: 16),
           FilledButton.icon(
             onPressed: saving || sharing ? null : save,
             icon: const Icon(Icons.download_outlined),
-            label: Text(saving ? '正在保存…' : '保存 PNG'),
+            label: Text(
+              saving ? context.l10n.financeSaving : context.l10n.financeSavePng,
+            ),
           ),
           if (sharer.supported) ...[
             const SizedBox(height: 10),
@@ -395,11 +447,15 @@ class _CalculationPreviewState extends State<CalculationPreview> {
                     ? null
                     : () => share(buttonContext),
                 icon: const Icon(Icons.ios_share),
-                label: Text(sharing ? '正在分享…' : '系统分享 PNG'),
+                label: Text(
+                  sharing
+                      ? context.l10n.financeSharing
+                      : context.l10n.financeSharePng,
+                ),
               ),
             ),
           ],
-          const InfoNote('保存位置可能是应用私有目录，不等于相册或公开下载目录。移动端可使用系统分享另存；取消分享不会关闭预览。'),
+          InfoNote(context.l10n.financePngLocationNote),
         ],
       ],
     ),

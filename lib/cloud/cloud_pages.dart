@@ -5,6 +5,8 @@ import 'package:flutter/material.dart';
 
 import '../core/app_theme.dart';
 import '../core/form_feedback.dart';
+import '../l10n/locale_preference.dart';
+import '../l10n/localized_message.dart';
 import '../servers/ledger_controller.dart';
 import '../servers/server_detail.dart';
 import '../servers/server_resource_fields.dart';
@@ -16,9 +18,14 @@ import 'cloud_widgets.dart';
 Future<void> _reloadLedger(LedgerController ledger) =>
     ledger.refreshAfterCloudCommit();
 
-void _cloudMessage(BuildContext context, String message) =>
-    ScaffoldMessenger.of(context)
-        .showSnackBar(SnackBar(content: Text(message)));
+void _cloudMessage(BuildContext context, Object message) =>
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Builder(
+          builder: (context) => Text(localizedText(message, context.l10n)),
+        ),
+      ),
+    );
 
 class CloudAccountsPage extends StatefulWidget {
   const CloudAccountsPage({super.key, required this.ledger});
@@ -66,10 +73,10 @@ class _CloudAccountsPageState extends State<CloudAccountsPage> {
     listenable: cloud,
     builder: (context, _) => Scaffold(
       appBar: AppBar(
-        title: const Text('面板账户'),
+        title: Text(context.l10n.cloudAccounts),
         actions: [
           IconButton(
-            tooltip: '添加面板账户',
+            tooltip: context.l10n.cloudAddAccount,
             onPressed: cloud.busy || cloud.needsReload ? null : add,
             icon: const Icon(Icons.add),
           ),
@@ -78,29 +85,26 @@ class _CloudAccountsPageState extends State<CloudAccountsPage> {
       body: ListView(
         padding: const EdgeInsets.all(20),
         children: [
-          const LedgerBadge('SolusVM 1 / 2 · 面板读取'),
+          LedgerBadge(context.l10n.cloudPanelReadBadge),
           const SizedBox(height: 16),
-          const Text(
-            '管理面板连接与实例',
+          Text(
+            context.l10n.cloudManageConnections,
             style: TextStyle(fontSize: 26, fontWeight: FontWeight.w700),
           ),
-          const InfoNote('每个连接独立管理授权与实例。\n同一面板可以添加多个独立账户或 VPS 连接。'),
+          InfoNote(context.l10n.cloudConnectionsInfo),
           if (cloud.needsReload) ...[
-            const CloudNotice('面板账户资料读取未完成，请重读后继续。', error: true),
+            CloudNotice(context.l10n.cloudMetadataIncomplete, error: true),
             OutlinedButton(
               onPressed: cloud.busy ? null : cloud.reload,
-              child: const Text('重读面板账户资料'),
+              child: Text(context.l10n.cloudReloadMetadata),
             ),
-          ] else if (cloud.error != null)
-            CloudNotice(cloud.error!, error: true),
+          ] else if (cloud.localizedError != null)
+            CloudNotice(cloud.localizedError!, error: true),
           if (cloud.cleanupPending) ...[
-            const CloudNotice(
-              '待清理的旧授权仍可能留在设备安全存储中。请重试清理；远端授权需到面板撤销。',
-              error: true,
-            ),
+            CloudNotice(context.l10n.cloudCleanupNotice, error: true),
             OutlinedButton(
               onPressed: cloud.busy ? null : cloud.retryCleanup,
-              child: const Text('重试清理旧授权'),
+              child: Text(context.l10n.cloudRetryCleanup),
             ),
           ],
           if (cloud.accounts.isEmpty && !cloud.needsReload)
@@ -114,15 +118,15 @@ class _CloudAccountsPageState extends State<CloudAccountsPage> {
                     color: Theme.of(context).colorScheme.primary,
                   ),
                   const SizedBox(height: 16),
-                  const Text(
-                    '添加第一个面板账户',
+                  Text(
+                    context.l10n.cloudFirstAccount,
                     style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
                   ),
-                  const InfoNote('从内置模板开始，验证面板授权后，再选择要加入台账的实例。'),
+                  InfoNote(context.l10n.cloudFirstAccountInfo),
                   FilledButton.icon(
                     onPressed: cloud.busy ? null : add,
                     icon: const Icon(Icons.add),
-                    label: const Text('选择接入模板'),
+                    label: Text(context.l10n.cloudChooseTemplate),
                   ),
                 ],
               ),
@@ -157,7 +161,12 @@ class _CloudAccountsPageState extends State<CloudAccountsPage> {
                                 ),
                               ),
                               Text(
-                                '${cloudProviderName(account.provider)} · ${cloud.bindings.where((b) => b.accountId == account.id).length} 台关联',
+                                context.l10n.cloudProviderLinks(
+                                  cloudProviderName(account.provider),
+                                  cloud.bindings
+                                      .where((b) => b.accountId == account.id)
+                                      .length,
+                                ),
                                 style: Theme.of(context).textTheme.bodySmall,
                               ),
                               Text(
@@ -166,7 +175,7 @@ class _CloudAccountsPageState extends State<CloudAccountsPage> {
                               ),
                               const SizedBox(height: 8),
                               LedgerBadge(
-                                cloudAccountStatus(account),
+                                cloudAccountStatus(account, l10n: context.l10n),
                                 warning: account.lastFailure != null,
                               ),
                             ],
@@ -187,11 +196,9 @@ class _CloudAccountsPageState extends State<CloudAccountsPage> {
             OutlinedButton.icon(
               onPressed: cloud.busy || cloud.needsReload ? null : add,
               icon: const Icon(Icons.add),
-              label: const Text('添加面板账户'),
+              label: Text(context.l10n.cloudAddAccount),
             ),
-          const InfoNote(
-            '本 App 仅使用读取能力，不代表 API 凭据本身只有读取权限。\n面板账户授权与 SSH 凭据分开管理。解除关联保留台账、费用、付款与 SSH。',
-          ),
+          InfoNote(context.l10n.cloudReadOnlyBoundary),
         ],
       ),
     ),
@@ -223,16 +230,16 @@ class _CloudTemplatesPageState extends State<CloudTemplatesPage> {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(title: const Text('添加面板账户')),
+    appBar: AppBar(title: Text(context.l10n.cloudAddAccount)),
     body: ListView(
       padding: const EdgeInsets.all(20),
       children: [
         const CloudSteps(1),
-        const Text(
-          '选择接入模板',
+        Text(
+          context.l10n.cloudChooseTemplate,
           style: TextStyle(fontSize: 25, fontWeight: FontWeight.w700),
         ),
-        const InfoNote('按面板版本选择授权方式。面板软件不等于销售厂商，真实服务商和费用可稍后补充。'),
+        InfoNote(context.l10n.cloudTemplateInfo),
         for (final provider in CloudProvider.values)
           Padding(
             padding: const EdgeInsets.only(bottom: 14),
@@ -242,15 +249,13 @@ class _CloudTemplatesPageState extends State<CloudTemplatesPage> {
                 icon: Icons.cloud_outlined,
                 title: cloudProviderName(provider),
                 subtitle: provider == CloudProvider.solusVm1
-                    ? 'Client API Key + Hash\n每组凭据只对应单台 VPS'
-                    : '用户 API Token\n读取当前用户的项目与实例',
+                    ? context.l10n.cloudV1TemplateInfo
+                    : context.l10n.cloudV2TemplateInfo,
                 onTap: () => choose(context, provider),
               ),
             ),
           ),
-        const InfoNote(
-          '支持 SolusVM 1 和 SolusVM 2 面板读取。不提供 API 电源控制，也不会修改远端资源或停止服务商计费。',
-        ),
+        InfoNote(context.l10n.cloudSupportedPanels),
       ],
     ),
   );
@@ -273,10 +278,9 @@ class CloudAuthorizationPage extends StatefulWidget {
 class _CloudAuthorizationPageState extends State<CloudAuthorizationPage>
     with WidgetsBindingObserver {
   final form = GlobalKey<FormState>();
-  late final alias = TextEditingController(
-    text:
-        widget.existing?.alias ?? '我的 ${cloudProviderName(widget.provider)} 面板',
-  );
+  final alias = TextEditingController();
+  bool _aliasInitialized = false;
+  bool _validated = false;
   late final endpoint = TextEditingController(
     text: widget.existing?.endpoint ?? '',
   );
@@ -287,7 +291,7 @@ class _CloudAuthorizationPageState extends State<CloudAuthorizationPage>
   bool get v1 => widget.provider == CloudProvider.solusVm1;
   bool reading = false, navigating = false;
   int serial = 0;
-  String? error;
+  LocalizedMessage? error;
   CloudEndpoint? get parsedEndpoint {
     try {
       return CloudEndpoint.parse(endpoint.text, allowSolusVm1ConsolePath: v1);
@@ -300,6 +304,22 @@ class _CloudAuthorizationPageState extends State<CloudAuthorizationPage>
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_aliasInitialized) {
+      alias.text =
+          widget.existing?.alias ??
+          context.l10n.cloudSuggestedAlias(cloudProviderName(widget.provider));
+      _aliasInitialized = true;
+    }
+    if (_validated) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) form.currentState?.validate();
+      });
+    }
   }
 
   void clearSecrets() {
@@ -315,7 +335,7 @@ class _CloudAuthorizationPageState extends State<CloudAuthorizationPage>
     if (mounted && update) {
       setState(() {
         reading = false;
-        error = '验证已取消，未保存授权';
+        error = LocalizedText((l10n) => l10n.cloudVerifyCancelled);
       });
     }
   }
@@ -344,11 +364,13 @@ class _CloudAuthorizationPageState extends State<CloudAuthorizationPage>
   }
 
   Future<void> verify() async {
-    if (reading || navigating || !form.currentState!.validate()) return;
+    if (reading || navigating) return;
+    _validated = !form.currentState!.validate();
+    if (_validated) return;
     // Long forms lazily unmount offscreen fields. Validate the local alias
     // independently before any network request, not only via FormState.
     if (alias.text.trim().isEmpty || alias.text.trim().length > 80) {
-      setState(() => error = '账户别名需为 1–80 个字符');
+      setState(() => error = LocalizedText((l10n) => l10n.cloudAliasInvalid));
       return;
     }
     final request = ++serial;
@@ -369,16 +391,19 @@ class _CloudAuthorizationPageState extends State<CloudAuthorizationPage>
         existing: widget.existing,
       );
     } on CloudFailure catch (failure) {
-      error = failure.message;
+      error = failure;
     } catch (_) {
-      error = '验证未完成，请检查面板地址、凭据和网络后重试';
+      error = LocalizedText((l10n) => l10n.cloudVerifyFailed);
     } finally {
       if (mounted && request == serial) clearSecrets();
     }
     if (!mounted || request != serial) return;
     setState(() {
       reading = false;
-      error ??= verified == null ? cloud.error ?? '验证未完成，未保存授权' : null;
+      error ??= verified == null
+          ? cloud.localizedError ??
+                LocalizedText((l10n) => l10n.cloudVerifyNotSaved)
+          : null;
     });
     if (verified == null) return;
     navigating = true;
@@ -398,7 +423,9 @@ class _CloudAuthorizationPageState extends State<CloudAuthorizationPage>
     if (saved == true) {
       Navigator.pop(context, true);
     } else {
-      setState(() => error = '未保存授权。需要重新验证后再导入。');
+      setState(
+        () => error = LocalizedText((l10n) => l10n.cloudVerifyAgainRequired),
+      );
     }
   }
 
@@ -417,9 +444,10 @@ class _CloudAuthorizationPageState extends State<CloudAuthorizationPage>
       enableSuggestions: false,
       enableIMEPersonalizedLearning: false,
       keyboardType: TextInputType.visiblePassword,
-      decoration: InputDecoration(labelText: label),
-      validator: (value) =>
-          value == null || value.isEmpty ? '请填写 $label' : null,
+      decoration: InputDecoration(labelText: label, errorMaxLines: 5),
+      validator: (value) => value == null || value.isEmpty
+          ? context.l10n.cloudRequiredField(label)
+          : null,
     ),
   );
 
@@ -432,8 +460,10 @@ class _CloudAuthorizationPageState extends State<CloudAuthorizationPage>
       appBar: AppBar(
         title: Text(
           widget.existing == null
-              ? '连接 ${cloudProviderName(widget.provider)}'
-              : '重新授权',
+              ? context.l10n.cloudConnectProvider(
+                  cloudProviderName(widget.provider),
+                )
+              : context.l10n.cloudReauthorize,
         ),
       ),
       body: Form(
@@ -444,21 +474,25 @@ class _CloudAuthorizationPageState extends State<CloudAuthorizationPage>
             const CloudSteps(2),
             LedgerCard(
               child: Text(
-                '${cloudProviderName(widget.provider)} · ${v1 ? '单台 VPS / Client API' : '用户账户 / API Token'}',
+                '${cloudProviderName(widget.provider)} · ${v1 ? context.l10n.cloudSingleVpsApi : context.l10n.cloudUserAccountApi}',
                 style: const TextStyle(fontWeight: FontWeight.w700),
               ),
             ),
             if (kIsWeb)
-              const CloudNotice('Web 预览不接受真实 API 凭据，请在原生应用中连接。', error: true),
+              CloudNotice(context.l10n.cloudWebPreviewNotice, error: true),
             const SizedBox(height: 20),
             TextFormField(
               key: const ValueKey('cloud-alias'),
               controller: alias,
               enabled: !reading,
               maxLength: 80,
-              decoration: const InputDecoration(labelText: '账户别名'),
-              validator: (value) =>
-                  value == null || value.trim().isEmpty ? '请填写账户别名' : null,
+              decoration: InputDecoration(
+                labelText: context.l10n.cloudAliasLabel,
+                errorMaxLines: 5,
+              ),
+              validator: (value) => value == null || value.trim().isEmpty
+                  ? context.l10n.cloudAliasRequired
+                  : null,
             ),
             const SizedBox(height: 12),
             TextFormField(
@@ -470,65 +504,62 @@ class _CloudAuthorizationPageState extends State<CloudAuthorizationPage>
               enableSuggestions: false,
               keyboardType: TextInputType.url,
               decoration: InputDecoration(
-                labelText: 'HTTPS 面板地址',
+                labelText: context.l10n.cloudEndpointLabel,
+                errorMaxLines: 6,
                 hintText: v1
                     ? 'https://panel.example.com:5656'
                     : 'https://panel.example.com',
               ),
               onChanged: (_) => setState(() => error = null),
               validator: (_) => parsedEndpoint == null
-                  ? '请输入 HTTPS 面板首页地址，不含凭据、参数或 API 路径'
+                  ? context.l10n.cloudEndpointValidation
                   : null,
             ),
-            const InfoNote('使用面板首页 HTTPS 地址，可以保留服务商指定端口。不会忽略证书错误或跟随重定向。'),
+            InfoNote(context.l10n.cloudEndpointInfo),
             if (parsedEndpoint case final target?)
               CloudNotice(
-                '${target.normalizedConsolePath ? '已移除 /home.php。\n' : ''}验证将连接：${target.origin}',
+                context.l10n.cloudVerifyTarget(
+                  target.normalizedConsolePath
+                      ? context.l10n.cloudConsolePathRemoved
+                      : '',
+                  target.origin.toString(),
+                ),
               ),
             if (widget.existing != null)
-              const InfoNote('面板地址与连接身份绑定。不同面板请另建连接，旧授权不会显示在此处。'),
+              InfoNote(context.l10n.cloudEndpointIdentityInfo),
             if (v1) ...[
               secretField(keyField, 'API Key', 'cloud-key'),
               secretField(hashField, 'API Hash', 'cloud-hash'),
-              const InfoNote(
-                '填写该 VPS 的 Client API Key / Hash。不是管理员 API 凭据或登录密码；需服务商开放 Client API。每组凭据只读取单台 VPS 的状态。',
-              ),
+              InfoNote(context.l10n.cloudV1CredentialsInfo),
             ] else ...[
               secretField(token, 'API Token', 'cloud-token'),
-              const InfoNote(
-                '使用 SolusVM 2 用户区 Account → API Tokens 的 Token。不要使用管理员 Token；可读取范围取决于服务商设置。',
-              ),
+              InfoNote(context.l10n.cloudV2CredentialsInfo),
             ],
             if (v1 && widget.existing != null)
-              const CloudNotice(
-                '此 API 无法证明新凭据仍属于原 VPS。验证后，必须明确确认解除旧关联，再决定是否导入新记录。旧台账、费用和 SSH 会保留。',
-                error: true,
-              ),
+              CloudNotice(context.l10n.cloudV1ReauthorizationInfo, error: true),
             if (!v1 && widget.existing != null)
-              const InfoNote('重新授权必须验证为同一远端用户账户，否则保留原授权与关联。'),
-            const CloudNotice(
-              '本 App 仅使用读取能力，不代表凭据本身只有读取权限。验证会读取状态或项目与实例；只有下一步保存后，授权才进入设备安全存储。',
-            ),
+              InfoNote(context.l10n.cloudV2ReauthorizationInfo),
+            CloudNotice(context.l10n.cloudVerifyScopeInfo),
             if (error != null) CloudNotice(error!, error: true),
             if (reading) ...[
               const Padding(
                 padding: EdgeInsets.all(12),
                 child: Center(child: CircularProgressIndicator()),
               ),
-              const InfoNote('正在验证并读取完整列表。请求有超时限制；返回或取消会停止本次读取。'),
+              InfoNote(context.l10n.cloudVerifyingInfo),
               OutlinedButton(
                 key: const ValueKey('cancel-cloud-verify'),
                 onPressed: cancel,
-                child: const Text('取消验证'),
+                child: Text(context.l10n.cloudCancelVerification),
               ),
             ] else
               FilledButton.icon(
                 key: const ValueKey('verify-cloud'),
                 onPressed: kIsWeb ? null : verify,
                 icon: const Icon(Icons.link),
-                label: const Text('验证并读取'),
+                label: Text(context.l10n.cloudVerifyRead),
               ),
-            const InfoNote('凭据输入在验证后或离开时清空，不写入台账、日志或导出。Dart 不保证内存安全擦除。'),
+            InfoNote(context.l10n.cloudCredentialMemoryInfo),
           ],
         ),
       ),
@@ -569,7 +600,7 @@ class _CloudImportPageState extends State<CloudImportPage>
       confirmRebind = false,
       committed = false,
       expired = false;
-  String? error;
+  LocalizedMessage? error;
   String keyFor(CloudInstance instance) =>
       widget.verification?.keyFor(instance) ??
       widget.inventory!.keyFor(instance);
@@ -599,7 +630,7 @@ class _CloudImportPageState extends State<CloudImportPage>
       cloud.cancelVerification();
       setState(() {
         expired = true;
-        error = '离开应用后已清除本次授权，请返回重新验证。尚未提交的保存已取消。';
+        error = LocalizedText((l10n) => l10n.cloudAuthorizationExpired);
       });
     }
   }
@@ -625,7 +656,9 @@ class _CloudImportPageState extends State<CloudImportPage>
       );
       if (resources == null) {
         revealFirstInvalidField(invalid);
-        setState(() => error = '请核对并补齐六项硬件信息；未知项目请先向厂商确认，补齐后再导入。');
+        setState(
+          () => error = LocalizedText((l10n) => l10n.cloudResourcesIncomplete),
+        );
         return;
       }
     } else {
@@ -660,12 +693,17 @@ class _CloudImportPageState extends State<CloudImportPage>
     if (!mounted) return;
     setState(() {
       saving = false;
-      error = ok ? null : cloud.error ?? '保存未完成，请重试';
+      error = ok
+          ? null
+          : cloud.localizedError ??
+                LocalizedText((l10n) => l10n.cloudSaveFailed);
     });
     if (ok) {
       _cloudMessage(
         context,
-        picked.isEmpty ? '账户授权已保存，未导入新实例' : '已保存，所选实例已加入本地台账',
+        picked.isEmpty
+            ? LocalizedText((l10n) => l10n.cloudAccountSavedOnly)
+            : LocalizedText((l10n) => l10n.cloudInstancesSaved),
       );
       Navigator.pop(context, true);
     }
@@ -708,11 +746,17 @@ class _CloudImportPageState extends State<CloudImportPage>
   Widget build(BuildContext context) => PopScope<Object?>(
     canPop: !saving,
     child: Scaffold(
-      appBar: AppBar(title: const Text('选择导入实例')),
+      appBar: AppBar(title: Text(context.l10n.cloudChooseInstances)),
       body: _importBody([
         const CloudSteps(3),
         CloudNotice(
-          '完整读取已完成 · ${snapshot.instances.length} 台\n读取时间：${cloudTime(snapshot.completedAt)}${widget.verification != null ? '\n尚未保存这次授权' : ''}',
+          context.l10n.cloudInventoryComplete(
+            snapshot.instances.length,
+            cloudTime(snapshot.completedAt),
+            widget.verification != null
+                ? context.l10n.cloudAuthorizationUnsaved
+                : '',
+          ),
         ),
         Text(
           widget.alias ?? account!.alias,
@@ -727,8 +771,8 @@ class _CloudImportPageState extends State<CloudImportPage>
           LedgerCard(
             child: Text(
               widget.verification != null
-                  ? '当前授权下没有可导入的实例。可仅保存账户，稍后继续导入。'
-                  : '本次完整列表没有返回可导入的实例。账户已保存，可稍后重新读取。',
+                  ? context.l10n.cloudEmptyVerification
+                  : context.l10n.cloudEmptyInventory,
             ),
           ),
         for (final instance in snapshot.instances)
@@ -758,48 +802,64 @@ class _CloudImportPageState extends State<CloudImportPage>
                 ),
                 title: Text(
                   v1
-                      ? '该凭据对应的单台 VPS'
-                      : instance.name ?? '实例 ${instance.serverId}',
+                      ? context.l10n.cloudV1Instance
+                      : instance.name ??
+                            context.l10n.cloudInstanceFallback(
+                              instance.serverId?.toString() ??
+                                  context.l10n.cloudPowerUnknown,
+                            ),
                 ),
                 subtitle: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     if (linked(instance) != null)
-                      const LedgerBadge('已关联 · 跳过重复导入'),
+                      LedgerBadge(context.l10n.cloudAlreadyLinked),
                     if (!v1)
                       Text(
-                        '项目 ${instance.projectName ?? instance.projectId} · 实例 ID ${instance.serverId}',
+                        context.l10n.cloudProjectInstance(
+                          (instance.projectName ?? instance.projectId)
+                                  ?.toString() ??
+                              context.l10n.cloudPowerUnknown,
+                          instance.serverId?.toString() ??
+                              context.l10n.cloudPowerUnknown,
+                        ),
                       ),
                     Text(
                       v1
-                          ? '无稳定实例 ID · 按此独立连接识别'
+                          ? context.l10n.cloudV1Identity
                           : [
                               instance.ipv4,
                               instance.ipv6,
                             ].whereType<String>().join(' / ').isEmpty
-                          ? 'IP 未提供'
+                          ? context.l10n.cloudIpNotProvided
                           : [
                               instance.ipv4,
                               instance.ipv6,
                             ].whereType<String>().join(' / '),
                     ),
-                    Text('电源${cloudPowerLabel(instance.power)} · 上次读取'),
+                    Text(
+                      context.l10n.cloudPowerLastRead(
+                        cloudPowerLabel(instance.power, l10n: context.l10n),
+                      ),
+                    ),
                   ],
                 ),
               ),
             ),
           ),
         if (v1) ...[
-          if (needsV1Selection) const InfoNote('请先勾选上方实例，再补齐下方资料；仅填写不会自动导入。'),
+          if (needsV1Selection)
+            InfoNote(context.l10n.cloudSelectBeforeComplete),
           const SizedBox(height: 6),
           TextField(
             key: const ValueKey('cloud-v1-name'),
             controller: displayName,
             enabled: !saving && !expired,
             maxLength: 80,
-            decoration: const InputDecoration(
-              labelText: '本地显示名称（可选）',
-              helperText: '仅用于新台账，不作为实例身份',
+            decoration: InputDecoration(
+              labelText: context.l10n.cloudLocalDisplayName,
+              helperText: context.l10n.cloudLocalNameInfo,
+              helperMaxLines: 4,
             ),
           ),
           if (snapshot.instances.isNotEmpty &&
@@ -819,15 +879,10 @@ class _CloudImportPageState extends State<CloudImportPage>
                 'vcpu': snapshot.instances.single.vcpu,
               },
             ),
-          const InfoNote(
-            'SolusVM 1 不提供稳定实例 ID。资源字段依厂商开放情况而异；已填资料只存本机，不会触发 SSH、TCP 或远端配置修改。',
-          ),
+          InfoNote(context.l10n.cloudV1ResourcesInfo),
         ],
         if (rebind) ...[
-          const CloudNotice(
-            '保存新授权将解除此连接的所有旧实例关联。旧记录、费用、付款和 SSH 原样保留；选择导入会新增本地记录，不自动覆盖或重连旧记录。',
-            error: true,
-          ),
+          CloudNotice(context.l10n.cloudRebindWarning, error: true),
           CheckboxListTile(
             key: const ValueKey('cloud-confirm-rebind'),
             contentPadding: EdgeInsets.zero,
@@ -836,11 +891,15 @@ class _CloudImportPageState extends State<CloudImportPage>
             onChanged: saving || expired
                 ? null
                 : (value) => setState(() => confirmRebind = value ?? false),
-            title: const Text('我确认保存新授权会解除旧实例关联'),
+            title: Text(context.l10n.cloudConfirmRebind),
           ),
         ],
         InfoNote(
-          '导入不会覆盖已有本地名称、费用、付款、备注或 SSH 配置。${v1 ? '同一连接下已关联的实例不会重复导入；不同连接不会自动合并。' : '去重依据独立连接与远端 ID，不按 IP 或名称合并。'}已归档的关联也不会重复导入。',
+          context.l10n.cloudImportBoundary(
+            v1
+                ? context.l10n.cloudV1Deduplication
+                : context.l10n.cloudV2Deduplication,
+          ),
         ),
         if (error != null) CloudNotice(error!, error: true),
         if (needsV1Selection && !saving && !expired)
@@ -848,7 +907,7 @@ class _CloudImportPageState extends State<CloudImportPage>
             key: const ValueKey('cloud-return-to-instance'),
             onPressed: revealV1Selection,
             icon: const Icon(Icons.arrow_upward),
-            label: const Text('返回选择实例'),
+            label: Text(context.l10n.cloudReturnSelect),
           ),
         FilledButton.icon(
           key: const ValueKey('cloud-import-submit'),
@@ -862,10 +921,12 @@ class _CloudImportPageState extends State<CloudImportPage>
           icon: const Icon(Icons.download_outlined),
           label: Text(
             saving
-                ? '正在保存…'
+                ? context.l10n.cloudSaving
                 : selected.isEmpty
-                ? '尚未选择新实例'
-                : '${widget.verification == null ? '导入' : '保存账户并导入'} ${selected.length} 台',
+                ? context.l10n.cloudNoneSelected
+                : widget.verification == null
+                ? context.l10n.cloudImportCount(selected.length)
+                : context.l10n.cloudSaveImportCount(selected.length),
           ),
         ),
         if (widget.verification != null) ...[
@@ -877,19 +938,19 @@ class _CloudImportPageState extends State<CloudImportPage>
                 : () => save(accountOnly: true),
             child: Text(
               widget.verification!.existingAccount == null
-                  ? '仅保存账户'
+                  ? context.l10n.cloudSaveOnly
                   : rebind
-                  ? '更新授权并解除旧关联'
-                  : '仅更新授权',
+                  ? context.l10n.cloudUpdateUnlink
+                  : context.l10n.cloudUpdateOnly,
             ),
           ),
         ],
         if (expired && !saving)
           OutlinedButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('返回重新验证'),
+            child: Text(context.l10n.cloudReturnVerify),
           ),
-        if (saving) const InfoNote('正在提交到本机，请等待完成后再返回。'),
+        if (saving) InfoNote(context.l10n.cloudSavingInfo),
       ]),
     ),
   );
@@ -915,7 +976,7 @@ class _CloudReadPageState extends State<CloudReadPage>
   CloudController get cloud => widget.ledger.cloud;
   bool reading = true;
   CloudInventory? result;
-  String? error;
+  LocalizedMessage? error;
   int serial = 0;
   @override
   void initState() {
@@ -951,7 +1012,7 @@ class _CloudReadPageState extends State<CloudReadPage>
     if (update && mounted) {
       setState(() {
         reading = false;
-        error = '读取已取消，保留上次读取的信息';
+        error = LocalizedText((l10n) => l10n.cloudReadCancelled);
       });
     }
   }
@@ -968,7 +1029,7 @@ class _CloudReadPageState extends State<CloudReadPage>
     if (current == null) {
       setState(() {
         reading = false;
-        error = '账户关联已解除，请返回';
+        error = LocalizedText((l10n) => l10n.cloudAccountUnlinkedReturn);
       });
       return;
     }
@@ -977,7 +1038,10 @@ class _CloudReadPageState extends State<CloudReadPage>
     setState(() {
       reading = false;
       result = inventory;
-      error = inventory == null ? cloud.error ?? '读取未完成，保留上次读取的信息' : null;
+      error = inventory == null
+          ? cloud.localizedError ??
+                LocalizedText((l10n) => l10n.cloudReadIncomplete)
+          : null;
     });
     if (inventory != null && widget.importAfterRead) {
       final imported = await Navigator.push<bool>(
@@ -998,7 +1062,11 @@ class _CloudReadPageState extends State<CloudReadPage>
     },
     child: Scaffold(
       appBar: AppBar(
-        title: Text(widget.importAfterRead ? '读取可导入实例' : '刷新账户状态'),
+        title: Text(
+          widget.importAfterRead
+              ? context.l10n.cloudReadImportable
+              : context.l10n.cloudRefreshAccount,
+        ),
       ),
       body: ListView(
         padding: const EdgeInsets.all(20),
@@ -1013,21 +1081,31 @@ class _CloudReadPageState extends State<CloudReadPage>
               padding: EdgeInsets.all(30),
               child: Center(child: CircularProgressIndicator()),
             ),
-            const InfoNote('正在读取完整列表与状态，有超时限制。取消或返回会停止本次读取，不改变台账、费用或 SSH。'),
-            OutlinedButton(onPressed: cancel, child: const Text('取消读取')),
+            InfoNote(context.l10n.cloudReadingInfo),
+            OutlinedButton(
+              onPressed: cancel,
+              child: Text(context.l10n.cloudCancelRead),
+            ),
           ],
           if (error != null) ...[
             CloudNotice(error!, error: true),
-            OutlinedButton(onPressed: read, child: const Text('重新读取')),
+            OutlinedButton(
+              onPressed: read,
+              child: Text(context.l10n.cloudReadAgain),
+            ),
           ],
           if (result != null && !reading && error == null) ...[
             CloudNotice(
-              '完整读取已完成 · ${result!.snapshot.instances.length} 台\n读取时间：${cloudTime(result!.snapshot.completedAt)}',
+              context.l10n.cloudInventoryComplete(
+                result!.snapshot.instances.length,
+                cloudTime(result!.snapshot.completedAt),
+                '',
+              ),
             ),
-            const InfoNote('只更新此账户的 API 返回信息。本地资料、费用、付款与 SSH 没有被覆盖。'),
+            InfoNote(context.l10n.cloudReadCompleteInfo),
             FilledButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text('完成'),
+              child: Text(context.l10n.cloudDone),
             ),
           ],
         ],
@@ -1058,14 +1136,22 @@ Future<void> cloudAccountMenu(
             InfoNote(
               '${cloudProviderName(account.provider)} · ${account.endpoint}',
             ),
-            for (final row in const <(String, IconData, String)>[
-              ('detail', Icons.info_outline, '查看账户详情'),
-              ('rename', Icons.edit_outlined, '编辑账户名称'),
-              ('reauthorize', Icons.key_outlined, '重新授权'),
-              ('import', Icons.download_outlined, '继续导入实例'),
-              ('servers', Icons.dns_outlined, '关联服务器'),
-              ('refresh', Icons.refresh, '刷新账户状态'),
-              ('unbind', Icons.link_off, '解除账户关联'),
+            for (final row in <(String, IconData, String)>[
+              ('detail', Icons.info_outline, context.l10n.cloudViewDetails),
+              ('rename', Icons.edit_outlined, context.l10n.cloudRenameAccount),
+              (
+                'reauthorize',
+                Icons.key_outlined,
+                context.l10n.cloudReauthorize,
+              ),
+              (
+                'import',
+                Icons.download_outlined,
+                context.l10n.cloudContinueImport,
+              ),
+              ('servers', Icons.dns_outlined, context.l10n.cloudLinkedServers),
+              ('refresh', Icons.refresh, context.l10n.cloudRefreshAccount),
+              ('unbind', Icons.link_off, context.l10n.cloudUnlinkAccount),
             ])
               ListTile(
                 contentPadding: EdgeInsets.zero,
@@ -1117,7 +1203,13 @@ Future<void> cloudAccountMenu(
     if (name == null) return;
     final ok = await cloud.renameAccount(current, name);
     if (context.mounted) {
-      _cloudMessage(context, ok ? '账户别名已保存' : cloud.error ?? '名称未保存，请重试');
+      _cloudMessage(
+        context,
+        ok
+            ? LocalizedText((l10n) => l10n.cloudAliasSaved)
+            : cloud.localizedError ??
+                  LocalizedText((l10n) => l10n.cloudNameSaveFailed),
+      );
     }
   } else if (action == 'import' || action == 'refresh') {
     await Navigator.push<void>(
@@ -1133,10 +1225,16 @@ Future<void> cloudAccountMenu(
   } else if (action == 'unbind') {
     final ok = await confirmAction(
       context,
-      title: '解除面板账户关联？',
-      message:
-          '${current.alias}\n\n移除此面板连接，并解除其所有本地实例关联。再次添加时需重新填写 API 凭据。服务器、费用、付款与 SSH 配置仍保留。不会销毁远端资源或停止扣费。\n\n${current.provider == CloudProvider.solusVm1 ? '还需到面板禁用该 VPS 的 Client API 或重置 Key / Hash。' : '还需到面板撤销已签发的 Token。'}',
-      action: '解除本地关联',
+      title: LocalizedText((l10n) => l10n.cloudUnlinkAccountTitle),
+      message: LocalizedText(
+        (l10n) => l10n.cloudUnlinkAccountMessage(
+          current.alias,
+          current.provider == CloudProvider.solusVm1
+              ? l10n.cloudRevokeV1
+              : l10n.cloudRevokeV2,
+        ),
+      ),
+      action: LocalizedText((l10n) => l10n.cloudUnlinkLocal),
       dangerous: true,
     );
     if (!ok) return;
@@ -1145,7 +1243,10 @@ Future<void> cloudAccountMenu(
     if (context.mounted) {
       _cloudMessage(
         context,
-        saved ? '已解除关联，台账、费用与 SSH 保留' : cloud.error ?? '解除关联未完成，请重试',
+        saved
+            ? LocalizedText((l10n) => l10n.cloudAccountUnlinked)
+            : cloud.localizedError ??
+                  LocalizedText((l10n) => l10n.cloudUnlinkFailed),
       );
     }
   }
@@ -1172,12 +1273,18 @@ class CloudAccountDetailsPage extends StatelessWidget {
           .where((b) => b.accountId == accountId)
           .toList();
       return Scaffold(
-        appBar: AppBar(title: Text(associationsOnly ? '关联服务器' : '面板账户详情')),
+        appBar: AppBar(
+          title: Text(
+            associationsOnly
+                ? context.l10n.cloudLinkedServers
+                : context.l10n.cloudAccountDetails,
+          ),
+        ),
         body: ListView(
           padding: const EdgeInsets.all(20),
           children: [
             if (account == null)
-              const CloudNotice('账户已解除关联，原有台账仍保留。')
+              CloudNotice(context.l10n.cloudAccountRemovedNotice)
             else ...[
               Text(
                 account.alias,
@@ -1192,33 +1299,49 @@ class CloudAccountDetailsPage extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      CloudValue('接入模板', cloudProviderName(account.provider)),
-                      CloudValue('面板地址', account.endpoint),
-                      CloudValue('读取状态', cloudAccountStatus(account)),
                       CloudValue(
-                        '最近读取尝试',
+                        context.l10n.cloudTemplateLabel,
+                        cloudProviderName(account.provider),
+                      ),
+                      CloudValue(
+                        context.l10n.cloudPanelAddress,
+                        account.endpoint,
+                      ),
+                      CloudValue(
+                        context.l10n.cloudReadStatus,
+                        cloudAccountStatus(account, l10n: context.l10n),
+                      ),
+                      CloudValue(
+                        context.l10n.cloudLastAttempt,
                         account.lastAttemptAt == null
-                            ? '尚无记录'
+                            ? context.l10n.cloudNoAttempts
                             : cloudTime(account.lastAttemptAt!),
                       ),
                       CloudValue(
-                        '已验证的读取范围',
+                        context.l10n.cloudVerifiedScope,
                         account.provider == CloudProvider.solusVm1
-                            ? '单台 VPS · Client API，无稳定实例身份'
-                            : '已验证用户账户 ${account.remoteAccountId} · 项目与实例',
+                            ? context.l10n.cloudV1Scope
+                            : context.l10n.cloudV2Scope(
+                                account.remoteAccountId?.toString() ??
+                                    context.l10n.cloudPowerUnknown,
+                              ),
                       ),
-                      const CloudValue('App 能力', '仅使用读取能力；无 API 电源控制'),
-                      const CloudValue('授权存储', '设备安全存储；不显示或导出 API 凭据'),
+                      CloudValue(
+                        context.l10n.cloudAppCapabilities,
+                        context.l10n.cloudReadCapabilities,
+                      ),
+                      CloudValue(
+                        context.l10n.cloudAuthorizationStorage,
+                        context.l10n.cloudSecureStorageInfo,
+                      ),
                     ],
                   ),
                 ),
-                const InfoNote(
-                  'API 凭据本身可能拥有更多权限，请在服务商面板核对。没有后台持续监控，读取结果只代表读取时刻。',
-                ),
+                InfoNote(context.l10n.cloudScopeNotice),
               ],
-              SectionTitle('已关联 ${bindings.length} 台'),
+              SectionTitle(context.l10n.cloudLinkedCount(bindings.length)),
               if (bindings.isEmpty)
-                const LedgerCard(child: Text('暂无关联实例，可从账户菜单继续导入。')),
+                LedgerCard(child: Text(context.l10n.cloudNoLinkedInstances)),
               for (final binding in bindings)
                 Padding(
                   padding: const EdgeInsets.only(bottom: 10),
@@ -1226,10 +1349,17 @@ class CloudAccountDetailsPage extends StatelessWidget {
                     padding: EdgeInsets.zero,
                     child: SettingRow(
                       icon: Icons.dns_outlined,
-                      title:
-                          '${ledger.byId(binding.serverId)?.name ?? '本地记录'}${ledger.byId(binding.serverId)?.archived == true ? ' · 已归档' : ''}',
-                      subtitle:
-                          '${cloudBindingSummary(binding)}\n读取时间：${cloudTime(binding.observedAt)}',
+                      title: context.l10n.cloudRecordWithState(
+                        ledger.byId(binding.serverId)?.name ??
+                            context.l10n.cloudLocalRecord,
+                        ledger.byId(binding.serverId)?.archived == true
+                            ? context.l10n.cloudArchivedSuffix
+                            : '',
+                      ),
+                      subtitle: context.l10n.cloudBindingWithTime(
+                        cloudBindingSummary(binding, l10n: context.l10n),
+                        cloudTime(binding.observedAt),
+                      ),
                       onTap: ledger.byId(binding.serverId) == null
                           ? null
                           : () => Navigator.push<void>(
@@ -1261,7 +1391,7 @@ class _CloudRenameDialog extends StatefulWidget {
 
 class _CloudRenameDialogState extends State<_CloudRenameDialog> {
   late final field = TextEditingController(text: widget.alias);
-  String? error;
+  LocalizedMessage? error;
   @override
   void dispose() {
     field.dispose();
@@ -1271,29 +1401,35 @@ class _CloudRenameDialogState extends State<_CloudRenameDialog> {
   @override
   Widget build(BuildContext context) => AlertDialog(
     scrollable: true,
-    title: const Text('编辑账户名称'),
+    title: Text(context.l10n.cloudRenameAccount),
     content: TextField(
       key: const ValueKey('cloud-rename'),
       controller: field,
       maxLength: 80,
       autofocus: true,
-      decoration: InputDecoration(labelText: '账户别名', errorText: error),
+      decoration: InputDecoration(
+        labelText: context.l10n.cloudAliasLabel,
+        errorText: error?.messageFor(context.l10n),
+        errorMaxLines: 5,
+      ),
     ),
     actions: [
       TextButton(
         onPressed: () => Navigator.pop(context),
-        child: const Text('取消'),
+        child: Text(context.l10n.cloudCancel),
       ),
       FilledButton(
         onPressed: () {
           final value = field.text.trim();
           if (value.isEmpty || value.length > 80) {
-            setState(() => error = '请输入 1–80 字的账户别名');
+            setState(
+              () => error = LocalizedText((l10n) => l10n.cloudAliasRange),
+            );
             return;
           }
           Navigator.pop(context, value);
         },
-        child: const Text('保存名称'),
+        child: Text(context.l10n.cloudSaveName),
       ),
     ],
   );

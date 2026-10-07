@@ -1,3 +1,7 @@
+import '../l10n/localized_message.dart';
+import '../l10n/locale_preference.dart';
+import '../l10n/generated/app_localizations.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:xterm/xterm.dart';
@@ -35,13 +39,36 @@ const mobileTerminalTheme = TerminalTheme(
 
 /// Built-in suggestions use the same local draft and exact-send review as
 /// user snippets. They are never persisted or executed by selecting them.
-const terminalQuickCommands = <CommandSnippet>[
-  CommandSnippet(id: 'builtin-pwd', name: '当前目录', content: 'pwd'),
-  CommandSnippet(id: 'builtin-ls', name: '列出文件', content: 'ls -lah'),
-  CommandSnippet(id: 'builtin-uptime', name: '运行时间', content: 'uptime'),
-  CommandSnippet(id: 'builtin-df', name: '磁盘用量', content: 'df -h'),
-  CommandSnippet(id: 'builtin-free', name: '内存用量', content: 'free -h'),
-];
+List<CommandSnippet> get terminalQuickCommands =>
+    terminalQuickCommandsFor(defaultLocalizations);
+List<CommandSnippet> terminalQuickCommandsFor(AppLocalizations l10n) =>
+    <CommandSnippet>[
+      CommandSnippet(
+        id: 'builtin-pwd',
+        name: l10n.terminalCurrentDirectory,
+        content: 'pwd',
+      ),
+      CommandSnippet(
+        id: 'builtin-ls',
+        name: l10n.terminalListFiles,
+        content: 'ls -lah',
+      ),
+      CommandSnippet(
+        id: 'builtin-uptime',
+        name: l10n.terminalUptime,
+        content: 'uptime',
+      ),
+      CommandSnippet(
+        id: 'builtin-df',
+        name: l10n.terminalDiskUsage,
+        content: 'df -h',
+      ),
+      CommandSnippet(
+        id: 'builtin-free',
+        name: l10n.terminalMemoryUsage,
+        content: 'free -h',
+      ),
+    ];
 
 class TerminalKeyBar extends StatelessWidget {
   const TerminalKeyBar({
@@ -72,7 +99,9 @@ class TerminalKeyBar extends StatelessWidget {
           children: [
             ExcludeFocus(
               child: Tooltip(
-                message: hasDraft ? '命令与片段 · 有未发送草稿' : '命令与片段',
+                message: hasDraft
+                    ? context.l10n.terminalCommandsWithDraft
+                    : context.l10n.terminalCommandsSnippets,
                 child: TextButton.icon(
                   key: const ValueKey('terminal-commands'),
                   onPressed: onCommands,
@@ -84,7 +113,7 @@ class TerminalKeyBar extends StatelessWidget {
                     isLabelVisible: hasDraft,
                     child: const Icon(Icons.code_rounded, size: 20),
                   ),
-                  label: const Text('命令'),
+                  label: Text(context.l10n.terminalCommands),
                 ),
               ),
             ),
@@ -109,7 +138,7 @@ class TerminalKeyBar extends StatelessWidget {
                         ),
                         child: Semantics(
                           toggled: controlArmed,
-                          label: 'Ctrl，作用于下一个按键，再点取消',
+                          label: context.l10n.terminalControlHelp,
                           excludeSemantics: true,
                           child: const Text('Ctrl'),
                         ),
@@ -117,7 +146,7 @@ class TerminalKeyBar extends StatelessWidget {
                     ),
                     ExcludeFocus(
                       child: Tooltip(
-                        message: 'Ctrl V · 粘贴到草稿，不自动发送',
+                        message: context.l10n.terminalControlPaste,
                         child: TextButton(
                           key: const ValueKey('terminal-paste'),
                           onPressed: onPaste,
@@ -129,44 +158,43 @@ class TerminalKeyBar extends StatelessWidget {
                         ),
                       ),
                     ),
-                    for (final item
-                        in const <(String, TerminalKey, bool, IconData?)>[
-                          ('Esc', TerminalKey.escape, false, null),
-                          ('Tab', TerminalKey.tab, false, null),
-                          ('Ctrl+C', TerminalKey.keyC, true, null),
-                          (
-                            '向上方向键',
-                            TerminalKey.arrowUp,
-                            false,
-                            Icons.keyboard_arrow_up,
-                          ),
-                          (
-                            '向下方向键',
-                            TerminalKey.arrowDown,
-                            false,
-                            Icons.keyboard_arrow_down,
-                          ),
-                          (
-                            '向左方向键',
-                            TerminalKey.arrowLeft,
-                            false,
-                            Icons.keyboard_arrow_left,
-                          ),
-                          (
-                            '向右方向键',
-                            TerminalKey.arrowRight,
-                            false,
-                            Icons.keyboard_arrow_right,
-                          ),
-                          (
-                            'Enter',
-                            TerminalKey.enter,
-                            false,
-                            Icons.keyboard_return,
-                          ),
-                          ('Home', TerminalKey.home, false, null),
-                          ('End', TerminalKey.end, false, null),
-                        ])
+                    for (final item in <(String, TerminalKey, bool, IconData?)>[
+                      ('Esc', TerminalKey.escape, false, null),
+                      ('Tab', TerminalKey.tab, false, null),
+                      ('Ctrl+C', TerminalKey.keyC, true, null),
+                      (
+                        context.l10n.terminalArrowUp,
+                        TerminalKey.arrowUp,
+                        false,
+                        Icons.keyboard_arrow_up,
+                      ),
+                      (
+                        context.l10n.terminalArrowDown,
+                        TerminalKey.arrowDown,
+                        false,
+                        Icons.keyboard_arrow_down,
+                      ),
+                      (
+                        context.l10n.terminalArrowLeft,
+                        TerminalKey.arrowLeft,
+                        false,
+                        Icons.keyboard_arrow_left,
+                      ),
+                      (
+                        context.l10n.terminalArrowRight,
+                        TerminalKey.arrowRight,
+                        false,
+                        Icons.keyboard_arrow_right,
+                      ),
+                      (
+                        'Enter',
+                        TerminalKey.enter,
+                        false,
+                        Icons.keyboard_return,
+                      ),
+                      ('Home', TerminalKey.home, false, null),
+                      ('End', TerminalKey.end, false, null),
+                    ])
                       ExcludeFocus(
                         child: Tooltip(
                           message: item.$1,
@@ -221,18 +249,20 @@ class TerminalCommandSheet extends StatefulWidget {
   final Future<bool> Function(String content) replaceDraft;
   final Future<bool> Function(String exact, int generation, bool appendEnter)
   sendDraft;
-  final Future<String?> Function() pasteDraft;
+  final Future<Object?> Function() pasteDraft;
   @override
   State<TerminalCommandSheet> createState() => _TerminalCommandSheetState();
 }
 
 class _TerminalCommandSheetState extends State<TerminalCommandSheet> {
   bool _busy = false;
-  String? _error;
+  Object? _error;
   late final int _generation = widget.service.generation;
 
   Future<void> _run(Future<void> Function() action) async {
-    if (!mounted || _busy || ModalRoute.of(context)?.isCurrent != true) return;
+    if (!mounted || _busy || ModalRoute.of(context)?.isCurrent != true) {
+      return;
+    }
     setState(() {
       _busy = true;
       _error = null;
@@ -240,7 +270,9 @@ class _TerminalCommandSheetState extends State<TerminalCommandSheet> {
     try {
       await action();
     } finally {
-      if (mounted) setState(() => _busy = false);
+      if (mounted) {
+        setState(() => _busy = false);
+      }
     }
   }
 
@@ -255,11 +287,15 @@ class _TerminalCommandSheetState extends State<TerminalCommandSheet> {
       _generation,
       appendEnter,
     );
-    if (!mounted) return;
+    if (!mounted) {
+      return;
+    }
     if (sent) {
       Navigator.pop(context, true);
     } else {
-      setState(() => _error = '发送未确认，草稿仍保留。请先核实远端状态，避免重复执行。');
+      setState(
+        () => _error = LocalizedText((l10n) => l10n.terminalSendUnconfirmed),
+      );
     }
   });
 
@@ -268,17 +304,17 @@ class _TerminalCommandSheetState extends State<TerminalCommandSheet> {
       key: const ValueKey('terminal-send'),
       onPressed: enabled ? () => _send(false) : null,
       icon: const Icon(Icons.send_outlined, size: 18),
-      label: const Text('发送'),
+      label: Text(context.l10n.terminalSend),
     );
     final execute = FilledButton.icon(
       key: const ValueKey('terminal-send-execute'),
       onPressed: enabled ? () => _send(true) : null,
       icon: const Icon(Icons.keyboard_return, size: 18),
-      label: const Text('发送并执行'),
+      label: Text(context.l10n.terminalSendExecute),
     );
     final painter = TextPainter(
       text: TextSpan(
-        text: '发送并执行',
+        text: context.l10n.terminalSendExecute,
         style: Theme.of(context).textTheme.labelLarge,
       ),
       textScaler: MediaQuery.textScalerOf(context),
@@ -331,13 +367,13 @@ class _TerminalCommandSheetState extends State<TerminalCommandSheet> {
                     children: [
                       Expanded(
                         child: Text(
-                          '命令与片段',
+                          context.l10n.terminalCommandsSnippets,
                           style: Theme.of(context).textTheme.titleLarge,
                         ),
                       ),
                       IconButton(
                         key: const ValueKey('terminal-commands-close'),
-                        tooltip: '返回终端',
+                        tooltip: context.l10n.terminalBack,
                         onPressed: () => Navigator.pop(context),
                         icon: const Icon(Icons.close),
                       ),
@@ -352,7 +388,7 @@ class _TerminalCommandSheetState extends State<TerminalCommandSheet> {
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
                         Text(
-                          '常用命令',
+                          context.l10n.terminalQuickCommands,
                           key: const ValueKey('terminal-command-choices'),
                           style: Theme.of(context).textTheme.titleSmall,
                         ),
@@ -361,7 +397,9 @@ class _TerminalCommandSheetState extends State<TerminalCommandSheet> {
                           spacing: 8,
                           runSpacing: 8,
                           children: [
-                            for (final command in terminalQuickCommands)
+                            for (final command in terminalQuickCommandsFor(
+                              context.l10n,
+                            ))
                               ActionChip(
                                 key: ValueKey(command.id),
                                 tooltip: command.name,
@@ -392,7 +430,7 @@ class _TerminalCommandSheetState extends State<TerminalCommandSheet> {
                               Icons.bookmarks_outlined,
                               size: 18,
                             ),
-                            label: const Text('插入片段'),
+                            label: Text(context.l10n.terminalInsertSnippet),
                           ),
                         ),
                         const Divider(height: 24),
@@ -421,11 +459,13 @@ class _TerminalCommandSheetState extends State<TerminalCommandSheet> {
                             fontSize: 14,
                           ),
                           onChanged: (_) {
-                            if (_error != null) setState(() => _error = null);
+                            if (_error != null) {
+                              setState(() => _error = null);
+                            }
                           },
-                          decoration: const InputDecoration(
-                            labelText: '待发送草稿',
-                            hintText: '在此编辑要发送的内容',
+                          decoration: InputDecoration(
+                            labelText: context.l10n.terminalDraft,
+                            hintText: context.l10n.terminalDraftHint,
                           ),
                         ),
                         Align(
@@ -441,12 +481,12 @@ class _TerminalCommandSheetState extends State<TerminalCommandSheet> {
                                     }
                                   }),
                             icon: const Icon(Icons.content_paste, size: 18),
-                            label: const Text('粘贴'),
+                            label: Text(context.l10n.terminalPaste),
                           ),
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          '发送到',
+                          context.l10n.terminalSendTo,
                           style: Theme.of(context).textTheme.bodySmall,
                         ),
                         SelectableText(
@@ -461,7 +501,7 @@ class _TerminalCommandSheetState extends State<TerminalCommandSheet> {
                         const SizedBox(height: 12),
                         if (hiddenBytes) ...[
                           Text(
-                            '正文含换行、回车或控制字符，不追加回车也可能立即执行。',
+                            context.l10n.terminalControlCharacterWarning,
                             key: const ValueKey('draft-control-warning'),
                             style: TextStyle(
                               color: Theme.of(context).colorScheme.tertiary,
@@ -488,7 +528,7 @@ class _TerminalCommandSheetState extends State<TerminalCommandSheet> {
                           Padding(
                             padding: const EdgeInsets.only(bottom: 8),
                             child: Text(
-                              _error!,
+                              localizedText(_error!, context.l10n),
                               key: const ValueKey('terminal-draft-error'),
                               style: TextStyle(
                                 color: Theme.of(context).colorScheme.error,
@@ -497,10 +537,10 @@ class _TerminalCommandSheetState extends State<TerminalCommandSheet> {
                           ),
                         Text(
                           !current
-                              ? '会话已变化，请返回终端后重新打开。草稿不会自动发送。'
+                              ? context.l10n.terminalSessionChanged
                               : !widget.service.acceptsInput
-                              ? '当前不可发送。重连会清空草稿，不重放输入。'
-                              : '“发送”不追加回车；“发送并执行”追加回车，由当前终端程序处理。',
+                              ? context.l10n.terminalCannotSend
+                              : context.l10n.terminalSendMeaning,
                           style: Theme.of(context).textTheme.bodySmall,
                         ),
                         const SizedBox(height: 12),

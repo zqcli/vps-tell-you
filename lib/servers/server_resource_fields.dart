@@ -1,3 +1,5 @@
+import '../l10n/locale_preference.dart';
+
 import 'dart:ui' show SemanticsValidationResult;
 
 import 'package:flutter/material.dart';
@@ -28,6 +30,24 @@ class ServerResourceFields extends StatefulWidget {
 
 class ServerResourceFieldsState extends State<ServerResourceFields> {
   final _form = GlobalKey<FormState>();
+  bool _hasValidated = false;
+  String? _validationLocale;
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final next = context.l10n.localeName;
+    if (_validationLocale != null &&
+        _validationLocale != next &&
+        _hasValidated) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          _form.currentState?.validate();
+        }
+      });
+    }
+    _validationLocale = next;
+  }
+
   final _fields = <String, TextEditingController>{};
   final _units = <String, int>{};
   late bool _unlimited;
@@ -93,7 +113,9 @@ class ServerResourceFieldsState extends State<ServerResourceFields> {
     final parts = text.split('.');
     final scale = BigInt.from(10).pow(parts.length == 1 ? 0 : parts[1].length);
     final amount = BigInt.parse(parts.join()) * BigInt.from(_units[key]!);
-    if (amount % scale != BigInt.zero) return null;
+    if (amount % scale != BigInt.zero) {
+      return null;
+    }
     final value = amount ~/ scale;
     return value > BigInt.zero && value <= BigInt.from(maxValue)
         ? value.toInt()
@@ -136,18 +158,29 @@ class ServerResourceFieldsState extends State<ServerResourceFields> {
       return _fields[key]!.text.trim().isEmpty &&
               !(key == 'trafficBytes' && _unlimited)
           ? null
-          : '来源：手动填写';
+          : context.l10n.resourceSourceManual;
     }
-    if (_apiSource(key)) return '来源：API';
-    if (widget.initial != null) return '来源：手动填写';
-    if (key == 'trafficBytes' && _unlimited) return '来源：手动确认不限量';
-    if (_fields[key]!.text.trim().isEmpty) return '待补填：API 未提供有效值';
-    return widget.observed[key] == null ? '来源：手动补填' : '来源：手动修改 API 预填值';
+    if (_apiSource(key)) {
+      return context.l10n.resourceSourceApi;
+    }
+    if (widget.initial != null) {
+      return context.l10n.resourceSourceManual;
+    }
+    if (key == 'trafficBytes' && _unlimited) {
+      return context.l10n.resourceSourceUnlimited;
+    }
+    if (_fields[key]!.text.trim().isEmpty) {
+      return context.l10n.resourceSourceMissing;
+    }
+    return widget.observed[key] == null
+        ? context.l10n.resourceSourceCompleted
+        : context.l10n.resourceSourceEditedApi;
   }
 
   ServerResources? validateAndRead({
     Set<FormFieldState<Object?>>? invalidFields,
   }) {
+    _hasValidated = true;
     final invalid = _form.currentState!.validateGranularly();
     if (invalid.isNotEmpty) {
       invalidFields?.addAll(invalid);
@@ -174,25 +207,29 @@ class ServerResourceFieldsState extends State<ServerResourceFields> {
 
   String? _validate(String key) {
     final value = _value(key);
-    if (key == 'trafficBytes' && _unlimited) return null;
-    if (!widget.importing && _fields[key]!.text.trim().isEmpty) return null;
+    if (key == 'trafficBytes' && _unlimited) {
+      return null;
+    }
+    if (!widget.importing && _fields[key]!.text.trim().isEmpty) {
+      return null;
+    }
     if (key == 'ip') {
       return ServerResources.validIp(value as String)
           ? null
-          : '请填写有效 IPv4 或 IPv6，不能为全零地址';
+          : context.l10n.resourceFieldValidIp;
     }
     if (key == 'hostname') {
       return ServerResources.validHostname(value as String)
           ? null
-          : '请填写有效主机名，不含协议、端口或路径';
+          : context.l10n.resourceValidHostname;
     }
     return value is int &&
             value > 0 &&
             value <= (key == 'vcpu' ? ServerResources.maxVcpu : maxValue)
         ? null
         : key == 'vcpu'
-        ? '请填写 1–65536 的整数核数'
-        : '请填写大于 0 的容量，精确到整字节';
+        ? context.l10n.resourceFieldValidVcpu
+        : context.l10n.resourceFieldValidBytes;
   }
 
   Widget _field(String key, String label) => Padding(
@@ -229,6 +266,28 @@ class ServerResourceFieldsState extends State<ServerResourceFields> {
     counterText: '',
   );
 
+  Widget _trafficPeriodValue(int months) {
+    final l10n = context.l10n;
+    final fullLabel = months == 0
+        ? l10n.notSet
+        : ServerResources.trafficPeriodsFor(l10n)[months]!;
+    final compactLabel = switch (months) {
+      0 => l10n.resourceTrafficPeriodUnsetShort,
+      1 => l10n.resourceTrafficPeriodMonthShort,
+      3 => l10n.resourceTrafficPeriodQuarterShort,
+      12 => l10n.resourceTrafficPeriodYearShort,
+      _ => fullLabel,
+    };
+    return Tooltip(
+      message: fullLabel,
+      child: Semantics(
+        label: fullLabel,
+        excludeSemantics: true,
+        child: Text(compactLabel),
+      ),
+    );
+  }
+
   Widget _capacityField(String key, String label, {bool traffic = false}) {
     final enabled = widget.enabled && !(traffic && _unlimited);
     final style = Theme.of(context).textTheme.bodyMedium;
@@ -242,7 +301,9 @@ class ServerResourceFieldsState extends State<ServerResourceFields> {
         textScaler: MediaQuery.textScalerOf(context),
         textDirection: Directionality.of(context),
       )..layout();
-      if (painter.width + 48 > unitWidth) unitWidth = painter.width + 48;
+      if (painter.width + 48 > unitWidth) {
+        unitWidth = painter.width + 48;
+      }
       painter.dispose();
     }
     return Padding(
@@ -278,11 +339,15 @@ class ServerResourceFieldsState extends State<ServerResourceFields> {
                       keyboardType: const TextInputType.numberWithOptions(
                         decimal: true,
                       ),
-                      decoration: _compactDecoration('容量').copyWith(
-                        // The shared row owns validation so its message can use
-                        // the full width below all three controls.
-                        error: field.hasError ? const SizedBox.shrink() : null,
-                      ),
+                      decoration:
+                          _compactDecoration(context.l10n.resourceCapacity)
+                              .copyWith(
+                                // The shared row owns validation so its message can use
+                                // the full width below all three controls.
+                                error: field.hasError
+                                    ? const SizedBox.shrink()
+                                    : null,
+                              ),
                       onChanged: (_) => setState(() {}),
                     ),
                   ),
@@ -291,7 +356,9 @@ class ServerResourceFieldsState extends State<ServerResourceFields> {
                 SizedBox(
                   width: unitWidth,
                   child: Semantics(
-                    label: '$label单位，1024 进制',
+                    label: context.l10n.resourceUnitSemantics(
+                      (label).toString(),
+                    ),
                     child: DropdownButtonFormField<int>(
                       key: ValueKey('resource-unit-$key'),
                       initialValue: _units[key],
@@ -303,7 +370,7 @@ class ServerResourceFieldsState extends State<ServerResourceFields> {
                       ],
                       style: style,
                       iconSize: 16,
-                      decoration: _compactDecoration('单位'),
+                      decoration: _compactDecoration(context.l10n.resourceUnit),
                       items: [
                         for (final unit in units.entries)
                           DropdownMenuItem(
@@ -322,7 +389,7 @@ class ServerResourceFieldsState extends State<ServerResourceFields> {
                   Expanded(
                     flex: 1,
                     child: Semantics(
-                      label: '流量周期',
+                      label: context.l10n.resourceTrafficPeriod,
                       child: DropdownButtonFormField<int>(
                         key: const ValueKey('resource-traffic-period'),
                         initialValue: _trafficPeriodMonths ?? 0,
@@ -331,26 +398,41 @@ class ServerResourceFieldsState extends State<ServerResourceFields> {
                         itemHeight: null,
                         selectedItemBuilder: (context) => [
                           if (_trafficPeriodMonths == null)
-                            const Text('未设置')
+                            _trafficPeriodValue(0)
                           else
                             const SizedBox.shrink(),
                           for (final period
-                              in ServerResources.trafficPeriods.entries)
-                            if (period.key == _trafficPeriodMonths)
-                              Text(period.value)
+                              in ServerResources.trafficPeriodsFor(context.l10n)
+                                  .keys)
+                            if (period == _trafficPeriodMonths)
+                              _trafficPeriodValue(period)
                             else
                               const SizedBox.shrink(),
                         ],
                         style: style,
                         iconSize: 16,
-                        decoration: _compactDecoration('周期'),
+                        decoration: _compactDecoration(
+                          context.l10n.resourcePeriod,
+                        ),
                         items: [
-                          const DropdownMenuItem(value: 0, child: Text('未设置')),
+                          DropdownMenuItem(
+                            value: 0,
+                            child: Builder(
+                              builder: (context) => Text(context.l10n.notSet),
+                            ),
+                          ),
                           for (final period
-                              in ServerResources.trafficPeriods.entries)
+                              in ServerResources.trafficPeriodsFor(context.l10n)
+                                  .keys)
                             DropdownMenuItem(
-                              value: period.key,
-                              child: Text(period.value),
+                              value: period,
+                              child: Builder(
+                                builder: (context) => Text(
+                                  ServerResources.trafficPeriodsFor(
+                                    context.l10n,
+                                  )[period]!,
+                                ),
+                              ),
                             ),
                         ],
                         onChanged: widget.enabled
@@ -385,8 +467,8 @@ class ServerResourceFieldsState extends State<ServerResourceFields> {
               const SizedBox(height: 6),
               Text(
                 widget.defaultTrafficPeriodMonths == 1 && widget.initial == null
-                    ? '新建默认按月，请按套餐确认；也可选“未设置”。'
-                    : '周期独立于容量单位；未知选“未设置”。',
+                    ? context.l10n.resourceNewPeriodHelp
+                    : context.l10n.resourcePeriodHelp,
                 style: Theme.of(context).textTheme.bodySmall,
               ),
             ],
@@ -402,16 +484,24 @@ class ServerResourceFieldsState extends State<ServerResourceFields> {
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        SectionTitle(widget.importing ? '硬件信息 · 六项必填' : '硬件信息'),
+        SectionTitle(
+          widget.importing
+              ? context.l10n.resourceSixRequired
+              : context.l10n.resourceHardware,
+        ),
         InfoNote(
           widget.importing
-              ? '核对并补齐六项后导入；容量按 1024 进制，0 不代表不限量。资料不全时可暂不选择此实例，待补齐后再导入。'
-              : '未知可留空，容量按 1024 进制。仅维护本地硬件，API 刷新不会覆盖，也不更改远端配置或 SSH 地址。',
+              ? context.l10n.resourceImportHelp
+              : context.l10n.resourceLocalHelp,
         ),
-        _field('ip', 'IP 地址'),
-        _field('hostname', '主机名'),
-        _capacityField('diskBytes', '磁盘容量'),
-        _capacityField('trafficBytes', '流量额度', traffic: true),
+        _field('ip', context.l10n.resourceIpAddress),
+        _field('hostname', context.l10n.resourceHostname),
+        _capacityField('diskBytes', context.l10n.resourceDiskCapacity),
+        _capacityField(
+          'trafficBytes',
+          context.l10n.resourceTrafficQuotaLabel,
+          traffic: true,
+        ),
         SwitchListTile(
           key: const ValueKey('resource-traffic-unlimited'),
           contentPadding: EdgeInsets.zero,
@@ -419,15 +509,15 @@ class ServerResourceFieldsState extends State<ServerResourceFields> {
           onChanged: widget.enabled
               ? (value) => setState(() => _unlimited = value)
               : null,
-          title: const Text('流量不限量'),
+          title: Text(context.l10n.resourceUnlimitedTraffic),
         ),
         Text(
-          '仅在套餐明确不限量时开启；未知或 API 返回 0 请保持关闭。',
+          context.l10n.resourceUnlimitedHelp,
           style: Theme.of(context).textTheme.bodySmall,
         ),
         const SizedBox(height: 18),
-        _capacityField('ramBytes', '内存容量'),
-        _field('vcpu', 'vCPU 核数'),
+        _capacityField('ramBytes', context.l10n.resourceMemoryCapacity),
+        _field('vcpu', context.l10n.resourceVcpuCount),
       ],
     ),
   );

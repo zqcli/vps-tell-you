@@ -1,3 +1,5 @@
+import 'package:vps_tell_you/l10n/generated/app_localizations.dart';
+
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
@@ -41,13 +43,16 @@ class FakeBackupTransfer extends LedgerBackupTransfer {
   @override
   bool get canShare => mobile;
   @override
-  Future<String?> pickBackup() async {
+  Future<String?> pickBackup({AppLocalizations? l10n}) async {
     picks++;
     return source;
   }
 
   @override
-  Future<String?> saveBackup(LedgerBackupSnapshot snapshot) async {
+  Future<String?> saveBackup(
+    LedgerBackupSnapshot snapshot, {
+    AppLocalizations? l10n,
+  }) async {
     saves++;
     savedJson = snapshot.encode();
     return '/synthetic/backup.json';

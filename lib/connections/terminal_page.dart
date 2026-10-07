@@ -1,3 +1,6 @@
+import '../l10n/localized_message.dart';
+import '../l10n/locale_preference.dart';
+
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
@@ -66,7 +69,7 @@ class _TerminalPageState extends State<TerminalPage>
       _closing = false,
       _targetInvalidated = false;
   int _targetEpoch = 0;
-  String? _notice;
+  Object? _notice;
   int? _powerIssuedGeneration;
 
   @override
@@ -90,7 +93,9 @@ class _TerminalPageState extends State<TerminalPage>
     });
     if (widget.connectOnOpen) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) _connect();
+        if (mounted) {
+          _connect();
+        }
       });
     }
   }
@@ -114,33 +119,47 @@ class _TerminalPageState extends State<TerminalPage>
       // Includes terminal protocol replies (DSR/CPR), which must remain
       // available while local dialogs are open. User-input gates live at
       // the keyboard/key-bar entry points rather than in this mixed stream.
-      if (_connected) _service.write(text);
+      if (_connected) {
+        _service.write(text);
+      }
     };
     _terminal.onResize = (columns, rows, pixelWidth, pixelHeight) {
-      if (!_closing && !_targetInvalidated) _service.resize(columns, rows);
+      if (!_closing && !_targetInvalidated) {
+        _service.resize(columns, rows);
+      }
     };
   }
 
   void _consumeControl() {
-    if (_ctrlArmed && mounted) setState(() => _ctrlArmed = false);
+    if (_ctrlArmed && mounted) {
+      setState(() => _ctrlArmed = false);
+    }
   }
 
   void _changed() {
-    if (!mounted) return;
+    if (!mounted) {
+      return;
+    }
     if (_connected && !_hasConnected) {
       _hasConnected = true;
       _service.resize(_terminal.viewWidth, _terminal.viewHeight);
     }
-    if (!_connected) _closeKeyboard();
+    if (!_connected) {
+      _closeKeyboard();
+    }
     setState(() {});
   }
 
   void _selectionChanged() {
-    if (mounted) setState(() {});
+    if (mounted) {
+      setState(() {});
+    }
   }
 
   void _scrollChanged() {
-    if (!_terminalScroll.hasClients) return;
+    if (!_terminalScroll.hasClients) {
+      return;
+    }
     final back = _terminalScroll.position.extentAfter > 24;
     if (back != _scrolledBack && mounted) {
       setState(() => _scrolledBack = back);
@@ -153,7 +172,9 @@ class _TerminalPageState extends State<TerminalPage>
       // xterm may already have corrected pixels during a view remount without
       // emitting a ScrollController change. An explicit latest/input action
       // clears the old history flag even when jumpTo uses the same pixels.
-      if (_scrolledBack && mounted) setState(() => _scrolledBack = false);
+      if (_scrolledBack && mounted) {
+        setState(() => _scrolledBack = false);
+      }
     }
   }
 
@@ -165,7 +186,9 @@ class _TerminalPageState extends State<TerminalPage>
       return;
     }
     final render = view.renderTerminal;
-    if (!render.hasSize || render.size.isEmpty) return;
+    if (!render.hasSize || render.size.isEmpty) {
+      return;
+    }
     final viewport = render.localToGlobal(Offset.zero) & render.size;
     final cursor = view.globalCursorRect;
     final delta = cursor.bottom > viewport.bottom
@@ -173,7 +196,9 @@ class _TerminalPageState extends State<TerminalPage>
         : cursor.top < viewport.top
         ? cursor.top - viewport.top
         : 0.0;
-    if (delta.abs() < .1) return;
+    if (delta.abs() < .1) {
+      return;
+    }
     final position = _terminalScroll.position;
     _terminalScroll.jumpTo(
       (position.pixels + delta).clamp(
@@ -184,7 +209,9 @@ class _TerminalPageState extends State<TerminalPage>
   }
 
   void _queueCursorReveal() {
-    if (_cursorRevealQueued) return;
+    if (_cursorRevealQueued) {
+      return;
+    }
     _cursorRevealQueued = true;
     final generation = _service.generation;
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -203,7 +230,9 @@ class _TerminalPageState extends State<TerminalPage>
   }
 
   void _viewportChanged(Size size, double textSize) {
-    if (size == _lastViewportSize && textSize == _lastViewportTextSize) return;
+    if (size == _lastViewportSize && textSize == _lastViewportTextSize) {
+      return;
+    }
     _lastViewportSize = size;
     _lastViewportTextSize = textSize;
     final ticket = ++_viewportEpoch;
@@ -240,7 +269,9 @@ class _TerminalPageState extends State<TerminalPage>
           return;
         }
         final currentView = _terminalViewKey.currentState;
-        if (currentView == null) return;
+        if (currentView == null) {
+          return;
+        }
         if (anchor?.attached == true) {
           final position = _terminalScroll.position;
           final pixels =
@@ -331,7 +362,9 @@ class _TerminalPageState extends State<TerminalPage>
     _touchPointer = null;
     // xterm 4.0.0 declares onTapUp but its recognizer never invokes it. A raw
     // pointer observer does not compete with its history/selection gestures.
-    if (tap && MediaQuery.viewInsetsOf(context).bottom == 0) _requestKeyboard();
+    if (tap && MediaQuery.viewInsetsOf(context).bottom == 0) {
+      _requestKeyboard();
+    }
   }
 
   void _closeKeyboard() {
@@ -365,23 +398,36 @@ class _TerminalPageState extends State<TerminalPage>
 
   Future<void> _copySelection() async {
     final selection = _terminalController.selection;
-    if (selection == null) return;
+    if (selection == null) {
+      return;
+    }
     final text = _terminal.buffer.getText(selection);
     try {
       await Clipboard.setData(ClipboardData(text: text));
     } catch (_) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context)
-          .showSnackBar(const SnackBar(content: Text('未能复制终端内容，请重试。')));
+      if (!mounted) {
+        return;
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Builder(
+            builder: (context) => Text(context.l10n.terminalCopyFailed),
+          ),
+        ),
+      );
       return;
     }
-    if (!mounted) return;
+    if (!mounted) {
+      return;
+    }
     if (_terminalController.selection == selection) {
       _terminalController.clearSelection();
     }
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('已复制所选终端内容'),
+      SnackBar(
+        content: Builder(
+          builder: (context) => Text(context.l10n.terminalSelectionCopied),
+        ),
         duration: Duration(seconds: 2),
       ),
     );
@@ -391,26 +437,32 @@ class _TerminalPageState extends State<TerminalPage>
     final keyboard = HardwareKeyboard.instance;
     if ((keyboard.isControlPressed || keyboard.isMetaPressed) &&
         event.logicalKey == LogicalKeyboardKey.keyV) {
-      if (event is KeyDownEvent) unawaited(_pasteToDraft().then((_) {}));
+      if (event is KeyDownEvent) {
+        unawaited(_pasteToDraft().then((_) {}));
+      }
       return KeyEventResult.handled;
     }
     return KeyEventResult.ignored;
   }
 
-  Future<String?> _pasteToDraft() async {
+  Future<Object?> _pasteToDraft() async {
     if (_pasteBusy || _closing || _targetInvalidated || _exitPromptOpen) {
       return null;
     }
     final route = _commandsOpen ? _commandsRoute : ModalRoute.of(context);
-    if (route?.isCurrent != true) return null;
+    if (route?.isCurrent != true) {
+      return null;
+    }
     _consumeControl();
     final epoch = _targetEpoch;
     final generation = _service.generation;
     final commandsEpoch = _commandsEpoch;
     final before = _draft.value;
     setState(() => _pasteBusy = true);
-    String problem(String message) {
-      if (mounted) setState(() => _notice = message);
+    Object problem(Object message) {
+      if (mounted) {
+        setState(() => _notice = message);
+      }
       return message;
     }
 
@@ -425,26 +477,34 @@ class _TerminalPageState extends State<TerminalPage>
           route?.isCurrent != true) {
         return null;
       }
-      if (_draft.value != before) return problem('草稿已变化，请再次点击粘贴。');
+      if (_draft.value != before) {
+        return problem(LocalizedText((l10n) => l10n.terminalDraftChangedPaste));
+      }
       final pasted = data?.text;
-      if (pasted == null || pasted.isEmpty) return problem('剪贴板中没有可粘贴的文本。');
+      if (pasted == null || pasted.isEmpty) {
+        return problem(LocalizedText((l10n) => l10n.terminalClipboardEmpty));
+      }
       final selection = before.selection;
       final start = selection.isValid ? selection.start : before.text.length;
       final end = selection.isValid ? selection.end : before.text.length;
       final next = before.text.replaceRange(start, end, pasted);
       if (next.length > CommandSnippet.maxContentLength) {
-        return problem('粘贴后超过 16384 个字符，草稿未修改。');
+        return problem(LocalizedText((l10n) => l10n.terminalPasteTooLong));
       }
       _draft.value = TextEditingValue(
         text: next,
         selection: TextSelection.collapsed(offset: start + pasted.length),
       );
-      if (!_commandsOpen) unawaited(_openCommands());
+      if (!_commandsOpen) {
+        unawaited(_openCommands());
+      }
       return null;
     } catch (_) {
-      return problem('剪贴板读取失败，草稿未修改。请重新点击粘贴。');
+      return problem(LocalizedText((l10n) => l10n.terminalClipboardReadFailed));
     } finally {
-      if (mounted) setState(() => _pasteBusy = false);
+      if (mounted) {
+        setState(() => _pasteBusy = false);
+      }
     }
   }
 
@@ -455,11 +515,13 @@ class _TerminalPageState extends State<TerminalPage>
     if (_draft.text.isNotEmpty && _draft.text != content) {
       final replace = await confirmAction(
         _dialogContext,
-        title: '替换当前草稿？',
-        message: '当前未发送的草稿会被替换。不会向 SSH 发送任何内容。',
-        action: '替换草稿',
+        title: LocalizedText((l10n) => l10n.terminalReplaceDraftQuestion),
+        message: LocalizedText((l10n) => l10n.terminalReplaceDraftHelp),
+        action: LocalizedText((l10n) => l10n.terminalReplaceDraft),
       );
-      if (!replace) return false;
+      if (!replace) {
+        return false;
+      }
     }
     if (!mounted ||
         _closing ||
@@ -477,7 +539,9 @@ class _TerminalPageState extends State<TerminalPage>
   }
 
   Future<void> _openCommands() async {
-    if (_commandsOpen || _closing || _targetInvalidated) return;
+    if (_commandsOpen || _closing || _targetInvalidated) {
+      return;
+    }
     _closeKeyboard();
     setState(() {
       _commandsOpen = true;
@@ -508,7 +572,9 @@ class _TerminalPageState extends State<TerminalPage>
         );
       },
     );
-    if (!mounted) return;
+    if (!mounted) {
+      return;
+    }
     setState(() {
       _commandsOpen = false;
       _commandsRoute = null;
@@ -533,11 +599,13 @@ class _TerminalPageState extends State<TerminalPage>
       context: _dialogContext,
       builder: (context) => AlertDialog(
         scrollable: true,
-        title: const Text('当前 SSH 会话'),
+        title: Text(context.l10n.terminalCurrentSession),
         content: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            SelectableText(escapedCommandPreview(widget.target.name)),
+            SelectableText(
+              escapedCommandPreview(widget.target.displayNameFor(context.l10n)),
+            ),
             const SizedBox(height: 8),
             SelectableText(
               escapedCommandPreview(widget.target.label),
@@ -545,28 +613,30 @@ class _TerminalPageState extends State<TerminalPage>
             ),
             const SizedBox(height: 12),
             Text(
-              '$_statusLabel · ${_terminal.viewWidth} 列 × ${_terminal.viewHeight} 行',
+              context.l10n.terminalDimensions(
+                (_statusLabel).toString(),
+                (_terminal.viewWidth).toString(),
+                (_terminal.viewHeight).toString(),
+              ),
             ),
             const SizedBox(height: 12),
-            const Text('点按终端输入；长按并拖动选择，使用“复制”复制。向上滚动查看历史，向下箭头回到最新输出。'),
+            Text(context.l10n.terminalSelectionHelp),
             const SizedBox(height: 12),
-            const Text(
-              '键盘和特殊键直接发送到 SSH。常用命令、片段和粘贴先进入独立草稿；“发送”不追加回车，“发送并执行”追加回车，由当前终端程序处理。正文原有换行仍可能执行。Ctrl 作用于下一个按键，再点可取消。',
-            ),
+            Text(context.l10n.terminalInputHelp),
             const SizedBox(height: 12),
-            const Text('离开或进入后台会断开会话；不会自动重连或重放输入。长任务建议在远端使用 tmux / screen。'),
+            Text(context.l10n.terminalBackgroundHelp),
             const SizedBox(height: 12),
-            const Text('离线字体：DejaVu Sans Mono · 中文使用设备字体回退'),
+            Text(context.l10n.terminalOfflineFont),
             TextButton(
               onPressed: () => showLicensePage(context: context),
-              child: const Text('开源许可'),
+              child: Text(context.l10n.terminalLicenses),
             ),
           ],
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('关闭'),
+            child: Text(context.l10n.connectionClose),
           ),
         ],
       ),
@@ -574,26 +644,46 @@ class _TerminalPageState extends State<TerminalPage>
   }
 
   Future<void> _requestLeave({bool disconnectOnly = false}) async {
-    if (_closing || _exitPromptOpen) return;
+    if (_closing || _exitPromptOpen) {
+      return;
+    }
     final active = _connected || _connecting;
     if (active || (!disconnectOnly && _draft.text.isNotEmpty)) {
       setState(() => _exitPromptOpen = true);
       _closeKeyboard();
       final accepted = await confirmAction(
         _dialogContext,
-        title: active ? '断开 SSH 会话？' : '丢弃草稿并退出？',
-        message: active
-            ? '${escapedCommandPreview(widget.target.label)}\n未放入 tmux / screen 的远端任务可能中断。${disconnectOnly ? '草稿暂时保留，重连时清空。' : '未发送草稿将清空。'}'
-            : '当前草稿尚未发送，退出后将清空。',
-        action: disconnectOnly
-            ? '断开连接'
-            : active
-            ? '断开并退出'
-            : '丢弃并退出',
+        title: LocalizedText(
+          (l10n) => active
+              ? l10n.terminalDisconnectQuestion
+              : l10n.terminalDiscardExitQuestion,
+        ),
+        message: LocalizedText(
+          (l10n) => active
+              ? l10n.terminalDisconnectHelp(
+                  (escapedCommandPreview(widget.target.label)).toString(),
+                  (disconnectOnly
+                          ? l10n.terminalDraftKeptUntilReconnect
+                          : l10n.terminalDraftWillClear)
+                      .toString(),
+                )
+              : l10n.terminalUnsentDraftExit,
+        ),
+        action: LocalizedText(
+          (l10n) => disconnectOnly
+              ? l10n.terminalDisconnect
+              : active
+              ? l10n.terminalDisconnectExit
+              : l10n.terminalDiscardExit,
+        ),
       );
-      if (!mounted) return;
+      if (!mounted) {
+        return;
+      }
       setState(() => _exitPromptOpen = false);
-      if (!accepted) return;
+      if (!accepted) {
+        return;
+      }
     }
     if (disconnectOnly) {
       _service.disconnect();
@@ -609,7 +699,13 @@ class _TerminalPageState extends State<TerminalPage>
         state == AppLifecycleState.detached) {
       _service.disconnect();
       _closeKeyboard();
-      if (mounted) setState(() => _notice = '应用进入后台，连接已清理。需要手动重连，不会重放输入。');
+      if (mounted) {
+        setState(
+          () => _notice = LocalizedText(
+            (l10n) => l10n.terminalBackgroundDisconnected,
+          ),
+        );
+      }
     }
   }
 
@@ -627,7 +723,9 @@ class _TerminalPageState extends State<TerminalPage>
       // Block local input synchronously, then invalidate the service generation
       // before the next event can interact with the changed target.
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (!mounted || _closing || epoch != _targetEpoch) return;
+        if (!mounted || _closing || epoch != _targetEpoch) {
+          return;
+        }
         _service.disconnect();
         _draft.clear();
         _terminalController.clearSelection();
@@ -636,14 +734,16 @@ class _TerminalPageState extends State<TerminalPage>
         _createTerminal();
         setState(() {
           _targetInvalidated = false;
-          _notice = '目标已变化，连接和草稿已清空。请手动连接新目标。';
+          _notice = LocalizedText((l10n) => l10n.terminalTargetChanged);
         });
       });
     }
   }
 
   void _leave() {
-    if (_closing) return;
+    if (_closing) {
+      return;
+    }
     _closing = true;
     _service.disconnect();
     _draft.clear();
@@ -685,7 +785,9 @@ class _TerminalPageState extends State<TerminalPage>
     }
     setState(() {
       _hasConnected = false;
-      _notice = widget.powerMode ? '连接后在“终端菜单”选择 SSH 重启或关机，并完成两次确认。' : null;
+      _notice = widget.powerMode
+          ? LocalizedText((l10n) => l10n.terminalPowerMenuHelp)
+          : null;
     });
     await _service.connect(
       widget.target,
@@ -704,7 +806,9 @@ class _TerminalPageState extends State<TerminalPage>
   };
 
   Future<String?> _requestKeyPassphrase(String credentialName) async {
-    if (!mounted || _closing || _targetInvalidated) return null;
+    if (!mounted || _closing || _targetInvalidated) {
+      return null;
+    }
     final generation = _service.generation;
     final value = await showDialog<String>(
       context: _dialogContext,
@@ -727,7 +831,9 @@ class _TerminalPageState extends State<TerminalPage>
   }
 
   Future<bool> _verifyHost(HostVerificationRequest request) async {
-    if (!mounted) return false;
+    if (!mounted) {
+      return false;
+    }
     final generation = _service.generation;
     bool current() =>
         mounted &&
@@ -740,7 +846,7 @@ class _TerminalPageState extends State<TerminalPage>
         context: _dialogContext,
         builder: (_) => AlertDialog(
           scrollable: true,
-          title: const Text('主机密钥变化 · 已阻断认证'),
+          title: Text(context.l10n.terminalHostChanged),
           content: SingleChildScrollView(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -749,11 +855,14 @@ class _TerminalPageState extends State<TerminalPage>
                 SelectableText(
                   '${request.identity.host}:${request.identity.port}',
                 ),
-                const InfoNote('这可能是重装或中间人攻击。尚未发送登录凭据。请通过厂商控制台等独立渠道核实原因与新公钥。'),
-                const Text('此前指纹'),
-                SelectableText(request.previous?.fingerprint ?? '无记录'),
+                InfoNote(context.l10n.terminalHostChangedHelp),
+                Text(context.l10n.terminalPreviousFingerprint),
+                SelectableText(
+                  request.previous?.fingerprint ??
+                      context.l10n.terminalNoRecord,
+                ),
                 const SizedBox(height: 12),
-                const Text('本次指纹'),
+                Text(context.l10n.terminalCurrentFingerprint),
                 SelectableText(request.identity.fingerprint),
               ],
             ),
@@ -761,18 +870,22 @@ class _TerminalPageState extends State<TerminalPage>
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context, false),
-              child: const Text('拒绝连接'),
+              child: Text(context.l10n.terminalRejectConnection),
             ),
             OutlinedButton(
               onPressed: () => Navigator.pop(context, true),
-              child: const Text('开始独立重新核实'),
+              child: Text(context.l10n.terminalReverify),
             ),
           ],
         ),
       );
-      if (start != true || !current()) return false;
+      if (start != true || !current()) {
+        return false;
+      }
     }
-    if (!mounted || !current()) return false;
+    if (!mounted || !current()) {
+      return false;
+    }
     final accepted = await showDialog<bool>(
       context: _dialogContext,
       barrierDismissible: false,
@@ -823,7 +936,9 @@ class _TerminalPageState extends State<TerminalPage>
       // controls in the draft are never removed or disguised as non-executing.
       final payload = appendEnter ? '$exact\r' : exact;
       _service.write(payload);
-      if (!_connected || generation != _service.generation) return false;
+      if (!_connected || generation != _service.generation) {
+        return false;
+      }
       _draft.clear();
       FocusManager.instance.primaryFocus?.unfocus();
       _scrollToBottom();
@@ -832,7 +947,9 @@ class _TerminalPageState extends State<TerminalPage>
       // Do not log the text or retry a potentially accepted write.
       return false;
     } finally {
-      if (mounted) setState(() => _sendBusy = false);
+      if (mounted) {
+        setState(() => _sendBusy = false);
+      }
     }
   }
 
@@ -850,26 +967,30 @@ class _TerminalPageState extends State<TerminalPage>
         service: _service,
         action: action,
       );
-      if (!mounted || result == null) return;
+      if (!mounted || result == null) {
+        return;
+      }
       _powerIssuedGeneration = generation;
       setState(
         () => _notice = result == PowerResult.failed
-            ? '电源指令未能确认成功。请核实连接、远端权限及厂商控制台状态，避免重复执行；不会自动重发。'
-            : '电源指令已尝试提交，结果未知。连接断开不证明操作完成；请到厂商控制台核实，不会自动重发。',
+            ? LocalizedText((l10n) => l10n.terminalPowerFailed)
+            : LocalizedText((l10n) => l10n.terminalPowerUnknown),
       );
     } finally {
-      if (mounted) setState(() => _powerBusy = false);
+      if (mounted) {
+        setState(() => _powerBusy = false);
+      }
     }
   }
 
   String get _statusLabel => switch (_service.status) {
-    SshStatus.idle => '未连接',
-    SshStatus.connecting => '连接中',
-    SshStatus.verifying => '核验主机身份中',
-    SshStatus.authenticating => '认证中',
-    SshStatus.connected => '已连接 · SSH PTY',
-    SshStatus.disconnected => '已断开',
-    SshStatus.failed => '连接失败',
+    SshStatus.idle => context.l10n.terminalNotConnected,
+    SshStatus.connecting => context.l10n.terminalConnecting,
+    SshStatus.verifying => context.l10n.terminalVerifying,
+    SshStatus.authenticating => context.l10n.terminalAuthenticating,
+    SshStatus.connected => context.l10n.terminalConnected,
+    SshStatus.disconnected => context.l10n.terminalDisconnected,
+    SshStatus.failed => context.l10n.terminalFailed,
   };
 
   @override
@@ -911,14 +1032,16 @@ class _TerminalPageState extends State<TerminalPage>
               centerTitle: false,
               titleSpacing: 0,
               leading: IconButton(
-                tooltip: '退出终端',
+                tooltip: context.l10n.terminalExit,
                 onPressed: _requestLeave,
                 icon: const Icon(Icons.arrow_back),
               ),
               title: Semantics(
                 button: true,
-                label:
-                    '会话详情，${escapedCommandPreview(widget.target.label)}，$_statusLabel',
+                label: context.l10n.terminalSessionSemantics(
+                  (escapedCommandPreview(widget.target.label)).toString(),
+                  (_statusLabel).toString(),
+                ),
                 excludeSemantics: true,
                 child: InkWell(
                   onTap: _connectionDetails,
@@ -927,7 +1050,9 @@ class _TerminalPageState extends State<TerminalPage>
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Text(
-                        escapedCommandPreview(widget.target.name),
+                        escapedCommandPreview(
+                          widget.target.displayNameFor(context.l10n),
+                        ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: Theme.of(context).textTheme.titleMedium!
@@ -960,15 +1085,15 @@ class _TerminalPageState extends State<TerminalPage>
                 if (hideKeyBar)
                   IconButton(
                     key: const ValueKey('terminal-commands'),
-                    tooltip: '命令与片段',
+                    tooltip: context.l10n.terminalCommandsSnippets,
                     onPressed: _openCommands,
                     icon: const Icon(Icons.code),
                   ),
                 IconButton(
                   key: const ValueKey('terminal-keyboard'),
                   tooltip: keyboardVisible && _terminalFocus.hasFocus
-                      ? '收起键盘'
-                      : '打开键盘',
+                      ? context.l10n.terminalHideKeyboard
+                      : context.l10n.terminalOpenKeyboard,
                   onPressed: _connected ? _toggleKeyboard : null,
                   icon: Icon(
                     keyboardVisible && _terminalFocus.hasFocus
@@ -977,7 +1102,7 @@ class _TerminalPageState extends State<TerminalPage>
                   ),
                 ),
                 PopupMenuButton<String>(
-                  tooltip: '终端菜单',
+                  tooltip: context.l10n.terminalMenu,
                   onOpened: () => setState(_closeKeyboard),
                   onSelected: (action) {
                     switch (action) {
@@ -996,25 +1121,42 @@ class _TerminalPageState extends State<TerminalPage>
                     }
                   },
                   itemBuilder: (_) => [
-                    const PopupMenuItem(
+                    PopupMenuItem(
                       value: 'details',
-                      child: Text('会话详情与使用说明'),
+                      child: Builder(
+                        builder: (context) =>
+                            Text(context.l10n.terminalSessionDetails),
+                      ),
                     ),
-                    const PopupMenuItem(value: 'paste', child: Text('粘贴到草稿')),
+                    PopupMenuItem(
+                      value: 'paste',
+                      child: Builder(
+                        builder: (context) =>
+                            Text(context.l10n.terminalPasteIntoDraft),
+                      ),
+                    ),
                     if (!_connected && !_connecting)
                       PopupMenuItem(
                         value: 'connect',
                         enabled: !kIsWeb,
-                        child: Text(
-                          _service.status == SshStatus.idle
-                              ? '连接 SSH'
-                              : '重新连接并清空草稿',
+                        child: Builder(
+                          builder: (context) => Text(
+                            _service.status == SshStatus.idle
+                                ? context.l10n.serverConnectSsh
+                                : context.l10n.terminalReconnectClear,
+                          ),
                         ),
                       ),
                     if (_connected || _connecting)
                       PopupMenuItem(
                         value: 'disconnect',
-                        child: Text(_connecting ? '取消连接' : '断开连接'),
+                        child: Builder(
+                          builder: (context) => Text(
+                            _connecting
+                                ? context.l10n.terminalCancelConnection
+                                : context.l10n.terminalDisconnect,
+                          ),
+                        ),
                       ),
                     const PopupMenuDivider(),
                     PopupMenuItem(
@@ -1023,7 +1165,10 @@ class _TerminalPageState extends State<TerminalPage>
                           _connected &&
                           !_powerBusy &&
                           _powerIssuedGeneration != _service.generation,
-                      child: const Text('SSH 重启'),
+                      child: Builder(
+                        builder: (context) =>
+                            Text(context.l10n.terminalSshRestart),
+                      ),
                     ),
                     PopupMenuItem(
                       value: 'shutdown',
@@ -1031,7 +1176,10 @@ class _TerminalPageState extends State<TerminalPage>
                           _connected &&
                           !_powerBusy &&
                           _powerIssuedGeneration != _service.generation,
-                      child: const Text('SSH 关机'),
+                      child: Builder(
+                        builder: (context) =>
+                            Text(context.l10n.terminalSshShutdown),
+                      ),
                     ),
                   ],
                 ),
@@ -1099,7 +1247,7 @@ class _TerminalPageState extends State<TerminalPage>
                                     child: Padding(
                                       padding: const EdgeInsets.all(24),
                                       child: Text(
-                                        '点按终端输入，按键直接发送',
+                                        context.l10n.terminalTypeDirectly,
                                         style: Theme.of(context)
                                             .textTheme
                                             .bodySmall,
@@ -1150,10 +1298,11 @@ class _TerminalPageState extends State<TerminalPage>
                                           Icons.copy_outlined,
                                           size: 18,
                                         ),
-                                        label: const Text('复制'),
+                                        label: Text(context.l10n.terminalCopy),
                                       ),
                                       IconButton(
-                                        tooltip: '取消选择',
+                                        tooltip:
+                                            context.l10n.terminalClearSelection,
                                         onPressed:
                                             _terminalController.clearSelection,
                                         icon: const Icon(Icons.close, size: 18),
@@ -1169,7 +1318,7 @@ class _TerminalPageState extends State<TerminalPage>
                                 child: FloatingActionButton.small(
                                   heroTag: null,
                                   key: const ValueKey('terminal-scroll-bottom'),
-                                  tooltip: '回到最新输出',
+                                  tooltip: context.l10n.terminalLatestOutput,
                                   onPressed: _scrollToBottom,
                                   child: const Icon(
                                     Icons.vertical_align_bottom,
@@ -1224,37 +1373,41 @@ class _TerminalPageState extends State<TerminalPage>
               spacing: 8,
               children: [
                 Text(
-                  _connecting ? '正在建立安全连接…' : '终端未连接',
+                  _connecting
+                      ? context.l10n.terminalEstablishingSecure
+                      : context.l10n.terminalOffline,
                   style: Theme.of(context).textTheme.bodyMedium,
                 ),
                 if (_connecting)
                   TextButton(
                     key: const ValueKey('terminal-disconnect'),
                     onPressed: _service.disconnect,
-                    child: const Text('取消连接'),
+                    child: Text(context.l10n.terminalCancelConnection),
                   )
                 else
                   TextButton(
                     key: const ValueKey('terminal-connect'),
                     onPressed: kIsWeb ? null : _connect,
                     child: Text(
-                      _service.status == SshStatus.idle ? '连接' : '重连 · 清空草稿',
+                      _service.status == SshStatus.idle
+                          ? context.l10n.terminalConnect
+                          : context.l10n.terminalReconnectShort,
                     ),
                   ),
               ],
             ),
             if (_service.error != null)
               Text(
-                _service.error!,
+                _service.errorFor(context.l10n)!,
                 style: TextStyle(color: Theme.of(context).colorScheme.error),
               ),
             if (kIsWeb)
-              const Text('浏览器不支持原生 SSH，请使用原生应用。')
+              Text(context.l10n.terminalBrowserUnsupported)
             else if (!_connecting)
               Text(
                 _service.status == SshStatus.idle
-                    ? '连接后点按终端输入，按键会直接发送到服务器。'
-                    : '输出已保留。重连会清空终端和草稿，不重放输入。',
+                    ? context.l10n.terminalConnectedInputHelp
+                    : context.l10n.terminalRetainedOutputHelp,
                 style: Theme.of(context).textTheme.bodySmall,
               ),
           ],
@@ -1273,14 +1426,14 @@ class _TerminalPageState extends State<TerminalPage>
             constraints: const BoxConstraints(maxHeight: 80),
             child: SingleChildScrollView(
               child: Text(
-                _notice!,
+                localizedText(_notice!, context.l10n),
                 style: Theme.of(context).textTheme.bodySmall,
               ),
             ),
           ),
         ),
         IconButton(
-          tooltip: '关闭提示',
+          tooltip: context.l10n.terminalDismissNotice,
           onPressed: () => setState(() => _notice = null),
           icon: const Icon(Icons.close, size: 18),
         ),
@@ -1302,7 +1455,9 @@ class _MobileTerminal extends Terminal {
   final VoidCallback consumeControl;
   @override
   void textInput(String text) {
-    if (text.isNotEmpty) consumeControl();
+    if (text.isNotEmpty) {
+      consumeControl();
+    }
     super.textInput(text);
   }
 }
@@ -1350,22 +1505,30 @@ class _VerifyHostDialogState extends State<_VerifyHostDialog> {
           widget.service.status == SshStatus.verifying;
       return AlertDialog(
         scrollable: true,
-        title: Text(changed ? '重新核实新的主机公钥' : '首次连接 · 核对主机身份'),
+        title: Text(
+          changed
+              ? context.l10n.terminalVerifyNewHost
+              : context.l10n.terminalFirstHostVerification,
+        ),
         content: SingleChildScrollView(
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               SelectableText(
-                '主机：${identity.host}\n端口：${identity.port}\n算法：${identity.algorithm}',
+                context.l10n.terminalHostIdentity(
+                  (identity.host).toString(),
+                  (identity.port).toString(),
+                  (identity.algorithm).toString(),
+                ),
               ),
               const SizedBox(height: 12),
-              const Text('SHA-256 指纹'),
+              Text(context.l10n.terminalSha256Fingerprint),
               SelectableText(identity.fingerprint),
               const SizedBox(height: 12),
-              const Text('完整主机公钥'),
+              Text(context.l10n.terminalFullHostKey),
               SelectableText('${identity.algorithm} ${identity.publicKey}'),
-              const InfoNote('请从厂商控制台或其他独立可信渠道核对。仅看见这个弹窗不代表身份可信。'),
+              InfoNote(context.l10n.terminalIndependentVerificationHelp),
               CheckboxListTile(
                 key: const ValueKey('host-verified-check'),
                 contentPadding: EdgeInsets.zero,
@@ -1374,17 +1537,19 @@ class _VerifyHostDialogState extends State<_VerifyHostDialog> {
                     ? (value) => setState(() => _checked = value == true)
                     : null,
                 title: Text(
-                  changed ? '我已独立重新核实变化原因与完整新公钥' : '我已通过独立渠道核实本次完整主机身份',
+                  changed
+                      ? context.l10n.terminalConfirmedChangedHost
+                      : context.l10n.terminalConfirmedHost,
                 ),
               ),
-              if (!current) const InfoNote('连接已取消或超时，此核验已失效。'),
+              if (!current) InfoNote(context.l10n.terminalVerificationExpired),
             ],
           ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('拒绝连接'),
+            child: Text(context.l10n.terminalRejectConnection),
           ),
           FilledButton(
             key: const ValueKey('host-verified-confirm'),
@@ -1394,7 +1559,11 @@ class _VerifyHostDialogState extends State<_VerifyHostDialog> {
                     Navigator.pop(context, true);
                   }
                 : null,
-            child: Text(changed ? '更新信任并继续认证' : '确认信任并认证'),
+            child: Text(
+              changed
+                  ? context.l10n.terminalUpdateTrustAuthenticate
+                  : context.l10n.terminalTrustAuthenticate,
+            ),
           ),
         ],
       );
@@ -1437,7 +1606,9 @@ class _KeyPassphraseDialogState extends State<_KeyPassphraseDialog>
   }
 
   void _serviceChanged() {
-    if (!mounted || _submitted) return;
+    if (!mounted || _submitted) {
+      return;
+    }
     if (widget.service.generation != widget.generation ||
         widget.service.status != SshStatus.connecting) {
       _input.clear();
@@ -1449,7 +1620,9 @@ class _KeyPassphraseDialogState extends State<_KeyPassphraseDialog>
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state != AppLifecycleState.resumed) {
       _input.clear();
-      if (mounted) setState(() => _invalidated = true);
+      if (mounted) {
+        setState(() => _invalidated = true);
+      }
     }
   }
 
@@ -1459,7 +1632,9 @@ class _KeyPassphraseDialogState extends State<_KeyPassphraseDialog>
   }
 
   void _submit() {
-    if (!_current || _input.text.isEmpty) return;
+    if (!_current || _input.text.isEmpty) {
+      return;
+    }
     final value = _input.text;
     _submitted = true;
     _input.clear();
@@ -1478,7 +1653,7 @@ class _KeyPassphraseDialogState extends State<_KeyPassphraseDialog>
   @override
   Widget build(BuildContext context) => AlertDialog(
     scrollable: true,
-    title: const Text('解锁本次 SSH 私钥'),
+    title: Text(context.l10n.terminalUnlockKey),
     content: SingleChildScrollView(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -1488,8 +1663,12 @@ class _KeyPassphraseDialogState extends State<_KeyPassphraseDialog>
             escapedCommandPreview(widget.target),
             textDirection: TextDirection.ltr,
           ),
-          Text('凭据：${escapedCommandPreview(widget.credentialName)}'),
-          const InfoNote('这是私钥解密口令，不是服务器登录密码。仅用于本次连接，不会保存；下次连接需重新输入。'),
+          Text(
+            context.l10n.terminalCredentialName(
+              (escapedCommandPreview(widget.credentialName)).toString(),
+            ),
+          ),
+          InfoNote(context.l10n.terminalPassphraseHelp),
           TextField(
             key: const ValueKey('ssh-key-passphrase'),
             controller: _input,
@@ -1504,18 +1683,23 @@ class _KeyPassphraseDialogState extends State<_KeyPassphraseDialog>
             textInputAction: TextInputAction.done,
             onChanged: (_) => setState(() {}),
             onSubmitted: (_) => _submit(),
-            decoration: const InputDecoration(labelText: '本次私钥口令'),
+            decoration: InputDecoration(
+              labelText: context.l10n.terminalKeyPassphrase,
+            ),
           ),
-          if (_invalidated) const InfoNote('连接已取消或页面进入后台，口令已清空。请取消并重新连接。'),
+          if (_invalidated) InfoNote(context.l10n.terminalPassphraseCleared),
         ],
       ),
     ),
     actions: [
-      TextButton(onPressed: _cancel, child: const Text('取消连接')),
+      TextButton(
+        onPressed: _cancel,
+        child: Text(context.l10n.terminalCancelConnection),
+      ),
       FilledButton(
         key: const ValueKey('ssh-key-passphrase-submit'),
         onPressed: _current && _input.text.isNotEmpty ? _submit : null,
-        child: const Text('仅解锁本次连接'),
+        child: Text(context.l10n.terminalUnlockOnce),
       ),
     ],
   );
@@ -1528,7 +1712,9 @@ class _CursorKeysHandler implements TerminalInputHandler {
   const _CursorKeysHandler();
   @override
   String? call(TerminalKeyboardEvent event) {
-    if (event.ctrl || event.alt || event.shift) return null;
+    if (event.ctrl || event.alt || event.shift) {
+      return null;
+    }
     final suffix = switch (event.key) {
       TerminalKey.arrowUp => 'A',
       TerminalKey.arrowDown => 'B',
@@ -1536,7 +1722,9 @@ class _CursorKeysHandler implements TerminalInputHandler {
       TerminalKey.arrowLeft => 'D',
       _ => null,
     };
-    if (suffix == null) return null;
+    if (suffix == null) {
+      return null;
+    }
     return '${event.state.cursorKeysMode ? '\x1bO' : '\x1b['}$suffix';
   }
 }

@@ -120,6 +120,18 @@ void main() {
     );
   }
 
+  Future<void> tapPageBack(WidgetTester tester) async {
+    // WidgetTester.pageBack searches the English tooltip before Cupertino.
+    // The real app's Material delegates correctly localize that tooltip.
+    final back = find.byType(BackButton);
+    expect(back, findsOneWidget, reason: 'One Material back button expected');
+    expect(back.hitTestable(), findsOneWidget);
+    final tooltip = MaterialLocalizations.of(tester.element(back))
+        .backButtonTooltip;
+    expect(find.byTooltip(tooltip).hitTestable(), findsOneWidget);
+    await tester.tap(back);
+  }
+
   testWidgets(
     'review: cold notification opens its server once; Back is stable',
     (tester) async {
@@ -131,7 +143,7 @@ void main() {
         'fixture',
       );
       expect(calls.where((method) => method.startsWith('request')), isEmpty);
-      await tester.pageBack();
+      await tapPageBack(tester);
       await tester.pumpAndSettle();
       expect(find.byType(ServerDetail), findsNothing);
       for (final state in [
@@ -203,7 +215,7 @@ void main() {
         'second',
       );
       expect(find.byType(ServerDetail, skipOffstage: false), findsOneWidget);
-      await tester.pageBack();
+      await tapPageBack(tester);
       await tester.pumpAndSettle();
       controller.busy = true;
       await notificationTap('fixture');
@@ -232,7 +244,7 @@ void main() {
         tester.widget<ServerDetail>(find.byType(ServerDetail)).id,
         'fixture',
       );
-      await tester.pageBack();
+      await tapPageBack(tester);
       await tester.pumpAndSettle();
       expect(
         tester.widget<ServerDetail>(find.byType(ServerDetail)).id,
@@ -364,7 +376,7 @@ void main() {
         await tester.pumpAndSettle();
         if (newerRoute) {
           expect(find.text('Newer notification route'), findsOneWidget);
-          await tester.pageBack();
+          await tapPageBack(tester);
           await tester.pumpAndSettle();
           await tester.ensureVisible(find.text('保存提醒规则'));
           await tester.pumpAndSettle();

@@ -1,3 +1,6 @@
+import '../l10n/localized_message.dart';
+import '../l10n/locale_preference.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -26,44 +29,68 @@ class ServerDetail extends StatelessWidget {
   Future<void> archive(BuildContext context, ServerRecord record) async {
     final confirmed = await confirmAction(
       context,
-      title: '归档这台服务器？',
-      message:
-          '${record.name}\n\n归档后将从服务器列表和当前费用统计中隐藏，历史付款保留。可在“设置 / 已归档记录”中恢复。不会关闭或销毁服务器，也不会停止厂商扣费。',
-      action: '归档本地记录',
+      title: LocalizedText((l10n) => l10n.serverArchiveQuestion),
+      message: LocalizedText((l10n) => l10n.serverArchiveHelp(record.name)),
+      action: LocalizedText((l10n) => l10n.serverArchiveLocal),
       dangerous: true,
     );
-    if (!confirmed || !context.mounted) return;
+    if (!confirmed || !context.mounted) {
+      return;
+    }
     try {
       final token = await controller.mutate(
         () => controller.store.archive(record),
       );
-      if (!context.mounted) return;
+      if (!context.mounted) {
+        return;
+      }
       final messenger = ScaffoldMessenger.of(context);
+      final canUndo = !controller.refreshFailed;
       Navigator.pop(context);
       messenger.showSnackBar(
         SnackBar(
           duration: const Duration(seconds: 8),
-          content: const Text('已归档，云端资源和扣费未改变'),
-          action: controller.refreshFailed
-              ? null
-              : SnackBarAction(
-                  label: '撤销',
-                  onPressed: () async {
-                    try {
-                      await controller.mutate(
-                        () => controller.store.undoArchive(token),
-                      );
-                    } catch (_) {
-                      messenger.showSnackBar(
-                        const SnackBar(content: Text('无法撤销，请在设置的归档记录中检查')),
-                      );
-                    }
-                  },
-                ),
+          // The standard action remains persistent and once-only even though
+          // it lives in localized content so an open/queued label can rebuild.
+          persist: canUndo,
+          content: Builder(
+            builder: (context) => Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text(context.l10n.serverArchived),
+                if (canUndo)
+                  Align(
+                    alignment: AlignmentDirectional.centerEnd,
+                    child: SnackBarAction(
+                      label: context.l10n.serverUndo,
+                      onPressed: () async {
+                        try {
+                          await controller.mutate(
+                            () => controller.store.undoArchive(token),
+                          );
+                        } catch (_) {
+                          messenger.showSnackBar(
+                            SnackBar(
+                              content: Builder(
+                                builder: (context) =>
+                                    Text(context.l10n.serverUndoArchiveFailed),
+                              ),
+                            ),
+                          );
+                        }
+                      },
+                    ),
+                  ),
+              ],
+            ),
+          ),
         ),
       );
     } catch (error) {
-      if (context.mounted) showFailure(context, error);
+      if (context.mounted) {
+        showFailure(context, error);
+      }
     }
   }
 
@@ -80,7 +107,9 @@ class ServerDetail extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 3),
-        SelectableText(value.isEmpty ? '待补充' : value),
+        SelectableText(
+          value.isEmpty ? context.l10n.serverMissingDetails : value,
+        ),
       ],
     ),
   );
@@ -96,16 +125,18 @@ class ServerDetail extends StatelessWidget {
           .firstOrNull;
       if (s == null) {
         return Scaffold(
-          appBar: AppBar(title: const Text('服务器详情')),
-          body: const Center(child: Text('记录暂不可用，请返回重试')),
+          appBar: AppBar(title: Text(context.l10n.serverDetails)),
+          body: Center(child: Text(context.l10n.serverRecordUnavailable)),
         );
       }
       return Scaffold(
         appBar: AppBar(
-          title: const Text('服务器详情'),
+          title: Text(context.l10n.serverDetails),
           actions: [
             IconButton(
-              tooltip: s.favorite ? '取消常用' : '设为常用',
+              tooltip: s.favorite
+                  ? context.l10n.serverRemoveFavorite
+                  : context.l10n.serverSetFavorite,
               onPressed: !controller.canMutate || s.archived
                   ? null
                   : () async {
@@ -114,7 +145,9 @@ class ServerDetail extends StatelessWidget {
                           () => controller.store.setFavorite(s, !s.favorite),
                         );
                       } catch (error) {
-                        if (context.mounted) showFailure(context, error);
+                        if (context.mounted) {
+                          showFailure(context, error);
+                        }
                       }
                     },
               icon: Icon(
@@ -123,16 +156,18 @@ class ServerDetail extends StatelessWidget {
               ),
             ),
             PopupMenuButton<String>(
-              tooltip: '更多操作',
+              tooltip: context.l10n.serverMoreActions,
               enabled: controller.canMutate && !s.archived,
               onSelected: (_) => archive(context, s),
               itemBuilder: (_) => [
                 PopupMenuItem(
                   value: 'archive',
-                  child: Text(
-                    '归档本地记录',
-                    style: TextStyle(
-                      color: Theme.of(context).colorScheme.error,
+                  child: Builder(
+                    builder: (context) => Text(
+                      context.l10n.serverArchiveLocal,
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.error,
+                      ),
                     ),
                   ),
                 ),
@@ -194,12 +229,12 @@ class ServerDetail extends StatelessWidget {
               ],
             ),
             if (s.isDemo)
-              const Padding(
+              Padding(
                 padding: EdgeInsets.only(top: 12),
-                child: LedgerBadge('演示记录 · 保留地址，不连接真实服务器'),
+                child: LedgerBadge(context.l10n.serverDemoWarning),
               ),
             SectionTitle(
-              '基本信息',
+              context.l10n.serverBasicInfo,
               action: TextButton(
                 onPressed: !controller.canMutate || s.archived
                     ? null
@@ -210,7 +245,7 @@ class ServerDetail extends StatelessWidget {
                               ServerForm(controller: controller, record: s),
                         ),
                       ),
-                child: const Text('编辑'),
+                child: Text(context.l10n.serverEdit),
               ),
             ),
             LedgerCard(
@@ -220,9 +255,15 @@ class ServerDetail extends StatelessWidget {
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Expanded(child: value(context, '主机地址', s.host)),
+                      Expanded(
+                        child: value(
+                          context,
+                          context.l10n.serverHostAddress,
+                          s.host,
+                        ),
+                      ),
                       IconButton(
-                        tooltip: '复制主机地址',
+                        tooltip: context.l10n.serverCopyHost,
                         onPressed: s.host.isEmpty
                             ? null
                             : () async {
@@ -232,7 +273,13 @@ class ServerDetail extends StatelessWidget {
                                   );
                                   if (context.mounted) {
                                     ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(content: Text('主机地址已复制')),
+                                      SnackBar(
+                                        content: Builder(
+                                          builder: (context) => Text(
+                                            context.l10n.serverHostCopied,
+                                          ),
+                                        ),
+                                      ),
                                     );
                                   }
                                 } catch (error) {
@@ -240,7 +287,9 @@ class ServerDetail extends StatelessWidget {
                                     showFailure(
                                       context,
                                       error,
-                                      fallbackMessage: '未能复制主机地址，请重试。',
+                                      fallbackMessage: LocalizedText(
+                                        (l10n) => l10n.serverCopyHostFailed,
+                                      ),
                                     );
                                   }
                                 }
@@ -250,19 +299,19 @@ class ServerDetail extends StatelessWidget {
                     ],
                   ),
                   const Divider(),
-                  value(context, '操作系统', s.os),
+                  value(context, context.l10n.serverOperatingSystem, s.os),
                   value(
                     context,
-                    '分组 / 用途',
-                    '${controller.groupName(s.groupId)} · ${s.purpose.isEmpty ? '待补充' : s.purpose}',
+                    context.l10n.serverGroupPurpose,
+                    '${controller.groupName(s.groupId, l10n: context.l10n)} · ${s.purpose.isEmpty ? context.l10n.serverMissingDetails : s.purpose}',
                   ),
-                  value(context, '规格', s.spec),
-                  InfoNote('以上是本地资料，面板刷新不会覆盖。连接测试结果不代表服务持续可用。'),
+                  value(context, context.l10n.serverSpecifications, s.spec),
+                  InfoNote(context.l10n.serverLocalInfoHelp),
                 ],
               ),
             ),
             SectionTitle(
-              '硬件信息',
+              context.l10n.resourceHardware,
               action: TextButton(
                 onPressed: !controller.canMutate || s.archived
                     ? null
@@ -276,22 +325,22 @@ class ServerDetail extends StatelessWidget {
                           ),
                         ),
                       ),
-                child: const Text('编辑硬件'),
+                child: Text(context.l10n.serverEditHardware),
               ),
             ),
             HardwareInformationCard(s.resources),
-            const SectionTitle('面板关联'),
+            SectionTitle(context.l10n.serverPanelLink),
             LedgerCard(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   Text(
-                    cloudAccount?.alias ?? '未关联面板账户',
+                    cloudAccount?.alias ?? context.l10n.serverNoPanelLink,
                     style: const TextStyle(fontWeight: FontWeight.w700),
                   ),
                   if (cloudAccount != null)
                     Text(cloudProviderName(cloudAccount.provider)),
-                  const InfoNote('关联已保存的面板账户与实例。关联或刷新均不会更改本地硬件信息，请在上方手动编辑。'),
+                  InfoNote(context.l10n.serverPanelLinkHelp),
                   OutlinedButton.icon(
                     key: const ValueKey('server-cloud-binding'),
                     onPressed:
@@ -310,29 +359,33 @@ class ServerDetail extends StatelessWidget {
                             ),
                           ),
                     icon: const Icon(Icons.link),
-                    label: Text(binding == null ? '关联面板账户' : '管理关联'),
+                    label: Text(
+                      binding == null
+                          ? context.l10n.serverLinkPanel
+                          : context.l10n.serverManageLink,
+                    ),
                   ),
                   if (controller.cloud.needsReload)
                     TextButton(
                       onPressed: controller.cloud.busy
                           ? null
                           : () => controller.cloud.reload(),
-                      child: const Text('重新读取面板账户资料'),
+                      child: Text(context.l10n.serverReloadPanelDetails),
                     ),
                 ],
               ),
             ),
-            const SectionTitle('费用与到期'),
+            SectionTitle(context.l10n.serverCostExpiry),
             LedgerCard(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     s.billing == BillingKind.metered
-                        ? '月费用估算'
+                        ? context.l10n.serverMonthlyEstimate
                         : s.billing == BillingKind.prepaid
-                        ? '续费金额'
-                        : '费用待补充',
+                        ? context.l10n.serverRenewalAmount
+                        : context.l10n.serverCostsMissing,
                     style: TextStyle(
                       color: Theme.of(context).colorScheme.onSurfaceVariant,
                       fontSize: 12,
@@ -355,23 +408,35 @@ class ServerDetail extends StatelessWidget {
                       ],
                     ),
                   if (s.billing == BillingKind.prepaid) ...[
-                    value(context, '续费周期', '${s.cycleMonths} 个月'),
-                    value(context, '服务开始日', s.startDate?.toString() ?? '未知'),
-                    value(context, '服务到期日', s.dueDate?.toString() ?? '未知'),
+                    value(
+                      context,
+                      context.l10n.serverRenewalCycle,
+                      context.l10n.serverMonths(s.cycleMonths),
+                    ),
+                    value(
+                      context,
+                      context.l10n.serverServiceStart,
+                      s.startDate?.toString() ?? context.l10n.serverUnknown,
+                    ),
+                    value(
+                      context,
+                      context.l10n.serverServiceDue,
+                      s.dueDate?.toString() ?? context.l10n.serverUnknown,
+                    ),
                   ],
                   InfoNote(
                     s.billing == BillingKind.unknown
-                        ? '未知金额不会按 0 计算。可在“基本信息 / 编辑”中补充费用资料。'
+                        ? context.l10n.serverUnknownCostHelp
                         : s.billing == BillingKind.metered
-                        ? '按量费用作为月估算，不产生剩余价值。可在编辑服务器时维护费用资料。'
-                        : '按当前续费价折算已知服务期；历史实付另计，不覆盖续费价。',
+                        ? context.l10n.serverMeteredValueHelp
+                        : context.l10n.serverRenewalValueHelp,
                   ),
                   if (controller.reminderFor(s.id) case final rule?)
                     SettingRow(
                       icon: Icons.notifications_none,
-                      title: '到期提醒与使用计划',
+                      title: context.l10n.serverReminderPlan,
                       subtitle:
-                          '${usagePlanLabel(rule.usagePlan)} · ${rule.enabled ? '${reminderDaysLabel(rule.leadDays)} · ${reminderTime(rule.minuteOfDay)}' : '提醒已关闭'}',
+                          '${usagePlanLabel(rule.usagePlan, l10n: context.l10n)} · ${rule.enabled ? '${reminderDaysLabel(rule.leadDays, l10n: context.l10n)} · ${reminderTime(rule.minuteOfDay)}' : context.l10n.serverRemindersOff}',
                       onTap: () => Navigator.push<void>(
                         context,
                         MaterialPageRoute(
@@ -386,7 +451,7 @@ class ServerDetail extends StatelessWidget {
               ),
             ),
             if (s.billing == BillingKind.prepaid) ...[
-              const SectionTitle('剩余价值'),
+              SectionTitle(context.l10n.serverRemainingValue),
               Builder(
                 builder: (context) {
                   final valuation = serverValuation(
@@ -395,8 +460,8 @@ class ServerDetail extends StatelessWidget {
                     controller.today,
                   );
                   if (valuation == null) {
-                    return const LedgerCard(
-                      child: InfoNote('日期或费用资料不足，剩余价值未知，不按 0 计算。'),
+                    return LedgerCard(
+                      child: InfoNote(context.l10n.serverUnknownValueHelp),
                     );
                   }
                   return ValuationCard(
@@ -428,7 +493,7 @@ class ServerDetail extends StatelessWidget {
                             ),
                           ),
                     icon: const Icon(Icons.add_card_outlined),
-                    label: const Text('记录已付款'),
+                    label: Text(context.l10n.serverRecordPayment),
                   ),
                   OutlinedButton.icon(
                     onPressed: controller.refreshFailed
@@ -443,7 +508,7 @@ class ServerDetail extends StatelessWidget {
                             ),
                           ),
                     icon: const Icon(Icons.calculate_outlined),
-                    label: const Text('引用资料试算'),
+                    label: Text(context.l10n.serverUseForCalculation),
                   ),
                 ],
               ),
@@ -458,15 +523,15 @@ class ServerDetail extends StatelessWidget {
                 ),
               ),
               icon: const Icon(Icons.receipt_long_outlined),
-              label: const Text('查看付款记录'),
+              label: Text(context.l10n.serverViewPayments),
             ),
-            const SectionTitle('连接与控制'),
+            SectionTitle(context.l10n.serverConnectionsControl),
             LedgerCard(
               padding: EdgeInsets.zero,
               child: SettingRow(
                 icon: Icons.terminal,
-                title: 'SSH 连接配置',
-                subtitle: '连接地址、端口、用户名和登录凭据',
+                title: context.l10n.serverSshSettings,
+                subtitle: context.l10n.serverSshSettingsDescription,
                 onTap: s.archived
                     ? null
                     : () => Navigator.push<void>(
@@ -498,7 +563,7 @@ class ServerDetail extends StatelessWidget {
                           ),
                         ),
                   icon: const Icon(Icons.terminal),
-                  label: const Text('连接 SSH'),
+                  label: Text(context.l10n.serverConnectSsh),
                 ),
                 OutlinedButton.icon(
                   onPressed: s.archived || s.isDemo
@@ -515,7 +580,7 @@ class ServerDetail extends StatelessWidget {
                           ),
                         ),
                   icon: const Icon(Icons.monitor_heart_outlined),
-                  label: const Text('TCP 测试'),
+                  label: Text(context.l10n.serverTcpTest),
                 ),
                 OutlinedButton.icon(
                   onPressed: s.archived || s.isDemo
@@ -531,17 +596,20 @@ class ServerDetail extends StatelessWidget {
                           ),
                         ),
                   icon: const Icon(Icons.power_settings_new),
-                  label: const Text('单机电源'),
+                  label: Text(context.l10n.serverPower),
                 ),
               ],
             ),
-            const InfoNote('首次连接需核对主机指纹；指纹变化会暂停登录。重启或关机需再次核对目标，且不会停止厂商计费。'),
+            InfoNote(context.l10n.serverConnectionSafety),
             if (s.notes.isNotEmpty) ...[
-              const SectionTitle('备注'),
+              SectionTitle(context.l10n.serverNotes),
               LedgerCard(child: SelectableText(s.notes)),
             ],
             InfoNote(
-              '本地保存于 ${s.updatedAt.toLocal().toString().substring(0, 16)}\n服务器 ID：${s.id}',
+              context.l10n.serverSavedMetadata(
+                (s.updatedAt.toLocal().toString().substring(0, 16)).toString(),
+                (s.id).toString(),
+              ),
             ),
           ],
         ),

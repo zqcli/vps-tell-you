@@ -1,3 +1,7 @@
+import '../l10n/localized_message.dart';
+import '../l10n/locale_preference.dart';
+import '../l10n/generated/app_localizations.dart';
+
 import 'dart:math' as math;
 import 'dart:ui' show SemanticsValidationResult;
 
@@ -26,6 +30,24 @@ class ServerForm extends StatefulWidget {
 
 class _ServerFormState extends State<ServerForm> {
   final _form = GlobalKey<FormState>();
+  bool _hasValidated = false;
+  String? _validationLocale;
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final next = context.l10n.localeName;
+    if (_validationLocale != null &&
+        _validationLocale != next &&
+        _hasValidated) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          _form.currentState?.validate();
+        }
+      });
+    }
+    _validationLocale = next;
+  }
+
   final _resources = GlobalKey<ServerResourceFieldsState>();
   final _cycleFocus = FocusNode();
   late final Map<String, TextEditingController> fields;
@@ -61,7 +83,9 @@ class _ServerFormState extends State<ServerForm> {
     groupId = s?.groupId;
     if (widget.focusHardware) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (!mounted) return;
+        if (!mounted) {
+          return;
+        }
         final hardwareContext = _resources.currentContext;
         if (hardwareContext != null) {
           Scrollable.ensureVisible(hardwareContext);
@@ -89,26 +113,28 @@ class _ServerFormState extends State<ServerForm> {
     bool required = false,
   }) {
     final text = value?.trim() ?? '';
-    if (required && text.isEmpty) return '请填写$label';
+    if (required && text.isEmpty) {
+      return context.l10n.serverRequiredField((label).toString());
+    }
     if (id == 'amount' &&
         billing != BillingKind.unknown &&
         Money.parseMinor(text) == null) {
-      return '请输入有效金额，最多两位小数';
+      return context.l10n.serverAmountPrecision;
     }
     if ((id == 'start' || id == 'due') &&
         text.isNotEmpty &&
         LedgerDate.tryParse(text) == null) {
-      return '请使用有效日期，例如 2026-10-06';
+      return context.l10n.serverDateExample;
     }
     if (id == 'due' && billing == BillingKind.prepaid) {
       final start = LedgerDate.tryParse(fields['start']!.text.trim());
       final due = LedgerDate.tryParse(text);
       if (start != null && due != null && start.compareTo(due) >= 0) {
-        return '到期日必须晚于开始日';
+        return context.l10n.serverDueAfterStart;
       }
     }
     if (id == 'host' && !ServerRecord.validHost(text)) {
-      return '请输入纯 IP 或域名，不含协议、端口或路径';
+      return context.l10n.serverPlainHost;
     }
     return null;
   }
@@ -155,7 +181,7 @@ class _ServerFormState extends State<ServerForm> {
     String? shortLabel,
   }) {
     final enabled =
-        !saving && !(termsLocked && (label == '计费方式' || label == '续费周期'));
+        !saving && !(termsLocked && (id == 'billing' || id == 'cycle'));
     final dropdown = Semantics(
       label: compact ? label : null,
       child: DropdownButtonFormField<T>(
@@ -291,7 +317,8 @@ class _ServerFormState extends State<ServerForm> {
     return (_textWidth(label, style) * .75).ceilToDouble();
   }
 
-  String _cycleDescription(int months) => months == 12 ? '每年' : '每 $months 个月';
+  String _cycleDescription(int months, AppLocalizations l10n) =>
+      months == 12 ? l10n.serverEveryYear : l10n.serverEveryMonths(months);
 
   Widget _cycleSelect(Map<int, String> labels) {
     final enabled = !saving && !termsLocked;
@@ -300,19 +327,20 @@ class _ServerFormState extends State<ServerForm> {
     for (final months in labels.keys) {
       menuWidth = math.max(
         menuWidth,
-        (_textWidth(_cycleDescription(months), style) + 40).ceilToDouble(),
+        (_textWidth(_cycleDescription(months, context.l10n), style) + 40)
+            .ceilToDouble(),
       );
     }
     return Padding(
       key: const ValueKey('row-cycle'),
       padding: EdgeInsets.zero,
       child: Semantics(
-        label: '续费周期',
+        label: context.l10n.serverRenewalCycle,
         child: InputDecorator(
           key: const ValueKey('field-cycle'),
           isFocused: enabled && _cycleFocus.hasFocus,
           decoration: InputDecoration(
-            labelText: '周期',
+            labelText: context.l10n.resourcePeriod,
             enabled: enabled,
             floatingLabelBehavior: FloatingLabelBehavior.always,
             // Put vertical padding inside the button so tapping above or
@@ -345,7 +373,7 @@ class _ServerFormState extends State<ServerForm> {
                   for (final months in labels.keys)
                     months == cycle
                         ? Semantics(
-                            label: _cycleDescription(months),
+                            label: _cycleDescription(months, context.l10n),
                             excludeSemantics: true,
                             child: Text(labels[months]!),
                           )
@@ -355,7 +383,10 @@ class _ServerFormState extends State<ServerForm> {
                   for (final months in labels.keys)
                     DropdownMenuItem(
                       value: months,
-                      child: Text(_cycleDescription(months)),
+                      child: Builder(
+                        builder: (context) =>
+                            Text(_cycleDescription(months, context.l10n)),
+                      ),
                     ),
                 ],
                 onChanged: enabled
@@ -370,20 +401,23 @@ class _ServerFormState extends State<ServerForm> {
   }
 
   Widget _feeRow() {
-    final amountLabel = billing == BillingKind.metered ? '月费用估算' : '续费金额';
-    const standardCycleLabels = {
-      1: '月',
-      3: '季',
-      6: '半年',
-      12: '年',
-      24: '2年',
-      36: '3年',
+    final amountLabel = billing == BillingKind.metered
+        ? context.l10n.serverMonthlyEstimate
+        : context.l10n.serverRenewalAmount;
+    final standardCycleLabels = {
+      1: context.l10n.resourceMonth,
+      3: context.l10n.resourceQuarter,
+      6: context.l10n.serverHalfYear,
+      12: context.l10n.resourceYear,
+      24: context.l10n.serverTwoYears,
+      36: context.l10n.serverThreeYears,
     };
     final cycleLabels = {
       ...standardCycleLabels,
       // Keep an unexpected legacy value visible until the user changes it;
       // building the form must not assert or silently normalize stored data.
-      if (!standardCycleLabels.containsKey(cycle)) cycle: '$cycle个月',
+      if (!standardCycleLabels.containsKey(cycle))
+        cycle: context.l10n.serverCompactMonths(cycle),
     };
     final valueStyle = Theme.of(context).textTheme.bodyMedium;
     var currencyWidth = 64.0;
@@ -395,8 +429,14 @@ class _ServerFormState extends State<ServerForm> {
     }
     // Padding and outline gaps keep 8 px on each side outside the cycle's
     // 48 px hit target. The floating labels must also remain fully visible.
-    final cycleMinWidth = math.max(64.0, _floatingLabelWidth('周期') + 16);
-    final amountMinWidth = math.max(48.0, _floatingLabelWidth('金额') + 16);
+    final cycleMinWidth = math.max(
+      64.0,
+      _floatingLabelWidth(context.l10n.resourcePeriod) + 16,
+    );
+    final amountMinWidth = math.max(
+      48.0,
+      _floatingLabelWidth(context.l10n.serverAmount) + 16,
+    );
     // Include the compact dropdown's icon, padded hit target and outline
     // gaps, rounding up fractional text widths. The selected value, not the
     // longest menu item or free row space, determines the closed width.
@@ -435,7 +475,7 @@ class _ServerFormState extends State<ServerForm> {
                     Expanded(
                       child: _compactInput(
                         'amount',
-                        '金额',
+                        context.l10n.serverAmount,
                         amountLabel,
                         field.errorText,
                       ),
@@ -444,7 +484,7 @@ class _ServerFormState extends State<ServerForm> {
                     SizedBox(
                       width: currencyWidth,
                       child: select<String>(
-                        '原币种',
+                        context.l10n.serverOriginalCurrency,
                         currency,
                         Money.currencies
                             .map(
@@ -454,7 +494,7 @@ class _ServerFormState extends State<ServerForm> {
                         (v) => setState(() => currency = v!),
                         id: 'currency',
                         compact: true,
-                        shortLabel: '币种',
+                        shortLabel: context.l10n.serverCurrency,
                       ),
                     ),
                     if (billing == BillingKind.prepaid) ...[
@@ -478,8 +518,13 @@ class _ServerFormState extends State<ServerForm> {
                     ? ''
                     : '${Money(currency, minor).decimal} $currency · ';
                 final period = billing == BillingKind.metered
-                    ? '每月费用估算'
-                    : '${cycle == 12 ? '每年' : '每 $cycle 个月'}续费金额，实付另记';
+                    ? context.l10n.serverMonthlyCostEstimate
+                    : context.l10n.serverRenewalPriceHelp(
+                        (cycle == 12
+                                ? context.l10n.serverEveryYear
+                                : context.l10n.serverEveryMonths(cycle))
+                            .toString(),
+                      );
                 // Keep the complete amount readable even while a narrow
                 // single-line editor scrolls its digits at larger text sizes.
                 return Text(
@@ -499,7 +544,9 @@ class _ServerFormState extends State<ServerForm> {
     for (final id in ['start', 'due']) {
       final error = _validateField(
         id,
-        id == 'start' ? '开始日期' : '到期日期',
+        id == 'start'
+            ? context.l10n.serverStartDate
+            : context.l10n.serverDueDate,
         fields[id]!.text,
       );
       if (error != null) {
@@ -523,8 +570,8 @@ class _ServerFormState extends State<ServerForm> {
               Expanded(
                 child: _compactInput(
                   'start',
-                  '开始日期',
-                  '服务开始日（选填）',
+                  context.l10n.serverStartDate,
+                  context.l10n.serverOptionalStart,
                   errors['start'],
                   date: true,
                 ),
@@ -533,8 +580,8 @@ class _ServerFormState extends State<ServerForm> {
               Expanded(
                 child: _compactInput(
                   'due',
-                  '到期日期',
-                  '服务到期日（选填）',
+                  context.l10n.serverDueDate,
+                  context.l10n.serverOptionalDue,
                   errors['due'],
                   date: true,
                 ),
@@ -544,7 +591,9 @@ class _ServerFormState extends State<ServerForm> {
           for (final error in errors.entries)
             _rowError(
               error.value,
-              label: error.key == 'start' ? '开始日期' : '到期日期',
+              label: error.key == 'start'
+                  ? context.l10n.serverStartDate
+                  : context.l10n.serverDueDate,
             ),
         ],
       );
@@ -552,7 +601,10 @@ class _ServerFormState extends State<ServerForm> {
   );
 
   Future<void> save() async {
-    if (saving) return;
+    if (saving) {
+      return;
+    }
+    _hasValidated = true;
     final invalid = _form.currentState!.validateGranularly();
     final resources = _resources.currentState?.validateAndRead(
       invalidFields: invalid,
@@ -561,7 +613,9 @@ class _ServerFormState extends State<ServerForm> {
       revealFirstInvalidField(invalid);
       return;
     }
-    if (resources == null) return;
+    if (resources == null) {
+      return;
+    }
     final old = widget.record;
     final now = widget.controller.clock();
     String text(String key) => fields[key]!.text.trim();
@@ -600,9 +654,12 @@ class _ServerFormState extends State<ServerForm> {
       isDemo: old?.isDemo ?? false,
       renewalAnchorDate: old?.renewalAnchorDate,
     );
-    final error = s.validate();
+    final error = s.validate(l10n: context.l10n);
     if (error != null) {
-      showFailure(context, ArgumentError(error));
+      showFailure(
+        context,
+        LocalizedArgumentError((l10n) => s.validate(l10n: l10n)!),
+      );
       return;
     }
     setState(() => saving = true);
@@ -610,7 +667,9 @@ class _ServerFormState extends State<ServerForm> {
       await widget.controller.mutate(
         () => widget.controller.store.saveServer(s, isNew: old == null),
       );
-      if (mounted) Navigator.pop(context, s.id);
+      if (mounted) {
+        Navigator.pop(context, s.id);
+      }
     } catch (error) {
       if (mounted) {
         setState(() => saving = false);
@@ -624,11 +683,15 @@ class _ServerFormState extends State<ServerForm> {
     canPop: !saving,
     child: Scaffold(
       appBar: AppBar(
-        title: Text(widget.record == null ? '手动添加' : '编辑服务器'),
+        title: Text(
+          widget.record == null
+              ? context.l10n.serverManualAdd
+              : context.l10n.serverEditTitle,
+        ),
         actions: [
           TextButton(
             onPressed: saving ? null : () => Navigator.pop(context),
-            child: const Text('取消'),
+            child: Text(context.l10n.cancel),
           ),
         ],
       ),
@@ -641,31 +704,46 @@ class _ServerFormState extends State<ServerForm> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const InfoNote('名称和厂商必填；硬件和费用可稍后补充。仅保存本地台账，不修改远端。'),
-              const SectionTitle('基本资料'),
-              field('name', '服务器名称', required: true),
-              field('vendor', '厂商', required: true, hint: '例如：搬瓦工 / 自定义厂商'),
+              InfoNote(context.l10n.serverFormHelp),
+              SectionTitle(context.l10n.serverBasicData),
+              field('name', context.l10n.serverName, required: true),
+              field(
+                'vendor',
+                context.l10n.serverProvider,
+                required: true,
+                hint: context.l10n.serverProviderExample,
+              ),
               field(
                 'host',
-                '主机地址（选填）',
-                hint: 'IPv4、IPv6 或域名，不含协议或端口',
+                context.l10n.serverOptionalHost,
+                hint: context.l10n.serverHostExample,
                 max: 253,
               ),
               InfoNote(
                 widget.record == null
-                    ? '新建时留空会采用硬件信息中的 IP 或主机名；SSH 连接地址另行设置。'
-                    : '此地址独立保存，修改硬件不会更改它；SSH 连接地址另行设置。',
+                    ? context.l10n.serverNewHostHelp
+                    : context.l10n.serverSavedHostHelp,
               ),
-              select<String>('分组', groupId ?? '', [
-                const DropdownMenuItem(value: '', child: Text('未分组')),
+              select<String>(context.l10n.serverGroup, groupId ?? '', [
+                DropdownMenuItem(
+                  value: '',
+                  child: Builder(
+                    builder: (context) => Text(context.l10n.ungrouped),
+                  ),
+                ),
                 ...widget.controller.groups.map(
                   (g) => DropdownMenuItem(value: g.id, child: Text(g.name)),
                 ),
               ], (v) => setState(() => groupId = v == '' ? null : v)),
-              field('purpose', '用途（选填）'),
-              field('region', '地区（选填）'),
-              field('os', '操作系统（选填）'),
-              field('spec', '规格补充（选填）', hint: '例如：CPU 型号、网络带宽', max: 200),
+              field('purpose', context.l10n.serverOptionalPurpose),
+              field('region', context.l10n.serverOptionalRegion),
+              field('os', context.l10n.serverOptionalOs),
+              field(
+                'spec',
+                context.l10n.serverOptionalSpec,
+                hint: context.l10n.serverSpecExample,
+                max: 200,
+              ),
               ServerResourceFields(
                 key: _resources,
                 initial: widget.record?.resources,
@@ -673,50 +751,57 @@ class _ServerFormState extends State<ServerForm> {
                 importing: false,
                 defaultTrafficPeriodMonths: widget.record == null ? 1 : null,
               ),
-              const SectionTitle('费用资料'),
-              if (termsLocked)
-                const InfoNote(
-                  '存在续费生成的服务期时，计费方式、周期和日期不可直接修改。请在付款详情核对可撤销范围；后续资料已改变时可能无法撤销。续费价和币种仍可调整，历史实付不变。',
-                ),
+              SectionTitle(context.l10n.serverCostDetails),
+              if (termsLocked) InfoNote(context.l10n.serverPaymentLockHelp),
               select<BillingKind>(
-                '计费方式',
+                context.l10n.serverBillingType,
                 billing,
-                const [
+                [
                   DropdownMenuItem(
                     value: BillingKind.unknown,
-                    child: Text('费用未知 · 稍后补充'),
+                    child: Builder(
+                      builder: (context) =>
+                          Text(context.l10n.serverCostUnknownOption),
+                    ),
                   ),
                   DropdownMenuItem(
                     value: BillingKind.prepaid,
-                    child: Text('预付费 · 按周期续费'),
+                    child: Builder(
+                      builder: (context) =>
+                          Text(context.l10n.serverPrepaidOption),
+                    ),
                   ),
                   DropdownMenuItem(
                     value: BillingKind.metered,
-                    child: Text('按量付费 · 月估算'),
+                    child: Builder(
+                      builder: (context) =>
+                          Text(context.l10n.serverMeteredOption),
+                    ),
                   ),
                 ],
                 (v) => setState(() => billing = v!),
                 id: 'billing',
-                selectedLabels: const {
-                  BillingKind.unknown: '费用未知',
-                  BillingKind.prepaid: '预付费',
-                  BillingKind.metered: '按量付费',
+                selectedLabels: {
+                  BillingKind.unknown: context.l10n.billingCostUnknown,
+                  BillingKind.prepaid: context.l10n.serverPrepaid,
+                  BillingKind.metered: context.l10n.serverMetered,
                 },
               ),
               if (billing != BillingKind.unknown) ...[
                 _feeRow(),
                 if (billing == BillingKind.prepaid) ...[
                   _dateRow(),
-                  const InfoNote(
-                    '日期选填，到期当天不计入服务期。只填到期日期时，会按续费周期推算开始日期；未填到期日期则无法计算剩余价值。',
-                  ),
+                  InfoNote(context.l10n.serverDatesHelp),
                 ],
-                const InfoNote(
-                  '金额填 0 表示免费；金额未知请选择“费用未知”。按所选币种保存，参考汇率仅用于折算。保存费用不会记录付款。',
-                ),
+                InfoNote(context.l10n.serverAmountHelp),
               ],
-              field('notes', '备注（选填）', max: 4000, lines: 4),
-              const InfoNote('不要在备注中保存密码、私钥或令牌；登录凭据请在“密钥与安全”管理。'),
+              field(
+                'notes',
+                context.l10n.serverOptionalNotes,
+                max: 4000,
+                lines: 4,
+              ),
+              InfoNote(context.l10n.serverNotesSafety),
             ],
           ),
         ),
@@ -727,7 +812,7 @@ class _ServerFormState extends State<ServerForm> {
           padding: const EdgeInsets.all(16),
           child: FilledButton(
             onPressed: saving ? null : save,
-            child: Text(saving ? '正在保存…' : '保存服务器'),
+            child: Text(saving ? context.l10n.saving : context.l10n.serverSave),
           ),
         ),
       ),

@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 
+import '../l10n/generated/app_localizations.dart';
+import '../l10n/locale_preference.dart';
+import '../l10n/localized_message.dart';
 import 'cloud_account.dart';
 import 'cloud_models.dart';
 
@@ -8,29 +11,38 @@ String cloudProviderName(CloudProvider provider) => switch (provider) {
   CloudProvider.solusVm2 => 'SolusVM 2',
 };
 
-String cloudPowerLabel(CloudPower power) => switch (power) {
-  CloudPower.running => '运行中',
-  CloudPower.stopped => '已停止',
-  CloudPower.unknown => '未知',
-};
+String cloudPowerLabel(CloudPower power, {AppLocalizations? l10n}) {
+  final strings = l10n ?? defaultLocalizations;
+  return switch (power) {
+    CloudPower.running => strings.cloudPowerRunning,
+    CloudPower.stopped => strings.cloudPowerStopped,
+    CloudPower.unknown => strings.cloudPowerUnknown,
+  };
+}
 
 String cloudTime(DateTime time) => time.toLocal().toString().substring(0, 16);
 
-String cloudBindingSummary(CloudBinding binding) {
+String cloudBindingSummary(CloudBinding binding, {AppLocalizations? l10n}) {
+  final strings = l10n ?? defaultLocalizations;
   final freshness = binding.missing
-      ? '本次未返回 · 保留上次信息'
+      ? strings.cloudMissingKept
       : binding.stale
-      ? '读取失败 · 保留上次信息'
-      : '上次读取';
-  return '$freshness · 电源${cloudPowerLabel(binding.power)}';
+      ? strings.cloudFailedKept
+      : strings.cloudLastRead;
+  return strings.cloudBindingSummary(
+    freshness,
+    cloudPowerLabel(binding.power, l10n: strings),
+  );
 }
 
-String cloudAccountStatus(CloudAccount account) =>
-    account.lastFailure == CloudFailureKind.unauthorized
-    ? '授权验证失败 · 原台账保留'
-    : account.lastFailure != null
-    ? '读取失败 · 保留上次信息'
-    : '已验证 · 手动读取';
+String cloudAccountStatus(CloudAccount account, {AppLocalizations? l10n}) {
+  final strings = l10n ?? defaultLocalizations;
+  return account.lastFailure == CloudFailureKind.unauthorized
+      ? strings.cloudAuthorizationFailedKept
+      : account.lastFailure != null
+      ? strings.cloudFailedKept
+      : strings.cloudVerifiedManual;
+}
 
 class CloudSteps extends StatelessWidget {
   const CloudSteps(this.step, {super.key});
@@ -44,7 +56,14 @@ class CloudSteps extends StatelessWidget {
       children: [
         for (var i = 0; i < 3; i++)
           Text(
-            '0${i + 1} ${['选模板', '填授权', '选实例'][i]}',
+            context.l10n.cloudStepLabel(
+              i + 1,
+              [
+                context.l10n.cloudStepTemplate,
+                context.l10n.cloudStepCredentials,
+                context.l10n.cloudStepInstances,
+              ][i],
+            ),
             style: TextStyle(
               fontSize: 12,
               fontWeight: i + 1 == step ? FontWeight.w700 : FontWeight.normal,
@@ -60,7 +79,7 @@ class CloudSteps extends StatelessWidget {
 
 class CloudNotice extends StatelessWidget {
   const CloudNotice(this.message, {super.key, this.error = false});
-  final String message;
+  final Object message;
   final bool error;
   @override
   Widget build(BuildContext context) => Padding(
@@ -77,7 +96,7 @@ class CloudNotice extends StatelessWidget {
           borderRadius: BorderRadius.circular(12),
         ),
         child: Text(
-          message,
+          localizedText(message, context.l10n),
           style: TextStyle(
             fontSize: 12,
             color: error
@@ -103,7 +122,9 @@ class CloudValue extends StatelessWidget {
         Text(label, style: Theme.of(context).textTheme.bodySmall),
         const SizedBox(height: 3),
         SelectableText(
-          value == null || value!.isEmpty ? '未知（API 未提供）' : value!,
+          value == null || value!.isEmpty
+              ? context.l10n.cloudApiUnknown
+              : value!,
         ),
       ],
     ),

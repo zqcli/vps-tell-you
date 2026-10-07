@@ -1,3 +1,5 @@
+import '../l10n/localized_message.dart';
+
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
@@ -5,6 +7,8 @@ import 'package:flutter/foundation.dart';
 import '../cloud/cloud_controller.dart';
 import '../core/value_types.dart';
 import '../data/ledger_store.dart';
+import '../l10n/locale_preference.dart';
+import '../l10n/generated/app_localizations.dart';
 import '../finance/finance_models.dart';
 import '../security/security_controller.dart';
 import '../settings/reminder_rule.dart';
@@ -41,6 +45,34 @@ class LedgerController extends ChangeNotifier {
   late final ReminderScheduler reminders;
   List<ReminderRule> reminderRules = const [];
   String themeMode = 'system';
+  LocalePreference languagePreference = LocalePreference.chinese;
+  bool savingLanguage = false;
+  int _languageRevision = 0;
+  bool _disposed = false;
+
+  /// A language change is a preference-only write. Do not call mutate/refresh:
+  /// those reload domain controllers and would disturb in-flight local drafts.
+  Future<void> setLanguage(LocalePreference preference) async {
+    if (_disposed || savingLanguage || preference == languagePreference) {
+      return;
+    }
+    _languageRevision++;
+    savingLanguage = true;
+    notifyListeners();
+    try {
+      await store.saveLanguagePreference(preference);
+      if (_disposed) return;
+      languagePreference = preference;
+      reminders.languagePreference = preference;
+      // Resubmit existing reminder content in the saved language. This does
+      // not reload ledger/cloud/SSH state, and native failures stay separate.
+      unawaited(reminders.reconcile());
+    } finally {
+      savingLanguage = false;
+      if (!_disposed) notifyListeners();
+    }
+  }
+
   ReminderRule? reminderFor(String id) =>
       reminderRules.where((r) => r.serverId == id).firstOrNull;
 
@@ -48,6 +80,7 @@ class LedgerController extends ChangeNotifier {
 
   @override
   void dispose() {
+    _disposed = true;
     cloud.removeListener(_cloudChanged);
     reminders.removeListener(_cloudChanged);
     reminders.dispose();
@@ -71,8 +104,12 @@ class LedgerController extends ChangeNotifier {
   bool hasPaymentPeriods(String serverId) =>
       periods.any((p) => p.serverId == serverId && p.paymentId != null);
   bool canUndoPayment(PaymentRecord payment) {
-    if (payment.voided) return false;
-    if (payment.isAccount) return true;
+    if (payment.voided) {
+      return false;
+    }
+    if (payment.isAccount) {
+      return true;
+    }
     final server = byId(payment.serverId!);
     return server != null &&
         !server.archived &&
@@ -97,8 +134,9 @@ class LedgerController extends ChangeNotifier {
       ? today.daysUntil(s.dueDate!)
       : null;
   bool isPending(ServerRecord s) => dueIn(s) != null && dueIn(s)! < 30;
-  String groupName(String? id) =>
-      groups.where((g) => g.id == id).firstOrNull?.name ?? '未分组';
+  String groupName(String? id, {AppLocalizations? l10n}) =>
+      groups.where((g) => g.id == id).firstOrNull?.name ??
+      (l10n ?? defaultLocalizations).ungrouped;
   ServerRecord? byId(String id) => records.where((s) => s.id == id).firstOrNull;
   List<ServerRecord> get visible {
     final query = search.trim().toLowerCase();
@@ -135,6 +173,7 @@ class LedgerController extends ChangeNotifier {
   }
 
   Future<void> refresh() async {
+    final languageRevision = _languageRevision;
     // Publish the complete loaded ledger only after every read succeeds.
     final loadedRecords = await store.servers();
     final loadedGroups = await store.groups();
@@ -143,6 +182,7 @@ class LedgerController extends ChangeNotifier {
     final loadedFx = await store.fxSettings();
     final loadedRules = await store.reminderRules();
     final loadedTheme = await store.themeMode();
+    final loadedLanguage = await store.languagePreference();
     await cloud.reload();
     refreshFailed = false;
     periods = List.unmodifiable(loadedPeriods);
@@ -150,6 +190,12 @@ class LedgerController extends ChangeNotifier {
     fx = loadedFx;
     reminderRules = List.unmodifiable(loadedRules);
     themeMode = loadedTheme;
+    // A slower pre-existing reload must not overwrite a newer preference-only
+    // write or publish a pre-commit read while that write is pending.
+    if (languageRevision == _languageRevision && !savingLanguage) {
+      languagePreference = loadedLanguage;
+      reminders.languagePreference = loadedLanguage;
+    }
     records = loadedRecords;
     groups = loadedGroups;
     if (groupFilter != null &&
@@ -175,8 +221,12 @@ class LedgerController extends ChangeNotifier {
   }
 
   Future<T> mutate<T>(Future<T> Function() action) async {
-    if (busy) throw StateError('请等待当前操作完成');
-    if (refreshFailed) throw StateError('请先重新读取已保存的台账');
+    if (busy) {
+      throw LocalizedStateError((l10n) => l10n.serverWaitForOperation);
+    }
+    if (refreshFailed) {
+      throw LocalizedStateError((l10n) => l10n.serverReloadSavedFirst);
+    }
     busy = true;
     notifyListeners();
     try {
@@ -201,10 +251,18 @@ class LedgerController extends ChangeNotifier {
     DueFilter? due,
     ServerSort? order,
   }) {
-    if (query != null) search = query;
-    if (category != null) filter = category;
-    if (due != null) dueFilter = due;
-    if (order != null) sort = order;
+    if (query != null) {
+      search = query;
+    }
+    if (category != null) {
+      filter = category;
+    }
+    if (due != null) {
+      dueFilter = due;
+    }
+    if (order != null) {
+      sort = order;
+    }
     notifyListeners();
   }
 

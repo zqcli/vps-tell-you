@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../l10n/locale_preference.dart';
+import '../l10n/generated/app_localizations.dart';
 import '../core/app_theme.dart';
 import '../core/value_types.dart';
 import 'finance_models.dart';
@@ -42,7 +44,11 @@ class FinanceTotalView extends StatelessWidget {
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
       Text(
-        '${total.covered > 0 ? '约 ' : ''}${total.formatted} ${total.currency}',
+        context.l10n.financeTotalAmount(
+          total.covered > 0 ? 'yes' : 'no',
+          total.formatted,
+          total.currency,
+        ),
         style: TextStyle(
           fontSize: compact ? 21 : 30,
           fontWeight: FontWeight.w700,
@@ -51,7 +57,11 @@ class FinanceTotalView extends StatelessWidget {
       ),
       const SizedBox(height: 5),
       Text(
-        '折算覆盖 ${total.coverageLabel}${total.missingFx > 0 ? ' · ${total.missingFx} 项缺汇率' : ''}',
+        context.l10n.financeCoverage(
+          total.covered,
+          total.total,
+          total.missingFx,
+        ),
         style: TextStyle(
           fontSize: 12,
           color: dark
@@ -61,7 +71,10 @@ class FinanceTotalView extends StatelessWidget {
       ),
       if (total.unknown + total.notApplicable > 0)
         Text(
-          '${total.unknown} 项未知 · ${total.notApplicable} 项不适用 / 未纳入',
+          context.l10n.financeUnknownExcluded(
+            total.unknown,
+            total.notApplicable,
+          ),
           style: TextStyle(
             fontSize: 12,
             color: dark
@@ -71,7 +84,7 @@ class FinanceTotalView extends StatelessWidget {
         ),
       if (total.missingFx > 0)
         Text(
-          '仅合计有汇率的部分，缺失部分未按 0 计算',
+          context.l10n.financeMissingFxExcluded,
           style: TextStyle(
             fontSize: 12,
             color: dark
@@ -83,7 +96,11 @@ class FinanceTotalView extends StatelessWidget {
         Padding(
           padding: const EdgeInsets.only(top: 8),
           child: Text(
-            '原币小计：${total.originals.entries.map((e) => '${e.key} ${formatRational(e.value)}').join(' · ')}',
+            context.l10n.financeOriginalSubtotals(
+              total.originals.entries
+                  .map((e) => '${e.key} ${formatRational(e.value)}')
+                  .join(' · '),
+            ),
             style: TextStyle(
               fontSize: 12,
               color: dark
@@ -96,14 +113,24 @@ class FinanceTotalView extends StatelessWidget {
   );
 }
 
-String convertedAmount(FinanceAmount amount, FxSettings fx) {
+String convertedAmount(
+  FinanceAmount amount,
+  FxSettings fx, {
+  AppLocalizations? l10n,
+}) {
+  final messages = l10n ?? defaultLocalizations;
   if (!amount.known) {
-    return amount.status == AmountStatus.notApplicable ? '不适用 / 未纳入' : '资料未知';
+    return amount.status == AmountStatus.notApplicable
+        ? messages.financeNotApplicable
+        : messages.financeDataUnknown;
   }
   final converted = fx.convert(amount.minor!, amount.currency);
   return converted == null
-      ? '缺少汇率 · 原币仍保留'
-      : '约 ${formatMinor(converted.round(), currency: fx.displayCurrency)} ${fx.displayCurrency}';
+      ? messages.financeMissingFxPreserved
+      : messages.financeApproxAmount(
+          formatMinor(converted.round(), currency: fx.displayCurrency),
+          fx.displayCurrency,
+        );
 }
 
 class ValuationCard extends StatelessWidget {
@@ -127,13 +154,14 @@ class ValuationCard extends StatelessWidget {
       asOf: asOf,
       start: value.activePeriod.start,
       end: value.activePeriod.end,
+      l10n: context.l10n,
     );
     return LedgerCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            '剩余价值 · 按当前续费价折算',
+            context.l10n.financeValueTitle,
             style: TextStyle(
               color: Theme.of(context).colorScheme.onSurfaceVariant,
               fontSize: 12,
@@ -145,14 +173,19 @@ class ValuationCard extends StatelessWidget {
             style: const TextStyle(fontSize: 32, fontWeight: FontWeight.w700),
           ),
           Text(
-            convertedAmount(value.amount, fx),
+            convertedAmount(value.amount, fx, l10n: context.l10n),
             style: TextStyle(
               color: Theme.of(context).colorScheme.onSurfaceVariant,
             ),
           ),
           const SizedBox(height: 22),
           Text(
-            '$periodLabel剩余 ${(value.ratio.toDouble() * 100).toStringAsFixed(1)}% · ${value.activeRemaining} / ${value.days} 天',
+            context.l10n.financePeriodProgress(
+              periodLabel,
+              (value.ratio.toDouble() * 100).toStringAsFixed(1),
+              value.activeRemaining,
+              value.days,
+            ),
           ),
           const SizedBox(height: 9),
           LinearProgressIndicator(
@@ -163,27 +196,39 @@ class ValuationCard extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            '${value.activePeriod.start} 至 ${value.activePeriod.end}（不含结束日）',
+            context.l10n.financePeriodDates(
+              value.activePeriod.start.toString(),
+              value.activePeriod.end.toString(),
+            ),
             style: TextStyle(
               fontSize: 12,
               color: Theme.of(context).colorScheme.onSurfaceVariant,
             ),
           ),
           const SizedBox(height: 12),
-          FinanceLine('估值日 / 服务到期日', '$asOf / $due'),
-          FinanceLine('剩余服务天数', '${value.remainingDays} 天'),
+          FinanceLine(context.l10n.financeValuationAndDue, '$asOf / $due'),
           FinanceLine(
-            '续费 / 周期',
-            '${renewal.formatted} ${renewal.currency} / $cycleMonths 个月',
+            context.l10n.financeRemainingDays,
+            context.l10n.financeDaysValue(value.remainingDays),
           ),
           FinanceLine(
-            '所示周期日均',
+            context.l10n.financeRenewalCycle,
+            context.l10n.financeRenewalValue(
+              renewal.formatted,
+              renewal.currency,
+              cycleMonths,
+            ),
+          ),
+          FinanceLine(
+            context.l10n.financeDailyShown,
             '${formatRational(value.dailyMinor, digits: 4)} ${renewal.currency}',
           ),
           if (value.futurePeriods > 0)
-            InfoNote('剩余价值含 ${value.futurePeriods} 个尚未开始的周期；进度条仅显示上述周期。'),
-          if (value.inferred) const InfoNote('部分服务起点由到期日与日历周期反推；不代表历史付款证明。'),
-          const InfoNote('仅表示服务时长的价格折算，不是退款承诺或成交价。'),
+            InfoNote(
+              context.l10n.financeFuturePeriodsNote(value.futurePeriods),
+            ),
+          if (value.inferred) InfoNote(context.l10n.financeInferredPeriods),
+          InfoNote(context.l10n.financeValueDisclaimer),
         ],
       ),
     );

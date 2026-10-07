@@ -1,3 +1,6 @@
+import '../l10n/localized_message.dart';
+import '../l10n/locale_preference.dart';
+
 import 'package:flutter/material.dart';
 
 import '../cloud/cloud_pages.dart';
@@ -39,7 +42,9 @@ class _ServerListState extends State<ServerList> {
   LedgerController get c => widget.controller;
   bool openingCloud = false;
   Future<void> importCloud() async {
-    if (openingCloud) return;
+    if (openingCloud) {
+      return;
+    }
     openingCloud = true;
     try {
       await Navigator.push<void>(
@@ -71,17 +76,29 @@ class _ServerListState extends State<ServerList> {
       builder: (context) => StatefulBuilder(
         builder: (context, setState) => AlertDialog(
           scrollable: true,
-          title: const Text('筛选服务器'),
+          title: Text(context.l10n.serverFilterTitle),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               DropdownButtonFormField<String>(
                 initialValue: group ?? '__all',
                 isExpanded: true,
-                decoration: const InputDecoration(labelText: '分组'),
+                decoration: InputDecoration(
+                  labelText: context.l10n.serverGroup,
+                ),
                 items: [
-                  const DropdownMenuItem(value: '__all', child: Text('全部分组')),
-                  const DropdownMenuItem(value: '', child: Text('未分组')),
+                  DropdownMenuItem(
+                    value: '__all',
+                    child: Builder(
+                      builder: (context) => Text(context.l10n.serverAllGroups),
+                    ),
+                  ),
+                  DropdownMenuItem(
+                    value: '',
+                    child: Builder(
+                      builder: (context) => Text(context.l10n.ungrouped),
+                    ),
+                  ),
                   ...c.groups.map(
                     (g) => DropdownMenuItem(value: g.id, child: Text(g.name)),
                   ),
@@ -93,20 +110,35 @@ class _ServerListState extends State<ServerList> {
               DropdownButtonFormField<DueFilter>(
                 initialValue: due,
                 isExpanded: true,
-                decoration: const InputDecoration(labelText: '到期状态'),
-                items: const [
-                  DropdownMenuItem(value: DueFilter.all, child: Text('全部状态')),
+                decoration: InputDecoration(
+                  labelText: context.l10n.serverDueStatus,
+                ),
+                items: [
+                  DropdownMenuItem(
+                    value: DueFilter.all,
+                    child: Builder(
+                      builder: (context) =>
+                          Text(context.l10n.serverAllStatuses),
+                    ),
+                  ),
                   DropdownMenuItem(
                     value: DueFilter.overdue,
-                    child: Text('已过期'),
+                    child: Builder(
+                      builder: (context) => Text(context.l10n.serverExpired),
+                    ),
                   ),
                   DropdownMenuItem(
                     value: DueFilter.next30,
-                    child: Text('未来 30 天到期'),
+                    child: Builder(
+                      builder: (context) => Text(context.l10n.serverDueNext30),
+                    ),
                   ),
                   DropdownMenuItem(
                     value: DueFilter.unknown,
-                    child: Text('费用 / 到期日未知'),
+                    child: Builder(
+                      builder: (context) =>
+                          Text(context.l10n.serverCostDateUnknown),
+                    ),
                   ),
                 ],
                 onChanged: (v) => setState(() => due = v!),
@@ -116,11 +148,11 @@ class _ServerListState extends State<ServerList> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context, false),
-              child: const Text('取消'),
+              child: Text(context.l10n.cancel),
             ),
             FilledButton(
               onPressed: () => Navigator.pop(context, true),
-              child: const Text('应用筛选'),
+              child: Text(context.l10n.serverApplyFilters),
             ),
           ],
         ),
@@ -148,8 +180,8 @@ class _ServerListState extends State<ServerList> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
-                    '服务器',
+                  Text(
+                    context.l10n.servers,
                     style: TextStyle(
                       fontSize: 28,
                       fontWeight: FontWeight.w800,
@@ -158,7 +190,7 @@ class _ServerListState extends State<ServerList> {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    '${all.length} 台服务器 · 本地台账',
+                    context.l10n.serverLedgerCount((all.length).toString()),
                     style: TextStyle(
                       fontSize: 12,
                       color: Theme.of(context).colorScheme.onSurfaceVariant,
@@ -168,7 +200,7 @@ class _ServerListState extends State<ServerList> {
               ),
             ),
             IconButton(
-              tooltip: '重新读取本地台账',
+              tooltip: context.l10n.serverReloadLocal,
               onPressed: c.busy
                   ? null
                   : () async {
@@ -176,11 +208,18 @@ class _ServerListState extends State<ServerList> {
                         await c.refresh();
                         if (context.mounted) {
                           ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('已重新读取本地台账，未查询远端状态')),
+                            SnackBar(
+                              content: Builder(
+                                builder: (context) =>
+                                    Text(context.l10n.serverReloadedLocal),
+                              ),
+                            ),
                           );
                         }
                       } catch (error) {
-                        if (context.mounted) showFailure(context, error);
+                        if (context.mounted) {
+                          showFailure(context, error);
+                        }
                       }
                     },
               icon: const Icon(Icons.refresh_rounded),
@@ -188,7 +227,7 @@ class _ServerListState extends State<ServerList> {
             const SizedBox(width: 3),
             IconButton.filled(
               key: const ValueKey('add-server'),
-              tooltip: '添加服务器',
+              tooltip: context.l10n.serverAdd,
               onPressed: c.canMutate ? () => addServer(context, c) : null,
               style: IconButton.styleFrom(
                 minimumSize: const Size(48, 48),
@@ -206,7 +245,7 @@ class _ServerListState extends State<ServerList> {
           key: const ValueKey('import-cloud-server'),
           onPressed: c.canMutate ? importCloud : null,
           icon: const Icon(Icons.cloud_download_outlined),
-          label: const Text('从面板账户导入'),
+          label: Text(context.l10n.serverImportPanel),
         ),
         if (all.isEmpty && c.records.isEmpty) ...[
           const SizedBox(height: 78),
@@ -225,14 +264,14 @@ class _ServerListState extends State<ServerList> {
             ),
           ),
           const SizedBox(height: 24),
-          const Text(
-            '你的第一台 VPS，\n从这里开始',
+          Text(
+            context.l10n.serverFirstTitle,
             textAlign: TextAlign.center,
             style: TextStyle(fontSize: 23, fontWeight: FontWeight.w700),
           ),
           const SizedBox(height: 14),
           Text(
-            '把机器、费用和连接放在一起。\n无需安装监控程序，也可直接手动记录。',
+            context.l10n.serverFirstDescription,
             textAlign: TextAlign.center,
             style: TextStyle(
               color: Theme.of(context).colorScheme.onSurfaceVariant,
@@ -243,7 +282,7 @@ class _ServerListState extends State<ServerList> {
           FilledButton.icon(
             onPressed: c.canMutate ? () => addServer(context, c) : null,
             icon: const Icon(Icons.add),
-            label: const Text('添加第一台服务器'),
+            label: Text(context.l10n.serverAddFirst),
           ),
           const SizedBox(height: 12),
           TextButton(
@@ -252,21 +291,25 @@ class _ServerListState extends State<ServerList> {
                 : () async {
                     final ok = await confirmAction(
                       context,
-                      title: '载入演示数据？',
-                      message: '将写入 4 条带“演示”标记的本地记录，地址均为保留地址。不会连接服务器。可在各服务器详情中归档这些记录。',
-                      action: '载入演示',
+                      title: LocalizedText(
+                        (l10n) => l10n.serverLoadDemoQuestion,
+                      ),
+                      message: LocalizedText((l10n) => l10n.serverLoadDemoHelp),
+                      action: LocalizedText((l10n) => l10n.serverLoadDemo),
                     );
                     if (ok) {
                       try {
                         await c.mutate(c.store.loadDemo);
                       } catch (error) {
-                        if (context.mounted) showFailure(context, error);
+                        if (context.mounted) {
+                          showFailure(context, error);
+                        }
                       }
                     }
                   },
-            child: const Text('先看看演示数据'),
+            child: Text(context.l10n.serverViewDemo),
           ),
-          const InfoNote('已经有机器？手动记录就能开始。'),
+          InfoNote(context.l10n.serverManualStartHelp),
         ] else ...[
           const SizedBox(height: 22),
           TextField(
@@ -274,12 +317,12 @@ class _ServerListState extends State<ServerList> {
             controller: search,
             onChanged: (value) => c.updateFilters(query: value),
             decoration: InputDecoration(
-              hintText: '搜索名称、地址、厂商、用途或地区',
+              hintText: context.l10n.serverSearchHint,
               prefixIcon: const Icon(Icons.search, size: 21),
               suffixIcon: c.search.isEmpty
                   ? null
                   : IconButton(
-                      tooltip: '清除搜索',
+                      tooltip: context.l10n.serverClearSearch,
                       onPressed: () {
                         search.clear();
                         c.updateFilters(query: '');
@@ -294,9 +337,9 @@ class _ServerListState extends State<ServerList> {
             runSpacing: 6,
             children: [
               ...[
-                (ServerFilter.all, '全部'),
-                (ServerFilter.favorites, '常用'),
-                (ServerFilter.pending, '到期核对'),
+                (ServerFilter.all, context.l10n.serverAll),
+                (ServerFilter.favorites, context.l10n.serverFavorites),
+                (ServerFilter.pending, context.l10n.expiryChecks),
               ].map(
                 (entry) => ChoiceChip(
                   label: Text(entry.$2),
@@ -318,7 +361,12 @@ class _ServerListState extends State<ServerList> {
               ActionChip(
                 avatar: const Icon(Icons.tune, size: 17),
                 label: Text(
-                  '筛选${c.groupFilter != null || c.dueFilter != DueFilter.all ? ' · 已选' : ''}',
+                  context.l10n.serverFilterLabel(
+                    (c.groupFilter != null || c.dueFilter != DueFilter.all
+                            ? context.l10n.serverFilterSelectedSuffix
+                            : '')
+                        .toString(),
+                  ),
                 ),
                 onPressed: filters,
               ),
@@ -353,7 +401,7 @@ class _ServerListState extends State<ServerList> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                '到期待核对',
+                                context.l10n.serverExpiryNeedsCheck,
                                 style: TextStyle(
                                   fontWeight: FontWeight.w700,
                                   color: Theme.of(context)
@@ -363,7 +411,10 @@ class _ServerListState extends State<ServerList> {
                               ),
                               const SizedBox(height: 3),
                               Text(
-                                '$overdue 台已过期 · ${pending.length - overdue} 台 30 天内到期',
+                                context.l10n.serverExpiryCounts(
+                                  (overdue).toString(),
+                                  (pending.length - overdue).toString(),
+                                ),
                                 style: TextStyle(
                                   fontSize: 11,
                                   color: Theme.of(context)
@@ -388,22 +439,28 @@ class _ServerListState extends State<ServerList> {
             ),
           SectionTitle(
             c.filter == ServerFilter.favorites
-                ? '常用服务器'
+                ? context.l10n.serverFavoriteServers
                 : c.filter == ServerFilter.pending
-                ? '到期待核对'
-                : '所有服务器',
+                ? context.l10n.serverExpiryNeedsCheck
+                : context.l10n.serverAllServers,
             action: PopupMenuButton<ServerSort>(
-              tooltip: '排序',
+              tooltip: context.l10n.serverSort,
               initialValue: c.sort,
               onSelected: (value) => c.updateFilters(order: value),
               itemBuilder: (_) => [
-                for (final entry in [
-                  (ServerSort.favorites, '按常用排序'),
-                  (ServerSort.due, '按到期排序'),
-                  (ServerSort.name, '按名称排序'),
-                  (ServerSort.updated, '按更新时间'),
-                ])
-                  PopupMenuItem(value: entry.$1, child: Text(entry.$2)),
+                for (final sort in ServerSort.values)
+                  PopupMenuItem(
+                    value: sort,
+                    child: Builder(
+                      builder: (context) => Text(switch (sort) {
+                        ServerSort.favorites =>
+                          context.l10n.serverSortFavorites,
+                        ServerSort.due => context.l10n.serverSortDue,
+                        ServerSort.name => context.l10n.serverSortName,
+                        ServerSort.updated => context.l10n.serverSortUpdated,
+                      }),
+                    ),
+                  ),
               ],
               child: Padding(
                 padding: const EdgeInsets.symmetric(vertical: 12),
@@ -412,10 +469,11 @@ class _ServerListState extends State<ServerList> {
                   children: [
                     Text(
                       switch (c.sort) {
-                        ServerSort.favorites => '按常用排序',
-                        ServerSort.due => '按到期排序',
-                        ServerSort.name => '按名称排序',
-                        ServerSort.updated => '按更新时间',
+                        ServerSort.favorites =>
+                          context.l10n.serverSortFavorites,
+                        ServerSort.due => context.l10n.serverSortDue,
+                        ServerSort.name => context.l10n.serverSortName,
+                        ServerSort.updated => context.l10n.serverSortUpdated,
                       },
                       style: TextStyle(
                         color: Theme.of(context).colorScheme.primary,
@@ -442,14 +500,18 @@ class _ServerListState extends State<ServerList> {
                     color: Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
                   const SizedBox(height: 12),
-                  Text(all.isEmpty ? '没有未归档服务器' : '没有符合条件的记录'),
-                  const InfoNote('试试调整筛选；已归档记录可在设置中恢复。'),
+                  Text(
+                    all.isEmpty
+                        ? context.l10n.serverNoUnarchived
+                        : context.l10n.serverNoMatches,
+                  ),
+                  InfoNote(context.l10n.serverNoMatchesHelp),
                   TextButton(
                     onPressed: () {
                       search.clear();
                       c.resetFilters();
                     },
-                    child: const Text('清除筛选'),
+                    child: Text(context.l10n.serverClearFilters),
                   ),
                 ],
               ),
@@ -466,9 +528,7 @@ class _ServerListState extends State<ServerList> {
                 ],
               ),
             ),
-          const InfoNote(
-            '显示本地资料和最近一次面板查询结果，不持续监控。\n到期天数按设备日期计算；未来 30 天包含今天及后 29 天。',
-          ),
+          InfoNote(context.l10n.serverListObservationHelp),
         ],
       ],
     );
@@ -485,16 +545,16 @@ class ServerRow extends StatelessWidget {
     final binding = controller.cloud.bindingFor(s.id);
     final days = controller.dueIn(s);
     final due = switch (s.billing) {
-      BillingKind.unknown => '费用待补充',
-      BillingKind.metered => '按量计费',
+      BillingKind.unknown => context.l10n.serverCostsMissing,
+      BillingKind.metered => context.l10n.serverMeteredBilling,
       BillingKind.prepaid =>
         days == null
-            ? '到期日未知'
+            ? context.l10n.serverDueUnknown
             : days < 0
-            ? '已过期 ${-days} 天 · 待核实'
+            ? context.l10n.serverExpiredDays(-days)
             : days == 0
-            ? '今天到期'
-            : '$days 天后到期',
+            ? context.l10n.serverDueToday
+            : context.l10n.serverDueInDays(days),
     };
     final big = MediaQuery.textScalerOf(context).scale(14) > 20;
     return Material(
@@ -558,7 +618,7 @@ class ServerRow extends StatelessWidget {
                       [
                         s.vendor,
                         s.region,
-                        if (s.favorite) '常用',
+                        if (s.favorite) context.l10n.serverFavorites,
                       ].where((e) => e.isNotEmpty).join(' · '),
                       style: TextStyle(
                         color: Theme.of(context).colorScheme.onSurfaceVariant,
@@ -572,7 +632,7 @@ class ServerRow extends StatelessWidget {
                       crossAxisAlignment: WrapCrossAlignment.center,
                       children: [
                         Text(
-                          s.billingLabel,
+                          s.billingLabelFor(context.l10n),
                           style: const TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.w600,
@@ -583,14 +643,14 @@ class ServerRow extends StatelessWidget {
                           warning: days != null && days >= 0 && days < 30,
                           danger: days != null && days < 0,
                         ),
-                        if (s.isDemo) const LedgerBadge('演示'),
+                        if (s.isDemo) LedgerBadge(context.l10n.serverDemo),
                       ],
                     ),
                     const SizedBox(height: 7),
                     Text(
                       binding != null
-                          ? cloudBindingSummary(binding)
-                          : '本地记录 · 未查询运行状态',
+                          ? cloudBindingSummary(binding, l10n: context.l10n)
+                          : context.l10n.serverLocalUnqueried,
                       style: TextStyle(
                         color: Theme.of(context).colorScheme.onSurfaceVariant,
                         fontSize: 10,

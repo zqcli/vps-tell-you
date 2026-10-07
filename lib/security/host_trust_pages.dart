@@ -5,6 +5,8 @@ import '../servers/ledger_controller.dart';
 import 'host_trust.dart';
 import 'security_models.dart';
 import 'security_pages.dart';
+import '../l10n/locale_preference.dart';
+import '../l10n/localized_message.dart';
 
 class HostTrustPage extends StatelessWidget {
   const HostTrustPage({super.key, required this.ledger});
@@ -14,10 +16,10 @@ class HostTrustPage extends StatelessWidget {
     listenable: ledger.security,
     builder: (context, _) => Scaffold(
       appBar: AppBar(
-        title: const Text('已信任的主机'),
+        title: Text(context.l10n.securityTrustedHosts),
         actions: [
           IconButton(
-            tooltip: '核验主机公钥',
+            tooltip: context.l10n.securityVerifyHostKey,
             icon: const Icon(Icons.add),
             onPressed: ledger.security.busy || ledger.security.needsReload
                 ? null
@@ -33,14 +35,10 @@ class HostTrustPage extends StatelessWidget {
       body: ListView(
         padding: const EdgeInsets.all(20),
         children: [
-          const InfoNote('信任绑定主机地址和端口，并记录算法及完整公钥。登录凭据与服务器主机公钥是两件事。'),
+          InfoNote(context.l10n.securityHostTrustNotice),
           SecurityNotice(controller: ledger.security),
           if (ledger.security.hostTrusts.isEmpty)
-            const LedgerCard(
-              child: InfoNote(
-                '尚无已信任主机。可在此录入从厂商控制台或管理员等独立可信渠道取得的公钥，也可在首次 SSH 连接时核对。此页面不会连接服务器。',
-              ),
-            ),
+            LedgerCard(child: InfoNote(context.l10n.securityNoTrustedHosts)),
           for (final pin in ledger.security.hostTrusts)
             Padding(
               padding: const EdgeInsets.only(bottom: 12),
@@ -53,13 +51,16 @@ class HostTrustPage extends StatelessWidget {
                       style: Theme.of(context).textTheme.titleMedium,
                     ),
                     InfoNote(
-                      '${pin.algorithm}\n核验于 ${pin.verifiedAt.toLocal().toString().substring(0, 16)}',
+                      context.l10n.securityHostVerifiedAt(
+                        pin.algorithm,
+                        pin.verifiedAt.toLocal().toString().substring(0, 16),
+                      ),
                     ),
                     SelectableText(pin.fingerprint),
                     const SizedBox(height: 12),
                     ExpansionTile(
                       tilePadding: EdgeInsets.zero,
-                      title: const Text('完整主机公钥'),
+                      title: Text(context.l10n.securityCompleteHostKey),
                       children: [
                         SelectableText('${pin.algorithm} ${pin.publicKey}'),
                       ],
@@ -80,7 +81,7 @@ class HostTrustPage extends StatelessWidget {
                                     ),
                                   ),
                                 ),
-                          child: const Text('重新核实主机'),
+                          child: Text(context.l10n.securityReverifyHost),
                         ),
                         TextButton(
                           onPressed: ledger.security.busy
@@ -88,10 +89,21 @@ class HostTrustPage extends StatelessWidget {
                               : () async {
                                   final confirmed = await confirmAction(
                                     context,
-                                    title: '移除主机信任？',
-                                    message:
-                                        '${pin.host}:${pin.port}\n${pin.fingerprint}\n\n下次连接必须重新核验身份。不会删除服务器或登录凭据。',
-                                    action: '移除信任',
+                                    title: LocalizedText(
+                                      (l10n) =>
+                                          l10n.securityRemoveHostTrustTitle,
+                                    ),
+                                    message: LocalizedText(
+                                      (l10n) =>
+                                          l10n.securityRemoveHostTrustMessage(
+                                            pin.host,
+                                            pin.port,
+                                            pin.fingerprint,
+                                          ),
+                                    ),
+                                    action: LocalizedText(
+                                      (l10n) => l10n.securityRemoveHostTrust,
+                                    ),
                                     dangerous: true,
                                   );
                                   if (confirmed) {
@@ -99,7 +111,7 @@ class HostTrustPage extends StatelessWidget {
                                   }
                                 },
                           child: Text(
-                            '移除信任',
+                            context.l10n.securityRemoveHostTrust,
                             style: TextStyle(
                               color: Theme.of(context).colorScheme.error,
                             ),
@@ -111,7 +123,7 @@ class HostTrustPage extends StatelessWidget {
                 ),
               ),
             ),
-          const InfoNote('若主机密钥变化，必须停止认证并通过独立渠道重新核实。没有“忽略并连接”入口。'),
+          InfoNote(context.l10n.securityHostChangedNotice),
         ],
       ),
     ),
@@ -185,7 +197,9 @@ class _HostTrustFormState extends State<HostTrustForm> {
       if (mounted && request == generation) {
         securityMessage(
           context,
-          error is SecurityFailure ? error.message : '无法读取主机信任资料，请重试',
+          error is SecurityFailure
+              ? error
+              : LocalizedText((l10n) => l10n.securityHostTrustReadFailed),
         );
       }
     } finally {
@@ -199,19 +213,20 @@ class _HostTrustFormState extends State<HostTrustForm> {
       if (didPop) generation++;
     },
     child: Scaffold(
-      appBar: AppBar(title: const Text('核验主机公钥')),
+      appBar: AppBar(title: Text(context.l10n.securityVerifyHostKey)),
       body: ListView(
         padding: const EdgeInsets.all(20),
         children: [
-          const InfoNote(
-            '输入从厂商控制台或管理员等独立可信渠道取得的主机公钥。此页面只校验输入内容并保存本机信任，不会连接服务器。',
-          ),
+          InfoNote(context.l10n.securityHostTrustInputNotice),
           TextField(
             key: const ValueKey('trust-host'),
             controller: host,
             enabled: !busy && widget.existing == null,
             autocorrect: false,
-            decoration: const InputDecoration(labelText: '主机地址'),
+            decoration: InputDecoration(
+              errorMaxLines: 8,
+              labelText: context.l10n.securityHostAddress,
+            ),
           ),
           const SizedBox(height: 16),
           TextField(
@@ -219,13 +234,19 @@ class _HostTrustFormState extends State<HostTrustForm> {
             controller: port,
             enabled: !busy && widget.existing == null,
             keyboardType: TextInputType.number,
-            decoration: const InputDecoration(labelText: '端口'),
+            decoration: InputDecoration(
+              errorMaxLines: 8,
+              labelText: context.l10n.securityPort,
+            ),
           ),
           const SizedBox(height: 16),
           DropdownButtonFormField<String>(
             initialValue: algorithm,
             isExpanded: true,
-            decoration: const InputDecoration(labelText: '主机公钥类型'),
+            decoration: InputDecoration(
+              errorMaxLines: 8,
+              labelText: context.l10n.securityHostKeyType,
+            ),
             items: [
               for (final type in [
                 'ssh-ed25519',
@@ -248,18 +269,21 @@ class _HostTrustFormState extends State<HostTrustForm> {
             maxLines: 5,
             autocorrect: false,
             enableSuggestions: false,
-            decoration: const InputDecoration(
-              labelText: '完整主机公钥',
-              helperText: '公钥行或完整 Base64；不是私钥，也不只是指纹',
-              helperMaxLines: 3,
+            decoration: InputDecoration(
+              errorMaxLines: 8,
+              labelText: context.l10n.securityCompleteHostKey,
+              helperText: context.l10n.securityHostKeyHelp,
+              helperMaxLines: 16,
             ),
           ),
-          const InfoNote(
-            'rsa-sha2-256 / rsa-sha2-512 是签名算法，其 RSA 公钥类型选择 ssh-rsa。只支持结构完整的受支持主机公钥。',
-          ),
+          InfoNote(context.l10n.securityRsaHostKeyNotice),
           FilledButton(
             onPressed: busy ? null : inspect,
-            child: Text(busy ? '校验中…' : '检查并核对指纹'),
+            child: Text(
+              busy
+                  ? context.l10n.securityChecking
+                  : context.l10n.securityCheckFingerprint,
+            ),
           ),
         ],
       ),
@@ -299,17 +323,19 @@ class _HostVerificationPageState extends State<HostVerificationPage> {
           ),
           title: Text(
             changed
-                ? '主机公钥与记录不一致'
+                ? context.l10n.securityHostKeyMismatch
                 : widget.previous == null
-                ? '首次主机核验'
-                : '重新核实主机',
+                ? context.l10n.securityFirstHostVerification
+                : context.l10n.securityReverifyHost,
           ),
         ),
         body: ListView(
           padding: const EdgeInsets.all(20),
           children: [
             LedgerBadge(
-              changed ? '公钥不一致 · 请独立重新核实' : '请先核实主机身份，再保存信任',
+              changed
+                  ? context.l10n.securityHostMismatchBadge
+                  : context.l10n.securityHostVerifyBeforeSave,
               danger: changed,
             ),
             const SizedBox(height: 16),
@@ -318,35 +344,33 @@ class _HostVerificationPageState extends State<HostVerificationPage> {
               style: Theme.of(context).textTheme.headlineSmall,
             ),
             if (widget.previous != null) ...[
-              const SectionTitle('已保存的主机指纹'),
+              SectionTitle(context.l10n.securitySavedHostFingerprint),
               LedgerCard(
                 child: SelectableText(
                   '${widget.previous!.algorithm}\n${widget.previous!.fingerprint}',
                 ),
               ),
             ],
-            const SectionTitle('待核验的主机指纹'),
+            SectionTitle(context.l10n.securityCandidateHostFingerprint),
             LedgerCard(
               child: SelectableText(
                 '${widget.identity.algorithm}\n${widget.identity.fingerprint}',
               ),
             ),
-            const SectionTitle('完整主机公钥'),
+            SectionTitle(context.l10n.securityCompleteHostKey),
             LedgerCard(
               child: SelectableText(
                 '${widget.identity.algorithm} ${widget.identity.publicKey}',
               ),
             ),
-            const InfoNote(
-              '请通过独立渠道核对完整指纹和目标地址。变化可能来自重装，也可能是错误主机或中间人攻击。无法确认时应拒绝。',
-            ),
+            InfoNote(context.l10n.securityHostVerificationWarning),
             if (changed && !reverifying)
               OutlinedButton(
                 onPressed: () => setState(() {
                   reverifying = true;
                   verified = false;
                 }),
-                child: const Text('开始独立重新核实'),
+                child: Text(context.l10n.securityBeginHostReverification),
               ),
             if (!changed || reverifying) ...[
               CheckboxListTile(
@@ -355,7 +379,7 @@ class _HostVerificationPageState extends State<HostVerificationPage> {
                 onChanged: saving
                     ? null
                     : (value) => setState(() => verified = value ?? false),
-                title: const Text('我已通过独立渠道核对主机、端口和完整指纹'),
+                title: Text(context.l10n.securityConfirmHostVerified),
               ),
               FilledButton(
                 onPressed:
@@ -374,19 +398,28 @@ class _HostVerificationPageState extends State<HostVerificationPage> {
                         setState(() => saving = false);
                         if (saved && context.mounted) {
                           Navigator.pop(context);
-                          securityMessage(context, '主机信任已保存；没有发起连接或认证');
+                          securityMessage(
+                            context,
+                            LocalizedText(
+                              (l10n) => l10n.securityHostTrustSaved,
+                            ),
+                          );
                         }
                       },
-                child: Text(changed ? '重新核实并替换信任' : '保存已核验的主机信任'),
+                child: Text(
+                  changed
+                      ? context.l10n.securityReverifyReplaceTrust
+                      : context.l10n.securitySaveVerifiedHostTrust,
+                ),
               ),
             ],
             TextButton(
               onPressed: saving ? null : () => Navigator.pop(context),
-              child: const Text('拒绝并返回'),
+              child: Text(context.l10n.securityRejectBack),
             ),
-            if (saving) const InfoNote('正在保存已确认的信任。完成前暂时不能返回。'),
+            if (saving) InfoNote(context.l10n.securitySavingHostTrust),
             SecurityNotice(controller: widget.ledger.security),
-            const InfoNote('只记录本机信任，当前不会连接服务器。拒绝、取消和返回均不保存，也不发送认证资料。'),
+            InfoNote(context.l10n.securityLocalHostTrustOnly),
           ],
         ),
       ),

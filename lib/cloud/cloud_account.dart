@@ -1,5 +1,8 @@
 import 'dart:convert';
 
+import '../l10n/generated/app_localizations.dart';
+import '../l10n/locale_preference.dart';
+import '../l10n/localized_message.dart';
 import '../servers/server_record.dart';
 import 'cloud_models.dart';
 
@@ -161,26 +164,59 @@ String cloudInstanceKey(CloudSnapshot snapshot, CloudInstance instance) {
 
 /// A closed, non-sensitive error vocabulary; never stringify storage/transport
 /// errors because they can contain credentials, URLs or provider response data.
-class CloudAccountFailure implements Exception {
-  const CloudAccountFailure(this.message);
-  final String message;
+enum _CloudAccountFailureCode {
+  identity,
+  v1Rebind,
+  selection,
+  alias,
+  secret,
+  secretRead,
+  bindingTaken,
+  bindingUnavailable,
+}
+
+class CloudAccountFailure implements Exception, LocalizedMessage {
+  /// Only app-authored safe messages belong here, never raw external errors.
+  const CloudAccountFailure(this._message);
+  final Object _message;
+  String get message => messageFor(defaultLocalizations);
+  @override
+  String messageFor(AppLocalizations l10n) => switch (_message) {
+    _CloudAccountFailureCode.identity => l10n.cloudAccountFailureIdentity,
+    _CloudAccountFailureCode.v1Rebind => l10n.cloudAccountFailureV1Rebind,
+    _CloudAccountFailureCode.selection => l10n.cloudAccountFailureSelection,
+    _CloudAccountFailureCode.alias => l10n.cloudAccountFailureAlias,
+    _CloudAccountFailureCode.secret => l10n.cloudAccountFailureSecret,
+    _CloudAccountFailureCode.secretRead => l10n.cloudAccountFailureSecretRead,
+    _CloudAccountFailureCode.bindingTaken =>
+      l10n.cloudAccountFailureBindingTaken,
+    _CloudAccountFailureCode.bindingUnavailable =>
+      l10n.cloudAccountFailureBindingUnavailable,
+    LocalizedMessage message => message.messageFor(l10n),
+    String message => message,
+    _ => l10n.cloudOperationFailed,
+  };
   @override
   String toString() => message;
-  static const identity = CloudAccountFailure('远端账户或实例身份变化，原关联未更改；请另建账户连接');
+  static const identity = CloudAccountFailure(
+    _CloudAccountFailureCode.identity,
+  );
   static const v1Rebind = CloudAccountFailure(
-    'SolusVM 1 无法证明新凭据仍属于原实例；请明确确认解除旧关联并重新选择导入，旧台账会保留',
+    _CloudAccountFailureCode.v1Rebind,
   );
-  static const selection = CloudAccountFailure('导入列表已变化或选择无效，请重新读取');
-  static const alias = CloudAccountFailure('账户别名需为 1–80 个字符');
-  static const secret = CloudAccountFailure(
-    'API 凭据未能保存到设备安全存储，原授权保持不变；请解锁设备后重试',
+  static const selection = CloudAccountFailure(
+    _CloudAccountFailureCode.selection,
   );
+  static const alias = CloudAccountFailure(_CloudAccountFailureCode.alias);
+  static const secret = CloudAccountFailure(_CloudAccountFailureCode.secret);
   static const secretRead = CloudAccountFailure(
-    '无法读取此账户已保存的 API 凭据，请解锁设备后重试；仍失败时请从账户菜单重新授权',
+    _CloudAccountFailureCode.secretRead,
   );
-  static const bindingTaken = CloudAccountFailure('该实例已关联其他服务器，不能覆盖；请重新读取本地列表');
+  static const bindingTaken = CloudAccountFailure(
+    _CloudAccountFailureCode.bindingTaken,
+  );
   static const bindingUnavailable = CloudAccountFailure(
-    '实例信息暂不可用于关联，请到“面板账户”手动刷新后重新选择',
+    _CloudAccountFailureCode.bindingUnavailable,
   );
 }
 

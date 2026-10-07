@@ -64,3 +64,6 @@ key.properties
 # Workspace-only protocol fixture dependencies.
 .ssh-test-venv/
 __pycache__/
+
+# gen-l10n diagnostic output; catalogs are checked for complete coverage.
+/untranslated_messages.json

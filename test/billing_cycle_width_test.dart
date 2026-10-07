@@ -260,18 +260,24 @@ void main() {
     final option = dropdown.items!.singleWhere((item) => item.value == value);
     await tester.tap(field(id));
     await tester.pumpAndSettle();
-    final label = (option.child as Text).data!;
-    final matchingText = find.text(label);
+    // Inspect the popup's built text: localized options use a Builder so an
+    // already-open route can update its label when the app language changes.
+    final menuOption = find.byWidget(option);
     // Long labels make the small-screen menu scroll. Its last options may
     // not have an element until the popup's own scrollable reaches them.
-    if (matchingText.evaluate().isEmpty) {
+    if (menuOption.evaluate().isEmpty) {
       await tester.scrollUntilVisible(
-        matchingText,
+        menuOption,
         100,
         scrollable: find.byType(Scrollable).last,
       );
     }
-    final menuText = matchingText.last;
+    final menuText = find.descendant(
+      of: menuOption,
+      matching: find.byType(Text),
+    );
+    expect(menuText, findsOneWidget);
+    final label = tester.widget<Text>(menuText).data!;
     await tester.ensureVisible(menuText);
     await tester.pumpAndSettle();
     expect(menuText.hitTestable(), findsOneWidget);

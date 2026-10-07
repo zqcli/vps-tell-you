@@ -1,5 +1,12 @@
 part of 'ledger_store.dart';
 
+/// A non-destructive preference migration. Existing ledgers stay in Chinese;
+/// billing data, IDs, user text, backup v1 and all other defaults are unchanged.
+Future<void> _addLanguageSchema(DatabaseExecutor db) => db.execute(
+  "ALTER TABLE app_settings ADD COLUMN language TEXT NOT NULL DEFAULT 'zh' "
+  "CHECK(language IN ('zh','en','system'))",
+);
+
 Future<void> _addSettingsSchema(DatabaseExecutor db) async {
   await db.execute('''CREATE TABLE app_settings (
     id INTEGER PRIMARY KEY CHECK(id=1),
@@ -24,6 +31,23 @@ Future<void> _addSettingsSchema(DatabaseExecutor db) async {
 }
 
 extension LedgerSettings on LedgerStore {
+  Future<LocalePreference> languagePreference() async =>
+      LocalePreference.fromStorage(
+        (await _db.query(
+          'app_settings',
+          columns: ['language'],
+        )).single['language'],
+      );
+
+  Future<void> saveLanguagePreference(LocalePreference preference) async {
+    final changed = await _db.update('app_settings', {
+      'language': preference.storageValue,
+    }, where: 'id=1');
+    if (changed != 1) {
+      throw StateError('Language preference row is missing');
+    }
+  }
+
   Future<String> themeMode() async =>
       (await _db.query('app_settings')).single['theme_mode'] as String;
 
@@ -70,7 +94,9 @@ extension LedgerSettings on LedgerStore {
         where: 'id = ? AND server_id = ? AND revision = ?',
         whereArgs: [rule.id, rule.serverId, rule.revision],
       );
-      if (changed != 1) throw const LedgerConflict();
+      if (changed != 1) {
+        throw const LedgerConflict();
+      }
     });
   }
 }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../l10n/locale_preference.dart';
 import '../core/app_theme.dart';
 import '../core/value_types.dart';
 import '../servers/ledger_controller.dart';
@@ -14,6 +15,23 @@ class FxPage extends StatefulWidget {
 }
 
 class _FxPageState extends State<FxPage> {
+  bool validationAttempted = false;
+  String? validationLocale;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final locale = context.l10n.localeName;
+    if (validationLocale != null &&
+        validationLocale != locale &&
+        validationAttempted) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) form.currentState?.validate();
+      });
+    }
+    validationLocale = locale;
+  }
+
   final form = GlobalKey<FormState>();
   late final TextEditingController usd, eur, date;
   late String currency;
@@ -39,7 +57,9 @@ class _FxPageState extends State<FxPage> {
   }
 
   Future<void> save() async {
-    if (saving || !form.currentState!.validate()) return;
+    if (saving) return;
+    validationAttempted = true;
+    if (!form.currentState!.validate()) return;
     final fx = FxSettings(
       displayCurrency: currency,
       usdToCny: usd.text.trim().isEmpty ? null : usd.text.trim(),
@@ -65,11 +85,11 @@ class _FxPageState extends State<FxPage> {
       canPop: !saving,
       child: Scaffold(
         appBar: AppBar(
-          title: const Text('币种与参考汇率'),
+          title: Text(context.l10n.financeFxTitle),
           actions: [
             TextButton(
               onPressed: saving ? null : () => Navigator.pop(context),
-              child: const Text('取消'),
+              child: Text(context.l10n.financeCancel),
             ),
           ],
         ),
@@ -80,11 +100,15 @@ class _FxPageState extends State<FxPage> {
             children: [
               if (widget.controller.refreshFailed)
                 RefreshFailureNotice(controller: widget.controller),
-              const InfoNote('仅改变参考折算，原币续费价与历史实付保持不变。不会请求实时汇率。留空表示该汇率未知。'),
+              InfoNote(context.l10n.financeFxScope),
               DropdownButtonFormField<String>(
                 initialValue: currency,
                 isExpanded: true,
-                decoration: const InputDecoration(labelText: '合计显示币种'),
+                itemHeight: null,
+                decoration: InputDecoration(
+                  errorMaxLines: 5,
+                  labelText: context.l10n.financeDisplayCurrency,
+                ),
                 items: Money.currencies
                     .map((c) => DropdownMenuItem(value: c, child: Text(c)))
                     .toList(),
@@ -92,8 +116,8 @@ class _FxPageState extends State<FxPage> {
               ),
               const SizedBox(height: 18),
               for (final entry in [
-                (usd, '1 USD = 多少 CNY', 'fx-usd'),
-                (eur, '1 EUR = 多少 CNY', 'fx-eur'),
+                (usd, context.l10n.financeUsdRate, 'fx-usd'),
+                (eur, context.l10n.financeEurRate, 'fx-eur'),
               ]) ...[
                 TextFormField(
                   key: ValueKey(entry.$3),
@@ -103,15 +127,16 @@ class _FxPageState extends State<FxPage> {
                     decimal: true,
                   ),
                   decoration: InputDecoration(
+                    errorMaxLines: 5,
                     labelText: entry.$2,
-                    hintText: '留空表示汇率未知',
+                    hintText: context.l10n.financeUnknownRateHint,
                   ),
                   validator: (value) {
                     final text = value!.trim();
                     if (text.isEmpty) return null;
                     if (!RegExp(r'^\d{1,9}(\.\d{1,8})?$').hasMatch(text) ||
                         (double.tryParse(text) ?? 0) <= 0) {
-                      return '请输入大于 0 的汇率，最多 8 位小数';
+                      return context.l10n.financeRateError;
                     }
                     return null;
                   },
@@ -122,24 +147,27 @@ class _FxPageState extends State<FxPage> {
                 key: const ValueKey('fx-date'),
                 controller: date,
                 enabled: !saving,
-                decoration: const InputDecoration(
-                  labelText: '汇率参考日期',
+                decoration: InputDecoration(
+                  errorMaxLines: 5,
+                  labelText: context.l10n.financeRateDate,
                   hintText: 'YYYY-MM-DD',
                 ),
                 validator: (v) {
                   final value = LedgerDate.tryParse(v!.trim());
                   return value == null ||
                           value.compareTo(widget.controller.today) > 0
-                      ? '请输入不晚于今天的有效日期'
+                      ? context.l10n.financePastDateError
                       : null;
                 },
               ),
-              const InfoNote(
-                'CNY 为基准，1 CNY = 1 CNY。同币种换算不需要汇率；跨币种缺汇率时只展示可转换部分及覆盖率。',
-              ),
+              InfoNote(context.l10n.financeFxBasis),
               FilledButton(
                 onPressed: saving || !widget.controller.canMutate ? null : save,
-                child: Text(saving ? '正在保存…' : '保存参考汇率'),
+                child: Text(
+                  saving
+                      ? context.l10n.financeSaving
+                      : context.l10n.financeSaveFx,
+                ),
               ),
             ],
           ),

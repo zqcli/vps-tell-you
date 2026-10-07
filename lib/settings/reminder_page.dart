@@ -1,3 +1,6 @@
+import '../l10n/locale_preference.dart';
+import '../l10n/generated/app_localizations.dart';
+
 import 'package:flutter/material.dart';
 
 import '../core/app_theme.dart';
@@ -6,18 +9,28 @@ import '../servers/ledger_controller.dart';
 import 'reminder_rule.dart';
 import 'reminder_scheduler.dart';
 
-String usagePlanLabel(UsagePlan plan) => switch (plan) {
-  UsagePlan.continueUsing => '继续使用',
-  UsagePlan.undecided => '待决定',
-  UsagePlan.stopAtExpiry => '到期不再使用',
-};
+String usagePlanLabel(UsagePlan plan, {AppLocalizations? l10n}) =>
+    switch (plan) {
+      UsagePlan.continueUsing => (l10n ?? defaultLocalizations).usageContinue,
+      UsagePlan.undecided => (l10n ?? defaultLocalizations).usageUndecided,
+      UsagePlan.stopAtExpiry => (l10n ?? defaultLocalizations).usageStop,
+    };
 
 String reminderTime(int minutes) =>
     '${(minutes ~/ 60).toString().padLeft(2, '0')}:${(minutes % 60).toString().padLeft(2, '0')}';
 
-String reminderDaysLabel(Iterable<int> days) => days.isEmpty
-    ? '未选择提醒日期'
-    : days.map((day) => day == 0 ? '到期当天' : '提前 $day 天').join('、');
+String reminderDaysLabel(Iterable<int> days, {AppLocalizations? l10n}) {
+  final messages = l10n ?? defaultLocalizations;
+  return days.isEmpty
+      ? messages.reminderNoDays
+      : days
+            .map(
+              (day) => day == 0
+                  ? messages.reminderOnDueDate
+                  : messages.reminderDaysBefore(day),
+            )
+            .join(messages.localeName.startsWith('zh') ? '、' : ', ');
+}
 
 class NotificationPage extends StatefulWidget {
   const NotificationPage({super.key, required this.controller});
@@ -30,12 +43,16 @@ class _NotificationPageState extends State<NotificationPage> {
   bool requesting = false;
 
   Future<void> request() async {
-    if (requesting) return;
+    if (requesting) {
+      return;
+    }
     setState(() => requesting = true);
     try {
       await widget.controller.reminders.requestPermission();
     } finally {
-      if (mounted) setState(() => requesting = false);
+      if (mounted) {
+        setState(() => requesting = false);
+      }
     }
   }
 
@@ -45,7 +62,7 @@ class _NotificationPageState extends State<NotificationPage> {
     builder: (context, _) {
       final reminders = widget.controller.reminders;
       return Scaffold(
-        appBar: AppBar(title: const Text('通知权限与提醒状态')),
+        appBar: AppBar(title: Text(context.l10n.notificationStatus)),
         body: ListView(
           padding: const EdgeInsets.all(20),
           children: [
@@ -54,41 +71,41 @@ class _NotificationPageState extends State<NotificationPage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    reminders.description,
+                    reminders.descriptionFor(context.l10n),
                     key: const ValueKey('reminder-status'),
                   ),
                   if (reminders.timezoneName != null)
-                    InfoNote('最近安排提醒时使用的时区：${reminders.timezoneName}'),
+                    InfoNote(
+                      context.l10n.reminderLastTimezone(
+                        (reminders.timezoneName).toString(),
+                      ),
+                    ),
                 ],
               ),
             ),
-            const InfoNote(
-              '需同时开启系统通知和服务器提醒。各服务器的提前天数、时间和使用计划可在详情中编辑；未允许通知时仍可保存规则。',
-            ),
+            InfoNote(context.l10n.reminderEnableHelp),
             if (reminders.platform.supported) ...[
               FilledButton(
                 onPressed: requesting ? null : request,
-                child: Text(requesting ? '正在申请…' : '申请系统通知权限'),
+                child: Text(
+                  requesting
+                      ? context.l10n.requestingPermission
+                      : context.l10n.requestNotificationPermission,
+                ),
               ),
-              const InfoNote('已拒绝或关闭通知渠道时，请到设备系统设置中调整；修改后返回应用，重新核对提醒状态。'),
+              InfoNote(context.l10n.notificationPermissionHelp),
             ],
             OutlinedButton(
               onPressed:
                   requesting || reminders.state == ReminderSyncState.syncing
                   ? null
                   : reminders.reconcile,
-              child: const Text('重新核对提醒状态'),
+              child: Text(context.l10n.checkReminderStatus),
             ),
-            const SectionTitle('提醒范围'),
-            const InfoNote(
-              '只提交未来 366 天内已知的到期提醒；过去的提醒时间不补发。iOS 最多排入最近 64 条，Android 最多 256 条，其余显示为未安排。请定期打开应用更新提醒。',
-            ),
-            const InfoNote(
-              '应用回到前台会重新读取权限和设备时区。旅行后请打开应用核对；未打开时已提交的提醒可能仍按旧时区投递。系统节电、专注模式及厂商限制可能延迟或阻止提醒，已安排不代表已经送达。',
-            ),
-            const InfoNote(
-              '提醒内容只包含到期日期和核对提示，不包含服务器名称、地址、账户或金额。不自动付款、不修改厂商续费设置。',
-            ),
+            SectionTitle(context.l10n.reminderCoverage),
+            InfoNote(context.l10n.reminderHorizonHelp),
+            InfoNote(context.l10n.reminderDeliveryHelp),
+            InfoNote(context.l10n.reminderPrivacyHelp),
           ],
         ),
       );
@@ -119,7 +136,9 @@ class _ReminderPageState extends State<ReminderPage> {
 
   Future<void> save() async {
     final rule = draft;
-    if (saving || rule == null) return;
+    if (saving || rule == null) {
+      return;
+    }
     final route = ModalRoute.of(context);
     FocusScope.of(context).unfocus();
     setState(() => saving = true);
@@ -127,7 +146,9 @@ class _ReminderPageState extends State<ReminderPage> {
       await widget.controller.mutate(
         () => widget.controller.store.saveReminderRule(rule),
       );
-      if (!mounted) return;
+      if (!mounted) {
+        return;
+      }
       final messenger = ScaffoldMessenger.of(context);
       // Back/replaced routes remain mounted during transitions. A notification
       // may also push a newer page while SQLite finishes. Never pop that route.
@@ -137,12 +158,20 @@ class _ReminderPageState extends State<ReminderPage> {
         draft = widget.controller.reminderFor(widget.serverId) ?? draft;
       }
       messenger.showSnackBar(
-        const SnackBar(content: Text('提醒规则已保存。请在“设置 / 通知权限”查看系统提醒状态。')),
+        SnackBar(
+          content: Builder(
+            builder: (context) => Text(context.l10n.reminderRulesSaved),
+          ),
+        ),
       );
     } catch (error) {
-      if (mounted) showFailure(context, error);
+      if (mounted) {
+        showFailure(context, error);
+      }
     } finally {
-      if (mounted) setState(() => saving = false);
+      if (mounted) {
+        setState(() => saving = false);
+      }
     }
   }
 
@@ -163,35 +192,39 @@ class _ReminderPageState extends State<ReminderPage> {
         canPop: !saving,
         child: Scaffold(
           appBar: AppBar(
-            title: const Text('本机到期提醒'),
+            title: Text(context.l10n.localExpiryReminders),
             leading: IconButton(
-              tooltip: '返回',
+              tooltip: context.l10n.back,
               icon: const Icon(Icons.arrow_back),
               onPressed: saving
                   ? null
                   : () {
-                      if (!saving) Navigator.pop(context);
+                      if (!saving) {
+                        Navigator.pop(context);
+                      }
                     },
             ),
           ),
           body: rule == null || server == null
-              ? const Center(child: Text('记录不存在，请返回重新读取。'))
+              ? Center(child: Text(context.l10n.recordMissingReload))
               : ListView(
                   padding: const EdgeInsets.all(20),
                   keyboardDismissBehavior:
                       ScrollViewKeyboardDismissBehavior.onDrag,
                   children: [
-                    Text('${server.name} · ${server.dueDate ?? '未填写到期日'}'),
-                    const InfoNote(
-                      '修改后点“保存提醒规则”生效。若启用提醒并选择“到期不再使用”，仍会提醒核对厂商的续费设置。',
+                    Text(
+                      '${server.name} · ${server.dueDate ?? context.l10n.dueDateNotEntered}',
                     ),
-                    if (server.isDemo) const InfoNote('演示数据不会提交真实系统通知。'),
-                    if (server.archived) const InfoNote('已归档记录不会排程提醒。'),
+                    InfoNote(context.l10n.reminderSaveHelp),
+                    if (server.isDemo)
+                      InfoNote(context.l10n.demoNoNotifications),
+                    if (server.archived)
+                      InfoNote(context.l10n.archivedNoReminders),
                     LedgerCard(
                       child: SwitchListTile.adaptive(
                         contentPadding: EdgeInsets.zero,
-                        title: const Text('启用此服务器的提醒'),
-                        subtitle: const Text('仅提醒，不自动续费或取消服务'),
+                        title: Text(context.l10n.enableServerReminders),
+                        subtitle: Text(context.l10n.reminderOnlyHelp),
                         value: rule.enabled,
                         onChanged: editable
                             ? (value) => setState(
@@ -200,14 +233,18 @@ class _ReminderPageState extends State<ReminderPage> {
                             : null,
                       ),
                     ),
-                    const SectionTitle('提前几天'),
+                    SectionTitle(context.l10n.daysBefore),
                     Wrap(
                       spacing: 8,
                       runSpacing: 8,
                       children: [
                         for (final day in ReminderRule.allowedLeadDays)
                           FilterChip(
-                            label: Text(day == 0 ? '当天' : '$day 天'),
+                            label: Text(
+                              day == 0
+                                  ? context.l10n.sameDay
+                                  : context.l10n.dayCount(day),
+                            ),
                             selected: rule.leadDays.contains(day),
                             onSelected: editable
                                 ? (selected) => setState(
@@ -223,7 +260,7 @@ class _ReminderPageState extends State<ReminderPage> {
                           ),
                       ],
                     ),
-                    const SectionTitle('提醒时间'),
+                    SectionTitle(context.l10n.reminderTime),
                     OutlinedButton.icon(
                       icon: const Icon(Icons.schedule),
                       label: Text(reminderTime(rule.minuteOfDay)),
@@ -232,12 +269,6 @@ class _ReminderPageState extends State<ReminderPage> {
                               FocusScope.of(context).unfocus();
                               final time = await showTimePicker(
                                 context: context,
-                                helpText: '选择提醒时间',
-                                cancelText: '取消',
-                                confirmText: '确定',
-                                hourLabelText: '时',
-                                minuteLabelText: '分',
-                                errorInvalidText: '请输入有效时间',
                                 builder: (context, child) => MediaQuery(
                                   data: MediaQuery.of(context)
                                       .copyWith(alwaysUse24HourFormat: true),
@@ -258,10 +289,8 @@ class _ReminderPageState extends State<ReminderPage> {
                             }
                           : null,
                     ),
-                    const InfoNote(
-                      '随设备当前时区。夏令时缺失时间向后顺延，重复时间仅提醒一次；整天被跳过的日期不排程。',
-                    ),
-                    const SectionTitle('我的使用计划'),
+                    InfoNote(context.l10n.reminderDstHelp),
+                    SectionTitle(context.l10n.myUsagePlan),
                     RadioGroup<UsagePlan>(
                       groupValue: rule.usagePlan,
                       onChanged: (value) {
@@ -275,18 +304,24 @@ class _ReminderPageState extends State<ReminderPage> {
                         children: [
                           for (final plan in UsagePlan.values)
                             RadioListTile<UsagePlan>(
-                              title: Text(usagePlanLabel(plan)),
+                              title: Text(
+                                usagePlanLabel(plan, l10n: context.l10n),
+                              ),
                               value: plan,
                               enabled: editable,
                             ),
                         ],
                       ),
                     ),
-                    const InfoNote('使用计划只是本地记录。计划到期停用不会停止厂商扣费，请另行向厂商确认取消续费。'),
-                    const SectionTitle('已保存规则的提醒安排'),
-                    Text(scheduler.description),
+                    InfoNote(context.l10n.usagePlanWarning),
+                    SectionTitle(context.l10n.savedRuleSchedule),
+                    Text(scheduler.descriptionFor(context.l10n)),
                     if (scheduler.state == ReminderSyncState.ready) ...[
-                      Text('本服务器已安排 ${plans.length} 条'),
+                      Text(
+                        context.l10n.serverScheduledCount(
+                          (plans.length).toString(),
+                        ),
+                      ),
                       for (final item in plans)
                         Text(
                           '${item.at.year}-${item.at.month.toString().padLeft(2, '0')}-${item.at.day.toString().padLeft(2, '0')} ${reminderTime(item.at.hour * 60 + item.at.minute)}',
@@ -300,15 +335,19 @@ class _ReminderPageState extends State<ReminderPage> {
                               NotificationPage(controller: controller),
                         ),
                       ),
-                      child: const Text('查看通知权限与覆盖范围'),
+                      child: Text(context.l10n.viewReminderCoverage),
                     ),
                     FilledButton(
                       onPressed: editable ? save : null,
-                      child: Text(saving ? '正在保存…' : '保存提醒规则'),
+                      child: Text(
+                        saving
+                            ? context.l10n.saving
+                            : context.l10n.saveReminderRules,
+                      ),
                     ),
                     TextButton(
                       onPressed: saving ? null : () => Navigator.pop(context),
-                      child: const Text('取消'),
+                      child: Text(context.l10n.cancel),
                     ),
                   ],
                 ),

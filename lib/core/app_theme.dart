@@ -1,3 +1,6 @@
+import '../l10n/locale_preference.dart';
+import '../l10n/localized_message.dart';
+
 import 'package:flutter/material.dart';
 
 abstract final class AppColors {
@@ -204,21 +207,21 @@ class InfoNote extends StatelessWidget {
 
 Future<bool> confirmAction(
   BuildContext context, {
-  required String title,
-  required String message,
-  required String action,
+  required Object title,
+  required Object message,
+  required Object action,
   bool dangerous = false,
 }) async =>
     await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
         scrollable: true,
-        title: Text(title),
-        content: Text(message),
+        title: Text(localizedText(title, context.l10n)),
+        content: Text(localizedText(message, context.l10n)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('取消'),
+            child: Text(context.l10n.cancel),
           ),
           FilledButton(
             style: dangerous
@@ -228,7 +231,7 @@ Future<bool> confirmAction(
                   )
                 : null,
             onPressed: () => Navigator.pop(context, true),
-            child: Text(action),
+            child: Text(localizedText(action, context.l10n)),
           ),
         ],
       ),
@@ -238,28 +241,38 @@ Future<bool> confirmAction(
 void showFailure(
   BuildContext context,
   Object error, {
-  String fallbackMessage = '操作未完成，请重试。已保存的资料仍保留。',
+  Object? fallbackMessage,
 }) {
   // Never render driver errors: they can include SQL or private record values.
-  final message = error is ArgumentError
-      ? error.message.toString()
-      : error.toString().contains('记录已发生变化')
-      ? '记录已发生变化，请返回后重试'
-      : fallbackMessage;
-  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+  ScaffoldMessenger.of(context).showSnackBar(
+    SnackBar(
+      content: Builder(
+        builder: (context) {
+          final message = error is LocalizedMessage
+              ? error.messageFor(context.l10n)
+              : error is ArgumentError
+              ? localizedText(error.message ?? '', context.l10n)
+              : fallbackMessage == null
+              ? context.l10n.operationFailed
+              : localizedText(fallbackMessage, context.l10n);
+          return Text(message);
+        },
+      ),
+    ),
+  );
 }
 
-void showStage(BuildContext context, String title, String detail) {
+void showStage(BuildContext context, Object title, Object detail) {
   showDialog<void>(
     context: context,
     builder: (context) => AlertDialog(
       scrollable: true,
-      title: Text(title),
-      content: Text(detail),
+      title: Text(localizedText(title, context.l10n)),
+      content: Text(localizedText(detail, context.l10n)),
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: const Text('知道了'),
+          child: Text(context.l10n.gotIt),
         ),
       ],
     ),

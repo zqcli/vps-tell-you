@@ -1,3 +1,5 @@
+import '../l10n/locale_preference.dart';
+
 import 'package:flutter/material.dart';
 
 import '../core/app_theme.dart';
@@ -15,8 +17,8 @@ class RefreshFailureNotice extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('写入已保存，显示内容暂未更新'),
-          const InfoNote('请先重新读取本地台账，再继续修改。不要重复提交，原数据不会被清除。'),
+          Text(context.l10n.serverSavedDisplayStale),
+          InfoNote(context.l10n.serverReloadBeforeEditing),
           TextButton(
             onPressed: controller.busy
                 ? null
@@ -26,14 +28,17 @@ class RefreshFailureNotice extends StatelessWidget {
                     } catch (_) {
                       if (context.mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('读取仍未完成，已保存的改动保留。请稍后重新读取。'),
+                          SnackBar(
+                            content: Builder(
+                              builder: (context) =>
+                                  Text(context.l10n.serverReloadStillFailed),
+                            ),
                           ),
                         );
                       }
                     }
                   },
-            child: const Text('重新读取'),
+            child: Text(context.l10n.serverReload),
           ),
         ],
       ),

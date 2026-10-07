@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../l10n/locale_preference.dart';
+import '../l10n/localized_message.dart';
 import '../core/app_theme.dart';
 import '../core/value_types.dart';
 import '../servers/ledger_controller.dart';
@@ -38,8 +40,8 @@ bool incompleteFinance(LedgerController c, ServerRecord s) =>
 
 void showFinanceRules(BuildContext context) => showStage(
   context,
-  '这些数字如何计算',
-  '月费用参考：未到期的预付续费价 ÷ 周期月数，加上按量月估算。到期当天及已过期的预付服务不计入；缺少日期或费用时标记为未知。\n\n剩余价值：按各个已知服务期的未用天数折算当前续费价，包含开始日、不含结束日。尚未开始的整期计整价，已结束的期间计 0；按量付费不适用，资料不足时为未知。它不是可退款金额或成交价。\n\n续费预测：假设继续按当前周期和价格续费。未来 30 天含今天及后 29 天；六个月指本月剩余日期和后五个自然月。已过期项目不补推，不包含按量账单；本地使用计划不会改变预测。\n\n近 30 天实付：包含今天及前 29 天已记录的付款。全部范围保留归档服务器的付款，独立账户账单只计一次；按分组查看时不分摊账户账单。\n\n跨币种缺少汇率时，仅合计可折算的部分，并保留原币小计。先精确求和，再四舍五入到分；参考折算不等于实际扣款。',
+  LocalizedText((l10n) => l10n.financeRulesTitle),
+  LocalizedText((l10n) => l10n.financeRulesBody),
 );
 
 class FinancePage extends StatefulWidget {
@@ -131,14 +133,14 @@ class _FinancePageState extends State<FinancePage> {
         children: [
           Row(
             children: [
-              const Expanded(
+              Expanded(
                 child: Text(
-                  '费用',
+                  context.l10n.financeTitle,
                   style: TextStyle(fontSize: 28, fontWeight: FontWeight.w800),
                 ),
               ),
               IconButton(
-                tooltip: '付款记录',
+                tooltip: context.l10n.financePayments,
                 onPressed: () => Navigator.push<void>(
                   context,
                   MaterialPageRoute(
@@ -149,22 +151,33 @@ class _FinancePageState extends State<FinancePage> {
                 icon: const Icon(Icons.receipt_long_outlined),
               ),
               IconButton(
-                tooltip: '统计口径',
+                tooltip: context.l10n.financeCalculationRules,
                 onPressed: () => showFinanceRules(context),
                 icon: const Icon(Icons.info_outline),
               ),
             ],
           ),
-          const InfoNote('查看月费用参考、剩余价值和已记录付款。'),
+          InfoNote(context.l10n.financeOverview),
           if (c.refreshFailed) RefreshFailureNotice(controller: c),
           DropdownButtonFormField<String>(
             key: ValueKey('finance-group-${groupId ?? 'all'}'),
             initialValue: groupId ?? '*',
             isExpanded: true,
-            decoration: const InputDecoration(labelText: '统计范围'),
+            itemHeight: null,
+            decoration: InputDecoration(labelText: context.l10n.financeScope),
             items: [
-              const DropdownMenuItem(value: '*', child: Text('全部分组')),
-              const DropdownMenuItem(value: '', child: Text('未分组')),
+              DropdownMenuItem(
+                value: '*',
+                child: Builder(
+                  builder: (context) => Text(context.l10n.financeAllGroups),
+                ),
+              ),
+              DropdownMenuItem(
+                value: '',
+                child: Builder(
+                  builder: (context) => Text(context.l10n.financeUngrouped),
+                ),
+              ),
               ...c.groups.map(
                 (g) => DropdownMenuItem(value: g.id, child: Text(g.name)),
               ),
@@ -180,7 +193,10 @@ class _FinancePageState extends State<FinancePage> {
               ),
               icon: const Icon(Icons.currency_exchange, size: 18),
               label: Text(
-                '${c.fx.displayCurrency} 参考 · 手动汇率 ${c.fx.rateDate ?? '未设置'}',
+                context.l10n.financeFxOverview(
+                  c.fx.displayCurrency,
+                  c.fx.rateDate?.toString() ?? context.l10n.financeNotSet,
+                ),
               ),
             ),
           ),
@@ -193,8 +209,8 @@ class _FinancePageState extends State<FinancePage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  '月费用参考',
+                Text(
+                  context.l10n.financeMonthlyReference,
                   style: TextStyle(color: Color(0xFFCAD5E7), fontSize: 12),
                 ),
                 const SizedBox(height: 12),
@@ -207,7 +223,7 @@ class _FinancePageState extends State<FinancePage> {
                 TextButton(
                   onPressed: () => detail(FinanceMetric.inventory),
                   child: Text(
-                    '在管服务器：${records.length} 台  ›',
+                    context.l10n.financeManagedCount(records.length),
                     style: const TextStyle(color: Colors.white),
                   ),
                 ),
@@ -219,8 +235,8 @@ class _FinancePageState extends State<FinancePage> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
-                        '总体剩余价值  ›',
+                      Text(
+                        context.l10n.financeTotalRemaining,
                         style: TextStyle(color: Color(0xFFCAD5E7)),
                       ),
                       FinanceTotalView(
@@ -232,8 +248,8 @@ class _FinancePageState extends State<FinancePage> {
                   ),
                 ),
                 const SizedBox(height: 14),
-                const Text(
-                  '预付续费价摊月 + 按量月估算，不等于本月实付',
+                Text(
+                  context.l10n.financeMonthlyNotPaid,
                   style: TextStyle(fontSize: 12, color: Color(0xFFCAD5E7)),
                 ),
               ],
@@ -241,9 +257,9 @@ class _FinancePageState extends State<FinancePage> {
           ),
           const SizedBox(height: 14),
           _MetricCard(
-            title: '未来 30 天预计续费',
+            title: context.l10n.financeUpcomingRenewals,
             total: renewals,
-            note: '${events.length} 笔预付续费 · 今天及后 29 天',
+            note: context.l10n.financeRenewalEventNote(events.length),
             onTap: () => Navigator.push<void>(
               context,
               MaterialPageRoute(
@@ -253,11 +269,11 @@ class _FinancePageState extends State<FinancePage> {
           ),
           const SizedBox(height: 12),
           _MetricCard(
-            title: '近 30 天已记录实付',
+            title: context.l10n.financeRecentPayments,
             total: paid,
             note: payments.isEmpty
-                ? '尚无已记录付款，不代表没有支出'
-                : '${payments.length} 笔 · 今天及前 29 天',
+                ? context.l10n.financeUnrecordedNotZero
+                : context.l10n.financeRecentPaymentNote(payments.length),
             empty: payments.isEmpty,
             onTap: () => Navigator.push<void>(
               context,
@@ -277,22 +293,24 @@ class _FinancePageState extends State<FinancePage> {
                 onPressed: () => detail(FinanceMetric.incomplete),
                 icon: const Icon(Icons.info_outline),
                 label: Text(
-                  '${records.where((s) => incompleteFinance(c, s)).length} 台费用资料待完善 / 已到期',
+                  context.l10n.financeIncompleteCount(
+                    records.where((s) => incompleteFinance(c, s)).length,
+                  ),
                 ),
               ),
             ),
           SectionTitle(
-            '月费用分布',
+            context.l10n.financeMonthlyDistribution,
             action: Wrap(
               spacing: 6,
               children: [
                 ChoiceChip(
-                  label: const Text('按厂商'),
+                  label: Text(context.l10n.financeByVendor),
                   selected: byVendor,
                   onSelected: (_) => setState(() => byVendor = true),
                 ),
                 ChoiceChip(
-                  label: const Text('按分组'),
+                  label: Text(context.l10n.financeByGroup),
                   selected: !byVendor,
                   onSelected: (_) => setState(() => byVendor = false),
                 ),
@@ -303,7 +321,8 @@ class _FinancePageState extends State<FinancePage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                if (ordered.isEmpty) const InfoNote('添加费用资料后显示分布。'),
+                if (ordered.isEmpty)
+                  InfoNote(context.l10n.financeDistributionEmpty),
                 for (final slice in ordered)
                   Builder(
                     builder: (context) {
@@ -319,7 +338,7 @@ class _FinancePageState extends State<FinancePage> {
                                 .toDouble();
                       final label = byVendor
                           ? slice.key
-                          : c.groupName(slice.key);
+                          : c.groupName(slice.key, l10n: context.l10n);
                       return InkWell(
                         key: ValueKey(
                           'finance-slice-${byVendor ? 'vendor' : 'group'}-${slice.key}',
@@ -328,7 +347,7 @@ class _FinancePageState extends State<FinancePage> {
                           FinanceMetric.monthly,
                           vendor: byVendor ? slice.key : null,
                           sliceGroup: byVendor ? null : slice.key,
-                          label: label,
+                          label: byVendor ? label : null,
                         ),
                         child: Padding(
                           padding: const EdgeInsets.symmetric(vertical: 10),
@@ -336,7 +355,10 @@ class _FinancePageState extends State<FinancePage> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                '$label · ${slice.value.length} 台',
+                                context.l10n.financeSliceLabel(
+                                  label,
+                                  slice.value.length,
+                                ),
                                 style: const TextStyle(
                                   fontWeight: FontWeight.w700,
                                 ),
@@ -362,10 +384,10 @@ class _FinancePageState extends State<FinancePage> {
           ),
           InfoNote(
             groupId == null
-                ? '点击分布查看同一口径的服务器明细。费用资料与续费记录均从服务器详情维护。'
-                : '当前分组不分摊账户级实付。点击分布查看明细。',
+                ? context.l10n.financeDistributionNote
+                : context.l10n.financeGroupDistributionNote,
           ),
-          const SectionTitle('本月起六个月 · 预付续费'),
+          SectionTitle(context.l10n.financeSixMonthTitle),
           LedgerCard(
             child: Column(
               children: [
@@ -388,10 +410,19 @@ class _FinancePageState extends State<FinancePage> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            '${f.month.year} 年 ${f.month.month} 月 · ${f.events.length} 笔',
+                            context.l10n.financeForecastMonth(
+                              f.month.year,
+                              f.month.month,
+                              f.events.length,
+                            ),
                           ),
                           Text(
-                            '${f.total.formatted} ${c.fx.displayCurrency}${f.total.missingFx > 0 ? ' · 缺汇率 ${f.total.missingFx} 项' : ''}${f.total.unknown > 0 ? ' · 金额未知 ${f.total.unknown} 项' : ''}',
+                            context.l10n.financeForecastTotal(
+                              f.total.formatted,
+                              c.fx.displayCurrency,
+                              f.total.missingFx,
+                              f.total.unknown,
+                            ),
                             style: const TextStyle(fontWeight: FontWeight.w700),
                           ),
                           const SizedBox(height: 7),
@@ -414,9 +445,7 @@ class _FinancePageState extends State<FinancePage> {
               ],
             ),
           ),
-          const InfoNote(
-            '按当前续费价和周期预测本月剩余日期及后五个自然月。假设继续续费，使用计划不改变预测；不包含按量账单或已过期项目。',
-          ),
+          InfoNote(context.l10n.financeForecastNote),
         ],
       );
     },
@@ -484,14 +513,14 @@ class FinanceDetailPage extends StatelessWidget {
       return Scaffold(
         appBar: AppBar(
           title: Text(switch (metric) {
-            FinanceMetric.monthly => '月费用明细',
-            FinanceMetric.value => '剩余价值明细',
-            FinanceMetric.inventory => '服务器构成',
-            FinanceMetric.incomplete => '费用与到期核对',
+            FinanceMetric.monthly => context.l10n.financeMonthlyDetail,
+            FinanceMetric.value => context.l10n.financeValueDetail,
+            FinanceMetric.inventory => context.l10n.financeInventoryDetail,
+            FinanceMetric.incomplete => context.l10n.financeIncompleteDetail,
           }),
           actions: [
             IconButton(
-              tooltip: '统计口径',
+              tooltip: context.l10n.financeCalculationRules,
               onPressed: () => showFinanceRules(context),
               icon: const Icon(Icons.info_outline),
             ),
@@ -502,7 +531,13 @@ class FinanceDetailPage extends StatelessWidget {
           children: [
             if (c.refreshFailed) RefreshFailureNotice(controller: c),
             InfoNote(
-              '${label ?? (groupId == null ? '全部分组' : c.groupName(groupId))} · ${records.length} 台未归档服务器',
+              context.l10n.financeDetailScope(
+                label ??
+                    (groupId == null
+                        ? context.l10n.financeAllGroups
+                        : c.groupName(groupId, l10n: context.l10n)),
+                records.length,
+              ),
             ),
             for (final s in records)
               Padding(
@@ -530,30 +565,46 @@ class FinanceDetailPage extends StatelessWidget {
                                 fontWeight: FontWeight.w700,
                               ),
                             ),
-                            Text('${s.vendor} · ${c.groupName(s.groupId)}'),
+                            Text(
+                              '${s.vendor} · ${c.groupName(s.groupId, l10n: context.l10n)}',
+                            ),
                             const SizedBox(height: 10),
                             Text(
-                              '${s.billingLabel} ${s.billing == BillingKind.unknown ? '' : s.currency}',
+                              context.l10n.localeName.startsWith('zh') &&
+                                      s.billing != BillingKind.unknown
+                                  ? '${s.billingLabelFor(context.l10n)} ${s.currency}'
+                                  : s.billingLabelFor(context.l10n),
                             ),
                             Text(
                               amount.known
-                                  ? '${amount.formatted} ${amount.currency}${metric == FinanceMetric.value ? ' 剩余价值' : ' / 月参考'}'
+                                  ? context.l10n.financeAmountMetric(
+                                      amount.formatted,
+                                      amount.currency,
+                                      metric == FinanceMetric.value
+                                          ? 'value'
+                                          : 'monthly',
+                                    )
                                   : s.billing == BillingKind.metered &&
                                         metric == FinanceMetric.value
-                                  ? '按量计费 · 剩余价值不适用'
+                                  ? context.l10n.financeMeteredValueNa
                                   : amount.status == AmountStatus.notApplicable
-                                  ? '已到期，未计入月费用参考'
-                                  : '日期或费用资料不足，金额未知',
+                                  ? context.l10n.financeExpiredMonthlyExcluded
+                                  : context.l10n.financeUnknownAmount,
                             ),
                             Text(
-                              convertedAmount(amount, c.fx),
+                              convertedAmount(amount, c.fx, l10n: context.l10n),
                               style: TextStyle(
                                 color: Theme.of(context)
                                     .colorScheme
                                     .onSurfaceVariant,
                               ),
                             ),
-                            if (s.dueDate != null) Text('到期日：${s.dueDate}'),
+                            if (s.dueDate != null)
+                              Text(
+                                context.l10n.financeDueDateValue(
+                                  s.dueDate.toString(),
+                                ),
+                              ),
                           ],
                         );
                       },
@@ -561,8 +612,8 @@ class FinanceDetailPage extends StatelessWidget {
                   ),
                 ),
               ),
-            if (records.isEmpty) const InfoNote('此范围没有服务器。'),
-            const InfoNote('“—”表示未知或不适用，不代表免费。已知金额为 0 时会显示 0.00。'),
+            if (records.isEmpty) InfoNote(context.l10n.financeNoServersInRange),
+            InfoNote(context.l10n.financeUnknownZeroNote),
           ],
         ),
       );
@@ -604,8 +655,11 @@ class RenewalsPage extends StatelessWidget {
         appBar: AppBar(
           title: Text(
             month == null
-                ? '未来 30 天续费安排'
-                : '${month!.year} 年 ${month!.month} 月续费',
+                ? context.l10n.financeRenewals30Title
+                : context.l10n.financeRenewalsMonthTitle(
+                    month!.year,
+                    month!.month,
+                  ),
           ),
         ),
         body: ListView(
@@ -614,7 +668,12 @@ class RenewalsPage extends StatelessWidget {
             if (c.refreshFailed) RefreshFailureNotice(controller: c),
             LedgerCard(child: FinanceTotalView(total: total)),
             InfoNote(
-              '${events.length} 笔 · ${groupId == null ? '全部分组' : c.groupName(groupId)} · 按当前续费价预测，不代表已付款。',
+              context.l10n.financeRenewalsScopeNote(
+                events.length,
+                groupId == null
+                    ? context.l10n.financeAllGroups
+                    : c.groupName(groupId, l10n: context.l10n),
+              ),
             ),
             for (final e in events)
               Padding(
@@ -638,22 +697,31 @@ class RenewalsPage extends StatelessWidget {
                             fontSize: 18,
                           ),
                         ),
-                        Text('${e.date} · ${e.server.cycleMonths} 个月周期'),
+                        Text(
+                          context.l10n.financeRenewalEventDate(
+                            e.date.toString(),
+                            e.server.cycleMonths,
+                          ),
+                        ),
                         Text('${e.amount.formatted} ${e.amount.currency}'),
-                        Text(convertedAmount(e.amount, c.fx)),
+                        Text(
+                          convertedAmount(e.amount, c.fx, l10n: context.l10n),
+                        ),
                       ],
                     ),
                   ),
                 ),
               ),
-            if (events.isEmpty) const InfoNote('此范围没有已知的预付续费。'),
+            if (events.isEmpty) InfoNote(context.l10n.financeNoKnownRenewals),
             if (expired.isNotEmpty) ...[
-              const SectionTitle('已过期 · 先核实'),
+              SectionTitle(context.l10n.financeExpiredCheck),
               ...expired.map(
                 (s) => ListTile(
                   contentPadding: EdgeInsets.zero,
                   title: Text(s.name),
-                  subtitle: Text('${s.dueDate} 已过期，不推断停机'),
+                  subtitle: Text(
+                    context.l10n.financeExpiredDate(s.dueDate.toString()),
+                  ),
                   trailing: const Icon(Icons.chevron_right),
                   onTap: () => Navigator.push<void>(
                     context,
@@ -664,7 +732,7 @@ class RenewalsPage extends StatelessWidget {
                 ),
               ),
             ],
-            const InfoNote('按量费用在服务器资料中维护月估算，不产生预付续费事件。'),
+            InfoNote(context.l10n.financeMeteredRenewalNote),
           ],
         ),
       );

@@ -1,8 +1,17 @@
+import '../l10n/generated/app_localizations.dart';
+import '../l10n/locale_preference.dart';
+import '../l10n/localized_message.dart';
+
 /// Deliberately contains only a fixed, safe message: never wrap plugin errors,
 /// private key text, passphrases or SQL exception arguments.
-class SecurityFailure implements Exception {
-  const SecurityFailure([this.message = '安全操作未完成，请重试']);
-  final String message;
+class SecurityFailure implements Exception, LocalizedMessage {
+  const SecurityFailure([this.details]);
+  final Object? details;
+  String get message => messageFor(defaultLocalizations);
+  @override
+  String messageFor(AppLocalizations l10n) => details == null
+      ? l10n.securityOperationIncomplete
+      : localizedText(details!, l10n);
   @override
   String toString() => message;
 }

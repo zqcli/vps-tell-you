@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 
 import '../core/app_theme.dart';
+import '../l10n/generated/app_localizations.dart';
+import '../l10n/locale_preference.dart';
+import '../l10n/localized_message.dart';
 import '../servers/ledger_controller.dart';
 import 'cloud_account.dart';
 import 'cloud_widgets.dart';
@@ -23,7 +26,8 @@ class ServerCloudBindingPage extends StatefulWidget {
 
 class _ServerCloudBindingPageState extends State<ServerCloudBindingPage> {
   ServerCloudBindingOptions? _options;
-  String? _accountId, _error;
+  String? _accountId;
+  LocalizedMessage? _error;
   CloudBindingChoice? _selected;
   bool _loading = false,
       _saving = false,
@@ -91,7 +95,9 @@ class _ServerCloudBindingPageState extends State<ServerCloudBindingPage> {
           loaded?.current?.accountId ?? loaded?.accounts.firstOrNull?.id;
       _expired = loaded == null;
       if (loaded == null) {
-        _error = widget.ledger.cloud.error ?? '无法读取本地关联资料，请重试';
+        _error =
+            widget.ledger.cloud.localizedError ??
+            LocalizedText((l10n) => l10n.cloudBindingReadFailed);
       }
     });
     if (loaded != null && _committed && mounted) {
@@ -99,19 +105,23 @@ class _ServerCloudBindingPageState extends State<ServerCloudBindingPage> {
     }
   }
 
-  String _accountName(String id) {
+  String _accountName(String id, {AppLocalizations? l10n}) {
+    final strings = l10n ?? context.l10n;
     final account = _options?.accounts.where((a) => a.id == id).firstOrNull;
-    return account == null ? '面板账户' : '${account.alias} · ${account.endpoint}';
+    return account == null
+        ? strings.cloudAccounts
+        : '${account.alias} · ${account.endpoint}';
   }
 
-  String _instanceName(CloudBindingChoice choice) {
+  String _instanceName(CloudBindingChoice choice, {AppLocalizations? l10n}) {
+    final strings = l10n ?? context.l10n;
     final observation = choice.observation;
     for (final value in [observation.name, observation.hostname]) {
       if (value != null && value.trim().isNotEmpty) return value;
     }
     return observation.serverId == null
-        ? '此账户的单台实例'
-        : '实例 ${observation.serverId}';
+        ? strings.cloudSingleAccountInstance
+        : strings.cloudInstanceFallback(observation.serverId.toString());
   }
 
   bool _same(CloudBindingChoice? a, CloudBindingChoice? b) =>
@@ -140,12 +150,28 @@ class _ServerCloudBindingPageState extends State<ServerCloudBindingPage> {
       setState(() => _confirming = true);
       final confirmed = await confirmAction(
         context,
-        title: unlink ? '解除这台服务器的面板关联？' : '更换这台服务器的面板关联？',
-        message:
-            '${options.server.name}\n当前：${_accountName(options.current!.accountId)} · ${_instanceName(options.current!)}'
-            '${unlink ? '' : '\n更换为：${_accountName(choice!.accountId)} · ${_instanceName(choice)}'}'
-            '\n\n仅修改本地关联，保留服务器资料、硬件、费用、付款、SSH、面板账户及授权。不会操作远端实例或停止扣费。',
-        action: unlink ? '仅解除这台关联' : '确认更换关联',
+        title: LocalizedText(
+          (l10n) => unlink
+              ? l10n.cloudUnlinkServerTitle
+              : l10n.cloudChangeServerTitle,
+        ),
+        message: LocalizedText(
+          (l10n) => l10n.cloudChangeLinkMessage(
+            options.server.name,
+            _accountName(options.current!.accountId, l10n: l10n),
+            _instanceName(options.current!, l10n: l10n),
+            unlink
+                ? ''
+                : l10n.cloudReplacementLink(
+                    _accountName(choice!.accountId, l10n: l10n),
+                    _instanceName(choice, l10n: l10n),
+                  ),
+          ),
+        ),
+        action: LocalizedText(
+          (l10n) =>
+              unlink ? l10n.cloudOnlyUnlinkThis : l10n.cloudConfirmChangeLink,
+        ),
         dangerous: unlink,
       );
       if (!mounted) return;
@@ -166,12 +192,23 @@ class _ServerCloudBindingPageState extends State<ServerCloudBindingPage> {
       _saving = false;
       _committed = saved;
       _expired = !saved;
-      _error = widget.ledger.cloud.error;
+      _error = widget.ledger.cloud.localizedError;
     });
     if (!saved) return;
     if (widget.ledger.cloud.needsReload) return;
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(unlink ? '已解除这台服务器的面板关联' : '已保存面板账户关联')),
+      SnackBar(
+        content: Builder(
+          builder: (context) => Text(
+            localizedText(
+              unlink
+                  ? LocalizedText((l10n) => l10n.cloudServerUnlinked)
+                  : LocalizedText((l10n) => l10n.cloudBindingSaved),
+              context.l10n,
+            ),
+          ),
+        ),
+      ),
     );
     Navigator.pop(context, true);
   }
@@ -188,30 +225,32 @@ class _ServerCloudBindingPageState extends State<ServerCloudBindingPage> {
       return PopScope<bool>(
         canPop: !_saving,
         child: Scaffold(
-          appBar: AppBar(title: const Text('关联面板账户')),
+          appBar: AppBar(title: Text(context.l10n.cloudLinkPanelAccount)),
           body: Center(
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 760),
               child: ListView(
                 padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
                 children: [
-                  const InfoNote(
-                    '这里只使用已保存的 API 返回信息，不会连接面板。没有可选实例或上次读取失败时，请到“面板账户”手动刷新，再返回重新读取本地列表。',
-                  ),
+                  InfoNote(context.l10n.cloudLocalBindingInfo),
                   if (_loading)
                     const Padding(
                       padding: EdgeInsets.all(24),
                       child: Center(child: CircularProgressIndicator()),
                     ),
-                  if (_committed) const CloudNotice('关联改动已保存，请先重新读取资料；不要重复提交。'),
+                  if (_committed)
+                    CloudNotice(context.l10n.cloudBindingCommitted),
                   if (_error != null) CloudNotice(_error!, error: true),
                   if (widget.ledger.refreshFailed)
-                    const CloudNotice('台账显示内容尚未更新，请先重新读取。', error: true),
+                    CloudNotice(
+                      context.l10n.cloudLedgerNotUpdated,
+                      error: true,
+                    ),
                   TextButton.icon(
                     key: const ValueKey('server-cloud-reload'),
                     onPressed: _busy ? null : _load,
                     icon: const Icon(Icons.refresh),
-                    label: const Text('重新读取本地列表'),
+                    label: Text(context.l10n.cloudReloadLocal),
                   ),
                   if (options != null) ...[
                     Text(
@@ -219,9 +258,12 @@ class _ServerCloudBindingPageState extends State<ServerCloudBindingPage> {
                       style: Theme.of(context).textTheme.titleLarge,
                     ),
                     if (options.server.archived || options.server.isDemo)
-                      const CloudNotice('已归档或演示记录不能修改面板关联。', error: true),
+                      CloudNotice(
+                        context.l10n.cloudBindingReadOnly,
+                        error: true,
+                      ),
                     if (current != null) ...[
-                      const SectionTitle('当前关联'),
+                      SectionTitle(context.l10n.cloudCurrentLink),
                       LedgerCard(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -234,15 +276,15 @@ class _ServerCloudBindingPageState extends State<ServerCloudBindingPage> {
                                   ? null
                                   : () => _save(unlink: true),
                               icon: const Icon(Icons.link_off),
-                              label: const Text('解除这台关联'),
+                              label: Text(context.l10n.cloudUnlinkThis),
                             ),
                           ],
                         ),
                       ),
                     ],
-                    const SectionTitle('选择面板账户'),
+                    SectionTitle(context.l10n.cloudSelectAccount),
                     if (options.accounts.isEmpty)
-                      const CloudNotice('还没有已保存的面板账户。请先到“面板账户”添加并验证账户。'),
+                      CloudNotice(context.l10n.cloudNoSavedAccounts),
                     for (final account in options.accounts)
                       ListTile(
                         key: ValueKey('server-cloud-account-${account.id}'),
@@ -267,9 +309,9 @@ class _ServerCloudBindingPageState extends State<ServerCloudBindingPage> {
                               }),
                       ),
                     if (_accountId != null) ...[
-                      const SectionTitle('选择已读取的实例'),
+                      SectionTitle(context.l10n.cloudSelectReadInstance),
                       if (choices?.isEmpty ?? true)
-                        const CloudNotice('这个账户没有已保存的实例信息。请到“面板账户”手动刷新。'),
+                        CloudNotice(context.l10n.cloudNoSavedInstances),
                       for (final choice in choices!)
                         Padding(
                           padding: const EdgeInsets.only(bottom: 10),
@@ -290,18 +332,25 @@ class _ServerCloudBindingPageState extends State<ServerCloudBindingPage> {
                                     choice.observation.ipv4!,
                                   if (choice.observation.projectName != null)
                                     choice.observation.projectName!,
-                                  '读取时间：${cloudTime(choice.observation.observedAt)}',
+                                  context.l10n.cloudReadAt(
+                                    cloudTime(choice.observation.observedAt),
+                                  ),
                                   if (choice.serverId == widget.serverId)
-                                    '当前关联',
+                                    context.l10n.cloudCurrentLink,
                                   if (choice.serverId != null &&
                                       choice.serverId != widget.serverId)
-                                    '已关联：${widget.ledger.byId(choice.serverId!)?.name ?? '其他服务器'} · 不可覆盖',
+                                    context.l10n.cloudAlreadyLinkedTo(
+                                      widget.ledger
+                                              .byId(choice.serverId!)
+                                              ?.name ??
+                                          context.l10n.cloudOtherServer,
+                                    ),
                                   if (choice.missing)
-                                    '本次未返回 · 请到面板账户手动刷新'
+                                    context.l10n.cloudMissingRefresh
                                   else if (choice.stale ||
                                       !_available(choice) &&
                                           choice.serverId == null)
-                                    '上次读取失败 · 请到面板账户手动刷新',
+                                    context.l10n.cloudFailedRefresh,
                                 ].join('\n'),
                               ),
                             ),
@@ -321,14 +370,14 @@ class _ServerCloudBindingPageState extends State<ServerCloudBindingPage> {
                       icon: const Icon(Icons.link),
                       label: Text(
                         _saving
-                            ? '正在保存…'
+                            ? context.l10n.cloudSaving
                             : current == null
-                            ? '保存关联'
-                            : '更换关联',
+                            ? context.l10n.cloudSaveLink
+                            : context.l10n.cloudChangeLink,
                       ),
                     ),
                     const SizedBox(height: 12),
-                    const InfoNote('只修改本地关联；服务器资料、硬件、账务及 SSH 保持原样。'),
+                    InfoNote(context.l10n.cloudLocalLinkBoundary),
                   ],
                 ],
               ),

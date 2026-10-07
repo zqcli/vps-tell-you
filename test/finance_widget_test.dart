@@ -20,6 +20,8 @@ import 'package:vps_tell_you/finance/payment_pages.dart';
 import 'package:vps_tell_you/servers/ledger_controller.dart';
 import 'package:vps_tell_you/servers/server_record.dart';
 
+import 'support/reminder_platform.dart';
+
 const today = LedgerDate(2026, 9, 23);
 CalculationShareData shareFixture({String amount = r'$9999999999.99'}) =>
     CalculationShareData(
@@ -56,7 +58,11 @@ void main() {
       path: '${directory.path}/ledger.db',
       clock: clock,
     );
-    controller = LedgerController(store, clock: clock);
+    controller = LedgerController(
+      store,
+      clock: clock,
+      reminderPlatform: FakeReminderPlatform()..supported = false,
+    );
     await store.saveGroup('Production');
     server = ServerRecord(
       id: 'private-machine-id',

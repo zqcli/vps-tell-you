@@ -9,6 +9,8 @@ import 'connections/snippet_pages.dart';
 import 'connections/tcp_test_page.dart';
 import 'data/ledger_store.dart';
 import 'data/open_ledger.dart';
+import 'l10n/generated/app_localizations.dart';
+import 'l10n/locale_preference.dart';
 import 'finance/finance_page.dart';
 import 'finance/calculator_page.dart';
 import 'servers/ledger_controller.dart';
@@ -130,6 +132,14 @@ class _LedgerAppState extends State<LedgerApp> with WidgetsBindingObserver {
   }
 
   @override
+  void didChangeLocales(List<Locale>? locales) {
+    if (mounted && controller?.languagePreference == LocalePreference.system) {
+      setState(() {});
+      unawaited(controller!.reminders.reconcile());
+    }
+  }
+
+  @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed && controller != null) {
       unawaited(controller!.reminders.reconcile());
@@ -159,6 +169,10 @@ class _LedgerAppState extends State<LedgerApp> with WidgetsBindingObserver {
       'dark' => ThemeMode.dark,
       _ => ThemeMode.system,
     },
+    locale: (controller?.languagePreference ?? LocalePreference.chinese)
+        .resolve(WidgetsBinding.instance.platformDispatcher.locales),
+    localizationsDelegates: AppLocalizations.localizationsDelegates,
+    supportedLocales: AppLocalizations.supportedLocales,
     builder: (context, child) => ColoredBox(
       color: Theme.of(context).scaffoldBackgroundColor,
       child: ValueListenableBuilder<bool>(
@@ -193,24 +207,24 @@ class _LedgerAppState extends State<LedgerApp> with WidgetsBindingObserver {
                               color: AppColors.blue,
                             ),
                             const SizedBox(height: 20),
-                            const Text(
-                              '无法打开本地台账',
+                            Text(
+                              context.l10n.ledgerOpenFailed,
                               style: TextStyle(
                                 fontSize: 22,
                                 fontWeight: FontWeight.w700,
                               ),
                             ),
                             const SizedBox(height: 12),
-                            const Text(
-                              '原有数据仍保留。请检查设备存储空间和文件权限；如果曾使用较新版本，请用相同或更新版本重试。',
+                            Text(
+                              context.l10n.ledgerOpenHelp,
                               textAlign: TextAlign.center,
                             ),
                             const SizedBox(height: 24),
                             FilledButton(
                               onPressed: load,
-                              child: const Text('重试打开'),
+                              child: Text(context.l10n.retryOpen),
                             ),
-                            const InfoNote('请勿清除应用数据或卸载重装来尝试修复。'),
+                            InfoNote(context.l10n.ledgerDoNotErase),
                           ],
                         ),
                 ),
@@ -290,7 +304,12 @@ class _HomeShellState extends State<HomeShell> {
                               ),
                               const SizedBox(height: 4),
                               Text(
-                                ['服务器', '费用', '工具', '设置'][i],
+                                [
+                                  context.l10n.servers,
+                                  context.l10n.costs,
+                                  context.l10n.tools,
+                                  context.l10n.settings,
+                                ][i],
                                 textAlign: TextAlign.center,
                                 style: TextStyle(
                                   fontSize: 11,
@@ -326,11 +345,11 @@ class ToolsPage extends StatelessWidget {
   Widget build(BuildContext context) => ListView(
     padding: const EdgeInsets.all(20),
     children: [
-      const Text(
-        '工具',
+      Text(
+        context.l10n.tools,
         style: TextStyle(fontSize: 28, fontWeight: FontWeight.w800),
       ),
-      const InfoNote('计算费用、连接服务器或管理常用命令。'),
+      InfoNote(context.l10n.toolsDescription),
       Container(
         decoration: BoxDecoration(
           color: Theme.of(context).colorScheme.primaryContainer,
@@ -341,8 +360,8 @@ class ToolsPage extends StatelessWidget {
         ),
         child: SettingRow(
           icon: Icons.calculate_outlined,
-          title: '剩余价值计算器',
-          subtitle: '独立试算或引用服务器资料 · 可导出图片',
+          title: context.l10n.remainingValueCalculator,
+          subtitle: context.l10n.calculatorDescription,
           onTap: () => Navigator.push<void>(
             context,
             MaterialPageRoute(
@@ -351,15 +370,15 @@ class ToolsPage extends StatelessWidget {
           ),
         ),
       ),
-      const SectionTitle('连接与排障'),
+      SectionTitle(context.l10n.connectionsTroubleshooting),
       LedgerCard(
         padding: EdgeInsets.zero,
         child: Column(
           children: [
             SettingRow(
               icon: Icons.terminal,
-              title: 'SSH 快速连接',
-              subtitle: '选择服务器或临时目标 · 核验主机后登录',
+              title: context.l10n.sshQuickConnect,
+              subtitle: context.l10n.sshQuickConnectDescription,
               onTap: () => Navigator.push<void>(
                 context,
                 MaterialPageRoute(
@@ -370,8 +389,8 @@ class ToolsPage extends StatelessWidget {
             const Divider(),
             SettingRow(
               icon: Icons.monitor_heart_outlined,
-              title: 'TCP 连接测试',
-              subtitle: '从当前设备检查单个地址和端口',
+              title: context.l10n.tcpConnectionTest,
+              subtitle: context.l10n.tcpConnectionDescription,
               onTap: () => Navigator.push<void>(
                 context,
                 MaterialPageRoute(builder: (_) => const TcpTestPage()),
@@ -380,8 +399,8 @@ class ToolsPage extends StatelessWidget {
             const Divider(),
             SettingRow(
               icon: Icons.code,
-              title: '命令片段',
-              subtitle: '保存常用命令 · 插入终端草稿后发送',
+              title: context.l10n.commandSnippets,
+              subtitle: context.l10n.commandSnippetsDescription,
               onTap: () => Navigator.push<void>(
                 context,
                 MaterialPageRoute(
@@ -392,13 +411,13 @@ class ToolsPage extends StatelessWidget {
           ],
         ),
       ),
-      const SectionTitle('单机维护'),
+      SectionTitle(context.l10n.singleServerMaintenance),
       LedgerCard(
         padding: EdgeInsets.zero,
         child: SettingRow(
           icon: Icons.power_settings_new,
-          title: '电源控制',
-          subtitle: '通过 SSH 重启或关机 · 操作前核对目标',
+          title: context.l10n.powerControl,
+          subtitle: context.l10n.powerControlDescription,
           onTap: () => Navigator.push<void>(
             context,
             MaterialPageRoute(
@@ -408,7 +427,7 @@ class ToolsPage extends StatelessWidget {
           ),
         ),
       ),
-      const InfoNote('关机后无法通过 SSH 开机，需使用厂商面板。重启或关机不会停止厂商计费。'),
+      InfoNote(context.l10n.powerControlWarning),
     ],
   );
 }

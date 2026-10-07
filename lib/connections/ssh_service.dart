@@ -1,3 +1,7 @@
+import '../l10n/localized_message.dart';
+import '../l10n/locale_preference.dart';
+import '../l10n/generated/app_localizations.dart';
+
 import 'dart:async';
 import 'dart:convert';
 
@@ -41,8 +45,12 @@ class SshTarget {
     required this.credentialId,
     this.port = 22,
     this.serverId,
+    this.isTemporary = false,
   });
   final String name, host, username, credentialId;
+  final bool isTemporary;
+  String displayNameFor(AppLocalizations l10n) =>
+      isTemporary ? l10n.connectionTemporary : name;
   final int port;
   final String? serverId;
   String get label =>
@@ -55,7 +63,7 @@ class SshTarget {
         username.length > 128 ||
         RegExp(r'[\x00-\x20\x7f]').hasMatch(username) ||
         credentialId.isEmpty) {
-      throw const SecurityFailure('请检查 SSH 端口、用户名与凭据');
+      throw SecurityFailure(LocalizedText((l10n) => l10n.sshCheckTarget));
     }
     return SshTarget(
       name: name,
@@ -64,6 +72,7 @@ class SshTarget {
       username: username,
       credentialId: credentialId,
       serverId: serverId,
+      isTemporary: isTemporary,
     );
   }
 }
@@ -90,6 +99,7 @@ typedef KeyPassphraseRequester = Future<String?> Function(
 abstract class SshService extends ChangeNotifier {
   SshStatus get status;
   String? get error;
+  String? errorFor(AppLocalizations l10n) => error;
   SshTarget? get target;
   int get generation;
   bool get connected => status == SshStatus.connected;
@@ -134,7 +144,10 @@ class NativeSshService extends SshService {
   @override
   SshStatus status = SshStatus.idle;
   @override
-  String? error;
+  String? get error => localizedError?.messageFor(defaultLocalizations);
+  LocalizedMessage? localizedError;
+  @override
+  String? errorFor(AppLocalizations l10n) => localizedError?.messageFor(l10n);
   @override
   SshTarget? target;
   @override
@@ -152,18 +165,26 @@ class NativeSshService extends SshService {
 
   bool _active(int epoch) => !_disposed && epoch == generation;
   void _guard(int epoch) {
-    if (!_active(epoch)) throw const SecurityFailure('SSH 连接已取消');
+    if (!_active(epoch)) {
+      throw SecurityFailure(
+        LocalizedText((l10n) => l10n.sshConnectionCancelled),
+      );
+    }
   }
 
   void _setStatus(SshStatus value) {
     status = value;
-    if (!_disposed) notifyListeners();
+    if (!_disposed) {
+      notifyListeners();
+    }
   }
 
-  void _deadline(int epoch, Duration duration, String message) {
+  void _deadline(int epoch, Duration duration, LocalizedMessage message) {
     _phaseTimer?.cancel();
     _phaseTimer = Timer(duration, () {
-      if (_active(epoch)) _fail(message);
+      if (_active(epoch)) {
+        _fail(message);
+      }
     });
   }
 
@@ -173,19 +194,27 @@ class NativeSshService extends SshService {
     required HostVerifier verifyHost,
     KeyPassphraseRequester? requestKeyPassphrase,
   }) async {
-    if (_disposed) return;
+    if (_disposed) {
+      return;
+    }
     _release();
     final epoch = ++generation;
-    error = null;
+    localizedError = null;
     target = null;
     _setStatus(SshStatus.connecting);
     try {
       if (!supportsNativeSsh) {
-        throw const SecurityFailure('浏览器不支持原生 SSH，请使用原生应用');
+        throw SecurityFailure(
+          LocalizedText((l10n) => l10n.sshBrowserUnsupported),
+        );
       }
       final next = requested.normalized();
       target = next;
-      _deadline(epoch, authTimeout, '读取 SSH 凭据超时');
+      _deadline(
+        epoch,
+        authTimeout,
+        LocalizedText((l10n) => l10n.sshCredentialReadTimeout),
+      );
       final credential = await security.loadSshCredential(
         next.credentialId,
         isCancelled: () => !_active(epoch),
@@ -197,24 +226,42 @@ class NativeSshService extends SshService {
         if (SSHKeyPair.isEncryptedPem(credential.secret) &&
             (passphrase == null || passphrase.isEmpty)) {
           if (requestKeyPassphrase == null) {
-            throw const SecurityFailure('此私钥需要解密口令，请重新连接并输入');
+            throw SecurityFailure(
+              LocalizedText((l10n) => l10n.sshKeyNeedsPassphrase),
+            );
           }
-          _deadline(epoch, verificationTimeout, '输入私钥口令超时，未进行连接');
+          _deadline(
+            epoch,
+            verificationTimeout,
+            LocalizedText((l10n) => l10n.sshPassphraseInputTimeout),
+          );
           passphrase = await requestKeyPassphrase(credential.metadata.name);
           _guard(epoch);
           if (passphrase == null || passphrase.isEmpty) {
-            throw const SecurityFailure('已取消私钥口令输入，未进行连接');
+            throw SecurityFailure(
+              LocalizedText((l10n) => l10n.sshPassphraseCancelled),
+            );
           }
           if (passphrase.length > 4096) {
-            throw const SecurityFailure('私钥口令超出长度限制');
+            throw SecurityFailure(
+              LocalizedText((l10n) => l10n.sshPassphraseTooLong),
+            );
           }
         }
-        _deadline(epoch, authTimeout, '私钥解密超时，未进行连接');
+        _deadline(
+          epoch,
+          authTimeout,
+          LocalizedText((l10n) => l10n.sshKeyDecryptionTimeout),
+        );
         key = await compute(_parseCredentialKey, (credential, passphrase));
         passphrase = null;
       }
       _guard(epoch);
-      _deadline(epoch, connectTimeout, 'SSH TCP 连接超时');
+      _deadline(
+        epoch,
+        connectTimeout,
+        LocalizedText((l10n) => l10n.sshTcpTimeout),
+      );
       final connection = SshSocketConnection(next.host, next.port);
       _connection = connection;
       final native = await connection.socket;
@@ -223,7 +270,11 @@ class NativeSshService extends SshService {
         return;
       }
       final socket = CapturedSshSocket(native);
-      _deadline(epoch, handshakeTimeout, 'SSH 握手超时');
+      _deadline(
+        epoch,
+        handshakeTimeout,
+        LocalizedText((l10n) => l10n.sshHandshakeTimeout),
+      );
       final signingKey = key;
       var authAllowed = false;
       Future<void> authGuard() async {
@@ -231,11 +282,15 @@ class NativeSshService extends SshService {
         if (!authAllowed ||
             _verification?.cancelled != false ||
             !await security.isCredentialCurrent(credential.metadata)) {
-          throw const SecurityFailure('主机核验或凭据已变化，认证已阻止');
+          throw SecurityFailure(
+            LocalizedText((l10n) => l10n.sshIdentityChanged),
+          );
         }
         _guard(epoch);
         if (_verification?.cancelled != false) {
-          throw const SecurityFailure('SSH 核验已取消');
+          throw SecurityFailure(
+            LocalizedText((l10n) => l10n.sshVerificationCancelled),
+          );
         }
       }
 
@@ -259,7 +314,9 @@ class NativeSshService extends SshService {
           _verification = attempt;
           final trust = await attempt.check();
           _guard(epoch);
-          if (attempt.cancelled) return false;
+          if (attempt.cancelled) {
+            return false;
+          }
           if (trust != HostTrustStatus.trusted) {
             final previous = await security.store.hostTrust(
               next.host,
@@ -267,7 +324,11 @@ class NativeSshService extends SshService {
             );
             _guard(epoch);
             _setStatus(SshStatus.verifying);
-            _deadline(epoch, verificationTimeout, '主机核验超时，未进行认证');
+            _deadline(
+              epoch,
+              verificationTimeout,
+              LocalizedText((l10n) => l10n.sshVerificationTimeout),
+            );
             final accepted = await verifyHost(
               HostVerificationRequest(
                 identity: identity,
@@ -280,21 +341,35 @@ class NativeSshService extends SshService {
               attempt.reject();
               return false;
             }
-            if (!await attempt.confirm(expected: previous)) return false;
+            if (!await attempt.confirm(expected: previous)) {
+              return false;
+            }
             _guard(epoch);
           }
           final permitted = await attempt.authenticate(() async {
             if (!await security.isCredentialCurrent(credential.metadata)) {
-              throw const SecurityFailure('凭据已变化，请重新连接');
+              throw SecurityFailure(
+                LocalizedText((l10n) => l10n.sshCredentialChanged),
+              );
             }
             _guard(epoch);
-            if (attempt.cancelled) throw const SecurityFailure('SSH 核验已取消');
+            if (attempt.cancelled) {
+              throw SecurityFailure(
+                LocalizedText((l10n) => l10n.sshVerificationCancelled),
+              );
+            }
             authAllowed = true;
           });
           _guard(epoch);
-          if (!permitted || attempt.cancelled) return false;
+          if (!permitted || attempt.cancelled) {
+            return false;
+          }
           _setStatus(SshStatus.authenticating);
-          _deadline(epoch, authTimeout, 'SSH 认证超时');
+          _deadline(
+            epoch,
+            authTimeout,
+            LocalizedText((l10n) => l10n.sshAuthenticationTimeout),
+          );
           return true;
         },
         identities: signingKey == null
@@ -325,7 +400,11 @@ class NativeSshService extends SshService {
       );
       await client.authenticated;
       _guard(epoch);
-      _deadline(epoch, sessionTimeout, 'SSH 终端开启超时');
+      _deadline(
+        epoch,
+        sessionTimeout,
+        LocalizedText((l10n) => l10n.sshTerminalOpenTimeout),
+      );
       final session = await client.shell(
         pty: SSHPtyConfig(width: _columns, height: _rows),
       );
@@ -339,7 +418,9 @@ class NativeSshService extends SshService {
         session.stdout,
         session.stderr,
         onData: (text) {
-          if (_active(epoch)) _output.add(text);
+          if (_active(epoch)) {
+            _output.add(text);
+          }
         },
       );
       unawaited(
@@ -355,36 +436,42 @@ class NativeSshService extends SshService {
       if (_active(epoch)) {
         _fail(
           problem is SecurityFailure
-              ? problem.message
+              ? problem
               : status == SshStatus.authenticating
-              ? 'SSH 认证失败，请检查用户名和凭据'
+              ? LocalizedText((l10n) => l10n.sshAuthenticationFailed)
               : status == SshStatus.verifying
-              ? '主机未获信任，未进行认证'
-              : 'SSH 连接未完成，请检查地址、网络与服务',
+              ? LocalizedText((l10n) => l10n.sshHostNotTrusted)
+              : LocalizedText((l10n) => l10n.sshConnectionIncomplete),
         );
       }
     }
   }
 
   Future<void> _finishRemoteClose(int epoch) async {
-    if (!_active(epoch) || !connected) return;
+    if (!_active(epoch) || !connected) {
+      return;
+    }
     _draining = true;
     await _sessionOutput?.done;
-    if (_active(epoch)) _remoteClosed(epoch);
+    if (_active(epoch)) {
+      _remoteClosed(epoch);
+    }
   }
 
   void _remoteClosed(int epoch) {
-    if (!_active(epoch)) return;
+    if (!_active(epoch)) {
+      return;
+    }
     _release();
     generation++;
-    error = 'SSH 会话已结束；命令是否完成请在重连后核实';
+    localizedError = LocalizedText((l10n) => l10n.sshSessionEnded);
     _setStatus(SshStatus.disconnected);
   }
 
-  void _fail(String message) {
+  void _fail(LocalizedMessage message) {
     _release();
     generation++;
-    error = message;
+    localizedError = message;
     _setStatus(SshStatus.failed);
   }
 
@@ -404,7 +491,7 @@ class NativeSshService extends SshService {
     try {
       _session?.write(Uint8List.fromList(utf8.encode(value)));
     } catch (_) {
-      _fail('SSH 输入发送未确认；请重连后核实，避免重复执行');
+      _fail(LocalizedText((l10n) => l10n.sshInputUnconfirmed));
     }
   }
 
@@ -416,7 +503,7 @@ class NativeSshService extends SshService {
       try {
         _session?.resizeTerminal(_columns, _rows);
       } catch (_) {
-        _fail('SSH 终端大小调整失败，请重连');
+        _fail(LocalizedText((l10n) => l10n.sshResizeFailed));
       }
     }
   }
@@ -455,7 +542,9 @@ class NativeSshService extends SshService {
           : PowerResult.failed;
     } catch (_) {
       // A timed-out channel must never submit a delayed exec later.
-      if (_active(expectedGeneration)) disconnect();
+      if (_active(expectedGeneration)) {
+        disconnect();
+      }
       return PowerResult.unknown;
     } finally {
       command?.close();
@@ -474,23 +563,29 @@ class NativeSshService extends SshService {
     _session = null;
     final client = _client;
     _client = null;
-    if (client != null) unawaited(client.close().catchError((Object _) {}));
+    if (client != null) {
+      unawaited(client.close().catchError((Object _) {}));
+    }
     _connection?.cancel();
     _connection = null;
   }
 
   @override
   void disconnect() {
-    if (_disposed) return;
+    if (_disposed) {
+      return;
+    }
     _release();
     generation++;
-    error = null;
+    localizedError = null;
     _setStatus(SshStatus.disconnected);
   }
 
   @override
   void dispose() {
-    if (_disposed) return;
+    if (_disposed) {
+      return;
+    }
     _disposed = true;
     generation++;
     _release();
@@ -509,7 +604,9 @@ SSHKeyPair _parseCredentialKey((SshCredential, String?) input) {
   );
   if (identity.algorithm != credential.metadata.keyAlgorithm ||
       identity.fingerprint != credential.metadata.fingerprint) {
-    throw const SecurityFailure('私钥与已保存的公钥信息不一致，请重新导入私钥后再连接');
+    throw SecurityFailure(
+      LocalizedText((l10n) => l10n.sshPrivatePublicMismatch),
+    );
   }
   return key;
 }

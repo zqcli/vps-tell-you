@@ -3,6 +3,9 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 
 import '../data/ledger_store.dart';
+import '../l10n/generated/app_localizations.dart';
+import '../l10n/locale_preference.dart';
+import '../l10n/localized_message.dart';
 import '../security/secret_store.dart';
 import '../servers/server_record.dart';
 import '../servers/server_resources.dart';
@@ -51,7 +54,9 @@ class CloudController extends ChangeNotifier {
   final CloudAdapterFactory adapterFactory;
   List<CloudAccount> accounts = const [];
   List<CloudBinding> bindings = const [];
-  String? error;
+  LocalizedMessage? localizedError;
+  String? get error => errorFor(defaultLocalizations);
+  String? errorFor(AppLocalizations l10n) => localizedError?.messageFor(l10n);
   bool needsReload = false;
   int cleanupCount = 0;
   bool get cleanupPending => cleanupCount > 0;
@@ -112,14 +117,14 @@ class CloudController extends ChangeNotifier {
   Future<bool> initialize() => reload();
   Future<bool> reload() async {
     if (_disposed) return false;
-    error = null;
+    localizedError = null;
     try {
       await readMetadata();
       _notify();
       return true;
     } catch (_) {
       needsReload = true;
-      error = '无法读取面板账户资料，请重试';
+      localizedError = LocalizedText((l10n) => l10n.cloudMetadataReadFailed);
       _notify();
       return false;
     }
@@ -143,18 +148,18 @@ class CloudController extends ChangeNotifier {
       await readMetadata();
     } catch (_) {
       needsReload = true;
-      error = '已保存，但资料重读失败；请重读后再修改';
+      localizedError = LocalizedText((l10n) => l10n.cloudSavedReloadFailed);
     }
   }
 
   void _failed(Object problem) {
-    error = problem is CloudFailure
-        ? problem.message
+    localizedError = problem is CloudFailure
+        ? problem
         : problem is CloudAccountFailure
-        ? problem.message
+        ? problem
         : problem is LedgerConflict
-        ? '面板账户资料已变化，请重新读取后重试'
-        : '面板账户操作未完成，请重试';
+        ? LocalizedText((l10n) => l10n.cloudAccountConflict)
+        : LocalizedText((l10n) => l10n.cloudOperationFailed);
   }
 
   Future<CloudVerification?> verifyConnection({
@@ -170,7 +175,7 @@ class CloudController extends ChangeNotifier {
     _verificationCancellation = cancellation;
     _verificationAccountId = existing?.id;
     _verifying = true;
-    error = null;
+    localizedError = null;
     _notify();
     try {
       _platform();
@@ -256,7 +261,7 @@ class CloudController extends ChangeNotifier {
     final selection = Set<String>.of(selectedInstanceKeys);
     String? reservedRef;
     _mutating = true;
-    error = null;
+    localizedError = null;
     _notify();
     try {
       _active(cancellation);
@@ -276,10 +281,16 @@ class CloudController extends ChangeNotifier {
       }
       if (verification.provider == CloudProvider.solusVm1 &&
           selection.isNotEmpty) {
-        final problem =
-            v1Resources?.validate(requireComplete: true) ??
-            (v1Resources == null ? '请补齐六项硬件信息后导入；未知项目请先向厂商确认' : null);
-        if (problem != null) throw CloudAccountFailure(problem);
+        if (v1Resources == null ||
+            v1Resources.validate(requireComplete: true) != null) {
+          throw CloudAccountFailure(
+            LocalizedText(
+              (l10n) =>
+                  v1Resources?.validate(requireComplete: true, l10n: l10n) ??
+                  l10n.cloudCompleteResources,
+            ),
+          );
+        }
       }
       final credentials = verification._credentials;
       if (credentials == null) {
@@ -346,7 +357,7 @@ class CloudController extends ChangeNotifier {
     cancelAccount(account.id);
     final cancellation = CloudCancellation();
     _reads[account.id] = cancellation;
-    error = null;
+    localizedError = null;
     _notify();
     CloudAccount? expected;
     try {
@@ -407,7 +418,7 @@ class CloudController extends ChangeNotifier {
   }) async {
     if (_disposed || _mutating || needsReload) return false;
     _mutating = true;
-    error = null;
+    localizedError = null;
     _notify();
     final cancellation = CloudCancellation();
     cancelAccount(inventory.account.id);
@@ -438,7 +449,7 @@ class CloudController extends ChangeNotifier {
     if (_disposed || _mutating || needsReload) return false;
     cancelAccount(account.id);
     _mutating = true;
-    error = null;
+    localizedError = null;
     _notify();
     try {
       await store.renameCloudAccount(account, alias);
@@ -459,7 +470,7 @@ class CloudController extends ChangeNotifier {
     String serverId,
   ) async {
     if (_disposed || busy || needsReload) return null;
-    error = null;
+    localizedError = null;
     try {
       return await store.serverCloudBindingOptions(serverId);
     } catch (problem) {
@@ -477,7 +488,7 @@ class CloudController extends ChangeNotifier {
   }) async {
     if (_disposed || busy || needsReload) return false;
     _mutating = true;
-    error = null;
+    localizedError = null;
     _notify();
     try {
       await store.setServerCloudBinding(
@@ -501,7 +512,7 @@ class CloudController extends ChangeNotifier {
   Future<bool> unbindAccount(CloudAccount account) async {
     if (_disposed || needsReload) return false;
     cancelAccount(account.id);
-    error = null;
+    localizedError = null;
     try {
       await store.unbindCloudAccount(account);
       await _cleanup([account.secretRef]);
@@ -589,15 +600,17 @@ class CloudController extends ChangeNotifier {
   Future<bool> retryCleanup() async {
     if (_disposed || busy) return false;
     _mutating = true;
-    error = null;
+    localizedError = null;
     _notify();
     try {
       await _cleanup(await store.pendingSecretCleanup());
       await readMetadata();
-      if (cleanupPending) error = '秘密清理尚未完成，可稍后重试';
+      if (cleanupPending) {
+        localizedError = LocalizedText((l10n) => l10n.cloudCleanupIncomplete);
+      }
       return !cleanupPending;
     } catch (_) {
-      error = '无法读取清理状态，请重试';
+      localizedError = LocalizedText((l10n) => l10n.cloudCleanupStatusFailed);
       return false;
     } finally {
       _mutating = false;

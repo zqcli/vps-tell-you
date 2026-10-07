@@ -139,6 +139,7 @@ void main() {
       await add('v6-cloud');
       final db = await raw();
       await db.execute('ALTER TABLE servers DROP COLUMN resources_json');
+      await db.execute('ALTER TABLE app_settings DROP COLUMN language');
       await db.setVersion(6);
       final tables = [
         'servers',
@@ -175,6 +176,12 @@ void main() {
           for (final row in after) {
             expect(row['resources_json'], isNull);
             row.remove('resources_json');
+          }
+        }
+        if (table == 'app_settings') {
+          for (final row in after) {
+            expect(row['language'], 'zh');
+            row.remove('language');
           }
         }
         expect(after, before[table], reason: table);

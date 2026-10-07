@@ -1,3 +1,5 @@
+import '../l10n/locale_preference.dart';
+import '../l10n/generated/app_localizations.dart';
 import '../core/value_types.dart';
 import '../servers/server_record.dart';
 
@@ -122,15 +124,18 @@ class FxSettings {
         : null;
   }
 
-  String? validate() {
-    if (!Money.currencies.contains(displayCurrency)) return '不支持的展示币种';
+  String? validate({AppLocalizations? l10n}) {
+    final messages = l10n ?? defaultLocalizations;
+    if (!Money.currencies.contains(displayCurrency)) {
+      return messages.financeUnsupportedCurrency;
+    }
     if ((usdToCny != null && parseRate(usdToCny) == null) ||
         (eurToCny != null && parseRate(eurToCny) == null)) {
-      return '汇率需为正数，最多 9 位整数和 8 位小数';
+      return messages.financeInvalidRate;
     }
     if ((usdToCny != null || eurToCny != null) &&
         (rateDate == null || !rateDate!.isValid)) {
-      return '请填写手动汇率日期';
+      return messages.financeMissingRateDate;
     }
     return null;
   }

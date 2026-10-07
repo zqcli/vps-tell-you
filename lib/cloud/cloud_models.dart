@@ -1,3 +1,7 @@
+import '../l10n/generated/app_localizations.dart';
+import '../l10n/locale_preference.dart';
+import '../l10n/localized_message.dart';
+
 enum CloudProvider { solusVm1, solusVm2 }
 
 enum CloudPower { running, stopped, unknown }
@@ -21,25 +25,28 @@ enum CloudFailureKind {
 }
 
 /// Never includes request URLs, credentials, remote bodies or transport errors.
-class CloudFailure implements Exception {
+class CloudFailure implements Exception, LocalizedMessage {
   const CloudFailure(this.kind);
   final CloudFailureKind kind;
-  String get message => switch (kind) {
-    CloudFailureKind.invalidEndpoint => '请输入 HTTPS 面板首页地址，不含登录信息、查询参数或 API 路径',
-    CloudFailureKind.invalidCredentials => '请填写该模板对应的有效 API 凭据',
-    CloudFailureKind.unauthorized => 'API 凭据未通过验证，请检查凭据或重新授权',
-    CloudFailureKind.apiRejected => '面板拒绝 API 读取，请检查凭据、API 开放情况与服务状态',
-    CloudFailureKind.forbidden => '面板拒绝读取，请检查 API 权限与服务商设置',
-    CloudFailureKind.rateLimited => '面板请求过于频繁，请稍后手动重试',
-    CloudFailureKind.unavailable => '面板暂时无法提供 API 读取服务',
-    CloudFailureKind.connection => '连接失败，请检查网络、面板地址与 HTTPS 证书',
-    CloudFailureKind.timeout => '读取超时，保留上次读取的信息；请稍后重试',
-    CloudFailureKind.cancelled => '读取已取消',
-    CloudFailureKind.redirect => '面板返回重定向，已停止以保护凭据；请核对面板地址',
-    CloudFailureKind.invalidResponse => '面板响应不符合读取协议，未更新本地资料',
-    CloudFailureKind.responseTooLarge => '面板响应超过安全大小限制',
-    CloudFailureKind.inventoryTooLarge => '实例或分页数量超过本次读取限制，未导入不完整列表',
-    CloudFailureKind.unsupportedPlatform => '此预览平台不接受真实 API 凭据，请使用原生应用',
+  String get message => messageFor(defaultLocalizations);
+  @override
+  String messageFor(AppLocalizations l10n) => switch (kind) {
+    CloudFailureKind.invalidEndpoint => l10n.cloudFailureInvalidEndpoint,
+    CloudFailureKind.invalidCredentials => l10n.cloudFailureInvalidCredentials,
+    CloudFailureKind.unauthorized => l10n.cloudFailureUnauthorized,
+    CloudFailureKind.apiRejected => l10n.cloudFailureApiRejected,
+    CloudFailureKind.forbidden => l10n.cloudFailureForbidden,
+    CloudFailureKind.rateLimited => l10n.cloudFailureRateLimited,
+    CloudFailureKind.unavailable => l10n.cloudFailureUnavailable,
+    CloudFailureKind.connection => l10n.cloudFailureConnection,
+    CloudFailureKind.timeout => l10n.cloudFailureTimeout,
+    CloudFailureKind.cancelled => l10n.cloudFailureCancelled,
+    CloudFailureKind.redirect => l10n.cloudFailureRedirect,
+    CloudFailureKind.invalidResponse => l10n.cloudFailureInvalidResponse,
+    CloudFailureKind.responseTooLarge => l10n.cloudFailureResponseTooLarge,
+    CloudFailureKind.inventoryTooLarge => l10n.cloudFailureInventoryTooLarge,
+    CloudFailureKind.unsupportedPlatform =>
+      l10n.cloudFailureUnsupportedPlatform,
   };
   @override
   String toString() => message;

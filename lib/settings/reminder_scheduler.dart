@@ -1,3 +1,6 @@
+import '../l10n/generated/app_localizations.dart';
+import '../l10n/locale_preference.dart';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_timezone/flutter_timezone.dart';
@@ -27,6 +30,7 @@ abstract interface class ReminderPlatform {
 class NativeReminderPlatform implements ReminderPlatform {
   NativeReminderPlatform({this.onOpen});
   final void Function(String serverId)? onOpen;
+  AppLocalizations l10n = defaultLocalizations;
   final _plugin = FlutterLocalNotificationsPlugin();
   Future<void>? _initializing;
   static const channelId = 'vps_expiry_checks';
@@ -46,7 +50,9 @@ class NativeReminderPlatform implements ReminderPlatform {
       });
 
   Future<void> _start() async {
-    if (!supported) return;
+    if (!supported) {
+      return;
+    }
     await _plugin.initialize(
       settings: const InitializationSettings(
         android: AndroidInitializationSettings('ic_notification'),
@@ -58,21 +64,12 @@ class NativeReminderPlatform implements ReminderPlatform {
       ),
       onDidReceiveNotificationResponse: (response) {
         final id = response.payload;
-        if (id != null && id.isNotEmpty) onOpen?.call(id);
+        if (id != null && id.isNotEmpty) {
+          onOpen?.call(id);
+        }
       },
     );
-    final android = _plugin
-        .resolvePlatformSpecificImplementation<
-          AndroidFlutterLocalNotificationsPlugin
-        >();
-    await android?.createNotificationChannel(
-      const AndroidNotificationChannel(
-        channelId,
-        '到期核对',
-        description: '本地到期提醒，不自动续费或付款',
-        importance: Importance.defaultImportance,
-      ),
-    );
+    await _updateChannel();
     final launch = await _plugin.getNotificationAppLaunchDetails();
     final id = launch?.notificationResponse?.payload;
     if (launch?.didNotificationLaunchApp == true &&
@@ -82,10 +79,28 @@ class NativeReminderPlatform implements ReminderPlatform {
     }
   }
 
+  Future<void> _updateChannel() async {
+    final android = _plugin
+        .resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin
+        >();
+    await android?.createNotificationChannel(
+      AndroidNotificationChannel(
+        channelId,
+        l10n.expiryChecks,
+        description: l10n.expiryChannelDescription,
+        importance: Importance.defaultImportance,
+      ),
+    );
+  }
+
   @override
   Future<ReminderPermission> permission() async {
-    if (!supported) return ReminderPermission.unsupported;
+    if (!supported) {
+      return ReminderPermission.unsupported;
+    }
     await _initialize();
+    await _updateChannel();
     if (defaultTargetPlatform == TargetPlatform.android) {
       final android = _plugin
           .resolvePlatformSpecificImplementation<
@@ -110,8 +125,11 @@ class NativeReminderPlatform implements ReminderPlatform {
 
   @override
   Future<void> requestPermission() async {
-    if (!supported) return;
+    if (!supported) {
+      return;
+    }
     await _initialize();
+    await _updateChannel();
     if (defaultTargetPlatform == TargetPlatform.android) {
       await _plugin
           .resolvePlatformSpecificImplementation<
@@ -143,11 +161,11 @@ class NativeReminderPlatform implements ReminderPlatform {
     payload: reminder.serverId,
     scheduledDate: reminder.at,
     androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
-    notificationDetails: const NotificationDetails(
+    notificationDetails: NotificationDetails(
       android: AndroidNotificationDetails(
         channelId,
-        '到期核对',
-        channelDescription: '本地到期提醒，不自动续费或付款',
+        l10n.expiryChecks,
+        channelDescription: l10n.expiryChannelDescription,
         importance: Importance.defaultImportance,
         visibility: NotificationVisibility.private,
       ),
@@ -170,6 +188,7 @@ class ReminderScheduler extends ChangeNotifier {
   final LedgerStore store;
   final ReminderPlatform platform;
   final DateTime Function() clock;
+  LocalePreference languagePreference = LocalePreference.chinese;
   ReminderSyncState state = ReminderSyncState.idle;
   String? timezoneName;
   int submitted = 0, uncovered = 0;
@@ -178,17 +197,23 @@ class ReminderScheduler extends ChangeNotifier {
   int _generation = 0;
   bool _disposed = false;
 
-  String get description => switch (state) {
-    ReminderSyncState.idle => '尚未检查系统通知',
-    ReminderSyncState.syncing => '正在核对系统提醒…',
-    ReminderSyncState.ready => '已安排 $submitted 条提醒 · 未安排 $uncovered 条',
-    ReminderSyncState.denied => '系统通知未获允许或通知渠道已关闭；已保存规则仍保留',
-    ReminderSyncState.unsupported => '此平台不支持定时通知；已保存规则不会在此设备触发提醒',
-    ReminderSyncState.failed => '提醒状态核对失败，可能仍有旧提醒；请重试或检查系统设置',
+  String get description => descriptionFor(defaultLocalizations);
+  String descriptionFor(AppLocalizations l10n) => switch (state) {
+    ReminderSyncState.idle => l10n.reminderNotChecked,
+    ReminderSyncState.syncing => l10n.reminderChecking,
+    ReminderSyncState.ready => l10n.reminderScheduleCounts(
+      (submitted).toString(),
+      (uncovered).toString(),
+    ),
+    ReminderSyncState.denied => l10n.reminderPermissionDenied,
+    ReminderSyncState.unsupported => l10n.reminderUnsupported,
+    ReminderSyncState.failed => l10n.reminderCheckFailed,
   };
 
   Future<void> requestPermission() async {
-    if (_disposed) return;
+    if (_disposed) {
+      return;
+    }
     try {
       await platform.requestPermission();
       await reconcile();
@@ -203,7 +228,9 @@ class ReminderScheduler extends ChangeNotifier {
   Future<void> reconcile() {
     final ticket = ++_generation;
     _tail = _tail.then((_) async {
-      if (_disposed || ticket != _generation) return;
+      if (_disposed || ticket != _generation) {
+        return;
+      }
       state = ReminderSyncState.syncing;
       notifyListeners();
       try {
@@ -213,8 +240,17 @@ class ReminderScheduler extends ChangeNotifier {
           state = ReminderSyncState.unsupported;
           return;
         }
+        final l10n = lookupAppLocalizations(
+          languagePreference.resolve(PlatformDispatcher.instance.locales),
+        );
+        final native = platform;
+        if (native is NativeReminderPlatform) {
+          native.l10n = l10n;
+        }
         final permission = await platform.permission();
-        if (_disposed || ticket != _generation) return;
+        if (_disposed || ticket != _generation) {
+          return;
+        }
         if (permission != ReminderPermission.allowed) {
           for (final id in await platform.pendingIds()) {
             await platform.cancel(id);
@@ -246,6 +282,7 @@ class ReminderScheduler extends ChangeNotifier {
           now: now,
           location: location,
           capacity: 1 << 30,
+          localizations: l10n,
         );
         // Short, disclosed horizon avoids far-future timezone/database limits.
         final horizon = now.add(const Duration(days: 366));
@@ -253,17 +290,23 @@ class ReminderScheduler extends ChangeNotifier {
             .where((r) => r.at.isBefore(horizon))
             .toList();
         final selected = inRange.take(platform.capacity).toList();
-        if (_disposed || ticket != _generation) return;
+        if (_disposed || ticket != _generation) {
+          return;
+        }
         // This app has only expiry notifications. Cancel old tasks before
         // replacement, including unchanged IDs whose dates/content changed.
         for (final id in await platform.pendingIds()) {
           await platform.cancel(id);
         }
         for (final reminder in selected) {
-          if (_disposed || ticket != _generation) return;
+          if (_disposed || ticket != _generation) {
+            return;
+          }
           await platform.schedule(reminder);
         }
-        if (_disposed || ticket != _generation) return;
+        if (_disposed || ticket != _generation) {
+          return;
+        }
         final actual = (await platform.pendingIds()).toSet();
         if (actual.length != selected.length ||
             selected.any((r) => !actual.contains(r.notificationId))) {
@@ -280,7 +323,9 @@ class ReminderScheduler extends ChangeNotifier {
           submitted = 0;
         }
       } finally {
-        if (!_disposed && ticket == _generation) notifyListeners();
+        if (!_disposed && ticket == _generation) {
+          notifyListeners();
+        }
       }
     });
     return _tail;

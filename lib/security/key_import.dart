@@ -15,6 +15,7 @@ import 'package:dartssh2/src/hostkey/hostkey_rsa.dart';
 
 import 'host_trust.dart';
 import 'security_models.dart';
+import '../l10n/localized_message.dart';
 
 /// Non-secret import metadata.
 class KeyImportResult {
@@ -91,7 +92,9 @@ SSHKeyPair parseValidatedPrivateKey(String privateKey, {String? passphrase}) {
   } catch (_) {
     // Never surface parser exceptions: malformed PEM headers/comments can
     // contain secrets, and dependencies may put input bytes in their errors.
-    throw const SecurityFailure('无法读取私钥，请检查完整内容、支持格式和解密口令');
+    throw SecurityFailure(
+      LocalizedText((l10n) => l10n.securityPrivateKeyUnreadable),
+    );
   }
 }
 

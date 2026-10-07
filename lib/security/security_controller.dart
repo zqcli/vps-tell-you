@@ -9,6 +9,9 @@ import 'host_trust.dart';
 import 'key_import.dart';
 import 'secret_store.dart';
 import 'security_models.dart';
+import '../l10n/generated/app_localizations.dart';
+import '../l10n/locale_preference.dart';
+import '../l10n/localized_message.dart';
 
 class SecurityController extends ChangeNotifier {
   SecurityController({
@@ -31,7 +34,14 @@ class SecurityController extends ChangeNotifier {
   bool needsReload = false;
   int cleanupCount = 0;
   bool get cleanupPending => cleanupCount > 0;
-  String? error;
+  LocalizedMessage? _error;
+
+  /// Stored safe message; resolving it never retries the operation.
+  LocalizedMessage? get localizedError => _error;
+  String? errorFor(AppLocalizations l10n) => _error?.messageFor(l10n);
+
+  /// Compatibility for contextless callers; intentionally fixed Chinese.
+  String? get error => errorFor(defaultLocalizations);
   String? revealedSecret, revealedPassphrase, revealedCredentialId;
   int _sensitiveEpoch = 0;
   Timer? _revealTimer;
@@ -52,14 +62,14 @@ class SecurityController extends ChangeNotifier {
   Future<bool> reload() async {
     if (busy || _disposed) return false;
     _working = true;
-    error = null;
+    _error = null;
     _notify();
     try {
       await readMetadata();
       return true;
     } catch (_) {
       needsReload = true;
-      error = '无法读取安全资料，请重试';
+      _error = LocalizedText((l10n) => l10n.securityReadFailed);
       return false;
     } finally {
       _working = false;
@@ -109,7 +119,7 @@ class SecurityController extends ChangeNotifier {
     if (busy || needsReload || _disposed) return false;
     hideSensitive();
     _working = true;
-    error = null;
+    _error = null;
     _notify();
     return true;
   }
@@ -120,16 +130,16 @@ class SecurityController extends ChangeNotifier {
     } catch (_) {
       // The mutation already committed. Never invite duplicate submission.
       needsReload = true;
-      error = '已保存，但资料重读失败；请重读后再修改';
+      _error = LocalizedText((l10n) => l10n.securitySavedReloadFailed);
     }
   }
 
   void _failed(Object problem) {
-    error = problem is SecurityFailure
-        ? problem.message
+    _error = problem is SecurityFailure
+        ? problem
         : problem is LedgerConflict
-        ? '资料已变化，请重读后重试'
-        : '安全操作未完成，原资料未更改；请重试';
+        ? LocalizedText((l10n) => l10n.securityDataChanged)
+        : LocalizedText((l10n) => l10n.securityMutationFailed);
   }
 
   void _finish() {
@@ -156,17 +166,25 @@ class SecurityController extends ChangeNotifier {
           user.length > 128 ||
           (kind == CredentialKind.password && user.isEmpty) ||
           RegExp(r'[\x00-\x20\x7f]').hasMatch(user)) {
-        throw const SecurityFailure('请输入 1–80 字名称及有效默认用户名');
+        throw SecurityFailure(
+          LocalizedText((l10n) => l10n.securityInvalidCredentialIdentity),
+        );
       }
       if ((existing == null || existing.kind != kind) && secret == null) {
-        throw const SecurityFailure('请提供秘密内容');
+        throw SecurityFailure(
+          LocalizedText((l10n) => l10n.securitySecretRequired),
+        );
       }
       if (secret == null && (passphrase?.isNotEmpty ?? false)) {
-        throw const SecurityFailure('更新已保存的口令时，请同时重新导入对应私钥');
+        throw SecurityFailure(
+          LocalizedText((l10n) => l10n.securityReimportForPassphrase),
+        );
       }
       if (kind == CredentialKind.password &&
           (passphrase?.isNotEmpty ?? false)) {
-        throw const SecurityFailure('密码凭据不使用私钥口令');
+        throw SecurityFailure(
+          LocalizedText((l10n) => l10n.securityPasswordNoPassphrase),
+        );
       }
       String? algorithm = existing?.keyAlgorithm,
           fingerprint = existing?.fingerprint;
@@ -174,7 +192,9 @@ class SecurityController extends ChangeNotifier {
         if (secret.isEmpty ||
             secret.length > 128 * 1024 ||
             (passphrase?.length ?? 0) > 4096) {
-          throw const SecurityFailure('秘密内容为空或超出大小限制');
+          throw SecurityFailure(
+            LocalizedText((l10n) => l10n.securitySecretSizeInvalid),
+          );
         }
         if (kind == CredentialKind.privateKey) {
           final info = await compute(_inspectKeyForSave, (secret, passphrase));
@@ -204,7 +224,9 @@ class SecurityController extends ChangeNotifier {
         });
         await secrets.write(ref, encoded);
         if (await secrets.read(ref) != encoded) {
-          throw const SecurityFailure('秘密写入未能校验，原凭据保持不变');
+          throw SecurityFailure(
+            LocalizedText((l10n) => l10n.securitySecretWriteUnverified),
+          );
         }
       }
       await store.saveCredential(
@@ -305,15 +327,17 @@ class SecurityController extends ChangeNotifier {
   Future<bool> retryCleanup() async {
     if (busy || _disposed) return false;
     _working = true;
-    error = null;
+    _error = null;
     _notify();
     try {
       await _cleanup(await store.pendingSecretCleanup());
       await readMetadata();
-      if (cleanupPending) error = '秘密清理尚未完成，可稍后重试';
+      if (cleanupPending) {
+        _error = LocalizedText((l10n) => l10n.securityCleanupIncomplete);
+      }
       return !cleanupPending;
     } catch (_) {
-      error = '无法读取待清理资料，请重试';
+      _error = LocalizedText((l10n) => l10n.securityCleanupReadFailed);
       return false;
     } finally {
       _finish();
@@ -329,7 +353,9 @@ class SecurityController extends ChangeNotifier {
   }) async {
     void guard() {
       if (_disposed || needsReload || isCancelled()) {
-        throw const SecurityFailure('SSH 连接已取消或资料需重读');
+        throw SecurityFailure(
+          LocalizedText((l10n) => l10n.securitySshCancelled),
+        );
       }
     }
 
@@ -338,11 +364,17 @@ class SecurityController extends ChangeNotifier {
       final records = await store.credentials();
       guard();
       final record = records.where((c) => c.id == id).firstOrNull;
-      if (record == null) throw const SecurityFailure('请选择可用凭据');
+      if (record == null) {
+        throw SecurityFailure(
+          LocalizedText((l10n) => l10n.securityChooseAvailableCredential),
+        );
+      }
       final encoded = await secrets.read(record.secretRef);
       guard();
       if (encoded == null || encoded.length > 1024 * 1024) {
-        throw const SecurityFailure('未找到此凭据的密码或私钥，请到“管理凭据”重新保存密码或导入私钥');
+        throw SecurityFailure(
+          LocalizedText((l10n) => l10n.securityCredentialSecretMissing),
+        );
       }
       final envelope = jsonDecode(encoded);
       if (envelope is! Map<String, dynamic> ||
@@ -354,10 +386,14 @@ class SecurityController extends ChangeNotifier {
           (envelope['passphrase'] != null &&
               (envelope['passphrase'] is! String ||
                   (envelope['passphrase'] as String).length > 4096))) {
-        throw const SecurityFailure('安全存储资料无法读取');
+        throw SecurityFailure(
+          LocalizedText((l10n) => l10n.securityStoredSecretUnreadable),
+        );
       }
       if (!await isCredentialCurrent(record)) {
-        throw const SecurityFailure('凭据已变化，请重读后重试');
+        throw SecurityFailure(
+          LocalizedText((l10n) => l10n.securityCredentialChanged),
+        );
       }
       guard();
       return SshCredential(
@@ -368,7 +404,9 @@ class SecurityController extends ChangeNotifier {
     } on SecurityFailure {
       rethrow;
     } catch (_) {
-      throw const SecurityFailure('无法读取 SSH 凭据，请重试');
+      throw SecurityFailure(
+        LocalizedText((l10n) => l10n.securitySshCredentialReadFailed),
+      );
     }
   }
 
@@ -386,18 +424,31 @@ class SecurityController extends ChangeNotifier {
         );
   }
 
-  Future<bool> reveal(CredentialMetadata record) async {
+  Future<bool> reveal(
+    CredentialMetadata record, {
+    AppLocalizations? l10n,
+  }) async {
     if (busy || needsReload || _disposed) return false;
     hideSensitive();
     final epoch = _sensitiveEpoch;
     _authenticating = true;
-    error = null;
+    _error = null;
     _notify();
     try {
       await _cancelAuthentication;
       if (_disposed || epoch != _sensitiveEpoch) return false;
-      if (!await authenticator.authenticate()) {
-        if (epoch == _sensitiveEpoch) error = '设备认证未完成，秘密仍隐藏';
+      // Capture the language only for this explicit attempt. Locale changes must
+      // never restart authentication or trigger a secure-store read.
+      final attemptLocalizations = l10n ?? defaultLocalizations;
+      final deviceAuth = authenticator;
+      final authenticated = deviceAuth is LocalizedDeviceAuthenticator
+          ? await (deviceAuth as LocalizedDeviceAuthenticator)
+                .authenticateWithLocalizations(attemptLocalizations)
+          : await deviceAuth.authenticate();
+      if (!authenticated) {
+        if (epoch == _sensitiveEpoch) {
+          _error = LocalizedText((l10n) => l10n.securityAuthenticationHidden);
+        }
         return false;
       }
       if (_disposed || epoch != _sensitiveEpoch) return false;
@@ -409,12 +460,16 @@ class SecurityController extends ChangeNotifier {
             c.revision == record.revision &&
             c.secretRef == record.secretRef,
       )) {
-        throw const SecurityFailure('凭据已变化，请重读后重试');
+        throw SecurityFailure(
+          LocalizedText((l10n) => l10n.securityCredentialChanged),
+        );
       }
       final encoded = await secrets.read(record.secretRef);
       if (_disposed || epoch != _sensitiveEpoch) return false;
       if (encoded == null) {
-        throw const SecurityFailure('未找到已保存的密码，请编辑此凭据并重新保存密码');
+        throw SecurityFailure(
+          LocalizedText((l10n) => l10n.securitySavedPasswordMissing),
+        );
       }
       final envelope = jsonDecode(encoded);
       if (envelope is! Map<String, dynamic> ||
@@ -423,7 +478,9 @@ class SecurityController extends ChangeNotifier {
           envelope['secret'] is! String ||
           (envelope['passphrase'] != null &&
               envelope['passphrase'] is! String)) {
-        throw const SecurityFailure('安全存储资料无法读取');
+        throw SecurityFailure(
+          LocalizedText((l10n) => l10n.securityStoredSecretUnreadable),
+        );
       }
       final latest = await store.credentials();
       if (_disposed || epoch != _sensitiveEpoch) return false;
@@ -433,7 +490,9 @@ class SecurityController extends ChangeNotifier {
             c.revision == record.revision &&
             c.secretRef == record.secretRef,
       )) {
-        throw const SecurityFailure('凭据已变化，请重读后重试');
+        throw SecurityFailure(
+          LocalizedText((l10n) => l10n.securityCredentialChanged),
+        );
       }
       revealedSecret = envelope['secret'] as String;
       revealedPassphrase = envelope['passphrase'] as String?;
@@ -442,7 +501,9 @@ class SecurityController extends ChangeNotifier {
       return true;
     } catch (problem) {
       if (!_disposed && epoch == _sensitiveEpoch) {
-        error = problem is SecurityFailure ? problem.message : '无法显示秘密，请重试';
+        _error = problem is SecurityFailure
+            ? problem
+            : LocalizedText((l10n) => l10n.securityRevealFailed);
       }
       return false;
     } finally {
@@ -493,7 +554,9 @@ class SecurityController extends ChangeNotifier {
     try {
       if (expected != null &&
           (expected.host != identity.host || expected.port != identity.port)) {
-        throw const SecurityFailure('主机核验目标不一致');
+        throw SecurityFailure(
+          LocalizedText((l10n) => l10n.securityHostTargetMismatch),
+        );
       }
       await store.saveHostTrust(
         HostTrustRecord(
@@ -594,7 +657,9 @@ class HostVerificationAttempt {
       await authentication();
       return true;
     } catch (_) {
-      throw const SecurityFailure('主机核验或认证未完成');
+      throw SecurityFailure(
+        LocalizedText((l10n) => l10n.securityHostAuthenticationIncomplete),
+      );
     }
   }
 }

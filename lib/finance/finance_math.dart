@@ -1,3 +1,4 @@
+import '../l10n/localized_message.dart';
 import '../core/value_types.dart';
 import '../servers/server_record.dart';
 import 'finance_models.dart';
@@ -131,7 +132,7 @@ LedgerDate renewalDate(ServerRecord server, int cycles) {
       !due.isValid ||
       !validCycle(server.cycleMonths) ||
       cycles < 0) {
-    throw ArgumentError('续费需要有效的周期与原到期日');
+    throw LocalizedArgumentError((l10n) => l10n.financeRenewalDateError);
   }
   final anchor = server.renewalAnchorDate ?? due;
   final elapsed = (due.year - anchor.year) * 12 + due.month - anchor.month;
@@ -139,10 +140,12 @@ LedgerDate renewalDate(ServerRecord server, int cycles) {
       elapsed < 0 ||
       anchor.addMonths(elapsed) != due ||
       elapsed % server.cycleMonths != 0) {
-    throw StateError('服务期锚点与到期日不一致，请核对资料');
+    throw LocalizedStateError((l10n) => l10n.financeAnchorMismatch);
   }
   final result = anchor.addMonths(elapsed + cycles * server.cycleMonths);
-  if (!result.isValid) throw ArgumentError('到期日超出支持范围');
+  if (!result.isValid) {
+    throw LocalizedArgumentError((l10n) => l10n.financeDueRangeError);
+  }
   return result;
 }
 
@@ -253,12 +256,14 @@ List<ServicePeriod> calculatorPeriods(
       !end.isValid ||
       !validCycle(cycleMonths) ||
       asOf.daysUntil(end).abs() > 36600) {
-    throw ArgumentError('请选择有效日期与周期，试算范围限制为 100 年');
+    throw LocalizedArgumentError((l10n) => l10n.financeTrialInputError);
   }
   final result = <ServicePeriod>[];
   for (var i = 0; i < 1200; i++) {
     final start = end.addMonths(-(i + 1) * cycleMonths);
-    if (!start.isValid) throw ArgumentError('服务期超出支持范围');
+    if (!start.isValid) {
+      throw LocalizedArgumentError((l10n) => l10n.financePeriodRangeError);
+    }
     result.add(
       ServicePeriod(
         id: 'trial-$i',
@@ -272,7 +277,7 @@ List<ServicePeriod> calculatorPeriods(
       return result.reversed.toList(growable: false);
     }
   }
-  throw ArgumentError('试算范围限制为 100 年');
+  throw LocalizedArgumentError((l10n) => l10n.financeTrialRangeError);
 }
 
 QuoteResult? calculateQuote({

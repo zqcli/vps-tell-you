@@ -10,15 +10,27 @@ import '../servers/server_detail.dart';
 import 'security_controller.dart';
 import 'security_models.dart';
 import 'host_trust_pages.dart';
+import '../l10n/generated/app_localizations.dart';
+import '../l10n/locale_preference.dart';
+import '../l10n/localized_message.dart';
 
 final securityRouteObserver = RouteObserver<ModalRoute<dynamic>>();
 
-String credentialKind(CredentialMetadata credential) =>
-    credential.kind == CredentialKind.password ? '用户名与密码' : 'SSH 密钥';
+String credentialKind(CredentialMetadata credential, {AppLocalizations? l10n}) {
+  final strings = l10n ?? defaultLocalizations;
+  return credential.kind == CredentialKind.password
+      ? strings.securityPasswordKind
+      : strings.securityPrivateKeyKind;
+}
 
-void securityMessage(BuildContext context, String message) =>
-    ScaffoldMessenger.of(context)
-        .showSnackBar(SnackBar(content: Text(message)));
+void securityMessage(BuildContext context, Object message) =>
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Builder(
+          builder: (context) => Text(localizedText(message, context.l10n)),
+        ),
+      ),
+    );
 
 class SecurityNotice extends StatelessWidget {
   const SecurityNotice({super.key, required this.controller});
@@ -27,23 +39,22 @@ class SecurityNotice extends StatelessWidget {
   Widget build(BuildContext context) => Column(
     crossAxisAlignment: CrossAxisAlignment.stretch,
     children: [
-      if (controller.error != null) InfoNote(controller.error!),
+      if (controller.localizedError != null)
+        InfoNote(controller.errorFor(context.l10n)!),
       if (controller.needsReload)
         OutlinedButton(
           onPressed: controller.busy ? null : controller.reload,
-          child: const Text('重新读取已保存的资料'),
+          child: Text(context.l10n.securityReloadSaved),
         ),
       if (controller.cleanupPending)
         LedgerCard(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const InfoNote(
-                '有未完成的安全存储清理。当前连接引用已保留；请在系统安全存储可用后重试。不会删除仍在使用的秘密。',
-              ),
+              InfoNote(context.l10n.securityCleanupNotice),
               OutlinedButton(
                 onPressed: controller.busy ? null : controller.retryCleanup,
-                child: const Text('重试清理未引用秘密'),
+                child: Text(context.l10n.securityRetryCleanup),
               ),
             ],
           ),
@@ -80,23 +91,23 @@ class _SecurityPageState extends State<SecurityPage> {
       context: context,
       isScrollControlled: true,
       builder: (context) => SafeArea(
-        child: Padding(
+        child: SingleChildScrollView(
           padding: const EdgeInsets.all(20),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const SectionTitle('新增登录凭据'),
+              SectionTitle(context.l10n.securityAddLoginCredential),
               SettingRow(
                 icon: Icons.key_outlined,
-                title: '导入 SSH 密钥',
-                subtitle: '系统文件选择器或粘贴 · 校验格式与口令',
+                title: context.l10n.securityImportKey,
+                subtitle: context.l10n.securityImportKeySubtitle,
                 onTap: () => Navigator.pop(context, CredentialKind.privateKey),
               ),
               SettingRow(
                 icon: Icons.person_outline,
-                title: '保存用户名与密码',
-                subtitle: '可供多台服务器引用',
+                title: context.l10n.securitySaveUsernamePassword,
+                subtitle: context.l10n.securityReusableCredential,
                 onTap: () => Navigator.pop(context, CredentialKind.password),
               ),
             ],
@@ -126,10 +137,10 @@ class _SecurityPageState extends State<SecurityPage> {
       );
       return Scaffold(
         appBar: AppBar(
-          title: const Text('密钥与安全'),
+          title: Text(context.l10n.securityTitle),
           actions: [
             IconButton(
-              tooltip: '新增凭据',
+              tooltip: context.l10n.securityAddCredential,
               onPressed: security.busy || security.needsReload ? null : add,
               icon: const Icon(Icons.add),
             ),
@@ -140,12 +151,13 @@ class _SecurityPageState extends State<SecurityPage> {
             : ListView(
                 padding: const EdgeInsets.all(20),
                 children: [
-                  const InfoNote('凭据独立管理，连接只引用凭据。秘密仅保存在系统安全存储中。'),
+                  InfoNote(context.l10n.securityCredentialStorageNotice),
                   SecurityNotice(controller: security),
                   TextField(
                     key: const ValueKey('credential-search'),
-                    decoration: const InputDecoration(
-                      labelText: '搜索名称、默认用户名',
+                    decoration: InputDecoration(
+                      errorMaxLines: 8,
+                      labelText: context.l10n.securitySearchCredentials,
                       prefixIcon: Icon(Icons.search),
                     ),
                     onChanged: (value) => setState(() => search = value),
@@ -156,9 +168,11 @@ class _SecurityPageState extends State<SecurityPage> {
                     runSpacing: 8,
                     children: [
                       for (final entry in <CredentialKind?, String>{
-                        null: '全部',
-                        CredentialKind.privateKey: 'SSH 密钥',
-                        CredentialKind.password: '用户名与密码',
+                        null: context.l10n.securityAll,
+                        CredentialKind.privateKey:
+                            context.l10n.securityPrivateKeyKind,
+                        CredentialKind.password:
+                            context.l10n.securityPasswordKind,
                       }.entries)
                         ChoiceChip(
                           label: Text(entry.value),
@@ -167,9 +181,17 @@ class _SecurityPageState extends State<SecurityPage> {
                         ),
                     ],
                   ),
-                  SectionTitle('已保存的登录凭据 · ${security.credentials.length} 条'),
+                  SectionTitle(
+                    context.l10n.securityCredentialCount(
+                      security.credentials.length,
+                    ),
+                  ),
                   if (visible.isEmpty)
-                    const LedgerCard(child: InfoNote('没有匹配的凭据。可切换筛选或新增。')),
+                    LedgerCard(
+                      child: InfoNote(
+                        context.l10n.securityNoMatchingCredentials,
+                      ),
+                    ),
                   for (final c in visible)
                     Padding(
                       padding: const EdgeInsets.only(bottom: 10),
@@ -181,21 +203,21 @@ class _SecurityPageState extends State<SecurityPage> {
                               : Icons.key_outlined,
                           title: c.name,
                           subtitle:
-                              '${credentialKind(c)}${c.defaultUsername.isEmpty ? '' : ' · ${c.defaultUsername}'}\n${security.sshConfigurations.where((s) => s.credentialId == c.id).length} 台关联',
+                              '${credentialKind(c, l10n: context.l10n)}${c.defaultUsername.isEmpty ? '' : ' · ${c.defaultUsername}'}\n${context.l10n.securityLinkedServerCount(security.sshConfigurations.where((s) => s.credentialId == c.id).length)}',
                           onTap: () =>
                               credentialMenu(context, widget.ledger, c),
                         ),
                       ),
                     ),
-                  const SectionTitle('设备与连接安全'),
+                  SectionTitle(context.l10n.securityDeviceConnectionSecurity),
                   LedgerCard(
                     padding: EdgeInsets.zero,
                     child: Column(
                       children: [
                         SettingRow(
                           icon: Icons.verified_user_outlined,
-                          title: '已信任的主机',
-                          subtitle: '主机、端口、算法与完整主机公钥',
+                          title: context.l10n.securityTrustedHosts,
+                          subtitle: context.l10n.securityTrustedHostsSubtitle,
                           onTap: () => Navigator.push<void>(
                             context,
                             MaterialPageRoute(
@@ -207,20 +229,23 @@ class _SecurityPageState extends State<SecurityPage> {
                         const Divider(),
                         SettingRow(
                           icon: Icons.lock_outline,
-                          title: '凭据保护',
-                          subtitle: '设备验证、短时显示与平台限制',
+                          title: context.l10n.securityCredentialProtection,
+                          subtitle:
+                              context.l10n.securityCredentialProtectionSubtitle,
                           onTap: () => showStage(
                             context,
-                            '凭据保护',
-                            '密码、私钥和密钥口令不进入台账数据库、导出或日志。密码查看需系统设备验证，20 秒后或离开页面即隐藏。Linux 不支持本应用的设备验证，无法查看秘密。\n\n设备认证是应用显示门禁，不代表秘密被生物识别硬件单独加密。iOS / Android 真机安全行为仍需验证。Dart 不保证内存安全擦除；当前不提供秘密复制或导出。',
+                            LocalizedText(
+                              (l10n) => l10n.securityCredentialProtection,
+                            ),
+                            LocalizedText(
+                              (l10n) => l10n.securityCredentialProtectionDetail,
+                            ),
                           ),
                         ),
                       ],
                     ),
                   ),
-                  const InfoNote(
-                    '修改本地凭据不会修改远端密码或 authorized_keys。只有明确发起连接才会使用所选凭据。',
-                  ),
+                  InfoNote(context.l10n.securityLocalCredentialNotice),
                 ],
               ),
       );
@@ -246,18 +271,30 @@ Future<void> credentialMenu(
               credential.name,
               style: Theme.of(context).textTheme.titleLarge,
             ),
-            InfoNote(credentialKind(credential)),
+            InfoNote(credentialKind(credential, l10n: context.l10n)),
             for (final item in <String, (IconData, String, String)>{
               'detail': (
                 Icons.visibility_outlined,
-                '查看详情',
+                context.l10n.securityViewDetails,
                 credential.kind == CredentialKind.privateKey
-                    ? '公钥指纹与元数据，不显示私钥'
-                    : '默认隐藏密码，查看需设备验证',
+                    ? context.l10n.securityPrivateKeyDetailsSubtitle
+                    : context.l10n.securityPasswordDetailsSubtitle,
               ),
-              'edit': (Icons.edit_outlined, '编辑凭据', '留空保留已保存的秘密'),
-              'references': (Icons.link, '关联服务器', '连接用户名独立保存'),
-              'delete': (Icons.delete_outline, '删除凭据', '先确认替换或解除关联影响'),
+              'edit': (
+                Icons.edit_outlined,
+                context.l10n.securityEditCredential,
+                context.l10n.securityKeepSecret,
+              ),
+              'references': (
+                Icons.link,
+                context.l10n.securityLinkedServers,
+                context.l10n.securityIndependentUsernames,
+              ),
+              'delete': (
+                Icons.delete_outline,
+                context.l10n.securityDeleteCredential,
+                context.l10n.securityReviewDeleteImpact,
+              ),
             }.entries)
               SettingRow(
                 icon: item.value.$1,
@@ -288,8 +325,9 @@ Future<void> credentialMenu(
 }
 
 /// Only the user-selected file is read. No filename/path enters app metadata.
-Future<String?> pickPrivateKey() async {
-  final file = await openFile();
+Future<String?> pickPrivateKey({AppLocalizations? l10n}) async {
+  final strings = l10n ?? defaultLocalizations;
+  final file = await openFile(confirmButtonText: strings.securityOpenKeyFile);
   if (file == null) return null;
   if (await file.length() > 128 * 1024) throw const FormatException();
   final bytes = await file.readAsBytes();
@@ -303,12 +341,12 @@ class CredentialForm extends StatefulWidget {
     required this.ledger,
     required this.kind,
     this.existing,
-    this.pickKey = pickPrivateKey,
+    this.pickKey,
   });
   final LedgerController ledger;
   final CredentialKind kind;
   final CredentialMetadata? existing;
-  final Future<String?> Function() pickKey;
+  final Future<String?> Function()? pickKey;
   @override
   State<CredentialForm> createState() => _CredentialFormState();
 }
@@ -329,6 +367,23 @@ class _CredentialFormState extends State<CredentialForm>
       pasting = false,
       allowPop = false;
   int generation = 0;
+  bool validationAttempted = false;
+  String? validationLocale;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final next = context.l10n.localeName;
+    if (validationLocale != null &&
+        validationLocale != next &&
+        validationAttempted) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) form.currentState?.validate();
+      });
+    }
+    validationLocale = next;
+  }
+
   SecurityController get security => widget.ledger.security;
   @override
   void initState() {
@@ -364,9 +419,11 @@ class _CredentialFormState extends State<CredentialForm>
         !dirty ||
         await confirmAction(
           context,
-          title: '放弃本次编辑？',
-          message: '尚未保存的凭据内容会被清除。',
-          action: '放弃修改',
+          title: LocalizedText((l10n) => l10n.securityDiscardCredentialTitle),
+          message: LocalizedText(
+            (l10n) => l10n.securityDiscardCredentialMessage,
+          ),
+          action: LocalizedText((l10n) => l10n.securityDiscardChanges),
           dangerous: true,
         );
     if (!discard || !mounted) return;
@@ -378,14 +435,21 @@ class _CredentialFormState extends State<CredentialForm>
     final request = ++generation;
     setState(() => picking = true);
     try {
-      final content = await widget.pickKey();
+      final content =
+          await (widget.pickKey?.call() ?? pickPrivateKey(l10n: context.l10n));
       if (!mounted || request != generation || content == null) return;
       secret.text = content;
       setState(() => dirty = true);
-      securityMessage(context, '已导入待保存的私钥；保存时校验格式与口令');
+      securityMessage(
+        context,
+        LocalizedText((l10n) => l10n.securityKeyImported),
+      );
     } catch (_) {
       if (mounted && request == generation) {
-        securityMessage(context, '无法读取私钥文件。请选择不超过 128 KB 的 UTF-8 私钥文件。');
+        securityMessage(
+          context,
+          LocalizedText((l10n) => l10n.securityKeyFileReadFailed),
+        );
       }
     } finally {
       if (mounted) setState(() => picking = false);
@@ -405,10 +469,13 @@ class _CredentialFormState extends State<CredentialForm>
       // otherwise remove PEM newlines from a normal keyboard/menu paste.
       secret.text = content;
       setState(() => dirty = true);
-      securityMessage(context, '已粘贴待保存的私钥；内容保持隐藏，保存时校验');
+      securityMessage(context, LocalizedText((l10n) => l10n.securityKeyPasted));
     } catch (_) {
       if (mounted && request == generation) {
-        securityMessage(context, '无法粘贴私钥。请复制不超过 128 KB 的完整私钥内容。');
+        securityMessage(
+          context,
+          LocalizedText((l10n) => l10n.securityKeyPasteFailed),
+        );
       }
     } finally {
       if (mounted) setState(() => pasting = false);
@@ -416,7 +483,9 @@ class _CredentialFormState extends State<CredentialForm>
   }
 
   Future<void> save() async {
-    if (saving || picking || pasting || !form.currentState!.validate()) return;
+    if (saving || picking || pasting) return;
+    validationAttempted = true;
+    if (!form.currentState!.validate()) return;
     setState(() => saving = true);
     final saved = await security.saveCredential(
       existing: widget.existing,
@@ -436,7 +505,10 @@ class _CredentialFormState extends State<CredentialForm>
       passphrase.clear();
       setState(() => allowPop = true);
       Navigator.pop(context);
-      securityMessage(context, '凭据已保存，远端认证资料未改变');
+      securityMessage(
+        context,
+        LocalizedText((l10n) => l10n.securityCredentialSaved),
+      );
     }
   }
 
@@ -454,9 +526,13 @@ class _CredentialFormState extends State<CredentialForm>
       },
       child: Scaffold(
         appBar: AppBar(
-          title: Text(widget.existing == null ? '新增凭据' : '编辑凭据'),
+          title: Text(
+            widget.existing == null
+                ? context.l10n.securityAddCredential
+                : context.l10n.securityEditCredential,
+          ),
           leading: IconButton(
-            tooltip: '取消编辑凭据',
+            tooltip: context.l10n.securityCancelCredentialEdit,
             onPressed: saving ? null : cancel,
             icon: const Icon(Icons.close),
           ),
@@ -470,7 +546,9 @@ class _CredentialFormState extends State<CredentialForm>
             padding: const EdgeInsets.all(20),
             children: [
               InfoNote(
-                widget.kind == CredentialKind.password ? '用户名与密码' : '导入 SSH 密钥',
+                widget.kind == CredentialKind.password
+                    ? context.l10n.securityPasswordKind
+                    : context.l10n.securityImportKey,
               ),
               SecurityNotice(controller: security),
               TextFormField(
@@ -478,9 +556,13 @@ class _CredentialFormState extends State<CredentialForm>
                 controller: name,
                 enabled: !saving,
                 maxLength: 80,
-                decoration: const InputDecoration(labelText: '凭据名称'),
-                validator: (value) =>
-                    value == null || value.trim().isEmpty ? '请填写凭据名称' : null,
+                decoration: InputDecoration(
+                  errorMaxLines: 8,
+                  labelText: context.l10n.securityCredentialName,
+                ),
+                validator: (value) => value == null || value.trim().isEmpty
+                    ? context.l10n.securityCredentialNameRequired
+                    : null,
               ),
               const SizedBox(height: 14),
               TextFormField(
@@ -490,14 +572,15 @@ class _CredentialFormState extends State<CredentialForm>
                 maxLength: 64,
                 autocorrect: false,
                 decoration: InputDecoration(
+                  errorMaxLines: 8,
                   labelText: widget.kind == CredentialKind.password
-                      ? '默认登录用户名'
-                      : '默认用户名（可选）',
+                      ? context.l10n.securityDefaultLoginUsername
+                      : context.l10n.securityOptionalDefaultUsername,
                 ),
                 validator: (value) =>
                     widget.kind == CredentialKind.password &&
                         (value == null || value.trim().isEmpty)
-                    ? '请填写默认用户名'
+                    ? context.l10n.securityDefaultUsernameRequired
                     : null,
               ),
               const SizedBox(height: 14),
@@ -505,17 +588,19 @@ class _CredentialFormState extends State<CredentialForm>
                 OutlinedButton.icon(
                   onPressed: saving || picking || pasting ? null : import,
                   icon: const Icon(Icons.file_open_outlined),
-                  label: Text(picking ? '选择文件中…' : '选择私钥文件'),
+                  label: Text(
+                    picking
+                        ? context.l10n.securityChoosingFile
+                        : context.l10n.securityChoosePrivateKeyFile,
+                  ),
                 ),
                 OutlinedButton.icon(
                   key: const ValueKey('credential-paste-key'),
                   onPressed: saving || picking || pasting ? null : pasteKey,
                   icon: const Icon(Icons.content_paste),
-                  label: const Text('粘贴完整私钥'),
+                  label: Text(context.l10n.securityPasteCompleteKey),
                 ),
-                const InfoNote(
-                  '支持 OpenSSH / PEM 私钥。只读取所选文件，不保存文件路径。也可用“粘贴完整私钥”保留换行；内容始终隐藏。',
-                ),
+                InfoNote(context.l10n.securityPrivateKeyImportNotice),
               ],
               TextFormField(
                 key: const ValueKey('credential-secret'),
@@ -530,18 +615,20 @@ class _CredentialFormState extends State<CredentialForm>
                 enableIMEPersonalizedLearning: false,
                 autofillHints: const [],
                 decoration: InputDecoration(
+                  errorMaxLines: 8,
                   labelText: widget.kind == CredentialKind.password
-                      ? '登录密码'
-                      : '私钥内容',
+                      ? context.l10n.securityLoginPassword
+                      : context.l10n.securityPrivateKeyContent,
+                  helperMaxLines: 16,
                   helperText: widget.existing == null
                       ? null
-                      : '留空保留已保存内容，旧秘密不会回显',
+                      : context.l10n.securityKeepSecretHidden,
                 ),
                 validator: (value) =>
                     widget.existing == null && (value == null || value.isEmpty)
                     ? widget.kind == CredentialKind.password
-                          ? '请填写登录密码'
-                          : '请选择私钥文件或粘贴完整私钥'
+                          ? context.l10n.securityLoginPasswordRequired
+                          : context.l10n.securityPrivateKeyRequired
                     : null,
               ),
               if (widget.kind == CredentialKind.privateKey) ...[
@@ -552,7 +639,7 @@ class _CredentialFormState extends State<CredentialForm>
                       widget.existing != null &&
                           secret.text.isEmpty &&
                           (value?.isNotEmpty ?? false)
-                      ? '更新已保存的口令时，请同时重新导入对应私钥'
+                      ? context.l10n.securityReimportForPassphrase
                       : null,
                   controller: passphrase,
                   enabled: !saving,
@@ -561,10 +648,11 @@ class _CredentialFormState extends State<CredentialForm>
                   enableSuggestions: false,
                   enableIMEPersonalizedLearning: false,
                   autofillHints: const [],
-                  decoration: const InputDecoration(
-                    labelText: '私钥加密口令（如有）',
-                    helperText: '用于解密所选私钥，不是服务器登录密码。本页不会更改私钥的加密口令',
-                    helperMaxLines: 3,
+                  decoration: InputDecoration(
+                    errorMaxLines: 8,
+                    labelText: context.l10n.securityPrivateKeyPassphrase,
+                    helperText: context.l10n.securityPrivateKeyPassphraseHelp,
+                    helperMaxLines: 16,
                   ),
                 ),
                 CheckboxListTile(
@@ -577,22 +665,18 @@ class _CredentialFormState extends State<CredentialForm>
                           savePassphrase = value == true;
                           dirty = true;
                         }),
-                  title: const Text('在设备安全存储中保存私钥口令'),
-                  subtitle: const Text(
-                    '默认不保存。加密私钥未保存口令时，每次连接都需输入。取消或口令错误会停止连接。仅在导入私钥时应用此选项。',
-                  ),
+                  title: Text(context.l10n.securityStoreKeyPassphrase),
+                  subtitle: Text(context.l10n.securityStoreKeyPassphraseHelp),
                 ),
               ],
-              const InfoNote(
-                '用户名只作为新连接的候选值，不覆盖已有连接。更新凭据只影响以后登录，不修改服务器端密码或密钥。离开到后台会清空未保存秘密。',
-              ),
+              InfoNote(context.l10n.securityCredentialEditNotice),
               if (widget.existing != null) ...[
-                const SectionTitle('当前关联影响'),
+                SectionTitle(context.l10n.securityCurrentLinkImpact),
                 for (final config in security.sshConfigurations.where(
                   (s) => s.credentialId == widget.existing!.id,
                 ))
                   InfoNote(
-                    '${widget.ledger.byId(config.serverId)?.name ?? '服务器'} · ${config.username} @ ${config.host}:${config.port}',
+                    '${widget.ledger.byId(config.serverId)?.name ?? context.l10n.securityServerFallback} · ${config.username} @ ${config.host}:${config.port}',
                   ),
               ],
               FilledButton(
@@ -604,7 +688,11 @@ class _CredentialFormState extends State<CredentialForm>
                         security.needsReload
                     ? null
                     : save,
-                child: Text(saving ? '保存中…' : '保存凭据'),
+                child: Text(
+                  saving
+                      ? context.l10n.securitySaving
+                      : context.l10n.securitySaveCredential,
+                ),
               ),
               const SizedBox(height: 24),
             ],
@@ -687,9 +775,9 @@ class _CredentialDetailPageState extends State<CredentialDetailPage>
           if (didPop) security.hideSensitive();
         },
         child: Scaffold(
-          appBar: AppBar(title: const Text('凭据详情')),
+          appBar: AppBar(title: Text(context.l10n.securityCredentialDetails)),
           body: c == null
-              ? const Center(child: Text('凭据已删除'))
+              ? Center(child: Text(context.l10n.securityCredentialDeleted))
               : ListView(
                   padding: const EdgeInsets.all(20),
                   children: [
@@ -698,17 +786,22 @@ class _CredentialDetailPageState extends State<CredentialDetailPage>
                       style: Theme.of(context).textTheme.headlineSmall,
                     ),
                     InfoNote(
-                      '${credentialKind(c)}\n默认用户名：${c.defaultUsername.isEmpty ? '由连接单独指定' : c.defaultUsername}',
+                      context.l10n.securityCredentialDefaultUsername(
+                        credentialKind(c, l10n: context.l10n),
+                        c.defaultUsername.isEmpty
+                            ? context.l10n.securityUsernamePerConnection
+                            : c.defaultUsername,
+                      ),
                     ),
                     SecurityNotice(controller: security),
                     if (c.kind == CredentialKind.privateKey) ...[
-                      const SectionTitle('公钥指纹'),
+                      SectionTitle(context.l10n.securityPublicKeyFingerprint),
                       LedgerCard(
                         child: SelectableText(
                           '${c.keyAlgorithm ?? ''}\n${c.fingerprint ?? ''}',
                         ),
                       ),
-                      const InfoNote('这里不展示或导出私钥。公钥指纹用于辨认登录密钥，与服务器主机指纹不同。'),
+                      InfoNote(context.l10n.securityPublicKeyFingerprintNotice),
                       OutlinedButton.icon(
                         onPressed: () async {
                           try {
@@ -716,19 +809,29 @@ class _CredentialDetailPageState extends State<CredentialDetailPage>
                               ClipboardData(text: c.fingerprint ?? ''),
                             );
                             if (context.mounted) {
-                              securityMessage(context, '公钥指纹已复制');
+                              securityMessage(
+                                context,
+                                LocalizedText(
+                                  (l10n) => l10n.securityFingerprintCopied,
+                                ),
+                              );
                             }
                           } catch (_) {
                             if (context.mounted) {
-                              securityMessage(context, '复制未完成，请重试');
+                              securityMessage(
+                                context,
+                                LocalizedText(
+                                  (l10n) => l10n.securityCopyFailed,
+                                ),
+                              );
                             }
                           }
                         },
                         icon: const Icon(Icons.copy),
-                        label: const Text('复制公钥指纹'),
+                        label: Text(context.l10n.securityCopyFingerprint),
                       ),
                     ] else ...[
-                      const SectionTitle('受保护的密码'),
+                      SectionTitle(context.l10n.securityProtectedPassword),
                       LedgerCard(
                         child: Text(
                           revealed
@@ -739,8 +842,8 @@ class _CredentialDetailPageState extends State<CredentialDetailPage>
                       ),
                       InfoNote(
                         revealed
-                            ? '20 秒后隐藏；离开页面或转入后台立即隐藏。'
-                            : '验证成功后仅短时显示。无设备认证能力时保持隐藏；Linux 暂不可查看。',
+                            ? context.l10n.securityPasswordRevealNotice
+                            : context.l10n.securityPasswordHiddenNotice,
                       ),
                       FilledButton.icon(
                         onPressed: security.busy
@@ -749,7 +852,7 @@ class _CredentialDetailPageState extends State<CredentialDetailPage>
                                 if (revealed) {
                                   security.hideSensitive();
                                 } else {
-                                  security.reveal(c);
+                                  security.reveal(c, l10n: context.l10n);
                                 }
                               },
                         icon: Icon(
@@ -757,11 +860,15 @@ class _CredentialDetailPageState extends State<CredentialDetailPage>
                               ? Icons.lock_outline
                               : Icons.visibility_outlined,
                         ),
-                        label: Text(revealed ? '隐藏密码' : '设备验证后查看密码'),
+                        label: Text(
+                          revealed
+                              ? context.l10n.securityHidePassword
+                              : context.l10n.securityVerifyViewPassword,
+                        ),
                       ),
                       TextButton(
                         onPressed: () => security.hideSensitive(),
-                        child: const Text('取消验证并隐藏'),
+                        child: Text(context.l10n.securityCancelVerifyHide),
                       ),
                     ],
                     const SizedBox(height: 14),
@@ -781,7 +888,7 @@ class _CredentialDetailPageState extends State<CredentialDetailPage>
                                 ),
                               );
                             },
-                      child: const Text('编辑凭据'),
+                      child: Text(context.l10n.securityEditCredential),
                     ),
                   ],
                 ),
@@ -801,7 +908,7 @@ class CredentialReferencesPage extends StatelessWidget {
   final CredentialMetadata credential;
   @override
   Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(title: const Text('关联服务器')),
+    appBar: AppBar(title: Text(context.l10n.securityLinkedServers)),
     body: ListenableBuilder(
       listenable: ledger.security,
       builder: (context, _) {
@@ -815,13 +922,17 @@ class CredentialReferencesPage extends StatelessWidget {
               credential.name,
               style: Theme.of(context).textTheme.titleLarge,
             ),
-            InfoNote('${configs.length} 台引用此凭据，包含已归档记录。连接用户名分别保存。'),
+            InfoNote(
+              context.l10n.securityCredentialReferenceCount(configs.length),
+            ),
             for (final config in configs)
               LedgerCard(
                 padding: EdgeInsets.zero,
                 child: SettingRow(
                   icon: Icons.dns_outlined,
-                  title: ledger.byId(config.serverId)?.name ?? '服务器',
+                  title:
+                      ledger.byId(config.serverId)?.name ??
+                      context.l10n.securityServerFallback,
                   subtitle:
                       '${config.username} @ ${config.host}:${config.port}',
                   onTap: () => Navigator.push<void>(
@@ -833,7 +944,8 @@ class CredentialReferencesPage extends StatelessWidget {
                   ),
                 ),
               ),
-            if (configs.isEmpty) const InfoNote('尚未关联。可在服务器详情的 SSH 配置中选择。'),
+            if (configs.isEmpty)
+              InfoNote(context.l10n.securityNoCredentialReferences),
           ],
         );
       },
@@ -865,7 +977,7 @@ class _CredentialDeletePageState extends State<CredentialDeletePage> {
           .where((s) => s.credentialId == widget.credential.id)
           .toList();
       return Scaffold(
-        appBar: AppBar(title: const Text('删除凭据')),
+        appBar: AppBar(title: Text(context.l10n.securityDeleteCredential)),
         body: ListView(
           padding: const EdgeInsets.all(20),
           children: [
@@ -873,29 +985,42 @@ class _CredentialDeletePageState extends State<CredentialDeletePage> {
               widget.credential.name,
               style: Theme.of(context).textTheme.headlineSmall,
             ),
-            InfoNote('${references.length} 台服务器将受影响，包含归档记录。请核对下面的每一项。'),
+            InfoNote(
+              context.l10n.securityCredentialDeleteImpact(references.length),
+            ),
             for (final s in references)
               LedgerCard(
                 child: Text(
-                  '${widget.ledger.byId(s.serverId)?.name ?? '服务器'}\n${s.username} @ ${s.host}:${s.port}',
+                  '${widget.ledger.byId(s.serverId)?.name ?? context.l10n.securityServerFallback}\n${s.username} @ ${s.host}:${s.port}',
                 ),
               ),
             if (references.isNotEmpty) ...[
-              const SectionTitle('如何处理关联'),
+              SectionTitle(context.l10n.securityManageLinks),
               DropdownButtonFormField<String>(
                 initialValue: replacementId ?? '',
                 isExpanded: true,
-                decoration: const InputDecoration(labelText: '替换或解除'),
+                decoration: InputDecoration(
+                  errorMaxLines: 8,
+                  labelText: context.l10n.securityReplaceOrUnlink,
+                ),
                 items: [
-                  const DropdownMenuItem(value: '', child: Text('解除所有关联')),
+                  DropdownMenuItem(
+                    value: '',
+                    child: Builder(
+                      builder: (context) =>
+                          Text(context.l10n.securityUnlinkAll),
+                    ),
+                  ),
                   for (final c in security.credentials.where(
                     (c) => c.id != widget.credential.id,
                   ))
                     DropdownMenuItem(
                       value: c.id,
-                      child: Text(
-                        '替换为 ${c.name}',
-                        overflow: TextOverflow.ellipsis,
+                      child: Builder(
+                        builder: (context) => Text(
+                          context.l10n.securityReplaceWith(c.name),
+                          overflow: TextOverflow.ellipsis,
+                        ),
                       ),
                     ),
                 ],
@@ -909,17 +1034,17 @@ class _CredentialDeletePageState extends State<CredentialDeletePage> {
             ],
             InfoNote(
               replacementId == null
-                  ? '解除后服务器、用户名和付款保留，下次连接需重新选择凭据。'
-                  : '仅替换凭据引用，所有服务器当前用户名保持不变。',
+                  ? context.l10n.securityUnlinkCredentialNotice
+                  : context.l10n.securityReplaceCredentialNotice,
             ),
-            const InfoNote('仅删除本机凭据，不能从本页面恢复。不修改远端密码或 authorized_keys，不取消云服务。'),
+            InfoNote(context.l10n.securityDeleteLocalCredentialNotice),
             CheckboxListTile(
               contentPadding: EdgeInsets.zero,
               value: confirmed,
               onChanged: security.busy
                   ? null
                   : (value) => setState(() => confirmed = value ?? false),
-              title: const Text('我已确认关联影响，删除本地凭据'),
+              title: Text(context.l10n.securityConfirmCredentialImpact),
             ),
             SecurityNotice(controller: security),
             FilledButton(
@@ -936,10 +1061,15 @@ class _CredentialDeletePageState extends State<CredentialDeletePage> {
                       );
                       if (saved && context.mounted) {
                         Navigator.pop(context);
-                        securityMessage(context, '本地凭据已删除，远端认证资料未改变');
+                        securityMessage(
+                          context,
+                          LocalizedText(
+                            (l10n) => l10n.securityLocalCredentialDeleted,
+                          ),
+                        );
                       }
                     },
-              child: const Text('确认删除'),
+              child: Text(context.l10n.securityConfirmDelete),
             ),
           ],
         ),
