@@ -901,4 +901,88 @@ void main() {
     expect(find.byType(CloudAccountsPage, skipOffstage: false), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
+  testWidgets(
+    'V1 unselected import explains the blocker and returns to selection without granting it',
+    (tester) async {
+      await mount(
+        tester,
+        CloudAuthorizationPage(
+          ledger: ledger,
+          provider: CloudProvider.solusVm1,
+        ),
+        scale: 2,
+      );
+      await authorize(tester, provider: CloudProvider.solusVm1);
+      await fillResources(tester);
+      await tapKey(tester, 'cloud-return-to-instance');
+      final selection = find.byWidgetPredicate(
+        (widget) =>
+            widget is CheckboxListTile &&
+            widget.key is ValueKey<String> &&
+            (widget.key as ValueKey<String>).value.startsWith('cloud-select-'),
+      );
+      expect(selection.hitTestable(), findsOneWidget);
+      expect(tester.widget<CheckboxListTile>(selection).value, isFalse);
+      expect(cloud.accounts, isEmpty);
+      expect(calls, 1);
+      await tester.tap(selection);
+      await tester.pumpAndSettle();
+      expect(
+        find.byKey(const ValueKey('cloud-return-to-instance')),
+        findsNothing,
+      );
+      expect(
+        tester
+            .widget<TextFormField>(find.byKey(const ValueKey('resource-vcpu')))
+            .controller!
+            .text,
+        '2',
+      );
+      await tapKey(tester, 'cloud-import-submit');
+      expect(cloud.accounts, hasLength(1));
+      expect(ledger.active, hasLength(1));
+      expect(calls, 1);
+      expect(tester.takeException(), isNull);
+    },
+  );
+
+  testWidgets('V1 invalid completion reveals its first error from the bottom', (
+    tester,
+  ) async {
+    await mount(
+      tester,
+      CloudAuthorizationPage(ledger: ledger, provider: CloudProvider.solusVm1),
+      scale: 2,
+    );
+    await authorize(tester, provider: CloudProvider.solusVm1);
+    final selection = find.byWidgetPredicate(
+      (widget) =>
+          widget is CheckboxListTile &&
+          widget.key is ValueKey<String> &&
+          (widget.key as ValueKey<String>).value.startsWith('cloud-select-'),
+    );
+    await reveal(tester, selection);
+    await tester.tap(selection);
+    await tester.pumpAndSettle();
+    await fill(tester, 'resource-vcpu', '2');
+    await tapKey(tester, 'cloud-import-submit');
+    expect(
+      find.byKey(const ValueKey('resource-ip')).hitTestable(),
+      findsOneWidget,
+    );
+    expect(
+      find.text('请填写有效 IPv4 或 IPv6，不能为全零地址').hitTestable(),
+      findsOneWidget,
+    );
+    expect(
+      tester
+          .widget<TextFormField>(find.byKey(const ValueKey('resource-vcpu')))
+          .controller!
+          .text,
+      '2',
+    );
+    expect(cloud.accounts, isEmpty);
+    expect(calls, 1);
+    expect(tester.takeException(), isNull);
+  });
 }

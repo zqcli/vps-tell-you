@@ -1,3 +1,5 @@
+import 'dart:ui' show SemanticsValidationResult;
+
 import 'package:flutter/material.dart';
 
 import '../core/app_theme.dart';
@@ -129,22 +131,28 @@ class ServerResourceFieldsState extends State<ServerResourceFields> {
     return observed != null && observed == _value(key);
   }
 
-  String _source(String key) {
+  String? _source(String key) {
     if (!widget.importing && !_apiSource(key)) {
       return _fields[key]!.text.trim().isEmpty &&
               !(key == 'trafficBytes' && _unlimited)
-          ? '未知可留空，之后可手动补充'
+          ? null
           : '来源：手动填写';
     }
-    if (_apiSource(key)) return '来源：API，导入后保留为本地资料';
+    if (_apiSource(key)) return '来源：API';
     if (widget.initial != null) return '来源：手动填写';
     if (key == 'trafficBytes' && _unlimited) return '来源：手动确认无限流量';
-    if (_fields[key]!.text.trim().isEmpty) return '待补填：API 未提供、为 0 或值无效';
+    if (_fields[key]!.text.trim().isEmpty) return '待补填：API 未提供有效值';
     return widget.observed[key] == null ? '来源：手动补填' : '来源：手动覆盖 API';
   }
 
-  ServerResources? validateAndRead() {
-    if (!_form.currentState!.validate()) return null;
+  ServerResources? validateAndRead({
+    Set<FormFieldState<Object?>>? invalidFields,
+  }) {
+    final invalid = _form.currentState!.validateGranularly();
+    if (invalid.isNotEmpty) {
+      invalidFields?.addAll(invalid);
+      return null;
+    }
     final result = ServerResources(
       ip: _fields['ip']!.text.trim(),
       hostname: _fields['hostname']!.text.trim(),
@@ -187,59 +195,206 @@ class ServerResourceFieldsState extends State<ServerResourceFields> {
         : '请填写大于 0 的容量，精确到整字节';
   }
 
-  Widget _field(String key, String label, {bool bytes = false}) => Padding(
+  Widget _field(String key, String label) => Padding(
     padding: const EdgeInsets.only(bottom: 18),
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        TextFormField(
-          key: ValueKey('resource-$key'),
-          controller: _fields[key],
-          enabled: widget.enabled && !(key == 'trafficBytes' && _unlimited),
-          maxLength: key == 'hostname'
-              ? 253
-              : key == 'ip'
-              ? 45
-              : 32,
-          keyboardType: bytes
-              ? const TextInputType.numberWithOptions(decimal: true)
-              : key == 'vcpu'
-              ? TextInputType.number
-              : TextInputType.text,
-          decoration: InputDecoration(
-            labelText: label,
-            counterText: '',
-            helperText: _source(key),
-            helperMaxLines: 3,
-          ),
-          validator: (_) => _validate(key),
-          onChanged: (_) => setState(() {}),
-        ),
-        if (bytes)
-          Padding(
-            padding: const EdgeInsets.only(top: 8),
-            child: DropdownButtonFormField<int>(
-              key: ValueKey('resource-unit-$key'),
-              initialValue: _units[key],
-              isExpanded: true,
-              decoration: InputDecoration(
-                labelText: key == 'trafficBytes'
-                    ? '流量单位（1024 进制）'
-                    : '容量单位（1024 进制）',
-              ),
-              items: [
-                for (final unit in units.entries)
-                  DropdownMenuItem(value: unit.value, child: Text(unit.key)),
-              ],
-              onChanged:
-                  widget.enabled && !(key == 'trafficBytes' && _unlimited)
-                  ? (unit) => setState(() => _units[key] = unit!)
-                  : null,
-            ),
-          ),
-      ],
+    child: TextFormField(
+      key: ValueKey('resource-$key'),
+      controller: _fields[key],
+      enabled: widget.enabled,
+      maxLength: key == 'hostname'
+          ? 253
+          : key == 'ip'
+          ? 45
+          : 32,
+      keyboardType: key == 'vcpu' ? TextInputType.number : TextInputType.text,
+      textInputAction: TextInputAction.next,
+      autocorrect: false,
+      enableSuggestions: false,
+      decoration: InputDecoration(
+        labelText: label,
+        counterText: '',
+        helperText: _source(key),
+        helperMaxLines: 3,
+        errorMaxLines: 4,
+      ),
+      validator: (_) => _validate(key),
+      onChanged: (_) => setState(() {}),
     ),
   );
+
+  InputDecoration _compactDecoration(String label) => InputDecoration(
+    labelText: label,
+    floatingLabelBehavior: FloatingLabelBehavior.always,
+    contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 16),
+    counterText: '',
+  );
+
+  Widget _capacityField(String key, String label, {bool traffic = false}) {
+    final enabled = widget.enabled && !(traffic && _unlimited);
+    final style = Theme.of(context).textTheme.bodyMedium;
+    // Reserve the complete unit word at the user's text size. The remaining
+    // space is shared by the editable number and period; unknown periods can
+    // wrap instead of clipping at narrow widths or with enlarged text.
+    var unitWidth = 64.0;
+    for (final unit in units.keys) {
+      final painter = TextPainter(
+        text: TextSpan(text: unit, style: style),
+        textScaler: MediaQuery.textScalerOf(context),
+        textDirection: Directionality.of(context),
+      )..layout();
+      if (painter.width + 48 > unitWidth) unitWidth = painter.width + 48;
+      painter.dispose();
+    }
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 18),
+      child: FormField<void>(
+        validator: (_) => _validate(key),
+        builder: (field) => Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // Keep long labels, provenance and help outside the narrow controls.
+            // Only the capacity, unit and optional quota period share this row.
+            Text(label),
+            const SizedBox(height: 8),
+            Row(
+              key: ValueKey('resource-row-$key'),
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  flex: 1,
+                  child: Semantics(
+                    label: label,
+                    hint: field.errorText,
+                    validationResult: field.hasError
+                        ? SemanticsValidationResult.invalid
+                        : SemanticsValidationResult.valid,
+                    child: TextFormField(
+                      key: ValueKey('resource-$key'),
+                      controller: _fields[key],
+                      enabled: enabled,
+                      maxLength: 32,
+                      textInputAction: TextInputAction.next,
+                      style: style,
+                      keyboardType: const TextInputType.numberWithOptions(
+                        decimal: true,
+                      ),
+                      decoration: _compactDecoration('容量').copyWith(
+                        // The shared row owns validation so its message can use
+                        // the full width below all three controls.
+                        error: field.hasError ? const SizedBox.shrink() : null,
+                      ),
+                      onChanged: (_) => setState(() {}),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 6),
+                SizedBox(
+                  width: unitWidth,
+                  child: Semantics(
+                    label: '$label单位，1024 进制',
+                    child: DropdownButtonFormField<int>(
+                      key: ValueKey('resource-unit-$key'),
+                      initialValue: _units[key],
+                      isExpanded: true,
+                      isDense: false,
+                      itemHeight: null,
+                      selectedItemBuilder: (context) => [
+                        for (final unit in units.keys) Text(unit),
+                      ],
+                      style: style,
+                      iconSize: 16,
+                      decoration: _compactDecoration('单位'),
+                      items: [
+                        for (final unit in units.entries)
+                          DropdownMenuItem(
+                            value: unit.value,
+                            child: Text(unit.key),
+                          ),
+                      ],
+                      onChanged: enabled
+                          ? (unit) => setState(() => _units[key] = unit!)
+                          : null,
+                    ),
+                  ),
+                ),
+                if (traffic) ...[
+                  const SizedBox(width: 6),
+                  Expanded(
+                    flex: 1,
+                    child: Semantics(
+                      label: '流量周期',
+                      child: DropdownButtonFormField<int>(
+                        key: const ValueKey('resource-traffic-period'),
+                        initialValue: _trafficPeriodMonths ?? 0,
+                        isExpanded: true,
+                        isDense: false,
+                        itemHeight: null,
+                        selectedItemBuilder: (context) => [
+                          if (_trafficPeriodMonths == null)
+                            const Text('未设置')
+                          else
+                            const SizedBox.shrink(),
+                          for (final period
+                              in ServerResources.trafficPeriods.entries)
+                            if (period.key == _trafficPeriodMonths)
+                              Text(period.value)
+                            else
+                              const SizedBox.shrink(),
+                        ],
+                        style: style,
+                        iconSize: 16,
+                        decoration: _compactDecoration('周期'),
+                        items: [
+                          const DropdownMenuItem(value: 0, child: Text('未设置')),
+                          for (final period
+                              in ServerResources.trafficPeriods.entries)
+                            DropdownMenuItem(
+                              value: period.key,
+                              child: Text(period.value),
+                            ),
+                        ],
+                        onChanged: widget.enabled
+                            ? (value) => setState(
+                                () => _trafficPeriodMonths = value == 0
+                                    ? null
+                                    : value,
+                              )
+                            : null,
+                      ),
+                    ),
+                  ),
+                ],
+              ],
+            ),
+            if (field.hasError) ...[
+              const SizedBox(height: 6),
+              Semantics(
+                liveRegion: true,
+                child: Text(
+                  field.errorText!,
+                  style: Theme.of(context).textTheme.bodySmall
+                      ?.copyWith(color: Theme.of(context).colorScheme.error),
+                ),
+              ),
+            ],
+            if (_source(key) case final source?) ...[
+              const SizedBox(height: 6),
+              Text(source, style: Theme.of(context).textTheme.bodySmall),
+            ],
+            if (traffic) ...[
+              const SizedBox(height: 6),
+              Text(
+                widget.defaultTrafficPeriodMonths == 1 && widget.initial == null
+                    ? '新建默认按月，请按套餐确认；也可选“未设置”。'
+                    : '周期独立于容量单位；未知选“未设置”。',
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) => Form(
@@ -250,53 +405,28 @@ class ServerResourceFieldsState extends State<ServerResourceFields> {
         SectionTitle(widget.importing ? '资源资料 · 六项必填' : '硬件信息'),
         InfoNote(
           widget.importing
-              ? '核对 API 已填值，补齐未知项。0 不代表容量或无限流量；若暂时不知道，可仅保存账户，稍后继续导入。'
-              : 'IP、Hostname、磁盘、流量、RAM 和 vCPU 均可手动维护，未知可留空。保存后不会被 API 刷新覆盖；修改不会更改远端配置或 SSH 连接地址。',
+              ? '核对并补齐六项后导入；容量按 1024 进制，0 不代表不限量。未知项可先仅保存账户，稍后补填。'
+              : '未知可留空，容量按 1024 进制。仅维护本地硬件，API 刷新不会覆盖，也不更改远端配置或 SSH 地址。',
         ),
         _field('ip', 'IP 地址'),
         _field('hostname', 'Hostname'),
-        _field('diskBytes', '磁盘额度', bytes: true),
-        _field('trafficBytes', '流量额度', bytes: true),
-        Padding(
-          padding: const EdgeInsets.only(bottom: 18),
-          child: DropdownButtonFormField<int>(
-            key: const ValueKey('resource-traffic-period'),
-            initialValue: _trafficPeriodMonths ?? 0,
-            isExpanded: true,
-            decoration: InputDecoration(
-              labelText: '流量周期',
-              helperText:
-                  widget.defaultTrafficPeriodMonths == 1 &&
-                      widget.initial == null
-                  ? '新建默认月，可修改或选“未设置”；请按套餐确认。'
-                  : '周期独立于容量单位；未知选“未设置”，不从 API 推断。',
-              helperMaxLines: 3,
-            ),
-            items: [
-              const DropdownMenuItem(value: 0, child: Text('未设置')),
-              for (final period in ServerResources.trafficPeriods.entries)
-                DropdownMenuItem(value: period.key, child: Text(period.value)),
-            ],
-            onChanged: widget.enabled
-                ? (value) => setState(
-                    () => _trafficPeriodMonths = value == 0 ? null : value,
-                  )
-                : null,
-          ),
-        ),
-        CheckboxListTile(
+        _capacityField('diskBytes', '磁盘额度'),
+        _capacityField('trafficBytes', '流量额度', traffic: true),
+        SwitchListTile(
           key: const ValueKey('resource-traffic-unlimited'),
           contentPadding: EdgeInsets.zero,
-          controlAffinity: ListTileControlAffinity.leading,
           value: _unlimited,
           onChanged: widget.enabled
-              ? (value) => setState(() => _unlimited = value ?? false)
+              ? (value) => setState(() => _unlimited = value)
               : null,
-          title: const Text('已确认套餐流量不限量'),
-          subtitle: const Text('仅在套餐确实不限量时选择，不按 API 的 0 推断'),
+          title: const Text('流量不限量'),
+        ),
+        Text(
+          '仅在套餐明确不限量时开启；未知或 API 返回 0 请保持关闭。',
+          style: Theme.of(context).textTheme.bodySmall,
         ),
         const SizedBox(height: 18),
-        _field('ramBytes', '内存容量', bytes: true),
+        _capacityField('ramBytes', '内存容量'),
         _field('vcpu', 'vCPU 核数'),
       ],
     ),

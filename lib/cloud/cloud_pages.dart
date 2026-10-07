@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../core/app_theme.dart';
+import '../core/form_feedback.dart';
 import '../servers/ledger_controller.dart';
 import '../servers/server_detail.dart';
 import '../servers/server_resource_fields.dart';
@@ -561,6 +562,7 @@ class _CloudImportPageState extends State<CloudImportPage>
   final selected = <String>{};
   final displayName = TextEditingController();
   final resourceForm = GlobalKey<ServerResourceFieldsState>();
+  final v1Selection = GlobalKey();
   bool saving = false,
       confirmRebind = false,
       committed = false,
@@ -615,8 +617,12 @@ class _CloudImportPageState extends State<CloudImportPage>
     if (!accountOnly && selected.isEmpty) return;
     final ServerResources? resources;
     if (v1 && !accountOnly && selected.isNotEmpty) {
-      resources = resourceForm.currentState?.validateAndRead();
+      final invalid = <FormFieldState<Object?>>{};
+      resources = resourceForm.currentState?.validateAndRead(
+        invalidFields: invalid,
+      );
       if (resources == null) {
+        revealFirstInvalidField(invalid);
         setState(() => error = '请补齐并核对六项资源资料；不知道的项目请向服务商核实，也可仅保存账户。');
         return;
       }
@@ -660,6 +666,24 @@ class _CloudImportPageState extends State<CloudImportPage>
         picked.isEmpty ? '账户授权已保存，未导入新实例' : '已保存，所选实例已加入本地台账',
       );
       Navigator.pop(context, true);
+    }
+  }
+
+  bool get needsV1Selection =>
+      v1 &&
+      selected.isEmpty &&
+      snapshot.instances.isNotEmpty &&
+      linked(snapshot.instances.single) == null;
+
+  void revealV1Selection() {
+    FocusScope.of(context).unfocus();
+    final target = v1Selection.currentContext;
+    if (target != null) {
+      Scrollable.ensureVisible(
+        target,
+        duration: const Duration(milliseconds: 250),
+        alignment: 0.1,
+      );
     }
   }
 
@@ -707,6 +731,7 @@ class _CloudImportPageState extends State<CloudImportPage>
           ),
         for (final instance in snapshot.instances)
           Padding(
+            key: v1 ? v1Selection : null,
             padding: const EdgeInsets.only(bottom: 12),
             child: LedgerCard(
               padding: EdgeInsets.zero,
@@ -763,6 +788,7 @@ class _CloudImportPageState extends State<CloudImportPage>
             ),
           ),
         if (v1) ...[
+          if (needsV1Selection) const InfoNote('请先勾选上方实例，再补齐下方资料；仅填写不会自动导入。'),
           const SizedBox(height: 6),
           TextField(
             key: const ValueKey('cloud-v1-name'),
@@ -815,6 +841,13 @@ class _CloudImportPageState extends State<CloudImportPage>
           '导入不会覆盖已有本地名称、费用、付款、备注或 SSH 配置。去重依据独立连接与远端 ID，不按 IP 或名称合并。已归档的关联也不会重复导入。',
         ),
         if (error != null) CloudNotice(error!, error: true),
+        if (needsV1Selection && !saving && !expired)
+          TextButton.icon(
+            key: const ValueKey('cloud-return-to-instance'),
+            onPressed: revealV1Selection,
+            icon: const Icon(Icons.arrow_upward),
+            label: const Text('返回选择实例'),
+          ),
         FilledButton.icon(
           key: const ValueKey('cloud-import-submit'),
           onPressed:
@@ -828,6 +861,8 @@ class _CloudImportPageState extends State<CloudImportPage>
           label: Text(
             saving
                 ? '正在保存…'
+                : needsV1Selection
+                ? '尚未选择实例'
                 : '${widget.verification == null ? '导入' : '保存账户并导入'} ${selected.length} 台',
           ),
         ),
