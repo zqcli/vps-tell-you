@@ -48,7 +48,13 @@ class _TerminalPageState extends State<TerminalPage>
   final _terminalScroll = ScrollController();
   bool _commandsOpen = false, _exitPromptOpen = false;
   bool _ctrlArmed = false, _scrolledBack = false, _hasOutput = false;
-  int _inputEpoch = 0;
+  int _inputEpoch = 0, _commandsEpoch = 0;
+  bool _pasteBusy = false;
+  ModalRoute<dynamic>? _commandsRoute;
+  Size? _lastViewportSize;
+  double? _lastViewportTextSize;
+  int _viewportEpoch = 0;
+  bool _cursorRevealQueued = false;
   int? _touchPointer;
   Offset? _touchStart;
   Duration? _touchStartedAt;
@@ -92,6 +98,8 @@ class _TerminalPageState extends State<TerminalPage>
   BuildContext get _dialogContext => _terminalViewKey.currentContext ?? context;
 
   void _createTerminal() {
+    _lastViewportSize = null;
+    _viewportEpoch++;
     _terminalViewKey = GlobalKey<TerminalViewState>();
     _hasOutput = false;
     _terminal = _MobileTerminal(
@@ -142,7 +150,113 @@ class _TerminalPageState extends State<TerminalPage>
   void _scrollToBottom() {
     if (_terminalScroll.hasClients) {
       _terminalScroll.jumpTo(_terminalScroll.position.maxScrollExtent);
+      // xterm may already have corrected pixels during a view remount without
+      // emitting a ScrollController change. An explicit latest/input action
+      // clears the old history flag even when jumpTo uses the same pixels.
+      if (_scrolledBack && mounted) setState(() => _scrolledBack = false);
     }
+  }
+
+  void _revealCursor() {
+    final view = _terminalViewKey.currentState;
+    if (view == null ||
+        !_terminalScroll.hasClients ||
+        _terminalScroll.positions.length != 1) {
+      return;
+    }
+    final render = view.renderTerminal;
+    if (!render.hasSize || render.size.isEmpty) return;
+    final viewport = render.localToGlobal(Offset.zero) & render.size;
+    final cursor = view.globalCursorRect;
+    final delta = cursor.bottom > viewport.bottom
+        ? cursor.bottom - viewport.bottom
+        : cursor.top < viewport.top
+        ? cursor.top - viewport.top
+        : 0.0;
+    if (delta.abs() < .1) return;
+    final position = _terminalScroll.position;
+    _terminalScroll.jumpTo(
+      (position.pixels + delta).clamp(
+        position.minScrollExtent,
+        position.maxScrollExtent,
+      ),
+    );
+  }
+
+  void _queueCursorReveal() {
+    if (_cursorRevealQueued) return;
+    _cursorRevealQueued = true;
+    final generation = _service.generation;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _cursorRevealQueued = false;
+      if (!mounted ||
+          !_connected ||
+          generation != _service.generation ||
+          !_terminalFocus.hasFocus ||
+          _commandsOpen ||
+          _scrolledBack ||
+          _terminalController.selection != null) {
+        return;
+      }
+      _revealCursor();
+    });
+  }
+
+  void _viewportChanged(Size size, double textSize) {
+    if (size == _lastViewportSize && textSize == _lastViewportTextSize) return;
+    _lastViewportSize = size;
+    _lastViewportTextSize = textSize;
+    final ticket = ++_viewportEpoch;
+    final terminal = _terminal;
+    final generation = _service.generation;
+    final view = _terminalViewKey.currentState;
+    CellAnchor? anchor;
+    var fraction = 0.0;
+    // A passive IME/rotation resize must not pull a reader out of history.
+    // Anchors survive xterm reflow, unlike an unqualified pixel offset.
+    if (view != null &&
+        _terminalScroll.hasClients &&
+        _terminalScroll.positions.length == 1 &&
+        (_terminalScroll.position.extentAfter > 24 ||
+            _terminalController.selection != null)) {
+      final lineHeight = view.renderTerminal.lineHeight;
+      final pixels = _terminalScroll.offset;
+      final row = (pixels / lineHeight).floor().clamp(
+        0,
+        terminal.buffer.height - 1,
+      );
+      anchor = terminal.buffer.createAnchor(0, row);
+      fraction = pixels / lineHeight - row;
+    }
+    final followCursor = anchor == null && _terminalFocus.hasFocus;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      try {
+        if (!mounted ||
+            ticket != _viewportEpoch ||
+            !identical(terminal, _terminal) ||
+            generation != _service.generation ||
+            !_terminalScroll.hasClients ||
+            _terminalScroll.positions.length != 1) {
+          return;
+        }
+        final currentView = _terminalViewKey.currentState;
+        if (currentView == null) return;
+        if (anchor?.attached == true) {
+          final position = _terminalScroll.position;
+          final pixels =
+              (anchor!.y + fraction) * currentView.renderTerminal.lineHeight;
+          _terminalScroll.jumpTo(
+            pixels.clamp(position.minScrollExtent, position.maxScrollExtent),
+          );
+        } else if (followCursor && _terminalFocus.hasFocus && !_commandsOpen) {
+          // This callback is registered during layout, after xterm's raw
+          // keyboard observer. It sees the final usable viewport for this frame.
+          _revealCursor();
+        }
+      } finally {
+        anchor?.dispose();
+      }
+    });
   }
 
   void _requestKeyboard() {
@@ -158,6 +272,8 @@ class _TerminalPageState extends State<TerminalPage>
     final view = _terminalViewKey.currentState;
     if (MediaQuery.viewInsetsOf(context).bottom > 0) {
       view?.requestKeyboard();
+      _scrollToBottom();
+      _queueCursorReveal();
       return;
     }
     // xterm 4.0.0 keeps both a logical connection and composing state after
@@ -179,6 +295,8 @@ class _TerminalPageState extends State<TerminalPage>
         return;
       }
       key.currentState?.requestKeyboard();
+      _scrollToBottom();
+      _queueCursorReveal();
     });
   }
 
@@ -264,32 +382,65 @@ class _TerminalPageState extends State<TerminalPage>
     final keyboard = HardwareKeyboard.instance;
     if ((keyboard.isControlPressed || keyboard.isMetaPressed) &&
         event.logicalKey == LogicalKeyboardKey.keyV) {
-      if (event is KeyDownEvent) unawaited(_pasteToDraft());
+      if (event is KeyDownEvent) unawaited(_pasteToDraft().then((_) {}));
       return KeyEventResult.handled;
     }
     return KeyEventResult.ignored;
   }
 
-  Future<void> _pasteToDraft() async {
-    if (_closing || _targetInvalidated) return;
+  Future<String?> _pasteToDraft() async {
+    if (_pasteBusy || _closing || _targetInvalidated || _exitPromptOpen) {
+      return null;
+    }
+    final route = _commandsOpen ? _commandsRoute : ModalRoute.of(context);
+    if (route?.isCurrent != true) return null;
+    _consumeControl();
     final epoch = _targetEpoch;
     final generation = _service.generation;
-    final data = await Clipboard.getData(Clipboard.kTextPlain);
-    if (!mounted ||
-        _closing ||
-        epoch != _targetEpoch ||
-        generation != _service.generation ||
-        data?.text == null) {
-      return;
+    final commandsEpoch = _commandsEpoch;
+    final before = _draft.value;
+    setState(() => _pasteBusy = true);
+    String problem(String message) {
+      if (mounted) setState(() => _notice = message);
+      return message;
     }
-    if (data!.text!.length > CommandSnippet.maxContentLength) {
-      setState(() => _notice = '剪贴板内容超过 16384 个字符，未插入或发送。');
-      return;
+
+    try {
+      final data = await Clipboard.getData(Clipboard.kTextPlain);
+      if (!mounted ||
+          _closing ||
+          _targetInvalidated ||
+          epoch != _targetEpoch ||
+          generation != _service.generation ||
+          commandsEpoch != _commandsEpoch ||
+          route?.isCurrent != true) {
+        return null;
+      }
+      if (_draft.value != before) return problem('草稿已变化，请再次点击粘贴。');
+      final pasted = data?.text;
+      if (pasted == null || pasted.isEmpty) return problem('剪贴板中没有可粘贴的文本。');
+      final selection = before.selection;
+      final start = selection.isValid ? selection.start : before.text.length;
+      final end = selection.isValid ? selection.end : before.text.length;
+      final next = before.text.replaceRange(start, end, pasted);
+      if (next.length > CommandSnippet.maxContentLength) {
+        return problem('粘贴后超过 16384 个字符，草稿未修改。');
+      }
+      _draft.value = TextEditingValue(
+        text: next,
+        selection: TextSelection.collapsed(offset: start + pasted.length),
+      );
+      if (!_commandsOpen) unawaited(_openCommands());
+      return null;
+    } catch (_) {
+      return problem('剪贴板读取失败，草稿未修改。请重新点击粘贴。');
+    } finally {
+      if (mounted) setState(() => _pasteBusy = false);
     }
-    if (await _replaceDraft(data.text!)) await _openCommands();
   }
 
   Future<bool> _replaceDraft(String content) async {
+    final before = _draft.value;
     final epoch = _targetEpoch;
     final generation = _service.generation;
     if (_draft.text.isNotEmpty && _draft.text != content) {
@@ -305,7 +456,8 @@ class _TerminalPageState extends State<TerminalPage>
         _closing ||
         _targetInvalidated ||
         epoch != _targetEpoch ||
-        generation != _service.generation) {
+        generation != _service.generation ||
+        _draft.value != before) {
       return false;
     }
     _draft.value = TextEditingValue(
@@ -318,7 +470,10 @@ class _TerminalPageState extends State<TerminalPage>
   Future<void> _openCommands() async {
     if (_commandsOpen || _closing || _targetInvalidated) return;
     _closeKeyboard();
-    setState(() => _commandsOpen = true);
+    setState(() {
+      _commandsOpen = true;
+      _commandsEpoch++;
+    });
     final sent = await showModalBottomSheet<bool>(
       context: _dialogContext,
       backgroundColor: terminalChromeColor,
@@ -328,20 +483,39 @@ class _TerminalPageState extends State<TerminalPage>
       ),
       isScrollControlled: true,
       useSafeArea: true,
-      builder: (sheetContext) => Theme(
-        data: appTheme(brightness: Brightness.dark),
-        child: TerminalCommandSheet(
-          draft: _draft,
-          service: _service,
-          insertSnippet: _insertSnippet,
-          replaceDraft: _replaceDraft,
-          sendDraft: _sendDraft,
-        ),
-      ),
+      builder: (sheetContext) {
+        _commandsRoute = ModalRoute.of(sheetContext);
+        return Theme(
+          data: appTheme(brightness: Brightness.dark),
+          child: TerminalCommandSheet(
+            draft: _draft,
+            service: _service,
+            insertSnippet: _insertSnippet,
+            replaceDraft: _replaceDraft,
+            sendDraft: _sendDraft,
+            pasteDraft: _pasteToDraft,
+            target: widget.target.label,
+          ),
+        );
+      },
     );
     if (!mounted) return;
-    setState(() => _commandsOpen = false);
-    if (sent == true) _requestKeyboard();
+    setState(() {
+      _commandsOpen = false;
+      _commandsRoute = null;
+      _commandsEpoch++;
+    });
+    if (sent == true) {
+      final generation = _service.generation;
+      final epoch = _commandsEpoch;
+      // Rebuild readOnly=false before asking an already-visible IME to attach.
+      await WidgetsBinding.instance.endOfFrame;
+      if (mounted &&
+          generation == _service.generation &&
+          epoch == _commandsEpoch) {
+        _requestKeyboard();
+      }
+    }
   }
 
   Future<void> _connectionDetails() async {
@@ -368,7 +542,7 @@ class _TerminalPageState extends State<TerminalPage>
             const Text('点按终端输入；长按并拖动选择，使用“复制”复制。向上滚动查看历史，向下箭头回到最新输出。'),
             const SizedBox(height: 12),
             const Text(
-              '键盘和特殊键直接发送到 SSH。常用命令、片段和菜单粘贴先进入独立草稿，确认后发送。Ctrl 作用于下一个按键，再点可取消。',
+              '键盘和特殊键直接发送到 SSH。常用命令、片段和粘贴先进入独立草稿；“发送”不额外回车，“发送并执行”追加一个回车。正文原有换行仍可能执行。Ctrl 作用于下一个按键，再点可取消。',
             ),
             const SizedBox(height: 12),
             const Text('离开或进入后台会断开会话；不会自动重连或重放输入。长任务建议在远端使用 tmux / screen。'),
@@ -621,34 +795,33 @@ class _TerminalPageState extends State<TerminalPage>
     await _replaceDraft(selected.content);
   }
 
-  Future<bool> _sendDraft() async {
-    if (_sendBusy || !_connected || _draft.text.isEmpty) return false;
-    final generation = _service.generation;
-    final exact = _draft.text;
-    FocusManager.instance.primaryFocus?.unfocus();
+  Future<bool> _sendDraft(
+    String exact,
+    int generation,
+    bool appendEnter,
+  ) async {
+    if (_sendBusy ||
+        !_connected ||
+        !_service.acceptsInput ||
+        exact.isEmpty ||
+        exact != _draft.text ||
+        generation != _service.generation) {
+      return false;
+    }
     setState(() => _sendBusy = true);
     try {
-      final payload = await showDialog<String>(
-        context: _dialogContext,
-        barrierDismissible: false,
-        builder: (_) => _SendDraftDialog(
-          service: _service,
-          generation: generation,
-          target: widget.target.label,
-          exact: exact,
-        ),
-      );
-      if (payload == null ||
-          !mounted ||
-          !_connected ||
-          _closing ||
-          _service.generation != generation) {
-        return false;
-      }
+      // The two visible actions define the exact payload. Existing CR/LF or
+      // controls in the draft are never removed or disguised as non-executing.
+      final payload = appendEnter ? '$exact\r' : exact;
       _service.write(payload);
+      if (!_connected || generation != _service.generation) return false;
       _draft.clear();
+      FocusManager.instance.primaryFocus?.unfocus();
       _scrollToBottom();
       return true;
+    } catch (_) {
+      // Do not log the text or retry a potentially accepted write.
+      return false;
     } finally {
       if (mounted) setState(() => _sendBusy = false);
     }
@@ -694,10 +867,17 @@ class _TerminalPageState extends State<TerminalPage>
   Widget build(BuildContext context) {
     final keyboardVisible = MediaQuery.viewInsetsOf(context).bottom > 0;
     final scale = MediaQuery.textScalerOf(context);
-    final headerHeight = (scale.scale(17) + scale.scale(11) + 20).clamp(
-      56.0,
-      120.0,
-    );
+    final media = MediaQuery.of(context);
+    final usableHeight =
+        media.size.height - media.viewInsets.bottom - media.padding.top;
+    final compactChrome = keyboardVisible && usableHeight < 260;
+    final headerHeight = compactChrome
+        ? 48.0
+        : (scale.scale(17) + scale.scale(11) + 20).clamp(56.0, 120.0);
+    final hideKeyBar =
+        keyboardVisible &&
+        usableHeight <
+            headerHeight + 49 + (scale.scale(14) * 1.3).ceilToDouble() + 8;
     return Theme(
       data: appTheme(brightness: Brightness.dark),
       child: Builder(
@@ -743,29 +923,38 @@ class _TerminalPageState extends State<TerminalPage>
                         overflow: TextOverflow.ellipsis,
                         style: Theme.of(context).textTheme.titleMedium!
                             .copyWith(
-                              fontSize: 17,
+                              fontSize: compactChrome ? 14 : 17,
                               height: 1.15,
                               fontWeight: FontWeight.w600,
                             ),
                       ),
-                      Text(
-                        '$_statusLabel · ${escapedCommandPreview(widget.target.label)}',
-                        key: const ValueKey('terminal-status'),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: Theme.of(context).textTheme.bodySmall!.copyWith(
-                          fontSize: 11,
-                          height: 1.15,
-                          color: _connected
-                              ? const Color(0xFF8CE4B6)
-                              : const Color(0xFFB9C5D9),
+                      if (!compactChrome)
+                        Text(
+                          '$_statusLabel · ${escapedCommandPreview(widget.target.label)}',
+                          key: const ValueKey('terminal-status'),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: Theme.of(context).textTheme.bodySmall!
+                              .copyWith(
+                                fontSize: 11,
+                                height: 1.15,
+                                color: _connected
+                                    ? const Color(0xFF8CE4B6)
+                                    : const Color(0xFFB9C5D9),
+                              ),
                         ),
-                      ),
                     ],
                   ),
                 ),
               ),
               actions: [
+                if (hideKeyBar)
+                  IconButton(
+                    key: const ValueKey('terminal-commands'),
+                    tooltip: '命令与片段',
+                    onPressed: _openCommands,
+                    icon: const Icon(Icons.code),
+                  ),
                 IconButton(
                   key: const ValueKey('terminal-keyboard'),
                   tooltip: keyboardVisible && _terminalFocus.hasFocus
@@ -788,7 +977,7 @@ class _TerminalPageState extends State<TerminalPage>
                       case 'connect':
                         unawaited(_connect());
                       case 'paste':
-                        unawaited(_pasteToDraft());
+                        unawaited(_pasteToDraft().then((_) {}));
                       case 'disconnect':
                         unawaited(_requestLeave(disconnectOnly: true));
                       case 'reboot':
@@ -845,150 +1034,159 @@ class _TerminalPageState extends State<TerminalPage>
                 children: [
                   Expanded(
                     child: LayoutBuilder(
-                      builder: (context, viewport) => Stack(
-                        children: [
-                          Positioned.fill(
-                            child: Listener(
-                              onPointerDown: _terminalPointerDown,
-                              onPointerMove: _terminalPointerMove,
-                              onPointerUp: _terminalPointerUp,
-                              onPointerCancel: (_) => _touchPointer = null,
-                              child: KeyedSubtree(
-                                key: ValueKey('terminal-input-$_inputEpoch'),
-                                child: TerminalView(
-                                  _terminal,
-                                  key: _terminalViewKey,
-                                  controller: _terminalController,
-                                  scrollController: _terminalScroll,
-                                  focusNode: _terminalFocus,
-                                  autofocus: false,
-                                  readOnly:
-                                      !_connected ||
-                                      _commandsOpen ||
-                                      _exitPromptOpen ||
-                                      _sendBusy,
-                                  deleteDetection: true,
-                                  keyboardType: TextInputType.multiline,
-                                  keyboardAppearance: Brightness.dark,
-                                  onKeyEvent: _terminalKeyEvent,
-                                  shortcuts: const {
-                                    SingleActivator(
-                                      LogicalKeyboardKey.keyC,
-                                      control: true,
-                                      shift: true,
-                                    ): CopySelectionTextIntent.copy,
-                                    SingleActivator(
-                                      LogicalKeyboardKey.keyC,
-                                      meta: true,
-                                    ): CopySelectionTextIntent.copy,
-                                  },
-                                  theme: mobileTerminalTheme,
-                                  textStyle: const CodingTerminalStyle(),
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 8,
-                                    vertical: 8,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                          if (_connected && !_hasOutput)
+                      builder: (context, viewport) {
+                        _viewportChanged(viewport.biggest, scale.scale(14));
+                        return Stack(
+                          children: [
                             Positioned.fill(
-                              child: IgnorePointer(
-                                child: Center(
-                                  child: Padding(
-                                    padding: const EdgeInsets.all(24),
-                                    child: Text(
-                                      '点按终端开始输入',
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .bodySmall,
+                              child: Listener(
+                                onPointerDown: _terminalPointerDown,
+                                onPointerMove: _terminalPointerMove,
+                                onPointerUp: _terminalPointerUp,
+                                onPointerCancel: (_) => _touchPointer = null,
+                                child: KeyedSubtree(
+                                  key: ValueKey('terminal-input-$_inputEpoch'),
+                                  child: TerminalView(
+                                    _terminal,
+                                    key: _terminalViewKey,
+                                    controller: _terminalController,
+                                    scrollController: _terminalScroll,
+                                    focusNode: _terminalFocus,
+                                    autofocus: false,
+                                    readOnly:
+                                        !_connected ||
+                                        _commandsOpen ||
+                                        _exitPromptOpen ||
+                                        _sendBusy,
+                                    deleteDetection: true,
+                                    keyboardType: TextInputType.multiline,
+                                    keyboardAppearance: Brightness.dark,
+                                    onKeyEvent: _terminalKeyEvent,
+                                    shortcuts: const {
+                                      SingleActivator(
+                                        LogicalKeyboardKey.keyC,
+                                        control: true,
+                                        shift: true,
+                                      ): CopySelectionTextIntent.copy,
+                                      SingleActivator(
+                                        LogicalKeyboardKey.keyC,
+                                        meta: true,
+                                      ): CopySelectionTextIntent.copy,
+                                    },
+                                    theme: mobileTerminalTheme,
+                                    textStyle: const CodingTerminalStyle(),
+                                    padding: EdgeInsets.symmetric(
+                                      horizontal: 8,
+                                      vertical: compactChrome ? 4 : 8,
                                     ),
                                   ),
                                 ),
                               ),
                             ),
-                          if (!_connected || _notice != null)
-                            Positioned(
-                              top: 0,
-                              left: 0,
-                              right: 0,
-                              child: ConstrainedBox(
-                                constraints: BoxConstraints(
-                                  maxHeight: viewport.maxHeight * .45,
+                            if (_connected && !_hasOutput)
+                              Positioned.fill(
+                                child: IgnorePointer(
+                                  child: Center(
+                                    child: Padding(
+                                      padding: const EdgeInsets.all(24),
+                                      child: Text(
+                                        '点按终端开始输入',
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .bodySmall,
+                                      ),
+                                    ),
+                                  ),
                                 ),
-                                child: SingleChildScrollView(
-                                  child: Column(
+                              ),
+                            if (!_connected || _notice != null)
+                              Positioned(
+                                top: 0,
+                                left: 0,
+                                right: 0,
+                                child: ConstrainedBox(
+                                  constraints: BoxConstraints(
+                                    maxHeight: viewport.maxHeight * .45,
+                                  ),
+                                  child: SingleChildScrollView(
+                                    child: Column(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        if (!_connected)
+                                          _connectionBanner(context),
+                                        if (_notice != null)
+                                          _noticeBanner(context),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            if (_terminalController.selection != null)
+                              Positioned(
+                                top: 8,
+                                right: 8,
+                                child: Material(
+                                  color: terminalChromeColor,
+                                  elevation: 4,
+                                  borderRadius: BorderRadius.circular(12),
+                                  child: Row(
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
-                                      if (!_connected)
-                                        _connectionBanner(context),
-                                      if (_notice != null)
-                                        _noticeBanner(context),
+                                      TextButton.icon(
+                                        key: const ValueKey(
+                                          'terminal-copy-selection',
+                                        ),
+                                        onPressed: _copySelection,
+                                        icon: const Icon(
+                                          Icons.copy_outlined,
+                                          size: 18,
+                                        ),
+                                        label: const Text('复制'),
+                                      ),
+                                      IconButton(
+                                        tooltip: '取消选择',
+                                        onPressed:
+                                            _terminalController.clearSelection,
+                                        icon: const Icon(Icons.close, size: 18),
+                                      ),
                                     ],
                                   ),
                                 ),
                               ),
-                            ),
-                          if (_terminalController.selection != null)
-                            Positioned(
-                              top: 8,
-                              right: 8,
-                              child: Material(
-                                color: terminalChromeColor,
-                                elevation: 4,
-                                borderRadius: BorderRadius.circular(12),
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    TextButton.icon(
-                                      key: const ValueKey(
-                                        'terminal-copy-selection',
-                                      ),
-                                      onPressed: _copySelection,
-                                      icon: const Icon(
-                                        Icons.copy_outlined,
-                                        size: 18,
-                                      ),
-                                      label: const Text('复制'),
-                                    ),
-                                    IconButton(
-                                      tooltip: '取消选择',
-                                      onPressed:
-                                          _terminalController.clearSelection,
-                                      icon: const Icon(Icons.close, size: 18),
-                                    ),
-                                  ],
+                            if (_scrolledBack)
+                              Positioned(
+                                bottom: 12,
+                                right: 12,
+                                child: FloatingActionButton.small(
+                                  heroTag: null,
+                                  key: const ValueKey('terminal-scroll-bottom'),
+                                  tooltip: '回到最新输出',
+                                  onPressed: _scrollToBottom,
+                                  child: const Icon(
+                                    Icons.vertical_align_bottom,
+                                  ),
                                 ),
                               ),
-                            ),
-                          if (_scrolledBack)
-                            Positioned(
-                              bottom: 12,
-                              right: 12,
-                              child: FloatingActionButton.small(
-                                heroTag: null,
-                                key: const ValueKey('terminal-scroll-bottom'),
-                                tooltip: '回到最新输出',
-                                onPressed: _scrollToBottom,
-                                child: const Icon(Icons.vertical_align_bottom),
-                              ),
-                            ),
-                        ],
-                      ),
+                          ],
+                        );
+                      },
                     ),
                   ),
-                  TerminalKeyBar(
-                    connected: _connected && !_commandsOpen,
-                    controlArmed: _ctrlArmed,
-                    onControl: () {
-                      setState(() => _ctrlArmed = !_ctrlArmed);
-                      _requestKeyboard();
-                    },
-                    onKey: _specialKey,
-                    onCommands: _openCommands,
-                    hasDraft: _draft.text.isNotEmpty,
-                  ),
+                  if (!hideKeyBar)
+                    TerminalKeyBar(
+                      connected: _connected && !_commandsOpen,
+                      controlArmed: _ctrlArmed,
+                      onControl: () {
+                        setState(() => _ctrlArmed = !_ctrlArmed);
+                        _requestKeyboard();
+                      },
+                      onKey: _specialKey,
+                      onCommands: _openCommands,
+                      hasDraft: _draft.text.isNotEmpty,
+                      onPaste: _pasteBusy
+                          ? null
+                          : () => unawaited(_pasteToDraft().then((_) {})),
+                    ),
                 ],
               ),
             ),
@@ -1188,83 +1386,6 @@ class _VerifyHostDialogState extends State<_VerifyHostDialog> {
                   }
                 : null,
             child: Text(changed ? '确认更新此主机信任' : '确认信任并认证'),
-          ),
-        ],
-      );
-    },
-  );
-}
-
-class _SendDraftDialog extends StatefulWidget {
-  const _SendDraftDialog({
-    required this.service,
-    required this.generation,
-    required this.target,
-    required this.exact,
-  });
-  final SshService service;
-  final int generation;
-  final String target, exact;
-  @override
-  State<_SendDraftDialog> createState() => _SendDraftDialogState();
-}
-
-class _SendDraftDialogState extends State<_SendDraftDialog> {
-  bool _enter = false, _submitted = false;
-  @override
-  Widget build(BuildContext context) => ListenableBuilder(
-    listenable: widget.service,
-    builder: (context, _) {
-      final current =
-          widget.service.connected &&
-          widget.service.generation == widget.generation;
-      final payload = '${widget.exact}${_enter ? '\r' : ''}';
-      return AlertDialog(
-        scrollable: true,
-        title: const Text('确认发送到单台 SSH'),
-        content: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              SelectableText(
-                escapedCommandPreview(widget.target),
-                textDirection: TextDirection.ltr,
-              ),
-              const InfoNote('以下是将发送的完整内容。反斜杠、换行、回车及控制字符以转义形式展示；它们可能立即执行命令。'),
-              SelectableText(
-                escapedCommandPreview(payload),
-                key: const ValueKey('draft-exact-preview'),
-                style: const TextStyle(fontFamily: 'monospace'),
-              ),
-              CheckboxListTile(
-                key: const ValueKey('draft-append-enter'),
-                contentPadding: EdgeInsets.zero,
-                value: _enter,
-                onChanged: current
-                    ? (value) => setState(() => _enter = value == true)
-                    : null,
-                title: const Text('额外追加 Enter（\\r）'),
-                subtitle: const Text('默认不追加；正文中已有的换行和控制字符原样保留'),
-              ),
-              if (!current) const InfoNote('连接已变化，本次确认作废。没有发送草稿。'),
-            ],
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('取消'),
-          ),
-          FilledButton(
-            key: const ValueKey('draft-confirm-send'),
-            onPressed: current && !_submitted
-                ? () {
-                    setState(() => _submitted = true);
-                    Navigator.pop(context, payload);
-                  }
-                : null,
-            child: const Text('发送完整内容'),
           ),
         ],
       );

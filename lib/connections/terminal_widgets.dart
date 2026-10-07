@@ -52,9 +52,11 @@ class TerminalKeyBar extends StatelessWidget {
     required this.onKey,
     required this.onCommands,
     required this.hasDraft,
+    required this.onPaste,
   });
   final bool connected, controlArmed, hasDraft;
   final VoidCallback onControl, onCommands;
+  final VoidCallback? onPaste;
   final void Function(TerminalKey key, {bool ctrl}) onKey;
 
   @override
@@ -74,7 +76,10 @@ class TerminalKeyBar extends StatelessWidget {
                 child: TextButton.icon(
                   key: const ValueKey('terminal-commands'),
                   onPressed: onCommands,
-                  style: TextButton.styleFrom(minimumSize: const Size(64, 48)),
+                  style: TextButton.styleFrom(
+                    minimumSize: const Size(64, 48),
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                  ),
                   icon: Badge(
                     isLabelVisible: hasDraft,
                     child: const Icon(Icons.code_rounded, size: 20),
@@ -97,6 +102,7 @@ class TerminalKeyBar extends StatelessWidget {
                         onPressed: connected ? onControl : null,
                         style: TextButton.styleFrom(
                           minimumSize: const Size(52, 48),
+                          padding: const EdgeInsets.symmetric(horizontal: 10),
                           backgroundColor: controlArmed
                               ? const Color(0xFF315586)
                               : null,
@@ -106,6 +112,20 @@ class TerminalKeyBar extends StatelessWidget {
                           label: 'Ctrl，作用于下一个按键，再点取消',
                           excludeSemantics: true,
                           child: const Text('Ctrl'),
+                        ),
+                      ),
+                    ),
+                    ExcludeFocus(
+                      child: Tooltip(
+                        message: 'Ctrl V · 粘贴到草稿，不自动发送',
+                        child: TextButton(
+                          key: const ValueKey('terminal-paste'),
+                          onPressed: onPaste,
+                          style: TextButton.styleFrom(
+                            minimumSize: const Size(64, 48),
+                            padding: const EdgeInsets.symmetric(horizontal: 10),
+                          ),
+                          child: const Text('Ctrl V'),
                         ),
                       ),
                     ),
@@ -188,25 +208,35 @@ class TerminalCommandSheet extends StatefulWidget {
     super.key,
     required this.draft,
     required this.service,
+    required this.target,
     required this.insertSnippet,
     required this.replaceDraft,
     required this.sendDraft,
+    required this.pasteDraft,
   });
   final TextEditingController draft;
   final SshService service;
+  final String target;
   final Future<void> Function() insertSnippet;
   final Future<bool> Function(String content) replaceDraft;
-  final Future<bool> Function() sendDraft;
+  final Future<bool> Function(String exact, int generation, bool appendEnter)
+  sendDraft;
+  final Future<String?> Function() pasteDraft;
   @override
   State<TerminalCommandSheet> createState() => _TerminalCommandSheetState();
 }
 
 class _TerminalCommandSheetState extends State<TerminalCommandSheet> {
   bool _busy = false;
+  String? _error;
+  late final int _generation = widget.service.generation;
 
   Future<void> _run(Future<void> Function() action) async {
-    if (_busy) return;
-    setState(() => _busy = true);
+    if (!mounted || _busy || ModalRoute.of(context)?.isCurrent != true) return;
+    setState(() {
+      _busy = true;
+      _error = null;
+    });
     try {
       await action();
     } finally {
@@ -214,150 +244,276 @@ class _TerminalCommandSheetState extends State<TerminalCommandSheet> {
     }
   }
 
+  Future<void> _send(bool appendEnter) => _run(() async {
+    if (!widget.service.acceptsInput ||
+        widget.service.generation != _generation ||
+        widget.draft.text.isEmpty) {
+      return;
+    }
+    final sent = await widget.sendDraft(
+      widget.draft.text,
+      _generation,
+      appendEnter,
+    );
+    if (!mounted) return;
+    if (sent) {
+      Navigator.pop(context, true);
+    } else {
+      setState(() => _error = '发送未确认，草稿仍保留。请先核实远端状态，避免重复执行。');
+    }
+  });
+
+  Widget _sendActions(BuildContext context, bool enabled) {
+    final normal = OutlinedButton.icon(
+      key: const ValueKey('terminal-send'),
+      onPressed: enabled ? () => _send(false) : null,
+      icon: const Icon(Icons.send_outlined, size: 18),
+      label: const Text('发送'),
+    );
+    final execute = FilledButton.icon(
+      key: const ValueKey('terminal-send-execute'),
+      onPressed: enabled ? () => _send(true) : null,
+      icon: const Icon(Icons.keyboard_return, size: 18),
+      label: const Text('发送并执行'),
+    );
+    final painter = TextPainter(
+      text: TextSpan(
+        text: '发送并执行',
+        style: Theme.of(context).textTheme.labelLarge,
+      ),
+      textScaler: MediaQuery.textScalerOf(context),
+      textDirection: TextDirection.ltr,
+    )..layout();
+    final rowWidth = (painter.width + 18 + 8 + 40) * 2 + 8;
+    painter.dispose();
+    return LayoutBuilder(
+      builder: (context, constraints) => constraints.maxWidth >= rowWidth
+          ? Row(
+              children: [
+                Expanded(child: normal),
+                const SizedBox(width: 8),
+                Expanded(child: execute),
+              ],
+            )
+          : Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [normal, const SizedBox(height: 8), execute],
+            ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) => ListenableBuilder(
     listenable: Listenable.merge([widget.draft, widget.service]),
-    builder: (context, _) => Padding(
-      padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(context).bottom),
-      child: SafeArea(
-        top: false,
-        child: FractionallySizedBox(
-          heightFactor: .88,
-          child: Column(
-            children: [
-              Padding(
-                padding: const EdgeInsets.fromLTRB(20, 8, 8, 0),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        '命令与片段',
-                        style: Theme.of(context).textTheme.titleLarge,
-                      ),
-                    ),
-                    IconButton(
-                      key: const ValueKey('terminal-commands-close'),
-                      tooltip: '返回终端',
-                      onPressed: () => Navigator.pop(context),
-                      icon: const Icon(Icons.close),
-                    ),
-                  ],
-                ),
-              ),
-              Expanded(
-                child: SingleChildScrollView(
-                  key: const ValueKey('terminal-command-scroll'),
-                  padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
+    builder: (context, _) {
+      final current = widget.service.generation == _generation;
+      final enabled =
+          !_busy &&
+          current &&
+          widget.service.acceptsInput &&
+          widget.draft.text.isNotEmpty;
+      final hiddenBytes = RegExp(
+        r'[\x00-\x1f\x7f-\x9f\u00ad\u061c\u180e\u200b-\u200f\u2028-\u202e\u2060-\u206f\ufeff]',
+      ).hasMatch(widget.draft.text);
+      return Padding(
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.viewInsetsOf(context).bottom,
+        ),
+        child: SafeArea(
+          top: false,
+          child: FractionallySizedBox(
+            heightFactor: .88,
+            child: Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 8, 8, 0),
+                  child: Row(
                     children: [
-                      Text(
-                        '点选仅填入草稿。确认发送前不会写入 SSH。',
-                        style: Theme.of(context).textTheme.bodySmall,
-                      ),
-                      const SizedBox(height: 16),
-                      Text(
-                        '常用命令',
-                        style: Theme.of(context).textTheme.titleSmall,
-                      ),
-                      const SizedBox(height: 8),
-                      Wrap(
-                        spacing: 8,
-                        runSpacing: 8,
-                        children: [
-                          for (final command in terminalQuickCommands)
-                            ActionChip(
-                              key: ValueKey(command.id),
-                              tooltip: command.name,
-                              label: Text(
-                                command.content,
-                                style: const TextStyle(
-                                  fontFamily: terminalFontFamily,
-                                ),
-                              ),
-                              onPressed: _busy
-                                  ? null
-                                  : () => _run(() async {
-                                      await widget.replaceDraft(
-                                        command.content,
-                                      );
-                                    }),
-                            ),
-                        ],
-                      ),
-                      const SizedBox(height: 4),
-                      Align(
-                        alignment: Alignment.centerLeft,
-                        child: TextButton.icon(
-                          key: const ValueKey('terminal-insert-snippet'),
-                          onPressed: _busy
-                              ? null
-                              : () => _run(widget.insertSnippet),
-                          icon: const Icon(Icons.bookmarks_outlined, size: 18),
-                          label: const Text('插入片段'),
+                      Expanded(
+                        child: Text(
+                          '命令与片段',
+                          style: Theme.of(context).textTheme.titleLarge,
                         ),
                       ),
-                      const SizedBox(height: 8),
-                      TextField(
-                        key: const ValueKey('terminal-draft'),
-                        controller: widget.draft,
-                        maxLength: CommandSnippet.maxContentLength,
-                        inputFormatters: [
-                          TextInputFormatter.withFunction(
-                            (oldValue, newValue) =>
-                                newValue.text.length <=
-                                    CommandSnippet.maxContentLength
-                                ? newValue
-                                : oldValue,
-                          ),
-                        ],
-                        minLines: 3,
-                        maxLines: 7,
-                        autocorrect: false,
-                        enableSuggestions: false,
-                        enableIMEPersonalizedLearning: false,
-                        keyboardType: TextInputType.multiline,
-                        style: const TextStyle(
-                          fontFamily: terminalFontFamily,
-                          fontSize: 14,
-                        ),
-                        decoration: const InputDecoration(
-                          labelText: '待发送草稿',
-                          hintText: '先编辑，再核对目标和完整内容',
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-                      FilledButton.icon(
-                        key: const ValueKey('terminal-send'),
-                        onPressed:
-                            !_busy &&
-                                widget.service.connected &&
-                                widget.draft.text.isNotEmpty
-                            ? () => _run(() async {
-                                final sent = await widget.sendDraft();
-                                if (sent && context.mounted) {
-                                  Navigator.pop(context, true);
-                                }
-                              })
-                            : null,
-                        icon: const Icon(Icons.preview_outlined),
-                        label: const Text('预览并发送'),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        widget.service.connected
-                            ? '默认不追加回车。终端键盘和底部特殊键会直接发送。'
-                            : '当前未连接。可以编辑草稿；重连时会清空，不自动发送。',
-                        style: Theme.of(context).textTheme.bodySmall,
+                      IconButton(
+                        key: const ValueKey('terminal-commands-close'),
+                        tooltip: '返回终端',
+                        onPressed: () => Navigator.pop(context),
+                        icon: const Icon(Icons.close),
                       ),
                     ],
                   ),
                 ),
-              ),
-            ],
+                Expanded(
+                  child: SingleChildScrollView(
+                    key: const ValueKey('terminal-command-scroll'),
+                    padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Text(
+                          '常用命令',
+                          key: const ValueKey('terminal-command-choices'),
+                          style: Theme.of(context).textTheme.titleSmall,
+                        ),
+                        const SizedBox(height: 8),
+                        Wrap(
+                          spacing: 8,
+                          runSpacing: 8,
+                          children: [
+                            for (final command in terminalQuickCommands)
+                              ActionChip(
+                                key: ValueKey(command.id),
+                                tooltip: command.name,
+                                label: Text(
+                                  command.content,
+                                  style: const TextStyle(
+                                    fontFamily: terminalFontFamily,
+                                  ),
+                                ),
+                                onPressed: _busy
+                                    ? null
+                                    : () => _run(() async {
+                                        await widget.replaceDraft(
+                                          command.content,
+                                        );
+                                      }),
+                              ),
+                          ],
+                        ),
+                        Align(
+                          alignment: Alignment.centerLeft,
+                          child: TextButton.icon(
+                            key: const ValueKey('terminal-insert-snippet'),
+                            onPressed: _busy
+                                ? null
+                                : () => _run(widget.insertSnippet),
+                            icon: const Icon(
+                              Icons.bookmarks_outlined,
+                              size: 18,
+                            ),
+                            label: const Text('插入片段'),
+                          ),
+                        ),
+                        const Divider(height: 24),
+                        TextField(
+                          key: const ValueKey('terminal-draft'),
+                          controller: widget.draft,
+                          enabled: !_busy,
+                          maxLength: CommandSnippet.maxContentLength,
+                          inputFormatters: [
+                            TextInputFormatter.withFunction(
+                              (oldValue, newValue) =>
+                                  newValue.text.length <=
+                                      CommandSnippet.maxContentLength
+                                  ? newValue
+                                  : oldValue,
+                            ),
+                          ],
+                          minLines: 2,
+                          maxLines: 6,
+                          autocorrect: false,
+                          enableSuggestions: false,
+                          enableIMEPersonalizedLearning: false,
+                          keyboardType: TextInputType.multiline,
+                          style: const TextStyle(
+                            fontFamily: terminalFontFamily,
+                            fontSize: 14,
+                          ),
+                          onChanged: (_) {
+                            if (_error != null) setState(() => _error = null);
+                          },
+                          decoration: const InputDecoration(
+                            labelText: '待发送草稿',
+                            hintText: '在此编辑要发送的内容',
+                          ),
+                        ),
+                        Align(
+                          alignment: Alignment.centerRight,
+                          child: TextButton.icon(
+                            key: const ValueKey('terminal-draft-paste'),
+                            onPressed: _busy
+                                ? null
+                                : () => _run(() async {
+                                    final error = await widget.pasteDraft();
+                                    if (mounted && error != null) {
+                                      setState(() => _error = error);
+                                    }
+                                  }),
+                            icon: const Icon(Icons.content_paste, size: 18),
+                            label: const Text('粘贴'),
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          '发送到',
+                          style: Theme.of(context).textTheme.bodySmall,
+                        ),
+                        SelectableText(
+                          escapedCommandPreview(widget.target),
+                          key: const ValueKey('terminal-send-target'),
+                          textDirection: TextDirection.ltr,
+                          style: const TextStyle(
+                            fontFamily: terminalFontFamily,
+                            fontSize: 12,
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        if (hiddenBytes) ...[
+                          Text(
+                            '正文含换行、回车或控制字符，不追加回车也可能立即执行。',
+                            key: const ValueKey('draft-control-warning'),
+                            style: TextStyle(
+                              color: Theme.of(context).colorScheme.tertiary,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          ConstrainedBox(
+                            constraints: const BoxConstraints(maxHeight: 144),
+                            child: SingleChildScrollView(
+                              child: SelectableText(
+                                escapedCommandPreview(widget.draft.text),
+                                key: const ValueKey('draft-exact-preview'),
+                                textDirection: TextDirection.ltr,
+                                style: const TextStyle(
+                                  fontFamily: terminalFontFamily,
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                        ],
+                        if (_error != null)
+                          Padding(
+                            padding: const EdgeInsets.only(bottom: 8),
+                            child: Text(
+                              _error!,
+                              key: const ValueKey('terminal-draft-error'),
+                              style: TextStyle(
+                                color: Theme.of(context).colorScheme.error,
+                              ),
+                            ),
+                          ),
+                        Text(
+                          !current
+                              ? '会话已变化，请返回终端后重新打开。草稿不会自动发送。'
+                              : !widget.service.acceptsInput
+                              ? '当前不可发送。重连会清空草稿，不重放输入。'
+                              : '发送不额外回车；发送并执行追加一个回车。',
+                          style: Theme.of(context).textTheme.bodySmall,
+                        ),
+                        const SizedBox(height: 12),
+                        _sendActions(context, enabled),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
-      ),
-    ),
+      );
+    },
   );
 }

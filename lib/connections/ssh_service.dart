@@ -93,6 +93,9 @@ abstract class SshService extends ChangeNotifier {
   SshTarget? get target;
   int get generation;
   bool get connected => status == SshStatus.connected;
+
+  /// Local input readiness, not proof that a remote command has executed.
+  bool get acceptsInput => connected;
   Stream<String> get output;
   Future<void> connect(
     SshTarget target, {
@@ -386,12 +389,16 @@ class NativeSshService extends SshService {
   }
 
   @override
+  bool get acceptsInput =>
+      connected &&
+      !_disposed &&
+      !_draining &&
+      _client?.isClosed == false &&
+      _session != null;
+
+  @override
   void write(String value) {
-    if (!connected ||
-        _disposed ||
-        _draining ||
-        _client?.isClosed != false ||
-        value.isEmpty) {
+    if (!acceptsInput || value.isEmpty) {
       return;
     }
     try {

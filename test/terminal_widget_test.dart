@@ -285,38 +285,38 @@ void main() {
   );
 
   testWidgets(
-    'draft controls remain separate from xterm and exact bytes need final Send',
+    'inline draft stays local until exact send; dismissing keeps contents',
     (tester) async {
       const content = 'echo one\nwhoami\r\x03\\r';
       await mount(tester, draft: content);
-      expect(ssh.writes, isEmpty);
-      await tap(tester, find.byKey(const ValueKey('terminal-send')));
+      await openCommands(tester);
       expect(find.text(target.label), findsWidgets);
       expect(find.text(escapedCommandPreview(content)), findsOneWidget);
+      expect(
+        find.byKey(const ValueKey('draft-control-warning')),
+        findsOneWidget,
+      );
+      expect(find.byType(AlertDialog), findsNothing);
       expect(ssh.writes, isEmpty);
-      await textTap(tester, '取消');
-      expect(ssh.writes, isEmpty);
+      await closeCommands(tester);
       expect(await currentDraft(tester), content);
+      expect(ssh.writes, isEmpty);
       await tap(tester, find.byKey(const ValueKey('terminal-send')));
-      await tap(tester, find.byKey(const ValueKey('draft-confirm-send')));
       expect(ssh.writes, [content]);
       expect(await currentDraft(tester), isEmpty);
     },
   );
 
-  testWidgets('append Enter is opt-in and included in full escaped preview', (
+  testWidgets('send and execute appends one CR without a checkbox or dialog', (
     tester,
   ) async {
     await mount(tester, draft: 'printf ready');
-    await tap(tester, find.byKey(const ValueKey('terminal-send')));
-    final checkbox = tester.widget<CheckboxListTile>(
-      find.byKey(const ValueKey('draft-append-enter')),
-    );
-    expect(checkbox.value, isFalse);
-    await tap(tester, find.byKey(const ValueKey('draft-append-enter')));
-    expect(find.text(escapedCommandPreview('printf ready\r')), findsOneWidget);
-    await tap(tester, find.byKey(const ValueKey('draft-confirm-send')));
+    await openCommands(tester);
+    expect(find.byType(CheckboxListTile), findsNothing);
+    expect(find.byType(AlertDialog), findsNothing);
+    await tap(tester, find.byKey(const ValueKey('terminal-send-execute')));
     expect(ssh.writes, ['printf ready\r']);
+    expect(find.byType(AlertDialog), findsNothing);
   });
 
   testWidgets(
@@ -347,26 +347,32 @@ void main() {
     },
   );
 
-  testWidgets('disconnect invalidates a pending exact-send confirmation', (
-    tester,
-  ) async {
-    await mount(tester, draft: 'echo must-not-send\r');
-    await tap(tester, find.byKey(const ValueKey('terminal-send')));
-    ssh.disconnect();
-    await tester.pump();
-    expect(
-      tester
-          .widget<FilledButton>(
-            find.byKey(const ValueKey('draft-confirm-send')),
+  testWidgets(
+    'disconnect invalidates both inline send actions and captured callbacks',
+    (tester) async {
+      await mount(tester, draft: 'echo must-not-send\r');
+      await openCommands(tester);
+      final send = tester
+          .widget<ButtonStyleButton>(
+            find.byKey(const ValueKey('terminal-send')),
           )
-          .onPressed,
-      isNull,
-    );
-    await textTap(tester, '取消');
-    await tap(tester, find.byKey(const ValueKey('terminal-connect')));
-    expect(ssh.writes, isEmpty);
-    expect(await currentDraft(tester), isEmpty);
-  });
+          .onPressed!;
+      ssh.disconnect();
+      await tester.pump();
+      for (final key in ['terminal-send', 'terminal-send-execute']) {
+        expect(
+          tester.widget<ButtonStyleButton>(find.byKey(ValueKey(key))).onPressed,
+          isNull,
+        );
+      }
+      send();
+      await tester.pumpAndSettle();
+      await closeCommands(tester);
+      await tap(tester, find.byKey(const ValueKey('terminal-connect')));
+      expect(ssh.writes, isEmpty);
+      expect(await currentDraft(tester), isEmpty);
+    },
+  );
 
   testWidgets('special keys and xterm input work only while connected', (
     tester,
@@ -611,9 +617,9 @@ void main() {
     (tester) async {
       await mount(tester, scale: 2, draft: 'echo large');
       expect(tester.takeException(), isNull);
-      await tap(tester, find.byKey(const ValueKey('terminal-send')));
+      await openCommands(tester);
       expect(tester.takeException(), isNull);
-      await textTap(tester, '取消');
+      await closeCommands(tester);
       await tap(tester, find.byKey(const ValueKey('terminal-disconnect')));
       ssh.request = HostVerificationRequest(
         identity: hostKey(host: target.host, port: target.port),
@@ -645,7 +651,12 @@ void main() {
           ),
         ),
       );
-      await tap(tester, find.byKey(const ValueKey('terminal-send')));
+      await openCommands(tester);
+      final staleSend = tester
+          .widget<ButtonStyleButton>(
+            find.byKey(const ValueKey('terminal-send')),
+          )
+          .onPressed!;
       const next = SshTarget(
         name: 'Next synthetic target',
         host: '::1',
@@ -657,13 +668,16 @@ void main() {
       await tester.pumpAndSettle();
       expect(
         tester
-            .widget<FilledButton>(
-              find.byKey(const ValueKey('draft-confirm-send')),
+            .widget<ButtonStyleButton>(
+              find.byKey(const ValueKey('terminal-send')),
             )
             .onPressed,
         isNull,
       );
-      await textTap(tester, '取消');
+      staleSend();
+      await tester.pumpAndSettle();
+      expect(ssh.writes, isEmpty);
+      await closeCommands(tester);
       expect(ssh.connected, isFalse);
       expect(await currentDraft(tester), isEmpty);
       expect(ssh.connections, 1);

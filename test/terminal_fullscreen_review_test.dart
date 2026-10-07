@@ -518,16 +518,12 @@ void main() {
     await tester.pumpAndSettle();
     expect(tester.takeException(), isNull);
     expect(ssh.writes, isEmpty);
-    await tap(tester, keyed('terminal-send'));
-    expect(tester.takeException(), isNull, reason: 'Opening exact-send dialog');
-    expect(find.text('确认发送到单台 SSH'), findsOneWidget);
-    expect(ssh.writes, isEmpty);
-    await tap(tester, find.text('取消'));
-    expect(
-      tester.takeException(),
-      isNull,
-      reason: 'Cancelling exact-send dialog',
-    );
+    expect(find.byType(AlertDialog), findsNothing);
+    expect(find.byType(CheckboxListTile), findsNothing);
+    for (final key in ['terminal-send', 'terminal-send-execute']) {
+      await tester.ensureVisible(keyed(key));
+      expect(tester.widget<ButtonStyleButton>(keyed(key)).onPressed, isNotNull);
+    }
     expect(ssh.writes, isEmpty);
     await tap(tester, keyed('terminal-commands-close'));
     expect(find.byType(TerminalCommandSheet), findsNothing);
