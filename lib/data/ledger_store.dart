@@ -8,6 +8,8 @@ import '../l10n/generated/app_localizations.dart';
 import '../l10n/localized_message.dart';
 import '../cloud/cloud_account.dart';
 import '../cloud/cloud_models.dart';
+import '../cloud/provider_record.dart';
+import '../cloud/cloud_import.dart';
 import '../connections/snippet.dart';
 import '../servers/server_record.dart';
 import '../servers/server_resources.dart';
@@ -18,6 +20,7 @@ import '../settings/reminder_rule.dart';
 
 part 'ledger_settings.dart';
 part 'ledger_backup.dart';
+part 'ledger_providers.dart';
 
 class LedgerConflict implements Exception, LocalizedMessage {
   const LedgerConflict();
@@ -29,6 +32,8 @@ class LedgerConflict implements Exception, LocalizedMessage {
 
 // Historical user-input constraint, never a translated group/state identity.
 const legacyReservedGroupName = '未分组';
+// Legacy persisted placeholder, also required by the unchanged backup v1 label contract.
+const legacyUnknownVendor = '服务商待填写';
 
 class ArchiveUndo {
   const ArchiveUndo(this.id, this.revision);
@@ -42,7 +47,7 @@ class LedgerStore {
   LedgerStore._(this._db, this.clock);
   final Database _db;
   final DateTime Function() clock;
-  static const schemaVersion = 9;
+  static const schemaVersion = 10;
   // Shared by both credential controllers using this store. A durable journal
   // reservation is not an orphan while its native write/DB commit is active.
   final Set<String> _activeSecretReservations = {};
@@ -88,6 +93,9 @@ class LedgerStore {
           if (oldVersion < 9) {
             await _addLanguageSchema(db);
           }
+          if (oldVersion < 10) {
+            await _addProviderSchema(db);
+          }
         },
         onDowngrade: (db, oldVersion, newVersion) async {
           throw StateError('Newer ledger version; upgrade the app');
@@ -125,6 +133,7 @@ class LedgerStore {
     await _addSettingsSchema(db);
     await _addResourcesSchema(db);
     await _addLanguageSchema(db);
+    await _addProviderSchema(db);
   }
 
   /// Nullable by design: old/manual records are not populated with fabricated
@@ -170,6 +179,24 @@ class LedgerStore {
         if (previous.archived || previous.revision != record.revision) {
           throw const LedgerConflict();
         }
+      }
+      if (record.providerId != null) {
+        await _providerRow(
+          txn,
+          record.providerId!,
+          confirmed: previous?.providerId != record.providerId,
+        );
+      }
+      if (previous != null &&
+          previous.providerId != record.providerId &&
+          (await txn.query(
+            'cloud_bindings',
+            where: 'server_id = ?',
+            whereArgs: [record.id],
+          )).isNotEmpty) {
+        throw CloudAccountFailure(
+          LocalizedText((l10n) => l10n.providerChangeNeedsUnlink),
+        );
       }
       final termsChanged =
           previous == null ||
@@ -1243,6 +1270,26 @@ class LedgerStore {
     orderBy: 'alias COLLATE NOCASE, id',
   )).map(CloudAccount.fromMap).toList(growable: false);
 
+  /// Non-secret historical identity metadata, including observations which
+  /// have never been linked to a local server. A later omitted UUID must not
+  /// erase an earlier verified identity during preview.
+  Future<Map<String, Map<String, String>>> cloudIdentityUuids() async {
+    final result = <String, Map<String, String>>{};
+    for (final row in await _db.query(
+      'cloud_observations',
+      columns: ['account_id', 'instance_key', 'identity_uuid'],
+      where: 'identity_uuid IS NOT NULL',
+    )) {
+      (result[row['account_id'] as String] ??= {})[row['instance_key']
+              as String] =
+          row['identity_uuid'] as String;
+    }
+    return Map.unmodifiable({
+      for (final entry in result.entries)
+        entry.key: Map<String, String>.unmodifiable(entry.value),
+    });
+  }
+
   Future<List<CloudBinding>> cloudBindings() async => (await _db.rawQuery('''
     SELECT b.server_id, o.* FROM cloud_bindings b JOIN cloud_observations o
       ON b.account_id = o.account_id AND b.instance_key = o.instance_key
@@ -1325,6 +1372,9 @@ class LedgerStore {
       final account = accounts
           .where((a) => a['id'] == choice.accountId)
           .firstOrNull;
+      if (account != null) {
+        await _validateAdapterLink(txn, CloudAccount.fromMap(account), server);
+      }
       final observations = await txn.query(
         'cloud_observations',
         where: 'account_id = ? AND instance_key = ?',
@@ -1336,6 +1386,15 @@ class LedgerStore {
           observations.single['stale'] != 0 ||
           observations.single['missing'] != 0) {
         throw CloudAccountFailure.bindingUnavailable;
+      }
+      final duplicates = await _existingCloudDevices(
+        txn,
+        CloudAccount.fromMap(account),
+        choice.instanceKey,
+        uuid: observations.single['identity_uuid'] as String?,
+      );
+      if (duplicates.any((id) => id != server.id)) {
+        throw CloudAccountFailure.bindingTaken;
       }
       final claimed = await txn.query(
         'cloud_bindings',
@@ -1391,6 +1450,8 @@ class LedgerStore {
         current.secretRef != expected.secretRef ||
         current.provider != expected.provider ||
         current.endpoint != expected.endpoint ||
+        current.businessProviderId != expected.businessProviderId ||
+        current.authScope != expected.authScope ||
         current.remoteAccountId != expected.remoteAccountId) {
       throw const LedgerConflict();
     }
@@ -1426,6 +1487,11 @@ class LedgerStore {
     CloudAccount account,
     CloudSnapshot snapshot,
   ) {
+    if (account.authScope != adapterScope(account.provider)) {
+      throw CloudAccountFailure(
+        LocalizedText((l10n) => l10n.adapterScopeUnavailable),
+      );
+    }
     if (snapshot.provider != account.provider ||
         snapshot.remoteAccountId != account.remoteAccountId) {
       throw CloudAccountFailure.identity;
@@ -1547,6 +1613,7 @@ class LedgerStore {
     required CloudAccount account,
     required CloudSnapshot snapshot,
     required CloudAccount? expected,
+    ProviderRecord? expectedProvider,
     Set<String> selectedInstanceKeys = const {},
     String? v1DisplayName,
     ServerResources? v1Resources,
@@ -1557,8 +1624,19 @@ class LedgerStore {
     if (account.alias.trim().isEmpty || account.alias.length > 80) {
       throw CloudAccountFailure.alias;
     }
-    CloudEndpoint.parse(account.endpoint);
+    if (CloudEndpoint.parse(account.endpoint).toString() != account.endpoint) {
+      throw const CloudFailure(CloudFailureKind.invalidEndpoint);
+    }
     _validateCloudSnapshot(account, snapshot);
+    final businessProvider = await _providerRow(
+      txn,
+      account.businessProviderId,
+    );
+    if (expectedProvider != null &&
+        (expectedProvider.id != businessProvider.id ||
+            expectedProvider.revision != businessProvider.revision)) {
+      throw const LedgerConflict();
+    }
     if (expected == null) {
       if ((await txn.query(
         'cloud_accounts',
@@ -1572,6 +1650,7 @@ class LedgerStore {
       if (account.id != expected.id ||
           account.provider != expected.provider ||
           account.endpoint != expected.endpoint ||
+          account.businessProviderId != expected.businessProviderId ||
           account.remoteAccountId != expected.remoteAccountId) {
         throw CloudAccountFailure.identity;
       }
@@ -1662,77 +1741,185 @@ class LedgerStore {
     String? v1DisplayName,
     ServerResources? v1Resources,
   }) async {
-    if (v1DisplayName != null &&
-        (v1DisplayName.trim().isEmpty || v1DisplayName.length > 80)) {
+    var count = 0;
+    for (final key in selected) {
+      final result = await _importCloudRecord(
+        txn,
+        account,
+        key,
+        displayName: v1DisplayName,
+        completed: v1Resources,
+      );
+      if (result.imported) count++;
+    }
+    return count;
+  }
+
+  /// Each item is its own transaction. A failed row cannot leave an unbound
+  /// local server or a half-written reminder; successful prior rows remain.
+  Future<CloudImportItemResult> importCloudDraft(
+    CloudInventory inventory,
+    CloudImportDraft draft, {
+    bool Function()? isCancelled,
+  }) => _db.transaction((txn) async {
+    _checkCloudCancellation(isCancelled);
+    final current = await _currentCloud(txn, inventory.account);
+    if (current.lastFailure != null ||
+        !inventory.snapshot.instances.any(
+          (instance) => inventory.keyFor(instance) == draft.instanceKey,
+        )) {
+      throw CloudAccountFailure.selection;
+    }
+    final result = await _importCloudRecord(
+      txn,
+      current,
+      draft.instanceKey,
+      displayName: draft.displayName,
+      completed: draft.resources,
+    );
+    _checkCloudCancellation(isCancelled);
+    return result;
+  });
+
+  Future<CloudImportItemResult> _importCloudRecord(
+    DatabaseExecutor txn,
+    CloudAccount account,
+    String key, {
+    String? displayName,
+    ServerResources? completed,
+  }) async {
+    final businessProvider = await _providerRow(
+      txn,
+      account.businessProviderId,
+    );
+    if (account.authScope != adapterScope(account.provider)) {
       throw CloudAccountFailure(
+        LocalizedText((l10n) => l10n.adapterScopeUnavailable),
+      );
+    }
+    if (displayName != null &&
+        (displayName.trim().isEmpty || displayName.length > 80)) {
+      throw CloudImportDraftFailure(
         LocalizedText((l10n) => l10n.invalidServerName),
       );
     }
-    var count = 0;
-    for (final key in selected) {
-      final rows = await txn.query(
-        'cloud_observations',
-        where:
-            'account_id = ? AND instance_key = ? AND stale = 0 AND missing = 0',
-        whereArgs: [account.id, key],
+    final rows = await txn.query(
+      'cloud_observations',
+      where:
+          'account_id = ? AND instance_key = ? AND stale = 0 AND missing = 0',
+      whereArgs: [account.id, key],
+    );
+    if (rows.length != 1) throw CloudAccountFailure.selection;
+    final existing = await _existingCloudDevices(
+      txn,
+      account,
+      key,
+      uuid: rows.single['identity_uuid'] as String?,
+    );
+    if (existing.isNotEmpty) {
+      return CloudImportItemResult(
+        instanceKey: key,
+        imported: false,
+        serverIds: existing,
       );
-      if (rows.length != 1) {
-        throw CloudAccountFailure.selection;
-      }
-      if ((await txn.query(
-        'cloud_bindings',
-        where: 'account_id = ? AND instance_key = ?',
-        whereArgs: [account.id, key],
-      )).isNotEmpty) {
-        continue;
-      }
-      final instance = decodeCloudInstance(
-        rows.single['observation'] as String,
-      );
-      final resources = account.provider == CloudProvider.solusVm1
-          ? v1Resources
-          : null;
-      if (account.provider == CloudProvider.solusVm1) {
-        final error = resources?.validate(requireComplete: true);
-        if (resources == null || error != null) {
-          throw CloudAccountFailure(
-            LocalizedText(
-              (l10n) =>
-                  resources?.validate(requireComplete: true, l10n: l10n) ??
-                  l10n.completeLocalResources,
-            ),
-          );
-        }
-      }
-      final now = clock().toUtc();
-      final host = resources?.ip ?? instance.ipv4 ?? instance.ipv6 ?? '';
-      final name = account.provider == CloudProvider.solusVm1
-          ? v1DisplayName?.trim() ?? account.alias
-          : (instance.name?.trim().isNotEmpty ?? false)
-          ? instance.name!
-          : 'VPS ${instance.serverId}';
-      final server = ServerRecord(
-        id: newLocalId(),
-        name: _cloudImportName(name),
-        vendor: '服务商待填写',
-        host: ServerRecord.validHost(host) ? host : '',
-        resources: resources,
-        spec: resources?.specSummary ?? '',
-        createdAt: now,
-        updatedAt: now,
-      );
-      if (server.validate() != null) {
-        throw CloudAccountFailure.selection;
-      }
-      await txn.insert('servers', server.toMap());
-      await txn.insert('cloud_bindings', {
-        'server_id': server.id,
-        'account_id': account.id,
-        'instance_key': key,
-      });
-      count++;
     }
-    return count;
+    final observation = decodeCloudInstance(
+      rows.single['observation'] as String,
+    );
+    final resources = completed ?? resourcesFromCloud(observation);
+    if (resources.validate(requireComplete: true) != null) {
+      throw CloudImportDraftFailure(
+        LocalizedText(
+          (l10n) => resources.validate(requireComplete: true, l10n: l10n)!,
+        ),
+      );
+    }
+    final reviewed = verifiedResourceSources(resources, observation);
+    final now = clock().toUtc();
+    final suggested = account.provider == CloudProvider.solusVm1
+        ? account.alias
+        : (observation.name?.trim().isNotEmpty ?? false)
+        ? observation.name!
+        : 'VPS ${observation.serverId}';
+    final server = ServerRecord(
+      id: newLocalId(),
+      name: _cloudImportName(displayName?.trim() ?? suggested),
+      vendor: businessProvider.name,
+      providerId: businessProvider.id,
+      host: reviewed.ip,
+      resources: reviewed,
+      spec: reviewed.specSummary,
+      createdAt: now,
+      updatedAt: now,
+    );
+    if (server.validate() != null) throw CloudAccountFailure.selection;
+    await _validateAdapterLink(txn, account, server);
+    await txn.insert('servers', server.toMap());
+    await txn.insert('cloud_bindings', {
+      'server_id': server.id,
+      'account_id': account.id,
+      'instance_key': key,
+    });
+    return CloudImportItemResult(
+      instanceKey: key,
+      imported: true,
+      serverIds: [server.id],
+    );
+  }
+
+  static Future<List<String>> _existingCloudDevices(
+    DatabaseExecutor txn,
+    CloudAccount account,
+    String key, {
+    String? uuid,
+  }) async {
+    final rows = await txn.rawQuery(
+      '''SELECT b.server_id, o.identity_uuid
+      FROM cloud_bindings b JOIN cloud_accounts a ON a.id = b.account_id
+      JOIN cloud_observations o ON o.account_id = b.account_id AND o.instance_key = b.instance_key
+      WHERE b.instance_key = ? AND (a.id = ? OR
+        (? = 'solusVm2' AND a.provider = 'solusVm2' AND a.endpoint = ? AND a.remote_account_id = ?))
+      ORDER BY b.server_id''',
+      [
+        key,
+        account.id,
+        account.provider.name,
+        account.endpoint,
+        account.remoteAccountId,
+      ],
+    );
+    if (uuid != null &&
+        rows.any(
+          (row) => row['identity_uuid'] != null && row['identity_uuid'] != uuid,
+        )) {
+      throw CloudAccountFailure.identity;
+    }
+    return rows.map((row) => row['server_id'] as String).toSet().toList();
+  }
+
+  static Future<void> _validateAdapterLink(
+    DatabaseExecutor txn,
+    CloudAccount account,
+    ServerRecord server,
+  ) async {
+    await _providerRow(txn, account.businessProviderId);
+    if (server.providerId != account.businessProviderId) {
+      throw CloudAccountFailure(
+        LocalizedText((l10n) => l10n.adapterProviderMismatch),
+      );
+    }
+    if (account.authScope != adapterScope(account.provider)) {
+      throw CloudAccountFailure(
+        LocalizedText((l10n) => l10n.adapterScopeUnavailable),
+      );
+    }
+    if (account.authScope == AdapterAuthScope.singleDevice &&
+        account.pinnedServerId != null &&
+        account.pinnedServerId != server.id) {
+      throw CloudAccountFailure(
+        LocalizedText((l10n) => l10n.adapterSingletonPinned),
+      );
+    }
   }
 
   static String _cloudImportName(String value) {

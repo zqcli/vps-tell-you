@@ -70,8 +70,17 @@ void main() {
       expect(controller.records, isEmpty);
       await tester.tap(find.byKey(const ValueKey('add-server')));
       await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('choose-provider-add')));
+      await tester.pumpAndSettle();
+      await tester.enterText(
+        find.byKey(const ValueKey('provider-name')),
+        'Custom',
+      );
+      await tester.tap(find.byKey(const ValueKey('provider-save')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('add-manual')));
+      await tester.pumpAndSettle();
       await fill(tester, 'name', 'My VPS');
-      await fill(tester, 'vendor', 'Custom');
       await fill(tester, 'host', '192.0.2.42');
       await tester.tap(find.text('保存服务器'));
       await tester.pumpAndSettle();
@@ -92,6 +101,11 @@ void main() {
       await tester.pageBack();
       await tester.pumpAndSettle();
       await tester.tap(find.byKey(const ValueKey('add-server')));
+      await tester.pumpAndSettle();
+      final provider = (await store.providers()).single;
+      await tester.tap(find.byKey(ValueKey('choose-provider-${provider.id}')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('add-manual')));
       await tester.pumpAndSettle();
       await fill(tester, 'name', 'Cancelled new');
       await tester.pageBack();

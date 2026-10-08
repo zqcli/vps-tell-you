@@ -3,13 +3,12 @@ import '../l10n/locale_preference.dart';
 
 import 'package:flutter/material.dart';
 
-import '../cloud/cloud_pages.dart';
+import '../cloud/provider_pages.dart';
 import '../cloud/cloud_widgets.dart';
 import '../core/app_theme.dart';
 import 'ledger_controller.dart';
 import 'refresh_failure_notice.dart';
 import 'server_detail.dart';
-import 'server_form.dart';
 import 'server_record.dart';
 
 Future<void> addServer(
@@ -18,7 +17,7 @@ Future<void> addServer(
 ) async {
   final id = await Navigator.push<String>(
     context,
-    MaterialPageRoute(builder: (_) => ServerForm(controller: controller)),
+    MaterialPageRoute(builder: (_) => AddServerPage(ledger: controller)),
   );
   if (id != null && context.mounted && controller.byId(id) != null) {
     Navigator.push<void>(
@@ -41,7 +40,18 @@ class _ServerListState extends State<ServerList> {
   late final TextEditingController search;
   LedgerController get c => widget.controller;
   bool openingCloud = false;
-  Future<void> importCloud() async {
+  bool openingAdd = false;
+  Future<void> openAdd() async {
+    if (openingAdd) return;
+    openingAdd = true;
+    try {
+      await addServer(context, c);
+    } finally {
+      openingAdd = false;
+    }
+  }
+
+  Future<void> openProviders() async {
     if (openingCloud) {
       return;
     }
@@ -49,7 +59,7 @@ class _ServerListState extends State<ServerList> {
     try {
       await Navigator.push<void>(
         context,
-        MaterialPageRoute(builder: (_) => CloudTemplatesPage(ledger: c)),
+        MaterialPageRoute(builder: (_) => ProvidersPage(ledger: c)),
       );
     } finally {
       openingCloud = false;
@@ -228,7 +238,7 @@ class _ServerListState extends State<ServerList> {
             IconButton.filled(
               key: const ValueKey('add-server'),
               tooltip: context.l10n.serverAdd,
-              onPressed: c.canMutate ? () => addServer(context, c) : null,
+              onPressed: c.canMutate ? openAdd : null,
               style: IconButton.styleFrom(
                 minimumSize: const Size(48, 48),
                 shape: RoundedRectangleBorder(
@@ -242,10 +252,10 @@ class _ServerListState extends State<ServerList> {
         if (c.refreshFailed) RefreshFailureNotice(controller: c),
         const SizedBox(height: 12),
         OutlinedButton.icon(
-          key: const ValueKey('import-cloud-server'),
-          onPressed: c.canMutate ? importCloud : null,
-          icon: const Icon(Icons.cloud_download_outlined),
-          label: Text(context.l10n.serverImportPanel),
+          key: const ValueKey('manage-providers'),
+          onPressed: openProviders,
+          icon: const Icon(Icons.business_outlined),
+          label: Text(context.l10n.providerUiTitle),
         ),
         if (all.isEmpty && c.records.isEmpty) ...[
           const SizedBox(height: 78),
@@ -280,7 +290,7 @@ class _ServerListState extends State<ServerList> {
           ),
           const SizedBox(height: 28),
           FilledButton.icon(
-            onPressed: c.canMutate ? () => addServer(context, c) : null,
+            onPressed: c.canMutate ? openAdd : null,
             icon: const Icon(Icons.add),
             label: Text(context.l10n.serverAddFirst),
           ),
@@ -582,7 +592,7 @@ class ServerRow extends StatelessWidget {
                     borderRadius: BorderRadius.circular(11),
                   ),
                   child: Text(
-                    s.mark,
+                    serverProviderMark(controller, s),
                     maxLines: 1,
                     style: TextStyle(
                       fontSize: 11,
@@ -616,7 +626,7 @@ class ServerRow extends StatelessWidget {
                     const SizedBox(height: 5),
                     Text(
                       [
-                        s.vendor,
+                        serverProviderLabel(context, controller, s),
                         s.region,
                         if (s.favorite) context.l10n.serverFavorites,
                       ].where((e) => e.isNotEmpty).join(' · '),

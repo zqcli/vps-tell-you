@@ -23,7 +23,7 @@ List<ServerRecord> financeScope(
     .where(
       (s) =>
           (groupId == null || (s.groupId ?? '') == groupId) &&
-          (vendor == null || s.vendor == vendor),
+          (vendor == null || c.providerGroupKey(s) == vendor),
     )
     .toList();
 FinanceAmount remainingAmount(LedgerController c, ServerRecord s) =>
@@ -131,7 +131,10 @@ class _FinancePageState extends State<FinancePage> {
       final slices = <String, List<ServerRecord>>{};
       for (final s in records) {
         slices
-            .putIfAbsent(byVendor ? s.vendor : s.groupId ?? '', () => [])
+            .putIfAbsent(
+              byVendor ? c.providerGroupKey(s) : s.groupId ?? '',
+              () => [],
+            )
             .add(s);
       }
       final ordered = slices.entries.toList()
@@ -371,7 +374,10 @@ class _FinancePageState extends State<FinancePage> {
                                 .clamp(0, 1)
                                 .toDouble();
                       final label = byVendor
-                          ? slice.key
+                          ? c.providerNameFor(
+                              slice.value.first,
+                              l10n: context.l10n,
+                            )
                           : c.groupName(slice.key, l10n: context.l10n);
                       return InkWell(
                         key: ValueKey(
@@ -600,7 +606,7 @@ class FinanceDetailPage extends StatelessWidget {
                               ),
                             ),
                             Text(
-                              '${s.vendor} · ${c.groupName(s.groupId, l10n: context.l10n)}',
+                              '${c.providerNameFor(s, l10n: context.l10n)} · ${c.groupName(s.groupId, l10n: context.l10n)}',
                             ),
                             const SizedBox(height: 10),
                             Text(

@@ -49,6 +49,7 @@ class ServerRecord {
     this.resources,
     this.notes = '',
     this.groupId,
+    this.providerId,
     this.favorite = false,
     this.billing = BillingKind.unknown,
     this.currency = 'USD',
@@ -63,6 +64,7 @@ class ServerRecord {
   });
   final String id, name, vendor, host, region, purpose, os, spec, notes;
   final String? groupId;
+  final String? providerId;
   final ServerResources? resources;
   final bool favorite, isDemo;
   final BillingKind billing;
@@ -107,7 +109,7 @@ class ServerRecord {
     if (name.trim().isEmpty || name.length > 80) {
       return l10n.serverNameRange;
     }
-    if (vendor.trim().isEmpty || vendor.length > 80) {
+    if (vendor.length > 80) {
       return l10n.serverVendorRange;
     }
     if (!validHost(host)) {
@@ -151,6 +153,7 @@ class ServerRecord {
     'id': id,
     'name': name,
     'vendor': vendor,
+    'provider_id': providerId,
     'host': host,
     'region': region,
     'purpose': purpose,
@@ -177,6 +180,7 @@ class ServerRecord {
     id: row['id'] as String,
     name: row['name'] as String,
     vendor: row['vendor'] as String,
+    providerId: row['provider_id'] as String?,
     host: row['host'] as String,
     region: row['region'] as String,
     purpose: row['purpose'] as String,

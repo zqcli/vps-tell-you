@@ -137,13 +137,36 @@ class LedgerController extends ChangeNotifier {
   String groupName(String? id, {AppLocalizations? l10n}) =>
       groups.where((g) => g.id == id).firstOrNull?.name ??
       (l10n ?? defaultLocalizations).ungrouped;
+  ProviderRecord? providerFor(ServerRecord server) =>
+      cloud.providers.where((p) => p.id == server.providerId).firstOrNull;
+
+  String providerNameFor(ServerRecord server, {AppLocalizations? l10n}) {
+    final strings = l10n ?? defaultLocalizations;
+    final provider = providerFor(server);
+    if (provider != null) {
+      return provider.needsReview
+          ? strings.providerPendingName(provider.name)
+          : provider.name;
+    }
+    return server.vendor.trim().isNotEmpty &&
+            server.vendor.trim() != legacyUnknownVendor
+        ? server.vendor
+        : strings.providerUiUnspecified;
+  }
+
+  // Separate actual provider identity from legacy labels and the unassigned
+  // group. A rename must not merge providers or change a drill-down's scope.
+  String providerGroupKey(ServerRecord server) => server.providerId == null
+      ? 'legacy:${server.vendor.trim().isEmpty || server.vendor.trim() == legacyUnknownVendor ? '' : server.vendor}'
+      : 'provider:${server.providerId}';
+
   ServerRecord? byId(String id) => records.where((s) => s.id == id).firstOrNull;
   List<ServerRecord> get visible {
     final query = search.trim().toLowerCase();
     final result = active.where((s) {
       final days = dueIn(s);
       return (query.isEmpty ||
-              '${s.name} ${s.host} ${s.vendor} ${s.purpose} ${s.region}'
+              '${s.name} ${s.host} ${s.vendor} ${providerNameFor(s)} ${s.purpose} ${s.region}'
                   .toLowerCase()
                   .contains(query)) &&
           (filter != ServerFilter.favorites || s.favorite) &&

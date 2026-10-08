@@ -414,12 +414,21 @@ extension LedgerBackupStore on LedgerStore {
       columns: columns,
       orderBy: 'id',
     )).map((r) => Map<String, Object?>.from(r)).toList();
+    final serverRows = await rows('servers', _backupServerColumns);
+    // Preserve the existing v1 nonempty-label contract without writing a
+    // business provider or fabricating any restored authorization. The local
+    // unspecified/blank field itself is never changed by export.
+    for (final server in serverRows) {
+      if ((server['vendor'] as String).trim().isEmpty) {
+        server['vendor'] = legacyUnknownVendor;
+      }
+    }
     final snapshot = LedgerBackupSnapshot._validated({
       'format': LedgerBackupSnapshot.format,
       'version': LedgerBackupSnapshot.version,
       'exported_at': clock().toUtc().toIso8601String(),
       'groups': await rows('server_groups', _backupGroupColumns),
-      'servers': await rows('servers', _backupServerColumns),
+      'servers': serverRows,
       'payments': await rows('payments', _backupPaymentColumns),
       'service_periods': await rows('service_periods', _backupPeriodColumns),
       'fx': (await txn.query(

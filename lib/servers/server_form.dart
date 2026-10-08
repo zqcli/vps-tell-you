@@ -7,6 +7,8 @@ import 'dart:ui' show SemanticsValidationResult;
 
 import 'package:flutter/material.dart';
 
+import '../cloud/provider_pages.dart';
+import '../cloud/provider_record.dart';
 import '../core/app_theme.dart';
 import '../core/form_feedback.dart';
 import '../core/value_types.dart';
@@ -19,10 +21,12 @@ class ServerForm extends StatefulWidget {
     super.key,
     required this.controller,
     this.record,
+    this.businessProvider,
     this.focusHardware = false,
   });
   final LedgerController controller;
   final ServerRecord? record;
+  final ProviderRecord? businessProvider;
   final bool focusHardware;
   @override
   State<ServerForm> createState() => _ServerFormState();
@@ -55,6 +59,8 @@ class _ServerFormState extends State<ServerForm> {
   late String currency;
   late int cycle;
   String? groupId;
+  ProviderRecord? selectedProvider;
+  bool choosingProvider = false;
   bool saving = false;
   bool get termsLocked =>
       widget.record != null &&
@@ -64,9 +70,9 @@ class _ServerFormState extends State<ServerForm> {
     super.initState();
     _cycleFocus.addListener(_refreshCycleFocus);
     final s = widget.record;
+    selectedProvider = widget.businessProvider;
     fields = {
       'name': TextEditingController(text: s?.name),
-      'vendor': TextEditingController(text: s?.vendor),
       'host': TextEditingController(text: s?.host),
       'region': TextEditingController(text: s?.region),
       'purpose': TextEditingController(text: s?.purpose),
@@ -600,8 +606,31 @@ class _ServerFormState extends State<ServerForm> {
     },
   );
 
+  Future<void> chooseProvider() async {
+    if (choosingProvider || saving || widget.record != null) return;
+    setState(() => choosingProvider = true);
+    try {
+      final selected = await Navigator.push<ProviderSelection>(
+        context,
+        MaterialPageRoute(
+          builder: (_) => ProviderPickerPage(
+            ledger: widget.controller,
+            allowUnspecified: true,
+          ),
+        ),
+      );
+      if (mounted && selected != null) {
+        setState(() => selectedProvider = selected.provider);
+      }
+    } finally {
+      if (mounted) setState(() => choosingProvider = false);
+    }
+  }
+
   Future<void> save() async {
-    if (saving) {
+    if (saving ||
+        !widget.controller.canMutate ||
+        widget.controller.cloud.needsReload) {
       return;
     }
     _hasValidated = true;
@@ -622,7 +651,9 @@ class _ServerFormState extends State<ServerForm> {
     final s = ServerRecord(
       id: old?.id ?? newLocalId(),
       name: text('name'),
-      vendor: text('vendor'),
+      // Legacy vendor text stays historical; providerId is current ownership.
+      vendor: old?.vendor ?? selectedProvider?.name ?? '',
+      providerId: old == null ? selectedProvider?.id : old.providerId,
       host: old == null && text('host').isEmpty
           ? (resources.ip.isNotEmpty ? resources.ip : resources.hostname)
           : text('host'),
@@ -679,140 +710,174 @@ class _ServerFormState extends State<ServerForm> {
   }
 
   @override
-  Widget build(BuildContext context) => PopScope(
-    canPop: !saving,
-    child: Scaffold(
-      appBar: AppBar(
-        title: Text(
-          widget.record == null
-              ? context.l10n.serverManualAdd
-              : context.l10n.serverEditTitle,
-        ),
-        actions: [
-          TextButton(
-            onPressed: saving ? null : () => Navigator.pop(context),
-            child: Text(context.l10n.cancel),
+  Widget build(BuildContext context) => ListenableBuilder(
+    listenable: widget.controller,
+    builder: (context, _) => PopScope(
+      canPop: !saving,
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text(
+            widget.record == null
+                ? context.l10n.serverManualAdd
+                : context.l10n.serverEditTitle,
           ),
-        ],
-      ),
-      body: Form(
-        key: _form,
-        // This bounded form owns nested resource state. Keep every field
-        // mounted so scrolling cannot discard edits or prevent validation.
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              InfoNote(context.l10n.serverFormHelp),
-              SectionTitle(context.l10n.serverBasicData),
-              field('name', context.l10n.serverName, required: true),
-              field(
-                'vendor',
-                context.l10n.serverProvider,
-                required: true,
-                hint: context.l10n.serverProviderExample,
-              ),
-              field(
-                'host',
-                context.l10n.serverOptionalHost,
-                hint: context.l10n.serverHostExample,
-                max: 253,
-              ),
-              InfoNote(
-                widget.record == null
-                    ? context.l10n.serverNewHostHelp
-                    : context.l10n.serverSavedHostHelp,
-              ),
-              select<String>(context.l10n.serverGroup, groupId ?? '', [
-                DropdownMenuItem(
-                  value: '',
-                  child: Builder(
-                    builder: (context) => Text(context.l10n.ungrouped),
+          actions: [
+            TextButton(
+              onPressed: saving ? null : () => Navigator.pop(context),
+              child: Text(context.l10n.cancel),
+            ),
+          ],
+        ),
+        body: Form(
+          key: _form,
+          // This bounded form owns nested resource state. Keep every field
+          // mounted so scrolling cannot discard edits or prevent validation.
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                InfoNote(context.l10n.serverFormHelp),
+                SectionTitle(context.l10n.serverBasicData),
+                field('name', context.l10n.serverName, required: true),
+                LedgerCard(
+                  padding: EdgeInsets.zero,
+                  child: SettingRow(
+                    key: const ValueKey('form-provider'),
+                    icon: Icons.business_outlined,
+                    title: widget.record == null
+                        ? widget.controller.cloud.providers
+                                  .where((p) => p.id == selectedProvider?.id)
+                                  .firstOrNull
+                                  ?.name ??
+                              selectedProvider?.name ??
+                              context.l10n.providerUiUnspecified
+                        : serverProviderLabel(
+                            context,
+                            widget.controller,
+                            widget.record!,
+                          ),
+                    subtitle: widget.record == null
+                        ? context.l10n.providerUiChooseAnother
+                        : context.l10n.providerUiChangeFromDetails,
+                    onTap:
+                        widget.record != null ||
+                            saving ||
+                            choosingProvider ||
+                            !widget.controller.canMutate
+                        ? null
+                        : chooseProvider,
                   ),
                 ),
-                ...widget.controller.groups.map(
-                  (g) => DropdownMenuItem(value: g.id, child: Text(g.name)),
+                const SizedBox(height: 18),
+                field(
+                  'host',
+                  context.l10n.serverOptionalHost,
+                  hint: context.l10n.serverHostExample,
+                  max: 253,
                 ),
-              ], (v) => setState(() => groupId = v == '' ? null : v)),
-              field('purpose', context.l10n.serverOptionalPurpose),
-              field('region', context.l10n.serverOptionalRegion),
-              field('os', context.l10n.serverOptionalOs),
-              field(
-                'spec',
-                context.l10n.serverOptionalSpec,
-                hint: context.l10n.serverSpecExample,
-                max: 200,
-              ),
-              ServerResourceFields(
-                key: _resources,
-                initial: widget.record?.resources,
-                enabled: !saving,
-                importing: false,
-                defaultTrafficPeriodMonths: widget.record == null ? 1 : null,
-              ),
-              SectionTitle(context.l10n.serverCostDetails),
-              if (termsLocked) InfoNote(context.l10n.serverPaymentLockHelp),
-              select<BillingKind>(
-                context.l10n.serverBillingType,
-                billing,
-                [
+                InfoNote(
+                  widget.record == null
+                      ? context.l10n.serverNewHostHelp
+                      : context.l10n.serverSavedHostHelp,
+                ),
+                select<String>(context.l10n.serverGroup, groupId ?? '', [
                   DropdownMenuItem(
-                    value: BillingKind.unknown,
+                    value: '',
                     child: Builder(
-                      builder: (context) =>
-                          Text(context.l10n.serverCostUnknownOption),
+                      builder: (context) => Text(context.l10n.ungrouped),
                     ),
                   ),
-                  DropdownMenuItem(
-                    value: BillingKind.prepaid,
-                    child: Builder(
-                      builder: (context) =>
-                          Text(context.l10n.serverPrepaidOption),
-                    ),
+                  ...widget.controller.groups.map(
+                    (g) => DropdownMenuItem(value: g.id, child: Text(g.name)),
                   ),
-                  DropdownMenuItem(
-                    value: BillingKind.metered,
-                    child: Builder(
-                      builder: (context) =>
-                          Text(context.l10n.serverMeteredOption),
+                ], (v) => setState(() => groupId = v == '' ? null : v)),
+                field('purpose', context.l10n.serverOptionalPurpose),
+                field('region', context.l10n.serverOptionalRegion),
+                field('os', context.l10n.serverOptionalOs),
+                field(
+                  'spec',
+                  context.l10n.serverOptionalSpec,
+                  hint: context.l10n.serverSpecExample,
+                  max: 200,
+                ),
+                ServerResourceFields(
+                  key: _resources,
+                  initial: widget.record?.resources,
+                  enabled: !saving,
+                  importing: false,
+                  defaultTrafficPeriodMonths: widget.record == null ? 1 : null,
+                ),
+                SectionTitle(context.l10n.serverCostDetails),
+                if (termsLocked) InfoNote(context.l10n.serverPaymentLockHelp),
+                select<BillingKind>(
+                  context.l10n.serverBillingType,
+                  billing,
+                  [
+                    DropdownMenuItem(
+                      value: BillingKind.unknown,
+                      child: Builder(
+                        builder: (context) =>
+                            Text(context.l10n.serverCostUnknownOption),
+                      ),
                     ),
-                  ),
+                    DropdownMenuItem(
+                      value: BillingKind.prepaid,
+                      child: Builder(
+                        builder: (context) =>
+                            Text(context.l10n.serverPrepaidOption),
+                      ),
+                    ),
+                    DropdownMenuItem(
+                      value: BillingKind.metered,
+                      child: Builder(
+                        builder: (context) =>
+                            Text(context.l10n.serverMeteredOption),
+                      ),
+                    ),
+                  ],
+                  (v) => setState(() => billing = v!),
+                  id: 'billing',
+                  selectedLabels: {
+                    BillingKind.unknown: context.l10n.billingCostUnknown,
+                    BillingKind.prepaid: context.l10n.serverPrepaid,
+                    BillingKind.metered: context.l10n.serverMetered,
+                  },
+                ),
+                if (billing != BillingKind.unknown) ...[
+                  _feeRow(),
+                  if (billing == BillingKind.prepaid) ...[
+                    _dateRow(),
+                    InfoNote(context.l10n.serverDatesHelp),
+                  ],
+                  InfoNote(context.l10n.serverAmountHelp),
                 ],
-                (v) => setState(() => billing = v!),
-                id: 'billing',
-                selectedLabels: {
-                  BillingKind.unknown: context.l10n.billingCostUnknown,
-                  BillingKind.prepaid: context.l10n.serverPrepaid,
-                  BillingKind.metered: context.l10n.serverMetered,
-                },
-              ),
-              if (billing != BillingKind.unknown) ...[
-                _feeRow(),
-                if (billing == BillingKind.prepaid) ...[
-                  _dateRow(),
-                  InfoNote(context.l10n.serverDatesHelp),
-                ],
-                InfoNote(context.l10n.serverAmountHelp),
+                field(
+                  'notes',
+                  context.l10n.serverOptionalNotes,
+                  max: 4000,
+                  lines: 4,
+                ),
+                InfoNote(context.l10n.serverNotesSafety),
               ],
-              field(
-                'notes',
-                context.l10n.serverOptionalNotes,
-                max: 4000,
-                lines: 4,
-              ),
-              InfoNote(context.l10n.serverNotesSafety),
-            ],
+            ),
           ),
         ),
-      ),
-      bottomNavigationBar: SafeArea(
-        top: false,
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: FilledButton(
-            onPressed: saving ? null : save,
-            child: Text(saving ? context.l10n.saving : context.l10n.serverSave),
+        bottomNavigationBar: SafeArea(
+          top: false,
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: FilledButton(
+              onPressed:
+                  saving ||
+                      !widget.controller.canMutate ||
+                      widget.controller.cloud.needsReload
+                  ? null
+                  : save,
+              child: Text(
+                saving ? context.l10n.saving : context.l10n.serverSave,
+              ),
+            ),
           ),
         ),
       ),

@@ -496,3 +496,17 @@ Android / iOS 实机安装重启、设备安全存储/设备认证、真实通�
 - `flutter pub get --enforce-lockfile --offline`、format145文件零变化、`flutter analyze --no-pub` 零问题、`git diff --check` 通过；官方未修改 Flutter 3.47.6 / Dart 3.13.5，Linux release 单worker构建成功。188个受测输入的最终 SHA-256 核对一致。
 
 生产 `libapp.so` SHA-256：`2ee467f9bd1228d1c19563d328bdbf8e3d94dc1b305ff5003c411cf492c5df42`。没有运行真实用户App、数据库、钥匙环或远端服务。当前截图是隔离 engine 验证，不等同于原生 Linux 桌面或手机真机。没有生成 APK，也不替代后续 Android/iOS 安装、IME 或系统分享实测。远端 commit/CI 需在发布后另行核实。
+
+
+## 2026-10-08：提供商与安全逐台导入
+
+- 完整套件 1046/1046，82 个测试文件，10 批单并发，无跳过；最终输入哈希 207 项一致。新增 101 项净增回归，原 SSH / 安全存储 / 财务 / i18n / 资源 / 备份测试继续通过。
+- schema v9→v10 实际旧表 / 列重建迁移，混杂及无绑定实例保守归属，旧行逐字段比较、旧 V1 矛盾绑定整库事务回滚、只读刷新及 stale generation 围栏通过。
+- 同提供商 / 已确认范围才可绑定；单机 pin 在 INSERT / UPDATE、解绑、归档、scope 变化与重启后保留。业务归属修改的旧确认不能移除新关联。
+- 新实例先提交并消费验证，再逐行导入；逐行失败不留下孤儿服务器 / 提醒，取消保留已提交项，授权变化停止余项，重试不重建实例或凭据。已保存但重读失败需要本地恢复，不能假报未保存。
+- V2 端点 / 用户 / 项目 / 设备身份、双方历史 UUID、已归档记录和历史多重重复覆盖；同 IP 不同设备不误合并，巨大 GiB 不发生整数回绕。
+- 统一添加、已有 / 新实例、缺失资源补填、空结果、批量结果、取消 / Back / 双击 / 后台、迟到读取及实时中英切换均有 widget 回归。沿用正式 UI 组件、菜单与四 Tab。
+- 真实 Noto 字形 14/14；提供商 / 实例 / 菜单 / 导入 / 补填共 18 张合成截图，含 320px / 2× 与深浅色，经实际目视复核。测试标题字体接线已修正，生产字体不变。
+- 独立 Astra max 架构与最终实现 review APPROVE；最终独立组合 13/13。format / analyze / diff check / offline locked pub get / 生产 Linux release 均通过。
+- 仅使用合成 SQLite、伪安全存储及原有 loopback 协议 fixture。没有真实 API、SSH、用户数据库、钥匙环访问，也没有手机真机或 APK 构建。JSON v1 不恢复 provider / adapter 关系，不新增凭据导出。
+- 发布提交及同 SHA CI 结果以最终远端记录为准；不引用上一提交的 CI 作为本次通过证明。

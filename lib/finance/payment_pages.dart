@@ -244,7 +244,12 @@ class _PaymentFormState extends State<PaymentForm> {
                                 fontWeight: FontWeight.w700,
                               ),
                             ),
-                            Text(widget.server!.vendor),
+                            Text(
+                              widget.controller.providerNameFor(
+                                widget.server!,
+                                l10n: context.l10n,
+                              ),
+                            ),
                             InfoNote(context.l10n.financeLocalPaymentOnly),
                           ],
                         ),

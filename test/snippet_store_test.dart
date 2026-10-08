@@ -1,3 +1,5 @@
+import 'support/provider_fixture.dart';
+
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
@@ -132,6 +134,7 @@ void main() {
         'revision': 2,
       });
       final trustBefore = await raw.query('host_trust');
+      await removeProviderSchema(raw);
       for (final table in [
         'cloud_bindings',
         'cloud_observations',
@@ -150,7 +153,10 @@ void main() {
         factory: databaseFactoryFfiNoIsolate,
         path: path,
       );
-      expect((await store.servers()).single.toMap(), serverBefore);
+      expect(
+        legacyProviderProjection((await store.servers()).single.toMap()),
+        legacyProviderProjection(serverBefore),
+      );
       expect((await store.fxSettings()).toMap(), fxBefore);
       final reopened = await databaseFactoryFfiNoIsolate.openDatabase(path);
       expect(await reopened.query('host_trust'), trustBefore);

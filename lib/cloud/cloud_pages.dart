@@ -10,10 +10,10 @@ import '../l10n/localized_message.dart';
 import '../servers/ledger_controller.dart';
 import '../servers/server_detail.dart';
 import '../servers/server_resource_fields.dart';
-import '../servers/server_resources.dart';
 import 'cloud_controller.dart';
 import 'cloud_models.dart';
 import 'cloud_widgets.dart';
+import 'provider_pages.dart';
 
 Future<void> _reloadLedger(LedgerController ledger) =>
     ledger.refreshAfterCloudCommit();
@@ -27,187 +27,22 @@ void _cloudMessage(BuildContext context, Object message) =>
       ),
     );
 
-class CloudAccountsPage extends StatefulWidget {
+/// Compatibility route; all entry points now use business providers first.
+class CloudAccountsPage extends StatelessWidget {
   const CloudAccountsPage({super.key, required this.ledger});
   final LedgerController ledger;
   @override
-  State<CloudAccountsPage> createState() => _CloudAccountsPageState();
-}
-
-class _CloudAccountsPageState extends State<CloudAccountsPage> {
-  CloudController get cloud => widget.ledger.cloud;
-  bool opening = false;
-  @override
-  void initState() {
-    super.initState();
-    unawaited(cloud.initialize());
-  }
-
-  Future<void> add() async {
-    if (opening) return;
-    opening = true;
-    try {
-      await Navigator.push<void>(
-        context,
-        MaterialPageRoute(
-          builder: (_) => CloudTemplatesPage(ledger: widget.ledger),
-        ),
-      );
-    } finally {
-      opening = false;
-    }
-  }
-
-  Future<void> menu(CloudAccount account) async {
-    if (opening) return;
-    opening = true;
-    try {
-      await cloudAccountMenu(context, widget.ledger, account);
-    } finally {
-      opening = false;
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) => ListenableBuilder(
-    listenable: cloud,
-    builder: (context, _) => Scaffold(
-      appBar: AppBar(
-        title: Text(context.l10n.cloudAccounts),
-        actions: [
-          IconButton(
-            tooltip: context.l10n.cloudAddAccount,
-            onPressed: cloud.busy || cloud.needsReload ? null : add,
-            icon: const Icon(Icons.add),
-          ),
-        ],
-      ),
-      body: ListView(
-        padding: const EdgeInsets.all(20),
-        children: [
-          LedgerBadge(context.l10n.cloudPanelReadBadge),
-          const SizedBox(height: 16),
-          Text(
-            context.l10n.cloudManageConnections,
-            style: TextStyle(fontSize: 26, fontWeight: FontWeight.w700),
-          ),
-          InfoNote(context.l10n.cloudConnectionsInfo),
-          if (cloud.needsReload) ...[
-            CloudNotice(context.l10n.cloudMetadataIncomplete, error: true),
-            OutlinedButton(
-              onPressed: cloud.busy ? null : cloud.reload,
-              child: Text(context.l10n.cloudReloadMetadata),
-            ),
-          ] else if (cloud.localizedError != null)
-            CloudNotice(cloud.localizedError!, error: true),
-          if (cloud.cleanupPending) ...[
-            CloudNotice(context.l10n.cloudCleanupNotice, error: true),
-            OutlinedButton(
-              onPressed: cloud.busy ? null : cloud.retryCleanup,
-              child: Text(context.l10n.cloudRetryCleanup),
-            ),
-          ],
-          if (cloud.accounts.isEmpty && !cloud.needsReload)
-            LedgerCard(
-              child: Column(
-                children: [
-                  const SizedBox(height: 12),
-                  Icon(
-                    Icons.cloud_outlined,
-                    size: 44,
-                    color: Theme.of(context).colorScheme.primary,
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    context.l10n.cloudFirstAccount,
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
-                  ),
-                  InfoNote(context.l10n.cloudFirstAccountInfo),
-                  FilledButton.icon(
-                    onPressed: cloud.busy ? null : add,
-                    icon: const Icon(Icons.add),
-                    label: Text(context.l10n.cloudChooseTemplate),
-                  ),
-                ],
-              ),
-            ),
-          for (final account in cloud.accounts)
-            Padding(
-              padding: const EdgeInsets.only(bottom: 12),
-              child: LedgerCard(
-                padding: EdgeInsets.zero,
-                child: InkWell(
-                  key: ValueKey('cloud-account-${account.id}'),
-                  onTap: () => menu(account),
-                  child: Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Icon(
-                          Icons.cloud_outlined,
-                          color: Theme.of(context).colorScheme.primary,
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                account.alias,
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.w700,
-                                  fontSize: 17,
-                                ),
-                              ),
-                              Text(
-                                context.l10n.cloudProviderLinks(
-                                  cloudProviderName(account.provider),
-                                  cloud.bindings
-                                      .where((b) => b.accountId == account.id)
-                                      .length,
-                                ),
-                                style: Theme.of(context).textTheme.bodySmall,
-                              ),
-                              Text(
-                                account.endpoint,
-                                style: Theme.of(context).textTheme.bodySmall,
-                              ),
-                              const SizedBox(height: 8),
-                              LedgerBadge(
-                                cloudAccountStatus(account, l10n: context.l10n),
-                                warning: account.lastFailure != null,
-                              ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(width: 6),
-                        Icon(
-                          Icons.more_vert,
-                          color: Theme.of(context).colorScheme.onSurfaceVariant,
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          if (cloud.accounts.isNotEmpty)
-            OutlinedButton.icon(
-              onPressed: cloud.busy || cloud.needsReload ? null : add,
-              icon: const Icon(Icons.add),
-              label: Text(context.l10n.cloudAddAccount),
-            ),
-          InfoNote(context.l10n.cloudReadOnlyBoundary),
-        ],
-      ),
-    ),
-  );
+  Widget build(BuildContext context) => ProvidersPage(ledger: ledger);
 }
 
 class CloudTemplatesPage extends StatefulWidget {
-  const CloudTemplatesPage({super.key, required this.ledger});
+  const CloudTemplatesPage({
+    super.key,
+    required this.ledger,
+    required this.businessProvider,
+  });
   final LedgerController ledger;
+  final ProviderRecord businessProvider;
   @override
   State<CloudTemplatesPage> createState() => _CloudTemplatesPageState();
 }
@@ -220,12 +55,15 @@ class _CloudTemplatesPageState extends State<CloudTemplatesPage> {
     final saved = await Navigator.push<bool>(
       context,
       MaterialPageRoute(
-        builder: (_) =>
-            CloudAuthorizationPage(ledger: widget.ledger, provider: provider),
+        builder: (_) => CloudAuthorizationPage(
+          ledger: widget.ledger,
+          provider: provider,
+          businessProvider: widget.businessProvider,
+        ),
       ),
     );
     opening = false;
-    if (saved == true && context.mounted) Navigator.pop(context);
+    if (saved == true && context.mounted) Navigator.pop(context, true);
   }
 
   @override
@@ -266,10 +104,12 @@ class CloudAuthorizationPage extends StatefulWidget {
     super.key,
     required this.ledger,
     required this.provider,
+    required this.businessProvider,
     this.existing,
   });
   final LedgerController ledger;
   final CloudProvider provider;
+  final ProviderRecord businessProvider;
   final CloudAccount? existing;
   @override
   State<CloudAuthorizationPage> createState() => _CloudAuthorizationPageState();
@@ -386,6 +226,7 @@ class _CloudAuthorizationPageState extends State<CloudAuthorizationPage>
           : SolusVm2Credentials(token.text);
       verified = await cloud.verifyConnection(
         provider: widget.provider,
+        businessProvider: widget.businessProvider,
         endpoint: endpoint.text,
         credentials: credentials,
         existing: widget.existing,
@@ -420,7 +261,7 @@ class _CloudAuthorizationPageState extends State<CloudAuthorizationPage>
     navigating = false;
     cloud.cancelVerification();
     if (!mounted) return;
-    if (saved == true) {
+    if (saved == true || verified.isCommitted) {
       Navigator.pop(context, true);
     } else {
       setState(
@@ -588,70 +429,275 @@ class _CloudImportPageState extends State<CloudImportPage>
   CloudController get cloud => widget.ledger.cloud;
   CloudSnapshot get snapshot =>
       widget.verification?.snapshot ?? widget.inventory!.snapshot;
+  CloudInventory? inventory;
   CloudAccount? get account =>
-      widget.verification?.existingAccount ?? widget.inventory?.account;
+      inventory?.account ?? widget.verification?.existingAccount;
+  CloudAccount? get currentAccount =>
+      cloud.accounts.where((value) => value.id == account?.id).firstOrNull ??
+      account;
+  ProviderRecord? get businessProvider => cloud.providers
+      .where(
+        (provider) =>
+            provider.id ==
+            (widget.verification?.businessProvider.id ??
+                account?.businessProviderId),
+      )
+      .firstOrNull;
   bool get v1 => snapshot.provider == CloudProvider.solusVm1;
   bool get rebind => v1 && widget.verification?.existingAccount != null;
+  bool get authorizationSaved =>
+      inventory != null || widget.verification?.isCommitted == true;
+  bool get awaitingRebind => rebind && !authorizationSaved;
+  bool get needsReload => cloud.needsReload || widget.ledger.refreshFailed;
+  bool get unavailable =>
+      businessProvider == null ||
+      businessProvider!.needsReview ||
+      (inventory != null &&
+          currentAccount?.authScope == AdapterAuthScope.unknown);
+  String? get pinnedServerId =>
+      v1 && !awaitingRebind ? currentAccount?.pinnedServerId : null;
   final selected = <String>{};
+  final drafts = <String, CloudImportDraft>{};
+  final outcomes = <String, CloudImportItemResult>{};
+  final failures = <String, LocalizedMessage>{};
+  final unprocessed = <String>{};
   final displayName = TextEditingController();
   final resourceForm = GlobalKey<ServerResourceFieldsState>();
   final v1Selection = GlobalKey();
+  final scroll = ScrollController();
   bool saving = false,
+      editing = false,
+      reloading = false,
       confirmRebind = false,
       committed = false,
-      expired = false;
-  LocalizedMessage? error;
-  String keyFor(CloudInstance instance) =>
-      widget.verification?.keyFor(instance) ??
-      widget.inventory!.keyFor(instance);
-  CloudBinding? linked(CloudInstance instance) => rebind
-      ? null
-      : cloud.bindings
-            .where(
-              (b) =>
-                  b.accountId == account?.id &&
-                  b.instanceKey == keyFor(instance),
-            )
-            .firstOrNull;
+      expired = false,
+      hasResult = false,
+      cancelling = false,
+      closing = false;
+  LocalizedMessage? error, interruption;
+  Set<String> get conflictingKeys => {
+    for (final instance in snapshot.instances)
+      if (hasIdentityConflict(instance)) keyFor(instance),
+  };
+  Set<String> get retryKeys => {...failures.keys, ...unprocessed};
+  Set<String> get retrySelection =>
+      retryKeys.intersection(selected).difference(conflictingKeys);
+  Set<String> get newSelection => selected
+      .difference(retryKeys)
+      .difference(outcomes.keys.toSet())
+      .difference(conflictingKeys);
+  bool get blocked =>
+      saving ||
+      editing ||
+      reloading ||
+      expired ||
+      needsReload ||
+      unavailable ||
+      closing;
+  String keyFor(CloudInstance instance) => cloudInstanceKey(snapshot, instance);
+  bool hasIdentityConflict(CloudInstance instance) =>
+      !awaitingRebind &&
+      (cloud.hasSourceIdentityConflict(
+            accountId: account?.id,
+            instanceKey: keyFor(instance),
+            uuid: instance.uuid,
+          ) ||
+          conflictingIds(instance).isNotEmpty);
+
+  List<String> existingIds(CloudInstance instance) {
+    if (awaitingRebind) return const [];
+    return cloud
+        .matchingDevices(
+          type: snapshot.provider,
+          endpoint:
+              widget.verification?.endpoint.toString() ?? account!.endpoint,
+          remoteAccountId: snapshot.remoteAccountId,
+          instanceKey: keyFor(instance),
+          accountId: account?.id,
+          uuid: instance.uuid,
+        )
+        .map((binding) => binding.serverId)
+        .toSet()
+        .toList(growable: false);
+  }
+
+  List<String> conflictingIds(CloudInstance instance) {
+    if (awaitingRebind) return const [];
+    return cloud
+        .conflictingDevices(
+          type: snapshot.provider,
+          endpoint:
+              widget.verification?.endpoint.toString() ?? account!.endpoint,
+          remoteAccountId: snapshot.remoteAccountId,
+          instanceKey: keyFor(instance),
+          accountId: account?.id,
+          uuid: instance.uuid,
+        )
+        .map((binding) => binding.serverId)
+        .toSet()
+        .toList(growable: false);
+  }
+
+  void finish({bool? result, bool afterSave = false}) {
+    if (!mounted ||
+        closing ||
+        (saving && !afterSave) ||
+        ModalRoute.of(context)?.isCurrent != true) {
+      return;
+    }
+    closing = true;
+    if (!authorizationSaved) cloud.cancelVerification();
+    Navigator.pop(context, result ?? committed);
+  }
+
+  bool complete(CloudInstance instance) =>
+      drafts[keyFor(instance)]!.resources.validate(requireComplete: true) ==
+      null;
+
+  String deviceName(String id) {
+    final server = widget.ledger.byId(id);
+    return server == null
+        ? context.l10n.cloudLocalRecord
+        : context.l10n.cloudRecordWithState(
+            server.name,
+            server.archived ? context.l10n.cloudArchivedSuffix : '',
+          );
+  }
+
+  List<String> addressHints(CloudInstance instance) {
+    final ids = existingIds(instance).toSet();
+    final addresses = [instance.ipv4, instance.ipv6, instance.hostname]
+        .whereType<String>()
+        .where((value) => value.trim().isNotEmpty)
+        .map((value) => value.toLowerCase())
+        .toSet();
+    if (addresses.isEmpty) return const [];
+    return widget.ledger.records
+        .where(
+          (server) =>
+              !ids.contains(server.id) &&
+              [server.host, server.resources?.ip, server.resources?.hostname]
+                  .whereType<String>()
+                  .any((value) => addresses.contains(value.toLowerCase())),
+        )
+        .map((server) => deviceName(server.id))
+        .toList(growable: false);
+  }
 
   @override
   void initState() {
     super.initState();
+    inventory = widget.inventory;
+    for (final instance in snapshot.instances) {
+      final key = keyFor(instance);
+      drafts[key] = CloudImportDraft(
+        instanceKey: key,
+        resources: resourcesFromCloud(instance),
+      );
+    }
     WidgetsBinding.instance.addObserver(this);
   }
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (widget.verification != null &&
-        !committed &&
-        (state == AppLifecycleState.inactive ||
-            state == AppLifecycleState.paused ||
-            state == AppLifecycleState.detached)) {
+    if (state != AppLifecycleState.inactive &&
+        state != AppLifecycleState.paused &&
+        state != AppLifecycleState.detached) {
+      return;
+    }
+    if (saving) stop();
+    if (widget.verification != null && !authorizationSaved) {
       cloud.cancelVerification();
-      setState(() {
-        expired = true;
-        error = LocalizedText((l10n) => l10n.cloudAuthorizationExpired);
-      });
+      if (mounted) {
+        setState(() {
+          expired = true;
+          error = LocalizedText((l10n) => l10n.cloudAuthorizationExpired);
+        });
+      }
     }
   }
 
   @override
   void dispose() {
+    closing = true;
+    cancelling = true;
     WidgetsBinding.instance.removeObserver(this);
-    if (widget.verification != null && !committed) {
+    if (widget.verification != null && !authorizationSaved) {
       cloud.cancelVerification(notify: false);
     }
+    if (saving && inventory != null) {
+      cloud.cancelAccount(inventory!.account.id, notify: false);
+    }
     displayName.dispose();
+    scroll.dispose();
     super.dispose();
   }
 
-  Future<void> save({bool accountOnly = false}) async {
-    if (saving || expired || (rebind && !confirmRebind)) return;
-    if (!accountOnly && selected.isEmpty) return;
-    final ServerResources? resources;
-    if (v1 && !accountOnly && selected.isNotEmpty) {
+  void stop() {
+    if (!saving || cancelling) return;
+    if (inventory != null) {
+      cloud.cancelAccount(inventory!.account.id);
+    } else if (!authorizationSaved) {
+      cloud.cancelVerification();
+    }
+    if (mounted) setState(() => cancelling = true);
+  }
+
+  Future<void> reloadLocal() async {
+    if (saving || editing || reloading) return;
+    setState(() => reloading = true);
+    await cloud.reload();
+    if (!cloud.needsReload) await _reloadLedger(widget.ledger);
+    if (!mounted) return;
+    setState(() {
+      reloading = false;
+      error = needsReload
+          ? cloud.localizedError ??
+                LocalizedText((l10n) => l10n.cloudLedgerNotUpdated)
+          : null;
+    });
+  }
+
+  Future<void> edit(CloudInstance instance) async {
+    if (blocked ||
+        hasIdentityConflict(instance) ||
+        existingIds(instance).isNotEmpty ||
+        outcomes.containsKey(keyFor(instance))) {
+      return;
+    }
+    setState(() => editing = true);
+    final result = await Navigator.push<CloudImportDraft>(
+      context,
+      MaterialPageRoute(
+        builder: (_) => _CloudResourceCompletionPage(
+          instance: instance,
+          draft: drafts[keyFor(instance)]!,
+        ),
+      ),
+    );
+    if (!mounted) return;
+    setState(() {
+      editing = false;
+      if (result != null && !expired) {
+        drafts[result.instanceKey] = result;
+        selected.add(result.instanceKey);
+        error = null;
+      }
+    });
+  }
+
+  /// Credentials are committed once, before the independent per-device batch.
+  /// Retries always reuse this exact inventory and never resubmit verification.
+  Future<void> save({bool accountOnly = false, bool retry = false}) async {
+    if (blocked || (awaitingRebind && !confirmRebind)) return;
+    final picked = accountOnly
+        ? <String>{}
+        : Set<String>.of(retry ? retrySelection : newSelection);
+    picked.removeAll(outcomes.keys);
+    if (!accountOnly && picked.isEmpty) return;
+    if (v1 && picked.isNotEmpty) {
       final invalid = <FormFieldState<Object?>>{};
-      resources = resourceForm.currentState?.validateAndRead(
+      final resources = resourceForm.currentState?.validateAndRead(
         invalidFields: invalid,
       );
       if (resources == null) {
@@ -661,51 +707,123 @@ class _CloudImportPageState extends State<CloudImportPage>
         );
         return;
       }
-    } else {
-      resources = null;
+      final key = picked.single;
+      drafts[key] = CloudImportDraft(
+        instanceKey: key,
+        resources: resources,
+        displayName: displayName.text.trim().isEmpty
+            ? null
+            : displayName.text.trim(),
+      );
+    }
+    if (picked.any(
+      (key) => drafts[key]?.resources.validate(requireComplete: true) != null,
+    )) {
+      setState(
+        () => error = LocalizedText((l10n) => l10n.cloudResourcesIncomplete),
+      );
+      return;
     }
     FocusScope.of(context).unfocus();
     setState(() {
       saving = true;
+      cancelling = false;
       error = null;
     });
-    final name = displayName.text.trim();
-    final picked = accountOnly ? <String>{} : Set<String>.of(selected);
-    final ok = widget.verification != null
-        ? await cloud.saveAccount(
-            widget.verification!,
-            alias: widget.alias!,
-            selectedInstanceKeys: picked,
-            confirmV1Rebind: confirmRebind,
-            v1DisplayName: name.isEmpty ? null : name,
-            v1Resources: resources,
-          )
-        : await cloud.importInstances(
-            widget.inventory!,
-            selectedInstanceKeys: picked,
-            v1DisplayName: name.isEmpty ? null : name,
-            v1Resources: resources,
+    try {
+      if (inventory == null) {
+        final saved = await cloud.saveAccount(
+          widget.verification!,
+          alias: widget.alias!,
+          selectedInstanceKeys: const {},
+          confirmV1Rebind: confirmRebind,
+        );
+        if (!saved) {
+          if (mounted) {
+            setState(() {
+              expired = widget.verification!.cancellation.isCancelled;
+              error =
+                  cloud.localizedError ??
+                  LocalizedText((l10n) => l10n.cloudSaveFailed);
+            });
+          }
+          return;
+        }
+        inventory = cloud.lastSavedInventory;
+        committed = true;
+        expired = false;
+        if (mounted) setState(() {});
+      }
+      // A pop/replacement can remove this route during post-commit cleanup.
+      // The saved instance stays committed, but a new batch must not begin.
+      if (!mounted || closing) return;
+      if (accountOnly) {
+        if (!needsReload) await _reloadLedger(widget.ledger);
+        if (!mounted || closing || ModalRoute.of(context)?.isCurrent != true) {
+          return;
+        }
+        if (!needsReload) {
+          _cloudMessage(
+            context,
+            LocalizedText((l10n) => l10n.cloudAccountSavedOnly),
           );
-    if (ok) {
-      committed = true;
-      await _reloadLedger(widget.ledger);
-    }
-    if (!mounted) return;
-    setState(() {
-      saving = false;
-      error = ok
-          ? null
-          : cloud.localizedError ??
-                LocalizedText((l10n) => l10n.cloudSaveFailed);
-    });
-    if (ok) {
-      _cloudMessage(
-        context,
-        picked.isEmpty
-            ? LocalizedText((l10n) => l10n.cloudAccountSavedOnly)
-            : LocalizedText((l10n) => l10n.cloudInstancesSaved),
-      );
-      Navigator.pop(context, true);
+          finish(result: true, afterSave: true);
+        }
+        return;
+      }
+      if (needsReload ||
+          inventory == null ||
+          cancelling ||
+          ModalRoute.of(context)?.isCurrent != true) {
+        if (mounted) {
+          setState(() {
+            hasResult = true;
+            unprocessed.addAll(picked);
+            interruption = cancelling
+                ? LocalizedText((l10n) => l10n.cloudImportCancelled)
+                : null;
+            error = needsReload ? cloud.localizedError : null;
+          });
+        }
+        return;
+      }
+      final result = await cloud.importBatch(inventory!, [
+        for (final key in picked) drafts[key]!,
+      ]);
+      if (result != null) {
+        hasResult = true;
+        for (final key in picked) {
+          failures.remove(key);
+          unprocessed.remove(key);
+        }
+        for (final item in result.items) {
+          outcomes[item.instanceKey] = item;
+          selected.remove(item.instanceKey);
+        }
+        failures.addAll(result.failures);
+        unprocessed.addAll(result.unprocessed);
+        interruption = result.interruption;
+        committed = committed || result.importedCount > 0;
+        if (!cloud.needsReload) await _reloadLedger(widget.ledger);
+      } else {
+        hasResult = true;
+        unprocessed.addAll(picked);
+        interruption =
+            cloud.localizedError ??
+            LocalizedText((l10n) => l10n.cloudOperationFailed);
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          saving = false;
+          cancelling = false;
+        });
+        if (hasResult) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted && scroll.hasClients) scroll.jumpTo(0);
+          });
+        }
+      }
     }
   }
 
@@ -713,7 +831,9 @@ class _CloudImportPageState extends State<CloudImportPage>
       v1 &&
       selected.isEmpty &&
       snapshot.instances.isNotEmpty &&
-      linked(snapshot.instances.single) == null;
+      existingIds(snapshot.instances.single).isEmpty &&
+      pinnedServerId == null &&
+      !hasResult;
 
   void revealV1Selection() {
     FocusScope.of(context).unfocus();
@@ -727,93 +847,92 @@ class _CloudImportPageState extends State<CloudImportPage>
     }
   }
 
-  Widget _importBody(List<Widget> children) {
-    // V1 is exactly one instance and owns a nested completion form. Eagerly
-    // mount that bounded form so validation and edits survive any scroll.
-    // V2 inventories may be large and continue using lazy list children.
-    return v1
-        ? SingleChildScrollView(
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: children,
+  Widget openDevice(String id) => TextButton.icon(
+    onPressed: saving || widget.ledger.byId(id) == null
+        ? null
+        : () => Navigator.push<void>(
+            context,
+            MaterialPageRoute(
+              builder: (_) => ServerDetail(controller: widget.ledger, id: id),
             ),
-          )
-        : ListView(padding: const EdgeInsets.all(20), children: children);
-  }
+          ),
+    icon: const Icon(Icons.dns_outlined),
+    label: Text(deviceName(id)),
+  );
 
-  @override
-  Widget build(BuildContext context) => PopScope<Object?>(
-    canPop: !saving,
-    child: Scaffold(
-      appBar: AppBar(title: Text(context.l10n.cloudChooseInstances)),
-      body: _importBody([
-        const CloudSteps(3),
-        CloudNotice(
-          context.l10n.cloudInventoryComplete(
-            snapshot.instances.length,
-            cloudTime(snapshot.completedAt),
-            widget.verification != null
-                ? context.l10n.cloudAuthorizationUnsaved
-                : '',
-          ),
-        ),
-        Text(
-          widget.alias ?? account!.alias,
-          style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 19),
-        ),
-        SelectableText(
-          widget.verification?.endpoint.toString() ?? account!.endpoint,
-          style: Theme.of(context).textTheme.bodySmall,
-        ),
-        const SizedBox(height: 20),
-        if (snapshot.instances.isEmpty)
-          LedgerCard(
-            child: Text(
-              widget.verification != null
-                  ? context.l10n.cloudEmptyVerification
-                  : context.l10n.cloudEmptyInventory,
-            ),
-          ),
-        for (final instance in snapshot.instances)
-          Padding(
-            key: v1 ? v1Selection : null,
-            padding: const EdgeInsets.only(bottom: 12),
-            child: LedgerCard(
-              padding: EdgeInsets.zero,
-              child: CheckboxListTile(
-                key: ValueKey('cloud-select-${keyFor(instance)}'),
-                value:
-                    linked(instance) != null ||
-                    selected.contains(keyFor(instance)),
-                onChanged: saving || expired || linked(instance) != null
-                    ? null
-                    : (checked) => setState(() {
-                        if (checked == true) {
-                          selected.add(keyFor(instance));
-                        } else {
-                          selected.remove(keyFor(instance));
-                        }
-                      }),
-                controlAffinity: ListTileControlAffinity.leading,
-                contentPadding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 8,
-                ),
-                title: Text(
-                  v1
-                      ? context.l10n.cloudV1Instance
-                      : instance.name ??
-                            context.l10n.cloudInstanceFallback(
-                              instance.serverId?.toString() ??
-                                  context.l10n.cloudPowerUnknown,
-                            ),
-                ),
-                subtitle: Column(
+  Widget instanceCard(CloudInstance instance) {
+    final colors = Theme.of(context).colorScheme;
+    final key = keyFor(instance);
+    final conflicting = conflictingIds(instance);
+    final identityConflict = hasIdentityConflict(instance);
+    final existing = existingIds(instance);
+    final result = outcomes[key];
+    final ids = identityConflict ? conflicting : result?.serverIds ?? existing;
+    final linked = !identityConflict && (result != null || existing.isNotEmpty);
+    final hints = linked || identityConflict
+        ? const <String>[]
+        : addressHints(instance);
+    final ready = complete(instance);
+    return Padding(
+      key: v1 ? v1Selection : null,
+      padding: const EdgeInsets.only(bottom: 12),
+      child: LedgerCard(
+        padding: EdgeInsets.zero,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            CheckboxListTile(
+              key: ValueKey('cloud-select-$key'),
+              value: !identityConflict && (linked || selected.contains(key)),
+              onChanged:
+                  blocked ||
+                      identityConflict ||
+                      linked ||
+                      pinnedServerId != null ||
+                      (!v1 && !ready)
+                  ? null
+                  : (checked) => setState(() {
+                      if (checked == true) {
+                        selected.add(key);
+                      } else {
+                        selected.remove(key);
+                      }
+                    }),
+              controlAffinity: ListTileControlAffinity.leading,
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 12,
+                vertical: 8,
+              ),
+              title: Text(
+                v1
+                    ? context.l10n.cloudV1Instance
+                    : instance.name ??
+                          context.l10n.cloudInstanceFallback(
+                            instance.serverId?.toString() ??
+                                context.l10n.cloudPowerUnknown,
+                          ),
+                style: TextStyle(color: colors.onSurface),
+              ),
+              subtitle: DefaultTextStyle.merge(
+                style: TextStyle(color: colors.onSurfaceVariant),
+                child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    if (linked(instance) != null)
-                      LedgerBadge(context.l10n.cloudAlreadyLinked),
+                    LedgerBadge(
+                      identityConflict
+                          ? context.l10n.cloudImportIdentityConflict
+                          : result?.imported == true
+                          ? context.l10n.cloudImportImported
+                          : linked
+                          ? context.l10n.cloudImportExisting
+                          : failures.containsKey(key)
+                          ? context.l10n.cloudImportFailed
+                          : unprocessed.contains(key)
+                          ? context.l10n.cloudImportUnprocessed
+                          : ready
+                          ? context.l10n.cloudImportReady
+                          : context.l10n.cloudImportNeedsCompletion,
+                    ),
                     if (!v1)
                       Text(
                         context.l10n.cloudProjectInstance(
@@ -842,19 +961,359 @@ class _CloudImportPageState extends State<CloudImportPage>
                         cloudPowerLabel(instance.power, l10n: context.l10n),
                       ),
                     ),
+                    if (!v1 && ready && !linked && !identityConflict)
+                      Text(drafts[key]!.resources.specSummaryFor(context.l10n)),
                   ],
                 ),
               ),
             ),
+            if (identityConflict)
+              const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 16),
+                child: CloudNotice(CloudAccountFailure.identity, error: true),
+              ),
+            if (ids.length > 1 && !identityConflict)
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: CloudNotice(
+                  context.l10n.cloudImportExistingConflict(ids.length),
+                  error: true,
+                ),
+              ),
+            for (final id in ids) openDevice(id),
+            if (hints.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: InfoNote(
+                  context.l10n.cloudImportAddressHint(hints.join('、')),
+                ),
+              ),
+            if (failures[key] case final message?)
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: CloudNotice(message, error: true),
+              ),
+            if (!v1 && !linked && !identityConflict)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+                child: OutlinedButton.icon(
+                  key: ValueKey('cloud-complete-$key'),
+                  onPressed: blocked ? null : () => edit(instance),
+                  icon: const Icon(Icons.edit_outlined),
+                  label: Text(
+                    ready
+                        ? context.l10n.cloudImportReviewResources
+                        : context.l10n.cloudImportCompleteResources,
+                  ),
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget body(List<Widget> children) => v1
+      ? SingleChildScrollView(
+          controller: scroll,
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: children,
           ),
-        if (v1) ...[
-          if (needsV1Selection)
-            InfoNote(context.l10n.cloudSelectBeforeComplete),
-          const SizedBox(height: 6),
+        )
+      : ListView(
+          controller: scroll,
+          padding: const EdgeInsets.all(20),
+          children: children,
+        );
+
+  @override
+  Widget build(BuildContext context) => ListenableBuilder(
+    listenable: Listenable.merge([widget.ledger, cloud]),
+    builder: (context, _) => PopScope<Object?>(
+      canPop: !saving && !committed,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop && !saving && committed) {
+          finish(result: true);
+        } else if (didPop) {
+          closing = true;
+          if (saving) stop();
+          if (!authorizationSaved) cloud.cancelVerification();
+        }
+      },
+      child: Scaffold(
+        appBar: AppBar(title: Text(context.l10n.cloudChooseInstances)),
+        body: body([
+          const CloudSteps(3),
+          CloudNotice(
+            context.l10n.cloudInventoryComplete(
+              snapshot.instances.length,
+              cloudTime(snapshot.completedAt),
+              authorizationSaved ? '' : context.l10n.cloudAuthorizationUnsaved,
+            ),
+          ),
+          Text(
+            widget.alias ?? account!.alias,
+            style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 19),
+          ),
+          if (businessProvider != null) Text(businessProvider!.name),
+          SelectableText(
+            widget.verification?.endpoint.toString() ?? account!.endpoint,
+            style: Theme.of(context).textTheme.bodySmall,
+          ),
+          if (authorizationSaved) CloudNotice(context.l10n.cloudImportSaved),
+          if (unavailable)
+            CloudNotice(
+              businessProvider?.needsReview == true || businessProvider == null
+                  ? context.l10n.providerReviewRequired
+                  : context.l10n.adapterScopeUnavailable,
+              error: true,
+            ),
+          if (needsReload) ...[
+            CloudNotice(context.l10n.cloudSavedReloadFailed, error: true),
+            OutlinedButton.icon(
+              key: const ValueKey('cloud-import-reload'),
+              onPressed: saving || reloading ? null : reloadLocal,
+              icon: const Icon(Icons.refresh),
+              label: Text(context.l10n.cloudReloadLocal),
+            ),
+          ],
+          if (pinnedServerId case final id?) ...[
+            CloudNotice(context.l10n.providerUiPinnedHelp(deviceName(id))),
+            openDevice(id),
+          ],
+          if (hasResult) ...[
+            SectionTitle(context.l10n.cloudImportResultsTitle),
+            LedgerCard(
+              key: const ValueKey('cloud-import-results'),
+              child: Text(
+                context.l10n.cloudImportSummary(
+                  outcomes.values.where((item) => item.imported).length,
+                  outcomes.values.where((item) => !item.imported).length,
+                  failures.length,
+                  unprocessed.length,
+                ),
+              ),
+            ),
+            if (interruption != null) CloudNotice(interruption!, error: true),
+          ],
+          const SizedBox(height: 20),
+          if (snapshot.instances.isEmpty)
+            LedgerCard(
+              child: Text(
+                authorizationSaved
+                    ? context.l10n.cloudEmptyInventory
+                    : context.l10n.cloudEmptyVerification,
+              ),
+            ),
+          for (final instance in snapshot.instances) instanceCard(instance),
+          if (v1 &&
+              snapshot.instances.isNotEmpty &&
+              existingIds(snapshot.instances.single).isEmpty &&
+              !outcomes.containsKey(keyFor(snapshot.instances.single)) &&
+              pinnedServerId == null) ...[
+            if (needsV1Selection)
+              InfoNote(context.l10n.cloudSelectBeforeComplete),
+            const SizedBox(height: 6),
+            TextField(
+              key: const ValueKey('cloud-v1-name'),
+              controller: displayName,
+              enabled: !blocked,
+              maxLength: 80,
+              decoration: InputDecoration(
+                labelText: context.l10n.cloudLocalDisplayName,
+                helperText: context.l10n.cloudLocalNameInfo,
+                helperMaxLines: 4,
+              ),
+            ),
+            ServerResourceFields(
+              key: resourceForm,
+              enabled: !blocked,
+              observed: observedCloudResources(snapshot.instances.single),
+            ),
+            InfoNote(context.l10n.cloudV1ResourcesInfo),
+          ],
+          if (awaitingRebind) ...[
+            CloudNotice(context.l10n.cloudRebindWarning, error: true),
+            CheckboxListTile(
+              key: const ValueKey('cloud-confirm-rebind'),
+              contentPadding: EdgeInsets.zero,
+              controlAffinity: ListTileControlAffinity.leading,
+              value: confirmRebind,
+              onChanged: blocked
+                  ? null
+                  : (value) => setState(() => confirmRebind = value ?? false),
+              title: Text(context.l10n.cloudConfirmRebind),
+            ),
+          ],
+          InfoNote(
+            context.l10n.cloudImportBoundary(
+              v1
+                  ? context.l10n.cloudV1Deduplication
+                  : context.l10n.cloudV2Deduplication,
+            ),
+          ),
+          InfoNote(context.l10n.cloudImportFinanceLater),
+          if (error != null) CloudNotice(error!, error: true),
+          if (needsV1Selection && !blocked)
+            TextButton.icon(
+              key: const ValueKey('cloud-return-to-instance'),
+              onPressed: revealV1Selection,
+              icon: const Icon(Icons.arrow_upward),
+              label: Text(context.l10n.cloudReturnSelect),
+            ),
+          if (!hasResult || newSelection.isNotEmpty)
+            FilledButton.icon(
+              key: const ValueKey('cloud-import-submit'),
+              onPressed:
+                  blocked ||
+                      newSelection.isEmpty ||
+                      pinnedServerId != null ||
+                      (awaitingRebind && !confirmRebind)
+                  ? null
+                  : () => save(),
+              icon: const Icon(Icons.download_outlined),
+              label: Text(
+                saving
+                    ? context.l10n.cloudSaving
+                    : newSelection.isEmpty
+                    ? context.l10n.cloudNoneSelected
+                    : authorizationSaved
+                    ? context.l10n.cloudImportCount(newSelection.length)
+                    : context.l10n.cloudSaveImportCount(newSelection.length),
+              ),
+            ),
+          if (hasResult && retryKeys.isNotEmpty)
+            FilledButton.icon(
+              key: const ValueKey('cloud-import-retry'),
+              onPressed: blocked || retrySelection.isEmpty
+                  ? null
+                  : () => save(retry: true),
+              icon: const Icon(Icons.refresh),
+              label: Text(
+                retrySelection.isEmpty
+                    ? context.l10n.cloudNoneSelected
+                    : context.l10n.cloudImportRetryCount(retrySelection.length),
+              ),
+            ),
+          if (widget.verification != null && !authorizationSaved) ...[
+            const SizedBox(height: 12),
+            OutlinedButton(
+              key: const ValueKey('cloud-save-only'),
+              onPressed: blocked || (awaitingRebind && !confirmRebind)
+                  ? null
+                  : () => save(accountOnly: true),
+              child: Text(
+                widget.verification!.existingAccount == null
+                    ? context.l10n.cloudSaveOnly
+                    : rebind
+                    ? context.l10n.cloudUpdateUnlink
+                    : context.l10n.cloudUpdateOnly,
+              ),
+            ),
+          ],
+          if (saving) ...[
+            InfoNote(context.l10n.cloudSavingInfo),
+            OutlinedButton(
+              key: const ValueKey('cloud-import-cancel'),
+              onPressed: cancelling ? null : stop,
+              child: Text(
+                cancelling
+                    ? context.l10n.cloudImportCancelling
+                    : context.l10n.cloudImportCancel,
+              ),
+            ),
+          ],
+          if ((hasResult || authorizationSaved) && !saving) ...[
+            const SizedBox(height: 12),
+            OutlinedButton(
+              key: const ValueKey('cloud-import-done'),
+              onPressed: finish,
+              child: Text(context.l10n.cloudDone),
+            ),
+          ],
+          if (expired && !saving)
+            OutlinedButton(
+              key: const ValueKey('cloud-import-return-verify'),
+              onPressed: finish,
+              child: Text(context.l10n.cloudReturnVerify),
+            ),
+        ]),
+      ),
+    ),
+  );
+}
+
+/// Each V2 device uses one eager shared form. Large inventory scrolling cannot
+/// dispose resource editors or overwrite a reviewed draft with raw API values.
+class _CloudResourceCompletionPage extends StatefulWidget {
+  const _CloudResourceCompletionPage({
+    required this.instance,
+    required this.draft,
+  });
+  final CloudInstance instance;
+  final CloudImportDraft draft;
+  @override
+  State<_CloudResourceCompletionPage> createState() =>
+      _CloudResourceCompletionPageState();
+}
+
+class _CloudResourceCompletionPageState
+    extends State<_CloudResourceCompletionPage> {
+  final resourceForm = GlobalKey<ServerResourceFieldsState>();
+  late final name = TextEditingController(text: widget.draft.displayName);
+  LocalizedMessage? error;
+  bool returning = false;
+  @override
+  void dispose() {
+    name.dispose();
+    super.dispose();
+  }
+
+  void save() {
+    if (returning || ModalRoute.of(context)?.isCurrent != true) return;
+    final invalid = <FormFieldState<Object?>>{};
+    final resources = resourceForm.currentState?.validateAndRead(
+      invalidFields: invalid,
+    );
+    if (resources == null) {
+      revealFirstInvalidField(invalid);
+      setState(
+        () => error = LocalizedText((l10n) => l10n.cloudResourcesIncomplete),
+      );
+      return;
+    }
+    returning = true;
+    Navigator.pop(
+      context,
+      CloudImportDraft(
+        instanceKey: widget.draft.instanceKey,
+        resources: resources,
+        displayName: name.text.trim().isEmpty ? null : name.text.trim(),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) => Scaffold(
+    appBar: AppBar(title: Text(context.l10n.cloudImportReviewResources)),
+    body: SingleChildScrollView(
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(
+            widget.instance.name ??
+                context.l10n.cloudInstanceFallback(
+                  widget.instance.serverId.toString(),
+                ),
+            style: Theme.of(context).textTheme.titleLarge,
+          ),
+          InfoNote(context.l10n.cloudImportCompletionInfo),
           TextField(
-            key: const ValueKey('cloud-v1-name'),
-            controller: displayName,
-            enabled: !saving && !expired,
+            key: const ValueKey('cloud-device-name'),
+            controller: name,
             maxLength: 80,
             decoration: InputDecoration(
               labelText: context.l10n.cloudLocalDisplayName,
@@ -862,96 +1321,21 @@ class _CloudImportPageState extends State<CloudImportPage>
               helperMaxLines: 4,
             ),
           ),
-          if (snapshot.instances.isNotEmpty &&
-              linked(snapshot.instances.single) == null)
-            ServerResourceFields(
-              key: resourceForm,
-              enabled: !saving && !expired,
-              observed: {
-                'ip':
-                    snapshot.instances.single.ipv4 ??
-                    snapshot.instances.single.ipv6,
-                'hostname': snapshot.instances.single.hostname,
-                'diskBytes': snapshot.instances.single.diskBytes,
-                'trafficBytes': snapshot.instances.single.trafficBytes,
-                'trafficUnlimited': snapshot.instances.single.trafficUnlimited,
-                'ramBytes': snapshot.instances.single.ramBytes,
-                'vcpu': snapshot.instances.single.vcpu,
-              },
-            ),
-          InfoNote(context.l10n.cloudV1ResourcesInfo),
-        ],
-        if (rebind) ...[
-          CloudNotice(context.l10n.cloudRebindWarning, error: true),
-          CheckboxListTile(
-            key: const ValueKey('cloud-confirm-rebind'),
-            contentPadding: EdgeInsets.zero,
-            controlAffinity: ListTileControlAffinity.leading,
-            value: confirmRebind,
-            onChanged: saving || expired
-                ? null
-                : (value) => setState(() => confirmRebind = value ?? false),
-            title: Text(context.l10n.cloudConfirmRebind),
-          ),
-        ],
-        InfoNote(
-          context.l10n.cloudImportBoundary(
-            v1
-                ? context.l10n.cloudV1Deduplication
-                : context.l10n.cloudV2Deduplication,
-          ),
-        ),
-        if (error != null) CloudNotice(error!, error: true),
-        if (needsV1Selection && !saving && !expired)
-          TextButton.icon(
-            key: const ValueKey('cloud-return-to-instance'),
-            onPressed: revealV1Selection,
-            icon: const Icon(Icons.arrow_upward),
-            label: Text(context.l10n.cloudReturnSelect),
-          ),
-        FilledButton.icon(
-          key: const ValueKey('cloud-import-submit'),
-          onPressed:
-              saving ||
-                  expired ||
-                  selected.isEmpty ||
-                  (rebind && !confirmRebind)
-              ? null
-              : save,
-          icon: const Icon(Icons.download_outlined),
-          label: Text(
-            saving
-                ? context.l10n.cloudSaving
-                : selected.isEmpty
-                ? context.l10n.cloudNoneSelected
-                : widget.verification == null
-                ? context.l10n.cloudImportCount(selected.length)
-                : context.l10n.cloudSaveImportCount(selected.length),
-          ),
-        ),
-        if (widget.verification != null) ...[
           const SizedBox(height: 12),
-          OutlinedButton(
-            key: const ValueKey('cloud-save-only'),
-            onPressed: saving || expired || (rebind && !confirmRebind)
-                ? null
-                : () => save(accountOnly: true),
-            child: Text(
-              widget.verification!.existingAccount == null
-                  ? context.l10n.cloudSaveOnly
-                  : rebind
-                  ? context.l10n.cloudUpdateUnlink
-                  : context.l10n.cloudUpdateOnly,
-            ),
+          ServerResourceFields(
+            key: resourceForm,
+            initial: widget.draft.resources,
+            observed: observedCloudResources(widget.instance),
+          ),
+          if (error != null) CloudNotice(error!, error: true),
+          FilledButton.icon(
+            key: const ValueKey('cloud-resource-done'),
+            onPressed: save,
+            icon: const Icon(Icons.check),
+            label: Text(context.l10n.cloudImportCompleteAndSelect),
           ),
         ],
-        if (expired && !saving)
-          OutlinedButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: Text(context.l10n.cloudReturnVerify),
-          ),
-        if (saving) InfoNote(context.l10n.cloudSavingInfo),
-      ]),
+      ),
     ),
   );
 }
@@ -975,6 +1359,7 @@ class _CloudReadPageState extends State<CloudReadPage>
     with WidgetsBindingObserver {
   CloudController get cloud => widget.ledger.cloud;
   bool reading = true;
+  bool closing = false, openingPreview = false;
   CloudInventory? result;
   LocalizedMessage? error;
   int serial = 0;
@@ -1000,6 +1385,7 @@ class _CloudReadPageState extends State<CloudReadPage>
 
   @override
   void dispose() {
+    closing = true;
     WidgetsBinding.instance.removeObserver(this);
     serial++;
     cloud.cancelAccount(widget.account.id, notify: false);
@@ -1017,7 +1403,37 @@ class _CloudReadPageState extends State<CloudReadPage>
     }
   }
 
+  void finish([bool? result]) {
+    if (!mounted || closing || ModalRoute.of(context)?.isCurrent != true) {
+      return;
+    }
+    closing = true;
+    Navigator.pop(context, result);
+  }
+
+  Future<void> openPreview(CloudInventory inventory) async {
+    if (!mounted ||
+        closing ||
+        reading ||
+        openingPreview ||
+        ModalRoute.of(context)?.isCurrent != true) {
+      return;
+    }
+    setState(() => openingPreview = true);
+    final imported = await Navigator.push<bool>(
+      context,
+      MaterialPageRoute(
+        builder: (_) =>
+            CloudImportPage(ledger: widget.ledger, inventory: inventory),
+      ),
+    );
+    if (!mounted) return;
+    setState(() => openingPreview = false);
+    finish(imported);
+  }
+
   Future<void> read() async {
+    if (closing || openingPreview || reading && serial != 0) return;
     final request = ++serial;
     setState(() {
       reading = true;
@@ -1033,6 +1449,21 @@ class _CloudReadPageState extends State<CloudReadPage>
       });
       return;
     }
+    final provider = cloud.providers
+        .where((provider) => provider.id == current.businessProviderId)
+        .firstOrNull;
+    if (widget.importAfterRead &&
+        (provider == null ||
+            provider.needsReview ||
+            current.authScope == AdapterAuthScope.unknown)) {
+      setState(() {
+        reading = false;
+        error = provider == null || provider.needsReview
+            ? LocalizedText((l10n) => l10n.providerReviewRequired)
+            : LocalizedText((l10n) => l10n.adapterScopeUnavailable);
+      });
+      return;
+    }
     final inventory = await cloud.refreshAccount(current);
     if (!mounted || request != serial) return;
     setState(() {
@@ -1043,22 +1474,21 @@ class _CloudReadPageState extends State<CloudReadPage>
                 LocalizedText((l10n) => l10n.cloudReadIncomplete)
           : null;
     });
-    if (inventory != null && widget.importAfterRead) {
-      final imported = await Navigator.push<bool>(
-        context,
-        MaterialPageRoute(
-          builder: (_) =>
-              CloudImportPage(ledger: widget.ledger, inventory: inventory),
-        ),
-      );
-      if (mounted) Navigator.pop(context, imported);
+    if (inventory != null &&
+        widget.importAfterRead &&
+        !closing &&
+        ModalRoute.of(context)?.isCurrent == true) {
+      await openPreview(inventory);
     }
   }
 
   @override
   Widget build(BuildContext context) => PopScope<Object?>(
     onPopInvokedWithResult: (didPop, _) {
-      if (didPop) cancel(update: false);
+      if (didPop) {
+        closing = true;
+        cancel(update: false);
+      }
     },
     child: Scaffold(
       appBar: AppBar(
@@ -1090,6 +1520,7 @@ class _CloudReadPageState extends State<CloudReadPage>
           if (error != null) ...[
             CloudNotice(error!, error: true),
             OutlinedButton(
+              key: const ValueKey('cloud-read-again'),
               onPressed: read,
               child: Text(context.l10n.cloudReadAgain),
             ),
@@ -1103,8 +1534,16 @@ class _CloudReadPageState extends State<CloudReadPage>
               ),
             ),
             InfoNote(context.l10n.cloudReadCompleteInfo),
+            if (widget.importAfterRead)
+              FilledButton.icon(
+                key: const ValueKey('cloud-read-open-preview'),
+                onPressed: openingPreview ? null : () => openPreview(result!),
+                icon: const Icon(Icons.download_outlined),
+                label: Text(context.l10n.cloudChooseInstances),
+              ),
             FilledButton(
-              onPressed: () => Navigator.pop(context),
+              key: const ValueKey('cloud-read-done'),
+              onPressed: finish,
               child: Text(context.l10n.cloudDone),
             ),
           ],
@@ -1119,6 +1558,19 @@ Future<void> cloudAccountMenu(
   LedgerController ledger,
   CloudAccount account,
 ) async {
+  final provider = ledger.cloud.providers
+      .where((provider) => provider.id == account.businessProviderId)
+      .firstOrNull;
+  final needsReview = provider == null || provider.needsReview;
+  bool actionEnabled(String action) =>
+      action == 'detail' ||
+      action == 'servers' ||
+      (!ledger.cloud.busy &&
+          !ledger.cloud.needsReload &&
+          !ledger.refreshFailed &&
+          !(needsReview && (action == 'reauthorize' || action == 'import')) &&
+          !(action == 'import' &&
+              account.authScope == AdapterAuthScope.unknown));
   final action = await showModalBottomSheet<String>(
     context: context,
     isScrollControlled: true,
@@ -1136,8 +1588,15 @@ Future<void> cloudAccountMenu(
             InfoNote(
               '${cloudProviderName(account.provider)} · ${account.endpoint}',
             ),
+            if (needsReview) InfoNote(context.l10n.providerReviewRequired),
             for (final row in <(String, IconData, String)>[
               ('detail', Icons.info_outline, context.l10n.cloudViewDetails),
+              if (needsReview)
+                (
+                  'provider',
+                  Icons.fact_check_outlined,
+                  context.l10n.providerUiConfirmOwnership,
+                ),
               ('rename', Icons.edit_outlined, context.l10n.cloudRenameAccount),
               (
                 'reauthorize',
@@ -1162,7 +1621,10 @@ Future<void> cloudAccountMenu(
                       : Theme.of(context).colorScheme.primary,
                 ),
                 title: Text(row.$3),
-                onTap: () => Navigator.pop(context, row.$1),
+                enabled: actionEnabled(row.$1),
+                onTap: actionEnabled(row.$1)
+                    ? () => Navigator.pop(context, row.$1)
+                    : null,
               ),
           ],
         ),
@@ -1173,7 +1635,9 @@ Future<void> cloudAccountMenu(
   final cloud = ledger.cloud;
   final current = cloud.accounts.where((a) => a.id == account.id).firstOrNull;
   if (current == null) return;
-  if (action == 'detail' || action == 'servers') {
+  if (action == 'provider') {
+    await confirmAdapterProviderOwnership(context, ledger, current);
+  } else if (action == 'detail' || action == 'servers') {
     await Navigator.push<void>(
       context,
       MaterialPageRoute(
@@ -1185,12 +1649,20 @@ Future<void> cloudAccountMenu(
       ),
     );
   } else if (action == 'reauthorize') {
+    final businessProvider = cloud.providers
+        .where((p) => p.id == current.businessProviderId)
+        .firstOrNull;
+    if (businessProvider == null || businessProvider.needsReview) {
+      _cloudMessage(context, context.l10n.providerReviewRequired);
+      return;
+    }
     await Navigator.push<bool>(
       context,
       MaterialPageRoute(
         builder: (_) => CloudAuthorizationPage(
           ledger: ledger,
           provider: current.provider,
+          businessProvider: businessProvider,
           existing: current,
         ),
       ),
@@ -1223,16 +1695,16 @@ Future<void> cloudAccountMenu(
       ),
     );
   } else if (action == 'unbind') {
+    final affected = cloud.bindings
+        .where((binding) => binding.accountId == current.id)
+        .map((binding) => binding.serverId)
+        .toSet();
     final ok = await confirmAction(
       context,
       title: LocalizedText((l10n) => l10n.cloudUnlinkAccountTitle),
       message: LocalizedText(
-        (l10n) => l10n.cloudUnlinkAccountMessage(
-          current.alias,
-          current.provider == CloudProvider.solusVm1
-              ? l10n.cloudRevokeV1
-              : l10n.cloudRevokeV2,
-        ),
+        (l10n) =>
+            '${l10n.cloudUnlinkAccountMessage(current.alias, current.provider == CloudProvider.solusVm1 ? l10n.cloudRevokeV1 : l10n.cloudRevokeV2)}\n\n${l10n.cloudInstanceDeleteImpact(affected.length, affected.isEmpty ? l10n.providerUiNoAffectedDevices : affected.map((id) => l10n.cloudRecordWithState(ledger.byId(id)?.name ?? l10n.cloudLocalRecord, ledger.byId(id)?.archived == true ? l10n.cloudArchivedSuffix : '')).join('\n'))}',
       ),
       action: LocalizedText((l10n) => l10n.cloudUnlinkLocal),
       dangerous: true,
@@ -1264,7 +1736,7 @@ class CloudAccountDetailsPage extends StatelessWidget {
   final bool associationsOnly;
   @override
   Widget build(BuildContext context) => ListenableBuilder(
-    listenable: ledger.cloud,
+    listenable: Listenable.merge([ledger, ledger.cloud]),
     builder: (context, _) {
       final account = ledger.cloud.accounts
           .where((a) => a.id == accountId)
@@ -1272,6 +1744,9 @@ class CloudAccountDetailsPage extends StatelessWidget {
       final bindings = ledger.cloud.bindings
           .where((b) => b.accountId == accountId)
           .toList();
+      final provider = ledger.cloud.providers
+          .where((provider) => provider.id == account?.businessProviderId)
+          .firstOrNull;
       return Scaffold(
         appBar: AppBar(
           title: Text(
@@ -1279,6 +1754,10 @@ class CloudAccountDetailsPage extends StatelessWidget {
                 ? context.l10n.cloudLinkedServers
                 : context.l10n.cloudAccountDetails,
           ),
+          actions: [
+            if (account != null)
+              _CloudAccountMenuButton(ledger: ledger, account: account),
+          ],
         ),
         body: ListView(
           padding: const EdgeInsets.all(20),
@@ -1293,6 +1772,48 @@ class CloudAccountDetailsPage extends StatelessWidget {
                   fontWeight: FontWeight.w700,
                 ),
               ),
+              const SizedBox(height: 12),
+              LedgerCard(
+                padding: EdgeInsets.zero,
+                child: SettingRow(
+                  key: const ValueKey('cloud-instance-provider'),
+                  icon: Icons.business_outlined,
+                  title: provider?.name ?? context.l10n.providerUiUnspecified,
+                  subtitle: context.l10n.providerUiOpenProvider,
+                  onTap: provider == null
+                      ? null
+                      : () => Navigator.push<void>(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => ProviderDetailsPage(
+                              ledger: ledger,
+                              providerId: provider.id,
+                            ),
+                          ),
+                        ),
+                ),
+              ),
+              if (provider == null || provider.needsReview) ...[
+                CloudNotice(context.l10n.providerReviewRequired),
+                OutlinedButton.icon(
+                  key: const ValueKey('cloud-instance-confirm-provider'),
+                  onPressed: ledger.cloud.busy || ledger.cloud.needsReload
+                      ? null
+                      : () => confirmAdapterProviderOwnership(
+                          context,
+                          ledger,
+                          account,
+                        ),
+                  icon: const Icon(Icons.fact_check_outlined),
+                  label: Text(context.l10n.providerUiConfirmOwnership),
+                ),
+              ],
+              if (account.pinnedServerId case final id?)
+                InfoNote(
+                  context.l10n.providerUiPinnedHelp(
+                    ledger.byId(id)?.name ?? context.l10n.cloudLocalRecord,
+                  ),
+                ),
               if (!associationsOnly) ...[
                 const SizedBox(height: 18),
                 LedgerCard(
@@ -1319,7 +1840,9 @@ class CloudAccountDetailsPage extends StatelessWidget {
                       ),
                       CloudValue(
                         context.l10n.cloudVerifiedScope,
-                        account.provider == CloudProvider.solusVm1
+                        account.authScope == AdapterAuthScope.unknown
+                            ? context.l10n.providerUiUnknownScope
+                            : account.provider == CloudProvider.solusVm1
                             ? context.l10n.cloudV1Scope
                             : context.l10n.cloudV2Scope(
                                 account.remoteAccountId?.toString() ??
@@ -1379,6 +1902,35 @@ class CloudAccountDetailsPage extends StatelessWidget {
         ),
       );
     },
+  );
+}
+
+class _CloudAccountMenuButton extends StatefulWidget {
+  const _CloudAccountMenuButton({required this.ledger, required this.account});
+  final LedgerController ledger;
+  final CloudAccount account;
+  @override
+  State<_CloudAccountMenuButton> createState() =>
+      _CloudAccountMenuButtonState();
+}
+
+class _CloudAccountMenuButtonState extends State<_CloudAccountMenuButton> {
+  bool opening = false;
+  @override
+  Widget build(BuildContext context) => IconButton(
+    key: const ValueKey('cloud-instance-menu'),
+    tooltip: context.l10n.serverMoreActions,
+    icon: const Icon(Icons.more_horiz),
+    onPressed: opening
+        ? null
+        : () async {
+            setState(() => opening = true);
+            try {
+              await cloudAccountMenu(context, widget.ledger, widget.account);
+            } finally {
+              if (mounted) setState(() => opening = false);
+            }
+          },
   );
 }
 

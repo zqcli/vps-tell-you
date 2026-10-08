@@ -311,7 +311,6 @@ void main() {
           expect(find.byKey(ValueKey('resource-$field')), findsOneWidget);
         }
         await fill(tester, 'field-name', 'Manual server');
-        await fill(tester, 'field-vendor', 'Fixture');
         await fill(tester, 'resource-${target.$1}', target.$2);
         await fill(tester, 'resource-vcpu', '4');
         await tester.tap(find.text('保存服务器'));
@@ -331,7 +330,6 @@ void main() {
       (tester) async {
         await mount(tester);
         await fill(tester, 'field-name', 'Full hardware');
-        await fill(tester, 'field-vendor', 'Fixture');
         for (final entry in {
           'ip': '192.0.2.50',
           'hostname': 'full.example',
@@ -393,7 +391,6 @@ void main() {
     ) async {
       await mount(tester);
       await fill(tester, 'field-name', 'Unknown hardware');
-      await fill(tester, 'field-vendor', 'Fixture');
       await tester.tap(find.text('保存服务器'));
       await tester.pumpAndSettle();
       final saved = (await store.servers()).single;
@@ -424,7 +421,6 @@ void main() {
     ) async {
       await mount(tester);
       await fill(tester, 'field-name', 'Manual server');
-      await fill(tester, 'field-vendor', 'Fixture');
       await fill(tester, 'field-host', 'gateway.example');
       await fill(tester, 'resource-ip', '192.0.2.40');
       await tester.tap(find.text('保存服务器'));

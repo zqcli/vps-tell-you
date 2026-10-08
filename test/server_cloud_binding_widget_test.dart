@@ -1,4 +1,10 @@
+import 'package:vps_tell_you/cloud/cloud_models.dart';
+
+import 'support/provider_fixture.dart';
+
 import 'dart:io';
+
+import 'package:vps_tell_you/l10n/generated/app_localizations_zh.dart';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -32,6 +38,7 @@ void main() {
       path: '${directory.path}/ledger.sqlite3',
       clock: () => cloudTestTime,
     );
+    await addTestProvider(store);
     secrets = CloudTestSecrets();
     adapterCalls = 0;
     result = null;
@@ -54,6 +61,7 @@ void main() {
           id: id,
           name: 'Local $id',
           vendor: 'Local vendor',
+          providerId: testProvider.id,
           host: '192.0.2.99',
           createdAt: cloudTestTime,
           updatedAt: cloudTestTime,
@@ -78,8 +86,10 @@ void main() {
     final account = CloudAccount(
       id: id,
       provider: data.provider,
+      businessProviderId: testProvider.id,
+      authScope: adapterScope(data.provider),
       alias: 'Panel $id',
-      endpoint: 'https://panel.example',
+      endpoint: 'https://$id.panel.example',
       secretRef: 'opaque-$id',
       remoteAccountId: data.remoteAccountId,
       createdAt: cloudTestTime,
@@ -165,8 +175,14 @@ void main() {
     tester,
   ) async {
     await mount(tester);
-    expect(find.textContaining('还没有已保存的面板账户'), findsOneWidget);
-    expect(find.textContaining('不会连接面板'), findsOneWidget);
+    expect(
+      find.text(AppLocalizationsZh().cloudNoSavedAccounts),
+      findsOneWidget,
+    );
+    expect(
+      find.text(AppLocalizationsZh().cloudLocalBindingInfo),
+      findsOneWidget,
+    );
     expect(await store.cloudBindings(), isEmpty);
   });
 

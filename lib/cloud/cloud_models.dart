@@ -4,6 +4,17 @@ import '../l10n/localized_message.dart';
 
 enum CloudProvider { solusVm1, solusVm2 }
 
+/// Compatibility name for the protocol implementation, never a business
+/// provider. Existing persisted protocol values remain unchanged.
+typedef AdapterType = CloudProvider;
+
+enum AdapterAuthScope { unknown, singleDevice, account }
+
+AdapterAuthScope adapterScope(CloudProvider type) => switch (type) {
+  CloudProvider.solusVm1 => AdapterAuthScope.singleDevice,
+  CloudProvider.solusVm2 => AdapterAuthScope.account,
+};
+
 enum CloudPower { running, stopped, unknown }
 
 enum CloudFailureKind {

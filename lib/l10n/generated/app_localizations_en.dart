@@ -2010,27 +2010,28 @@ class AppLocalizationsEn extends AppLocalizations {
       'The security operation did not complete. Try again.';
 
   @override
-  String get cloudAccounts => 'Panel accounts';
+  String get cloudAccounts => 'Adapter instances';
 
   @override
-  String get cloudAddAccount => 'Add panel account';
+  String get cloudAddAccount => 'Add adapter instance';
 
   @override
   String get cloudPanelReadBadge => 'SolusVM 1 / 2 · Panel reads';
 
   @override
-  String get cloudManageConnections => 'Manage panel connections and instances';
+  String get cloudManageConnections =>
+      'Manage adapter instances and device links';
 
   @override
   String get cloudConnectionsInfo =>
-      'Each connection has its own authorization and instances.\nYou can add multiple separate account or VPS connections to the same panel.';
+      'Each adapter instance has its own authorization and read scope.\nA provider can have multiple single-device or account-scoped adapter instances.';
 
   @override
   String get cloudMetadataIncomplete =>
-      'Panel account details could not be fully loaded. Reload them to continue.';
+      'Adapter instance details could not be fully loaded. Reload them to continue.';
 
   @override
-  String get cloudReloadMetadata => 'Reload panel account details';
+  String get cloudReloadMetadata => 'Reload adapter instance details';
 
   @override
   String get cloudCleanupNotice =>
@@ -2040,22 +2041,22 @@ class AppLocalizationsEn extends AppLocalizations {
   String get cloudRetryCleanup => 'Retry old credential cleanup';
 
   @override
-  String get cloudFirstAccount => 'Add your first panel account';
+  String get cloudFirstAccount => 'Add your first adapter instance';
 
   @override
   String get cloudFirstAccountInfo =>
-      'Start with a built-in template, verify panel authorization, then select instances to add to the ledger.';
+      'Choose an adapter type and verify its authorization, then review devices and resources before adding them to the ledger.';
 
   @override
-  String get cloudChooseTemplate => 'Choose a connection template';
+  String get cloudChooseTemplate => 'Choose an adapter type';
 
   @override
   String get cloudReadOnlyBoundary =>
-      'This app only reads data; the API credentials themselves may have other permissions.\nPanel authorization and SSH credentials are managed separately. Unlinking keeps ledger records, costs, payments, and SSH settings.';
+      'This app only reads data; the API credentials themselves may have other permissions.\nAdapter authorization and SSH credentials are managed separately. Unlinking keeps local records, costs, payments, and SSH settings.';
 
   @override
   String get cloudTemplateInfo =>
-      'Choose the authorization method for your panel version. Panel software is separate from the seller; you can add the actual provider and costs later.';
+      'Choose the adapter type that matches the panel version. The adapter reads technical information; the provider is the business supplying the servers.';
 
   @override
   String get cloudV1TemplateInfo =>
@@ -2063,7 +2064,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get cloudV2TemplateInfo =>
-      'User API Token\nRead the current user’s projects and instances';
+      'User API Token\nRead the current user’s projects and devices';
 
   @override
   String get cloudSupportedPanels =>
@@ -2083,10 +2084,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'Web preview does not accept real API credentials. Connect in the native app.';
 
   @override
-  String get cloudAliasLabel => 'Account alias';
+  String get cloudAliasLabel => 'Adapter instance name';
 
   @override
-  String get cloudAliasRequired => 'Enter an account alias';
+  String get cloudAliasRequired => 'Enter an adapter instance name';
 
   @override
   String get cloudEndpointLabel => 'HTTPS panel address';
@@ -2121,7 +2122,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get cloudVerifyScopeInfo =>
-      'This app only reads data; the credentials themselves may have other permissions. Verification reads status or projects and instances. Credentials enter secure device storage only when you save in the next step.';
+      'This app only reads data; the credentials themselves may have other permissions. Verification reads status or projects and devices. Credentials enter secure device storage only when you save in the next step.';
 
   @override
   String get cloudVerifyingInfo =>
@@ -2138,15 +2139,15 @@ class AppLocalizationsEn extends AppLocalizations {
       'Credential fields are cleared after verification or on leaving. They are not written to the ledger, logs, or exports. Dart does not guarantee secure memory erasure.';
 
   @override
-  String get cloudChooseInstances => 'Choose instances to import';
+  String get cloudChooseInstances => 'Choose devices to import';
 
   @override
   String get cloudEmptyVerification =>
-      'No instances can be imported with this authorization. You can save the account and import later.';
+      'This authorization returned no devices to import. You can save the adapter instance and read it again later.';
 
   @override
   String get cloudEmptyInventory =>
-      'The complete list returned no instances to import. The account is saved; you can read it again later.';
+      'The complete read returned no devices to import. The adapter instance is saved; you can read it again later.';
 
   @override
   String get cloudV1Instance => 'The single VPS for these credentials';
@@ -2156,49 +2157,49 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get cloudV1Identity =>
-      'No stable instance ID · Identified by this separate connection';
+      'No stable device ID · Identified by this separate authorization';
 
   @override
   String get cloudIpNotProvided => 'IP not provided';
 
   @override
   String get cloudSelectBeforeComplete =>
-      'Select the instance above, then complete the details below. Filling in details alone does not import it.';
+      'Select the device above, then complete the details below. Filling in details alone does not import it.';
 
   @override
   String get cloudLocalDisplayName => 'Local display name (optional)';
 
   @override
   String get cloudLocalNameInfo =>
-      'Used only for the new ledger record, not as the instance identity';
+      'Used only for the new local record, not as remote device identity';
 
   @override
   String get cloudV1ResourcesInfo =>
-      'SolusVM 1 does not provide a stable instance ID. Available resource fields depend on the provider. Entered details stay on this device and do not trigger SSH, TCP, or remote configuration changes.';
+      'SolusVM 1 does not provide a stable device ID. Available resource fields depend on the provider. Entered details stay local and do not trigger SSH, TCP, or remote configuration changes.';
 
   @override
   String get cloudRebindWarning =>
-      'Saving new authorization unlinks all old instance associations for this connection. Existing records, costs, payments, and SSH settings are kept. Importing creates new local records; it does not overwrite or relink old ones.';
+      'Saving new authorization removes this adapter instance’s old device links. Existing records, finances, and SSH are kept. Importing creates new local records; it does not overwrite or automatically relink old devices.';
 
   @override
   String get cloudConfirmRebind =>
-      'I confirm that saving new authorization will unlink old instances';
+      'I confirm that saving new authorization will remove old device links';
 
   @override
-  String get cloudReturnSelect => 'Return to instance selection';
+  String get cloudReturnSelect => 'Return to device selection';
 
   @override
   String get cloudSaving => 'Saving…';
 
   @override
-  String get cloudNoneSelected => 'No new instances selected';
+  String get cloudNoneSelected => 'No new devices selected';
 
   @override
-  String get cloudSaveOnly => 'Save account only';
+  String get cloudSaveOnly => 'Save adapter instance only';
 
   @override
   String get cloudUpdateUnlink =>
-      'Update authorization and unlink old instances';
+      'Update authorization and remove old device links';
 
   @override
   String get cloudUpdateOnly => 'Update authorization only';
@@ -2211,10 +2212,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'Saving to this device. Please wait until it finishes before going back.';
 
   @override
-  String get cloudReadImportable => 'Read importable instances';
+  String get cloudReadImportable => 'Read devices available to import';
 
   @override
-  String get cloudRefreshAccount => 'Refresh account status';
+  String get cloudRefreshAccount => 'Refresh adapter instance status';
 
   @override
   String get cloudReadingInfo =>
@@ -2228,41 +2229,41 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get cloudReadCompleteInfo =>
-      'Only the API-returned information for this account was updated. Local details, costs, payments, and SSH settings were not overwritten.';
+      'Only this adapter instance’s API observations were updated. Local details, costs, payments, and SSH settings were not overwritten.';
 
   @override
   String get cloudDone => 'Done';
 
   @override
-  String get cloudViewDetails => 'View account details';
+  String get cloudViewDetails => 'View adapter instance details';
 
   @override
-  String get cloudRenameAccount => 'Edit account name';
+  String get cloudRenameAccount => 'Edit adapter instance name';
 
   @override
-  String get cloudContinueImport => 'Import more instances';
+  String get cloudContinueImport => 'Import more devices';
 
   @override
   String get cloudLinkedServers => 'Linked servers';
 
   @override
-  String get cloudUnlinkAccount => 'Unlink account';
+  String get cloudUnlinkAccount => 'Delete adapter instance';
 
   @override
-  String get cloudUnlinkAccountTitle => 'Unlink this panel account?';
+  String get cloudUnlinkAccountTitle => 'Delete this adapter instance?';
 
   @override
-  String get cloudUnlinkLocal => 'Unlink locally';
+  String get cloudUnlinkLocal => 'Delete local adapter instance';
 
   @override
-  String get cloudAccountDetails => 'Panel account details';
+  String get cloudAccountDetails => 'Adapter instance details';
 
   @override
   String get cloudAccountRemovedNotice =>
-      'The account has been unlinked. Existing ledger records are kept.';
+      'The adapter instance was deleted. All local device records are kept.';
 
   @override
-  String get cloudTemplateLabel => 'Connection template';
+  String get cloudTemplateLabel => 'Adapter type';
 
   @override
   String get cloudPanelAddress => 'Panel address';
@@ -2281,7 +2282,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get cloudV1Scope =>
-      'Single VPS · Client API, without stable instance identity';
+      'Single device · Client API, without stable device identity';
 
   @override
   String get cloudAppCapabilities => 'App capabilities';
@@ -2302,7 +2303,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get cloudNoLinkedInstances =>
-      'No linked instances yet. Import more from the account menu.';
+      'No linked devices yet. Import more from the adapter instance menu.';
 
   @override
   String get cloudLocalRecord => 'Local record';
@@ -2314,11 +2315,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get cloudSaveName => 'Save name';
 
   @override
-  String get cloudLinkPanelAccount => 'Link panel account';
+  String get cloudLinkPanelAccount => 'Link adapter instance';
 
   @override
   String get cloudLocalBindingInfo =>
-      'This page uses saved API-returned information and does not connect to the panel. If no instances are available or the last read failed, refresh manually in Panel accounts, then return and reload this local list.';
+      'This page uses saved API observations and does not connect to the panel. If no devices are available or the last read failed, refresh the adapter instance manually, then return and reload this local list.';
 
   @override
   String get cloudBindingCommitted =>
@@ -2342,29 +2343,29 @@ class AppLocalizationsEn extends AppLocalizations {
   String get cloudUnlinkThis => 'Unlink this server';
 
   @override
-  String get cloudSelectAccount => 'Select a panel account';
+  String get cloudSelectAccount => 'Choose an adapter instance';
 
   @override
   String get cloudNoSavedAccounts =>
-      'No panel accounts have been saved. Add and verify an account in Panel accounts first.';
+      'This provider has no adapter instances with confirmed ownership. Add and verify one first.';
 
   @override
-  String get cloudSelectReadInstance => 'Select a previously read instance';
+  String get cloudSelectReadInstance => 'Choose a previously read device';
 
   @override
   String get cloudNoSavedInstances =>
-      'This account has no saved instance information. Refresh it manually in Panel accounts.';
+      'This adapter instance has no saved device information. Refresh it manually first.';
 
   @override
   String get cloudOtherServer => 'Another server';
 
   @override
   String get cloudMissingRefresh =>
-      'Not returned in this read · Refresh manually in Panel accounts';
+      'Not returned in this read · Refresh the adapter instance manually';
 
   @override
   String get cloudFailedRefresh =>
-      'Last read failed · Refresh manually in Panel accounts';
+      'Last read failed · Refresh the adapter instance manually';
 
   @override
   String get cloudSaveLink => 'Save link';
@@ -2377,7 +2378,8 @@ class AppLocalizationsEn extends AppLocalizations {
       'Only the local link changes. Server details, hardware, finances, and SSH settings are kept.';
 
   @override
-  String get cloudSingleAccountInstance => 'This account’s single instance';
+  String get cloudSingleAccountInstance =>
+      'The single device for this authorization';
 
   @override
   String get cloudUnlinkServerTitle => 'Unlink this server from the panel?';
@@ -2393,7 +2395,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get cloudMetadataReadFailed =>
-      'Could not load panel account details. Try again.';
+      'Could not load adapter instance details. Try again.';
 
   @override
   String get cloudSavedReloadFailed =>
@@ -2401,11 +2403,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get cloudAccountConflict =>
-      'Panel account details have changed. Reload them and try again.';
+      'Adapter instance details have changed. Reload them and try again.';
 
   @override
   String get cloudOperationFailed =>
-      'The panel account operation did not finish. Try again.';
+      'The adapter instance operation did not finish. Try again.';
 
   @override
   String get cloudCompleteResources =>
@@ -2424,7 +2426,8 @@ class AppLocalizationsEn extends AppLocalizations {
       'Verification cancelled. Authorization was not saved.';
 
   @override
-  String get cloudAliasInvalid => 'The account alias must be 1–80 characters.';
+  String get cloudAliasInvalid =>
+      'The adapter instance name must be 1–80 characters.';
 
   @override
   String get cloudVerifyFailed =>
@@ -2451,11 +2454,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get cloudAccountSavedOnly =>
-      'Account authorization saved. No new instances were imported.';
+      'Adapter instance saved. No new devices were imported.';
 
   @override
   String get cloudInstancesSaved =>
-      'Saved. The selected instances were added to the local ledger.';
+      'Saved. Selected devices were added to the local ledger.';
 
   @override
   String get cloudReadCancelled =>
@@ -2463,27 +2466,29 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get cloudAccountUnlinkedReturn =>
-      'The account has been unlinked. Go back to continue.';
+      'The adapter instance was deleted. Go back to continue.';
 
   @override
   String get cloudReadIncomplete =>
       'The read did not finish. Previously read information is kept.';
 
   @override
-  String get cloudAliasSaved => 'Account alias saved.';
+  String get cloudAliasSaved => 'Adapter instance name saved.';
 
   @override
   String get cloudNameSaveFailed => 'The name was not saved. Try again.';
 
   @override
   String get cloudAccountUnlinked =>
-      'Unlinked. Ledger records, costs, and SSH settings are kept.';
+      'Adapter instance deleted. Local details, finances, and SSH settings are kept.';
 
   @override
-  String get cloudUnlinkFailed => 'Unlinking did not finish. Try again.';
+  String get cloudUnlinkFailed =>
+      'Deleting the adapter instance did not finish. Try again.';
 
   @override
-  String get cloudAliasRange => 'Enter an account alias of 1–80 characters.';
+  String get cloudAliasRange =>
+      'Enter an adapter instance name of 1–80 characters.';
 
   @override
   String get cloudBindingReadFailed =>
@@ -2493,7 +2498,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get cloudServerUnlinked => 'This server’s panel link was removed.';
 
   @override
-  String get cloudBindingSaved => 'Panel account link saved.';
+  String get cloudBindingSaved => 'Adapter instance link saved.';
 
   @override
   String get cloudFailureInvalidEndpoint =>
@@ -2548,7 +2553,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get cloudFailureInventoryTooLarge =>
-      'The number of instances or pages exceeds this read’s limit. The incomplete list was not imported.';
+      'The number of devices or pages exceeds this read’s limit. The incomplete list was not imported.';
 
   @override
   String get cloudFailureUnsupportedPlatform =>
@@ -2556,11 +2561,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get cloudAccountFailureIdentity =>
-      'The remote account or instance identity changed. Existing links were not changed. Create a separate account connection.';
+      'The remote account or device identity changed. Existing links were not changed. Create a separate adapter instance.';
 
   @override
   String get cloudAccountFailureV1Rebind =>
-      'SolusVM 1 cannot prove that new credentials belong to the original instance. Explicitly confirm unlinking old associations and select instances to import again. Existing ledger records are kept.';
+      'SolusVM 1 cannot prove that new credentials belong to the original device. Explicitly confirm removing old links, then choose devices to import. Existing local records are kept.';
 
   @override
   String get cloudAccountFailureSelection =>
@@ -2568,7 +2573,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get cloudAccountFailureAlias =>
-      'The account alias must be 1–80 characters.';
+      'The adapter instance name must be 1–80 characters.';
 
   @override
   String get cloudAccountFailureSecret =>
@@ -2576,15 +2581,15 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get cloudAccountFailureSecretRead =>
-      'Could not read this account’s saved API credentials. Unlock the device and try again. If it still fails, authorize again from the account menu.';
+      'Could not read this adapter instance’s saved API credentials. Unlock the device and try again. If it still fails, authorize again from its menu.';
 
   @override
   String get cloudAccountFailureBindingTaken =>
-      'This instance is linked to another server and cannot be overwritten. Reload the local list.';
+      'This device is linked to another local server and cannot be overwritten. Reload the local list.';
 
   @override
   String get cloudAccountFailureBindingUnavailable =>
-      'Instance information is not currently available for linking. Refresh manually in Panel accounts, then select it again.';
+      'Device information is not currently available for linking. Refresh the adapter instance manually, then select it again.';
 
   @override
   String get cloudReadLimitPositive => 'Read limits must be greater than zero.';
@@ -2620,20 +2625,20 @@ class AppLocalizationsEn extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count instances',
-      one: '1 instance',
+      other: '$count devices',
+      one: '1 device',
     );
     return 'Complete read finished · $_temp0\nRead at: $time$authorization';
   }
 
   @override
   String cloudInstanceFallback(String id) {
-    return 'Instance $id';
+    return 'Device $id';
   }
 
   @override
   String cloudProjectInstance(String project, String id) {
-    return 'Project $project · Instance ID $id';
+    return 'Project $project · Device ID $id';
   }
 
   @override
@@ -2648,7 +2653,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String cloudV2Scope(String id) {
-    return 'Verified user account $id · Projects and instances';
+    return 'Verified user account $id · Projects and devices';
   }
 
   @override
@@ -2681,11 +2686,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get cloudV1Deduplication =>
-      'Already linked instances in this connection are not imported twice; separate connections are not merged automatically.';
+      'A device already pinned to this authorization is not created again; unlinking keeps the pin. Separate authorizations are not merged automatically.';
 
   @override
   String get cloudV2Deduplication =>
-      'Duplicates are identified by the separate connection and remote IDs, not by IP or name.';
+      'Duplicates use adapter type, panel endpoint, remote account, project, and device IDs. Matching IP or hostname is only a review hint.';
 
   @override
   String get cloudArchivedSuffix => ' · Archived';
@@ -2695,8 +2700,8 @@ class AppLocalizationsEn extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count instances',
-      one: '1 instance',
+      other: '$count devices',
+      one: '1 device',
     );
     return 'Import $_temp0';
   }
@@ -2706,15 +2711,15 @@ class AppLocalizationsEn extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count instances',
-      one: '1 instance',
+      other: '$count devices',
+      one: '1 device',
     );
-    return 'Save account and import $_temp0';
+    return 'Save adapter instance and import $_temp0';
   }
 
   @override
   String cloudUnlinkAccountMessage(String alias, String remoteAction) {
-    return '$alias\n\nRemove this panel connection and all its local instance links. You will need to enter API credentials again to add it back. Server records, costs, payments, and SSH settings are kept. Remote resources are not destroyed and billing does not stop.\n\n$remoteAction';
+    return '$alias\n\nDelete this local adapter instance and its device links. Adding it again requires API credentials. Remote devices are not destroyed and billing does not stop.\n\n$remoteAction';
   }
 
   @override
@@ -2727,7 +2732,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String cloudSuggestedAlias(String provider) {
-    return 'My $provider panel';
+    return 'My $provider adapter';
   }
 
   @override
@@ -2747,7 +2752,7 @@ class AppLocalizationsEn extends AppLocalizations {
     String instance,
     String replacement,
   ) {
-    return '$server\nCurrent: $account · $instance$replacement\n\nOnly the local link changes. Server details, hardware, costs, payments, SSH settings, the panel account, and authorization are kept. No remote instances are changed and billing does not stop.';
+    return '$server\nCurrent: $account · $instance$replacement\n\nOnly the local link changes. Server details, hardware, costs, payments, SSH settings, the adapter instance, and authorization are kept. No remote devices are changed and billing does not stop.';
   }
 
   @override
@@ -2782,13 +2787,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get cloudVerifiedManual => 'Verified · Manual reads';
 
   @override
-  String get cloudStepTemplate => 'Template';
+  String get cloudStepTemplate => 'Adapter type';
 
   @override
   String get cloudStepCredentials => 'Credentials';
 
   @override
-  String get cloudStepInstances => 'Instances';
+  String get cloudStepInstances => 'Devices';
 
   @override
   String get cloudApiUnknown => 'Unknown (not provided by API)';
@@ -5154,4 +5159,315 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get resourceTrafficPeriodYearShort => 'Y';
+
+  @override
+  String get providerReviewRequired =>
+      'Confirm this instance’s provider before adding authorization, importing, or linking servers.';
+
+  @override
+  String get providerNameRange => 'Use 1–80 characters for the provider name.';
+
+  @override
+  String get providerAlreadyExists =>
+      'This provider already exists. Select it from the list.';
+
+  @override
+  String get providerChangeNeedsUnlink =>
+      'Confirm unlinking the current adapter before changing the provider.';
+
+  @override
+  String get adapterProviderMismatch =>
+      'The server and adapter instance must have the same provider.';
+
+  @override
+  String get adapterScopeUnavailable =>
+      'This instance’s authorization scope is unverified. New links are unavailable.';
+
+  @override
+  String get adapterSingletonPinned =>
+      'These single-device credentials are pinned to another local server. Unlinking does not expand their scope. Return to that record or explicitly reauthorize.';
+
+  @override
+  String get providerUiTitle => 'Providers';
+
+  @override
+  String get providerUiDetails => 'Provider details';
+
+  @override
+  String get providerUiAdd => 'Add provider';
+
+  @override
+  String get providerUiRename => 'Rename provider';
+
+  @override
+  String get providerUiName => 'Provider name';
+
+  @override
+  String get providerUiUnspecified => 'Unspecified provider';
+
+  @override
+  String get providerUiUnspecifiedHelp =>
+      'Manual entry only. You can assign a provider later in server details.';
+
+  @override
+  String get providerUiHierarchyHelp =>
+      'A provider identifies the business that supplies your servers. Each adapter instance holds a separate authorization and reads only devices within its scope.';
+
+  @override
+  String providerUiSummary(int instances, int devices) {
+    return '$instances adapter instances · $devices servers';
+  }
+
+  @override
+  String get providerUiEmpty => 'No providers yet';
+
+  @override
+  String get providerUiEmptyHelp =>
+      'Add a provider name, then enter servers manually or configure a read-only adapter.';
+
+  @override
+  String get providerUiNeedsReview =>
+      'Ownership needs confirmation. New authorization and links are unavailable.';
+
+  @override
+  String providerUiUnspecifiedCount(int count) {
+    return '$count servers have no provider assigned.';
+  }
+
+  @override
+  String get providerUiChoose => 'Choose a provider';
+
+  @override
+  String get providerUiChooseHelp =>
+      'Choose the business provider. You will select the panel type and authorization later.';
+
+  @override
+  String get providerUiSelected => 'Server provider';
+
+  @override
+  String get providerUiChooseAnother => 'Choose another provider';
+
+  @override
+  String get providerUiChooseMethod => 'Choose how to add';
+
+  @override
+  String get providerUiManualHelp =>
+      'Enter details manually. Unknown hardware and costs can stay blank.';
+
+  @override
+  String get providerUiAutomatic => 'Read through an adapter';
+
+  @override
+  String get providerUiAutomaticHelp =>
+      'Choose an existing authorization or add an adapter, then review the devices to import.';
+
+  @override
+  String get providerUiAutoNeedsProvider =>
+      'Choose a confirmed provider before automatic reading.';
+
+  @override
+  String get providerUiInstances => 'Adapter instances';
+
+  @override
+  String get providerUiNoInstances =>
+      'No adapters configured. You can still add servers manually.';
+
+  @override
+  String get providerUiAddInstance => 'Add adapter instance';
+
+  @override
+  String get providerUiDevices => 'Provider servers';
+
+  @override
+  String get providerUiNoDevices => 'No servers belong to this provider yet.';
+
+  @override
+  String get providerUiManualDevice => 'No adapter link';
+
+  @override
+  String get providerUiLinkedDevice => 'Adapter linked';
+
+  @override
+  String providerUiLinkedCount(int count) {
+    return '$count linked servers';
+  }
+
+  @override
+  String get providerUiSingleScope => 'Single-device authorization';
+
+  @override
+  String get providerUiAccountScope => 'Account-scoped authorization';
+
+  @override
+  String get providerUiUnknownScope => 'Authorization scope unverified';
+
+  @override
+  String providerUiPinnedHelp(String name) {
+    return 'This single-device authorization is pinned to “$name”. Unlinking does not free it for another device. Return to that record or explicitly reauthorize.';
+  }
+
+  @override
+  String get providerUiChooseInstance => 'Choose an adapter instance';
+
+  @override
+  String get providerUiInstanceChoiceHelp =>
+      'Only this provider’s instances are listed. Adapter type and verification determine authorization scope.';
+
+  @override
+  String get providerUiReviewHelp =>
+      'The business provider could not be determined from older records. Confirm the provider and all affected servers for each instance. Until then, only existing links can be refreshed.';
+
+  @override
+  String get providerUiRenameReviewHelp =>
+      'Renaming does not confirm ownership. Confirm the provider for the instance separately.';
+
+  @override
+  String get providerUiConfirmOwnership => 'Confirm instance provider';
+
+  @override
+  String providerUiConfirmOwnershipMessage(
+    String alias,
+    String provider,
+    String devices,
+  ) {
+    return 'Assign “$alias” to “$provider”. These linked servers will move with it:\n$devices\n\nExisting authorization, server details, costs, and SSH remain. This does not expand authorization scope.';
+  }
+
+  @override
+  String get providerUiNoAffectedDevices => 'No linked servers.';
+
+  @override
+  String get providerUiUnavailable =>
+      'This provider changed or is unavailable. Go back and choose again.';
+
+  @override
+  String get providerUiChange => 'Change provider';
+
+  @override
+  String providerUiChangeMessage(
+    String server,
+    String oldProvider,
+    String newProvider,
+    String linkEffect,
+  ) {
+    return 'Change “$server” from “$oldProvider” to “$newProvider”.\n\n$linkEffect\n\nThe server ID, manual details, costs, and SSH remain. This does not automatically add authorization or a new link.';
+  }
+
+  @override
+  String get providerUiChangeNoLink => 'This server has no adapter link.';
+
+  @override
+  String providerUiChangeUnlink(String alias) {
+    return 'The local link to “$alias” must be removed. Its authorization remains, including any single-device pin.';
+  }
+
+  @override
+  String get providerUiUnlinkAndChange => 'Unlink and change provider';
+
+  @override
+  String get providerUiChangeFromDetails =>
+      'To change an existing server’s provider, return to details and choose “Change provider”. Any existing link must be explicitly removed.';
+
+  @override
+  String get providerUiProviderAndAdapter => 'Provider and adapter';
+
+  @override
+  String get providerUiOpenProvider => 'View provider';
+
+  @override
+  String get providerUiOpenInstance => 'View adapter instance';
+
+  @override
+  String providerPendingName(String name) {
+    return '$name · provider unconfirmed';
+  }
+
+  @override
+  String get providerBindingAssignFirst =>
+      'Assign a provider in server details before choosing an adapter instance to link.';
+
+  @override
+  String get cloudImportSaved =>
+      'Adapter instance saved. Its authorization is kept independently of these device import results.';
+
+  @override
+  String get cloudImportReady => 'Resources complete';
+
+  @override
+  String get cloudImportNeedsCompletion => 'Resources need completion';
+
+  @override
+  String get cloudImportImported => 'Imported';
+
+  @override
+  String get cloudImportExisting => 'Already exists';
+
+  @override
+  String get cloudImportFailed => 'Failed';
+
+  @override
+  String get cloudImportUnprocessed => 'Not processed';
+
+  @override
+  String get cloudImportCompleteResources => 'Complete resources';
+
+  @override
+  String get cloudImportReviewResources => 'Review resources';
+
+  @override
+  String get cloudImportCompleteAndSelect => 'Save draft and select';
+
+  @override
+  String get cloudImportCompletionInfo =>
+      'Check all six resource fields before importing. Values omitted by the API stay unknown; choose unlimited traffic only when confirmed. Your edits are local configuration and do not change API observations.';
+
+  @override
+  String get cloudImportFinanceLater =>
+      'This import adds devices and resource details. Financial information is optional and can be added later; no costs or payments are created.';
+
+  @override
+  String cloudImportSummary(
+    int imported,
+    int existing,
+    int failed,
+    int unprocessed,
+  ) {
+    return 'Imported $imported · Existing $existing · Failed $failed · Not processed $unprocessed';
+  }
+
+  @override
+  String cloudImportRetryCount(int count) {
+    return 'Retry only $count unfinished devices';
+  }
+
+  @override
+  String get cloudImportCancel => 'Stop remaining imports';
+
+  @override
+  String get cloudImportCancelling => 'Stopping…';
+
+  @override
+  String get cloudImportCancelled =>
+      'Remaining imports stopped. Committed devices are kept. Review the results before retrying unfinished items.';
+
+  @override
+  String get cloudImportResultsTitle => 'Import results';
+
+  @override
+  String cloudImportExistingConflict(int count) {
+    return 'Found $count local records with the same remote identity. Review each record; none is chosen or merged automatically.';
+  }
+
+  @override
+  String cloudImportAddressHint(String names) {
+    return 'IP or hostname also appears on: $names. This is a review hint only and does not prove the devices are identical.';
+  }
+
+  @override
+  String cloudInstanceDeleteImpact(int count, String names) {
+    return 'This removes links from $count local servers:\n$names\n\nAll local details, hardware, finances, and SSH settings are kept.';
+  }
+
+  @override
+  String get cloudImportIdentityConflict => 'Device identity conflict';
 }

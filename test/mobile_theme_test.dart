@@ -1,3 +1,5 @@
+import 'support/provider_fixture.dart';
+
 import 'dart:io';
 import 'dart:math' as math;
 
@@ -124,6 +126,11 @@ class _SyntheticAdapter implements CloudAdapter {
           serverId: 101,
           name: 'Synthetic cloud server',
           ipv4: '192.0.2.101',
+          hostname: 'fixture-101.example',
+          vcpu: 2,
+          ramBytes: 2147483648,
+          diskBytes: 32212254720,
+          trafficBytes: 1099511627776,
           power: CloudPower.unknown,
         ),
       ],
@@ -298,6 +305,7 @@ void main() {
         path: '${directory.path}/ledger.sqlite3',
         clock: clock,
       );
+      await addTestProvider(store);
       secrets = FakeSecretStore();
       ledger = LedgerController(
         store,
@@ -326,6 +334,7 @@ void main() {
         isTrue,
       );
       final verified = (await ledger.cloud.verifyConnection(
+        businessProvider: testProvider,
         provider: CloudProvider.solusVm2,
         endpoint: 'https://panel.example',
         credentials: SolusVm2Credentials('SYNTHETIC_TEST_ONLY'),
@@ -381,12 +390,17 @@ void main() {
               'host trust': () => HostTrustPage(ledger: ledger),
               'host trust form': () => HostTrustForm(ledger: ledger),
               'cloud accounts': () => CloudAccountsPage(ledger: ledger),
-              'cloud templates': () => CloudTemplatesPage(ledger: ledger),
+              'cloud templates': () => CloudTemplatesPage(
+                businessProvider: testProvider,
+                ledger: ledger,
+              ),
               'SolusVM 1 authorization': () => CloudAuthorizationPage(
+                businessProvider: testProvider,
                 ledger: ledger,
                 provider: CloudProvider.solusVm1,
               ),
               'SolusVM 2 authorization': () => CloudAuthorizationPage(
+                businessProvider: testProvider,
                 ledger: ledger,
                 provider: CloudProvider.solusVm2,
               ),
@@ -455,6 +469,7 @@ void main() {
             tester,
             _opener(
               () => CloudAuthorizationPage(
+                businessProvider: testProvider,
                 ledger: ledger,
                 provider: CloudProvider.solusVm2,
               ),

@@ -1004,11 +1004,11 @@
   "invalidServerName": "The server name must contain 1–80 characters",
   "completeLocalResources": "Complete and confirm all six local resource fields first",
   "securityOperationIncomplete": "The security operation did not complete. Try again.",
-  "cloudAccounts": "Panel accounts",
+  "cloudAccounts": "Adapter instances",
   "@cloudAccounts": {
     "description": "Panel accounts: accounts"
   },
-  "cloudAddAccount": "Add panel account",
+  "cloudAddAccount": "Add adapter instance",
   "@cloudAddAccount": {
     "description": "Panel accounts: add account"
   },
@@ -1016,19 +1016,19 @@
   "@cloudPanelReadBadge": {
     "description": "Panel accounts: panel read badge"
   },
-  "cloudManageConnections": "Manage panel connections and instances",
+  "cloudManageConnections": "Manage adapter instances and device links",
   "@cloudManageConnections": {
     "description": "Panel accounts: manage connections"
   },
-  "cloudConnectionsInfo": "Each connection has its own authorization and instances.\nYou can add multiple separate account or VPS connections to the same panel.",
+  "cloudConnectionsInfo": "Each adapter instance has its own authorization and read scope.\nA provider can have multiple single-device or account-scoped adapter instances.",
   "@cloudConnectionsInfo": {
     "description": "Panel accounts: connections info"
   },
-  "cloudMetadataIncomplete": "Panel account details could not be fully loaded. Reload them to continue.",
+  "cloudMetadataIncomplete": "Adapter instance details could not be fully loaded. Reload them to continue.",
   "@cloudMetadataIncomplete": {
     "description": "Panel accounts: metadata incomplete"
   },
-  "cloudReloadMetadata": "Reload panel account details",
+  "cloudReloadMetadata": "Reload adapter instance details",
   "@cloudReloadMetadata": {
     "description": "Panel accounts: reload metadata"
   },
@@ -1040,23 +1040,23 @@
   "@cloudRetryCleanup": {
     "description": "Panel accounts: retry cleanup"
   },
-  "cloudFirstAccount": "Add your first panel account",
+  "cloudFirstAccount": "Add your first adapter instance",
   "@cloudFirstAccount": {
     "description": "Panel accounts: first account"
   },
-  "cloudFirstAccountInfo": "Start with a built-in template, verify panel authorization, then select instances to add to the ledger.",
+  "cloudFirstAccountInfo": "Choose an adapter type and verify its authorization, then review devices and resources before adding them to the ledger.",
   "@cloudFirstAccountInfo": {
     "description": "Panel accounts: first account info"
   },
-  "cloudChooseTemplate": "Choose a connection template",
+  "cloudChooseTemplate": "Choose an adapter type",
   "@cloudChooseTemplate": {
     "description": "Panel accounts: choose template"
   },
-  "cloudReadOnlyBoundary": "This app only reads data; the API credentials themselves may have other permissions.\nPanel authorization and SSH credentials are managed separately. Unlinking keeps ledger records, costs, payments, and SSH settings.",
+  "cloudReadOnlyBoundary": "This app only reads data; the API credentials themselves may have other permissions.\nAdapter authorization and SSH credentials are managed separately. Unlinking keeps local records, costs, payments, and SSH settings.",
   "@cloudReadOnlyBoundary": {
     "description": "Panel accounts: read only boundary"
   },
-  "cloudTemplateInfo": "Choose the authorization method for your panel version. Panel software is separate from the seller; you can add the actual provider and costs later.",
+  "cloudTemplateInfo": "Choose the adapter type that matches the panel version. The adapter reads technical information; the provider is the business supplying the servers.",
   "@cloudTemplateInfo": {
     "description": "Panel accounts: template info"
   },
@@ -1064,7 +1064,7 @@
   "@cloudV1TemplateInfo": {
     "description": "Panel accounts: v1 template info"
   },
-  "cloudV2TemplateInfo": "User API Token\nRead the current user’s projects and instances",
+  "cloudV2TemplateInfo": "User API Token\nRead the current user’s projects and devices",
   "@cloudV2TemplateInfo": {
     "description": "Panel accounts: v2 template info"
   },
@@ -1088,11 +1088,11 @@
   "@cloudWebPreviewNotice": {
     "description": "Panel accounts: web preview notice"
   },
-  "cloudAliasLabel": "Account alias",
+  "cloudAliasLabel": "Adapter instance name",
   "@cloudAliasLabel": {
     "description": "Panel accounts: alias label"
   },
-  "cloudAliasRequired": "Enter an account alias",
+  "cloudAliasRequired": "Enter an adapter instance name",
   "@cloudAliasRequired": {
     "description": "Panel accounts: alias required"
   },
@@ -1128,7 +1128,7 @@
   "@cloudV2ReauthorizationInfo": {
     "description": "Panel accounts: v2 reauthorization info"
   },
-  "cloudVerifyScopeInfo": "This app only reads data; the credentials themselves may have other permissions. Verification reads status or projects and instances. Credentials enter secure device storage only when you save in the next step.",
+  "cloudVerifyScopeInfo": "This app only reads data; the credentials themselves may have other permissions. Verification reads status or projects and devices. Credentials enter secure device storage only when you save in the next step.",
   "@cloudVerifyScopeInfo": {
     "description": "Panel accounts: verify scope info"
   },
@@ -1148,15 +1148,15 @@
   "@cloudCredentialMemoryInfo": {
     "description": "Panel accounts: credential memory info"
   },
-  "cloudChooseInstances": "Choose instances to import",
+  "cloudChooseInstances": "Choose devices to import",
   "@cloudChooseInstances": {
     "description": "Panel accounts: choose instances"
   },
-  "cloudEmptyVerification": "No instances can be imported with this authorization. You can save the account and import later.",
+  "cloudEmptyVerification": "This authorization returned no devices to import. You can save the adapter instance and read it again later.",
   "@cloudEmptyVerification": {
     "description": "Panel accounts: empty verification"
   },
-  "cloudEmptyInventory": "The complete list returned no instances to import. The account is saved; you can read it again later.",
+  "cloudEmptyInventory": "The complete read returned no devices to import. The adapter instance is saved; you can read it again later.",
   "@cloudEmptyInventory": {
     "description": "Panel accounts: empty inventory"
   },
@@ -1168,7 +1168,7 @@
   "@cloudAlreadyLinked": {
     "description": "Panel accounts: already linked"
   },
-  "cloudV1Identity": "No stable instance ID · Identified by this separate connection",
+  "cloudV1Identity": "No stable device ID · Identified by this separate authorization",
   "@cloudV1Identity": {
     "description": "Panel accounts: v1 identity"
   },
@@ -1176,7 +1176,7 @@
   "@cloudIpNotProvided": {
     "description": "Panel accounts: ip not provided"
   },
-  "cloudSelectBeforeComplete": "Select the instance above, then complete the details below. Filling in details alone does not import it.",
+  "cloudSelectBeforeComplete": "Select the device above, then complete the details below. Filling in details alone does not import it.",
   "@cloudSelectBeforeComplete": {
     "description": "Panel accounts: select before complete"
   },
@@ -1184,23 +1184,23 @@
   "@cloudLocalDisplayName": {
     "description": "Panel accounts: local display name"
   },
-  "cloudLocalNameInfo": "Used only for the new ledger record, not as the instance identity",
+  "cloudLocalNameInfo": "Used only for the new local record, not as remote device identity",
   "@cloudLocalNameInfo": {
     "description": "Panel accounts: local name info"
   },
-  "cloudV1ResourcesInfo": "SolusVM 1 does not provide a stable instance ID. Available resource fields depend on the provider. Entered details stay on this device and do not trigger SSH, TCP, or remote configuration changes.",
+  "cloudV1ResourcesInfo": "SolusVM 1 does not provide a stable device ID. Available resource fields depend on the provider. Entered details stay local and do not trigger SSH, TCP, or remote configuration changes.",
   "@cloudV1ResourcesInfo": {
     "description": "Panel accounts: v1 resources info"
   },
-  "cloudRebindWarning": "Saving new authorization unlinks all old instance associations for this connection. Existing records, costs, payments, and SSH settings are kept. Importing creates new local records; it does not overwrite or relink old ones.",
+  "cloudRebindWarning": "Saving new authorization removes this adapter instance’s old device links. Existing records, finances, and SSH are kept. Importing creates new local records; it does not overwrite or automatically relink old devices.",
   "@cloudRebindWarning": {
     "description": "Panel accounts: rebind warning"
   },
-  "cloudConfirmRebind": "I confirm that saving new authorization will unlink old instances",
+  "cloudConfirmRebind": "I confirm that saving new authorization will remove old device links",
   "@cloudConfirmRebind": {
     "description": "Panel accounts: confirm rebind"
   },
-  "cloudReturnSelect": "Return to instance selection",
+  "cloudReturnSelect": "Return to device selection",
   "@cloudReturnSelect": {
     "description": "Panel accounts: return select"
   },
@@ -1208,15 +1208,15 @@
   "@cloudSaving": {
     "description": "Panel accounts: saving"
   },
-  "cloudNoneSelected": "No new instances selected",
+  "cloudNoneSelected": "No new devices selected",
   "@cloudNoneSelected": {
     "description": "Panel accounts: none selected"
   },
-  "cloudSaveOnly": "Save account only",
+  "cloudSaveOnly": "Save adapter instance only",
   "@cloudSaveOnly": {
     "description": "Panel accounts: save only"
   },
-  "cloudUpdateUnlink": "Update authorization and unlink old instances",
+  "cloudUpdateUnlink": "Update authorization and remove old device links",
   "@cloudUpdateUnlink": {
     "description": "Panel accounts: update unlink"
   },
@@ -1232,11 +1232,11 @@
   "@cloudSavingInfo": {
     "description": "Panel accounts: saving info"
   },
-  "cloudReadImportable": "Read importable instances",
+  "cloudReadImportable": "Read devices available to import",
   "@cloudReadImportable": {
     "description": "Panel accounts: read importable"
   },
-  "cloudRefreshAccount": "Refresh account status",
+  "cloudRefreshAccount": "Refresh adapter instance status",
   "@cloudRefreshAccount": {
     "description": "Panel accounts: refresh account"
   },
@@ -1252,7 +1252,7 @@
   "@cloudReadAgain": {
     "description": "Panel accounts: read again"
   },
-  "cloudReadCompleteInfo": "Only the API-returned information for this account was updated. Local details, costs, payments, and SSH settings were not overwritten.",
+  "cloudReadCompleteInfo": "Only this adapter instance’s API observations were updated. Local details, costs, payments, and SSH settings were not overwritten.",
   "@cloudReadCompleteInfo": {
     "description": "Panel accounts: read complete info"
   },
@@ -1260,15 +1260,15 @@
   "@cloudDone": {
     "description": "Panel accounts: done"
   },
-  "cloudViewDetails": "View account details",
+  "cloudViewDetails": "View adapter instance details",
   "@cloudViewDetails": {
     "description": "Panel accounts: view details"
   },
-  "cloudRenameAccount": "Edit account name",
+  "cloudRenameAccount": "Edit adapter instance name",
   "@cloudRenameAccount": {
     "description": "Panel accounts: rename account"
   },
-  "cloudContinueImport": "Import more instances",
+  "cloudContinueImport": "Import more devices",
   "@cloudContinueImport": {
     "description": "Panel accounts: continue import"
   },
@@ -1276,27 +1276,27 @@
   "@cloudLinkedServers": {
     "description": "Panel accounts: linked servers"
   },
-  "cloudUnlinkAccount": "Unlink account",
+  "cloudUnlinkAccount": "Delete adapter instance",
   "@cloudUnlinkAccount": {
     "description": "Panel accounts: unlink account"
   },
-  "cloudUnlinkAccountTitle": "Unlink this panel account?",
+  "cloudUnlinkAccountTitle": "Delete this adapter instance?",
   "@cloudUnlinkAccountTitle": {
     "description": "Panel accounts: unlink account title"
   },
-  "cloudUnlinkLocal": "Unlink locally",
+  "cloudUnlinkLocal": "Delete local adapter instance",
   "@cloudUnlinkLocal": {
     "description": "Panel accounts: unlink local"
   },
-  "cloudAccountDetails": "Panel account details",
+  "cloudAccountDetails": "Adapter instance details",
   "@cloudAccountDetails": {
     "description": "Panel accounts: account details"
   },
-  "cloudAccountRemovedNotice": "The account has been unlinked. Existing ledger records are kept.",
+  "cloudAccountRemovedNotice": "The adapter instance was deleted. All local device records are kept.",
   "@cloudAccountRemovedNotice": {
     "description": "Panel accounts: account removed notice"
   },
-  "cloudTemplateLabel": "Connection template",
+  "cloudTemplateLabel": "Adapter type",
   "@cloudTemplateLabel": {
     "description": "Panel accounts: template label"
   },
@@ -1320,7 +1320,7 @@
   "@cloudVerifiedScope": {
     "description": "Panel accounts: verified scope"
   },
-  "cloudV1Scope": "Single VPS · Client API, without stable instance identity",
+  "cloudV1Scope": "Single device · Client API, without stable device identity",
   "@cloudV1Scope": {
     "description": "Panel accounts: v1 scope"
   },
@@ -1344,7 +1344,7 @@
   "@cloudScopeNotice": {
     "description": "Panel accounts: scope notice"
   },
-  "cloudNoLinkedInstances": "No linked instances yet. Import more from the account menu.",
+  "cloudNoLinkedInstances": "No linked devices yet. Import more from the adapter instance menu.",
   "@cloudNoLinkedInstances": {
     "description": "Panel accounts: no linked instances"
   },
@@ -1360,11 +1360,11 @@
   "@cloudSaveName": {
     "description": "Panel accounts: save name"
   },
-  "cloudLinkPanelAccount": "Link panel account",
+  "cloudLinkPanelAccount": "Link adapter instance",
   "@cloudLinkPanelAccount": {
     "description": "Panel accounts: link panel account"
   },
-  "cloudLocalBindingInfo": "This page uses saved API-returned information and does not connect to the panel. If no instances are available or the last read failed, refresh manually in Panel accounts, then return and reload this local list.",
+  "cloudLocalBindingInfo": "This page uses saved API observations and does not connect to the panel. If no devices are available or the last read failed, refresh the adapter instance manually, then return and reload this local list.",
   "@cloudLocalBindingInfo": {
     "description": "Panel accounts: local binding info"
   },
@@ -1392,19 +1392,19 @@
   "@cloudUnlinkThis": {
     "description": "Panel accounts: unlink this"
   },
-  "cloudSelectAccount": "Select a panel account",
+  "cloudSelectAccount": "Choose an adapter instance",
   "@cloudSelectAccount": {
     "description": "Panel accounts: select account"
   },
-  "cloudNoSavedAccounts": "No panel accounts have been saved. Add and verify an account in Panel accounts first.",
+  "cloudNoSavedAccounts": "This provider has no adapter instances with confirmed ownership. Add and verify one first.",
   "@cloudNoSavedAccounts": {
     "description": "Panel accounts: no saved accounts"
   },
-  "cloudSelectReadInstance": "Select a previously read instance",
+  "cloudSelectReadInstance": "Choose a previously read device",
   "@cloudSelectReadInstance": {
     "description": "Panel accounts: select read instance"
   },
-  "cloudNoSavedInstances": "This account has no saved instance information. Refresh it manually in Panel accounts.",
+  "cloudNoSavedInstances": "This adapter instance has no saved device information. Refresh it manually first.",
   "@cloudNoSavedInstances": {
     "description": "Panel accounts: no saved instances"
   },
@@ -1412,11 +1412,11 @@
   "@cloudOtherServer": {
     "description": "Panel accounts: other server"
   },
-  "cloudMissingRefresh": "Not returned in this read · Refresh manually in Panel accounts",
+  "cloudMissingRefresh": "Not returned in this read · Refresh the adapter instance manually",
   "@cloudMissingRefresh": {
     "description": "Panel accounts: missing refresh"
   },
-  "cloudFailedRefresh": "Last read failed · Refresh manually in Panel accounts",
+  "cloudFailedRefresh": "Last read failed · Refresh the adapter instance manually",
   "@cloudFailedRefresh": {
     "description": "Panel accounts: failed refresh"
   },
@@ -1432,7 +1432,7 @@
   "@cloudLocalLinkBoundary": {
     "description": "Panel accounts: local link boundary"
   },
-  "cloudSingleAccountInstance": "This account’s single instance",
+  "cloudSingleAccountInstance": "The single device for this authorization",
   "@cloudSingleAccountInstance": {
     "description": "Panel accounts: single account instance"
   },
@@ -1452,7 +1452,7 @@
   "@cloudConfirmChangeLink": {
     "description": "Panel accounts: confirm change link"
   },
-  "cloudMetadataReadFailed": "Could not load panel account details. Try again.",
+  "cloudMetadataReadFailed": "Could not load adapter instance details. Try again.",
   "@cloudMetadataReadFailed": {
     "description": "Panel accounts: metadata read failed"
   },
@@ -1460,11 +1460,11 @@
   "@cloudSavedReloadFailed": {
     "description": "Panel accounts: saved reload failed"
   },
-  "cloudAccountConflict": "Panel account details have changed. Reload them and try again.",
+  "cloudAccountConflict": "Adapter instance details have changed. Reload them and try again.",
   "@cloudAccountConflict": {
     "description": "Panel accounts: account conflict"
   },
-  "cloudOperationFailed": "The panel account operation did not finish. Try again.",
+  "cloudOperationFailed": "The adapter instance operation did not finish. Try again.",
   "@cloudOperationFailed": {
     "description": "Panel accounts: operation failed"
   },
@@ -1484,7 +1484,7 @@
   "@cloudVerifyCancelled": {
     "description": "Panel accounts: verify cancelled"
   },
-  "cloudAliasInvalid": "The account alias must be 1–80 characters.",
+  "cloudAliasInvalid": "The adapter instance name must be 1–80 characters.",
   "@cloudAliasInvalid": {
     "description": "Panel accounts: alias invalid"
   },
@@ -1512,11 +1512,11 @@
   "@cloudSaveFailed": {
     "description": "Panel accounts: save failed"
   },
-  "cloudAccountSavedOnly": "Account authorization saved. No new instances were imported.",
+  "cloudAccountSavedOnly": "Adapter instance saved. No new devices were imported.",
   "@cloudAccountSavedOnly": {
     "description": "Panel accounts: account saved only"
   },
-  "cloudInstancesSaved": "Saved. The selected instances were added to the local ledger.",
+  "cloudInstancesSaved": "Saved. Selected devices were added to the local ledger.",
   "@cloudInstancesSaved": {
     "description": "Panel accounts: instances saved"
   },
@@ -1524,7 +1524,7 @@
   "@cloudReadCancelled": {
     "description": "Panel accounts: read cancelled"
   },
-  "cloudAccountUnlinkedReturn": "The account has been unlinked. Go back to continue.",
+  "cloudAccountUnlinkedReturn": "The adapter instance was deleted. Go back to continue.",
   "@cloudAccountUnlinkedReturn": {
     "description": "Panel accounts: account unlinked return"
   },
@@ -1532,7 +1532,7 @@
   "@cloudReadIncomplete": {
     "description": "Panel accounts: read incomplete"
   },
-  "cloudAliasSaved": "Account alias saved.",
+  "cloudAliasSaved": "Adapter instance name saved.",
   "@cloudAliasSaved": {
     "description": "Panel accounts: alias saved"
   },
@@ -1540,15 +1540,15 @@
   "@cloudNameSaveFailed": {
     "description": "Panel accounts: name save failed"
   },
-  "cloudAccountUnlinked": "Unlinked. Ledger records, costs, and SSH settings are kept.",
+  "cloudAccountUnlinked": "Adapter instance deleted. Local details, finances, and SSH settings are kept.",
   "@cloudAccountUnlinked": {
     "description": "Panel accounts: account unlinked"
   },
-  "cloudUnlinkFailed": "Unlinking did not finish. Try again.",
+  "cloudUnlinkFailed": "Deleting the adapter instance did not finish. Try again.",
   "@cloudUnlinkFailed": {
     "description": "Panel accounts: unlink failed"
   },
-  "cloudAliasRange": "Enter an account alias of 1–80 characters.",
+  "cloudAliasRange": "Enter an adapter instance name of 1–80 characters.",
   "@cloudAliasRange": {
     "description": "Panel accounts: alias range"
   },
@@ -1560,7 +1560,7 @@
   "@cloudServerUnlinked": {
     "description": "Panel accounts: server unlinked"
   },
-  "cloudBindingSaved": "Panel account link saved.",
+  "cloudBindingSaved": "Adapter instance link saved.",
   "@cloudBindingSaved": {
     "description": "Panel accounts: binding saved"
   },
@@ -1616,7 +1616,7 @@
   "@cloudFailureResponseTooLarge": {
     "description": "Panel accounts: failure response too large"
   },
-  "cloudFailureInventoryTooLarge": "The number of instances or pages exceeds this read’s limit. The incomplete list was not imported.",
+  "cloudFailureInventoryTooLarge": "The number of devices or pages exceeds this read’s limit. The incomplete list was not imported.",
   "@cloudFailureInventoryTooLarge": {
     "description": "Panel accounts: failure inventory too large"
   },
@@ -1624,11 +1624,11 @@
   "@cloudFailureUnsupportedPlatform": {
     "description": "Panel accounts: failure unsupported platform"
   },
-  "cloudAccountFailureIdentity": "The remote account or instance identity changed. Existing links were not changed. Create a separate account connection.",
+  "cloudAccountFailureIdentity": "The remote account or device identity changed. Existing links were not changed. Create a separate adapter instance.",
   "@cloudAccountFailureIdentity": {
     "description": "Panel accounts: account failure identity"
   },
-  "cloudAccountFailureV1Rebind": "SolusVM 1 cannot prove that new credentials belong to the original instance. Explicitly confirm unlinking old associations and select instances to import again. Existing ledger records are kept.",
+  "cloudAccountFailureV1Rebind": "SolusVM 1 cannot prove that new credentials belong to the original device. Explicitly confirm removing old links, then choose devices to import. Existing local records are kept.",
   "@cloudAccountFailureV1Rebind": {
     "description": "Panel accounts: account failure v1 rebind"
   },
@@ -1636,7 +1636,7 @@
   "@cloudAccountFailureSelection": {
     "description": "Panel accounts: account failure selection"
   },
-  "cloudAccountFailureAlias": "The account alias must be 1–80 characters.",
+  "cloudAccountFailureAlias": "The adapter instance name must be 1–80 characters.",
   "@cloudAccountFailureAlias": {
     "description": "Panel accounts: account failure alias"
   },
@@ -1644,15 +1644,15 @@
   "@cloudAccountFailureSecret": {
     "description": "Panel accounts: account failure secret"
   },
-  "cloudAccountFailureSecretRead": "Could not read this account’s saved API credentials. Unlock the device and try again. If it still fails, authorize again from the account menu.",
+  "cloudAccountFailureSecretRead": "Could not read this adapter instance’s saved API credentials. Unlock the device and try again. If it still fails, authorize again from its menu.",
   "@cloudAccountFailureSecretRead": {
     "description": "Panel accounts: account failure secret read"
   },
-  "cloudAccountFailureBindingTaken": "This instance is linked to another server and cannot be overwritten. Reload the local list.",
+  "cloudAccountFailureBindingTaken": "This device is linked to another local server and cannot be overwritten. Reload the local list.",
   "@cloudAccountFailureBindingTaken": {
     "description": "Panel accounts: account failure binding taken"
   },
-  "cloudAccountFailureBindingUnavailable": "Instance information is not currently available for linking. Refresh manually in Panel accounts, then select it again.",
+  "cloudAccountFailureBindingUnavailable": "Device information is not currently available for linking. Refresh the adapter instance manually, then select it again.",
   "@cloudAccountFailureBindingUnavailable": {
     "description": "Panel accounts: account failure binding unavailable"
   },
@@ -1702,7 +1702,7 @@
       }
     }
   },
-  "cloudInventoryComplete": "Complete read finished · {count, plural, =1{1 instance} other{{count} instances}}\nRead at: {time}{authorization}",
+  "cloudInventoryComplete": "Complete read finished · {count, plural, =1{1 device} other{{count} devices}}\nRead at: {time}{authorization}",
   "@cloudInventoryComplete": {
     "description": "Panel accounts: inventory complete",
     "placeholders": {
@@ -1717,7 +1717,7 @@
       }
     }
   },
-  "cloudInstanceFallback": "Instance {id}",
+  "cloudInstanceFallback": "Device {id}",
   "@cloudInstanceFallback": {
     "description": "Panel accounts: instance fallback",
     "placeholders": {
@@ -1726,7 +1726,7 @@
       }
     }
   },
-  "cloudProjectInstance": "Project {project} · Instance ID {id}",
+  "cloudProjectInstance": "Project {project} · Device ID {id}",
   "@cloudProjectInstance": {
     "description": "Panel accounts: project instance",
     "placeholders": {
@@ -1756,7 +1756,7 @@
       }
     }
   },
-  "cloudV2Scope": "Verified user account {id} · Projects and instances",
+  "cloudV2Scope": "Verified user account {id} · Projects and devices",
   "@cloudV2Scope": {
     "description": "Panel accounts: v2 scope",
     "placeholders": {
@@ -1806,11 +1806,11 @@
   "@cloudAuthorizationUnsaved": {
     "description": "Panel accounts: authorization unsaved"
   },
-  "cloudV1Deduplication": "Already linked instances in this connection are not imported twice; separate connections are not merged automatically.",
+  "cloudV1Deduplication": "A device already pinned to this authorization is not created again; unlinking keeps the pin. Separate authorizations are not merged automatically.",
   "@cloudV1Deduplication": {
     "description": "Panel accounts: v1 deduplication"
   },
-  "cloudV2Deduplication": "Duplicates are identified by the separate connection and remote IDs, not by IP or name.",
+  "cloudV2Deduplication": "Duplicates use adapter type, panel endpoint, remote account, project, and device IDs. Matching IP or hostname is only a review hint.",
   "@cloudV2Deduplication": {
     "description": "Panel accounts: v2 deduplication"
   },
@@ -1818,7 +1818,7 @@
   "@cloudArchivedSuffix": {
     "description": "Panel accounts: archived suffix"
   },
-  "cloudImportCount": "Import {count, plural, =1{1 instance} other{{count} instances}}",
+  "cloudImportCount": "Import {count, plural, =1{1 device} other{{count} devices}}",
   "@cloudImportCount": {
     "description": "Panel accounts: import count",
     "placeholders": {
@@ -1827,7 +1827,7 @@
       }
     }
   },
-  "cloudSaveImportCount": "Save account and import {count, plural, =1{1 instance} other{{count} instances}}",
+  "cloudSaveImportCount": "Save adapter instance and import {count, plural, =1{1 device} other{{count} devices}}",
   "@cloudSaveImportCount": {
     "description": "Panel accounts: save import count",
     "placeholders": {
@@ -1836,7 +1836,7 @@
       }
     }
   },
-  "cloudUnlinkAccountMessage": "{alias}\n\nRemove this panel connection and all its local instance links. You will need to enter API credentials again to add it back. Server records, costs, payments, and SSH settings are kept. Remote resources are not destroyed and billing does not stop.\n\n{remoteAction}",
+  "cloudUnlinkAccountMessage": "{alias}\n\nDelete this local adapter instance and its device links. Adding it again requires API credentials. Remote devices are not destroyed and billing does not stop.\n\n{remoteAction}",
   "@cloudUnlinkAccountMessage": {
     "description": "Panel accounts: unlink account message",
     "placeholders": {
@@ -1856,7 +1856,7 @@
   "@cloudRevokeV2": {
     "description": "Panel accounts: revoke v2"
   },
-  "cloudSuggestedAlias": "My {provider} panel",
+  "cloudSuggestedAlias": "My {provider} adapter",
   "@cloudSuggestedAlias": {
     "description": "Panel accounts: suggested alias",
     "placeholders": {
@@ -1883,7 +1883,7 @@
       }
     }
   },
-  "cloudChangeLinkMessage": "{server}\nCurrent: {account} · {instance}{replacement}\n\nOnly the local link changes. Server details, hardware, costs, payments, SSH settings, the panel account, and authorization are kept. No remote instances are changed and billing does not stop.",
+  "cloudChangeLinkMessage": "{server}\nCurrent: {account} · {instance}{replacement}\n\nOnly the local link changes. Server details, hardware, costs, payments, SSH settings, the adapter instance, and authorization are kept. No remote devices are changed and billing does not stop.",
   "@cloudChangeLinkMessage": {
     "description": "Panel accounts: change link message",
     "placeholders": {
@@ -1945,7 +1945,7 @@
   "@cloudVerifiedManual": {
     "description": "Panel accounts: verified manual"
   },
-  "cloudStepTemplate": "Template",
+  "cloudStepTemplate": "Adapter type",
   "@cloudStepTemplate": {
     "description": "Panel accounts: step template"
   },
@@ -1953,7 +1953,7 @@
   "@cloudStepCredentials": {
     "description": "Panel accounts: step credentials"
   },
-  "cloudStepInstances": "Instances",
+  "cloudStepInstances": "Devices",
   "@cloudStepInstances": {
     "description": "Panel accounts: step instances"
   },
@@ -3320,5 +3320,428 @@
   "resourceTrafficPeriodUnsetShort": "—",
   "resourceTrafficPeriodMonthShort": "M",
   "resourceTrafficPeriodQuarterShort": "Q",
-  "resourceTrafficPeriodYearShort": "Y"
+  "resourceTrafficPeriodYearShort": "Y",
+  "providerReviewRequired": "Confirm this instance’s provider before adding authorization, importing, or linking servers.",
+  "@providerReviewRequired": {
+    "description": "Provider and adapter relationship validation."
+  },
+  "providerNameRange": "Use 1–80 characters for the provider name.",
+  "@providerNameRange": {
+    "description": "Provider and adapter relationship validation."
+  },
+  "providerAlreadyExists": "This provider already exists. Select it from the list.",
+  "@providerAlreadyExists": {
+    "description": "Provider and adapter relationship validation."
+  },
+  "providerChangeNeedsUnlink": "Confirm unlinking the current adapter before changing the provider.",
+  "@providerChangeNeedsUnlink": {
+    "description": "Provider and adapter relationship validation."
+  },
+  "adapterProviderMismatch": "The server and adapter instance must have the same provider.",
+  "@adapterProviderMismatch": {
+    "description": "Provider and adapter relationship validation."
+  },
+  "adapterScopeUnavailable": "This instance’s authorization scope is unverified. New links are unavailable.",
+  "@adapterScopeUnavailable": {
+    "description": "Provider and adapter relationship validation."
+  },
+  "adapterSingletonPinned": "These single-device credentials are pinned to another local server. Unlinking does not expand their scope. Return to that record or explicitly reauthorize.",
+  "@adapterSingletonPinned": {
+    "description": "Provider and adapter relationship validation."
+  },
+  "providerUiTitle": "Providers",
+  "@providerUiTitle": {
+    "description": "Provider navigation and ownership UI."
+  },
+  "providerUiDetails": "Provider details",
+  "@providerUiDetails": {
+    "description": "Provider navigation and ownership UI."
+  },
+  "providerUiAdd": "Add provider",
+  "@providerUiAdd": {
+    "description": "Provider navigation and ownership UI."
+  },
+  "providerUiRename": "Rename provider",
+  "@providerUiRename": {
+    "description": "Provider navigation and ownership UI."
+  },
+  "providerUiName": "Provider name",
+  "@providerUiName": {
+    "description": "Provider navigation and ownership UI."
+  },
+  "providerUiUnspecified": "Unspecified provider",
+  "@providerUiUnspecified": {
+    "description": "Provider navigation and ownership UI."
+  },
+  "providerUiUnspecifiedHelp": "Manual entry only. You can assign a provider later in server details.",
+  "@providerUiUnspecifiedHelp": {
+    "description": "Provider navigation and ownership UI."
+  },
+  "providerUiHierarchyHelp": "A provider identifies the business that supplies your servers. Each adapter instance holds a separate authorization and reads only devices within its scope.",
+  "@providerUiHierarchyHelp": {
+    "description": "Provider navigation and ownership UI."
+  },
+  "providerUiSummary": "{instances} adapter instances · {devices} servers",
+  "@providerUiSummary": {
+    "description": "Provider navigation and ownership UI.",
+    "placeholders": {
+      "instances": {
+        "type": "int"
+      },
+      "devices": {
+        "type": "int"
+      }
+    }
+  },
+  "providerUiEmpty": "No providers yet",
+  "@providerUiEmpty": {
+    "description": "Provider navigation and ownership UI."
+  },
+  "providerUiEmptyHelp": "Add a provider name, then enter servers manually or configure a read-only adapter.",
+  "@providerUiEmptyHelp": {
+    "description": "Provider navigation and ownership UI."
+  },
+  "providerUiNeedsReview": "Ownership needs confirmation. New authorization and links are unavailable.",
+  "@providerUiNeedsReview": {
+    "description": "Provider navigation and ownership UI."
+  },
+  "providerUiUnspecifiedCount": "{count} servers have no provider assigned.",
+  "@providerUiUnspecifiedCount": {
+    "description": "Provider navigation and ownership UI.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "providerUiChoose": "Choose a provider",
+  "@providerUiChoose": {
+    "description": "Provider navigation and ownership UI."
+  },
+  "providerUiChooseHelp": "Choose the business provider. You will select the panel type and authorization later.",
+  "@providerUiChooseHelp": {
+    "description": "Provider navigation and ownership UI."
+  },
+  "providerUiSelected": "Server provider",
+  "@providerUiSelected": {
+    "description": "Provider navigation and ownership UI."
+  },
+  "providerUiChooseAnother": "Choose another provider",
+  "@providerUiChooseAnother": {
+    "description": "Provider navigation and ownership UI."
+  },
+  "providerUiChooseMethod": "Choose how to add",
+  "@providerUiChooseMethod": {
+    "description": "Provider navigation and ownership UI."
+  },
+  "providerUiManualHelp": "Enter details manually. Unknown hardware and costs can stay blank.",
+  "@providerUiManualHelp": {
+    "description": "Provider navigation and ownership UI."
+  },
+  "providerUiAutomatic": "Read through an adapter",
+  "@providerUiAutomatic": {
+    "description": "Provider navigation and ownership UI."
+  },
+  "providerUiAutomaticHelp": "Choose an existing authorization or add an adapter, then review the devices to import.",
+  "@providerUiAutomaticHelp": {
+    "description": "Provider navigation and ownership UI."
+  },
+  "providerUiAutoNeedsProvider": "Choose a confirmed provider before automatic reading.",
+  "@providerUiAutoNeedsProvider": {
+    "description": "Provider navigation and ownership UI."
+  },
+  "providerUiInstances": "Adapter instances",
+  "@providerUiInstances": {
+    "description": "Provider navigation and ownership UI."
+  },
+  "providerUiNoInstances": "No adapters configured. You can still add servers manually.",
+  "@providerUiNoInstances": {
+    "description": "Provider navigation and ownership UI."
+  },
+  "providerUiAddInstance": "Add adapter instance",
+  "@providerUiAddInstance": {
+    "description": "Provider navigation and ownership UI."
+  },
+  "providerUiDevices": "Provider servers",
+  "@providerUiDevices": {
+    "description": "Provider navigation and ownership UI."
+  },
+  "providerUiNoDevices": "No servers belong to this provider yet.",
+  "@providerUiNoDevices": {
+    "description": "Provider navigation and ownership UI."
+  },
+  "providerUiManualDevice": "No adapter link",
+  "@providerUiManualDevice": {
+    "description": "Provider navigation and ownership UI."
+  },
+  "providerUiLinkedDevice": "Adapter linked",
+  "@providerUiLinkedDevice": {
+    "description": "Provider navigation and ownership UI."
+  },
+  "providerUiLinkedCount": "{count} linked servers",
+  "@providerUiLinkedCount": {
+    "description": "Provider navigation and ownership UI.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "providerUiSingleScope": "Single-device authorization",
+  "@providerUiSingleScope": {
+    "description": "Provider navigation and ownership UI."
+  },
+  "providerUiAccountScope": "Account-scoped authorization",
+  "@providerUiAccountScope": {
+    "description": "Provider navigation and ownership UI."
+  },
+  "providerUiUnknownScope": "Authorization scope unverified",
+  "@providerUiUnknownScope": {
+    "description": "Provider navigation and ownership UI."
+  },
+  "providerUiPinnedHelp": "This single-device authorization is pinned to “{name}”. Unlinking does not free it for another device. Return to that record or explicitly reauthorize.",
+  "@providerUiPinnedHelp": {
+    "description": "Provider navigation and ownership UI.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "providerUiChooseInstance": "Choose an adapter instance",
+  "@providerUiChooseInstance": {
+    "description": "Provider navigation and ownership UI."
+  },
+  "providerUiInstanceChoiceHelp": "Only this provider’s instances are listed. Adapter type and verification determine authorization scope.",
+  "@providerUiInstanceChoiceHelp": {
+    "description": "Provider navigation and ownership UI."
+  },
+  "providerUiReviewHelp": "The business provider could not be determined from older records. Confirm the provider and all affected servers for each instance. Until then, only existing links can be refreshed.",
+  "@providerUiReviewHelp": {
+    "description": "Provider navigation and ownership UI."
+  },
+  "providerUiRenameReviewHelp": "Renaming does not confirm ownership. Confirm the provider for the instance separately.",
+  "@providerUiRenameReviewHelp": {
+    "description": "Provider navigation and ownership UI."
+  },
+  "providerUiConfirmOwnership": "Confirm instance provider",
+  "@providerUiConfirmOwnership": {
+    "description": "Provider navigation and ownership UI."
+  },
+  "providerUiConfirmOwnershipMessage": "Assign “{alias}” to “{provider}”. These linked servers will move with it:\n{devices}\n\nExisting authorization, server details, costs, and SSH remain. This does not expand authorization scope.",
+  "@providerUiConfirmOwnershipMessage": {
+    "description": "Provider navigation and ownership UI.",
+    "placeholders": {
+      "alias": {
+        "type": "String"
+      },
+      "provider": {
+        "type": "String"
+      },
+      "devices": {
+        "type": "String"
+      }
+    }
+  },
+  "providerUiNoAffectedDevices": "No linked servers.",
+  "@providerUiNoAffectedDevices": {
+    "description": "Provider navigation and ownership UI."
+  },
+  "providerUiUnavailable": "This provider changed or is unavailable. Go back and choose again.",
+  "@providerUiUnavailable": {
+    "description": "Provider navigation and ownership UI."
+  },
+  "providerUiChange": "Change provider",
+  "@providerUiChange": {
+    "description": "Provider navigation and ownership UI."
+  },
+  "providerUiChangeMessage": "Change “{server}” from “{oldProvider}” to “{newProvider}”.\n\n{linkEffect}\n\nThe server ID, manual details, costs, and SSH remain. This does not automatically add authorization or a new link.",
+  "@providerUiChangeMessage": {
+    "description": "Provider navigation and ownership UI.",
+    "placeholders": {
+      "server": {
+        "type": "String"
+      },
+      "oldProvider": {
+        "type": "String"
+      },
+      "newProvider": {
+        "type": "String"
+      },
+      "linkEffect": {
+        "type": "String"
+      }
+    }
+  },
+  "providerUiChangeNoLink": "This server has no adapter link.",
+  "@providerUiChangeNoLink": {
+    "description": "Provider navigation and ownership UI."
+  },
+  "providerUiChangeUnlink": "The local link to “{alias}” must be removed. Its authorization remains, including any single-device pin.",
+  "@providerUiChangeUnlink": {
+    "description": "Provider navigation and ownership UI.",
+    "placeholders": {
+      "alias": {
+        "type": "String"
+      }
+    }
+  },
+  "providerUiUnlinkAndChange": "Unlink and change provider",
+  "@providerUiUnlinkAndChange": {
+    "description": "Provider navigation and ownership UI."
+  },
+  "providerUiChangeFromDetails": "To change an existing server’s provider, return to details and choose “Change provider”. Any existing link must be explicitly removed.",
+  "@providerUiChangeFromDetails": {
+    "description": "Provider navigation and ownership UI."
+  },
+  "providerUiProviderAndAdapter": "Provider and adapter",
+  "@providerUiProviderAndAdapter": {
+    "description": "Provider navigation and ownership UI."
+  },
+  "providerUiOpenProvider": "View provider",
+  "@providerUiOpenProvider": {
+    "description": "Provider navigation and ownership UI."
+  },
+  "providerUiOpenInstance": "View adapter instance",
+  "@providerUiOpenInstance": {
+    "description": "Provider navigation and ownership UI."
+  },
+  "providerPendingName": "{name} · provider unconfirmed",
+  "@providerPendingName": {
+    "description": "Label for an ambiguous migrated provider.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "providerBindingAssignFirst": "Assign a provider in server details before choosing an adapter instance to link.",
+  "@providerBindingAssignFirst": {
+    "description": "Adapter instance import and local linking"
+  },
+  "cloudImportSaved": "Adapter instance saved. Its authorization is kept independently of these device import results.",
+  "@cloudImportSaved": {
+    "description": "Adapter instance import and local linking"
+  },
+  "cloudImportReady": "Resources complete",
+  "@cloudImportReady": {
+    "description": "Adapter instance import and local linking"
+  },
+  "cloudImportNeedsCompletion": "Resources need completion",
+  "@cloudImportNeedsCompletion": {
+    "description": "Adapter instance import and local linking"
+  },
+  "cloudImportImported": "Imported",
+  "@cloudImportImported": {
+    "description": "Adapter instance import and local linking"
+  },
+  "cloudImportExisting": "Already exists",
+  "@cloudImportExisting": {
+    "description": "Adapter instance import and local linking"
+  },
+  "cloudImportFailed": "Failed",
+  "@cloudImportFailed": {
+    "description": "Adapter instance import and local linking"
+  },
+  "cloudImportUnprocessed": "Not processed",
+  "@cloudImportUnprocessed": {
+    "description": "Adapter instance import and local linking"
+  },
+  "cloudImportCompleteResources": "Complete resources",
+  "@cloudImportCompleteResources": {
+    "description": "Adapter instance import and local linking"
+  },
+  "cloudImportReviewResources": "Review resources",
+  "@cloudImportReviewResources": {
+    "description": "Adapter instance import and local linking"
+  },
+  "cloudImportCompleteAndSelect": "Save draft and select",
+  "@cloudImportCompleteAndSelect": {
+    "description": "Adapter instance import and local linking"
+  },
+  "cloudImportCompletionInfo": "Check all six resource fields before importing. Values omitted by the API stay unknown; choose unlimited traffic only when confirmed. Your edits are local configuration and do not change API observations.",
+  "@cloudImportCompletionInfo": {
+    "description": "Adapter instance import and local linking"
+  },
+  "cloudImportFinanceLater": "This import adds devices and resource details. Financial information is optional and can be added later; no costs or payments are created.",
+  "@cloudImportFinanceLater": {
+    "description": "Adapter instance import and local linking"
+  },
+  "cloudImportSummary": "Imported {imported} · Existing {existing} · Failed {failed} · Not processed {unprocessed}",
+  "@cloudImportSummary": {
+    "description": "Adapter instance import and local linking",
+    "placeholders": {
+      "imported": {
+        "type": "int"
+      },
+      "existing": {
+        "type": "int"
+      },
+      "failed": {
+        "type": "int"
+      },
+      "unprocessed": {
+        "type": "int"
+      }
+    }
+  },
+  "cloudImportRetryCount": "Retry only {count} unfinished devices",
+  "@cloudImportRetryCount": {
+    "description": "Adapter instance import and local linking",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "cloudImportCancel": "Stop remaining imports",
+  "@cloudImportCancel": {
+    "description": "Adapter instance import and local linking"
+  },
+  "cloudImportCancelling": "Stopping…",
+  "@cloudImportCancelling": {
+    "description": "Adapter instance import and local linking"
+  },
+  "cloudImportCancelled": "Remaining imports stopped. Committed devices are kept. Review the results before retrying unfinished items.",
+  "@cloudImportCancelled": {
+    "description": "Adapter instance import and local linking"
+  },
+  "cloudImportResultsTitle": "Import results",
+  "@cloudImportResultsTitle": {
+    "description": "Adapter instance import and local linking"
+  },
+  "cloudImportExistingConflict": "Found {count} local records with the same remote identity. Review each record; none is chosen or merged automatically.",
+  "@cloudImportExistingConflict": {
+    "description": "Adapter instance import and local linking",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "cloudImportAddressHint": "IP or hostname also appears on: {names}. This is a review hint only and does not prove the devices are identical.",
+  "@cloudImportAddressHint": {
+    "description": "Adapter instance import and local linking",
+    "placeholders": {
+      "names": {
+        "type": "String"
+      }
+    }
+  },
+  "cloudInstanceDeleteImpact": "This removes links from {count} local servers:\n{names}\n\nAll local details, hardware, finances, and SSH settings are kept.",
+  "@cloudInstanceDeleteImpact": {
+    "description": "Adapter instance import and local linking",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "names": {
+        "type": "String"
+      }
+    }
+  },
+  "cloudImportIdentityConflict": "Device identity conflict",
+  "@cloudImportIdentityConflict": {
+    "description": "Read remote UUID conflicts with locked local device identity"
+  }
 }
