@@ -2,10 +2,6 @@
 
 SolusVM 协议基线核对：2026-10-06；RackNerd ctrl 接入：2026-10-08（UTC+8）。自动回归使用合成数据与临时本地 HTTPS 服务，不包含生产凭据或真实面板响应；另有用户授权的有限 RackNerd 只读实测，范围见 [RACKNERD](RACKNERD.md)。
 
-## 共享结构
-
-面板工厂、凭据构造/编解码、端点与显示规则由 `CloudProviderDefinition` 集中管理；SolusVM 1 / RackNerd ctrl 共用 `KeyHashCredentials`、单 VPS 读取模板、资源投影和有界传输，具体请求、解析器及白名单仍独立。SolusVM 2 只复用通用传输，不继承匿名单 VPS 流程。控制器保留生命周期/身份/存储协调，表单按凭据种类而非厂商分支工作。结构与新增提供商步骤见 [CLOUD_ARCHITECTURE](CLOUD_ARCHITECTURE.md)。
-
 ## 读取范围
 
 - SolusVM 1：每组 Client API Key/Hash 仅对应单台 VPS；仅 multipart POST `/api/client/command.php`，字段恰为 `key`、`hash`、`action=status` 和 `ipaddr/mem/hdd/bw/status=true`。凭据只在请求体中。

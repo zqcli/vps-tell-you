@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/foundation.dart';
 
 import '../data/ledger_store.dart';
@@ -9,7 +11,7 @@ import '../servers/server_record.dart';
 import '../servers/server_resources.dart';
 import 'cloud_account.dart';
 import 'cloud_models.dart';
-import 'cloud_provider_definition.dart';
+import 'solusvm_adapter.dart';
 
 export 'cloud_account.dart';
 
@@ -70,8 +72,20 @@ class CloudController extends ChangeNotifier {
     CloudProvider provider,
     CloudEndpoint endpoint,
     CloudCredentials credentials,
-  ) =>
-      CloudProviderDefinition.of(provider).createAdapter(endpoint, credentials);
+  ) => switch (provider) {
+    CloudProvider.solusVm1 => SolusVm1Adapter(
+      endpoint: endpoint,
+      credentials: credentials as SolusVm1Credentials,
+    ),
+    CloudProvider.solusVm2 => SolusVm2Adapter(
+      endpoint: endpoint,
+      credentials: credentials as SolusVm2Credentials,
+    ),
+    CloudProvider.rackNerd => RackNerdAdapter(
+      endpoint: endpoint,
+      credentials: credentials as RackNerdCredentials,
+    ),
+  };
   void _notify() {
     if (!_disposed) notifyListeners();
   }
@@ -83,6 +97,20 @@ class CloudController extends ChangeNotifier {
 
   void _platform() {
     if (kIsWeb) throw const CloudFailure(CloudFailureKind.unsupportedPlatform);
+  }
+
+  static void _validateCredentials(
+    CloudProvider provider,
+    CloudCredentials credentials,
+  ) {
+    final valid = switch (provider) {
+      CloudProvider.solusVm1 => credentials is SolusVm1Credentials,
+      CloudProvider.solusVm2 => credentials is SolusVm2Credentials,
+      CloudProvider.rackNerd => credentials is RackNerdCredentials,
+    };
+    if (!valid) {
+      throw const CloudFailure(CloudFailureKind.invalidCredentials);
+    }
   }
 
   CloudBinding? bindingFor(String serverId) {
@@ -157,9 +185,12 @@ class CloudController extends ChangeNotifier {
     _notify();
     try {
       _platform();
-      final definition = CloudProviderDefinition.of(provider);
-      definition.validateCredentials(credentials);
-      final parsed = definition.parseEndpoint(endpoint);
+      _validateCredentials(provider, credentials);
+      final parsed = CloudEndpoint.parse(
+        endpoint,
+        allowSolusVm1ConsolePath: provider == CloudProvider.solusVm1,
+        allowRackNerdApiPath: provider == CloudProvider.rackNerd,
+      );
       CloudAccount? expected;
       if (existing != null) {
         if (existing.provider != provider ||
@@ -274,8 +305,7 @@ class CloudController extends ChangeNotifier {
       reservedRef = ref;
       await store.reserveSecret(ref, active: true);
       _active(cancellation);
-      final encoded = CloudProviderDefinition.of(verification.provider)
-          .encodeCredentials(credentials);
+      final encoded = _encodeSecret(credentials);
       try {
         await secrets.write(ref, encoded);
         _active(cancellation);
@@ -530,13 +560,46 @@ class CloudController extends ChangeNotifier {
     try {
       final raw = await secrets.read(account.secretRef);
       if (raw == null) throw CloudAccountFailure.secretRead;
-      return CloudProviderDefinition.of(account.provider)
-          .decodeCredentials(raw);
+      final value = jsonDecode(raw) as Map<String, dynamic>;
+      if (value['version'] != 1 || value['provider'] != account.provider.name) {
+        throw CloudAccountFailure.secretRead;
+      }
+      return switch (account.provider) {
+        CloudProvider.solusVm1 => SolusVm1Credentials(
+          key: value['key'] as String,
+          hash: value['hash'] as String,
+        ),
+        CloudProvider.solusVm2 => SolusVm2Credentials(value['token'] as String),
+        CloudProvider.rackNerd => RackNerdCredentials(
+          key: value['key'] as String,
+          hash: value['hash'] as String,
+        ),
+      };
     } catch (_) {
       throw CloudAccountFailure.secretRead;
     }
   }
 
+  static String _encodeSecret(CloudCredentials credentials) =>
+      switch (credentials) {
+        SolusVm1Credentials() => jsonEncode({
+          'version': 1,
+          'provider': CloudProvider.solusVm1.name,
+          'key': credentials.key,
+          'hash': credentials.hash,
+        }),
+        RackNerdCredentials() => jsonEncode({
+          'version': 1,
+          'provider': CloudProvider.rackNerd.name,
+          'key': credentials.key,
+          'hash': credentials.hash,
+        }),
+        SolusVm2Credentials() => jsonEncode({
+          'version': 1,
+          'provider': CloudProvider.solusVm2.name,
+          'token': credentials.token,
+        }),
+      };
   Future<void> _cleanup(List<String> refs) async {
     for (final ref in refs) {
       try {

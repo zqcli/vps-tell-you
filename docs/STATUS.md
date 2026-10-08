@@ -1,20 +1,9 @@
 # 状态
 
-更新：2026-10-08 UTC
+更新：2026-10-07 UTC
 
 
-## 当前增量：面板接入共享重构
-
-基于 `291cd65`，按用户要求完成保持行为的 OOP 整理，不新增面板能力或更改协议。
-
-- `KeyHashCredentials` 共享字段/校验，保留 V1 与 RackNerd 的具体凭据类型隔离；`_SingleVpsAdapter` 共享读取骨架、API 状态检查、资源投影与匿名快照。
-- `CloudProviderDefinition` 集中工厂、凭据输入/类型验证/旧秘密编解码、端点规则与动态本地化说明；控制器和通用表单不再分散维护厂商分支。没有运行时插件注册或用户秘密缓存。
-- V1 multipart/status/XML、RackNerd form/info/JSON、V2 GET/分页及解析白名单均保持；时间、取消、TLS、秘密反射、重授权和身份围栏不变。schema10、secret envelope v1、ARB、依赖和备份均未改。
-- 同一批 `gpt-6.1-sol:xhigh` 核心/UI成员实施，独立审查 **APPROVE**。新核心62项及旧相关286项focused通过；主会话最终全量 **1071 passed / 2 failed**，两项仍是前次已确认的主题golden，其实际PNG与重构前逐字节相同；未修改golden或跳过失败。
-- 全仓analyze无问题、format152文件/0变化、diff检查通过；iOS Debug模拟器构建10.5秒成功，已原位安装并启动，schema10与原4条记录保持，外键检查为空。
-- 本轮未再次访问真实厂商API或读写用户秘密。结构、扩展规则及完整验证范围见 [CLOUD_ARCHITECTURE](CLOUD_ARCHITECTURE.md) / [ACCEPTANCE](ACCEPTANCE.md)。
-
-## 前一增量：RackNerd ctrl 独立面板支持
+## 当前增量：RackNerd ctrl 独立面板支持
 
 2026-10-08（UTC+8），基于 `1a7b35e`。RackNerd 的 `<ctrl>` XML 包装与仅返回状态的 `status` 接口不符合原 SolusVM 1 读取合同；新增 **RackNerd ctrl** 模板，使用独立 form `info` / JSON 协议，不改变其他厂商的 V1 multipart / status / XML 或 V2 GET 行为。操作说明与架构判断边界见 [RACKNERD](RACKNERD.md)。
 

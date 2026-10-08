@@ -85,7 +85,7 @@ flutter run -d <simulator-id>
 - `lib/finance`：纯 Dart 财务 / FX、付款、计算器、白名单 PNG 导出
 - `lib/security`：凭据元数据与原生存储、密钥校验、设备认证、SSH 配置、完整主机信任
 - `lib/connections`：SSH 服务 / xterm、临时连接、单目标 TCP、片段 / 待发送区与电源确认
-- `lib/cloud`：集中式面板定义、共享 Key/Hash 与单 VPS 读取模板、独立协议适配、账户 / API 观测、验证 / 导入 / 刷新 / 重新授权 / 解绑；扩展边界见 [CLOUD_ARCHITECTURE](docs/CLOUD_ARCHITECTURE.md)
+- `lib/cloud`：SolusVM / RackNerd ctrl 只读协议、独立账户 / API 观测、验证 / 导入 / 刷新 / 重新授权 / 解绑
 - `lib/settings`：分组、归档、币种与手动汇率、提醒纯逻辑 / 原生调度、权限、外观与备份
 - `lib/l10n`：官方 ARB / gen-l10n、简体中文与英文、稳定语言偏好和显示时本地化消息
 - `lib/app.dart`：启动恢复状态和四 Tab；使用 Flutter Navigator
