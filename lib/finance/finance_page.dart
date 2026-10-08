@@ -94,6 +94,7 @@ class _FinancePageState extends State<FinancePage> {
     listenable: widget.controller,
     builder: (context, _) {
       final c = widget.controller;
+      final colors = Theme.of(context).colorScheme;
       if (groupId != null &&
           groupId != '' &&
           !c.groups.any((g) => g.id == groupId)) {
@@ -218,57 +219,58 @@ class _FinancePageState extends State<FinancePage> {
               ),
             ),
           ),
-          Container(
+          LedgerCard(
+            key: const ValueKey('finance-summary'),
             padding: const EdgeInsets.all(22),
-            decoration: BoxDecoration(
-              color: const Color(0xFF1E355B),
-              borderRadius: BorderRadius.circular(17),
-            ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   context.l10n.financeMonthlyReference,
-                  style: TextStyle(color: Color(0xFFCAD5E7), fontSize: 12),
+                  style: Theme.of(context).textTheme.bodySmall,
                 ),
                 const SizedBox(height: 12),
                 InkWell(
                   key: const ValueKey('metric-monthly'),
+                  // Keep metadata legible when focus, hover and ripple overlap.
+                  highlightColor: Colors.transparent,
+                  splashColor: colors.primary.withValues(alpha: .02),
+                  focusColor: colors.primary.withValues(alpha: .03),
+                  hoverColor: colors.primary.withValues(alpha: .01),
                   onTap: () => detail(FinanceMetric.monthly),
-                  child: FinanceTotalView(total: monthly, dark: true),
+                  child: FinanceTotalView(total: monthly, emphasize: true),
                 ),
                 const SizedBox(height: 16),
                 TextButton(
                   onPressed: () => detail(FinanceMetric.inventory),
-                  child: Text(
-                    context.l10n.financeManagedCount(records.length),
-                    style: const TextStyle(color: Colors.white),
-                  ),
+                  child: Text(context.l10n.financeManagedCount(records.length)),
                 ),
-                const Divider(color: Color(0xFF476087)),
+                const Divider(),
                 const SizedBox(height: 16),
                 InkWell(
                   key: const ValueKey('metric-value'),
+                  highlightColor: Colors.transparent,
+                  splashColor: colors.primary.withValues(alpha: .02),
+                  focusColor: colors.primary.withValues(alpha: .03),
+                  hoverColor: colors.primary.withValues(alpha: .01),
                   onTap: () => detail(FinanceMetric.value),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
                         context.l10n.financeTotalRemaining,
-                        style: TextStyle(color: Color(0xFFCAD5E7)),
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
                       ),
-                      FinanceTotalView(
-                        total: values,
-                        dark: true,
-                        compact: true,
-                      ),
+                      FinanceTotalView(total: values, compact: true),
                     ],
                   ),
                 ),
                 const SizedBox(height: 14),
                 Text(
                   context.l10n.financeMonthlyNotPaid,
-                  style: TextStyle(fontSize: 12, color: Color(0xFFCAD5E7)),
+                  style: Theme.of(context).textTheme.bodySmall,
                 ),
               ],
             ),
