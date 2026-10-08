@@ -5,12 +5,10 @@ import '../l10n/locale_preference.dart';
 import '../l10n/localized_message.dart';
 import 'cloud_account.dart';
 import 'cloud_models.dart';
+import 'cloud_provider_definition.dart';
 
-String cloudProviderName(CloudProvider provider) => switch (provider) {
-  CloudProvider.solusVm1 => 'SolusVM 1',
-  CloudProvider.solusVm2 => 'SolusVM 2',
-  CloudProvider.rackNerd => 'RackNerd ctrl',
-};
+String cloudProviderName(CloudProvider provider) =>
+    CloudProviderDefinition.of(provider).displayName;
 
 String cloudPowerLabel(CloudPower power, {AppLocalizations? l10n}) {
   final strings = l10n ?? defaultLocalizations;

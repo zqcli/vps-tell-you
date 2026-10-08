@@ -34,9 +34,11 @@ class CloudReadLimits {
   final int responseBytes, totalBytes, pages, items;
 }
 
-/// One Key/Hash corresponds to one VPS; no account inventory or inferred ID.
-class SolusVm1Adapter implements CloudAdapter {
-  SolusVm1Adapter({
+/// The single-VPS operation is shared; request formats and field allowlists are
+/// supplied by the concrete adapters, never inferred from the credential shape.
+abstract class _SingleVpsAdapter<C extends KeyHashCredentials>
+    implements CloudAdapter {
+  _SingleVpsAdapter({
     required this.endpoint,
     required this.credentials,
     CloudReadLimits? limits,
@@ -46,92 +48,121 @@ class SolusVm1Adapter implements CloudAdapter {
        _clock = clock ?? DateTime.now,
        _clientFactory = clientFactory ?? http.Client.new;
   final CloudEndpoint endpoint;
-  final SolusVm1Credentials credentials;
+  final C credentials;
   final CloudReadLimits _limits;
   final DateTime Function() _clock;
   final http.Client Function() _clientFactory;
 
-  @override
-  Future<CloudSnapshot> read({required CloudCancellation cancellation}) async {
-    final session = _ReadSession(_limits, cancellation, _clientFactory);
-    final request =
-        http.MultipartRequest('POST', endpoint.uri('/api/client/command.php'))
-          ..fields.addAll({
-            'key': credentials.key,
-            'hash': credentials.hash,
-            'action': 'status',
-            'ipaddr': 'true',
-            'mem': 'true',
-            'hdd': 'true',
-            'bw': 'true',
-            'status': 'true',
-          });
-    final body = await session.send(request, responseLimit: 16 * 1024);
-    final now = _clock().toUtc();
-    final instance = _v1Instance(body, credentials, now);
-    session.check();
-    return CloudSnapshot(
-      provider: CloudProvider.solusVm1,
-      completedAt: now,
-      instances: [instance],
-    );
-  }
-}
-
-/// RackNerd ctrl has a separate form/JSON protocol, despite its Key/Hash shape.
-/// No status probe or fallback resends credentials to discover that protocol.
-class RackNerdAdapter implements CloudAdapter {
-  RackNerdAdapter({
-    required this.endpoint,
-    required this.credentials,
-    CloudReadLimits? limits,
-    DateTime Function()? clock,
-    http.Client Function()? clientFactory,
-  }) : _limits = limits ?? CloudReadLimits(),
-       _clock = clock ?? DateTime.now,
-       _clientFactory = clientFactory ?? http.Client.new;
-  final CloudEndpoint endpoint;
-  final RackNerdCredentials credentials;
-  final CloudReadLimits _limits;
-  final DateTime Function() _clock;
-  final http.Client Function() _clientFactory;
+  CloudProvider get _provider;
+  bool get _clockBeforeParsing;
+  http.BaseRequest _buildRequest();
+  Map<String, String> _parseFields(String body);
 
   @override
   Future<CloudSnapshot> read({required CloudCancellation cancellation}) async {
     final session = _ReadSession(_limits, cancellation, _clientFactory);
-    final request =
-        http.Request('POST', endpoint.uri('/api/client/command.php'))
-          ..bodyFields = {
-            'key': credentials.key,
-            'hash': credentials.hash,
-            'action': 'info',
-            'rdtype': 'json',
-            'status': 'true',
-            'ipaddr': 'true',
-            'bw': 'true',
-            'hdd': 'true',
-            'mem': 'true',
-          };
-    final body = await session.send(request, responseLimit: 16 * 1024);
-    final fields = _RackNerdJsonFields(body).parse();
+    final body = await session.send(_buildRequest(), responseLimit: 16 * 1024);
+    // Preserve the original clock contract: V1 observes before XML parsing;
+    // RackNerd observes only after successful JSON and API-field validation.
+    final beforeParsing = _clockBeforeParsing ? _clock().toUtc() : null;
+    final fields = _parseFields(body);
     if (fields['status'] == 'error') {
       throw const CloudFailure(CloudFailureKind.apiRejected);
     }
     if (fields['status'] != 'success' || !fields.containsKey('statusmsg')) {
       _invalid();
     }
-    final now = _clock().toUtc();
+    final now = beforeParsing ?? _clock().toUtc();
     final instance = _clientInstance(fields, [
       credentials.key,
       credentials.hash,
     ], now);
     session.check();
     return CloudSnapshot(
-      provider: CloudProvider.rackNerd,
+      provider: _provider,
       completedAt: now,
       instances: [instance],
     );
   }
+}
+
+/// One Key/Hash corresponds to one VPS; no account inventory or inferred ID.
+class SolusVm1Adapter extends _SingleVpsAdapter<SolusVm1Credentials> {
+  SolusVm1Adapter({
+    required super.endpoint,
+    required super.credentials,
+    super.limits,
+    super.clock,
+    super.clientFactory,
+  });
+
+  @override
+  CloudProvider get _provider => CloudProvider.solusVm1;
+  @override
+  bool get _clockBeforeParsing => true;
+  @override
+  http.BaseRequest _buildRequest() =>
+      http.MultipartRequest('POST', endpoint.uri('/api/client/command.php'))
+        ..fields.addAll({
+          'key': credentials.key,
+          'hash': credentials.hash,
+          'action': 'status',
+          'ipaddr': 'true',
+          'mem': 'true',
+          'hdd': 'true',
+          'bw': 'true',
+          'status': 'true',
+        });
+
+  @override
+  Map<String, String> _parseFields(String body) => _v1Fields(body, {
+    'status',
+    'statusmsg',
+    'vmstat',
+    'ipaddress',
+    'ipaddr',
+    'hostname',
+    'mem',
+    'hdd',
+    'bw',
+    'vcpu',
+    'cpus',
+  });
+}
+
+/// RackNerd ctrl has a separate form/JSON protocol, despite its Key/Hash shape.
+/// No status probe or fallback resends credentials to discover that protocol.
+class RackNerdAdapter extends _SingleVpsAdapter<RackNerdCredentials> {
+  RackNerdAdapter({
+    required super.endpoint,
+    required super.credentials,
+    super.limits,
+    super.clock,
+    super.clientFactory,
+  });
+
+  @override
+  CloudProvider get _provider => CloudProvider.rackNerd;
+  @override
+  bool get _clockBeforeParsing => false;
+  @override
+  http.BaseRequest _buildRequest() =>
+      http.Request('POST', endpoint.uri('/api/client/command.php'))
+        ..bodyFields = {
+          'key': credentials.key,
+          'hash': credentials.hash,
+          'action': 'info',
+          'rdtype': 'json',
+          'status': 'true',
+          'ipaddr': 'true',
+          'bw': 'true',
+          'hdd': 'true',
+          'mem': 'true',
+        };
+
+  @override
+  Map<String, String> _parseFields(String body) =>
+      _RackNerdJsonFields(body).parse();
 }
 
 class SolusVm2Adapter implements CloudAdapter {
@@ -511,38 +542,6 @@ int? _v1Unsigned(String? value) {
     return null;
   }
   return (total: total, used: used);
-}
-
-CloudInstance _v1Instance(
-  String body,
-  SolusVm1Credentials credentials,
-  DateTime observedAt,
-) {
-  // Explicit response allowlist. No extra requests, speculative resource flags,
-  // Admin API, provider names or package names are used to obtain missing data.
-  final fields = _v1Fields(body, {
-    'status',
-    'statusmsg',
-    'vmstat',
-    'ipaddress',
-    'ipaddr',
-    'hostname',
-    'mem',
-    'hdd',
-    'bw',
-    'vcpu',
-    'cpus',
-  });
-  if (fields['status'] == 'error') {
-    throw const CloudFailure(CloudFailureKind.apiRejected);
-  }
-  if (fields['status'] != 'success' || !fields.containsKey('statusmsg')) {
-    _invalid();
-  }
-  return _clientInstance(fields, [
-    credentials.key,
-    credentials.hash,
-  ], observedAt);
 }
 
 /// Shared Client API resource units and secret filtering, not shared protocols.

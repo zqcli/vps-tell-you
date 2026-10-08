@@ -256,59 +256,115 @@ void main() {
     );
   });
 
-  testWidgets(
-    'RackNerd endpoint review and Key Hash drafts translate without API or secret access',
-    (tester) async {
-      await mount(
-        tester,
-        CloudAuthorizationPage(
-          ledger: ledger,
-          provider: CloudProvider.rackNerd,
-        ),
-      );
-      await fill(tester, 'cloud-endpoint', 'invalid');
-      await fill(tester, 'cloud-key', 'synthetic-draft-key');
-      await fill(tester, 'cloud-hash', 'synthetic-draft-hash');
-      await tapKey(tester, 'verify-cloud');
-      await language(tester, LocalePreference.english);
-      await reveal(tester, find.byKey(const ValueKey('cloud-endpoint')));
-      expect(
-        find.text(english.cloudRackNerdEndpointValidation),
-        findsOneWidget,
-      );
-      await fill(
-        tester,
-        'cloud-endpoint',
-        'https://panel.example:8443/api/client/command.php',
-      );
-      final englishTarget = english.cloudVerifyTarget(
-        english.cloudRackNerdApiPathRemoved,
-        'https://panel.example:8443',
-      );
-      await reveal(tester, find.text(englishTarget));
-      expect(find.text(englishTarget), findsOneWidget);
-      await language(tester, LocalePreference.chinese);
-      final chineseTarget = chinese.cloudVerifyTarget(
-        chinese.cloudRackNerdApiPathRemoved,
-        'https://panel.example:8443',
-      );
-      expect(find.text(chineseTarget), findsOneWidget);
-      for (final item in {
-        'cloud-key': 'synthetic-draft-key',
-        'cloud-hash': 'synthetic-draft-hash',
-      }.entries) {
-        final target = find.byKey(ValueKey(item.key));
-        await reveal(tester, target);
-        expect(
-          tester.widget<TextFormField>(target).controller!.text,
-          item.value,
-        );
+  testWidgets('all three template descriptions retain their localized copy', (
+    tester,
+  ) async {
+    await mount(tester, CloudTemplatesPage(ledger: ledger));
+    for (final (preference, strings) in [
+      (LocalePreference.chinese, chinese),
+      (LocalePreference.english, english),
+    ]) {
+      await language(tester, preference);
+      for (final (name, description) in [
+        ('SolusVM 1', strings.cloudV1TemplateInfo),
+        ('SolusVM 2', strings.cloudV2TemplateInfo),
+        ('RackNerd ctrl', strings.cloudRackNerdTemplateInfo),
+      ]) {
+        await reveal(tester, find.text(description));
+        expect(find.text(name), findsOneWidget);
+        expect(find.text(description), findsOneWidget);
       }
-      expect(calls, 0);
-      expect(secrets.reads + secrets.writes + secrets.deletes, 0);
-      expect(await store.cloudAccounts(), isEmpty);
-    },
-  );
+    }
+    expect(calls, 0);
+    expect(secrets.reads + secrets.writes + secrets.deletes, 0);
+  });
+
+  for (final provider in [CloudProvider.solusVm1, CloudProvider.rackNerd]) {
+    testWidgets(
+      '${provider.name} endpoint review and Key Hash drafts translate without API or secret access',
+      (tester) async {
+        final v1 = provider == CloudProvider.solusVm1;
+        await mount(
+          tester,
+          CloudAuthorizationPage(ledger: ledger, provider: provider),
+        );
+        expect(
+          tester
+              .widget<TextField>(
+                find.descendant(
+                  of: find.byKey(const ValueKey('cloud-endpoint')),
+                  matching: find.byType(TextField),
+                ),
+              )
+              .decoration!
+              .hintText,
+          v1 ? 'https://panel.example.com:5656' : 'https://panel.example.com',
+        );
+        await fill(tester, 'cloud-endpoint', 'invalid');
+        await fill(tester, 'cloud-key', 'synthetic-draft-key');
+        await fill(tester, 'cloud-hash', 'synthetic-draft-hash');
+        await tapKey(tester, 'verify-cloud');
+        await language(tester, LocalePreference.english);
+        await reveal(tester, find.byKey(const ValueKey('cloud-endpoint')));
+        expect(
+          find.text(
+            v1
+                ? english.cloudEndpointValidation
+                : english.cloudRackNerdEndpointValidation,
+          ),
+          findsOneWidget,
+        );
+        await fill(
+          tester,
+          'cloud-endpoint',
+          v1
+              ? 'https://panel.example:8443/home.php'
+              : 'https://panel.example:8443/api/client/command.php',
+        );
+        final info = v1
+            ? english.cloudEndpointInfo
+            : english.cloudRackNerdEndpointInfo;
+        await reveal(tester, find.text(info));
+        expect(find.text(info), findsOneWidget);
+        final englishTarget = english.cloudVerifyTarget(
+          v1
+              ? english.cloudConsolePathRemoved
+              : english.cloudRackNerdApiPathRemoved,
+          'https://panel.example:8443',
+        );
+        await reveal(tester, find.text(englishTarget));
+        expect(find.text(englishTarget), findsOneWidget);
+        await language(tester, LocalePreference.chinese);
+        final chineseTarget = chinese.cloudVerifyTarget(
+          v1
+              ? chinese.cloudConsolePathRemoved
+              : chinese.cloudRackNerdApiPathRemoved,
+          'https://panel.example:8443',
+        );
+        expect(find.text(chineseTarget), findsOneWidget);
+        final credentialsInfo = v1
+            ? chinese.cloudV1CredentialsInfo
+            : chinese.cloudRackNerdCredentialsInfo;
+        await reveal(tester, find.text(credentialsInfo));
+        expect(find.text(credentialsInfo), findsOneWidget);
+        expect(find.byKey(const ValueKey('cloud-token')), findsNothing);
+        for (final item in {
+          'cloud-key': 'synthetic-draft-key',
+          'cloud-hash': 'synthetic-draft-hash',
+        }.entries) {
+          final target = find.byKey(ValueKey(item.key));
+          await reveal(tester, target);
+          expect(
+            tester.widget<TextFormField>(target).controller!.text,
+            item.value,
+          );
+        }
+        expect(calls, 0);
+        expect(secrets.reads + secrets.writes + secrets.deletes, 0);
+        expect(await store.cloudAccounts(), isEmpty);
+      },
+    );
+  }
 
   testWidgets(
     'authorization draft and validation survive persisted language change',
@@ -325,6 +381,21 @@ void main() {
       await fill(tester, 'cloud-endpoint', 'https://panel.example:8443');
       await fill(tester, 'cloud-token', 'fixture-draft-token');
       await language(tester, LocalePreference.english);
+      final endpoint = find.byKey(const ValueKey('cloud-endpoint'));
+      await reveal(tester, endpoint);
+      expect(
+        tester
+            .widget<TextField>(
+              find.descendant(of: endpoint, matching: find.byType(TextField)),
+            )
+            .decoration!
+            .hintText,
+        'https://panel.example.com',
+      );
+      await reveal(tester, find.text(english.cloudEndpointInfo));
+      expect(find.text(english.cloudEndpointInfo), findsOneWidget);
+      await reveal(tester, find.text(english.cloudV2CredentialsInfo));
+      expect(find.text(english.cloudV2CredentialsInfo), findsOneWidget);
       for (final item in {
         'cloud-alias': alias,
         'cloud-endpoint': 'https://panel.example:8443',

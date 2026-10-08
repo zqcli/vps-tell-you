@@ -554,3 +554,26 @@ SimRenderServer/MetalDeviceDescriptor.swift:40: Fatal error: Attempt to initiali
 ### 剩余边界
 
 RackNerd ctrl是已核对的接口标识，不能仅凭兼容路径判断底层一定是SolusVM1或2。新类型的真机安全存储保存、通知/分享/后台仍需设备验收；既有主题golden的跨环境一致性问题单独保留，不属于本轮RackNerd协议回归。没有推送、发布或任何真实VPS电源操作。
+
+
+## 面板接入共享重构（2026-10-08）
+
+基于 `291cd65`，接手时工作区及暂存区干净。用户要求复用 SolusVM / RackNerd 可共用逻辑并避免厂商分支扩散；本次仅整理结构，保持现有行为。方案见 [CLOUD_ARCHITECTURE](CLOUD_ARCHITECTURE.md)。
+
+### 改动及兼容性
+
+- 新增共享 `KeyHashCredentials` 字段/验证父类，但 V1/RackNerd 具体类型、旧构造及名义类型隔离保持。
+- 新增私有 `_SingleVpsAdapter` 模板方法：共用独立 session、单次16 KiB发送、API状态校验、资源投影、最终取消检查和匿名快照；具体adapter保留固定请求与各自解析器/白名单。保持V1解析前取时、RackNerd成功字段校验后取时的顺序。
+- 封闭不可变 `CloudProviderDefinition` 集中三种provider的工厂、凭据构造/验证、version1 envelope编解码、输入地址和本地化规则；无Widget依赖、动态插件注册或用户秘密缓存。UI按`credentialKind`显示字段，`isSingleInstance`仍只承载身份/导入语义。
+- 控制器默认工厂与UI委托definition，原`CloudAdapterFactory`注入、刷新已存origin严格校验、生命周期、secretRead错误转换和事务协调保持；loopback nativefixture在原host/port gate后复用同一工厂。
+- `git diff`确认`lib/data`、ARB/生成文案、`pubspec.yaml` / lock无变化；schema10、稳定provider值、secret envelope v1和JSON备份v1不变。没有重编码/迁移旧秘密，不要求已有连接重新授权。
+
+### 验证结果
+
+- 持续使用`cus-resp/gpt-6.1-sol:xhigh`的rack-core/rack-ui实施；rack-review独立只读审查 **APPROVE**，未发现可证实行为回归或阻碍。
+- 两个新核心测试文件 **62/62通过**，原协议/资源/控制器/独立回归/TLS七文件 **286/286通过**；新增行为断言覆盖所有provider/credential交叉组合、手写旧envelope、编码字段顺序、错误安全、窄范围端点规则、原公开adapter接口、实际wire/injection、共享资源且CPU白名单隔离、取时及取消顺序。UI三种模板双语说明、地址规范化和凭据草稿语言切换另补回归。
+- 主会话最终`flutter analyze --no-pub`：No issues found；`dart format --output=none --set-exit-if-changed lib test`：**152文件 / 0变化**；`git diff --check`通过。Flutter3.47.6 / Dart3.13.5，未新增依赖或重生成本地化。
+- 最终全量使用现有独立AsyncSSH fixture、并发4：**1071通过 / 2失败，退出码1**，约85秒。相对上轮新增64项。两失败仍为`mobile_theme_test.dart`浅/深色golden；实际PNG与前次已经和未修改基线核对过的输出`cmp`逐字节相同，不属于本次重构变化，未修改golden、弱化或跳过断言。完整日志`build/cloud-oop-test.log`，失败图片`build/cloud-oop-verification/theme-failures/`，均不提交。
+- iOS生产入口`flutter build ios --simulator --debug --no-codesign --no-pub`退出码0，Xcode构建 **10.5秒**；iPhone17Pro / iOS26.2原位安装并启动，未卸载清数据。安装前后schema均10、servers均4、三个云表均0，`foreign_key_check`为空。App保留运行，截图和无秘密启动日志在`build/cloud-oop-verification/`。
+
+本轮未再次请求真实RackNerd或其他厂商API、未操作用户钥匙环/秘密或SSH；所有协议/存储行为检查使用合成或loopback资料。模拟器启动不代替真实API新增授权保存、全部交互或真机验收；前次真实RackNerd只读成功记录仍按前次范围保留。

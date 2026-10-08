@@ -13,6 +13,7 @@ import '../servers/server_resource_fields.dart';
 import '../servers/server_resources.dart';
 import 'cloud_controller.dart';
 import 'cloud_models.dart';
+import 'cloud_provider_definition.dart';
 import 'cloud_widgets.dart';
 
 Future<void> _reloadLedger(LedgerController ledger) =>
@@ -248,12 +249,8 @@ class _CloudTemplatesPageState extends State<CloudTemplatesPage> {
               child: SettingRow(
                 icon: Icons.cloud_outlined,
                 title: cloudProviderName(provider),
-                subtitle: switch (provider) {
-                  CloudProvider.solusVm1 => context.l10n.cloudV1TemplateInfo,
-                  CloudProvider.solusVm2 => context.l10n.cloudV2TemplateInfo,
-                  CloudProvider.rackNerd =>
-                    context.l10n.cloudRackNerdTemplateInfo,
-                },
+                subtitle: CloudProviderDefinition.of(provider)
+                    .templateInfo(context.l10n),
                 onTap: () => choose(context, provider),
               ),
             ),
@@ -291,18 +288,15 @@ class _CloudAuthorizationPageState extends State<CloudAuthorizationPage>
   final hashField = TextEditingController();
   final token = TextEditingController();
   CloudController get cloud => widget.ledger.cloud;
+  CloudProviderDefinition get definition =>
+      CloudProviderDefinition.of(widget.provider);
   bool get singleInstance => widget.provider.isSingleInstance;
-  bool get rackNerd => widget.provider == CloudProvider.rackNerd;
   bool reading = false, navigating = false;
   int serial = 0;
   LocalizedMessage? error;
   CloudEndpoint? get parsedEndpoint {
     try {
-      return CloudEndpoint.parse(
-        endpoint.text,
-        allowSolusVm1ConsolePath: widget.provider == CloudProvider.solusVm1,
-        allowRackNerdApiPath: rackNerd,
-      );
+      return definition.parseEndpoint(endpoint.text);
     } on CloudFailure {
       return null;
     }
@@ -389,17 +383,11 @@ class _CloudAuthorizationPageState extends State<CloudAuthorizationPage>
     });
     CloudVerification? verified;
     try {
-      final credentials = switch (widget.provider) {
-        CloudProvider.solusVm1 => SolusVm1Credentials(
-          key: keyField.text,
-          hash: hashField.text,
-        ),
-        CloudProvider.solusVm2 => SolusVm2Credentials(token.text),
-        CloudProvider.rackNerd => RackNerdCredentials(
-          key: keyField.text,
-          hash: hashField.text,
-        ),
-      };
+      final credentials = definition.createCredentials(
+        key: keyField.text,
+        hash: hashField.text,
+        token: token.text,
+      );
       verified = await cloud.verifyConnection(
         provider: widget.provider,
         endpoint: endpoint.text,
@@ -522,22 +510,14 @@ class _CloudAuthorizationPageState extends State<CloudAuthorizationPage>
               decoration: InputDecoration(
                 labelText: context.l10n.cloudEndpointLabel,
                 errorMaxLines: 6,
-                hintText: widget.provider == CloudProvider.solusVm1
-                    ? 'https://panel.example.com:5656'
-                    : 'https://panel.example.com',
+                hintText: definition.endpointHint,
               ),
               onChanged: (_) => setState(() => error = null),
               validator: (_) => parsedEndpoint == null
-                  ? rackNerd
-                        ? context.l10n.cloudRackNerdEndpointValidation
-                        : context.l10n.cloudEndpointValidation
+                  ? definition.endpointValidation(context.l10n)
                   : null,
             ),
-            InfoNote(
-              rackNerd
-                  ? context.l10n.cloudRackNerdEndpointInfo
-                  : context.l10n.cloudEndpointInfo,
-            ),
+            InfoNote(definition.endpointInfo(context.l10n)),
             if (parsedEndpoint case final target?)
               CloudNotice(
                 context.l10n.cloudVerifyTarget(
@@ -551,18 +531,12 @@ class _CloudAuthorizationPageState extends State<CloudAuthorizationPage>
               ),
             if (widget.existing != null)
               InfoNote(context.l10n.cloudEndpointIdentityInfo),
-            if (singleInstance) ...[
+            if (definition.credentialKind == CloudCredentialKind.keyHash) ...[
               secretField(keyField, 'API Key', 'cloud-key'),
               secretField(hashField, 'API Hash', 'cloud-hash'),
-              InfoNote(
-                rackNerd
-                    ? context.l10n.cloudRackNerdCredentialsInfo
-                    : context.l10n.cloudV1CredentialsInfo,
-              ),
-            ] else ...[
+            ] else
               secretField(token, 'API Token', 'cloud-token'),
-              InfoNote(context.l10n.cloudV2CredentialsInfo),
-            ],
+            InfoNote(definition.credentialsInfo(context.l10n)),
             if (singleInstance && widget.existing != null)
               CloudNotice(context.l10n.cloudV1ReauthorizationInfo, error: true),
             if (!singleInstance && widget.existing != null)
@@ -618,6 +592,8 @@ class _CloudImportPageState extends State<CloudImportPage>
       widget.verification?.snapshot ?? widget.inventory!.snapshot;
   CloudAccount? get account =>
       widget.verification?.existingAccount ?? widget.inventory?.account;
+  CloudProviderDefinition get definition =>
+      CloudProviderDefinition.of(snapshot.provider);
   bool get singleInstance => snapshot.provider.isSingleInstance;
   bool get rebind =>
       singleInstance && widget.verification?.existingAccount != null;
@@ -908,11 +884,8 @@ class _CloudImportPageState extends State<CloudImportPage>
                 'vcpu': snapshot.instances.single.vcpu,
               },
             ),
-          InfoNote(
-            snapshot.provider == CloudProvider.rackNerd
-                ? context.l10n.cloudRackNerdResourcesInfo
-                : context.l10n.cloudV1ResourcesInfo,
-          ),
+          if (definition.resourceCompletionInfo(context.l10n) case final info?)
+            InfoNote(info),
         ],
         if (rebind) ...[
           CloudNotice(context.l10n.cloudRebindWarning, error: true),

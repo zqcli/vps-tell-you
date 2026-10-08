@@ -9,7 +9,7 @@ import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:vps_tell_you/app.dart';
 import 'package:vps_tell_you/cloud/cloud_controller.dart';
 import 'package:vps_tell_you/cloud/cloud_models.dart';
-import 'package:vps_tell_you/cloud/solusvm_adapter.dart';
+import 'package:vps_tell_you/cloud/cloud_provider_definition.dart';
 import 'package:vps_tell_you/core/app_theme.dart';
 import 'package:vps_tell_you/data/ledger_store.dart';
 import 'package:vps_tell_you/security/security_controller.dart';
@@ -41,23 +41,8 @@ Future<void> main() async {
         throw const CloudFailure(CloudFailureKind.invalidEndpoint);
       }
       IOClient clientFactory() => IOClient(HttpClient(context: trust));
-      return switch (provider) {
-        CloudProvider.solusVm1 => SolusVm1Adapter(
-          endpoint: endpoint,
-          credentials: credentials as SolusVm1Credentials,
-          clientFactory: clientFactory,
-        ),
-        CloudProvider.solusVm2 => SolusVm2Adapter(
-          endpoint: endpoint,
-          credentials: credentials as SolusVm2Credentials,
-          clientFactory: clientFactory,
-        ),
-        CloudProvider.rackNerd => RackNerdAdapter(
-          endpoint: endpoint,
-          credentials: credentials as RackNerdCredentials,
-          clientFactory: clientFactory,
-        ),
-      };
+      return CloudProviderDefinition.of(provider)
+          .createAdapter(endpoint, credentials, clientFactory: clientFactory);
     },
   );
   final ledger = LedgerController(store, security: security, cloud: cloud);

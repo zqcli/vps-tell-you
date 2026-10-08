@@ -129,8 +129,8 @@ sealed class CloudCredentials {
   const CloudCredentials();
 }
 
-class SolusVm1Credentials extends CloudCredentials {
-  SolusVm1Credentials({required this.key, required this.hash}) {
+sealed class KeyHashCredentials extends CloudCredentials {
+  KeyHashCredentials({required this.key, required this.hash}) {
     if (!_validSecret(key) || !_validSecret(hash)) {
       throw const CloudFailure(CloudFailureKind.invalidCredentials);
     }
@@ -138,13 +138,12 @@ class SolusVm1Credentials extends CloudCredentials {
   final String key, hash;
 }
 
-class RackNerdCredentials extends CloudCredentials {
-  RackNerdCredentials({required this.key, required this.hash}) {
-    if (!_validSecret(key) || !_validSecret(hash)) {
-      throw const CloudFailure(CloudFailureKind.invalidCredentials);
-    }
-  }
-  final String key, hash;
+class SolusVm1Credentials extends KeyHashCredentials {
+  SolusVm1Credentials({required super.key, required super.hash});
+}
+
+class RackNerdCredentials extends KeyHashCredentials {
+  RackNerdCredentials({required super.key, required super.hash});
 }
 
 class SolusVm2Credentials extends CloudCredentials {
