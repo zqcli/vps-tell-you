@@ -3,6 +3,8 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
+import 'package:vps_tell_you/cloud/cloud_widgets.dart';
+import 'package:vps_tell_you/core/ui/ui.dart';
 import 'package:vps_tell_you/cloud/cloud_controller.dart';
 import 'package:vps_tell_you/cloud/cloud_models.dart';
 import 'package:vps_tell_you/cloud/server_cloud_binding_page.dart';
@@ -207,7 +209,7 @@ void main() {
 
   Future<void> saveDisabled(WidgetTester tester) async {
     final target = await reveal(tester, 'server-cloud-save');
-    expect(tester.widget<FilledButton>(target).onPressed, isNull);
+    expect(tester.widget<AppButton>(target).onPressed, isNull);
   }
 
   testWidgets(
@@ -223,8 +225,17 @@ void main() {
         ),
         findsOneWidget,
       );
-      expect(find.byType(CheckboxListTile), findsNothing);
-      expect(find.byType(ListTile), findsNothing);
+      expect(find.byType(CloudCheckRow), findsNothing);
+      expect(
+        find.byWidgetPredicate(
+          (widget) =>
+              widget.key is ValueKey<String> &&
+              (widget.key as ValueKey<String>).value.startsWith(
+                'server-cloud-account-',
+              ),
+        ),
+        findsNothing,
+      );
       await saveDisabled(tester);
       await tap(tester, 'server-cloud-reload');
       await saveDisabled(tester);
@@ -287,12 +298,21 @@ void main() {
         findsOneWidget,
       );
       expect(find.text('Observed north'), findsOneWidget);
-      expect(find.byType(CheckboxListTile), findsNothing);
-      expect(find.byType(ListTile), findsNothing);
+      expect(find.byType(CloudCheckRow), findsNothing);
+      expect(
+        find.byWidgetPredicate(
+          (widget) =>
+              widget.key is ValueKey<String> &&
+              (widget.key as ValueKey<String>).value.startsWith(
+                'server-cloud-account-',
+              ),
+        ),
+        findsNothing,
+      );
       await saveDisabled(tester);
       await tap(tester, 'server-cloud-reload');
       final unlink = await reveal(tester, 'server-cloud-unbind');
-      expect(tester.widget<TextButton>(unlink).onPressed, isNotNull);
+      expect(tester.widget<AppRow>(unlink).onTap, isNotNull);
       await tester.tap(unlink);
       await tester.pumpAndSettle();
       await tester.tap(find.text('Cancel'));
@@ -326,13 +346,13 @@ void main() {
     );
     await mount(tester);
     final row = await reveal(tester, 'server-cloud-account-north');
-    expect(tester.widget<ListTile>(row).onTap, isNull);
+    expect(tester.widget<AppRow>(row).onTap, isNull);
     expect(
       find.textContaining('authorization scope is unverified'),
       findsWidgets,
     );
     final item = await reveal(tester, 'server-cloud-instance-north-7/2/3');
-    expect(tester.widget<CheckboxListTile>(item).onChanged, isNull);
+    expect(tester.widget<CloudCheckRow>(item).onChanged, isNull);
     await saveDisabled(tester);
     expect(await store.cloudBindings(), isEmpty);
   });
@@ -377,13 +397,13 @@ void main() {
       );
       await mount(tester);
       final row = await reveal(tester, 'server-cloud-account-single');
-      expect(tester.widget<ListTile>(row).onTap, isNull);
+      expect(tester.widget<AppRow>(row).onTap, isNull);
       expect(
         find.textContaining('pinned to another local server'),
         findsWidgets,
       );
       final item = await reveal(tester, 'server-cloud-instance-single-single');
-      expect(tester.widget<CheckboxListTile>(item).onChanged, isNull);
+      expect(tester.widget<CloudCheckRow>(item).onChanged, isNull);
       await saveDisabled(tester);
       expect(await store.cloudBindings(), isEmpty);
       expect((await store.cloudAccounts()).single.pinnedServerId, 'original');
@@ -426,7 +446,7 @@ void main() {
       }
       await mount(tester);
       final item = await reveal(tester, 'server-cloud-instance-north-7/2/3');
-      expect(tester.widget<CheckboxListTile>(item).onChanged, isNull);
+      expect(tester.widget<CloudCheckRow>(item).onChanged, isNull);
       final strings = AppLocalizations.of(tester.element(item));
       expect(
         find.textContaining(
@@ -457,7 +477,7 @@ void main() {
     });
     await tap(tester, 'server-cloud-reload');
     final item = await reveal(tester, 'server-cloud-instance-south-7/2/3');
-    expect(tester.widget<CheckboxListTile>(item).value, isFalse);
+    expect(tester.widget<CloudCheckRow>(item).value, isFalse);
     expect(
       find.byKey(const ValueKey('server-cloud-account-north')),
       findsNothing,
@@ -482,7 +502,7 @@ void main() {
     locale.value = const Locale('zh');
     await tester.pumpAndSettle();
     final item = await reveal(tester, 'server-cloud-instance-north-7/2/3');
-    expect(tester.widget<CheckboxListTile>(item).value, isTrue);
+    expect(tester.widget<CloudCheckRow>(item).value, isTrue);
     await reveal(tester, 'server-cloud-save');
     expect(tester.takeException(), isNull);
     expect(await store.cloudBindings(), isEmpty);

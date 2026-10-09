@@ -8342,6 +8342,36 @@ abstract class AppLocalizations {
   /// **'提供商管理'**
   String get providerUiTitle;
 
+  /// Cloud / provider UI.
+  ///
+  /// In zh, this message translates to:
+  /// **'提供商'**
+  String get uiCloudProvidersTitle;
+
+  /// Cloud / provider UI.
+  ///
+  /// In zh, this message translates to:
+  /// **'归属待确认'**
+  String get uiCloudNeedsReviewPill;
+
+  /// Cloud / provider UI.
+  ///
+  /// In zh, this message translates to:
+  /// **'归属提供商'**
+  String get uiCloudOwnerSection;
+
+  /// Cloud / provider UI.
+  ///
+  /// In zh, this message translates to:
+  /// **'添加方式'**
+  String get uiCloudMethodSection;
+
+  /// Cloud / provider UI.
+  ///
+  /// In zh, this message translates to:
+  /// **'面板密钥只存入设备安全存储，读取不会修改远端。'**
+  String get uiCloudAddFooter;
+
   /// Provider navigation and ownership UI.
   ///
   /// In zh, this message translates to:

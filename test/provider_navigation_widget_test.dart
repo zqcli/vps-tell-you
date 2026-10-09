@@ -1,8 +1,11 @@
 import 'dart:io';
 
+import 'package:flutter/cupertino.dart'
+    show CupertinoAlertDialog, CupertinoDialogAction;
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
+import 'package:vps_tell_you/core/ui/ui.dart';
 import 'package:vps_tell_you/cloud/cloud_controller.dart';
 import 'package:vps_tell_you/cloud/cloud_models.dart';
 import 'package:vps_tell_you/cloud/cloud_pages.dart';
@@ -219,7 +222,7 @@ void main() {
       await tap(tester, 'choose-provider-unspecified');
       expect(
         tester
-            .widget<SettingRow>(find.byKey(const ValueKey('add-automatic')))
+            .widget<AppRow>(find.byKey(const ValueKey('add-automatic')))
             .onTap,
         isNull,
       );
@@ -248,9 +251,7 @@ void main() {
   ) async {
     await mount(tester, AddServerPage(ledger: ledger));
     await tap(tester, 'choose-provider-north');
-    final row = tester.widget<SettingRow>(
-      find.byKey(const ValueKey('add-manual')),
-    );
+    final row = tester.widget<AppRow>(find.byKey(const ValueKey('add-manual')));
     row.onTap!();
     row.onTap!();
     await tester.pumpAndSettle();
@@ -313,13 +314,13 @@ void main() {
         'New Provider',
       );
       ledger.failReload = true;
-      final button = tester.widget<FilledButton>(
+      final button = tester.widget<CupertinoDialogAction>(
         find.byKey(const ValueKey('provider-save')),
       );
       button.onPressed!();
       button.onPressed!();
       await tester.pumpAndSettle();
-      expect(find.byType(AlertDialog), findsNothing);
+      expect(find.byType(CupertinoAlertDialog), findsNothing);
       expect(ledger.refreshFailed, isTrue);
       expect(
         (await store.providers()).where((p) => p.name == 'New Provider').length,
@@ -327,10 +328,8 @@ void main() {
       );
       expect(
         tester
-            .widget<OutlinedButton>(
-              find.byKey(const ValueKey('choose-provider-add')),
-            )
-            .onPressed,
+            .widget<AppRow>(find.byKey(const ValueKey('choose-provider-add')))
+            .onTap,
         isNull,
       );
       ledger.failReload = false;
@@ -369,7 +368,7 @@ void main() {
       );
       final pinned = find.byKey(const ValueKey('choose-instance-north-single'));
       await tester.ensureVisible(pinned);
-      expect(tester.widget<SettingRow>(pinned).onTap, isNull);
+      expect(tester.widget<AppRow>(pinned).onTap, isNull);
       expect(find.textContaining('pinned to'), findsOneWidget);
       expect(secrets.reads, 0);
       await tap(tester, 'pinned-device-north-single');
@@ -461,9 +460,7 @@ void main() {
       await mount(tester, ProviderPickerPage(ledger: ledger));
       expect(
         tester
-            .widget<SettingRow>(
-              find.byKey(const ValueKey('choose-provider-north')),
-            )
+            .widget<AppRow>(find.byKey(const ValueKey('choose-provider-north')))
             .onTap,
         isNull,
       );
@@ -478,13 +475,13 @@ void main() {
       await tap(tester, 'choose-provider-south');
       expect(
         find.descendant(
-          of: find.byType(AlertDialog),
+          of: find.byType(CupertinoAlertDialog),
           matching: find.textContaining('Device review'),
         ),
         findsOneWidget,
       );
       final confirm = find.widgetWithText(
-        FilledButton,
+        CupertinoDialogAction,
         'Confirm instance provider',
       );
       await tester.tap(confirm);

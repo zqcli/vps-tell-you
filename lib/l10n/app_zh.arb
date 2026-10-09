@@ -3852,6 +3852,26 @@
   "@providerUiTitle": {
     "description": "Provider navigation and ownership UI."
   },
+  "uiCloudProvidersTitle": "提供商",
+  "@uiCloudProvidersTitle": {
+    "description": "Cloud / provider UI."
+  },
+  "uiCloudNeedsReviewPill": "归属待确认",
+  "@uiCloudNeedsReviewPill": {
+    "description": "Cloud / provider UI."
+  },
+  "uiCloudOwnerSection": "归属提供商",
+  "@uiCloudOwnerSection": {
+    "description": "Cloud / provider UI."
+  },
+  "uiCloudMethodSection": "添加方式",
+  "@uiCloudMethodSection": {
+    "description": "Cloud / provider UI."
+  },
+  "uiCloudAddFooter": "面板密钥只存入设备安全存储，读取不会修改远端。",
+  "@uiCloudAddFooter": {
+    "description": "Cloud / provider UI."
+  },
   "providerUiDetails": "提供商详情",
   "@providerUiDetails": {
     "description": "Provider navigation and ownership UI."

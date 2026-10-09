@@ -5215,6 +5215,22 @@ class AppLocalizationsEn extends AppLocalizations {
   String get providerUiTitle => 'Providers';
 
   @override
+  String get uiCloudProvidersTitle => 'Providers';
+
+  @override
+  String get uiCloudNeedsReviewPill => 'Ownership pending';
+
+  @override
+  String get uiCloudOwnerSection => 'Provider';
+
+  @override
+  String get uiCloudMethodSection => 'How to add';
+
+  @override
+  String get uiCloudAddFooter =>
+      'Panel keys are stored only in secure device storage. Reading never changes the remote panel.';
+
+  @override
   String get providerUiDetails => 'Provider details';
 
   @override

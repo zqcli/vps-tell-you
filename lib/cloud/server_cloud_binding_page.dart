@@ -1,6 +1,7 @@
+import 'package:flutter/cupertino.dart' show CupertinoActivityIndicator;
 import 'package:flutter/material.dart';
 
-import '../core/app_theme.dart';
+import '../core/ui/ui.dart';
 import '../l10n/generated/app_localizations.dart';
 import '../l10n/locale_preference.dart';
 import '../l10n/localized_message.dart';
@@ -210,7 +211,7 @@ class _ServerCloudBindingPageState extends State<ServerCloudBindingPage> {
     }
     if (options.current != null) {
       setState(() => _confirming = true);
-      final confirmed = await confirmAction(
+      final confirmed = await showAppConfirm(
         context,
         title: LocalizedText(
           (l10n) => unlink
@@ -258,18 +259,13 @@ class _ServerCloudBindingPageState extends State<ServerCloudBindingPage> {
     });
     if (!saved) return;
     if (widget.ledger.cloud.needsReload) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Builder(
-          builder: (context) => Text(
-            localizedText(
-              unlink
-                  ? LocalizedText((l10n) => l10n.cloudServerUnlinked)
-                  : LocalizedText((l10n) => l10n.cloudBindingSaved),
-              context.l10n,
-            ),
-          ),
-        ),
+    showAppToast(
+      context,
+      localizedText(
+        unlink
+            ? LocalizedText((l10n) => l10n.cloudServerUnlinked)
+            : LocalizedText((l10n) => l10n.cloudBindingSaved),
+        context.l10n,
       ),
     );
     Navigator.pop(context, true);
@@ -294,194 +290,199 @@ class _ServerCloudBindingPageState extends State<ServerCloudBindingPage> {
           .toList();
       return PopScope<bool>(
         canPop: !_saving,
-        child: Scaffold(
-          appBar: AppBar(title: Text(context.l10n.cloudLinkPanelAccount)),
-          body: Center(
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 760),
-              child: ListView(
-                padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
+        child: AppScaffold(
+          title: context.l10n.cloudLinkPanelAccount,
+          largeTitle: false,
+          children: [
+            if (_loading)
+              const Padding(
+                padding: EdgeInsets.all(24),
+                child: Center(child: CupertinoActivityIndicator()),
+              ),
+            if (_committed) CloudNotice(context.l10n.cloudBindingCommitted),
+            if (_error != null) CloudNotice(_error!, error: true),
+            if (widget.ledger.refreshFailed)
+              CloudNotice(context.l10n.cloudLedgerNotUpdated, error: true),
+            AppSection(
+              topSpacing: 12,
+              footer: options == null
+                  ? context.l10n.cloudLocalBindingInfo
+                  : null,
+              children: [
+                AppRow(
+                  key: const ValueKey('server-cloud-reload'),
+                  icon: Icons.refresh,
+                  iconColor: AppTints.blue,
+                  title: context.l10n.cloudReloadLocal,
+                  enabled: !_busy,
+                  onTap: _busy ? null : _load,
+                ),
+              ],
+            ),
+            if (options != null) ...[
+              AppSection(
+                header: context.l10n.serverDetails,
+                footer: context.l10n.cloudLocalBindingInfo,
                 children: [
-                  InfoNote(context.l10n.cloudLocalBindingInfo),
-                  if (_loading)
-                    const Padding(
-                      padding: EdgeInsets.all(24),
-                      child: Center(child: CircularProgressIndicator()),
-                    ),
-                  if (_committed)
-                    CloudNotice(context.l10n.cloudBindingCommitted),
-                  if (_error != null) CloudNotice(_error!, error: true),
-                  if (widget.ledger.refreshFailed)
-                    CloudNotice(
-                      context.l10n.cloudLedgerNotUpdated,
-                      error: true,
-                    ),
-                  TextButton.icon(
-                    key: const ValueKey('server-cloud-reload'),
-                    onPressed: _busy ? null : _load,
-                    icon: const Icon(Icons.refresh),
-                    label: Text(context.l10n.cloudReloadLocal),
+                  AppRow(
+                    leading: ProviderAvatar(name: provider?.name),
+                    title: options.server.name,
+                    subtitle: provider == null
+                        ? context.l10n.providerUiUnspecified
+                        : provider.needsReview
+                        ? context.l10n.providerPendingName(provider.name)
+                        : provider.name,
                   ),
-                  if (options != null) ...[
-                    Text(
-                      options.server.name,
-                      style: Theme.of(context).textTheme.titleLarge,
-                    ),
-                    if (provider != null)
-                      Text(
-                        provider.needsReview
-                            ? context.l10n.providerPendingName(provider.name)
-                            : provider.name,
-                      ),
-                    if (options.server.providerId == null)
-                      CloudNotice(context.l10n.providerBindingAssignFirst)
-                    else if (provider == null)
-                      CloudNotice(
-                        context.l10n.providerUiUnavailable,
-                        error: true,
-                      )
-                    else if (provider.needsReview)
-                      CloudNotice(context.l10n.providerReviewRequired),
-                    if (options.server.archived || options.server.isDemo)
-                      CloudNotice(
-                        context.l10n.cloudBindingReadOnly,
-                        error: true,
-                      ),
-                    if (current != null) ...[
-                      SectionTitle(context.l10n.cloudCurrentLink),
-                      LedgerCard(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            Text(_accountName(current.accountId)),
-                            Text(_instanceName(current)),
-                            TextButton.icon(
-                              key: const ValueKey('server-cloud-unbind'),
-                              onPressed: _blocked
-                                  ? null
-                                  : () => _save(unlink: true),
-                              icon: const Icon(Icons.link_off),
-                              label: Text(context.l10n.cloudUnlinkThis),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                    SectionTitle(context.l10n.providerUiChooseInstance),
-                    if (provider != null && !provider.needsReview) ...[
-                      InfoNote(context.l10n.providerUiInstanceChoiceHelp),
-                      if (accounts.isEmpty)
-                        CloudNotice(context.l10n.cloudNoSavedAccounts),
-                    ],
-                    for (final account in accounts)
-                      ListTile(
-                        key: ValueKey('server-cloud-account-${account.id}'),
-                        contentPadding: EdgeInsets.zero,
-                        leading: Icon(
-                          _accountId == account.id
-                              ? Icons.radio_button_checked
-                              : Icons.radio_button_unchecked,
-                        ),
-                        title: Text(account.alias),
-                        subtitle: Text(
-                          [
-                            cloudProviderName(account.adapterType),
-                            _scopeLabel(account),
-                            account.endpoint,
-                            if (_accountRestriction(account) case final reason?)
-                              localizedText(reason, context.l10n),
-                          ].join('\n'),
-                        ),
-                        selected: _accountId == account.id,
-                        enabled:
-                            !_blocked && _accountRestriction(account) == null,
-                        onTap: _blocked || _accountRestriction(account) != null
-                            ? null
-                            : () => setState(() {
-                                _accountId = account.id;
-                                _selected = current?.accountId == account.id
-                                    ? current
-                                    : null;
-                              }),
-                      ),
-                    if (selectedAccount != null) ...[
-                      SectionTitle(context.l10n.cloudSelectReadInstance),
-                      if (choices?.isEmpty ?? true)
-                        CloudNotice(context.l10n.cloudNoSavedInstances),
-                      for (final choice in choices!)
-                        Padding(
-                          padding: const EdgeInsets.only(bottom: 10),
-                          child: LedgerCard(
-                            padding: EdgeInsets.zero,
-                            child: CheckboxListTile(
-                              key: ValueKey(
-                                'server-cloud-instance-${choice.accountId}-${choice.instanceKey}',
-                              ),
-                              value: _same(_selected, choice),
-                              onChanged: _blocked || !_available(choice)
-                                  ? null
-                                  : (_) => setState(() => _selected = choice),
-                              title: Text(_instanceName(choice)),
-                              subtitle: Text(
-                                [
-                                  if (choice.observation.ipv4 != null)
-                                    choice.observation.ipv4!,
-                                  if (choice.observation.projectName != null)
-                                    choice.observation.projectName!,
-                                  context.l10n.cloudReadAt(
-                                    cloudTime(choice.observation.observedAt),
-                                  ),
-                                  if (choice.serverId == widget.serverId)
-                                    context.l10n.cloudCurrentLink,
-                                  if (choice.serverId != null &&
-                                      choice.serverId != widget.serverId)
-                                    context.l10n.cloudAlreadyLinkedTo(
-                                      widget.ledger
-                                              .byId(choice.serverId!)
-                                              ?.name ??
-                                          context.l10n.cloudOtherServer,
-                                    ),
-                                  if (choice.missing)
-                                    context.l10n.cloudMissingRefresh
-                                  else if (choice.stale)
-                                    context.l10n.cloudFailedRefresh,
-                                  if (accountRestriction != null)
-                                    localizedText(
-                                      accountRestriction,
-                                      context.l10n,
-                                    ),
-                                ].join('\n'),
-                              ),
-                            ),
-                          ),
-                        ),
-                    ],
-                    const SizedBox(height: 20),
-                    FilledButton.icon(
-                      key: const ValueKey('server-cloud-save'),
-                      onPressed:
-                          _blocked ||
-                              _selected == null ||
-                              !_available(_selected!) ||
-                              _same(current, _selected)
-                          ? null
-                          : _save,
-                      icon: const Icon(Icons.link),
-                      label: Text(
-                        _saving
-                            ? context.l10n.cloudSaving
-                            : current == null
-                            ? context.l10n.cloudSaveLink
-                            : context.l10n.cloudChangeLink,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    InfoNote(context.l10n.cloudLocalLinkBoundary),
-                  ],
                 ],
               ),
-            ),
-          ),
+              if (options.server.providerId == null)
+                CloudNotice(context.l10n.providerBindingAssignFirst)
+              else if (provider == null)
+                CloudNotice(context.l10n.providerUiUnavailable, error: true)
+              else if (provider.needsReview)
+                CloudNotice(
+                  context.l10n.providerReviewRequired,
+                  tone: AppTone.amber,
+                ),
+              if (options.server.archived || options.server.isDemo)
+                CloudNotice(context.l10n.cloudBindingReadOnly, error: true),
+              if (current != null)
+                AppSection(
+                  header: context.l10n.cloudCurrentLink,
+                  children: [
+                    AppRow(
+                      icon: Icons.link,
+                      iconColor: AppTints.purple,
+                      title: _accountName(current.accountId),
+                      subtitle: _instanceName(current),
+                    ),
+                    AppRow(
+                      key: const ValueKey('server-cloud-unbind'),
+                      center: true,
+                      destructive: true,
+                      title: context.l10n.cloudUnlinkThis,
+                      enabled: !_blocked,
+                      onTap: _blocked ? null : () => _save(unlink: true),
+                    ),
+                  ],
+                ),
+              AppSection(
+                header: context.l10n.providerUiChooseInstance,
+                footer: provider != null && !provider.needsReview
+                    ? context.l10n.providerUiInstanceChoiceHelp
+                    : null,
+                children: [
+                  if (provider != null &&
+                      !provider.needsReview &&
+                      accounts.isEmpty)
+                    AppRow(title: context.l10n.cloudNoSavedAccounts),
+                  for (final account in accounts)
+                    AppRow(
+                      key: ValueKey('server-cloud-account-${account.id}'),
+                      icon: Icons.cloud_outlined,
+                      iconColor: AppTints.purple,
+                      title: account.alias,
+                      subtitle: [
+                        cloudProviderName(account.adapterType),
+                        _scopeLabel(account),
+                        account.endpoint,
+                        if (_accountRestriction(account) case final reason?)
+                          localizedText(reason, context.l10n),
+                      ].join('\n'),
+                      trailing: _accountId == account.id
+                          ? Icon(
+                              Icons.check_rounded,
+                              size: 22,
+                              color: context.palette.primary,
+                            )
+                          : null,
+                      enabled:
+                          !_blocked && _accountRestriction(account) == null,
+                      onTap: _blocked || _accountRestriction(account) != null
+                          ? null
+                          : () => setState(() {
+                              _accountId = account.id;
+                              _selected = current?.accountId == account.id
+                                  ? current
+                                  : null;
+                            }),
+                    ),
+                ],
+              ),
+              if (selectedAccount != null)
+                AppSection(
+                  header: context.l10n.cloudSelectReadInstance,
+                  children: [
+                    if (choices?.isEmpty ?? true)
+                      AppRow(title: context.l10n.cloudNoSavedInstances),
+                    for (final choice in choices!)
+                      CloudCheckRow(
+                        key: ValueKey(
+                          'server-cloud-instance-${choice.accountId}-${choice.instanceKey}',
+                        ),
+                        value: _same(_selected, choice),
+                        onChanged: _blocked || !_available(choice)
+                            ? null
+                            : (_) => setState(() => _selected = choice),
+                        title: _instanceName(choice),
+                        status: choice.missing || choice.stale
+                            ? Align(
+                                alignment: AlignmentDirectional.centerStart,
+                                child: StatusPill(
+                                  choice.missing
+                                      ? context.l10n.cloudMissingRefresh
+                                      : context.l10n.cloudFailedRefresh,
+                                  tone: AppTone.amber,
+                                ),
+                              )
+                            : choice.serverId == widget.serverId
+                            ? Align(
+                                alignment: AlignmentDirectional.centerStart,
+                                child: StatusPill(
+                                  context.l10n.cloudCurrentLink,
+                                  tone: AppTone.green,
+                                ),
+                              )
+                            : null,
+                        details: [
+                          if (choice.observation.ipv4 != null)
+                            choice.observation.ipv4!,
+                          if (choice.observation.projectName != null)
+                            choice.observation.projectName!,
+                          context.l10n.cloudReadAt(
+                            cloudTime(choice.observation.observedAt),
+                          ),
+                          if (choice.serverId != null &&
+                              choice.serverId != widget.serverId)
+                            context.l10n.cloudAlreadyLinkedTo(
+                              widget.ledger.byId(choice.serverId!)?.name ??
+                                  context.l10n.cloudOtherServer,
+                            ),
+                          if (accountRestriction != null)
+                            localizedText(accountRestriction, context.l10n),
+                        ],
+                      ),
+                  ],
+                ),
+              CloudAction(
+                buttonKey: const ValueKey('server-cloud-save'),
+                icon: Icons.link,
+                onPressed:
+                    _blocked ||
+                        _selected == null ||
+                        !_available(_selected!) ||
+                        _same(current, _selected)
+                    ? null
+                    : _save,
+                label: _saving
+                    ? context.l10n.cloudSaving
+                    : current == null
+                    ? context.l10n.cloudSaveLink
+                    : context.l10n.cloudChangeLink,
+              ),
+              CloudFootnote(context.l10n.cloudLocalLinkBoundary),
+            ],
+          ],
         ),
       );
     },

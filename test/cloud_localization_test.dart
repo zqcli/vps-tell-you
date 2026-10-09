@@ -38,6 +38,14 @@ CloudSnapshot _localizedSnapshot(CloudProvider provider) {
   );
 }
 
+/// Text of the input inside [field] (a form row or a plain text field).
+String fieldText(WidgetTester tester, Finder field) => tester
+    .widget<EditableText>(
+      find.descendant(of: field, matching: find.byType(EditableText)),
+    )
+    .controller
+    .text;
+
 void main() {
   final english = AppLocalizationsEn();
   final chinese = AppLocalizationsZh();
@@ -315,10 +323,7 @@ void main() {
       }.entries) {
         final target = find.byKey(ValueKey(item.key));
         await reveal(tester, target);
-        expect(
-          tester.widget<TextFormField>(target).controller!.text,
-          item.value,
-        );
+        expect(fieldText(tester, target), item.value);
       }
       expect(calls, 0);
       expect(secrets.reads + secrets.writes + secrets.deletes, 0);
@@ -349,10 +354,7 @@ void main() {
       }.entries) {
         final target = find.byKey(ValueKey(item.key));
         await reveal(tester, target);
-        expect(
-          tester.widget<TextFormField>(target).controller!.text,
-          item.value,
-        );
+        expect(fieldText(tester, target), item.value);
       }
       expect(calls, 0);
       expect(secrets.reads + secrets.writes + secrets.deletes, 0);
@@ -538,16 +540,12 @@ void main() {
         }.entries) {
           final target = find.byKey(ValueKey(item.key));
           await reveal(tester, target);
-          final widget = tester.widget(target);
-          final controller = widget is TextField
-              ? widget.controller
-              : (widget as TextFormField).controller;
-          expect(controller!.text, item.value);
+          expect(fieldText(tester, target), item.value);
         }
         await reveal(tester, find.byKey(const ValueKey('cloud-select-single')));
         expect(
           tester
-              .widget<CheckboxListTile>(
+              .widget<CloudCheckRow>(
                 find.byKey(const ValueKey('cloud-select-single')),
               )
               .value,
@@ -592,7 +590,7 @@ void main() {
       await language(tester, LocalePreference.english);
       await reveal(tester, find.byKey(ValueKey(key)));
       expect(
-        tester.widget<CheckboxListTile>(find.byKey(ValueKey(key))).value,
+        tester.widget<CloudCheckRow>(find.byKey(ValueKey(key))).value,
         isTrue,
       );
       expect(calls, 1);

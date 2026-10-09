@@ -278,53 +278,57 @@ Future<bool> showAppConfirm(
   required Object action,
   bool dangerous = false,
 }) async {
-  final l10n = context.l10n;
-  final titleText = localizedText(title, l10n);
-  final messageText = localizedText(message, l10n);
-  final actionText = localizedText(action, l10n);
+  // Texts are resolved while the overlay builds, so a locale change while it
+  // is open re-translates it like the legacy `confirmAction`.
   if (dangerous) {
     var confirmed = false;
     await showCupertinoModalPopup<void>(
       context: context,
-      builder: (sheetContext) => CupertinoActionSheet(
-        title: Text(titleText),
-        message: Text(messageText),
-        actions: [
-          CupertinoActionSheetAction(
-            isDestructiveAction: true,
-            onPressed: () {
-              confirmed = true;
-              Navigator.pop(sheetContext);
-            },
-            child: Text(actionText),
+      builder: (sheetContext) {
+        final l10n = sheetContext.l10n;
+        return CupertinoActionSheet(
+          title: Text(localizedText(title, l10n)),
+          message: Text(localizedText(message, l10n)),
+          actions: [
+            CupertinoActionSheetAction(
+              isDestructiveAction: true,
+              onPressed: () {
+                confirmed = true;
+                Navigator.pop(sheetContext);
+              },
+              child: Text(localizedText(action, l10n)),
+            ),
+          ],
+          cancelButton: CupertinoActionSheetAction(
+            onPressed: () => Navigator.pop(sheetContext),
+            child: Text(l10n.cancel),
           ),
-        ],
-        cancelButton: CupertinoActionSheetAction(
-          onPressed: () => Navigator.pop(sheetContext),
-          child: Text(l10n.cancel),
-        ),
-      ),
+        );
+      },
     );
     return confirmed;
   }
   return await showCupertinoDialog<bool>(
         context: context,
         barrierDismissible: true,
-        builder: (dialogContext) => CupertinoAlertDialog(
-          title: Text(titleText),
-          content: Text(messageText),
-          actions: [
-            CupertinoDialogAction(
-              onPressed: () => Navigator.pop(dialogContext, false),
-              child: Text(l10n.cancel),
-            ),
-            CupertinoDialogAction(
-              isDefaultAction: true,
-              onPressed: () => Navigator.pop(dialogContext, true),
-              child: Text(actionText),
-            ),
-          ],
-        ),
+        builder: (dialogContext) {
+          final l10n = dialogContext.l10n;
+          return CupertinoAlertDialog(
+            title: Text(localizedText(title, l10n)),
+            content: Text(localizedText(message, l10n)),
+            actions: [
+              CupertinoDialogAction(
+                onPressed: () => Navigator.pop(dialogContext, false),
+                child: Text(l10n.cancel),
+              ),
+              CupertinoDialogAction(
+                isDefaultAction: true,
+                onPressed: () => Navigator.pop(dialogContext, true),
+                child: Text(localizedText(action, l10n)),
+              ),
+            ],
+          );
+        },
       ) ??
       false;
 }

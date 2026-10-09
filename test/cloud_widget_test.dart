@@ -4,11 +4,14 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:flutter/cupertino.dart' show CupertinoActionSheet;
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
+import 'package:vps_tell_you/cloud/cloud_widgets.dart';
+import 'package:vps_tell_you/core/ui/ui.dart';
 import 'package:vps_tell_you/cloud/cloud_controller.dart';
 import 'package:vps_tell_you/cloud/cloud_models.dart';
 import 'package:vps_tell_you/cloud/cloud_pages.dart';
@@ -326,16 +329,13 @@ void main() {
       await fill(tester, 'cloud-hash', 'SYNTHETIC_HASH');
       for (final key in ['cloud-key', 'cloud-hash']) {
         await reveal(tester, find.byKey(ValueKey(key)));
-        expect(
-          tester
-              .widget<TextFormField>(find.byKey(ValueKey(key)))
-              .controller!
-              .text,
-          isNotEmpty,
-        );
         final editable = find.descendant(
           of: find.byKey(ValueKey(key)),
           matching: find.byType(EditableText),
+        );
+        expect(
+          tester.widget<EditableText>(editable).controller.text,
+          isNotEmpty,
         );
         expect(tester.widget<EditableText>(editable).obscureText, isTrue);
       }
@@ -346,7 +346,7 @@ void main() {
       await reveal(tester, find.byKey(const ValueKey('cloud-import-submit')));
       expect(
         tester
-            .widget<FilledButton>(
+            .widget<AppButton>(
               find.byKey(const ValueKey('cloud-import-submit')),
             )
             .onPressed,
@@ -647,7 +647,7 @@ void main() {
     await tester.pump();
     final submit = find.byKey(const ValueKey('cloud-import-submit'));
     await reveal(tester, submit);
-    expect(tester.widget<FilledButton>(submit).onPressed, isNull);
+    expect(tester.widget<AppButton>(submit).onPressed, isNull);
     expect(cloud.accounts, isEmpty);
     expect(await store.servers(), isEmpty);
     expect(secrets.values, isEmpty);
@@ -737,8 +737,13 @@ void main() {
       expect(cancellations.single.isCancelled, isTrue);
       expect(
         tester
-            .widget<TextFormField>(find.byKey(const ValueKey('cloud-token')))
-            .controller!
+            .widget<EditableText>(
+              find.descendant(
+                of: find.byKey(const ValueKey('cloud-token')),
+                matching: find.byType(EditableText),
+              ),
+            )
+            .controller
             .text,
         isEmpty,
       );
@@ -791,7 +796,7 @@ void main() {
       await tapKey(tester, 'cloud-import-done');
       await openAccountMenu(tester, cloud.accounts.single.id);
       await tapText(tester, '继续导入设备');
-      final linked = tester.widget<CheckboxListTile>(
+      final linked = tester.widget<CloudCheckRow>(
         find.byKey(const ValueKey('cloud-select-7/11/101')),
       );
       expect(linked.value, isTrue);
@@ -823,8 +828,13 @@ void main() {
       expect(find.byType(CloudImportPage), findsNothing);
       expect(
         tester
-            .widget<TextFormField>(find.byKey(const ValueKey('cloud-token')))
-            .controller!
+            .widget<EditableText>(
+              find.descendant(
+                of: find.byKey(const ValueKey('cloud-token')),
+                matching: find.byType(EditableText),
+              ),
+            )
+            .controller
             .text,
         isEmpty,
       );
@@ -856,7 +866,7 @@ void main() {
       await reveal(tester, find.byKey(const ValueKey('cloud-import-submit')));
       expect(
         tester
-            .widget<FilledButton>(
+            .widget<AppButton>(
               find.byKey(const ValueKey('cloud-import-submit')),
             )
             .onPressed,
@@ -865,9 +875,7 @@ void main() {
       await reveal(tester, find.byKey(const ValueKey('cloud-save-only')));
       expect(
         tester
-            .widget<OutlinedButton>(
-              find.byKey(const ValueKey('cloud-save-only')),
-            )
+            .widget<AppButton>(find.byKey(const ValueKey('cloud-save-only')))
             .onPressed,
         isNull,
       );
@@ -963,7 +971,13 @@ void main() {
       await openAccountMenu(tester, saved.id);
       await tapText(tester, '删除适配器实例');
       expect(find.textContaining('将解除 1 台本地服务器的关联'), findsOneWidget);
-      expect(find.textContaining('手动名称'), findsOneWidget);
+      expect(
+        find.descendant(
+          of: find.byType(CupertinoActionSheet),
+          matching: find.textContaining('手动名称'),
+        ),
+        findsOneWidget,
+      );
       await tapText(tester, '仅删除本地适配器实例');
       expect(cloud.accounts, isEmpty);
       expect(cloud.bindings, isEmpty);
@@ -1019,7 +1033,7 @@ void main() {
         expect(find.text('仅更新授权'), findsNothing);
         expect(
           tester
-              .widget<FilledButton>(
+              .widget<AppButton>(
                 find.byKey(const ValueKey('cloud-import-submit')),
               )
               .onPressed,
@@ -1028,9 +1042,7 @@ void main() {
         await reveal(tester, find.byKey(const ValueKey('cloud-save-only')));
         expect(
           tester
-              .widget<OutlinedButton>(
-                find.byKey(const ValueKey('cloud-save-only')),
-              )
+              .widget<AppButton>(find.byKey(const ValueKey('cloud-save-only')))
               .onPressed,
           isNull,
         );
@@ -1164,7 +1176,7 @@ void main() {
     behavior = (_, _) => pending.future;
     final retry = find.byKey(const ValueKey('cloud-read-again'));
     await reveal(tester, retry);
-    final readAgain = tester.widget<OutlinedButton>(retry).onPressed!;
+    final readAgain = tester.widget<AppButton>(retry).onPressed!;
     readAgain();
     readAgain();
     await tester.pump();
@@ -1242,12 +1254,12 @@ void main() {
       await tapKey(tester, 'cloud-return-to-instance');
       final selection = find.byWidgetPredicate(
         (widget) =>
-            widget is CheckboxListTile &&
+            widget is CloudCheckRow &&
             widget.key is ValueKey<String> &&
             (widget.key as ValueKey<String>).value.startsWith('cloud-select-'),
       );
       expect(selection.hitTestable(), findsOneWidget);
-      expect(tester.widget<CheckboxListTile>(selection).value, isFalse);
+      expect(tester.widget<CloudCheckRow>(selection).value, isFalse);
       expect(cloud.accounts, isEmpty);
       expect(calls, 1);
       await tester.tap(selection);
@@ -1286,7 +1298,7 @@ void main() {
     await authorize(tester, provider: CloudProvider.solusVm1);
     final selection = find.byWidgetPredicate(
       (widget) =>
-          widget is CheckboxListTile &&
+          widget is CloudCheckRow &&
           widget.key is ValueKey<String> &&
           (widget.key as ValueKey<String>).value.startsWith('cloud-select-'),
     );
