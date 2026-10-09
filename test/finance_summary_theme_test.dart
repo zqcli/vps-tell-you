@@ -210,48 +210,37 @@ void main() {
     }))!;
   }
 
+  /// The summary is a gradient card with white text: every text must stay
+  /// readable against the lightest stop of its gradient.
   void checkColors(WidgetTester tester) {
-    final context = tester.element(summary);
-    final colors = Theme.of(context).colorScheme;
-    final card = tester.widget<Material>(
-      find.descendant(of: summary, matching: find.byType(Material)).first,
-    );
-    expect(card.color, colors.surface);
-    // Cards are borderless rounded surfaces in the redesigned theme.
-    expect((card.shape! as RoundedRectangleBorder).side, BorderSide.none);
+    final decoration =
+        tester.widget<DecoratedBox>(summary).decoration as BoxDecoration;
+    final gradient = decoration.gradient! as LinearGradient;
+    expect(decoration.border, isNull);
     final totals = tester.widgetList<FinanceTotalView>(
       find.descendant(of: summary, matching: find.byType(FinanceTotalView)),
     );
-    expect(totals.map((total) => total.emphasize), [true, false]);
+    expect(totals.map((total) => total.layout), [
+      FinanceTotalLayout.hero,
+      FinanceTotalLayout.tile,
+      FinanceTotalLayout.tile,
+    ]);
     for (final element
         in find
             .descendant(of: summary, matching: find.byType(Text))
             .evaluate()) {
       final widget = element.widget as Text;
       final style = DefaultTextStyle.of(element).style.merge(widget.style);
-      expect(
-        _contrast(style.color!, card.color!),
-        greaterThanOrEqualTo(4.5),
-        reason: widget.data,
-      );
+      for (final stop in gradient.colors) {
+        expect(
+          _contrast(style.color!, stop),
+          greaterThanOrEqualTo(4.5),
+          reason: widget.data,
+        );
+      }
       expect(widget.maxLines, isNull);
       expect(widget.overflow, isNull);
     }
-    final l10n = AppLocalizations.of(context);
-    final warning = find.descendant(
-      of: summary,
-      matching: find.text(l10n.financeMissingFxExcluded),
-    );
-    for (final text in tester.widgetList<Text>(warning)) {
-      expect(text.style!.color, colors.tertiary);
-    }
-    final divider = tester.widget<Divider>(
-      find.descendant(of: summary, matching: find.byType(Divider)),
-    );
-    expect(
-      divider.color ?? Theme.of(context).dividerTheme.color,
-      colors.outlineVariant,
-    );
   }
 
   for (final language in ['zh', 'en']) {
@@ -288,13 +277,16 @@ void main() {
             expect(total.missingFx, 1);
             expect(total.unknown, 1);
             final l10n = AppLocalizations.of(tester.element(summary));
+            final inventory = find.byKey(const ValueKey('finance-inventory'));
+            await reveal(tester, inventory);
             expect(
               find.descendant(
-                of: summary,
-                matching: find.text(l10n.financeManagedCount(4)),
+                of: inventory,
+                matching: find.text(l10n.uiFinanceServerCount(4)),
               ),
               findsOneWidget,
             );
+            await reveal(tester, monthly);
             await capture(tester, '$prefix-monthly');
             final value = find.byKey(const ValueKey('metric-value'));
             await reveal(tester, value);
@@ -315,7 +307,7 @@ void main() {
             for (final destination in [
               (monthly, FinanceMetric.monthly),
               (value, FinanceMetric.value),
-              (find.text(l10n.financeManagedCount(4)), FinanceMetric.inventory),
+              (inventory, FinanceMetric.inventory),
             ]) {
               await reveal(tester, destination.$1);
               await tester.tap(destination.$1);
@@ -326,7 +318,9 @@ void main() {
                     .metric,
                 destination.$2,
               );
-              final back = find.byType(BackButton).hitTestable();
+              final back = find
+                  .byKey(const ValueKey('app-nav-back'))
+                  .hitTestable();
               expect(back, findsOneWidget);
               await tester.tap(back);
               await tester.pumpAndSettle();
@@ -345,7 +339,6 @@ void main() {
     ) async {
       await seed();
       await mount(tester, language: 'en', brightness: brightness);
-      final colors = appTheme(brightness: brightness).colorScheme;
       final previous = FocusManager.instance.highlightStrategy;
       FocusManager.instance.highlightStrategy =
           FocusHighlightStrategy.alwaysTraditional;
@@ -369,25 +362,15 @@ void main() {
         await mouse.moveTo(tester.getCenter(target));
         await tester.pumpAndSettle();
         final focused = await backgroundPixel(tester, target);
-        expect(focused, isNot(colors.surface));
-        expect(
-          _contrast(colors.onSurfaceVariant, focused),
-          greaterThanOrEqualTo(4.5),
-        );
+        // White text on the gradient (plus hover / focus layers) stays legible.
+        expect(_contrast(Colors.white, focused), greaterThanOrEqualTo(4.5));
         await capture(tester, '${brightness.name}-$key-focused-hovered');
 
         await mouse.down(tester.getCenter(target));
         await tester.pump(const Duration(milliseconds: 300));
         await tester.pump(const Duration(milliseconds: 300));
         final pressed = await backgroundPixel(tester, target);
-        for (final foreground in [
-          colors.onSurface,
-          colors.onSurfaceVariant,
-          colors.primary,
-          colors.tertiary,
-        ]) {
-          expect(_contrast(foreground, pressed), greaterThanOrEqualTo(4.5));
-        }
+        expect(_contrast(Colors.white, pressed), greaterThanOrEqualTo(4.5));
         await capture(tester, '${brightness.name}-$key-pressed');
         await mouse.cancel();
         await mouse.removePointer();

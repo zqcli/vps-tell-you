@@ -17,6 +17,7 @@ import 'package:vps_tell_you/connections/terminal_widgets.dart';
 import 'package:vps_tell_you/core/app_theme.dart';
 import 'package:vps_tell_you/data/ledger_store.dart';
 import 'package:vps_tell_you/finance/finance_page.dart';
+import 'package:vps_tell_you/finance/finance_widgets.dart';
 import 'package:vps_tell_you/finance/payment_pages.dart';
 import 'package:vps_tell_you/security/host_trust_pages.dart';
 import 'package:vps_tell_you/security/security_controller.dart';
@@ -526,7 +527,7 @@ void main() {
             final field = find.byKey(const ValueKey('pay-account'));
             await _reveal(tester, field);
             expect(
-              tester.widget<TextFormField>(field).controller!.text,
+              tester.widget<FinanceFieldRow>(field).controller.text,
               isEmpty,
             );
             await tester.enterText(field, 'Unsaved synthetic bill');

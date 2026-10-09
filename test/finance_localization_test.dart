@@ -319,7 +319,7 @@ void main() {
         await mount(tester, page, locale: 'zh');
         final price = find.byKey(const ValueKey('calc-price'));
         await reveal(tester, price);
-        final controller = tester.widget<TextFormField>(price).controller!;
+        final controller = tester.widget<FinanceFieldRow>(price).controller;
         await tester.enterText(price, '52.34');
         final due = find.byKey(const ValueKey('calc-due'));
         await reveal(tester, due);
@@ -337,12 +337,12 @@ void main() {
           'Enter a valid expiry date',
         );
         expect(
-          tester.widget<TextFormField>(due).controller!.text,
+          tester.widget<FinanceFieldRow>(due).controller.text,
           'invalid-draft',
         );
         await reveal(tester, price);
         expect(
-          tester.widget<TextFormField>(price).controller,
+          tester.widget<FinanceFieldRow>(price).controller,
           same(controller),
         );
         expect(controller.text, '52.34');
@@ -373,7 +373,7 @@ void main() {
         expect(find.text(en.financePaymentConfirmError), findsOneWidget);
         await reveal(tester, amount);
         expect(
-          tester.widget<TextFormField>(amount).controller!.text,
+          tester.widget<FinanceFieldRow>(amount).controller.text,
           'not-a-number',
         );
         expect(
@@ -382,7 +382,7 @@ void main() {
         );
         await reveal(tester, account);
         expect(
-          tester.widget<TextFormField>(account).controller!.text,
+          tester.widget<FinanceFieldRow>(account).controller.text,
           '原样保存用户输入',
         );
         expect(ledger.payments.length, 1);
@@ -421,7 +421,7 @@ void main() {
         await reveal(tester, find.text(zh.financeQuoteFxError));
         expect(find.text(zh.financeQuoteFxError), findsOneWidget);
         await reveal(tester, offer);
-        expect(tester.widget<TextFormField>(offer).controller!.text, '100.50');
+        expect(tester.widget<FinanceFieldRow>(offer).controller.text, '100.50');
         expect(tester.takeException(), isNull);
       },
     );
@@ -465,7 +465,10 @@ void main() {
         en.financePastDateError,
       );
       await reveal(tester, rate);
-      expect(tester.widget<TextFormField>(rate).controller!.text, '7.12345678');
+      expect(
+        tester.widget<FinanceFieldRow>(rate).controller.text,
+        '7.12345678',
+      );
       expect(ledger.fx.usdToCny, isNull);
     });
 
