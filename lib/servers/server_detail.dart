@@ -4,6 +4,8 @@ import '../l10n/locale_preference.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../cloud/cloud_pages.dart';
+import '../cloud/provider_pages.dart';
 import '../cloud/cloud_widgets.dart';
 import '../cloud/server_cloud_binding_page.dart';
 import '../core/app_theme.dart';
@@ -119,10 +121,6 @@ class ServerDetail extends StatelessWidget {
     listenable: controller,
     builder: (context, _) {
       final s = controller.byId(id);
-      final binding = controller.cloud.bindingFor(id);
-      final cloudAccount = controller.cloud.accounts
-          .where((a) => a.id == binding?.accountId)
-          .firstOrNull;
       if (s == null) {
         return Scaffold(
           appBar: AppBar(title: Text(context.l10n.serverDetails)),
@@ -192,7 +190,7 @@ class ServerDetail extends StatelessWidget {
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Text(
-                    s.mark,
+                    serverProviderMark(controller, s),
                     maxLines: 1,
                     style: TextStyle(
                       fontWeight: FontWeight.w700,
@@ -215,7 +213,7 @@ class ServerDetail extends StatelessWidget {
                       Text(
                         [
                           s.purpose,
-                          s.vendor,
+                          serverProviderLabel(context, controller, s),
                           s.region,
                         ].where((e) => e.isNotEmpty).join(' · '),
                         style: TextStyle(
@@ -329,52 +327,8 @@ class ServerDetail extends StatelessWidget {
               ),
             ),
             HardwareInformationCard(s.resources),
-            SectionTitle(context.l10n.serverPanelLink),
-            LedgerCard(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Text(
-                    cloudAccount?.alias ?? context.l10n.serverNoPanelLink,
-                    style: const TextStyle(fontWeight: FontWeight.w700),
-                  ),
-                  if (cloudAccount != null)
-                    Text(cloudProviderName(cloudAccount.provider)),
-                  InfoNote(context.l10n.serverPanelLinkHelp),
-                  OutlinedButton.icon(
-                    key: const ValueKey('server-cloud-binding'),
-                    onPressed:
-                        !controller.canMutate ||
-                            s.archived ||
-                            controller.cloud.busy ||
-                            controller.cloud.needsReload
-                        ? null
-                        : () => Navigator.push<bool>(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => ServerCloudBindingPage(
-                                ledger: controller,
-                                serverId: s.id,
-                              ),
-                            ),
-                          ),
-                    icon: const Icon(Icons.link),
-                    label: Text(
-                      binding == null
-                          ? context.l10n.serverLinkPanel
-                          : context.l10n.serverManageLink,
-                    ),
-                  ),
-                  if (controller.cloud.needsReload)
-                    TextButton(
-                      onPressed: controller.cloud.busy
-                          ? null
-                          : () => controller.cloud.reload(),
-                      child: Text(context.l10n.serverReloadPanelDetails),
-                    ),
-                ],
-              ),
-            ),
+            SectionTitle(context.l10n.providerUiProviderAndAdapter),
+            _ServerProviderCard(controller: controller, server: s),
             SectionTitle(context.l10n.serverCostExpiry),
             LedgerCard(
               child: Column(
@@ -616,4 +570,154 @@ class ServerDetail extends StatelessWidget {
       );
     },
   );
+}
+
+class _ServerProviderCard extends StatefulWidget {
+  const _ServerProviderCard({required this.controller, required this.server});
+  final LedgerController controller;
+  final ServerRecord server;
+  @override
+  State<_ServerProviderCard> createState() => _ServerProviderCardState();
+}
+
+class _ServerProviderCardState extends State<_ServerProviderCard> {
+  bool opening = false;
+  Future<void> open(Future<void> Function() action) async {
+    if (opening) return;
+    setState(() => opening = true);
+    try {
+      await action();
+    } finally {
+      if (mounted) setState(() => opening = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final controller = widget.controller;
+    final server = widget.server;
+    final provider = controller.cloud.providers
+        .where((p) => p.id == server.providerId)
+        .firstOrNull;
+    final binding = controller.cloud.bindingFor(server.id);
+    final account = controller.cloud.accounts
+        .where((a) => a.id == binding?.accountId)
+        .firstOrNull;
+    final editable =
+        !opening &&
+        controller.canMutate &&
+        !server.archived &&
+        !controller.cloud.busy &&
+        !controller.cloud.needsReload;
+    return LedgerCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          SettingRow(
+            key: const ValueKey('server-provider-link'),
+            icon: Icons.business_outlined,
+            title: provider?.name ?? context.l10n.providerUiUnspecified,
+            subtitle: provider?.needsReview == true
+                ? context.l10n.providerUiNeedsReview
+                : context.l10n.providerUiOpenProvider,
+            onTap: provider == null || opening
+                ? null
+                : () => open(() async {
+                    await Navigator.push<void>(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => ProviderDetailsPage(
+                          ledger: controller,
+                          providerId: provider.id,
+                        ),
+                      ),
+                    );
+                  }),
+          ),
+          TextButton.icon(
+            key: const ValueKey('server-change-provider'),
+            onPressed: editable && !server.isDemo
+                ? () => open(() async {
+                    await changeServerProvider(context, controller, server);
+                  })
+                : null,
+            icon: const Icon(Icons.swap_horiz),
+            label: Text(context.l10n.providerUiChange),
+          ),
+          const Divider(),
+          if (account != null)
+            SettingRow(
+              key: const ValueKey('server-adapter-link'),
+              icon: Icons.cloud_outlined,
+              title: account.alias,
+              subtitle:
+                  '${cloudProviderName(account.adapterType)} · '
+                  '${context.l10n.providerUiOpenInstance}',
+              onTap: opening
+                  ? null
+                  : () => open(() async {
+                      await Navigator.push<void>(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => CloudAccountDetailsPage(
+                            ledger: controller,
+                            accountId: account.id,
+                          ),
+                        ),
+                      );
+                    }),
+            )
+          else
+            Text(
+              context.l10n.serverNoPanelLink,
+              style: const TextStyle(fontWeight: FontWeight.w700),
+            ),
+          InfoNote(context.l10n.serverPanelLinkHelp),
+          if (provider?.needsReview == true && account != null)
+            OutlinedButton.icon(
+              onPressed: editable
+                  ? () => open(() async {
+                      await confirmAdapterProviderOwnership(
+                        context,
+                        controller,
+                        account,
+                      );
+                    })
+                  : null,
+              icon: const Icon(Icons.fact_check_outlined),
+              label: Text(context.l10n.providerUiConfirmOwnership),
+            ),
+          OutlinedButton.icon(
+            key: const ValueKey('server-cloud-binding'),
+            onPressed: editable
+                ? () => open(() async {
+                    await Navigator.push<bool>(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => ServerCloudBindingPage(
+                          ledger: controller,
+                          serverId: server.id,
+                        ),
+                      ),
+                    );
+                  })
+                : null,
+            icon: const Icon(Icons.link),
+            label: Text(
+              binding == null
+                  ? context.l10n.serverLinkPanel
+                  : context.l10n.serverManageLink,
+            ),
+          ),
+          if (controller.cloud.needsReload)
+            TextButton(
+              onPressed: controller.cloud.busy
+                  ? null
+                  : () => controller.cloud.reload(),
+              child: Text(context.l10n.serverReloadPanelDetails),
+            ),
+        ],
+      ),
+    );
+  }
 }

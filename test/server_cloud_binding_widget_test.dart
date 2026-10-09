@@ -1,4 +1,8 @@
+import 'support/provider_fixture.dart';
+
 import 'dart:io';
+
+import 'package:vps_tell_you/l10n/generated/app_localizations_zh.dart';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -33,6 +37,7 @@ void main() {
       path: '${directory.path}/ledger.sqlite3',
       clock: () => cloudTestTime,
     );
+    await addTestProvider(store);
     secrets = CloudTestSecrets();
     adapterCalls = 0;
     result = null;
@@ -55,6 +60,7 @@ void main() {
           id: id,
           name: 'Local $id',
           vendor: 'Local vendor',
+          providerId: testProvider.id,
           host: '192.0.2.99',
           createdAt: cloudTestTime,
           updatedAt: cloudTestTime,
@@ -94,8 +100,10 @@ void main() {
     final account = CloudAccount(
       id: id,
       provider: data.provider,
+      businessProviderId: testProvider.id,
+      authScope: adapterScope(data.provider),
       alias: 'Panel $id',
-      endpoint: 'https://panel.example',
+      endpoint: 'https://$id.panel.example',
       secretRef: 'opaque-$id',
       remoteAccountId: data.remoteAccountId,
       createdAt: cloudTestTime,
@@ -157,8 +165,7 @@ void main() {
     await tester.pumpAndSettle();
   }
 
-  Future<void> tapKey(WidgetTester tester, String key) async {
-    final target = find.byKey(ValueKey(key));
+  Future<void> reveal(WidgetTester tester, Finder target) async {
     if (target.evaluate().isEmpty) {
       tester
           .state<ScrollableState>(find.byType(Scrollable).first)
@@ -173,6 +180,11 @@ void main() {
     }
     await tester.ensureVisible(target);
     await tester.pumpAndSettle();
+  }
+
+  Future<void> tapKey(WidgetTester tester, String key) async {
+    final target = find.byKey(ValueKey(key));
+    await reveal(tester, target);
     await tester.tap(target);
     await tester.pumpAndSettle();
   }
@@ -181,8 +193,14 @@ void main() {
     tester,
   ) async {
     await mount(tester);
-    expect(find.textContaining('还没有已保存的面板账户'), findsOneWidget);
-    expect(find.textContaining('不会连接面板'), findsOneWidget);
+    expect(
+      find.text(AppLocalizationsZh().cloudNoSavedAccounts),
+      findsOneWidget,
+    );
+    expect(
+      find.text(AppLocalizationsZh().cloudLocalBindingInfo),
+      findsOneWidget,
+    );
     expect(await store.cloudBindings(), isEmpty);
   });
 
@@ -236,12 +254,48 @@ void main() {
       expect(cloud.bindingFor('local')!.instanceKey, 'single');
       expect(cloud.bindingFor('local')!.observation.serverId, isNull);
       expect(cloud.bindingFor('local')!.observation.projectId, isNull);
+      expect(cloud.accounts.single.authScope, AdapterAuthScope.singleDevice);
+      expect(cloud.accounts.single.pinnedServerId, 'local');
       expect(
         (await store.servers())
             .singleWhere((server) => server.id == 'local')
             .toMap(),
         before,
       );
+      expect(tester.takeException(), isNull);
+    },
+  );
+
+  testWidgets(
+    'RackNerd single-device pin cannot be reassigned after a local unlink',
+    (tester) async {
+      await addAccount('rack', provider: CloudProvider.rackNerd);
+      await bind('other', 'rack');
+      final options = await store.serverCloudBindingOptions('other');
+      await store.setServerCloudBinding(options, choice: null);
+      await cloud.reload();
+      expect(cloud.accounts.single.pinnedServerId, 'other');
+      final before = (await store.servers()).map((s) => s.toMap()).toList();
+      await mount(tester, scale: 2);
+      final account = find.byKey(const ValueKey('server-cloud-account-rack'));
+      await reveal(tester, account);
+      expect(tester.widget<ListTile>(account).enabled, isFalse);
+      expect(tester.widget<ListTile>(account).onTap, isNull);
+      expect(
+        find.textContaining(AppLocalizationsZh().adapterSingletonPinned),
+        findsWidgets,
+      );
+      final instance = find.byKey(
+        const ValueKey('server-cloud-instance-rack-single'),
+      );
+      await reveal(tester, instance);
+      expect(tester.widget<CheckboxListTile>(instance).onChanged, isNull);
+      final save = find.byKey(const ValueKey('server-cloud-save'));
+      await reveal(tester, save);
+      expect(tester.widget<FilledButton>(save).onPressed, isNull);
+      expect(await store.cloudBindings(), isEmpty);
+      expect((await store.servers()).map((s) => s.toMap()).toList(), before);
+      expect(cloud.accounts.single.pinnedServerId, 'other');
       expect(tester.takeException(), isNull);
     },
   );

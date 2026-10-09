@@ -11,7 +11,27 @@ import 'package:vps_tell_you/security/security_models.dart';
 import 'package:vps_tell_you/servers/server_record.dart';
 import 'package:vps_tell_you/servers/server_resources.dart';
 
-import 'cloud_store_test.dart' show cloudTestTime, completedResources;
+import 'cloud_store_test.dart' show cloudTestTime;
+import 'support/provider_fixture.dart';
+
+// Values match the observation. Unlimited traffic is a manual override and
+// must not retain an API-source marker for the observed finite quota.
+ServerResources completedResources({bool unlimited = false}) => ServerResources(
+  ip: '192.0.2.40',
+  hostname: 'vps.synthetic.example',
+  vcpu: 2,
+  ramBytes: 2147483648,
+  diskBytes: 32212254720,
+  trafficBytes: unlimited ? null : 1099511627776,
+  trafficUnlimited: unlimited,
+  apiFields: {
+    'ip',
+    'hostname',
+    'ramBytes',
+    'diskBytes',
+    if (!unlimited) 'trafficBytes',
+  },
+);
 
 CloudSnapshot _rackSnapshot({
   DateTime? at,
@@ -65,6 +85,7 @@ void main() {
       path: path,
       clock: () => cloudTestTime,
     );
+    await addTestProvider(store);
   });
   tearDown(() async {
     await store.close();
@@ -74,6 +95,8 @@ void main() {
   CloudAccount account(String id, {String? secretRef}) => CloudAccount(
     id: id,
     provider: CloudProvider.rackNerd,
+    businessProviderId: testProvider.id,
+    authScope: AdapterAuthScope.singleDevice,
     alias: 'Synthetic panel $id',
     endpoint: 'https://panel.synthetic.example',
     secretRef: secretRef ?? 'opaque-synthetic-$id-reference',
@@ -143,7 +166,8 @@ void main() {
       server.resources!.toJson(),
       completedResources(unlimited: true).toJson(),
     );
-    expect(server.vendor, '服务商待填写');
+    expect(server.vendor, testProvider.name);
+    expect(server.providerId, testProvider.id);
     expect(server.billing, BillingKind.unknown);
     expect(server.amountMinor, isNull);
     expect(
@@ -160,7 +184,10 @@ void main() {
       path: path,
       clock: () => cloudTestTime,
     );
-    expect((await store.cloudAccounts()).single.toMap(), connection.toMap());
+    expect((await store.cloudAccounts()).single.toMap(), {
+      ...connection.toMap(),
+      'pinned_server_id': server.id,
+    });
     expect((await store.servers()).single.toMap(), server.toMap());
     expect((await store.cloudBindings()).single.instanceKey, 'single');
   });

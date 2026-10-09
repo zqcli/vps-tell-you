@@ -1,3 +1,5 @@
+import 'support/provider_fixture.dart';
+
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
@@ -31,6 +33,7 @@ void main() {
       path: path,
       clock: () => cloudTestTime,
     );
+    await addTestProvider(store);
     secrets = CloudTestSecrets();
     adapterCalls = 0;
     cloud = ReloadFailCloudController(
@@ -58,6 +61,7 @@ void main() {
       id: id,
       name: 'Local $id',
       vendor: 'Local vendor',
+      providerId: testProvider.id,
       host: '192.0.2.99',
       notes: 'Local note',
       resources: completedResources(),
@@ -77,8 +81,10 @@ void main() {
     final account = CloudAccount(
       id: id,
       provider: data.provider,
+      businessProviderId: testProvider.id,
+      authScope: adapterScope(data.provider),
       alias: 'Panel $id',
-      endpoint: 'https://panel.example',
+      endpoint: 'https://$id.panel.example',
       secretRef: 'opaque-$id',
       remoteAccountId: data.remoteAccountId,
       createdAt: cloudTestTime,

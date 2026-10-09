@@ -1,3 +1,5 @@
+import 'support/provider_fixture.dart';
+
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
@@ -99,6 +101,7 @@ void main() {
       path: path,
       clock: () => cloudTestTime,
     );
+    await addTestProvider(store);
     secrets = CloudTestSecrets();
     reader = (_) async => snapshot();
     adapterCalls = 0;
@@ -119,6 +122,7 @@ void main() {
     bool v1 = false,
     String token = 'synthetic-token',
   }) => controller.verifyConnection(
+    businessProvider: testProvider,
     provider: v1 ? CloudProvider.solusVm1 : CloudProvider.solusVm2,
     endpoint: 'https://panel.example',
     credentials: v1
@@ -214,7 +218,7 @@ void main() {
     expect(secrets.writes, writes);
     reader = (_) async => snapshot(user: 999);
     expect(await verify(existing: account, token: 'replacement-token'), isNull);
-    expect(controller.error, contains('身份变化'));
+    expect(controller.localizedError, same(CloudAccountFailure.identity));
     expect(secrets.values[account.secretRef], prior);
     expect(secrets.writes, writes);
     expect((await store.cloudAccounts()).single.secretRef, account.secretRef);

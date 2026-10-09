@@ -12,6 +12,8 @@ class CloudAccount {
   const CloudAccount({
     required this.id,
     required this.provider,
+    required this.businessProviderId,
+    required this.authScope,
     required this.alias,
     required this.endpoint,
     required this.secretRef,
@@ -21,9 +23,17 @@ class CloudAccount {
     this.generation = 0,
     this.lastAttemptAt,
     this.lastFailure,
+    this.pinnedServerId,
   });
   final String id, alias, endpoint, secretRef;
   final CloudProvider provider;
+  CloudProvider get adapterType => provider;
+  final String businessProviderId;
+  final AdapterAuthScope authScope;
+
+  /// Single-VPS credentials have no stable remote ID. Their first local device
+  /// remains pinned for this authorization epoch, including after a local unlink.
+  final String? pinnedServerId;
   final int? remoteAccountId;
   final int revision, generation;
   final DateTime createdAt;
@@ -33,6 +43,9 @@ class CloudAccount {
   Map<String, Object?> toMap() => {
     'id': id,
     'provider': provider.name,
+    'business_provider_id': businessProviderId,
+    'auth_scope': authScope.name,
+    'pinned_server_id': pinnedServerId,
     'alias': alias,
     'endpoint': endpoint,
     'secret_ref': secretRef,
@@ -46,6 +59,9 @@ class CloudAccount {
   factory CloudAccount.fromMap(Map<String, Object?> row) => CloudAccount(
     id: row['id'] as String,
     provider: CloudProvider.values.byName(row['provider'] as String),
+    businessProviderId: row['business_provider_id'] as String,
+    authScope: AdapterAuthScope.values.byName(row['auth_scope'] as String),
+    pinnedServerId: row['pinned_server_id'] as String?,
     alias: row['alias'] as String,
     endpoint: row['endpoint'] as String,
     secretRef: row['secret_ref'] as String,
@@ -61,6 +77,10 @@ class CloudAccount {
         : CloudFailureKind.values.byName(row['last_failure'] as String),
   );
 }
+
+/// One credential instance under a business provider. Retain the old Dart and
+/// SQLite names at the persistence boundary to avoid changing stored identity.
+typedef AdapterInstance = CloudAccount;
 
 /// An immutable read result plus the DB generation which authorized it. An old
 /// inventory cannot be used to import after a newer read, reauthorization or
@@ -80,9 +100,14 @@ class CloudBinding {
     required this.observation,
     required this.stale,
     required this.missing,
+    this.identityUuid,
   });
   final String serverId, accountId, instanceKey;
   final CloudInstance observation;
+
+  /// Retained independently of a later API response which omits UUID.
+  final String? identityUuid;
+  String? get stableUuid => identityUuid ?? observation.uuid;
   final bool stale, missing;
   DateTime get observedAt => observation.observedAt;
   CloudPower get power => observation.power;
@@ -90,6 +115,7 @@ class CloudBinding {
     serverId: row['server_id'] as String,
     accountId: row['account_id'] as String,
     instanceKey: row['instance_key'] as String,
+    identityUuid: row['identity_uuid'] as String?,
     observation: decodeCloudInstance(row['observation'] as String),
     stale: row['stale'] == 1,
     missing: row['missing'] == 1,

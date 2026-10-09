@@ -15,6 +15,8 @@ import 'package:vps_tell_you/security/security_models.dart';
 import 'package:vps_tell_you/servers/server_record.dart';
 import 'package:vps_tell_you/servers/server_resources.dart';
 
+import 'support/provider_fixture.dart';
+
 // Independent review coverage: only synthetic credentials, in-memory secrets,
 // a temporary SQLite ledger and injected HTTP responses. No native vault/API.
 const _key = 'SYNTHETIC_REVIEW_KEY+ /&=';
@@ -165,6 +167,7 @@ void main() {
       path: path,
       clock: () => _at,
     );
+    await addTestProvider(store);
     secrets = _MemorySecrets();
     adapterCalls = 0;
     requests = 0;
@@ -183,6 +186,7 @@ void main() {
     bool replacement = false,
   }) async => (await controller.verifyConnection(
     provider: provider,
+    businessProvider: testProvider,
     endpoint: 'https://synthetic-review.example.test:8443',
     credentials: _credentials(provider, replacement: replacement),
     existing: existing,
@@ -197,11 +201,26 @@ void main() {
         selectedInstanceKeys: verification.snapshot.instances
             .map(verification.keyFor)
             .toSet(),
-        v1Resources: provider.isSingleInstance ? _completed() : null,
+        v1Resources: _completed(),
       ),
       isTrue,
     );
-    return controller.accounts.single;
+    final account = controller.accounts.single;
+    expect(account.businessProviderId, testProvider.id);
+    expect(
+      account.authScope,
+      provider.isSingleInstance
+          ? AdapterAuthScope.singleDevice
+          : AdapterAuthScope.account,
+    );
+    final server = (await store.servers()).single;
+    expect(server.providerId, testProvider.id);
+    expect(server.vendor, testProvider.name);
+    expect(
+      account.pinnedServerId,
+      provider.isSingleInstance ? server.id : null,
+    );
+    return account;
   }
 
   Future<void> reopen() async {
@@ -374,6 +393,12 @@ void main() {
         );
         expect(controller.bindings, isEmpty);
         expect(controller.accounts.single.remoteAccountId, isNull);
+        expect(controller.accounts.single.businessProviderId, testProvider.id);
+        expect(
+          controller.accounts.single.authScope,
+          AdapterAuthScope.singleDevice,
+        );
+        expect(controller.accounts.single.pinnedServerId, isNull);
         expect(controller.accounts.single.secretRef, isNot(account.secretRef));
         expect(secrets.values.containsKey(account.secretRef), isFalse);
         expect(secrets.values[sshRef], _sshSecret);
@@ -432,6 +457,7 @@ void main() {
           isFalse,
         );
         expect(await store.servers(), hasLength(1));
+        expect(controller.accounts.single.pinnedServerId, isNull);
         expect(
           await controller.importInstances(
             inventory,
@@ -443,6 +469,10 @@ void main() {
         );
         expect(await store.servers(), hasLength(2));
         expect(controller.bindings.single.serverId, isNot(imported.id));
+        expect(
+          controller.accounts.single.pinnedServerId,
+          controller.bindings.single.serverId,
+        );
         expect(
           (await store.servers())
               .singleWhere((server) => server.id == imported.id)

@@ -1,3 +1,5 @@
+import 'support/provider_fixture.dart';
+
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
@@ -49,6 +51,11 @@ CloudSnapshot snapshot({
             uuid: v1 ? null : uuid,
             name: v1 ? null : name,
             ipv4: v1 ? null : ip,
+            hostname: v1 ? null : 'fixture-$server.example',
+            vcpu: v1 ? null : 2,
+            ramBytes: v1 ? null : 2147483648,
+            diskBytes: v1 ? null : 32212254720,
+            trafficBytes: v1 ? null : 1099511627776,
           ),
         ],
 );
@@ -67,6 +74,7 @@ void main() {
       path: path,
       clock: () => cloudTestTime,
     );
+    await addTestProvider(store);
   });
   tearDown(() async {
     await store.close();
@@ -82,6 +90,8 @@ void main() {
     final account = CloudAccount(
       id: id,
       provider: data.provider,
+      businessProviderId: testProvider.id,
+      authScope: adapterScope(data.provider),
       alias: 'Panel $id',
       endpoint: 'https://panel.example:8443',
       secretRef: 'opaque-$id',
@@ -138,6 +148,7 @@ void main() {
       await store.saveThemeMode('dark');
       await add('v6-cloud');
       final db = await raw();
+      await removeProviderSchema(db);
       await db.execute('ALTER TABLE servers DROP COLUMN resources_json');
       await db.execute('ALTER TABLE app_settings DROP COLUMN language');
       await db.setVersion(6);
@@ -170,7 +181,7 @@ void main() {
       expect(await migrated.getVersion(), LedgerStore.schemaVersion);
       for (final table in tables) {
         final after = (await migrated.query(table))
-            .map((row) => Map<String, Object?>.from(row))
+            .map(legacyProviderProjection)
             .toList();
         if (table == 'servers') {
           for (final row in after) {
@@ -263,6 +274,7 @@ void main() {
         paidDate: const LedgerDate(2026, 10, 6),
       );
       final db = await raw();
+      await removeProviderSchema(db);
       final tables = [
         'servers',
         'payments',
@@ -294,30 +306,31 @@ void main() {
       final upgraded = await raw();
       expect(await upgraded.getVersion(), LedgerStore.schemaVersion);
       for (final table in tables) {
-        expect(await upgraded.query(table), before[table]);
+        expect(
+          (await upgraded.query(table)).map(legacyProviderProjection).toList(),
+          before[table],
+        );
       }
       expect(await store.cloudAccounts(), isEmpty);
     },
   );
-  test(
-    'same endpoint and same remote ID remain scoped by local connection',
-    () async {
-      await add('a');
-      await add('b');
-      expect(await store.servers(), hasLength(2));
-      expect(await store.cloudBindings(), hasLength(2));
-      expect(
-        (await store.cloudAccounts()).map((a) => a.endpoint).toSet(),
-        hasLength(1),
-      );
-      await store.close();
-      store = await LedgerStore.open(
-        factory: databaseFactoryFfiNoIsolate,
-        path: path,
-      );
-      expect(await store.cloudBindings(), hasLength(2));
-    },
-  );
+  test('same stable V2 identity is deduplicated while credentials stay independent', () async {
+    await add('a');
+    await add('b');
+    expect(await store.servers(), hasLength(1));
+    expect(await store.cloudAccounts(), hasLength(2));
+    expect(await store.cloudBindings(), hasLength(1));
+    expect(
+      (await store.cloudAccounts()).map((a) => a.endpoint).toSet(),
+      hasLength(1),
+    );
+    await store.close();
+    store = await LedgerStore.open(
+      factory: databaseFactoryFfiNoIsolate,
+      path: path,
+    );
+    expect(await store.cloudBindings(), hasLength(1));
+  });
   test(
     'save without importing, continue import and duplicate import are atomic',
     () async {
@@ -357,6 +370,8 @@ void main() {
       final account = CloudAccount(
         id: 'a',
         provider: CloudProvider.solusVm2,
+        businessProviderId: testProvider.id,
+        authScope: adapterScope(CloudProvider.solusVm2),
         alias: 'Panel',
         endpoint: 'https://panel.example',
         secretRef: ref,
@@ -386,6 +401,7 @@ void main() {
         id: original.id,
         name: 'My name',
         vendor: 'My vendor',
+        providerId: original.providerId,
         host: 'manual.example',
         notes: 'Private local notes',
         resources: completedResources(),
@@ -559,6 +575,8 @@ void main() {
     final replacement = CloudAccount(
       id: 'a',
       provider: CloudProvider.solusVm1,
+      businessProviderId: testProvider.id,
+      authScope: adapterScope(CloudProvider.solusVm1),
       alias: 'Rebound',
       endpoint: account.endpoint,
       secretRef: 'replacement',
@@ -602,6 +620,8 @@ void main() {
       final account = CloudAccount(
         id: 'incomplete',
         provider: CloudProvider.solusVm1,
+        businessProviderId: testProvider.id,
+        authScope: adapterScope(CloudProvider.solusVm1),
         alias: 'Incomplete',
         endpoint: 'https://panel.example',
         secretRef: 'incomplete-ref',
@@ -674,7 +694,10 @@ void main() {
     final server = (await store.servers()).single;
     expect(server.host, resources.ip);
     expect(server.spec, resources.specSummary);
-    expect(server.resources!.toJson(), resources.toJson());
+    expect(server.resources!.toJson(), {
+      ...resources.toJson(),
+      'apiFields': <String>[],
+    });
     expect(server.billing, BillingKind.unknown);
     expect(server.amountMinor, isNull);
   });
@@ -732,7 +755,10 @@ void main() {
       await store.unbindCloudAccount(account);
       server = (await store.servers()).single;
       expect(server.toMap(), before);
-      expect(server.resources!.toJson(), completedResources().toJson());
+      expect(server.resources!.toJson(), {
+        ...completedResources().toJson(),
+        'apiFields': <String>[],
+      });
       expect((await store.sshConfigurations()).single.toMap(), sshBefore);
       expect((await store.payments()).single.toMap(), paymentBefore);
       expect(await store.cloudBindings(), isEmpty);
@@ -768,7 +794,7 @@ void main() {
       final server = (await store.servers()).single;
       expect(server.name.length, 80);
       expect(server.validate(), isNull);
-      expect(server.vendor, '服务商待填写');
+      expect(server.vendor, testProvider.name);
       await store.saveServer(server, isNew: false);
     },
   );

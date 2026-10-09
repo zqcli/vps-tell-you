@@ -34,11 +34,11 @@ class FinanceTotalView extends StatelessWidget {
   const FinanceTotalView({
     super.key,
     required this.total,
-    this.dark = false,
+    this.emphasize = false,
     this.compact = false,
   });
   final FinanceTotal total;
-  final bool dark, compact;
+  final bool emphasize, compact;
   @override
   Widget build(BuildContext context) => Column(
     crossAxisAlignment: CrossAxisAlignment.start,
@@ -52,7 +52,9 @@ class FinanceTotalView extends StatelessWidget {
         style: TextStyle(
           fontSize: compact ? 21 : 30,
           fontWeight: FontWeight.w700,
-          color: dark ? Colors.white : Theme.of(context).colorScheme.onSurface,
+          color: emphasize
+              ? Theme.of(context).colorScheme.primary
+              : Theme.of(context).colorScheme.onSurface,
         ),
       ),
       const SizedBox(height: 5),
@@ -64,9 +66,7 @@ class FinanceTotalView extends StatelessWidget {
         ),
         style: TextStyle(
           fontSize: 12,
-          color: dark
-              ? const Color(0xFFCAD5E7)
-              : Theme.of(context).colorScheme.onSurfaceVariant,
+          color: Theme.of(context).colorScheme.onSurfaceVariant,
         ),
       ),
       if (total.unknown + total.notApplicable > 0)
@@ -77,9 +77,7 @@ class FinanceTotalView extends StatelessWidget {
           ),
           style: TextStyle(
             fontSize: 12,
-            color: dark
-                ? const Color(0xFFCAD5E7)
-                : Theme.of(context).colorScheme.onSurfaceVariant,
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
           ),
         ),
       if (total.missingFx > 0)
@@ -87,9 +85,7 @@ class FinanceTotalView extends StatelessWidget {
           context.l10n.financeMissingFxExcluded,
           style: TextStyle(
             fontSize: 12,
-            color: dark
-                ? const Color(0xFFFFD89B)
-                : Theme.of(context).colorScheme.onTertiaryContainer,
+            color: Theme.of(context).colorScheme.tertiary,
           ),
         ),
       if (total.originals.isNotEmpty)
@@ -103,9 +99,7 @@ class FinanceTotalView extends StatelessWidget {
             ),
             style: TextStyle(
               fontSize: 12,
-              color: dark
-                  ? const Color(0xFFCAD5E7)
-                  : Theme.of(context).colorScheme.onSurfaceVariant,
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
             ),
           ),
         ),

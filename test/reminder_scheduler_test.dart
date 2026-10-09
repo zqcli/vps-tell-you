@@ -1,3 +1,5 @@
+import 'support/provider_fixture.dart';
+
 import 'dart:async';
 import 'dart:io';
 
@@ -87,6 +89,7 @@ void main() {
     'v5 upgrade preserves prior ledger rows and adds rules/default appearance',
     () async {
       final raw = await databaseFactoryFfiNoIsolate.openDatabase(path);
+      await removeProviderSchema(raw);
       final before = await raw.query('servers');
       final periods = await raw.query('service_periods');
       await raw.execute('DROP TRIGGER server_reminder');
@@ -101,7 +104,12 @@ void main() {
       );
       final upgraded = await databaseFactoryFfiNoIsolate.openDatabase(path);
       expect(await upgraded.getVersion(), LedgerStore.schemaVersion);
-      expect(await upgraded.query('servers'), before);
+      expect(
+        (await upgraded.query('servers'))
+            .map(legacyProviderProjection)
+            .toList(),
+        before,
+      );
       expect(await upgraded.query('service_periods'), periods);
       expect((await store.reminderRules()).single.serverId, 'one');
       expect(await store.themeMode(), 'system');

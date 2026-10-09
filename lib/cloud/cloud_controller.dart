@@ -11,9 +11,13 @@ import '../servers/server_record.dart';
 import '../servers/server_resources.dart';
 import 'cloud_account.dart';
 import 'cloud_models.dart';
+import 'cloud_import.dart';
 import 'solusvm_adapter.dart';
+import 'provider_record.dart';
 
 export 'cloud_account.dart';
+export 'provider_record.dart';
+export 'cloud_import.dart';
 
 typedef CloudAdapterFactory = CloudAdapter Function(
   CloudProvider provider,
@@ -26,6 +30,7 @@ typedef CloudAdapterFactory = CloudAdapter Function(
 class CloudVerification {
   CloudVerification._({
     required this.provider,
+    required this.businessProvider,
     required this.endpoint,
     required this.snapshot,
     required CloudCredentials this._credentials,
@@ -33,12 +38,14 @@ class CloudVerification {
     required this.cancellation,
   });
   final CloudProvider provider;
+  final ProviderRecord businessProvider;
   final CloudEndpoint endpoint;
   final CloudSnapshot snapshot;
   final CloudAccount? existingAccount;
   final CloudCancellation cancellation;
   CloudCredentials? _credentials;
   bool _consumed = false;
+  bool get isCommitted => _consumed;
   String keyFor(CloudInstance instance) => cloudInstanceKey(snapshot, instance);
 }
 
@@ -53,7 +60,9 @@ class CloudController extends ChangeNotifier {
   final SecretStore secrets;
   final CloudAdapterFactory adapterFactory;
   List<CloudAccount> accounts = const [];
+  List<ProviderRecord> providers = const [];
   List<CloudBinding> bindings = const [];
+  Map<String, Map<String, String>> _identityUuids = const {};
   LocalizedMessage? localizedError;
   String? get error => errorFor(defaultLocalizations);
   String? errorFor(AppLocalizations l10n) => localizedError?.messageFor(l10n);
@@ -64,6 +73,11 @@ class CloudController extends ChangeNotifier {
   CloudCancellation? _verificationCancellation;
   String? _verificationAccountId;
   CloudVerification? _verification;
+  CloudInventory? _lastSavedInventory;
+
+  /// The committed instance snapshot, available even if the metadata reread
+  /// fails. It contains no credentials and is fenced by the persisted epoch.
+  CloudInventory? get lastSavedInventory => _lastSavedInventory;
   bool _verifying = false, _mutating = false, _disposed = false;
   bool get busy => _verifying || _mutating || _reads.isNotEmpty;
   int _metadataEpoch = 0;
@@ -139,12 +153,16 @@ class CloudController extends ChangeNotifier {
   @protected
   Future<void> readMetadata() async {
     final epoch = ++_metadataEpoch;
+    final nextProviders = await store.providers();
     final nextAccounts = await store.cloudAccounts();
     final nextBindings = await store.cloudBindings();
+    final nextIdentityUuids = await store.cloudIdentityUuids();
     final pending = await store.pendingSecretCleanup();
     if (_disposed || epoch != _metadataEpoch) return;
+    providers = List.unmodifiable(nextProviders);
     accounts = List.unmodifiable(nextAccounts);
     bindings = List.unmodifiable(nextBindings);
+    _identityUuids = nextIdentityUuids;
     cleanupCount = pending.length;
     needsReload = false;
   }
@@ -170,12 +188,14 @@ class CloudController extends ChangeNotifier {
 
   Future<CloudVerification?> verifyConnection({
     required CloudProvider provider,
+    required ProviderRecord businessProvider,
     required String endpoint,
     required CloudCredentials credentials,
     CloudAccount? existing,
   }) async {
     if (_disposed || _mutating || needsReload) return null;
     cancelVerification();
+    _lastSavedInventory = null;
     if (existing != null) cancelAccount(existing.id);
     final cancellation = CloudCancellation();
     _verificationCancellation = cancellation;
@@ -186,6 +206,15 @@ class CloudController extends ChangeNotifier {
     try {
       _platform();
       _validateCredentials(provider, credentials);
+      final selectedProvider = await store.verifiedProvider(
+        businessProvider.id,
+      );
+      if (selectedProvider.revision != businessProvider.revision ||
+          existing != null &&
+              existing.businessProviderId != businessProvider.id) {
+        throw const LedgerConflict();
+      }
+      _active(cancellation);
       final parsed = CloudEndpoint.parse(
         endpoint,
         allowSolusVm1ConsolePath: provider == CloudProvider.solusVm1,
@@ -227,6 +256,7 @@ class CloudController extends ChangeNotifier {
       }
       final verification = CloudVerification._(
         provider: provider,
+        businessProvider: selectedProvider,
         endpoint: parsed,
         snapshot: snapshot,
         credentials: credentials,
@@ -297,6 +327,13 @@ class CloudController extends ChangeNotifier {
           );
         }
       }
+      final currentProvider = await store.verifiedProvider(
+        verification.businessProvider.id,
+      );
+      if (currentProvider.revision != verification.businessProvider.revision) {
+        throw const LedgerConflict();
+      }
+      _active(cancellation);
       final credentials = verification._credentials;
       if (credentials == null) {
         throw const CloudFailure(CloudFailureKind.cancelled);
@@ -318,18 +355,25 @@ class CloudController extends ChangeNotifier {
         throw CloudAccountFailure.secret;
       }
       _active(cancellation);
+      final savedAccount = CloudAccount(
+        id: existing?.id ?? newLocalId(),
+        provider: verification.provider,
+        businessProviderId: verification.businessProvider.id,
+        authScope: adapterScope(verification.provider),
+        alias: clean,
+        endpoint: verification.endpoint.toString(),
+        secretRef: ref,
+        remoteAccountId: verification.snapshot.remoteAccountId,
+        createdAt: existing?.createdAt ?? store.clock().toUtc(),
+        revision: existing == null ? 0 : existing.revision + 1,
+        generation: existing == null ? 0 : existing.generation + 1,
+        lastAttemptAt: verification.snapshot.completedAt,
+      );
       await store.saveCloudAccount(
-        account: CloudAccount(
-          id: existing?.id ?? newLocalId(),
-          provider: verification.provider,
-          alias: clean,
-          endpoint: verification.endpoint.toString(),
-          secretRef: ref,
-          remoteAccountId: verification.snapshot.remoteAccountId,
-          createdAt: existing?.createdAt ?? store.clock().toUtc(),
-        ),
+        account: savedAccount,
         snapshot: verification.snapshot,
         expected: existing,
+        expectedProvider: verification.businessProvider,
         selectedInstanceKeys: selection,
         v1DisplayName: v1DisplayName,
         v1Resources: v1Resources,
@@ -339,6 +383,10 @@ class CloudController extends ChangeNotifier {
       // Commit is final even if reload or old-secret cleanup subsequently fails.
       verification._consumed = true;
       verification._credentials = null;
+      _lastSavedInventory = CloudInventory(
+        account: savedAccount,
+        snapshot: verification.snapshot,
+      );
       if (identical(_verification, verification)) _verification = null;
       if (existing != null) await _cleanup([existing.secretRef]);
       await _afterCommit();
@@ -449,6 +497,179 @@ class CloudController extends ChangeNotifier {
       _notify();
     }
   }
+
+  /// Partial local import with exact committed outcomes. A cancellation or
+  /// authority/storage failure stops the remainder; it never refreshes and
+  /// silently continues a now-different authorization.
+  Future<CloudImportBatchResult?> importBatch(
+    CloudInventory inventory,
+    List<CloudImportDraft> drafts,
+  ) async {
+    if (_disposed || _mutating || needsReload) return null;
+    final selected = List<CloudImportDraft>.unmodifiable(drafts);
+    if (selected.map((d) => d.instanceKey).toSet().length != selected.length) {
+      _failed(CloudAccountFailure.selection);
+      _notify();
+      return null;
+    }
+    _mutating = true;
+    localizedError = null;
+    final cancellation = CloudCancellation();
+    cancelAccount(inventory.account.id, notify: false);
+    _reads[inventory.account.id] = cancellation;
+    final items = <CloudImportItemResult>[];
+    final failures = <String, LocalizedMessage>{};
+    final unprocessed = <String>{};
+    LocalizedMessage? interruption;
+    _notify();
+    try {
+      for (var i = 0; i < selected.length; i++) {
+        final draft = selected[i];
+        try {
+          _active(cancellation);
+          items.add(await importDraft(inventory, draft, cancellation));
+        } catch (problem) {
+          _failed(problem);
+          final safe =
+              localizedError ??
+              LocalizedText((l10n) => l10n.cloudOperationFailed);
+          failures[draft.instanceKey] = safe;
+          if (problem is! CloudImportDraftFailure) {
+            interruption = safe;
+            unprocessed.addAll(selected.skip(i + 1).map((d) => d.instanceKey));
+            break;
+          }
+        }
+      }
+      await _afterCommit();
+      return CloudImportBatchResult(
+        items: items,
+        failures: failures,
+        unprocessed: unprocessed,
+        interruption: interruption,
+      );
+    } finally {
+      if (identical(_reads[inventory.account.id], cancellation)) {
+        _reads.remove(inventory.account.id);
+      }
+      _mutating = false;
+      _notify();
+    }
+  }
+
+  @protected
+  Future<CloudImportItemResult> importDraft(
+    CloudInventory inventory,
+    CloudImportDraft draft,
+    CloudCancellation cancellation,
+  ) => store.importCloudDraft(
+    inventory,
+    draft,
+    isCancelled: () => _disposed || cancellation.isCancelled,
+  );
+
+  /// Read-only display hints from current local metadata. The transaction
+  /// repeats these checks against stable IDs before any import or link.
+  String? lockedIdentityFor({
+    String? accountId,
+    required String instanceKey,
+    String? uuid,
+  }) => _identityUuids[accountId]?[instanceKey] ?? uuid;
+
+  bool hasSourceIdentityConflict({
+    String? accountId,
+    required String instanceKey,
+    String? uuid,
+  }) {
+    final locked = _identityUuids[accountId]?[instanceKey];
+    return uuid != null && locked != null && uuid != locked;
+  }
+
+  List<CloudBinding> matchingDevices({
+    required CloudProvider type,
+    required String endpoint,
+    required int? remoteAccountId,
+    required String instanceKey,
+    String? accountId,
+    String? uuid,
+  }) {
+    final candidates = _deviceCandidates(
+      type: type,
+      endpoint: endpoint,
+      remoteAccountId: remoteAccountId,
+      instanceKey: instanceKey,
+      accountId: accountId,
+    );
+    final locked = lockedIdentityFor(
+      accountId: accountId,
+      instanceKey: instanceKey,
+      uuid: uuid,
+    );
+    if (hasSourceIdentityConflict(
+          accountId: accountId,
+          instanceKey: instanceKey,
+          uuid: uuid,
+        ) ||
+        candidates.any((binding) => _uuidConflicts(binding, locked))) {
+      return const [];
+    }
+    return candidates;
+  }
+
+  List<CloudBinding> conflictingDevices({
+    required CloudProvider type,
+    required String endpoint,
+    required int? remoteAccountId,
+    required String instanceKey,
+    required String? uuid,
+    String? accountId,
+  }) {
+    final candidates = _deviceCandidates(
+      type: type,
+      endpoint: endpoint,
+      remoteAccountId: remoteAccountId,
+      instanceKey: instanceKey,
+      accountId: accountId,
+    );
+    if (hasSourceIdentityConflict(
+      accountId: accountId,
+      instanceKey: instanceKey,
+      uuid: uuid,
+    )) {
+      return candidates;
+    }
+    final locked = lockedIdentityFor(
+      accountId: accountId,
+      instanceKey: instanceKey,
+      uuid: uuid,
+    );
+    return candidates
+        .where((binding) => _uuidConflicts(binding, locked))
+        .toList(growable: false);
+  }
+
+  static bool _uuidConflicts(CloudBinding binding, String? uuid) =>
+      uuid != null && binding.stableUuid != null && binding.stableUuid != uuid;
+
+  List<CloudBinding> _deviceCandidates({
+    required CloudProvider type,
+    required String endpoint,
+    required int? remoteAccountId,
+    required String instanceKey,
+    String? accountId,
+  }) => bindings
+      .where((binding) {
+        if (binding.instanceKey != instanceKey) return false;
+        if (binding.accountId == accountId) return true;
+        if (type != CloudProvider.solusVm2) return false;
+        final source = accounts
+            .where((a) => a.id == binding.accountId)
+            .firstOrNull;
+        return source?.provider == type &&
+            source?.endpoint == endpoint &&
+            source?.remoteAccountId == remoteAccountId;
+      })
+      .toList(growable: false);
 
   Future<bool> renameAccount(CloudAccount account, String alias) async {
     if (_disposed || _mutating || needsReload) return false;

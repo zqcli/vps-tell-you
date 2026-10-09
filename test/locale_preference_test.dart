@@ -1,3 +1,5 @@
+import 'support/provider_fixture.dart';
+
 import 'dart:io';
 import 'dart:async';
 import 'dart:ui' show CheckedState;
@@ -80,6 +82,7 @@ void main() {
       final path = '${directory.path}/ledger.db';
       final raw = await databaseFactoryFfiNoIsolate.openDatabase(path);
       await LedgerStore.createSchema(raw);
+      await removeProviderSchema(raw);
       await raw.execute('ALTER TABLE app_settings DROP COLUMN language');
       await raw.setVersion(8);
       await raw.insert('server_groups', {

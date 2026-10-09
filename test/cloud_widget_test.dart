@@ -1,3 +1,5 @@
+import 'support/provider_fixture.dart';
+
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
@@ -10,6 +12,7 @@ import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:vps_tell_you/cloud/cloud_controller.dart';
 import 'package:vps_tell_you/cloud/cloud_models.dart';
 import 'package:vps_tell_you/cloud/cloud_pages.dart';
+import 'package:vps_tell_you/cloud/provider_pages.dart';
 import 'package:vps_tell_you/cloud/solusvm_adapter.dart';
 import 'package:vps_tell_you/core/app_theme.dart';
 import 'package:vps_tell_you/core/value_types.dart';
@@ -56,6 +59,11 @@ CloudSnapshot _snapshot(
                 serverId: id,
                 name: name ?? 'Fixture VPS $id',
                 ipv4: '192.0.2.10',
+                hostname: 'fixture-$id.example',
+                vcpu: 2,
+                ramBytes: 2147483648,
+                diskBytes: 32212254720,
+                trafficBytes: 1099511627776,
               ),
           ],
   );
@@ -81,6 +89,7 @@ void main() {
       factory: databaseFactoryFfiNoIsolate,
       path: '${directory.path}/ledger.sqlite3',
     );
+    await addTestProvider(store);
     secrets = FakeSecretStore();
     behavior = (provider, _) async => _snapshot(provider);
     cancellations.clear();
@@ -203,7 +212,9 @@ void main() {
     String text, {
     bool settle = true,
   }) async {
-    final target = find.text(text).last;
+    final matches = find.text(text);
+    if (matches.evaluate().isEmpty) await reveal(tester, matches);
+    final target = matches.last;
     await reveal(tester, target);
     await tester.tap(target);
     if (settle) {
@@ -211,6 +222,16 @@ void main() {
     } else {
       await tester.pump();
     }
+  }
+
+  Future<void> openAccountMenu(WidgetTester tester, String id) async {
+    if (find.byType(CloudAccountDetailsPage).evaluate().isEmpty) {
+      if (find.byType(ProviderDetailsPage).evaluate().isEmpty) {
+        await tapKey(tester, 'provider-${testProvider.id}');
+      }
+      await tapKey(tester, 'provider-instance-$id');
+    }
+    await tapKey(tester, 'cloud-instance-menu');
   }
 
   Future<void> fillResources(WidgetTester tester) async {
@@ -245,6 +266,7 @@ void main() {
     bool import = true,
   }) async {
     final verification = (await cloud.verifyConnection(
+      businessProvider: testProvider,
       provider: provider,
       endpoint: 'https://panel.example',
       credentials: switch (provider) {
@@ -277,7 +299,11 @@ void main() {
   testWidgets(
     'template repeated taps do not stack forms; V1 origin review and explicit anonymous import at 390px large text',
     (tester) async {
-      await mount(tester, CloudTemplatesPage(ledger: ledger), scale: 2.0);
+      await mount(
+        tester,
+        CloudTemplatesPage(businessProvider: testProvider, ledger: ledger),
+        scale: 2.0,
+      );
       final v1 = find.text('SolusVM 1');
       await tester.tap(v1);
       await tester.tap(v1, warnIfMissed: false);
@@ -316,7 +342,7 @@ void main() {
       await tapKey(tester, 'verify-cloud');
       expect(calls, 1);
       expect(endpoints.single, 'https://panel.example:5656');
-      expect(find.text('无稳定实例 ID · 按此独立连接识别'), findsOneWidget);
+      expect(find.text('无稳定设备 ID · 按此独立授权识别'), findsOneWidget);
       await reveal(tester, find.byKey(const ValueKey('cloud-import-submit')));
       expect(
         tester
@@ -374,7 +400,11 @@ void main() {
           }),
         );
       };
-      await mount(tester, CloudTemplatesPage(ledger: ledger), scale: 2);
+      await mount(
+        tester,
+        CloudTemplatesPage(businessProvider: testProvider, ledger: ledger),
+        scale: 2,
+      );
       await tapText(tester, 'RackNerd ctrl');
       expect(find.byType(CloudAuthorizationPage), findsOneWidget);
       await fill(
@@ -436,6 +466,14 @@ void main() {
       expect(requests, hasLength(1));
       expect(cloud.accounts.single.provider, CloudProvider.rackNerd);
       expect(cloud.accounts.single.remoteAccountId, isNull);
+      expect(cloud.accounts.single.businessProviderId, testProvider.id);
+      expect(cloud.accounts.single.authScope, AdapterAuthScope.singleDevice);
+      expect(cloud.accounts.single.pinnedServerId, ledger.active.single.id);
+      expect(
+        find.byKey(const ValueKey('cloud-import-results')),
+        findsOneWidget,
+      );
+      expect(find.byKey(const ValueKey('cloud-import-done')), findsOneWidget);
       expect(cloud.bindings.single.instanceKey, 'single');
       expect(cloud.bindings.single.observation.serverId, isNull);
       expect(cloud.bindings.single.observation.vcpu, isNull);
@@ -466,6 +504,7 @@ void main() {
       await mount(
         tester,
         CloudAuthorizationPage(
+          businessProvider: testProvider,
           ledger: ledger,
           provider: CloudProvider.rackNerd,
         ),
@@ -477,10 +516,11 @@ void main() {
       expect(cloud.accounts.single.remoteAccountId, isNull);
       expect(await store.servers(), isEmpty);
       expect(cloud.bindings, isEmpty);
+      expect(cloud.accounts.single.pinnedServerId, isNull);
       final saved = cloud.accounts.single;
       await mount(tester, CloudAccountsPage(ledger: ledger));
-      await tapKey(tester, 'cloud-account-${saved.id}');
-      await tapText(tester, '继续导入实例');
+      await openAccountMenu(tester, saved.id);
+      await tapText(tester, '继续导入设备');
       await tapKey(tester, 'cloud-select-single');
       await fillResources(tester);
       await tapKey(tester, 'cloud-import-submit');
@@ -488,6 +528,11 @@ void main() {
       expect(secrets.writes, 1);
       expect(ledger.active, hasLength(1));
       expect(cloud.bindings.single.instanceKey, 'single');
+      expect(cloud.accounts.single.pinnedServerId, ledger.active.single.id);
+      expect(
+        find.byKey(const ValueKey('cloud-import-results')),
+        findsOneWidget,
+      );
       expect(tester.takeException(), isNull);
     },
   );
@@ -498,6 +543,7 @@ void main() {
       await mount(
         tester,
         CloudAuthorizationPage(
+          businessProvider: testProvider,
           ledger: ledger,
           provider: CloudProvider.rackNerd,
         ),
@@ -546,6 +592,7 @@ void main() {
       await mount(
         tester,
         CloudAuthorizationPage(
+          businessProvider: testProvider,
           ledger: ledger,
           provider: CloudProvider.solusVm1,
         ),
@@ -581,7 +628,11 @@ void main() {
   ) async {
     await mount(
       tester,
-      CloudAuthorizationPage(ledger: ledger, provider: CloudProvider.solusVm1),
+      CloudAuthorizationPage(
+        businessProvider: testProvider,
+        ledger: ledger,
+        provider: CloudProvider.solusVm1,
+      ),
     );
     await authorize(tester, provider: CloudProvider.solusVm1);
     await tapKey(tester, 'cloud-select-single');
@@ -625,6 +676,7 @@ void main() {
       await mount(
         tester,
         CloudAuthorizationPage(
+          businessProvider: testProvider,
           ledger: ledger,
           provider: CloudProvider.solusVm1,
         ),
@@ -668,6 +720,7 @@ void main() {
       await mount(
         tester,
         CloudAuthorizationPage(
+          businessProvider: testProvider,
           ledger: ledger,
           provider: CloudProvider.solusVm2,
         ),
@@ -714,6 +767,7 @@ void main() {
       await mount(
         tester,
         CloudAuthorizationPage(
+          businessProvider: testProvider,
           ledger: ledger,
           provider: CloudProvider.solusVm2,
         ),
@@ -723,8 +777,8 @@ void main() {
       expect(cloud.accounts, hasLength(1));
       expect(ledger.active, isEmpty);
       await mount(tester, CloudAccountsPage(ledger: ledger));
-      await tapKey(tester, 'cloud-account-${cloud.accounts.single.id}');
-      await tapText(tester, '继续导入实例');
+      await openAccountMenu(tester, cloud.accounts.single.id);
+      await tapText(tester, '继续导入设备');
       expect(find.byType(CloudImportPage), findsOneWidget);
       await tapKey(tester, 'cloud-select-7/11/101');
       final submit = find.byKey(const ValueKey('cloud-import-submit'));
@@ -734,8 +788,9 @@ void main() {
       await tester.pumpAndSettle();
       expect(ledger.active, hasLength(1));
       expect(secrets.writes, 1);
-      await tapKey(tester, 'cloud-account-${cloud.accounts.single.id}');
-      await tapText(tester, '继续导入实例');
+      await tapKey(tester, 'cloud-import-done');
+      await openAccountMenu(tester, cloud.accounts.single.id);
+      await tapText(tester, '继续导入设备');
       final linked = tester.widget<CheckboxListTile>(
         find.byKey(const ValueKey('cloud-select-7/11/101')),
       );
@@ -757,6 +812,7 @@ void main() {
       await mount(
         tester,
         CloudAuthorizationPage(
+          businessProvider: testProvider,
           ledger: ledger,
           provider: CloudProvider.solusVm2,
         ),
@@ -788,6 +844,7 @@ void main() {
       await mount(
         tester,
         CloudAuthorizationPage(
+          businessProvider: testProvider,
           ledger: ledger,
           provider: CloudProvider.solusVm2,
         ),
@@ -796,6 +853,7 @@ void main() {
       await tapKey(tester, 'cloud-select-7/11/101');
       tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.inactive);
       await tester.pump();
+      await reveal(tester, find.byKey(const ValueKey('cloud-import-submit')));
       expect(
         tester
             .widget<FilledButton>(
@@ -804,6 +862,7 @@ void main() {
             .onPressed,
         isNull,
       );
+      await reveal(tester, find.byKey(const ValueKey('cloud-save-only')));
       expect(
         tester
             .widget<OutlinedButton>(
@@ -860,6 +919,7 @@ void main() {
           id: original.id,
           name: '手动名称',
           vendor: '自填服务商',
+          providerId: original.providerId,
           host: 'manual.example',
           notes: '本地备注',
           billing: BillingKind.metered,
@@ -889,20 +949,22 @@ void main() {
       final before = ledger.active.single.toMap();
       final ssh = (await store.sshConfigurations()).single.toMap();
       await mount(tester, CloudAccountsPage(ledger: ledger), scale: 2.0);
-      await tapKey(tester, 'cloud-account-${saved.id}');
-      await tapText(tester, '查看账户详情');
-      expect(find.text('面板账户详情'), findsOneWidget);
-      expect(find.text('已验证用户账户 7 · 项目与实例'), findsOneWidget);
+      await openAccountMenu(tester, saved.id);
+      await tapText(tester, '查看适配器实例详情');
+      expect(find.text('适配器实例详情'), findsOneWidget);
+      expect(find.text('已验证用户账户 7 · 项目与设备'), findsOneWidget);
       await tester.pageBack();
       await tester.pumpAndSettle();
-      await tapKey(tester, 'cloud-account-${saved.id}');
-      await tapText(tester, '编辑账户名称');
+      await openAccountMenu(tester, saved.id);
+      await tapText(tester, '编辑适配器实例名称');
       await fill(tester, 'cloud-rename', '重命名的面板');
       await tapText(tester, '保存名称');
       expect(cloud.accounts.single.alias, '重命名的面板');
-      await tapKey(tester, 'cloud-account-${saved.id}');
-      await tapText(tester, '解除账户关联');
-      await tapText(tester, '解除本地关联');
+      await openAccountMenu(tester, saved.id);
+      await tapText(tester, '删除适配器实例');
+      expect(find.textContaining('将解除 1 台本地服务器的关联'), findsOneWidget);
+      expect(find.textContaining('手动名称'), findsOneWidget);
+      await tapText(tester, '仅删除本地适配器实例');
       expect(cloud.accounts, isEmpty);
       expect(cloud.bindings, isEmpty);
       expect((await store.servers()).single.toMap(), before);
@@ -941,6 +1003,7 @@ void main() {
         await mount(
           tester,
           CloudAuthorizationPage(
+            businessProvider: testProvider,
             ledger: ledger,
             provider: provider,
             existing: saved,
@@ -952,7 +1015,7 @@ void main() {
         await tapKey(tester, 'verify-cloud');
         await tapKey(tester, 'cloud-select-single');
         await reveal(tester, find.byKey(const ValueKey('cloud-import-submit')));
-        expect(find.text('更新授权并解除旧关联'), findsOneWidget);
+        expect(find.text('更新授权并解除旧设备关联'), findsOneWidget);
         expect(find.text('仅更新授权'), findsNothing);
         expect(
           tester
@@ -962,6 +1025,7 @@ void main() {
               .onPressed,
           isNull,
         );
+        await reveal(tester, find.byKey(const ValueKey('cloud-save-only')));
         expect(
           tester
               .widget<OutlinedButton>(
@@ -980,6 +1044,12 @@ void main() {
         expect(cloud.bindingFor(oldServerId), isNull);
         expect(cloud.bindings.single.serverId, isNot(oldServerId));
         expect(cloud.accounts.single.id, saved.id);
+        expect(cloud.accounts.single.authScope, AdapterAuthScope.singleDevice);
+        expect(
+          cloud.accounts.single.pinnedServerId,
+          cloud.bindings.single.serverId,
+        );
+        expect(cloud.accounts.single.pinnedServerId, isNot(oldServerId));
         expect(ledger.byId(oldServerId)!.toMap(), previousServer);
         expect((await store.sshConfigurations()).single.toMap(), previousSsh);
         expect((await store.payments()).single.toMap(), previousPayment);
@@ -998,6 +1068,7 @@ void main() {
       await mount(
         tester,
         CloudAuthorizationPage(
+          businessProvider: testProvider,
           ledger: ledger,
           provider: CloudProvider.solusVm2,
           existing: saved,
@@ -1059,8 +1130,8 @@ void main() {
       await mount(tester, CloudAccountsPage(ledger: ledger));
       final pending = Completer<CloudSnapshot>();
       behavior = (_, _) => pending.future;
-      await tapKey(tester, 'cloud-account-${cloud.accounts.single.id}');
-      await tapText(tester, '继续导入实例', settle: false);
+      await openAccountMenu(tester, cloud.accounts.single.id);
+      await tapText(tester, '继续导入设备', settle: false);
       await tester.pump(const Duration(milliseconds: 350));
       final request = cancellations.last;
       expect(request.isCancelled, isFalse);
@@ -1072,11 +1143,37 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.byType(CloudReadPage), findsNothing);
       expect(find.byType(CloudImportPage), findsNothing);
-      expect(find.byType(CloudAccountsPage), findsOneWidget);
+      expect(find.byType(CloudAccountDetailsPage), findsOneWidget);
       expect(cloud.bindings, isEmpty);
       expect(tester.takeException(), isNull);
     },
   );
+
+  testWidgets('saved adapter read retry ignores repeated callbacks', (
+    tester,
+  ) async {
+    final saved = await account(import: false);
+    behavior = (_, _) async =>
+        throw const CloudFailure(CloudFailureKind.timeout);
+    await mount(
+      tester,
+      CloudReadPage(ledger: ledger, account: saved, importAfterRead: false),
+    );
+    expect(calls, 2);
+    final pending = Completer<CloudSnapshot>();
+    behavior = (_, _) => pending.future;
+    final retry = find.byKey(const ValueKey('cloud-read-again'));
+    await reveal(tester, retry);
+    final readAgain = tester.widget<OutlinedButton>(retry).onPressed!;
+    readAgain();
+    readAgain();
+    await tester.pump();
+    expect(calls, 3);
+    pending.complete(_snapshot(CloudProvider.solusVm2));
+    await tester.pumpAndSettle();
+    expect(calls, 3);
+    expect(tester.takeException(), isNull);
+  });
 
   testWidgets(
     'saving twice waits for one secure-store operation; failed storage cannot claim success',
@@ -1084,6 +1181,7 @@ void main() {
       await mount(
         tester,
         CloudAuthorizationPage(
+          businessProvider: testProvider,
           ledger: ledger,
           provider: CloudProvider.solusVm2,
         ),
@@ -1119,12 +1217,12 @@ void main() {
     tester,
   ) async {
     await mount(tester, Scaffold(body: SettingsPage(controller: ledger)));
-    final entry = find.text('面板账户');
+    final entry = find.byKey(const ValueKey('settings-providers'));
     await reveal(tester, entry);
     await tester.tap(entry);
     await tester.tap(entry, warnIfMissed: false);
     await tester.pumpAndSettle();
-    expect(find.byType(CloudAccountsPage, skipOffstage: false), findsOneWidget);
+    expect(find.byType(ProvidersPage, skipOffstage: false), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
   testWidgets(
@@ -1133,6 +1231,7 @@ void main() {
       await mount(
         tester,
         CloudAuthorizationPage(
+          businessProvider: testProvider,
           ledger: ledger,
           provider: CloudProvider.solusVm1,
         ),
@@ -1177,7 +1276,11 @@ void main() {
   ) async {
     await mount(
       tester,
-      CloudAuthorizationPage(ledger: ledger, provider: CloudProvider.solusVm1),
+      CloudAuthorizationPage(
+        businessProvider: testProvider,
+        ledger: ledger,
+        provider: CloudProvider.solusVm1,
+      ),
       scale: 2,
     );
     await authorize(tester, provider: CloudProvider.solusVm1);

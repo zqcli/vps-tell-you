@@ -1,3 +1,5 @@
+import 'support/provider_fixture.dart';
+
 import 'dart:convert';
 import 'dart:io';
 
@@ -155,8 +157,12 @@ void main() {
         'name': 'excluded-snippet-name',
         'content': 'excluded-command',
       });
+      await addTestProvider(source);
+      await db.update('servers', {'provider_id': testProvider.id});
       await db.insert('cloud_accounts', {
         'id': 'excluded-cloud',
+        'business_provider_id': testProvider.id,
+        'auth_scope': 'singleDevice',
         'provider': 'solusVm1',
         'alias': 'excluded-alias',
         'endpoint': 'https://excluded-cloud.invalid',
@@ -165,13 +171,13 @@ void main() {
       });
       await db.insert('cloud_observations', {
         'account_id': 'excluded-cloud',
-        'instance_key': 'excluded-instance',
+        'instance_key': 'single',
         'observation': 'excluded-observation',
       });
       await db.insert('cloud_bindings', {
         'server_id': 'server',
         'account_id': 'excluded-cloud',
-        'instance_key': 'excluded-instance',
+        'instance_key': 'single',
       });
       await source.saveThemeMode('dark');
       final snapshot = await source.exportLedgerBackup();
@@ -332,6 +338,7 @@ void main() {
       {...resources.toJson()}..remove('trafficPeriodMonths'),
     );
     final raw = await databaseFactoryFfiNoIsolate.openDatabase(sourcePath);
+    await removeProviderSchema(raw);
     await raw.update('servers', {'resources_json': legacyJson});
     // Reconstruct the actual pre-language v7 preference schema.
     await raw.execute('ALTER TABLE app_settings DROP COLUMN language');
@@ -344,7 +351,10 @@ void main() {
     );
     final after = await databaseFactoryFfiNoIsolate.openDatabase(sourcePath);
     expect(await after.getVersion(), LedgerStore.schemaVersion);
-    expect(await after.query('servers'), before);
+    expect(
+      (await after.query('servers')).map(legacyProviderProjection).toList(),
+      before,
+    );
     expect(
       (await source.servers()).single.resources!.trafficPeriodMonths,
       isNull,

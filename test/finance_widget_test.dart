@@ -211,10 +211,10 @@ void main() {
       await tester.pumpAndSettle();
       await reveal(
         tester,
-        find.byKey(const ValueKey('finance-slice-vendor-Vendor One')),
+        find.byKey(const ValueKey('finance-slice-vendor-legacy:Vendor One')),
       );
       await tester.tap(
-        find.byKey(const ValueKey('finance-slice-vendor-Vendor One')),
+        find.byKey(const ValueKey('finance-slice-vendor-legacy:Vendor One')),
       );
       await tester.pumpAndSettle();
       expect(find.text('Vendor One · 1 台未归档服务器'), findsOneWidget);

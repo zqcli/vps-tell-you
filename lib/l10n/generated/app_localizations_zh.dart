@@ -1731,25 +1731,26 @@ class AppLocalizationsZh extends AppLocalizations {
   String get securityOperationIncomplete => '安全操作未完成，请重试';
 
   @override
-  String get cloudAccounts => '面板账户';
+  String get cloudAccounts => '适配器实例';
 
   @override
-  String get cloudAddAccount => '添加面板账户';
+  String get cloudAddAccount => '添加适配器实例';
 
   @override
   String get cloudPanelReadBadge => '面板只读接入';
 
   @override
-  String get cloudManageConnections => '管理面板连接与实例';
+  String get cloudManageConnections => '管理适配器实例与设备关联';
 
   @override
-  String get cloudConnectionsInfo => '每个连接独立管理授权与实例。\n同一面板可以添加多个独立账户或 VPS 连接。';
+  String get cloudConnectionsInfo =>
+      '每个适配器实例拥有独立授权与读取范围。\n同一提供商下可添加多个单设备或账户级适配器实例。';
 
   @override
-  String get cloudMetadataIncomplete => '面板账户资料读取未完成，请重读后继续。';
+  String get cloudMetadataIncomplete => '适配器实例资料未能完整载入，请重新载入后继续。';
 
   @override
-  String get cloudReloadMetadata => '重读面板账户资料';
+  String get cloudReloadMetadata => '重新载入适配器实例资料';
 
   @override
   String get cloudCleanupNotice => '待清理的旧授权仍可能留在设备安全存储中。请重试清理；远端授权需到面板撤销。';
@@ -1758,26 +1759,26 @@ class AppLocalizationsZh extends AppLocalizations {
   String get cloudRetryCleanup => '重试清理旧授权';
 
   @override
-  String get cloudFirstAccount => '添加第一个面板账户';
+  String get cloudFirstAccount => '添加首个适配器实例';
 
   @override
-  String get cloudFirstAccountInfo => '从内置模板开始，验证面板授权后，再选择要加入台账的实例。';
+  String get cloudFirstAccountInfo => '选择适配器类型并验证授权，再核对设备与资源，添加到台账。';
 
   @override
-  String get cloudChooseTemplate => '选择接入模板';
+  String get cloudChooseTemplate => '选择适配器类型';
 
   @override
   String get cloudReadOnlyBoundary =>
-      '本 App 仅使用读取能力，不代表 API 凭据本身只有读取权限。\n面板账户授权与 SSH 凭据分开管理。解除关联保留台账、费用、付款与 SSH。';
+      '本 App 仅使用读取能力，不代表 API 凭据本身只有读取权限。\n适配器实例授权与 SSH 凭据分开管理。解除关联保留台账、费用、付款与 SSH。';
 
   @override
-  String get cloudTemplateInfo => '按面板类型选择授权方式。面板软件不等于销售厂商，真实服务商和费用可稍后补充。';
+  String get cloudTemplateInfo => '选择与面板匹配的适配器类型。适配器负责读取技术信息，提供商是供应服务器的商家。';
 
   @override
   String get cloudV1TemplateInfo => 'Client API Key + Hash\n每组凭据只对应单台 VPS';
 
   @override
-  String get cloudV2TemplateInfo => '用户 API Token\n读取当前用户的项目与实例';
+  String get cloudV2TemplateInfo => '用户 API Token\n读取当前用户的项目与设备';
 
   @override
   String get cloudRackNerdTemplateInfo =>
@@ -1800,10 +1801,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get cloudWebPreviewNotice => 'Web 预览不接受真实 API 凭据，请在原生应用中连接。';
 
   @override
-  String get cloudAliasLabel => '账户别名';
+  String get cloudAliasLabel => '适配器实例名称';
 
   @override
-  String get cloudAliasRequired => '请填写账户别名';
+  String get cloudAliasRequired => '请输入适配器实例名称';
 
   @override
   String get cloudEndpointLabel => 'HTTPS 面板地址';
@@ -1846,7 +1847,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get cloudVerifyScopeInfo =>
-      '本 App 仅使用读取能力，不代表凭据本身只有读取权限。验证会读取状态或项目与实例；只有下一步保存后，授权才进入设备安全存储。';
+      '本 App 仅使用读取能力，不代表凭据本身只有读取权限。验证会读取状态或项目与设备；只有下一步保存后，授权才进入设备安全存储。';
 
   @override
   String get cloudVerifyingInfo => '正在验证并读取完整列表。请求有超时限制；返回或取消会停止本次读取。';
@@ -1862,64 +1863,64 @@ class AppLocalizationsZh extends AppLocalizations {
       '凭据输入在验证后或离开时清空，不写入台账、日志或导出。Dart 不保证内存安全擦除。';
 
   @override
-  String get cloudChooseInstances => '选择导入实例';
+  String get cloudChooseInstances => '选择导入的设备';
 
   @override
-  String get cloudEmptyVerification => '当前授权下没有可导入的实例。可仅保存账户，稍后继续导入。';
+  String get cloudEmptyVerification => '本次授权未返回可导入的设备。可以仅保存适配器实例，稍后再读取。';
 
   @override
-  String get cloudEmptyInventory => '本次完整列表没有返回可导入的实例。账户已保存，可稍后重新读取。';
+  String get cloudEmptyInventory => '本次完整读取未返回可导入的设备。适配器实例已保存，可稍后重新读取。';
 
   @override
   String get cloudV1Instance => '该凭据对应的单台 VPS';
 
   @override
-  String get cloudAlreadyLinked => '已关联 · 跳过重复导入';
+  String get cloudAlreadyLinked => '已关联 · 不重复导入';
 
   @override
-  String get cloudV1Identity => '无稳定实例 ID · 按此独立连接识别';
+  String get cloudV1Identity => '无稳定设备 ID · 按此独立授权识别';
 
   @override
   String get cloudIpNotProvided => 'IP 未提供';
 
   @override
-  String get cloudSelectBeforeComplete => '请先勾选上方实例，再补齐下方资料；仅填写不会自动导入。';
+  String get cloudSelectBeforeComplete => '请先勾选上方设备，再补全下方资料。仅填写资料不会导入设备。';
 
   @override
   String get cloudLocalDisplayName => '本地显示名称（可选）';
 
   @override
-  String get cloudLocalNameInfo => '仅用于新台账，不作为实例身份';
+  String get cloudLocalNameInfo => '仅用于新建本地记录，不作为远端设备标识';
 
   @override
   String get cloudV1ResourcesInfo =>
-      'SolusVM 1 不提供稳定实例 ID。资源字段依厂商开放情况而异；已填资料只存本机，不会触发 SSH、TCP 或远端配置修改。';
+      'SolusVM 1 不提供稳定设备 ID，可读取的资源字段取决于提供商。填写内容仅保存本地，不会触发 SSH、TCP 或远端配置更改。';
 
   @override
   String get cloudRackNerdResourcesInfo =>
-      'RackNerd ctrl 不提供稳定实例 ID。导入前需补齐六项硬件信息，API 未返回的 CPU 核数不能猜测。已填资料只存本机，不会触发 SSH、TCP 或远端配置修改。';
+      'RackNerd ctrl 不提供稳定设备 ID。导入前需补齐六项硬件信息，API 未返回的 CPU 核数不能猜测。已填资料只存本机，不会触发 SSH、TCP 或远端配置修改。';
 
   @override
   String get cloudRebindWarning =>
-      '保存新授权将解除此连接的所有旧实例关联。旧记录、费用、付款和 SSH 原样保留；选择导入会新增本地记录，不自动覆盖或重连旧记录。';
+      '保存新授权将解除此适配器实例的全部旧设备关联。原有资料、财务与 SSH 设置保留；导入会创建新本地记录，不会覆盖或自动重新关联旧设备。';
 
   @override
-  String get cloudConfirmRebind => '我确认保存新授权会解除旧实例关联';
+  String get cloudConfirmRebind => '我确认保存新授权将解除旧设备关联';
 
   @override
-  String get cloudReturnSelect => '返回选择实例';
+  String get cloudReturnSelect => '返回勾选设备';
 
   @override
   String get cloudSaving => '正在保存…';
 
   @override
-  String get cloudNoneSelected => '尚未选择新实例';
+  String get cloudNoneSelected => '尚未勾选新设备';
 
   @override
-  String get cloudSaveOnly => '仅保存账户';
+  String get cloudSaveOnly => '仅保存适配器实例';
 
   @override
-  String get cloudUpdateUnlink => '更新授权并解除旧关联';
+  String get cloudUpdateUnlink => '更新授权并解除旧设备关联';
 
   @override
   String get cloudUpdateOnly => '仅更新授权';
@@ -1931,10 +1932,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get cloudSavingInfo => '正在提交到本机，请等待完成后再返回。';
 
   @override
-  String get cloudReadImportable => '读取可导入实例';
+  String get cloudReadImportable => '读取可导入的设备';
 
   @override
-  String get cloudRefreshAccount => '刷新账户状态';
+  String get cloudRefreshAccount => '刷新适配器实例状态';
 
   @override
   String get cloudReadingInfo =>
@@ -1947,40 +1948,41 @@ class AppLocalizationsZh extends AppLocalizations {
   String get cloudReadAgain => '重新读取';
 
   @override
-  String get cloudReadCompleteInfo => '只更新此账户的 API 返回信息。本地资料、费用、付款与 SSH 没有被覆盖。';
+  String get cloudReadCompleteInfo =>
+      '仅更新本适配器实例的 API 观测信息，未覆盖本地资料、费用、付款或 SSH 设置。';
 
   @override
   String get cloudDone => '完成';
 
   @override
-  String get cloudViewDetails => '查看账户详情';
+  String get cloudViewDetails => '查看适配器实例详情';
 
   @override
-  String get cloudRenameAccount => '编辑账户名称';
+  String get cloudRenameAccount => '编辑适配器实例名称';
 
   @override
-  String get cloudContinueImport => '继续导入实例';
+  String get cloudContinueImport => '继续导入设备';
 
   @override
   String get cloudLinkedServers => '关联服务器';
 
   @override
-  String get cloudUnlinkAccount => '解除账户关联';
+  String get cloudUnlinkAccount => '删除适配器实例';
 
   @override
-  String get cloudUnlinkAccountTitle => '解除面板账户关联？';
+  String get cloudUnlinkAccountTitle => '删除此适配器实例？';
 
   @override
-  String get cloudUnlinkLocal => '解除本地关联';
+  String get cloudUnlinkLocal => '仅删除本地适配器实例';
 
   @override
-  String get cloudAccountDetails => '面板账户详情';
+  String get cloudAccountDetails => '适配器实例详情';
 
   @override
-  String get cloudAccountRemovedNotice => '账户已解除关联，原有台账仍保留。';
+  String get cloudAccountRemovedNotice => '适配器实例已删除，全部本地设备记录保留。';
 
   @override
-  String get cloudTemplateLabel => '接入模板';
+  String get cloudTemplateLabel => '适配器类型';
 
   @override
   String get cloudPanelAddress => '面板地址';
@@ -1998,7 +2000,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get cloudVerifiedScope => '已验证的读取范围';
 
   @override
-  String get cloudV1Scope => '单台 VPS · Client API，无稳定实例身份';
+  String get cloudV1Scope => '单设备 · Client API，无稳定设备标识';
 
   @override
   String get cloudAppCapabilities => 'App 能力';
@@ -2017,7 +2019,7 @@ class AppLocalizationsZh extends AppLocalizations {
       'API 凭据本身可能拥有更多权限，请在服务商面板核对。没有后台持续监控，读取结果只代表读取时刻。';
 
   @override
-  String get cloudNoLinkedInstances => '暂无关联实例，可从账户菜单继续导入。';
+  String get cloudNoLinkedInstances => '暂无关联设备，可从适配器实例菜单继续导入。';
 
   @override
   String get cloudLocalRecord => '本地记录';
@@ -2029,11 +2031,11 @@ class AppLocalizationsZh extends AppLocalizations {
   String get cloudSaveName => '保存名称';
 
   @override
-  String get cloudLinkPanelAccount => '关联面板账户';
+  String get cloudLinkPanelAccount => '关联适配器实例';
 
   @override
   String get cloudLocalBindingInfo =>
-      '这里只使用已保存的 API 返回信息，不会连接面板。没有可选实例或上次读取失败时，请到“面板账户”手动刷新，再返回重新读取本地列表。';
+      '此页仅使用已保存的 API 观测信息，不连接面板。没有可选设备或上次读取失败时，请先在适配器实例中手动刷新，再返回重新载入本地列表。';
 
   @override
   String get cloudBindingCommitted => '关联改动已保存，请先重新读取资料；不要重复提交。';
@@ -2054,25 +2056,25 @@ class AppLocalizationsZh extends AppLocalizations {
   String get cloudUnlinkThis => '解除这台关联';
 
   @override
-  String get cloudSelectAccount => '选择面板账户';
+  String get cloudSelectAccount => '选择适配器实例';
 
   @override
-  String get cloudNoSavedAccounts => '还没有已保存的面板账户。请先到“面板账户”添加并验证账户。';
+  String get cloudNoSavedAccounts => '此提供商下暂无已确认归属的适配器实例，请先添加并验证。';
 
   @override
-  String get cloudSelectReadInstance => '选择已读取的实例';
+  String get cloudSelectReadInstance => '选择已读取的设备';
 
   @override
-  String get cloudNoSavedInstances => '这个账户没有已保存的实例信息。请到“面板账户”手动刷新。';
+  String get cloudNoSavedInstances => '此适配器实例暂无已保存的设备信息，请先手动刷新。';
 
   @override
   String get cloudOtherServer => '其他服务器';
 
   @override
-  String get cloudMissingRefresh => '本次未返回 · 请到面板账户手动刷新';
+  String get cloudMissingRefresh => '本次未返回 · 请在适配器实例中手动刷新';
 
   @override
-  String get cloudFailedRefresh => '上次读取失败 · 请到面板账户手动刷新';
+  String get cloudFailedRefresh => '上次读取失败 · 请在适配器实例中手动刷新';
 
   @override
   String get cloudSaveLink => '保存关联';
@@ -2084,7 +2086,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get cloudLocalLinkBoundary => '只修改本地关联；服务器资料、硬件、账务及 SSH 保持原样。';
 
   @override
-  String get cloudSingleAccountInstance => '此账户的单台实例';
+  String get cloudSingleAccountInstance => '此授权对应的单台设备';
 
   @override
   String get cloudUnlinkServerTitle => '解除这台服务器的面板关联？';
@@ -2099,16 +2101,16 @@ class AppLocalizationsZh extends AppLocalizations {
   String get cloudConfirmChangeLink => '确认更换关联';
 
   @override
-  String get cloudMetadataReadFailed => '无法读取面板账户资料，请重试';
+  String get cloudMetadataReadFailed => '无法读取适配器实例资料，请重试。';
 
   @override
   String get cloudSavedReloadFailed => '已保存，但资料重读失败；请重读后再修改';
 
   @override
-  String get cloudAccountConflict => '面板账户资料已变化，请重新读取后重试';
+  String get cloudAccountConflict => '适配器实例资料已改变，请重新载入后重试。';
 
   @override
-  String get cloudOperationFailed => '面板账户操作未完成，请重试';
+  String get cloudOperationFailed => '适配器实例操作未完成，请重试。';
 
   @override
   String get cloudCompleteResources => '请补齐六项硬件信息后导入；未知项目请先向厂商确认';
@@ -2123,7 +2125,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get cloudVerifyCancelled => '验证已取消，未保存授权';
 
   @override
-  String get cloudAliasInvalid => '账户别名需为 1–80 个字符';
+  String get cloudAliasInvalid => '适配器实例名称须为 1–80 字。';
 
   @override
   String get cloudVerifyFailed => '验证未完成，请检查面板地址、凭据和网络后重试';
@@ -2144,34 +2146,34 @@ class AppLocalizationsZh extends AppLocalizations {
   String get cloudSaveFailed => '保存未完成，请重试';
 
   @override
-  String get cloudAccountSavedOnly => '账户授权已保存，未导入新实例';
+  String get cloudAccountSavedOnly => '适配器实例已保存，未导入新设备。';
 
   @override
-  String get cloudInstancesSaved => '已保存，所选实例已加入本地台账';
+  String get cloudInstancesSaved => '已保存，所选设备已添加到本地台账。';
 
   @override
   String get cloudReadCancelled => '读取已取消，保留上次读取的信息';
 
   @override
-  String get cloudAccountUnlinkedReturn => '账户关联已解除，请返回';
+  String get cloudAccountUnlinkedReturn => '适配器实例已删除，请返回后继续。';
 
   @override
   String get cloudReadIncomplete => '读取未完成，保留上次读取的信息';
 
   @override
-  String get cloudAliasSaved => '账户别名已保存';
+  String get cloudAliasSaved => '适配器实例名称已保存。';
 
   @override
   String get cloudNameSaveFailed => '名称未保存，请重试';
 
   @override
-  String get cloudAccountUnlinked => '已解除关联，台账、费用与 SSH 保留';
+  String get cloudAccountUnlinked => '适配器实例已删除。本地资料、财务与 SSH 设置保留。';
 
   @override
-  String get cloudUnlinkFailed => '解除关联未完成，请重试';
+  String get cloudUnlinkFailed => '删除适配器实例未完成，请重试。';
 
   @override
-  String get cloudAliasRange => '请输入 1–80 字的账户别名';
+  String get cloudAliasRange => '请输入 1–80 字的适配器实例名称。';
 
   @override
   String get cloudBindingReadFailed => '无法读取本地关联资料，请重试';
@@ -2180,7 +2182,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get cloudServerUnlinked => '已解除这台服务器的面板关联';
 
   @override
-  String get cloudBindingSaved => '已保存面板账户关联';
+  String get cloudBindingSaved => '适配器实例关联已保存。';
 
   @override
   String get cloudFailureInvalidEndpoint =>
@@ -2223,37 +2225,38 @@ class AppLocalizationsZh extends AppLocalizations {
   String get cloudFailureResponseTooLarge => '面板响应超过安全大小限制';
 
   @override
-  String get cloudFailureInventoryTooLarge => '实例或分页数量超过本次读取限制，未导入不完整列表';
+  String get cloudFailureInventoryTooLarge => '设备或分页数量超过本次读取限制，未导入不完整列表';
 
   @override
   String get cloudFailureUnsupportedPlatform => '此预览平台不接受真实 API 凭据，请使用原生应用';
 
   @override
-  String get cloudAccountFailureIdentity => '远端账户或实例身份变化，原关联未更改；请另建账户连接';
+  String get cloudAccountFailureIdentity =>
+      '远端账户或设备标识发生变化，原有关联未改动。请建立独立的适配器实例。';
 
   @override
   String get cloudAccountFailureV1Rebind =>
-      '单 VPS API 无法证明新凭据仍属于原实例；请明确确认解除旧关联并重新选择导入，旧台账会保留';
+      '此客户端 API 无法证明新凭据仍对应原设备。请明确确认解除旧关联，再选择导入的设备。原有本地记录保留。';
 
   @override
   String get cloudAccountFailureSelection => '导入列表已变化或选择无效，请重新读取';
 
   @override
-  String get cloudAccountFailureAlias => '账户别名需为 1–80 个字符';
+  String get cloudAccountFailureAlias => '适配器实例名称须为 1–80 字。';
 
   @override
   String get cloudAccountFailureSecret => 'API 凭据未能保存到设备安全存储，原授权保持不变；请解锁设备后重试';
 
   @override
   String get cloudAccountFailureSecretRead =>
-      '无法读取此账户已保存的 API 凭据，请解锁设备后重试；仍失败时请从账户菜单重新授权';
+      '无法读取此适配器实例保存的 API 凭据。请解锁设备后重试；仍失败时可从菜单重新授权。';
 
   @override
-  String get cloudAccountFailureBindingTaken => '该实例已关联其他服务器，不能覆盖；请重新读取本地列表';
+  String get cloudAccountFailureBindingTaken => '此设备已关联其他本地服务器，不能覆盖。请重新载入本地列表。';
 
   @override
   String get cloudAccountFailureBindingUnavailable =>
-      '实例信息暂不可用于关联，请到“面板账户”手动刷新后重新选择';
+      '设备信息暂不可用于关联，请先手动刷新适配器实例后重新选择。';
 
   @override
   String get cloudReadLimitPositive => '读取限制必须大于 0';
@@ -2280,17 +2283,17 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String cloudInventoryComplete(int count, String time, String authorization) {
-    return '完整读取已完成 · $count 台\n读取时间：$time$authorization';
+    return '完整读取完成 · $count 台设备\n读取时间：$time$authorization';
   }
 
   @override
   String cloudInstanceFallback(String id) {
-    return '实例 $id';
+    return '设备 $id';
   }
 
   @override
   String cloudProjectInstance(String project, String id) {
-    return '项目 $project · 实例 ID $id';
+    return '项目 $project · 设备 ID $id';
   }
 
   @override
@@ -2305,7 +2308,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String cloudV2Scope(String id) {
-    return '已验证用户账户 $id · 项目与实例';
+    return '已验证用户账户 $id · 项目与设备';
   }
 
   @override
@@ -2334,27 +2337,28 @@ class AppLocalizationsZh extends AppLocalizations {
   String get cloudAuthorizationUnsaved => '\n尚未保存这次授权';
 
   @override
-  String get cloudV1Deduplication => '同一连接下已关联的实例不会重复导入；不同连接不会自动合并。';
+  String get cloudV1Deduplication => '此授权已固定的设备不会再次创建；解除关联不会解除固定。独立授权之间不会自动合并。';
 
   @override
-  String get cloudV2Deduplication => '去重依据独立连接与远端 ID，不按 IP 或名称合并。';
+  String get cloudV2Deduplication =>
+      '以适配器类型、面板地址、远端账户、项目与设备 ID 确认重复。IP 或主机名相同仅作核对提示。';
 
   @override
   String get cloudArchivedSuffix => ' · 已归档';
 
   @override
   String cloudImportCount(int count) {
-    return '导入 $count 台';
+    return '导入 $count 台设备';
   }
 
   @override
   String cloudSaveImportCount(int count) {
-    return '保存账户并导入 $count 台';
+    return '保存适配器实例并导入 $count 台设备';
   }
 
   @override
   String cloudUnlinkAccountMessage(String alias, String remoteAction) {
-    return '$alias\n\n移除此面板连接，并解除其所有本地实例关联。再次添加时需重新填写 API 凭据。服务器、费用、付款与 SSH 配置仍保留。不会销毁远端资源或停止扣费。\n\n$remoteAction';
+    return '$alias\n\n删除此本地适配器实例及其设备关联。重新添加需要再次输入 API 凭据。不会删除远端设备或停止计费。\n\n$remoteAction';
   }
 
   @override
@@ -2365,7 +2369,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String cloudSuggestedAlias(String provider) {
-    return '我的 $provider 面板';
+    return '我的 $provider 适配器';
   }
 
   @override
@@ -2385,7 +2389,7 @@ class AppLocalizationsZh extends AppLocalizations {
     String instance,
     String replacement,
   ) {
-    return '$server\n当前：$account · $instance$replacement\n\n仅修改本地关联，保留服务器资料、硬件、费用、付款、SSH、面板账户及授权。不会操作远端实例或停止扣费。';
+    return '$server\n当前：$account · $instance$replacement\n\n仅修改本地关联，保留服务器资料、硬件、费用、付款、SSH、适配器实例及授权。不会操作远端设备或停止扣费。';
   }
 
   @override
@@ -2418,13 +2422,13 @@ class AppLocalizationsZh extends AppLocalizations {
   String get cloudVerifiedManual => '已验证 · 手动读取';
 
   @override
-  String get cloudStepTemplate => '选模板';
+  String get cloudStepTemplate => '适配器类型';
 
   @override
   String get cloudStepCredentials => '填授权';
 
   @override
-  String get cloudStepInstances => '选实例';
+  String get cloudStepInstances => '设备';
 
   @override
   String get cloudApiUnknown => '未知（API 未提供）';
@@ -4550,4 +4554,295 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get resourceTrafficPeriodYearShort => '年';
+
+  @override
+  String get providerReviewRequired => '请先确认此实例的提供商归属，再添加授权、导入或关联服务器。';
+
+  @override
+  String get providerNameRange => '提供商名称需为 1–80 个字符。';
+
+  @override
+  String get providerAlreadyExists => '这个提供商已存在，请直接选择。';
+
+  @override
+  String get providerChangeNeedsUnlink => '更改提供商前，请确认解除原适配器关联。';
+
+  @override
+  String get adapterProviderMismatch => '服务器与适配器实例必须属于同一提供商。';
+
+  @override
+  String get adapterScopeUnavailable => '此实例的授权范围尚未确认，不能新增关联。';
+
+  @override
+  String get adapterSingletonPinned =>
+      '这组单机凭据已确认用于另一条服务器记录；解绑不会释放其授权范围。请回到原记录，或单独重新授权。';
+
+  @override
+  String get providerUiTitle => '提供商管理';
+
+  @override
+  String get providerUiDetails => '提供商详情';
+
+  @override
+  String get providerUiAdd => '新增提供商';
+
+  @override
+  String get providerUiRename => '重命名提供商';
+
+  @override
+  String get providerUiName => '提供商名称';
+
+  @override
+  String get providerUiUnspecified => '未指定提供商';
+
+  @override
+  String get providerUiUnspecifiedHelp => '仅手动添加，可稍后在服务器详情中指定归属。';
+
+  @override
+  String get providerUiHierarchyHelp =>
+      '提供商是服务器的业务归属；适配器实例保存一份独立授权，只能读取该授权范围内的设备。';
+
+  @override
+  String providerUiSummary(int instances, int devices) {
+    return '$instances 个适配器实例 · $devices 台服务器';
+  }
+
+  @override
+  String get providerUiEmpty => '还没有提供商';
+
+  @override
+  String get providerUiEmptyHelp => '先记录提供商名称，再手动添加服务器或配置只读适配器。';
+
+  @override
+  String get providerUiNeedsReview => '归属待确认，暂不能新增授权或关联';
+
+  @override
+  String providerUiUnspecifiedCount(int count) {
+    return '$count 台服务器尚未指定提供商。';
+  }
+
+  @override
+  String get providerUiChoose => '选择提供商';
+
+  @override
+  String get providerUiChooseHelp => '选择业务提供商。面板类型与授权将在后续步骤选择。';
+
+  @override
+  String get providerUiSelected => '服务器归属';
+
+  @override
+  String get providerUiChooseAnother => '重新选择提供商';
+
+  @override
+  String get providerUiChooseMethod => '选择添加方式';
+
+  @override
+  String get providerUiManualHelp => '手动填写资料。六项硬件和费用未知时可以留空。';
+
+  @override
+  String get providerUiAutomatic => '通过适配器读取';
+
+  @override
+  String get providerUiAutomaticHelp => '选择现有授权或新增适配器，读取后确认导入。';
+
+  @override
+  String get providerUiAutoNeedsProvider => '自动读取前，需要选择已确认的提供商。';
+
+  @override
+  String get providerUiInstances => '适配器实例';
+
+  @override
+  String get providerUiNoInstances => '尚未配置适配器；仍可手动添加服务器。';
+
+  @override
+  String get providerUiAddInstance => '新增适配器实例';
+
+  @override
+  String get providerUiDevices => '名下服务器';
+
+  @override
+  String get providerUiNoDevices => '这个提供商下还没有服务器。';
+
+  @override
+  String get providerUiManualDevice => '无适配器关联';
+
+  @override
+  String get providerUiLinkedDevice => '已关联适配器';
+
+  @override
+  String providerUiLinkedCount(int count) {
+    return '已关联 $count 台服务器';
+  }
+
+  @override
+  String get providerUiSingleScope => '单台设备授权';
+
+  @override
+  String get providerUiAccountScope => '账户范围授权';
+
+  @override
+  String get providerUiUnknownScope => '授权范围未确认';
+
+  @override
+  String providerUiPinnedHelp(String name) {
+    return '这份单台授权已固定到「$name」。即使解除关联，也不能给另一台设备使用；请回到原记录或明确重新授权。';
+  }
+
+  @override
+  String get providerUiChooseInstance => '选择适配器实例';
+
+  @override
+  String get providerUiInstanceChoiceHelp => '只列出当前提供商的实例。授权范围由适配器类型与验证结果决定。';
+
+  @override
+  String get providerUiReviewHelp =>
+      '旧资料无法确定业务归属。请为每个实例确认提供商及所有受影响的服务器。确认前只允许刷新已有关联。';
+
+  @override
+  String get providerUiRenameReviewHelp => '重命名不会确认归属；仍须在实例上执行归属确认。';
+
+  @override
+  String get providerUiConfirmOwnership => '确认实例归属';
+
+  @override
+  String providerUiConfirmOwnershipMessage(
+    String alias,
+    String provider,
+    String devices,
+  ) {
+    return '将「$alias」归属到「$provider」。下列已关联服务器会一起调整归属：\n$devices\n\n保留原授权、服务器资料、费用和 SSH。此操作不会扩大授权范围。';
+  }
+
+  @override
+  String get providerUiNoAffectedDevices => '没有已关联服务器。';
+
+  @override
+  String get providerUiUnavailable => '此提供商已变更或不可用，请返回重新选择。';
+
+  @override
+  String get providerUiChange => '更改提供商';
+
+  @override
+  String providerUiChangeMessage(
+    String server,
+    String oldProvider,
+    String newProvider,
+    String linkEffect,
+  ) {
+    return '将「$server」从「$oldProvider」改为「$newProvider」。\n\n$linkEffect\n\n保留服务器 ID、手动资料、费用和 SSH。更改归属不会自动添加新授权或关联。';
+  }
+
+  @override
+  String get providerUiChangeNoLink => '这台服务器没有适配器关联。';
+
+  @override
+  String providerUiChangeUnlink(String alias) {
+    return '必须先解除与「$alias」的本地关联；旧适配器授权仍保留，单台授权的固定目标不会被清除。';
+  }
+
+  @override
+  String get providerUiUnlinkAndChange => '解除关联并更改归属';
+
+  @override
+  String get providerUiChangeFromDetails =>
+      '更改已有服务器归属，请返回详情选择“更改提供商”；有关联时须先确认解除。';
+
+  @override
+  String get providerUiProviderAndAdapter => '提供商与适配器';
+
+  @override
+  String get providerUiOpenProvider => '查看提供商';
+
+  @override
+  String get providerUiOpenInstance => '查看适配器实例';
+
+  @override
+  String providerPendingName(String name) {
+    return '$name · 归属待确认';
+  }
+
+  @override
+  String get providerBindingAssignFirst => '请先在服务器详情中指定提供商，再选择适配器实例关联。';
+
+  @override
+  String get cloudImportSaved => '适配器实例已保存。授权与本次设备导入结果分别保留。';
+
+  @override
+  String get cloudImportReady => '资源完整';
+
+  @override
+  String get cloudImportNeedsCompletion => '待补填资源';
+
+  @override
+  String get cloudImportImported => '导入成功';
+
+  @override
+  String get cloudImportExisting => '已存在';
+
+  @override
+  String get cloudImportFailed => '导入失败';
+
+  @override
+  String get cloudImportUnprocessed => '未处理';
+
+  @override
+  String get cloudImportCompleteResources => '补填资源';
+
+  @override
+  String get cloudImportReviewResources => '核对资源';
+
+  @override
+  String get cloudImportCompleteAndSelect => '保存草稿并勾选';
+
+  @override
+  String get cloudImportCompletionInfo =>
+      '导入前需核对完整的六项资源。API 未提供的值保持未知；只有明确确认后才选择不限流量。补填或修改仅用于本地配置，不会改写 API 观测信息。';
+
+  @override
+  String get cloudImportFinanceLater => '本次仅添加设备与资源配置。财务信息可稍后填写，不会自动创建费用或付款。';
+
+  @override
+  String cloudImportSummary(
+    int imported,
+    int existing,
+    int failed,
+    int unprocessed,
+  ) {
+    return '成功 $imported · 已存在 $existing · 失败 $failed · 未处理 $unprocessed';
+  }
+
+  @override
+  String cloudImportRetryCount(int count) {
+    return '仅重试未完成的 $count 台设备';
+  }
+
+  @override
+  String get cloudImportCancel => '停止后续导入';
+
+  @override
+  String get cloudImportCancelling => '正在停止…';
+
+  @override
+  String get cloudImportCancelled => '已停止后续导入。已提交的设备保留，可核对结果后重试未完成项。';
+
+  @override
+  String get cloudImportResultsTitle => '本次导入结果';
+
+  @override
+  String cloudImportExistingConflict(int count) {
+    return '发现 $count 条相同远端标识的本地记录，请逐条核对；不会自动选择或合并。';
+  }
+
+  @override
+  String cloudImportAddressHint(String names) {
+    return 'IP 或主机名与这些本地设备相同：$names。这只是核对提示，不能据此确认是同一设备。';
+  }
+
+  @override
+  String cloudInstanceDeleteImpact(int count, String names) {
+    return '将解除 $count 台本地服务器的关联：\n$names\n\n全部本地资料、资源配置、财务与 SSH 设置保留。';
+  }
+
+  @override
+  String get cloudImportIdentityConflict => '设备标识冲突';
 }

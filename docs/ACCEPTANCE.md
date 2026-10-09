@@ -554,3 +554,57 @@ SimRenderServer/MetalDeviceDescriptor.swift:40: Fatal error: Attempt to initiali
 ### 剩余边界
 
 RackNerd ctrl是已核对的接口标识，不能仅凭兼容路径判断底层一定是SolusVM1或2。新类型的真机安全存储保存、通知/分享/后台仍需设备验收；既有主题golden的跨环境一致性问题单独保留，不属于本轮RackNerd协议回归。没有推送、发布或任何真实VPS电源操作。
+
+
+## 费用页剩余价值计算器入口（2026-10-07 UTC）
+
+基线为已发布 `61cacb36dc5528de5c6d15e631970a1fc42dd0c7`。仅在费用总览汇总卡下方加入紧凑入口，复用现有 `CalculatorPage`、双语文案、估值 / 报价模型和 PNG 白名单。未更改 schema v9、1356对 ARB 消息、依赖、真实台账或既有工具 / 详情入口。
+
+- 新增14项回归：实际 Costs tab 导航、入口在剩余价值汇总之后且在续费预测之前、双语空台账独立试算、引用 USD / EUR / CNY（含免费）、排除未知 / 按量 / 已归档来源、缺汇率保留原币、返回编辑保留输入、返回费用保留分组 / 滚动、重复激活单路由、刷新失败仍可独立计算，以及实时语言切换。合成 SQLite 全量台账快照在计算前后完全相同。
+- 入口继续打开原有 PNG 预览，验证语言、原币、缺汇率与隐私白名单；未添加导出实现、系统分享调用或财务字段。PNG 渲染 / 保存 / 分享回归仍由完整套件覆盖。
+- 独立 Astra max 最终 review **APPROVE**，已核对源码、12张截图、完整回归清单与产物哈希，无未解决阻塞。
+- 独立检查3/3：按钮角色、完整语义标签与点击动作、键盘 Enter、系统返回、退出动画中重新打开，以及计算器打开时整个 shell 卸载。最终入口32行生产增量，无共享组件改写。
+- 最终完整 **933/933（72文件）**，八批最终有效计数为114、147、76、60、108、251、60、117，各外层 CLI 退出码0，无跳过。最后增加按钮语义后，先前启动的前两批完整重跑，以 `final-suite-01/02` 替换旧结果；最终清单每个文件计一次。早期测试夹具的懒加载坐标、带箭头标题、分组创建和语义 handle 清理错误均保留失败日志，不计通过，也未弱化业务断言。
+- 最终代码额外14/14真实字体入口检查，中文 / English、明 / 暗、390px标准字与320px两倍字；12张隔离 Flutter engine 截图经过实际查看。测试专用 Noto Sans CJK SC 第2 face 子集含776个映射字符，字宽与轮廓逐一等于原字体，货币符号保留；生产字体未修改。
+- `flutter pub get --enforce-lockfile --offline`、format145文件零变化、`flutter analyze --no-pub` 零问题、`git diff --check` 通过；官方未修改 Flutter 3.47.6 / Dart 3.13.5，Linux release 单worker构建成功。188个受测输入的最终 SHA-256 核对一致。
+
+生产 `libapp.so` SHA-256：`2ee467f9bd1228d1c19563d328bdbf8e3d94dc1b305ff5003c411cf492c5df42`。没有运行真实用户App、数据库、钥匙环或远端服务。当前截图是隔离 engine 验证，不等同于原生 Linux 桌面或手机真机。没有生成 APK，也不替代后续 Android/iOS 安装、IME 或系统分享实测。远端 commit/CI 需在发布后另行核实。
+
+
+## 2026-10-08：提供商与安全逐台导入
+
+- 完整套件 1046/1046，82 个测试文件，10 批单并发，无跳过；最终输入哈希 207 项一致。新增 101 项净增回归，原 SSH / 安全存储 / 财务 / i18n / 资源 / 备份测试继续通过。
+- schema v9→v10 实际旧表 / 列重建迁移，混杂及无绑定实例保守归属，旧行逐字段比较、旧 V1 矛盾绑定整库事务回滚、只读刷新及 stale generation 围栏通过。
+- 同提供商 / 已确认范围才可绑定；单机 pin 在 INSERT / UPDATE、解绑、归档、scope 变化与重启后保留。业务归属修改的旧确认不能移除新关联。
+- 新实例先提交并消费验证，再逐行导入；逐行失败不留下孤儿服务器 / 提醒，取消保留已提交项，授权变化停止余项，重试不重建实例或凭据。已保存但重读失败需要本地恢复，不能假报未保存。
+- V2 端点 / 用户 / 项目 / 设备身份、双方历史 UUID、已归档记录和历史多重重复覆盖；同 IP 不同设备不误合并，巨大 GiB 不发生整数回绕。
+- 统一添加、已有 / 新实例、缺失资源补填、空结果、批量结果、取消 / Back / 双击 / 后台、迟到读取及实时中英切换均有 widget 回归。沿用正式 UI 组件、菜单与四 Tab。
+- 真实 Noto 字形 14/14；提供商 / 实例 / 菜单 / 导入 / 补填共 18 张合成截图，含 320px / 2× 与深浅色，经实际目视复核。测试标题字体接线已修正，生产字体不变。
+- 独立 Astra max 架构与最终实现 review APPROVE；最终独立组合 13/13。format / analyze / diff check / offline locked pub get / 生产 Linux release 均通过。
+- 仅使用合成 SQLite、伪安全存储及原有 loopback 协议 fixture。没有真实 API、SSH、用户数据库、钥匙环访问，也没有手机真机或 APK 构建。JSON v1 不恢复 provider / adapter 关系，不新增凭据导出。
+- 发布提交及同 SHA CI 结果以最终远端记录为准；不引用上一提交的 CI 作为本次通过证明。
+
+
+## 2026-10-09：上游合并与 iOS 模拟器运行
+
+合并前 `dev` 为本地 `305b9ff`，工作区 / 暂存区干净；`git fetch --prune origin` 后上游为 `eaf80db`，分叉为本地5 / 上游3个提交。使用真正的 merge 保留两边历史，不reset、不重写已有提交，未恢复用户已撤销的下午OOP重构。
+
+### 合并及资料保护
+
+- 上游包含 `bcd8ac2` 费用计算器入口、`7a42deb` 费用汇总主题修正、`eaf80db` 提供商 / 适配器实例 / 设备与安全逐台导入。保留本地 RackNerd ctrl 独立协议、凭据类型及 Mac 构建记录。
+- 12个内容冲突涉及README/验收/状态、云UI/store、ARB/生成代码及两份UI测试；手动合并语义，生成的三份本地化由官方gen-l10n重建，不整文件选择ours/theirs丢弃一边能力。
+- 本地和上游分别已有不同结构的v10，合并schema为 **11**。`ledger_store.dart` 按实际云列与关系结构辨识，兼容原v9、本地Rack-v10、上游Provider-v10；事务内复制完整云账户/观测/关联FK图再重建，保留已有关系及秘密引用。旧关系缺失时沿用上游保守提供商推断，已有关系不重新分配；单设备范围/pin覆盖RackNerd。
+- 新`schema11_store_migration_test.dart`使用真实三种旧结构，验证原值/外键/重开、晚期失败回滚、未知/不完整结构拒绝和scope/pin。旧Rack测试补合法业务提供商前置并保持资源、秘密和财务保护断言；V1/Rack身份语义与上游批次导入衔接。
+- 现协议adapter与本地合并前逐字相同，V1 multipart/status/XML、RackNerd form/info/JSON、V2 GET及分页、证书验证/重定向拒绝和secret envelope v1保持；依赖及lock没有改变。独立 `gpt-6.1-sol:xhigh` 审查 APPROVE，未发现安全或资料保护阻碍。
+
+### 实际检查
+
+- Flutter3.47.6 / Dart3.13.5：`flutter pub get --enforce-lockfile`、官方gen-l10n、`flutter analyze --no-pub`（No issues）、format **166文件 / 0变化**、`git diff --check`均通过。
+- 首轮全量有两处本次测试准备失败：懒加载Rack模板尚未挂载便取finder.last，以及迁移后测试重复创建同名提供商；分别改为先挂载后定位、复用正确的已迁移提供商，不改生产约束或弱化断言。修正后重新跑完整测试。
+- 最终命令：`VPS_SSH_FIXTURE_PYTHON="$PWD/.ssh-test-venv/bin/python" flutter test --no-pub --concurrency=4 --reporter expanded`，**1159通过 / 2失败，退出码1**，约93秒。仅失败为`mobile_theme_test.dart`浅/深色golden的已知1.87%/3287px差异；两实际PNG与前次经未改代码基线证明的结果再次`cmp`逐字节相同。没有更新golden或跳过失败来制造全绿。
+- 本机日志`build/upstream-merge/final-tests.log`，失败图片`build/upstream-merge/theme-failures/`；均不提交。
+- Metal检测恢复正常，原iPhone17Pro / iOS26.2启动约14秒。生产入口`flutter build ios --simulator --debug --no-codesign --no-pub`成功，Xcode build **12.9秒**，原位install / launch成功，PID34565。
+- 安装前用SQLite备份至被Git忽略的`build/upstream-merge/ledger-before-v11.sqlite3`；原库没有删除、重建或卸载清数据。实际10→11后保留4台服务器、1笔付款，新增4个提供商；外键检查为空。另用只读连接逐表比较全部旧列与行，15个原表均等值，无真实内容打印。
+- 实际截图`build/upstream-merge/home.png`已查看：首页显示新的「提供商管理」入口、原服务器及四Tab，没有迁移/台账错误页；启动stderr为空。App与Simulator保持打开供用户查看。
+
+本次未访问真实厂商API/SSH、未读取钥匙环秘密、未发布/推送、未做真机签名。全套合成行为验证和原生启动分别计数，不将首页截图当作全部原生交互已验收；远端CI亦不作为本地合并结果证明。

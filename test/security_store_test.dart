@@ -1,3 +1,5 @@
+import 'support/provider_fixture.dart';
+
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
@@ -567,6 +569,7 @@ void main() {
     );
     await store.saveFx(fx);
     final db = await raw();
+    await removeProviderSchema(db);
     for (final table in [
       'ssh_configurations',
       'credentials',
@@ -585,7 +588,10 @@ void main() {
     await db.execute('ALTER TABLE servers DROP COLUMN resources_json');
     await db.setVersion(2);
     await reopen();
-    expect((await store.servers()).single.toMap(), server.toMap());
+    expect(
+      legacyProviderProjection((await store.servers()).single.toMap()),
+      legacyProviderProjection(server.toMap()),
+    );
     expect((await store.servicePeriods()).single.toMap(), before);
     expect((await store.payments()).single.toMap(), payment.toMap());
     expect((await store.fxSettings()).toMap(), fx.toMap());

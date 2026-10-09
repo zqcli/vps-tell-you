@@ -6,7 +6,9 @@ import '../l10n/locale_preference.dart';
 import '../l10n/localized_message.dart';
 import '../servers/ledger_controller.dart';
 import 'cloud_account.dart';
+import 'cloud_models.dart';
 import 'cloud_widgets.dart';
+import 'provider_record.dart';
 
 /// Edits one existing server's local association from saved observations only.
 /// Returns true after a successful change. Opening or reloading this page never
@@ -73,8 +75,11 @@ class _ServerCloudBindingPageState extends State<ServerCloudBindingPage> {
     });
     ServerCloudBindingOptions? loaded;
     try {
-      if (widget.ledger.refreshFailed) await widget.ledger.refresh();
-      if (widget.ledger.cloud.needsReload) {
+      if (widget.ledger.refreshFailed) {
+        await widget.ledger.refresh();
+      } else {
+        // Provider confirmation is local metadata too. Read it again even
+        // when the previous metadata read succeeded, without invoking an API.
         await widget.ledger.cloud.reload();
       }
       if (!widget.ledger.refreshFailed && !widget.ledger.cloud.needsReload) {
@@ -91,8 +96,17 @@ class _ServerCloudBindingPageState extends State<ServerCloudBindingPage> {
       _loading = false;
       _options = loaded;
       _selected = loaded?.current;
+      final accounts = _candidateAccounts;
+      final currentAccount = accounts
+          .where((account) => account.id == loaded?.current?.accountId)
+          .firstOrNull;
       _accountId =
-          loaded?.current?.accountId ?? loaded?.accounts.firstOrNull?.id;
+          currentAccount?.id ??
+          accounts
+              .where((account) => _accountRestriction(account) == null)
+              .firstOrNull
+              ?.id ??
+          accounts.firstOrNull?.id;
       _expired = loaded == null;
       if (loaded == null) {
         _error =
@@ -127,15 +141,63 @@ class _ServerCloudBindingPageState extends State<ServerCloudBindingPage> {
   bool _same(CloudBindingChoice? a, CloudBindingChoice? b) =>
       a?.accountId == b?.accountId && a?.instanceKey == b?.instanceKey;
 
+  ProviderRecord? get _serverProvider => widget.ledger.cloud.providers
+      .where((provider) => provider.id == _options?.server.providerId)
+      .firstOrNull;
+
+  List<CloudAccount> get _candidateAccounts {
+    final provider = _serverProvider;
+    if (provider == null || provider.needsReview) return const [];
+    return _options?.accounts
+            .where((account) => account.businessProviderId == provider.id)
+            .toList(growable: false) ??
+        const [];
+  }
+
+  LocalizedMessage? _accountRestriction(CloudAccount account) {
+    final provider = _serverProvider;
+    if (_options?.server.providerId == null) {
+      return LocalizedText((l10n) => l10n.providerBindingAssignFirst);
+    }
+    if (provider == null) {
+      return LocalizedText((l10n) => l10n.providerUiUnavailable);
+    }
+    if (provider.needsReview) {
+      return LocalizedText((l10n) => l10n.providerReviewRequired);
+    }
+    if (account.businessProviderId != provider.id) {
+      return LocalizedText((l10n) => l10n.adapterProviderMismatch);
+    }
+    if (account.authScope != adapterScope(account.adapterType)) {
+      return LocalizedText((l10n) => l10n.adapterScopeUnavailable);
+    }
+    if (account.authScope == AdapterAuthScope.singleDevice &&
+        account.pinnedServerId != null &&
+        account.pinnedServerId != widget.serverId) {
+      return LocalizedText((l10n) => l10n.adapterSingletonPinned);
+    }
+    if (account.lastFailure != null) {
+      return LocalizedText((l10n) => l10n.cloudFailedRefresh);
+    }
+    return null;
+  }
+
+  CloudAccount? _accountFor(CloudBindingChoice choice) => _options?.accounts
+      .where((account) => account.id == choice.accountId)
+      .firstOrNull;
+
   bool _available(CloudBindingChoice choice) =>
       !choice.stale &&
       !choice.missing &&
       (choice.serverId == null || choice.serverId == widget.serverId) &&
-      _options?.accounts
-              .where((a) => a.id == choice.accountId)
-              .firstOrNull
-              ?.lastFailure ==
-          null;
+      _accountFor(choice) != null &&
+      _accountRestriction(_accountFor(choice)!) == null;
+
+  String _scopeLabel(CloudAccount account) => switch (account.authScope) {
+    AdapterAuthScope.singleDevice => context.l10n.providerUiSingleScope,
+    AdapterAuthScope.account => context.l10n.providerUiAccountScope,
+    AdapterAuthScope.unknown => context.l10n.providerUiUnknownScope,
+  };
 
   Future<void> _save({bool unlink = false}) async {
     final options = _options;
@@ -219,8 +281,16 @@ class _ServerCloudBindingPageState extends State<ServerCloudBindingPage> {
     builder: (context, _) {
       final options = _options;
       final current = options?.current;
+      final provider = _serverProvider;
+      final accounts = _candidateAccounts;
+      final selectedAccount = accounts
+          .where((account) => account.id == _accountId)
+          .firstOrNull;
+      final accountRestriction = selectedAccount == null
+          ? null
+          : _accountRestriction(selectedAccount);
       final choices = options?.choices
-          .where((choice) => choice.accountId == _accountId)
+          .where((choice) => choice.accountId == selectedAccount?.id)
           .toList();
       return PopScope<bool>(
         canPop: !_saving,
@@ -257,6 +327,21 @@ class _ServerCloudBindingPageState extends State<ServerCloudBindingPage> {
                       options.server.name,
                       style: Theme.of(context).textTheme.titleLarge,
                     ),
+                    if (provider != null)
+                      Text(
+                        provider.needsReview
+                            ? context.l10n.providerPendingName(provider.name)
+                            : provider.name,
+                      ),
+                    if (options.server.providerId == null)
+                      CloudNotice(context.l10n.providerBindingAssignFirst)
+                    else if (provider == null)
+                      CloudNotice(
+                        context.l10n.providerUiUnavailable,
+                        error: true,
+                      )
+                    else if (provider.needsReview)
+                      CloudNotice(context.l10n.providerReviewRequired),
                     if (options.server.archived || options.server.isDemo)
                       CloudNotice(
                         context.l10n.cloudBindingReadOnly,
@@ -282,10 +367,13 @@ class _ServerCloudBindingPageState extends State<ServerCloudBindingPage> {
                         ),
                       ),
                     ],
-                    SectionTitle(context.l10n.cloudSelectAccount),
-                    if (options.accounts.isEmpty)
-                      CloudNotice(context.l10n.cloudNoSavedAccounts),
-                    for (final account in options.accounts)
+                    SectionTitle(context.l10n.providerUiChooseInstance),
+                    if (provider != null && !provider.needsReview) ...[
+                      InfoNote(context.l10n.providerUiInstanceChoiceHelp),
+                      if (accounts.isEmpty)
+                        CloudNotice(context.l10n.cloudNoSavedAccounts),
+                    ],
+                    for (final account in accounts)
                       ListTile(
                         key: ValueKey('server-cloud-account-${account.id}'),
                         contentPadding: EdgeInsets.zero,
@@ -296,10 +384,18 @@ class _ServerCloudBindingPageState extends State<ServerCloudBindingPage> {
                         ),
                         title: Text(account.alias),
                         subtitle: Text(
-                          '${cloudProviderName(account.provider)}\n${account.endpoint}',
+                          [
+                            cloudProviderName(account.adapterType),
+                            _scopeLabel(account),
+                            account.endpoint,
+                            if (_accountRestriction(account) case final reason?)
+                              localizedText(reason, context.l10n),
+                          ].join('\n'),
                         ),
                         selected: _accountId == account.id,
-                        onTap: _blocked
+                        enabled:
+                            !_blocked && _accountRestriction(account) == null,
+                        onTap: _blocked || _accountRestriction(account) != null
                             ? null
                             : () => setState(() {
                                 _accountId = account.id;
@@ -308,7 +404,7 @@ class _ServerCloudBindingPageState extends State<ServerCloudBindingPage> {
                                     : null;
                               }),
                       ),
-                    if (_accountId != null) ...[
+                    if (selectedAccount != null) ...[
                       SectionTitle(context.l10n.cloudSelectReadInstance),
                       if (choices?.isEmpty ?? true)
                         CloudNotice(context.l10n.cloudNoSavedInstances),
@@ -347,10 +443,13 @@ class _ServerCloudBindingPageState extends State<ServerCloudBindingPage> {
                                     ),
                                   if (choice.missing)
                                     context.l10n.cloudMissingRefresh
-                                  else if (choice.stale ||
-                                      !_available(choice) &&
-                                          choice.serverId == null)
+                                  else if (choice.stale)
                                     context.l10n.cloudFailedRefresh,
+                                  if (accountRestriction != null)
+                                    localizedText(
+                                      accountRestriction,
+                                      context.l10n,
+                                    ),
                                 ].join('\n'),
                               ),
                             ),

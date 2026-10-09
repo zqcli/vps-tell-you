@@ -8,6 +8,7 @@ import 'package:vps_tell_you/data/ledger_store.dart';
 import 'package:vps_tell_you/servers/server_record.dart';
 
 import 'cloud_store_test.dart' show cloudTestTime, completedResources;
+import 'support/provider_fixture.dart';
 
 // This is the real v9 DDL, including its original provider/remote-ID CHECKs.
 // Never construct this fixture with LedgerStore.createSchema or by relabeling
@@ -124,15 +125,30 @@ Future<Database> _openRaw(String path) =>
       ),
     );
 
-Future<Database> _createV9(String path) =>
+const _rackV10Accounts = '''CREATE TABLE cloud_accounts (
+  id TEXT PRIMARY KEY, provider TEXT NOT NULL CHECK(provider IN ('solusVm1','solusVm2','rackNerd')),
+  alias TEXT NOT NULL, endpoint TEXT NOT NULL, secret_ref TEXT NOT NULL UNIQUE,
+  remote_account_id INTEGER, revision INTEGER NOT NULL DEFAULT 0,
+  generation INTEGER NOT NULL DEFAULT 0, created_at TEXT NOT NULL,
+  last_attempt_at TEXT, last_failure TEXT,
+  CHECK((provider IN ('solusVm1','rackNerd') AND remote_account_id IS NULL) OR
+        (provider = 'solusVm2' AND remote_account_id IS NOT NULL AND remote_account_id > 0)))''';
+
+Future<Database> _createV9(String path) => createLegacyLedgerV9(path);
+
+Future<Database> createLegacyLedgerV9(String path, {bool rackV10 = false}) =>
     databaseFactoryFfiNoIsolate.openDatabase(
       path,
       options: OpenDatabaseOptions(
-        version: 9,
+        version: rackV10 ? 10 : 9,
         onConfigure: (db) => db.execute('PRAGMA foreign_keys=ON'),
         onCreate: (db, _) async {
           for (final statement in _v9Schema) {
-            await db.execute(statement);
+            await db.execute(
+              rackV10 && statement.startsWith('CREATE TABLE cloud_accounts ')
+                  ? _rackV10Accounts
+                  : statement,
+            );
           }
           await _populateV9(db);
         },
@@ -159,7 +175,7 @@ Future<void> _populateV9(DatabaseExecutor db) async {
         resources: completedResources(),
         createdAt: cloudTestTime,
         updatedAt: cloudTestTime,
-      ).toMap(),
+      ).toMap()..remove('provider_id'),
     );
   }
   await db.insert('payments', {
@@ -246,22 +262,22 @@ Future<void> _populateV9(DatabaseExecutor db) async {
     'revision': 8,
   });
   for (final v1 in [true, false]) {
-    final account = CloudAccount(
-      id: v1 ? 'v1' : 'v2',
-      provider: v1 ? CloudProvider.solusVm1 : CloudProvider.solusVm2,
-      alias: v1 ? 'Synthetic V1 account' : 'Synthetic V2 account',
-      endpoint: 'https://panel.synthetic.example:8443',
-      secretRef: 'opaque-synthetic-${v1 ? 'v1' : 'v2'}-reference',
-      remoteAccountId: v1 ? null : 7,
-      createdAt: cloudTestTime,
-      revision: v1 ? 4 : 6,
-      generation: v1 ? 9 : 12,
-      lastAttemptAt: cloudTestTime,
-      lastFailure: v1 ? CloudFailureKind.timeout : null,
-    );
-    await db.insert('cloud_accounts', account.toMap());
+    final accountId = v1 ? 'v1' : 'v2';
+    await db.insert('cloud_accounts', {
+      'id': accountId,
+      'provider': v1 ? 'solusVm1' : 'solusVm2',
+      'alias': v1 ? 'Synthetic V1 account' : 'Synthetic V2 account',
+      'endpoint': 'https://panel.synthetic.example:8443',
+      'secret_ref': 'opaque-synthetic-$accountId-reference',
+      'remote_account_id': v1 ? null : 7,
+      'created_at': now,
+      'revision': v1 ? 4 : 6,
+      'generation': v1 ? 9 : 12,
+      'last_attempt_at': now,
+      'last_failure': v1 ? 'timeout' : null,
+    });
     await db.insert('cloud_observations', {
-      'account_id': account.id,
+      'account_id': accountId,
       'instance_key': v1 ? 'single' : '7/2/3',
       'identity_uuid': v1 ? null : 'synthetic-v2-uuid',
       'observation': encodeCloudInstance(
@@ -282,8 +298,8 @@ Future<void> _populateV9(DatabaseExecutor db) async {
       'missing': 0,
     });
     await db.insert('cloud_bindings', {
-      'server_id': 'legacy-${account.id}',
-      'account_id': account.id,
+      'server_id': 'legacy-$accountId',
+      'account_id': accountId,
       'instance_key': v1 ? 'single' : '7/2/3',
     });
   }
@@ -321,6 +337,23 @@ Future<Map<String, List<Map<String, Object?>>>> _rows(Database db) async {
 Future<List<Map<String, Object?>>> _schema(Database db) => db.rawQuery(
   'SELECT type, name, tbl_name, sql FROM sqlite_master ORDER BY type, name',
 );
+
+Future<Map<String, List<Map<String, Object?>>>> legacyLedgerRows(Database db) =>
+    _rows(db);
+
+Future<List<Map<String, Object?>>> legacyLedgerSchema(Database db) =>
+    _schema(db);
+
+Future<Map<String, List<Map<String, Object?>>>> _v9Projection(
+  Database db,
+) async {
+  final all = await _rows(db);
+  all.remove('providers');
+  return {
+    for (final table in all.entries)
+      table.key: table.value.map(legacyProviderProjection).toList(),
+  };
+}
 
 Map<String, Object?> _accountRow(
   String id,
@@ -363,6 +396,9 @@ void main() {
       raw = await _createV9(path);
       expect(await raw!.getVersion(), 9);
       final originalSchema = await _schema(raw!);
+      final originalServerColumns = await raw!.rawQuery(
+        'PRAGMA table_info(servers)',
+      );
       final oldCheck =
           originalSchema.singleWhere(
                 (row) => row['name'] == 'cloud_accounts',
@@ -384,17 +420,53 @@ void main() {
         path: path,
       );
       raw = await _openRaw(path);
-      expect(await raw!.getVersion(), 10);
-      expect(await _rows(raw!), before);
+      expect(await raw!.getVersion(), 11);
+      expect(await _v9Projection(raw!), before);
       expect(await raw!.rawQuery('PRAGMA foreign_key_check'), isEmpty);
       expect(
         (await store!.cloudAccounts()).map((account) => account.provider),
         [CloudProvider.solusVm1, CloudProvider.solusVm2],
       );
       expect(await store!.cloudBindings(), hasLength(2));
+      expect(await raw!.rawQuery('PRAGMA table_info(servers)'), [
+        ...originalServerColumns,
+        {
+          'cid': originalServerColumns.length,
+          'name': 'provider_id',
+          'type': 'TEXT',
+          'notnull': 0,
+          'dflt_value': null,
+          'pk': 0,
+        },
+      ]);
+      final accounts = await store!.cloudAccounts();
+      expect(
+        accounts.singleWhere((a) => a.id == 'v1').authScope,
+        AdapterAuthScope.singleDevice,
+      );
+      expect(
+        accounts.singleWhere((a) => a.id == 'v1').pinnedServerId,
+        'legacy-v1',
+      );
+      expect(
+        accounts.singleWhere((a) => a.id == 'v2').authScope,
+        AdapterAuthScope.account,
+      );
+      expect(accounts.map((a) => a.businessProviderId).toSet(), hasLength(1));
+      final providers = await store!.providers();
+      expect(providers.single.name, 'Local vendor');
+      expect(providers.single.needsReview, isFalse);
+      expect(
+        (await store!.servers()).every(
+          (s) => s.providerId == providers.single.id,
+        ),
+        isTrue,
+      );
       final newSchema = await _schema(raw!);
       for (final original in originalSchema.where(
-        (row) => !(row['tbl_name']! as String).startsWith('cloud_'),
+        (row) =>
+            row['name'] != 'servers' &&
+            !(row['tbl_name']! as String).startsWith('cloud_'),
       )) {
         expect(
           newSchema.singleWhere(
@@ -414,14 +486,14 @@ void main() {
         path: path,
       );
       raw = await _openRaw(path);
-      expect(await _rows(raw!), before);
+      expect(await _v9Projection(raw!), before);
       expect(await raw!.rawQuery('PRAGMA foreign_key_check'), isEmpty);
     },
   );
 
   for (final migrated in [false, true]) {
     test(
-      '${migrated ? 'migrated' : 'fresh'} v10 enforces provider and remote identity CHECKs',
+      '${migrated ? 'migrated' : 'fresh'} v11 enforces provider and remote identity CHECKs',
       () async {
         if (migrated) {
           raw = await _createV9(path);
@@ -431,6 +503,12 @@ void main() {
         store = await LedgerStore.open(
           factory: databaseFactoryFfiNoIsolate,
           path: path,
+        );
+        if (!migrated) await addTestProvider(store!);
+        // A migrated fixture already has a confirmed provider for Local vendor;
+        // reuse it rather than creating a duplicate under a different ID.
+        final businessProvider = (await store!.providers()).singleWhere(
+          (provider) => !provider.needsReview,
         );
         raw = await _openRaw(path);
         var id = 0;
@@ -443,10 +521,13 @@ void main() {
           ('unknown', null),
         ]) {
           await expectLater(
-            raw!.insert(
-              'cloud_accounts',
-              _accountRow('invalid-${id++}', invalid.$1, invalid.$2),
-            ),
+            raw!.insert('cloud_accounts', {
+              ..._accountRow('invalid-${id++}', invalid.$1, invalid.$2),
+              'business_provider_id': businessProvider.id,
+              'auth_scope': invalid.$1 == 'solusVm2'
+                  ? 'account'
+                  : 'singleDevice',
+            }),
             throwsA(isA<DatabaseException>()),
           );
         }
@@ -455,10 +536,11 @@ void main() {
           ('solusVm1', null),
           ('solusVm2', 11),
         ]) {
-          await raw!.insert(
-            'cloud_accounts',
-            _accountRow('valid-${id++}', valid.$1, valid.$2),
-          );
+          await raw!.insert('cloud_accounts', {
+            ..._accountRow('valid-${id++}', valid.$1, valid.$2),
+            'business_provider_id': businessProvider.id,
+            'auth_scope': valid.$1 == 'solusVm2' ? 'account' : 'singleDevice',
+          });
         }
         expect(await raw!.query('cloud_accounts'), hasLength(migrated ? 5 : 3));
         expect(await raw!.rawQuery('PRAGMA foreign_key_check'), isEmpty);
@@ -499,8 +581,8 @@ void main() {
       path: path,
     );
     raw = await _openRaw(path);
-    expect(await raw!.getVersion(), 10);
-    expect(await _rows(raw!), before);
+    expect(await raw!.getVersion(), 11);
+    expect(await _v9Projection(raw!), before);
   });
 
   test('invalid legacy V2 identity fails without inventing an ID or losing data', () async {
@@ -591,7 +673,10 @@ void main() {
         );
       }
       expect(
-        await raw!.query('servers', orderBy: 'rowid'),
+        (await raw!.query(
+          'servers',
+          orderBy: 'rowid',
+        )).map(legacyProviderProjection).toList(),
         before['servers']!.where((row) => row['id'] != 'manual').toList(),
       );
       expect(await raw!.rawQuery('PRAGMA foreign_key_check'), isEmpty);

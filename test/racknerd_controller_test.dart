@@ -12,6 +12,7 @@ import 'package:vps_tell_you/data/ledger_store.dart';
 import 'package:vps_tell_you/servers/server_resources.dart';
 
 import 'cloud_controller_test.dart' show CloudTestSecrets, CallbackCloudAdapter;
+import 'support/provider_fixture.dart';
 
 const _key = 'SYNTHETIC+KEY/&=';
 const _hash = 'SYNTHETIC+HASH/&=';
@@ -45,6 +46,7 @@ void main() {
       path: '${temporary.path}/ledger.sqlite',
       clock: () => _at,
     );
+    await addTestProvider(store);
     body = File('test/fixtures/solusvm/racknerd-info.json').readAsStringSync();
     secrets = CloudTestSecrets();
     calls = 0;
@@ -81,18 +83,22 @@ void main() {
     await temporary.delete(recursive: true);
   });
 
-  Future<CloudVerification?> verify({CloudAccount? existing}) =>
-      controller.verifyConnection(
-        provider: CloudProvider.rackNerd,
-        endpoint: 'https://panel.example.test:8443/api/client/command.php',
-        credentials: RackNerdCredentials(key: _key, hash: _hash),
-        existing: existing,
-      );
+  Future<CloudVerification?> verify({
+    CloudAccount? existing,
+    ProviderRecord? businessProvider,
+  }) => controller.verifyConnection(
+    provider: CloudProvider.rackNerd,
+    businessProvider: businessProvider ?? testProvider,
+    endpoint: 'https://panel.example.test:8443/api/client/command.php',
+    credentials: RackNerdCredentials(key: _key, hash: _hash),
+    existing: existing,
+  );
 
   test('real RackNerd adapter -> verify -> manual CPU completion -> persistent import -> refresh', () async {
     final verification = (await verify())!;
     expect(calls, 1);
     expect(verification.endpoint.normalizedApiPath, isTrue);
+    expect(verification.businessProvider.id, testProvider.id);
     expect(
       verification.keyFor(verification.snapshot.instances.single),
       'single',
@@ -132,10 +138,15 @@ void main() {
     });
     final account = controller.accounts.single;
     expect(account.provider, CloudProvider.rackNerd);
+    expect(account.businessProviderId, testProvider.id);
+    expect(account.authScope, AdapterAuthScope.singleDevice);
     expect(account.endpoint, 'https://panel.example.test:8443');
     expect(account.remoteAccountId, isNull);
     expect(controller.bindings.single.instanceKey, 'single');
     final server = (await store.servers()).single;
+    expect(server.providerId, testProvider.id);
+    expect(server.vendor, testProvider.name);
+    expect(account.pinnedServerId, server.id);
     expect(server.name, 'Reviewed local VPS');
     expect(server.resources!.vcpu, 2);
     expect(server.resources!.apiFields, isNot(contains('vcpu')));
@@ -179,6 +190,9 @@ void main() {
       isTrue,
     );
     expect(await store.servers(), isEmpty);
+    expect(controller.accounts.single.businessProviderId, testProvider.id);
+    expect(controller.accounts.single.authScope, AdapterAuthScope.singleDevice);
+    expect(controller.accounts.single.pinnedServerId, isNull);
     final inventory = (await controller.refreshAccount(
       controller.accounts.single,
     ))!;
@@ -222,6 +236,8 @@ void main() {
       );
       final account = controller.accounts.single;
       final prior = (await store.servers()).single.toMap();
+      expect(account.authScope, AdapterAuthScope.singleDevice);
+      expect(account.pinnedServerId, prior['id']);
       final reauthorization = (await verify(existing: account))!;
       final writes = secrets.writes;
       expect(
@@ -239,6 +255,12 @@ void main() {
         isTrue,
       );
       expect(await store.cloudBindings(), isEmpty);
+      expect(controller.accounts.single.businessProviderId, testProvider.id);
+      expect(
+        controller.accounts.single.authScope,
+        AdapterAuthScope.singleDevice,
+      );
+      expect(controller.accounts.single.pinnedServerId, isNull);
       expect((await store.servers()).single.toMap(), prior);
       expect(secrets.values.keys, [controller.accounts.single.secretRef]);
     },
@@ -297,6 +319,7 @@ void main() {
         expect(
           await controller.verifyConnection(
             provider: provider,
+            businessProvider: testProvider,
             endpoint: 'https://panel.example.test:8443',
             credentials: credentials,
           ),
@@ -380,4 +403,103 @@ void main() {
       expect(await store.cloudAccounts(), isEmpty);
     },
   );
+
+  test(
+    'RackNerd requires a current confirmed business provider before API access',
+    () async {
+      final missing = ProviderRecord(
+        id: 'missing-provider',
+        name: 'Missing vendor',
+        createdAt: _at,
+      );
+      expect(await verify(businessProvider: missing), isNull);
+      expect(calls, 0);
+      expect(secrets.writes, 0);
+
+      await store.saveProvider(
+        ProviderRecord(
+          id: testProvider.id,
+          name: 'Renamed vendor',
+          createdAt: testProvider.createdAt,
+          revision: testProvider.revision,
+        ),
+        isNew: false,
+      );
+      expect(await verify(), isNull);
+      expect(calls, 0);
+      expect(secrets.writes, 0);
+
+      final current = (await store.providers()).single;
+      final db = await databaseFactoryFfiNoIsolate.openDatabase(
+        '${temporary.path}/ledger.sqlite',
+      );
+      await db.update(
+        'providers',
+        {'needs_review': 1},
+        where: 'id = ?',
+        whereArgs: [current.id],
+      );
+      expect(await verify(businessProvider: current), isNull);
+      expect(calls, 0);
+      expect(secrets.writes, 0);
+      expect(await store.cloudAccounts(), isEmpty);
+      expect(await store.servers(), isEmpty);
+    },
+  );
+
+  test('provider rename after RackNerd verification fences save before vault write', () async {
+    final verification = (await verify())!;
+    expect(calls, 1);
+    await store.saveProvider(
+      ProviderRecord(
+        id: testProvider.id,
+        name: 'Renamed vendor',
+        createdAt: testProvider.createdAt,
+        revision: testProvider.revision,
+      ),
+      isNew: false,
+    );
+    expect(
+      await controller.saveAccount(verification, alias: 'Stale provider'),
+      isFalse,
+    );
+    expect(secrets.writes, 0);
+    expect(secrets.values, isEmpty);
+    expect(await store.cloudAccounts(), isEmpty);
+    expect(await store.cloudBindings(), isEmpty);
+  });
+
+  test('RackNerd reauthorization cannot silently move to another business provider', () async {
+    final verification = (await verify())!;
+    expect(
+      await controller.saveAccount(
+        verification,
+        alias: 'Owned by local vendor',
+        selectedInstanceKeys: {'single'},
+        v1Resources: _resources(
+          verification.snapshot.instances.single,
+          vcpu: 2,
+        ),
+      ),
+      isTrue,
+    );
+    final account = controller.accounts.single;
+    final server = (await store.servers()).single.toMap();
+    final secretValues = Map<String, String>.of(secrets.values);
+    final writes = secrets.writes;
+    final requests = calls;
+    final other = ProviderRecord(
+      id: 'other-provider',
+      name: 'Other local vendor',
+      createdAt: _at,
+    );
+    await store.saveProvider(other, isNew: true);
+    expect(await verify(existing: account, businessProvider: other), isNull);
+    expect(calls, requests);
+    expect(secrets.writes, writes);
+    expect(secrets.values, secretValues);
+    expect((await store.cloudAccounts()).single.toMap(), account.toMap());
+    expect((await store.servers()).single.toMap(), server);
+    expect((await store.cloudBindings()).single.serverId, server['id']);
+  });
 }

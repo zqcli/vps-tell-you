@@ -2,7 +2,7 @@ import '../l10n/localized_message.dart';
 
 import 'package:flutter/material.dart';
 
-import '../cloud/cloud_pages.dart';
+import '../cloud/provider_pages.dart';
 import '../core/app_theme.dart';
 import '../data/ledger_store.dart';
 import '../finance/fx_page.dart';
@@ -126,9 +126,7 @@ class _SettingsPageState extends State<SettingsPage> {
     try {
       await Navigator.push<void>(
         context,
-        MaterialPageRoute(
-          builder: (_) => CloudAccountsPage(ledger: controller),
-        ),
+        MaterialPageRoute(builder: (_) => ProvidersPage(ledger: controller)),
       );
     } finally {
       openingCloud = false;
@@ -218,9 +216,11 @@ class _SettingsPageState extends State<SettingsPage> {
           children: [
             SettingRow(
               icon: Icons.cloud_outlined,
-              title: context.l10n.panelAccounts,
-              subtitle: context.l10n.panelConnectionCount(
-                (controller.cloud.accounts.length).toString(),
+              key: const ValueKey('settings-providers'),
+              title: context.l10n.providerUiTitle,
+              subtitle: context.l10n.providerUiSummary(
+                controller.cloud.accounts.length,
+                controller.records.length,
               ),
               onTap: openCloud,
             ),
@@ -529,7 +529,7 @@ class ArchivePage extends StatelessWidget {
                       ),
                     ),
                     Text(
-                      '${s.vendor} · ${controller.groupName(s.groupId)}',
+                      '${serverProviderLabel(context, controller, s)} · ${controller.groupName(s.groupId)}',
                       style: TextStyle(
                         color: Theme.of(context).colorScheme.onSurfaceVariant,
                         fontSize: 12,

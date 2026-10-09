@@ -8,6 +8,7 @@ import '../servers/ledger_controller.dart';
 import '../servers/refresh_failure_notice.dart';
 import '../servers/server_detail.dart';
 import '../servers/server_record.dart';
+import 'calculator_page.dart';
 import 'finance_math.dart';
 import 'finance_models.dart';
 import 'finance_widgets.dart';
@@ -22,7 +23,7 @@ List<ServerRecord> financeScope(
     .where(
       (s) =>
           (groupId == null || (s.groupId ?? '') == groupId) &&
-          (vendor == null || s.vendor == vendor),
+          (vendor == null || c.providerGroupKey(s) == vendor),
     )
     .toList();
 FinanceAmount remainingAmount(LedgerController c, ServerRecord s) =>
@@ -54,6 +55,23 @@ class FinancePage extends StatefulWidget {
 class _FinancePageState extends State<FinancePage> {
   String? groupId;
   bool byVendor = true;
+  bool calculatorOpen = false;
+
+  Future<void> openCalculator() async {
+    if (calculatorOpen) return;
+    calculatorOpen = true;
+    try {
+      await Navigator.push<void>(
+        context,
+        MaterialPageRoute(
+          builder: (_) => CalculatorPage(controller: widget.controller),
+        ),
+      );
+    } finally {
+      calculatorOpen = false;
+    }
+  }
+
   void detail(
     FinanceMetric metric, {
     String? vendor,
@@ -76,6 +94,7 @@ class _FinancePageState extends State<FinancePage> {
     listenable: widget.controller,
     builder: (context, _) {
       final c = widget.controller;
+      final colors = Theme.of(context).colorScheme;
       if (groupId != null &&
           groupId != '' &&
           !c.groups.any((g) => g.id == groupId)) {
@@ -112,7 +131,10 @@ class _FinancePageState extends State<FinancePage> {
       final slices = <String, List<ServerRecord>>{};
       for (final s in records) {
         slices
-            .putIfAbsent(byVendor ? s.vendor : s.groupId ?? '', () => [])
+            .putIfAbsent(
+              byVendor ? c.providerGroupKey(s) : s.groupId ?? '',
+              () => [],
+            )
             .add(s);
       }
       final ordered = slices.entries.toList()
@@ -200,62 +222,77 @@ class _FinancePageState extends State<FinancePage> {
               ),
             ),
           ),
-          Container(
+          LedgerCard(
+            key: const ValueKey('finance-summary'),
             padding: const EdgeInsets.all(22),
-            decoration: BoxDecoration(
-              color: const Color(0xFF1E355B),
-              borderRadius: BorderRadius.circular(17),
-            ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   context.l10n.financeMonthlyReference,
-                  style: TextStyle(color: Color(0xFFCAD5E7), fontSize: 12),
+                  style: Theme.of(context).textTheme.bodySmall,
                 ),
                 const SizedBox(height: 12),
                 InkWell(
                   key: const ValueKey('metric-monthly'),
+                  // Keep metadata legible when focus, hover and ripple overlap.
+                  highlightColor: Colors.transparent,
+                  splashColor: colors.primary.withValues(alpha: .02),
+                  focusColor: colors.primary.withValues(alpha: .03),
+                  hoverColor: colors.primary.withValues(alpha: .01),
                   onTap: () => detail(FinanceMetric.monthly),
-                  child: FinanceTotalView(total: monthly, dark: true),
+                  child: FinanceTotalView(total: monthly, emphasize: true),
                 ),
                 const SizedBox(height: 16),
                 TextButton(
                   onPressed: () => detail(FinanceMetric.inventory),
-                  child: Text(
-                    context.l10n.financeManagedCount(records.length),
-                    style: const TextStyle(color: Colors.white),
-                  ),
+                  child: Text(context.l10n.financeManagedCount(records.length)),
                 ),
-                const Divider(color: Color(0xFF476087)),
+                const Divider(),
                 const SizedBox(height: 16),
                 InkWell(
                   key: const ValueKey('metric-value'),
+                  highlightColor: Colors.transparent,
+                  splashColor: colors.primary.withValues(alpha: .02),
+                  focusColor: colors.primary.withValues(alpha: .03),
+                  hoverColor: colors.primary.withValues(alpha: .01),
                   onTap: () => detail(FinanceMetric.value),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
                         context.l10n.financeTotalRemaining,
-                        style: TextStyle(color: Color(0xFFCAD5E7)),
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
                       ),
-                      FinanceTotalView(
-                        total: values,
-                        dark: true,
-                        compact: true,
-                      ),
+                      FinanceTotalView(total: values, compact: true),
                     ],
                   ),
                 ),
                 const SizedBox(height: 14),
                 Text(
                   context.l10n.financeMonthlyNotPaid,
-                  style: TextStyle(fontSize: 12, color: Color(0xFFCAD5E7)),
+                  style: Theme.of(context).textTheme.bodySmall,
                 ),
               ],
             ),
           ),
           const SizedBox(height: 14),
+          LedgerCard(
+            key: const ValueKey('finance-calculator-entry'),
+            padding: EdgeInsets.zero,
+            child: Semantics(
+              button: true,
+              child: SettingRow(
+                icon: Icons.calculate_outlined,
+                title: context.l10n.remainingValueCalculator,
+                subtitle: context.l10n.calculatorDescription,
+                onTap: openCalculator,
+              ),
+            ),
+          ),
+          const SizedBox(height: 12),
           _MetricCard(
             title: context.l10n.financeUpcomingRenewals,
             total: renewals,
@@ -337,7 +374,10 @@ class _FinancePageState extends State<FinancePage> {
                                 .clamp(0, 1)
                                 .toDouble();
                       final label = byVendor
-                          ? slice.key
+                          ? c.providerNameFor(
+                              slice.value.first,
+                              l10n: context.l10n,
+                            )
                           : c.groupName(slice.key, l10n: context.l10n);
                       return InkWell(
                         key: ValueKey(
@@ -566,7 +606,7 @@ class FinanceDetailPage extends StatelessWidget {
                               ),
                             ),
                             Text(
-                              '${s.vendor} · ${c.groupName(s.groupId, l10n: context.l10n)}',
+                              '${c.providerNameFor(s, l10n: context.l10n)} · ${c.groupName(s.groupId, l10n: context.l10n)}',
                             ),
                             const SizedBox(height: 10),
                             Text(

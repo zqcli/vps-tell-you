@@ -1,3 +1,5 @@
+import 'support/provider_fixture.dart';
+
 import 'dart:async';
 import 'dart:io';
 
@@ -7,6 +9,7 @@ import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:vps_tell_you/cloud/cloud_controller.dart';
 import 'package:vps_tell_you/cloud/cloud_models.dart';
 import 'package:vps_tell_you/cloud/cloud_pages.dart';
+import 'package:vps_tell_you/cloud/provider_pages.dart';
 import 'package:vps_tell_you/cloud/cloud_widgets.dart';
 import 'package:vps_tell_you/cloud/server_cloud_binding_page.dart';
 import 'package:vps_tell_you/core/app_theme.dart';
@@ -55,6 +58,7 @@ void main() {
       path: '${directory.path}/ledger.sqlite',
       clock: () => cloudTestTime,
     );
+    await addTestProvider(store);
     secrets = CloudTestSecrets();
     calls = 0;
     cancellations.clear();
@@ -148,6 +152,16 @@ void main() {
     await tester.pumpAndSettle();
   }
 
+  Future<void> openAccountMenu(WidgetTester tester, String id) async {
+    if (find.byType(CloudAccountDetailsPage).evaluate().isEmpty) {
+      if (find.byType(ProviderDetailsPage).evaluate().isEmpty) {
+        await tapKey(tester, 'provider-${testProvider.id}');
+      }
+      await tapKey(tester, 'provider-instance-$id');
+    }
+    await tapKey(tester, 'cloud-instance-menu');
+  }
+
   Future<CloudVerification> verify({
     bool v1 = false,
     CloudProvider? provider,
@@ -155,6 +169,7 @@ void main() {
     final selected =
         provider ?? (v1 ? CloudProvider.solusVm1 : CloudProvider.solusVm2);
     return (await cloud.verifyConnection(
+      businessProvider: testProvider,
       provider: selected,
       endpoint: 'https://panel.example:8443',
       credentials: switch (selected) {
@@ -262,6 +277,7 @@ void main() {
       await mount(
         tester,
         CloudAuthorizationPage(
+          businessProvider: testProvider,
           ledger: ledger,
           provider: CloudProvider.rackNerd,
         ),
@@ -316,6 +332,7 @@ void main() {
       await mount(
         tester,
         CloudAuthorizationPage(
+          businessProvider: testProvider,
           ledger: ledger,
           provider: CloudProvider.solusVm2,
         ),
@@ -358,6 +375,7 @@ void main() {
       await mount(
         tester,
         CloudAuthorizationPage(
+          businessProvider: testProvider,
           ledger: ledger,
           provider: CloudProvider.solusVm2,
         ),
@@ -454,7 +472,7 @@ void main() {
       final writes = secrets.writes;
       final reads = secrets.reads;
       await mount(tester, CloudAccountsPage(ledger: ledger), narrow: true);
-      await tapKey(tester, 'cloud-account-${saved.id}');
+      await openAccountMenu(tester, saved.id);
       await language(tester, LocalePreference.english);
       await reveal(tester, find.text(english.cloudRenameAccount));
       await tester.tap(find.text(english.cloudRenameAccount));
@@ -474,7 +492,7 @@ void main() {
       );
       await tester.tap(find.text(chinese.cloudCancel).last);
       await tester.pumpAndSettle();
-      await tapKey(tester, 'cloud-account-${saved.id}');
+      await openAccountMenu(tester, saved.id);
       final unlink = find.text(chinese.cloudUnlinkAccount);
       await reveal(tester, unlink);
       await tester.tap(unlink);
@@ -556,6 +574,7 @@ void main() {
           id: 'local',
           name: '用户维护服务器',
           vendor: 'Vendor literal',
+          providerId: testProvider.id,
           host: '192.0.2.12',
           createdAt: cloudTestTime,
           updatedAt: cloudTestTime,
@@ -611,6 +630,8 @@ void main() {
       account: CloudAccount(
         id: 'v1',
         provider: CloudProvider.solusVm1,
+        businessProviderId: testProvider.id,
+        authScope: adapterScope(CloudProvider.solusVm1),
         alias: longName,
         endpoint: 'https://panel.example:8443',
         secretRef: 'synthetic-only',
@@ -622,6 +643,8 @@ void main() {
       account: CloudAccount(
         id: 'rack',
         provider: CloudProvider.rackNerd,
+        businessProviderId: testProvider.id,
+        authScope: adapterScope(CloudProvider.rackNerd),
         alias: longName,
         endpoint: 'https://panel.example:8443',
         secretRef: 'synthetic-only',
@@ -631,10 +654,22 @@ void main() {
     );
     for (final page in <Widget>[
       CloudAccountsPage(ledger: ledger),
-      CloudTemplatesPage(ledger: ledger),
-      CloudAuthorizationPage(ledger: ledger, provider: CloudProvider.solusVm1),
-      CloudAuthorizationPage(ledger: ledger, provider: CloudProvider.solusVm2),
-      CloudAuthorizationPage(ledger: ledger, provider: CloudProvider.rackNerd),
+      CloudTemplatesPage(businessProvider: testProvider, ledger: ledger),
+      CloudAuthorizationPage(
+        businessProvider: testProvider,
+        ledger: ledger,
+        provider: CloudProvider.solusVm1,
+      ),
+      CloudAuthorizationPage(
+        businessProvider: testProvider,
+        ledger: ledger,
+        provider: CloudProvider.solusVm2,
+      ),
+      CloudAuthorizationPage(
+        businessProvider: testProvider,
+        ledger: ledger,
+        provider: CloudProvider.rackNerd,
+      ),
       CloudImportPage(ledger: ledger, inventory: inventory),
       CloudImportPage(ledger: ledger, inventory: v1),
       CloudImportPage(ledger: ledger, inventory: rack),
