@@ -97,6 +97,51 @@ class AppLocalizationsZh extends AppLocalizations {
   String get powerControlWarning => '关机后无法通过 SSH 开机，需使用厂商面板。重启或关机不会停止厂商计费。';
 
   @override
+  String get uiTabsCalculatorTile => '独立试算或引用服务器，可导出不含隐私的图片';
+
+  @override
+  String get uiTabsSshTile => '选择已配置的服务器';
+
+  @override
+  String get uiTabsTcpTile => '单目标端口探测';
+
+  @override
+  String get uiTabsSnippetsTile => '常用命令，插入草稿后发送';
+
+  @override
+  String get uiTabsPowerTile => '经 SSH 重启或关机';
+
+  @override
+  String get uiTabsLedgerSection => '台账';
+
+  @override
+  String get uiTabsSecuritySection => '安全';
+
+  @override
+  String get uiTabsPreferencesSection => '偏好';
+
+  @override
+  String get uiTabsDataSection => '数据';
+
+  @override
+  String get uiTabsNotifyAllowed => '已允许';
+
+  @override
+  String get uiTabsNotifyDenied => '未允许';
+
+  @override
+  String get uiTabsNotifyUnsupported => '不支持';
+
+  @override
+  String get uiTabsNotifyUnchecked => '未检查';
+
+  @override
+  String get uiTabsNotifyChecking => '检查中';
+
+  @override
+  String get uiTabsNotifyFailed => '检查失败';
+
+  @override
   String get usageContinue => '继续使用';
 
   @override
@@ -174,6 +219,32 @@ class AppLocalizationsZh extends AppLocalizations {
   @override
   String get reminderSaveHelp =>
       '修改后点“保存提醒规则”生效。若启用提醒并选择“到期不再使用”，仍会提醒核对厂商的续费设置。';
+
+  @override
+  String get uiTabsReminderSaveHelp =>
+      '修改后点右上角“保存”生效。若启用提醒并选择“到期不再使用”，仍会提醒核对厂商的续费设置。';
+
+  @override
+  String uiTabsReminderDue(String name, String date) {
+    return '$name 将于 $date 到期。';
+  }
+
+  @override
+  String uiTabsReminderPreview(String dates, String time) {
+    return '将在 $dates $time 提醒（设备时区）。通知不包含名称、IP 或金额。';
+  }
+
+  @override
+  String get uiTabsReminderPreviewNone => '按当前设置没有未来的提醒时间。通知不包含名称、IP 或金额。';
+
+  @override
+  String get uiTabsUsageContinueHint => '到期前提醒续费';
+
+  @override
+  String get uiTabsUsageUndecidedHint => '提醒你做出决定';
+
+  @override
+  String get uiTabsUsageStopHint => '仍提醒核对并取消自动续费';
 
   @override
   String get demoNoNotifications => '演示数据不会提交真实系统通知。';

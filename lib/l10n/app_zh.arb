@@ -29,6 +29,21 @@
   "powerControl": "电源控制",
   "powerControlDescription": "通过 SSH 重启或关机 · 操作前核对目标",
   "powerControlWarning": "关机后无法通过 SSH 开机，需使用厂商面板。重启或关机不会停止厂商计费。",
+  "uiTabsCalculatorTile": "独立试算或引用服务器，可导出不含隐私的图片",
+  "uiTabsSshTile": "选择已配置的服务器",
+  "uiTabsTcpTile": "单目标端口探测",
+  "uiTabsSnippetsTile": "常用命令，插入草稿后发送",
+  "uiTabsPowerTile": "经 SSH 重启或关机",
+  "uiTabsLedgerSection": "台账",
+  "uiTabsSecuritySection": "安全",
+  "uiTabsPreferencesSection": "偏好",
+  "uiTabsDataSection": "数据",
+  "uiTabsNotifyAllowed": "已允许",
+  "uiTabsNotifyDenied": "未允许",
+  "uiTabsNotifyUnsupported": "不支持",
+  "uiTabsNotifyUnchecked": "未检查",
+  "uiTabsNotifyChecking": "检查中",
+  "uiTabsNotifyFailed": "检查失败",
   "usageContinue": "继续使用",
   "usageUndecided": "待决定",
   "usageStop": "到期不再使用",
@@ -66,6 +81,33 @@
   "recordMissingReload": "记录不存在，请返回重新读取。",
   "dueDateNotEntered": "未填写到期日",
   "reminderSaveHelp": "修改后点“保存提醒规则”生效。若启用提醒并选择“到期不再使用”，仍会提醒核对厂商的续费设置。",
+  "uiTabsReminderSaveHelp": "修改后点右上角“保存”生效。若启用提醒并选择“到期不再使用”，仍会提醒核对厂商的续费设置。",
+  "uiTabsReminderDue": "{name} 将于 {date} 到期。",
+  "@uiTabsReminderDue": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "uiTabsReminderPreview": "将在 {dates} {time} 提醒（设备时区）。通知不包含名称、IP 或金额。",
+  "@uiTabsReminderPreview": {
+    "placeholders": {
+      "dates": {
+        "type": "String"
+      },
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "uiTabsReminderPreviewNone": "按当前设置没有未来的提醒时间。通知不包含名称、IP 或金额。",
+  "uiTabsUsageContinueHint": "到期前提醒续费",
+  "uiTabsUsageUndecidedHint": "提醒你做出决定",
+  "uiTabsUsageStopHint": "仍提醒核对并取消自动续费",
   "demoNoNotifications": "演示数据不会提交真实系统通知。",
   "archivedNoReminders": "已归档记录不会排程提醒。",
   "enableServerReminders": "启用此服务器的提醒",
