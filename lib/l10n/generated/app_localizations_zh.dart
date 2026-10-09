@@ -2983,6 +2983,87 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
+  String get uiDetailCopy => '复制';
+
+  @override
+  String get uiDetailMenuValuation => '用于剩余价值试算';
+
+  @override
+  String get uiDetailPurpose => '用途';
+
+  @override
+  String get uiDetailRegion => '地区';
+
+  @override
+  String uiDetailDueOn(String date) {
+    return '到期 $date';
+  }
+
+  @override
+  String uiDetailConverted(String currency) {
+    return '折合 $currency';
+  }
+
+  @override
+  String get uiDetailDaily => '日均';
+
+  @override
+  String get uiDetailRemainingDays => '剩余天数';
+
+  @override
+  String get uiDetailPayments => '付款记录';
+
+  @override
+  String get uiDetailValuation => '价值试算';
+
+  @override
+  String get uiDetailFillIn => '补填';
+
+  @override
+  String get uiDetailHostKey => '主机公钥';
+
+  @override
+  String get uiDetailHostKeyTrusted => '已核验';
+
+  @override
+  String get uiDetailHostKeyFirstUse => '首次连接时核验';
+
+  @override
+  String get uiDetailNotConfigured => '未配置';
+
+  @override
+  String get uiDetailNeedSshTitle => '尚未配置 SSH';
+
+  @override
+  String uiDetailNeedSshMessage(String name) {
+    return '为 $name 设置地址、端口、用户名和登录凭据后，才能连接或执行电源操作。';
+  }
+
+  @override
+  String get uiDetailGoConfigure => '去配置';
+
+  @override
+  String get uiDetailArchivedUnavailable => '已归档的服务器不能进行此操作。';
+
+  @override
+  String get uiDetailNotPrepaid => '只有预付服务器可以记录续费付款。';
+
+  @override
+  String get uiDetailCannotRenew => '到期日或续费周期资料不完整，暂时无法记录续费付款。请先补充费用资料。';
+
+  @override
+  String get uiDetailReadOnly => '本地数据读取未完成或正在处理，暂时不能记录付款。请先重新读取。';
+
+  @override
+  String get uiDetailQuickSsh => 'SSH 连接';
+
+  @override
+  String get uiDetailQuickPayment => '记录付款';
+
+  @override
+  String get uiDetailQuickPower => '电源';
+
+  @override
   String serverRequiredField(String p0) {
     return '请填写$p0';
   }

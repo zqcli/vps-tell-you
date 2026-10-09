@@ -3431,6 +3431,91 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get uiDetailCopy => 'Copy';
+
+  @override
+  String get uiDetailMenuValuation => 'Use for remaining-value estimate';
+
+  @override
+  String get uiDetailPurpose => 'Purpose';
+
+  @override
+  String get uiDetailRegion => 'Region';
+
+  @override
+  String uiDetailDueOn(String date) {
+    return 'Due $date';
+  }
+
+  @override
+  String uiDetailConverted(String currency) {
+    return 'In $currency';
+  }
+
+  @override
+  String get uiDetailDaily => 'Daily';
+
+  @override
+  String get uiDetailRemainingDays => 'Days left';
+
+  @override
+  String get uiDetailPayments => 'Payments';
+
+  @override
+  String get uiDetailValuation => 'Estimate';
+
+  @override
+  String get uiDetailFillIn => 'Fill in';
+
+  @override
+  String get uiDetailHostKey => 'Host key';
+
+  @override
+  String get uiDetailHostKeyTrusted => 'Verified';
+
+  @override
+  String get uiDetailHostKeyFirstUse => 'Verified on first connect';
+
+  @override
+  String get uiDetailNotConfigured => 'Not set up';
+
+  @override
+  String get uiDetailNeedSshTitle => 'SSH is not set up';
+
+  @override
+  String uiDetailNeedSshMessage(String name) {
+    return 'Set the address, port, username and credential for $name before connecting or using power actions.';
+  }
+
+  @override
+  String get uiDetailGoConfigure => 'Set up';
+
+  @override
+  String get uiDetailArchivedUnavailable =>
+      'This action is not available for archived servers.';
+
+  @override
+  String get uiDetailNotPrepaid =>
+      'Only prepaid servers can record renewal payments.';
+
+  @override
+  String get uiDetailCannotRenew =>
+      'The due date or renewal cycle is incomplete, so a renewal payment cannot be recorded yet. Fill in the cost details first.';
+
+  @override
+  String get uiDetailReadOnly =>
+      'Local data is still loading or busy, so a payment cannot be recorded now. Reload first.';
+
+  @override
+  String get uiDetailQuickSsh => 'SSH';
+
+  @override
+  String get uiDetailQuickPayment => 'Payment';
+
+  @override
+  String get uiDetailQuickPower => 'Power';
+
+  @override
   String serverRequiredField(String p0) {
     return 'Enter $p0';
   }

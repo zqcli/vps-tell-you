@@ -2179,6 +2179,52 @@
   "serverConnectionSafety": "Verify the host fingerprint on first connection. A changed fingerprint pauses sign-in. Check the target again before restarting or shutting down. Neither action stops provider billing.",
   "serverNotes": "Notes",
   "serverSavedMetadata": "Saved locally: {p0}\nServer ID: {p1}",
+  "uiDetailCopy": "Copy",
+  "uiDetailMenuValuation": "Use for remaining-value estimate",
+  "uiDetailPurpose": "Purpose",
+  "uiDetailRegion": "Region",
+  "uiDetailDueOn": "Due {date}",
+  "@uiDetailDueOn": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "uiDetailConverted": "In {currency}",
+  "@uiDetailConverted": {
+    "placeholders": {
+      "currency": {
+        "type": "String"
+      }
+    }
+  },
+  "uiDetailDaily": "Daily",
+  "uiDetailRemainingDays": "Days left",
+  "uiDetailPayments": "Payments",
+  "uiDetailValuation": "Estimate",
+  "uiDetailFillIn": "Fill in",
+  "uiDetailHostKey": "Host key",
+  "uiDetailHostKeyTrusted": "Verified",
+  "uiDetailHostKeyFirstUse": "Verified on first connect",
+  "uiDetailNotConfigured": "Not set up",
+  "uiDetailNeedSshTitle": "SSH is not set up",
+  "uiDetailNeedSshMessage": "Set the address, port, username and credential for {name} before connecting or using power actions.",
+  "@uiDetailNeedSshMessage": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "uiDetailGoConfigure": "Set up",
+  "uiDetailArchivedUnavailable": "This action is not available for archived servers.",
+  "uiDetailNotPrepaid": "Only prepaid servers can record renewal payments.",
+  "uiDetailCannotRenew": "The due date or renewal cycle is incomplete, so a renewal payment cannot be recorded yet. Fill in the cost details first.",
+  "uiDetailReadOnly": "Local data is still loading or busy, so a payment cannot be recorded now. Reload first.",
+  "uiDetailQuickSsh": "SSH",
+  "uiDetailQuickPayment": "Payment",
+  "uiDetailQuickPower": "Power",
   "serverRequiredField": "Enter {p0}",
   "serverAmountPrecision": "Enter a valid amount with up to two decimal places",
   "serverDateExample": "Enter a valid date, for example 2026-10-06",

@@ -83,7 +83,13 @@ void main() {
       final ip = find.byKey(const ValueKey('resource-ip'));
       expect(tester.getRect(ip).top, greaterThan(0));
       expect(tester.getRect(ip).bottom, lessThan(844));
-      expect(find.text('硬件信息'), findsOneWidget);
+      expect(
+        find.descendant(
+          of: find.byType(ServerForm),
+          matching: find.text('硬件信息'),
+        ),
+        findsOneWidget,
+      );
       await tester.tap(find.text('取消'));
       await tester.pumpAndSettle();
       expect(find.byType(ServerForm), findsNothing);

@@ -5368,6 +5368,156 @@ abstract class AppLocalizations {
   /// **'本地保存于 {p0}\n服务器 ID：{p1}'**
   String serverSavedMetadata(String p0, String p1);
 
+  /// No description provided for @uiDetailCopy.
+  ///
+  /// In zh, this message translates to:
+  /// **'复制'**
+  String get uiDetailCopy;
+
+  /// No description provided for @uiDetailMenuValuation.
+  ///
+  /// In zh, this message translates to:
+  /// **'用于剩余价值试算'**
+  String get uiDetailMenuValuation;
+
+  /// No description provided for @uiDetailPurpose.
+  ///
+  /// In zh, this message translates to:
+  /// **'用途'**
+  String get uiDetailPurpose;
+
+  /// No description provided for @uiDetailRegion.
+  ///
+  /// In zh, this message translates to:
+  /// **'地区'**
+  String get uiDetailRegion;
+
+  /// No description provided for @uiDetailDueOn.
+  ///
+  /// In zh, this message translates to:
+  /// **'到期 {date}'**
+  String uiDetailDueOn(String date);
+
+  /// No description provided for @uiDetailConverted.
+  ///
+  /// In zh, this message translates to:
+  /// **'折合 {currency}'**
+  String uiDetailConverted(String currency);
+
+  /// No description provided for @uiDetailDaily.
+  ///
+  /// In zh, this message translates to:
+  /// **'日均'**
+  String get uiDetailDaily;
+
+  /// No description provided for @uiDetailRemainingDays.
+  ///
+  /// In zh, this message translates to:
+  /// **'剩余天数'**
+  String get uiDetailRemainingDays;
+
+  /// No description provided for @uiDetailPayments.
+  ///
+  /// In zh, this message translates to:
+  /// **'付款记录'**
+  String get uiDetailPayments;
+
+  /// No description provided for @uiDetailValuation.
+  ///
+  /// In zh, this message translates to:
+  /// **'价值试算'**
+  String get uiDetailValuation;
+
+  /// No description provided for @uiDetailFillIn.
+  ///
+  /// In zh, this message translates to:
+  /// **'补填'**
+  String get uiDetailFillIn;
+
+  /// No description provided for @uiDetailHostKey.
+  ///
+  /// In zh, this message translates to:
+  /// **'主机公钥'**
+  String get uiDetailHostKey;
+
+  /// No description provided for @uiDetailHostKeyTrusted.
+  ///
+  /// In zh, this message translates to:
+  /// **'已核验'**
+  String get uiDetailHostKeyTrusted;
+
+  /// No description provided for @uiDetailHostKeyFirstUse.
+  ///
+  /// In zh, this message translates to:
+  /// **'首次连接时核验'**
+  String get uiDetailHostKeyFirstUse;
+
+  /// No description provided for @uiDetailNotConfigured.
+  ///
+  /// In zh, this message translates to:
+  /// **'未配置'**
+  String get uiDetailNotConfigured;
+
+  /// No description provided for @uiDetailNeedSshTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'尚未配置 SSH'**
+  String get uiDetailNeedSshTitle;
+
+  /// No description provided for @uiDetailNeedSshMessage.
+  ///
+  /// In zh, this message translates to:
+  /// **'为 {name} 设置地址、端口、用户名和登录凭据后，才能连接或执行电源操作。'**
+  String uiDetailNeedSshMessage(String name);
+
+  /// No description provided for @uiDetailGoConfigure.
+  ///
+  /// In zh, this message translates to:
+  /// **'去配置'**
+  String get uiDetailGoConfigure;
+
+  /// No description provided for @uiDetailArchivedUnavailable.
+  ///
+  /// In zh, this message translates to:
+  /// **'已归档的服务器不能进行此操作。'**
+  String get uiDetailArchivedUnavailable;
+
+  /// No description provided for @uiDetailNotPrepaid.
+  ///
+  /// In zh, this message translates to:
+  /// **'只有预付服务器可以记录续费付款。'**
+  String get uiDetailNotPrepaid;
+
+  /// No description provided for @uiDetailCannotRenew.
+  ///
+  /// In zh, this message translates to:
+  /// **'到期日或续费周期资料不完整，暂时无法记录续费付款。请先补充费用资料。'**
+  String get uiDetailCannotRenew;
+
+  /// No description provided for @uiDetailReadOnly.
+  ///
+  /// In zh, this message translates to:
+  /// **'本地数据读取未完成或正在处理，暂时不能记录付款。请先重新读取。'**
+  String get uiDetailReadOnly;
+
+  /// No description provided for @uiDetailQuickSsh.
+  ///
+  /// In zh, this message translates to:
+  /// **'SSH 连接'**
+  String get uiDetailQuickSsh;
+
+  /// No description provided for @uiDetailQuickPayment.
+  ///
+  /// In zh, this message translates to:
+  /// **'记录付款'**
+  String get uiDetailQuickPayment;
+
+  /// No description provided for @uiDetailQuickPower.
+  ///
+  /// In zh, this message translates to:
+  /// **'电源'**
+  String get uiDetailQuickPower;
+
   /// No description provided for @serverRequiredField.
   ///
   /// In zh, this message translates to:
