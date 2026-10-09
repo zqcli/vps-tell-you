@@ -1535,6 +1535,104 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String uiFinanceDisplayChip(String currency) {
+    return 'Show $currency';
+  }
+
+  @override
+  String get uiFinanceCurrencyNote =>
+      'Only changes how totals are converted and shown. Original-currency records stay unchanged.';
+
+  @override
+  String get uiFinanceTileRemaining => 'Remaining value';
+
+  @override
+  String get uiFinanceTileRenewals => 'Renewals in 30 days';
+
+  @override
+  String uiFinanceBannerMissingFx(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count amounts have no exchange rate and are left out of totals',
+      one: '1 amount has no exchange rate and is left out of totals',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String uiFinanceGapMissingFx(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count missing rates',
+      one: '1 missing rate',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String uiFinanceGapUnknown(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count unknown amounts',
+      one: '1 unknown amount',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String uiFinanceMonthShort(String month) {
+    String _temp0 = intl.Intl.selectLogic(month, {
+      '1': 'Jan',
+      '2': 'Feb',
+      '3': 'Mar',
+      '4': 'Apr',
+      '5': 'May',
+      '6': 'Jun',
+      '7': 'Jul',
+      '8': 'Aug',
+      '9': 'Sep',
+      '10': 'Oct',
+      '11': 'Nov',
+      '12': 'Dec',
+      'other': '$month',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String get uiFinanceForecastBasis => 'At current renewal prices';
+
+  @override
+  String get uiFinanceToolsHeader => 'Records & tools';
+
+  @override
+  String uiFinanceServerCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count servers',
+      one: '1 server',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get uiFinanceFootnote =>
+      'Amounts use current renewal prices and manual reference exchange rates. For reference only; they are not vendor bills.';
+
+  @override
+  String get uiFinanceVoidedPill => 'Voided';
+
+  @override
+  String get uiFinanceArchivedPill => 'Archived';
+
+  @override
+  String get uiFinanceAccountPill => 'Account bill';
+
+  @override
   String financeForecastMonth(int year, int month, int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,

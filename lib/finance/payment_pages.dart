@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 
 import '../l10n/locale_preference.dart';
 import '../l10n/localized_message.dart';
-import '../core/app_theme.dart';
+import '../core/app_theme.dart' show confirmAction, showFailure;
+import '../core/ui/ui.dart';
 import '../core/value_types.dart';
 import '../servers/ledger_controller.dart';
 import '../servers/refresh_failure_notice.dart';
@@ -78,55 +79,73 @@ class _PaymentFormState extends State<PaymentForm> {
     String? hint,
     int lines = 1,
     bool optional = false,
-  }) => Padding(
-    padding: const EdgeInsets.only(bottom: 18),
-    child: TextFormField(
-      key: ValueKey('pay-$id'),
-      controller: fields[id],
-      enabled: !saving,
-      maxLines: lines,
-      maxLength: id == 'note'
-          ? 1000
-          : id == 'account'
-          ? 80
-          : null,
-      keyboardType: id == 'amount'
-          ? const TextInputType.numberWithOptions(decimal: true)
-          : TextInputType.text,
-      decoration: InputDecoration(
-        labelText: label,
-        hintText: hint,
-        counterText: '',
-        errorMaxLines: 4,
-      ),
-      validator: (raw) {
-        final value = raw!.trim();
-        if (id == 'note') return null;
-        if (optional && value.isEmpty) return null;
-        if (id == 'account') {
-          return value.isEmpty ? context.l10n.financeAccountNameError : null;
-        }
-        if (id == 'amount') {
-          return Money.parseMinor(value) == null
-              ? context.l10n.financePaidAmountError
-              : null;
-        }
-        final date = LedgerDate.tryParse(value);
-        if (date == null) return context.l10n.financeDateError;
-        if (id == 'date' && date.compareTo(widget.controller.today) > 0) {
-          return context.l10n.financePaymentFutureError;
-        }
-        if (id == 'until' &&
-            !account &&
-            date.toString() != renewalDate(widget.server!, count).toString()) {
-          return context.l10n.financeCycleEndError(
-            renewalDate(widget.server!, count).toString(),
-          );
-        }
-        return null;
-      },
-    ),
+  }) => FinanceFieldRow(
+    key: ValueKey('pay-$id'),
+    controller: fields[id]!,
+    label: label,
+    hint: hint,
+    enabled: !saving,
+    stacked: id == 'note',
+    maxLines: lines,
+    maxLength: id == 'note'
+        ? 1000
+        : id == 'account'
+        ? 80
+        : null,
+    keyboardType: id == 'amount'
+        ? const TextInputType.numberWithOptions(decimal: true)
+        : TextInputType.text,
+    check: (raw) {
+      final value = raw.trim();
+      if (id == 'note') return null;
+      if (optional && value.isEmpty) return null;
+      if (id == 'account') {
+        return value.isEmpty ? context.l10n.financeAccountNameError : null;
+      }
+      if (id == 'amount') {
+        return Money.parseMinor(value) == null
+            ? context.l10n.financePaidAmountError
+            : null;
+      }
+      final date = LedgerDate.tryParse(value);
+      if (date == null) return context.l10n.financeDateError;
+      if (id == 'date' && date.compareTo(widget.controller.today) > 0) {
+        return context.l10n.financePaymentFutureError;
+      }
+      if (id == 'until' &&
+          !account &&
+          date.toString() != renewalDate(widget.server!, count).toString()) {
+        return context.l10n.financeCycleEndError(
+          renewalDate(widget.server!, count).toString(),
+        );
+      }
+      return null;
+    },
   );
+
+  Future<void> chooseCount() async {
+    final server = widget.server!;
+    final n = await showAppPicker<int>(
+      context,
+      title: context.l10n.financeRenewalCount,
+      selected: count,
+      options: [
+        for (final n in [1, 2, 3].where((n) => canRenew(server, cycles: n)))
+          AppPickerOption(
+            key: ValueKey('pay-count-$n'),
+            value: n,
+            title: context.l10n.financeCycleCountOption(n, server.cycleMonths),
+          ),
+      ],
+    );
+    if (n == null || n == count || !mounted) return;
+    setState(() {
+      count = n;
+      fields['until']!.text = renewalDate(server, count).toString();
+      confirmed = false;
+    });
+  }
+
   Future<void> save() async {
     if (saving) return;
     validationAttempted = true;
@@ -198,216 +217,194 @@ class _PaymentFormState extends State<PaymentForm> {
   }
 
   @override
-  Widget build(BuildContext context) =>
-      widget.server != null && !canRenew(widget.server!)
-      ? Scaffold(
-          appBar: AppBar(title: Text(context.l10n.financeRecordPayment)),
-          body: Padding(
-            padding: EdgeInsets.all(20),
-            child: InfoNote(context.l10n.financeNoRenewalDate),
-          ),
-        )
-      : ListenableBuilder(
-          listenable: widget.controller,
-          builder: (context, _) => PopScope(
-            canPop: !saving,
-            child: Scaffold(
-              appBar: AppBar(
-                title: Text(
-                  account
-                      ? context.l10n.financeRecordAccountBill
-                      : context.l10n.financeRecordPayment,
-                ),
-                actions: [
-                  TextButton(
-                    onPressed: saving ? null : () => Navigator.pop(context),
-                    child: Text(context.l10n.financeCancel),
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final server = widget.server;
+    if (server != null && !canRenew(server)) {
+      return FinanceModalFrame(
+        child: AppScaffold.modal(
+          title: l10n.financeRecordPayment,
+          actionLabel: l10n.gotIt,
+          onAction: () => Navigator.maybePop(context),
+          children: [FinanceNote(l10n.financeNoRenewalDate)],
+        ),
+      );
+    }
+    return ListenableBuilder(
+      listenable: widget.controller,
+      builder: (context, _) {
+        final l10n = context.l10n;
+        final canSave = !saving && widget.controller.canMutate;
+        return PopScope(
+          canPop: !saving,
+          child: FinanceModalFrame(
+            child: Form(
+              key: form,
+              child: AppScaffold.modal(
+                title: account
+                    ? l10n.financeRecordAccountBill
+                    : l10n.financeRecordPayment,
+                cancelLabel: l10n.financeCancel,
+                actionLabel: l10n.save,
+                actionBusy: saving,
+                onAction: canSave ? save : null,
+                children: [
+                  if (widget.controller.refreshFailed)
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+                      child: RefreshFailureNotice(
+                        controller: widget.controller,
+                      ),
+                    ),
+                  if (server != null)
+                    AppSection(
+                      footer: l10n.financeLocalPaymentOnly,
+                      children: [
+                        AppRow(
+                          title: server.name,
+                          subtitle: widget.controller.providerNameFor(
+                            server,
+                            l10n: l10n,
+                          ),
+                        ),
+                      ],
+                    )
+                  else
+                    FinanceNote(
+                      l10n.financeAccountBillNote,
+                      padding: const EdgeInsets.fromLTRB(20, 14, 20, 0),
+                    ),
+                  AppSection(
+                    children: [
+                      if (account)
+                        field(
+                          'account',
+                          l10n.financeAccountName,
+                          hint: l10n.financeAccountNameHint,
+                        ),
+                      field('amount', l10n.financePaidAmount),
+                      AppFormRow(
+                        label: l10n.financePaidCurrency,
+                        child: AppSegmented<String>(
+                          key: const ValueKey('pay-currency'),
+                          compact: true,
+                          options: {for (final c in Money.currencies) c: c},
+                          value: currency,
+                          onChanged: (c) {
+                            if (!saving) setState(() => currency = c);
+                          },
+                        ),
+                      ),
+                      field('date', l10n.financePaidDate, hint: 'YYYY-MM-DD'),
+                    ],
                   ),
-                ],
-              ),
-              body: Form(
-                key: form,
-                child: ListView(
-                  padding: const EdgeInsets.all(20),
-                  children: [
-                    if (widget.controller.refreshFailed)
-                      RefreshFailureNotice(controller: widget.controller),
-                    if (!account)
-                      LedgerCard(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              widget.server!.name,
-                              style: const TextStyle(
-                                fontSize: 20,
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
-                            Text(
-                              widget.controller.providerNameFor(
-                                widget.server!,
-                                l10n: context.l10n,
-                              ),
-                            ),
-                            InfoNote(context.l10n.financeLocalPaymentOnly),
-                          ],
+                  if (server != null) ...[
+                    AppSection(
+                      footer: l10n.financeExtendFromDue(
+                        server.dueDate.toString(),
+                      ),
+                      children: [
+                        AppFormRow.pick(
+                          key: const ValueKey('pay-count'),
+                          label: l10n.financeRenewalCount,
+                          value: l10n.financeCycleCountOption(
+                            count,
+                            server.cycleMonths,
+                          ),
+                          onTap: saving ? null : chooseCount,
                         ),
-                      ),
-                    if (account) InfoNote(context.l10n.financeAccountBillNote),
-                    const SizedBox(height: 18),
-                    if (account)
-                      field(
-                        'account',
-                        context.l10n.financeAccountName,
-                        hint: context.l10n.financeAccountNameHint,
-                      ),
-                    field('amount', context.l10n.financePaidAmount),
-                    DropdownButtonFormField<String>(
-                      initialValue: currency,
-                      isExpanded: true,
-                      itemHeight: null,
-                      decoration: InputDecoration(
-                        labelText: context.l10n.financePaidCurrency,
-                      ),
-                      items: Money.currencies
-                          .map(
-                            (c) => DropdownMenuItem(value: c, child: Text(c)),
-                          )
-                          .toList(),
-                      onChanged: saving
-                          ? null
-                          : (c) => setState(() => currency = c!),
+                        field(
+                          'until',
+                          l10n.financeNewDue,
+                          hint: l10n.financeNewDueHint,
+                        ),
+                      ],
                     ),
-                    const SizedBox(height: 18),
-                    field(
-                      'date',
-                      context.l10n.financePaidDate,
-                      hint: 'YYYY-MM-DD',
+                    AppSection(
+                      footer: l10n.financePaymentRenewalNote,
+                      children: [
+                        AppRow(
+                          title: l10n.financeNextRenewalPrice(
+                            server.billingLabelFor(l10n),
+                            server.currency,
+                          ),
+                        ),
+                      ],
                     ),
-                    if (!account) ...[
-                      DropdownButtonFormField<int>(
-                        initialValue: count,
-                        isExpanded: true,
-                        itemHeight: null,
-                        decoration: InputDecoration(
-                          labelText: context.l10n.financeRenewalCount,
+                  ] else
+                    AppSection(
+                      children: [
+                        field(
+                          'from',
+                          l10n.financeBillStart,
+                          hint: 'YYYY-MM-DD',
+                          optional: true,
                         ),
-                        items: [1, 2, 3]
-                            .where((n) => canRenew(widget.server!, cycles: n))
-                            .map(
-                              (n) => DropdownMenuItem(
-                                value: n,
-                                child: Builder(
-                                  builder: (context) => Text(
-                                    context.l10n.financeCycleCountOption(
-                                      n,
-                                      widget.server!.cycleMonths,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            )
-                            .toList(),
-                        onChanged: saving
-                            ? null
-                            : (n) => setState(() {
-                                count = n!;
-                                fields['until']!.text = renewalDate(
-                                  widget.server!,
-                                  count,
-                                ).toString();
-                                confirmed = false;
-                              }),
-                      ),
-                      InfoNote(
-                        context.l10n.financeExtendFromDue(
-                          widget.server!.dueDate.toString(),
+                        field(
+                          'until',
+                          l10n.financeBillEnd,
+                          hint: 'YYYY-MM-DD',
+                          optional: true,
                         ),
-                      ),
+                      ],
+                    ),
+                  AppSection(
+                    children: [
                       field(
-                        'until',
-                        context.l10n.financeNewDue,
-                        hint: context.l10n.financeNewDueHint,
-                      ),
-                      LedgerCard(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              context.l10n.financeNextRenewalPrice(
-                                widget.server!.billingLabelFor(context.l10n),
-                                widget.server!.currency,
-                              ),
-                            ),
-                            InfoNote(context.l10n.financePaymentRenewalNote),
-                          ],
-                        ),
-                      ),
-                    ] else ...[
-                      field(
-                        'from',
-                        context.l10n.financeBillStart,
-                        hint: 'YYYY-MM-DD',
-                        optional: true,
-                      ),
-                      field(
-                        'until',
-                        context.l10n.financeBillEnd,
-                        hint: 'YYYY-MM-DD',
+                        'note',
+                        l10n.financeOptionalNote,
+                        lines: 3,
                         optional: true,
                       ),
                     ],
-                    const SizedBox(height: 18),
-                    field(
-                      'note',
-                      context.l10n.financeOptionalNote,
-                      lines: 3,
-                      optional: true,
-                    ),
-                    CheckboxListTile(
-                      key: const ValueKey('pay-confirm'),
-                      contentPadding: EdgeInsets.zero,
-                      value: confirmed,
-                      controlAffinity: ListTileControlAffinity.leading,
-                      onChanged: saving
-                          ? null
-                          : (v) => setState(() {
-                              confirmed = v!;
-                              confirmationError = null;
-                            }),
-                      title: Text(
-                        account
-                            ? context.l10n.financeConfirmAccountPaid
-                            : context.l10n.financeConfirmServerPaid,
+                  ),
+                  AppSection(
+                    footerWidget: confirmationError == null
+                        ? null
+                        : Text(
+                            confirmationError!.messageFor(l10n),
+                            style: TextStyle(
+                              fontSize: 12.5,
+                              height: 1.4,
+                              color: context.palette.red,
+                            ),
+                          ),
+                    children: [
+                      AppSwitchRow(
+                        key: const ValueKey('pay-confirm'),
+                        title: account
+                            ? l10n.financeConfirmAccountPaid
+                            : l10n.financeConfirmServerPaid,
+                        value: confirmed,
+                        onChanged: saving
+                            ? null
+                            : (v) => setState(() {
+                                confirmed = v;
+                                confirmationError = null;
+                              }),
                       ),
-                    ),
-                    if (confirmationError != null)
-                      Text(
-                        confirmationError!.messageFor(context.l10n),
-                        style: TextStyle(
-                          color: Theme.of(context).colorScheme.error,
-                        ),
-                      ),
-                    const SizedBox(height: 18),
-                    FilledButton(
+                    ],
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 20, 16, 0),
+                    child: AppButton(
                       key: const ValueKey('save-payment'),
-                      onPressed: saving || !widget.controller.canMutate
-                          ? null
-                          : save,
-                      child: Text(
-                        saving
-                            ? context.l10n.financeSaving
-                            : context.l10n.financeSavePayment,
-                      ),
+                      label: saving
+                          ? l10n.financeSaving
+                          : l10n.financeSavePayment,
+                      expand: true,
+                      onPressed: canSave ? save : null,
                     ),
-                    InfoNote(context.l10n.financeNotReceipt),
-                  ],
-                ),
+                  ),
+                  FinanceNote(l10n.financeNotReceipt),
+                ],
               ),
             ),
           ),
         );
+      },
+    );
+  }
 }
 
 class PaymentListPage extends StatefulWidget {
@@ -429,11 +426,42 @@ class _PaymentListPageState extends State<PaymentListPage> {
   late bool recent = widget.recent;
   bool showVoided = false;
   late String? serverId = widget.serverId;
+
+  Future<void> chooseTarget() async {
+    final c = widget.controller;
+    final picked = await showAppPicker<String>(
+      context,
+      title: context.l10n.financePaymentTarget,
+      selected: serverId ?? '',
+      options: [
+        AppPickerOption(
+          key: const ValueKey('payment-target-all'),
+          value: '',
+          title: context.l10n.financeAllPayments,
+        ),
+        for (final s in c.records)
+          AppPickerOption(
+            key: ValueKey('payment-target-${s.id}'),
+            value: s.id,
+            title: context.l10n.financeArchivedName(
+              s.name,
+              s.archived ? 'yes' : 'no',
+            ),
+          ),
+      ],
+    );
+    if (picked != null && mounted) {
+      setState(() => serverId = picked == '' ? null : picked);
+    }
+  }
+
   @override
   Widget build(BuildContext context) => ListenableBuilder(
     listenable: widget.controller,
     builder: (context, _) {
       final c = widget.controller;
+      final l10n = context.l10n;
+      final p = context.palette;
       final rows = c.payments.where((p) {
         if (!showVoided && p.voided) return false;
         if (serverId != null && p.serverId != serverId) return false;
@@ -450,129 +478,153 @@ class _PaymentListPageState extends State<PaymentListPage> {
         counted.map((p) => FinanceAmount.money(p.amount)),
         c.fx,
       );
-      return Scaffold(
-        appBar: AppBar(title: Text(context.l10n.financePayments)),
-        body: ListView(
-          padding: const EdgeInsets.all(20),
-          children: [
-            if (c.refreshFailed) RefreshFailureNotice(controller: c),
-            DropdownButtonFormField<String>(
-              initialValue: serverId ?? '',
-              isExpanded: true,
-              itemHeight: null,
-              decoration: InputDecoration(
-                labelText: context.l10n.financePaymentTarget,
-              ),
-              items: [
-                DropdownMenuItem(
-                  value: '',
-                  child: Builder(
-                    builder: (context) => Text(context.l10n.financeAllPayments),
-                  ),
-                ),
-                ...c.records.map(
-                  (s) => DropdownMenuItem(
-                    value: s.id,
-                    child: Builder(
-                      builder: (context) => Text(
-                        context.l10n.financeArchivedName(
-                          s.name,
-                          s.archived ? 'yes' : 'no',
-                        ),
-                        overflow: TextOverflow.ellipsis,
+      final target = serverId == null ? null : c.byId(serverId!);
+      final secondary = TextStyle(fontSize: 13, height: 1.4, color: p.text2);
+      return AppScaffold(
+        largeTitle: false,
+        title: l10n.financePayments,
+        children: [
+          if (c.refreshFailed)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+              child: RefreshFailureNotice(controller: c),
+            ),
+          AppSection(
+            children: [
+              AppFormRow.pick(
+                key: const ValueKey('payment-target'),
+                label: l10n.financePaymentTarget,
+                value: target == null
+                    ? l10n.financeAllPayments
+                    : l10n.financeArchivedName(
+                        target.name,
+                        target.archived ? 'yes' : 'no',
                       ),
+                onTap: chooseTarget,
+              ),
+            ],
+          ),
+          AppChipRow(
+            children: [
+              AppChip(
+                key: const ValueKey('payment-recent'),
+                label: l10n.financeRecent30,
+                selected: recent,
+                onTap: () => setState(() => recent = !recent),
+              ),
+              AppChip(
+                key: const ValueKey('payment-voided'),
+                label: l10n.financeShowVoided,
+                selected: showVoided,
+                onTap: () => setState(() => showVoided = !showVoided),
+              ),
+            ],
+          ),
+          AppSection(
+            header: l10n.financeRecordedPaidTotal,
+            footer: [
+              l10n.financeValidPaymentsNote(counted.length),
+              if (widget.groupId != null)
+                l10n.financePaymentGroupNote(
+                  c.groupName(widget.groupId, l10n: l10n),
+                ),
+            ].join('\n'),
+            children: [
+              AppRow.custom(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  child: counted.isEmpty
+                      ? Text(
+                          l10n.financeNoPayments,
+                          style: TextStyle(fontSize: 15, color: p.text2),
+                        )
+                      : FinanceTotalView(total: total),
+                ),
+              ),
+            ],
+          ),
+          AppSection(
+            header: l10n.financePaymentDetails,
+            children: [
+              if (rows.isEmpty) AppRow(title: l10n.financeNoPaymentsInRange),
+              for (final pay in rows)
+                AppRow.custom(
+                  key: ValueKey('payment-${pay.id}'),
+                  onTap: () => Navigator.push<void>(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) =>
+                          PaymentDetailPage(controller: c, id: pay.id),
                     ),
                   ),
-                ),
-              ],
-              onChanged: (v) => setState(() => serverId = v == '' ? null : v),
-            ),
-            const SizedBox(height: 12),
-            Wrap(
-              spacing: 10,
-              children: [
-                FilterChip(
-                  label: Text(context.l10n.financeRecent30),
-                  selected: recent,
-                  onSelected: (v) => setState(() => recent = v),
-                ),
-                FilterChip(
-                  label: Text(context.l10n.financeShowVoided),
-                  selected: showVoided,
-                  onSelected: (v) => setState(() => showVoided = v),
-                ),
-              ],
-            ),
-            SectionTitle(context.l10n.financeRecordedPaidTotal),
-            LedgerCard(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  if (counted.isEmpty)
-                    Text(context.l10n.financeNoPayments)
-                  else
-                    FinanceTotalView(total: total),
-                  InfoNote(
-                    context.l10n.financeValidPaymentsNote(counted.length),
-                  ),
-                ],
-              ),
-            ),
-            if (widget.groupId != null)
-              InfoNote(
-                context.l10n.financePaymentGroupNote(
-                  c.groupName(widget.groupId, l10n: context.l10n),
-                ),
-              ),
-            SectionTitle(context.l10n.financePaymentDetails),
-            for (final p in rows)
-              Padding(
-                padding: const EdgeInsets.only(bottom: 10),
-                child: LedgerCard(
-                  child: InkWell(
-                    onTap: () => Navigator.push<void>(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) =>
-                            PaymentDetailPage(controller: c, id: p.id),
-                      ),
-                    ),
+                  chevron: true,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 12),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          context.l10n.financeVoidedName(
-                            p.targetName,
-                            p.voided ? 'yes' : 'no',
-                          ),
-                          style: const TextStyle(fontWeight: FontWeight.w700),
+                        Row(
+                          children: [
+                            Flexible(
+                              child: Text(
+                                pay.targetName,
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
+                                  color: p.text,
+                                ),
+                              ),
+                            ),
+                            if (pay.voided) ...[
+                              const SizedBox(width: 8),
+                              Flexible(
+                                child: StatusPill(
+                                  l10n.uiFinanceVoidedPill,
+                                  tone: AppTone.red,
+                                ),
+                              ),
+                            ],
+                          ],
                         ),
-                        const SizedBox(height: 5),
+                        const SizedBox(height: 3),
                         Text(
-                          '${p.amount.formatted} ${p.amount.currency}',
-                          style: const TextStyle(
-                            fontSize: 20,
+                          '${pay.amount.formatted} ${pay.amount.currency}',
+                          style: TextStyle(
+                            fontSize: 18,
                             fontWeight: FontWeight.w600,
+                            color: p.text,
+                            fontFeatures: kTabularFigures,
                           ),
                         ),
                         Text(
-                          context.l10n.financePaymentSummary(
-                            p.paidDate.toString(),
-                            p.serverId == null ? 'yes' : 'no',
-                            p.until?.toString() ?? context.l10n.financeUnknown,
+                          l10n.financePaymentSummary(
+                            pay.paidDate.toString(),
+                            pay.serverId == null ? 'yes' : 'no',
+                            pay.until?.toString() ?? l10n.financeUnknown,
                           ),
+                          style: secondary,
                         ),
-                        if (p.serverId != null &&
-                            c.byId(p.serverId!)?.archived == true)
-                          LedgerBadge(context.l10n.financeArchivedPayment),
+                        if (pay.serverId != null &&
+                            c.byId(pay.serverId!)?.archived == true) ...[
+                          Padding(
+                            padding: const EdgeInsets.only(top: 6),
+                            child: Align(
+                              alignment: AlignmentDirectional.centerStart,
+                              child: StatusPill(
+                                l10n.uiFinanceArchivedPill,
+                                tone: AppTone.neutral,
+                              ),
+                            ),
+                          ),
+                          Text(l10n.financeArchivedPayment, style: secondary),
+                        ],
                       ],
                     ),
                   ),
                 ),
-              ),
-            if (rows.isEmpty) InfoNote(context.l10n.financeNoPaymentsInRange),
-          ],
-        ),
+            ],
+          ),
+        ],
       );
     },
   );
@@ -587,6 +639,8 @@ class PaymentDetailPage extends StatelessWidget {
   final LedgerController controller;
   final String id;
   Future<void> undo(BuildContext context, PaymentRecord payment) async {
+    // confirmAction re-translates an open confirmation when the language
+    // changes; showAppConfirm resolves its text once.
     final confirmed = await confirmAction(
       context,
       title: LocalizedText((l10n) => l10n.financeVoidTitle),
@@ -618,84 +672,123 @@ class PaymentDetailPage extends StatelessWidget {
     listenable: controller,
     builder: (context, _) {
       final p = controller.payments.where((p) => p.id == id).firstOrNull;
-      return Scaffold(
-        appBar: AppBar(title: Text(context.l10n.financePaymentDetail)),
-        body: ListView(
-          padding: const EdgeInsets.all(20),
-          children: [
-            if (controller.refreshFailed)
-              RefreshFailureNotice(controller: controller),
-            if (p == null)
-              InfoNote(context.l10n.financePaymentUnavailable)
-            else ...[
-              LedgerCard(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      p.targetName,
-                      style: const TextStyle(
-                        fontSize: 22,
-                        fontWeight: FontWeight.w700,
-                      ),
+      final l10n = context.l10n;
+      final palette = context.palette;
+      return AppScaffold(
+        largeTitle: false,
+        title: l10n.financePaymentDetail,
+        children: [
+          if (controller.refreshFailed)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+              child: RefreshFailureNotice(controller: controller),
+            ),
+          if (p == null)
+            FinanceNote(
+              l10n.financePaymentUnavailable,
+              padding: const EdgeInsets.fromLTRB(20, 14, 20, 0),
+            )
+          else ...[
+            const SizedBox(height: 12),
+            AppCard(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    p.targetName,
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w700,
+                      color: palette.text,
                     ),
-                    const SizedBox(height: 16),
-                    Text(
-                      '${p.amount.formatted} ${p.amount.currency}',
-                      style: const TextStyle(
-                        fontSize: 28,
-                        fontWeight: FontWeight.w700,
-                      ),
+                  ),
+                  const SizedBox(height: 10),
+                  Text(
+                    '${p.amount.formatted} ${p.amount.currency}',
+                    style: TextStyle(
+                      fontSize: 30,
+                      fontWeight: FontWeight.w700,
+                      color: palette.text,
+                      fontFeatures: kTabularFigures,
                     ),
-                    FinanceLine(
-                      context.l10n.financePaymentDateLabel,
-                      '${p.paidDate}',
-                    ),
-                    FinanceLine(
-                      context.l10n.financeType,
-                      p.serverId == null
-                          ? context.l10n.financeAccountBill
-                          : context.l10n.financePrepaidRenewalType(
-                              p.cycleCount,
-                            ),
-                    ),
-                    FinanceLine(
-                      context.l10n.financeBillServicePeriod,
-                      p.from == null
-                          ? context.l10n.financeNotEntered
-                          : context.l10n.financePaymentPeriodRange(
-                              p.from.toString(),
-                              p.until.toString(),
-                            ),
-                    ),
-                    FinanceLine(
-                      context.l10n.financeNote,
-                      p.note.isEmpty ? context.l10n.financeNotEntered : p.note,
-                    ),
-                    FinanceLine(
-                      context.l10n.financeStatus,
-                      p.voided
-                          ? context.l10n.financeVoidedStatus
-                          : context.l10n.financeRecordedStatus,
-                    ),
-                  ],
-                ),
+                  ),
+                  const SizedBox(height: 8),
+                  Wrap(
+                    spacing: 6,
+                    runSpacing: 6,
+                    children: [
+                      if (p.voided)
+                        StatusPill(
+                          l10n.uiFinanceVoidedPill,
+                          tone: AppTone.red,
+                          dot: true,
+                        )
+                      else
+                        StatusPill(
+                          l10n.financeRecordedStatus,
+                          tone: AppTone.green,
+                          dot: true,
+                        ),
+                      if (p.serverId == null)
+                        StatusPill(l10n.uiFinanceAccountPill),
+                    ],
+                  ),
+                ],
               ),
-              InfoNote(context.l10n.financePaymentHistoryNote),
-              if (!p.voided) ...[
-                OutlinedButton(
-                  onPressed:
-                      controller.canMutate && controller.canUndoPayment(p)
-                      ? () => undo(context, p)
-                      : null,
-                  child: Text(context.l10n.financeVoidThisRecord),
+            ),
+            AppSection(
+              footer: l10n.financePaymentHistoryNote,
+              children: [
+                AppKeyValueRow(
+                  label: l10n.financePaymentDateLabel,
+                  value: '${p.paidDate}',
                 ),
-                if (!controller.canUndoPayment(p))
-                  InfoNote(context.l10n.financeVoidBlocked),
+                AppKeyValueRow(
+                  label: l10n.financeType,
+                  value: p.serverId == null
+                      ? l10n.financeAccountBill
+                      : l10n.financePrepaidRenewalType(p.cycleCount),
+                ),
+                AppKeyValueRow(
+                  label: l10n.financeBillServicePeriod,
+                  value: p.from == null
+                      ? l10n.financeNotEntered
+                      : l10n.financePaymentPeriodRange(
+                          p.from.toString(),
+                          p.until.toString(),
+                        ),
+                ),
+                AppKeyValueRow(
+                  label: l10n.financeNote,
+                  value: p.note.isEmpty ? l10n.financeNotEntered : p.note,
+                ),
+                AppKeyValueRow(
+                  label: l10n.financeStatus,
+                  value: p.voided
+                      ? l10n.financeVoidedStatus
+                      : l10n.financeRecordedStatus,
+                ),
               ],
-            ],
+            ),
+            if (!p.voided)
+              AppSection(
+                footer: controller.canUndoPayment(p)
+                    ? null
+                    : l10n.financeVoidBlocked,
+                children: [
+                  AppRow(
+                    key: const ValueKey('payment-void'),
+                    title: l10n.financeVoidThisRecord,
+                    center: true,
+                    destructive: true,
+                    enabled:
+                        controller.canMutate && controller.canUndoPayment(p),
+                    onTap: () => undo(context, p),
+                  ),
+                ],
+              ),
           ],
-        ),
+        ],
       );
     },
   );

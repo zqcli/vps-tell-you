@@ -697,6 +697,63 @@
       }
     }
   },
+  "uiFinanceDisplayChip": "Show {currency}",
+  "@uiFinanceDisplayChip": {
+    "placeholders": {
+      "currency": {
+        "type": "String"
+      }
+    }
+  },
+  "uiFinanceCurrencyNote": "Only changes how totals are converted and shown. Original-currency records stay unchanged.",
+  "uiFinanceTileRemaining": "Remaining value",
+  "uiFinanceTileRenewals": "Renewals in 30 days",
+  "uiFinanceBannerMissingFx": "{count, plural, one{1 amount has no exchange rate and is left out of totals} other{{count} amounts have no exchange rate and are left out of totals}}",
+  "@uiFinanceBannerMissingFx": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "uiFinanceGapMissingFx": "{count, plural, one{1 missing rate} other{{count} missing rates}}",
+  "@uiFinanceGapMissingFx": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "uiFinanceGapUnknown": "{count, plural, one{1 unknown amount} other{{count} unknown amounts}}",
+  "@uiFinanceGapUnknown": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "uiFinanceMonthShort": "{month, select, 1{Jan} 2{Feb} 3{Mar} 4{Apr} 5{May} 6{Jun} 7{Jul} 8{Aug} 9{Sep} 10{Oct} 11{Nov} 12{Dec} other{{month}}}",
+  "@uiFinanceMonthShort": {
+    "placeholders": {
+      "month": {
+        "type": "String"
+      }
+    }
+  },
+  "uiFinanceForecastBasis": "At current renewal prices",
+  "uiFinanceToolsHeader": "Records & tools",
+  "uiFinanceServerCount": "{count, plural, one{1 server} other{{count} servers}}",
+  "@uiFinanceServerCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "uiFinanceFootnote": "Amounts use current renewal prices and manual reference exchange rates. For reference only; they are not vendor bills.",
+  "uiFinanceVoidedPill": "Voided",
+  "uiFinanceArchivedPill": "Archived",
+  "uiFinanceAccountPill": "Account bill",
   "financeForecastMonth": "{year}-{month} · {count, plural, one{1 renewal} other{{count} renewals}}",
   "@financeForecastMonth": {
     "placeholders": {

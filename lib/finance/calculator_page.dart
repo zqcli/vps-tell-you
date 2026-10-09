@@ -3,7 +3,8 @@ import 'package:flutter/services.dart';
 
 import '../l10n/locale_preference.dart';
 import '../l10n/localized_message.dart';
-import '../core/app_theme.dart';
+import '../core/app_theme.dart' show showFailure;
+import '../core/ui/ui.dart';
 import '../core/value_types.dart';
 import '../servers/ledger_controller.dart';
 import '../servers/server_record.dart';
@@ -77,46 +78,60 @@ class _CalculatorPageState extends State<CalculatorPage> {
   }
 
   Future<void> chooseReference() async {
-    final s = await showModalBottomSheet<ServerRecord>(
-      context: context,
-      showDragHandle: true,
-      isScrollControlled: true,
-      builder: (context) => SafeArea(
-        child: SizedBox(
-          height: MediaQuery.sizeOf(context).height * .65,
-          child: ListView(
-            padding: const EdgeInsets.all(20),
-            children: [
-              Text(
-                context.l10n.financeReferenceTitle,
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
-              ),
-              InfoNote(context.l10n.financeReferenceNote),
-              ...widget.controller.active
-                  .where((s) => s.billing == BillingKind.prepaid)
-                  .map(
-                    (s) => ListTile(
-                      contentPadding: EdgeInsets.zero,
-                      title: Text(s.name),
-                      subtitle: Text(
-                        context.l10n.financeReferenceServerSubtitle(
-                          s.billingLabelFor(context.l10n),
-                          s.dueDate?.toString() ?? context.l10n.financeUnknown,
-                        ),
-                      ),
-                      onTap: () => Navigator.pop(context, s),
+    final s = await showAppSheet<ServerRecord>(
+      context,
+      title: context.l10n.financeReferenceTitle,
+      builder: (context) {
+        final prepaid = widget.controller.active
+            .where((s) => s.billing == BillingKind.prepaid)
+            .toList();
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            AppSection(
+              topSpacing: 0,
+              footer: context.l10n.financeReferenceNote,
+              children: [
+                if (prepaid.isEmpty)
+                  AppRow(title: context.l10n.financeNoPrepaid),
+                for (final s in prepaid)
+                  AppRow(
+                    key: ValueKey('calc-reference-${s.id}'),
+                    title: s.name,
+                    subtitle: context.l10n.financeReferenceServerSubtitle(
+                      s.billingLabelFor(context.l10n),
+                      s.dueDate?.toString() ?? context.l10n.financeUnknown,
                     ),
+                    onTap: () => Navigator.pop(context, s),
                   ),
-              if (!widget.controller.active.any(
-                (s) => s.billing == BillingKind.prepaid,
-              ))
-                InfoNote(context.l10n.financeNoPrepaid),
-            ],
-          ),
-        ),
-      ),
+              ],
+            ),
+            const SizedBox(height: 16),
+          ],
+        );
+      },
     );
     if (s != null && mounted) setState(() => reference(s));
+  }
+
+  Future<void> chooseCycle() async {
+    final picked = await showAppPicker<int>(
+      context,
+      title: context.l10n.financeCycle,
+      selected: cycle,
+      options: [
+        for (final c in [1, 3, 6, 12, 24, 36])
+          AppPickerOption(
+            key: ValueKey('calc-cycle-option-$c'),
+            value: c,
+            title: context.l10n.financeEveryMonths(c),
+          ),
+      ],
+    );
+    if (picked != null && picked != cycle && mounted) {
+      changePeriod();
+      setState(() => cycle = picked);
+    }
   }
 
   void changePeriod() {
@@ -175,131 +190,136 @@ class _CalculatorPageState extends State<CalculatorPage> {
     }
   }
 
+  bool algorithmOpen = false;
+
   @override
-  Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(title: Text(context.l10n.financeCalculatorTitle)),
-    body: Form(
-      key: form,
-      child: ListView(
-        padding: const EdgeInsets.all(20),
-        children: [
-          Wrap(
-            crossAxisAlignment: WrapCrossAlignment.center,
-            spacing: 8,
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final p = context.palette;
+    return AppScaffold(
+      largeTitle: false,
+      title: l10n.financeCalculatorTitle,
+      bottomBar: AppButton(
+        key: const ValueKey('calculate-value'),
+        label: l10n.financeCalculateValue,
+        expand: true,
+        onPressed: calculate,
+      ),
+      children: [
+        Form(
+          key: form,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              LedgerBadge(context.l10n.financeEstimatedOnly),
-              TextButton(
-                onPressed: chooseReference,
-                child: Text(context.l10n.financeReferenceServer),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 14, 16, 0),
+                child: Align(
+                  alignment: AlignmentDirectional.centerStart,
+                  child: StatusPill(l10n.financeEstimatedOnly),
+                ),
+              ),
+              AppSection(
+                footer: referencedPeriods != null
+                    ? l10n.financeReferenceBasis(sourceName ?? '')
+                    : rebuilt
+                    ? l10n.financeIndependentRebuilt
+                    : l10n.financeIndependentNote,
+                children: [
+                  AppRow(
+                    key: const ValueKey('calc-reference'),
+                    icon: Icons.dns_outlined,
+                    iconColor: AppTints.slate,
+                    title: l10n.financeReferenceServer,
+                    value: referencedPeriods != null ? sourceName : null,
+                    chevron: true,
+                    onTap: chooseReference,
+                  ),
+                ],
+              ),
+              AppSection(
+                children: [
+                  FinanceFieldRow(
+                    key: const ValueKey('calc-price'),
+                    controller: price,
+                    label: l10n.financeRenewalAmount,
+                    keyboardType: const TextInputType.numberWithOptions(
+                      decimal: true,
+                    ),
+                    check: (v) => Money.parseMinor(v) == null
+                        ? l10n.financeAmountError
+                        : null,
+                  ),
+                  AppFormRow(
+                    label: l10n.financeOriginalCurrency,
+                    child: AppSegmented<String>(
+                      key: ValueKey('calc-currency-$currency'),
+                      compact: true,
+                      options: {for (final c in Money.currencies) c: c},
+                      value: currency,
+                      onChanged: (v) => setState(() => currency = v),
+                    ),
+                  ),
+                  AppFormRow.pick(
+                    key: ValueKey('calc-cycle-$cycle'),
+                    label: l10n.financeCycle,
+                    value: l10n.financeEveryMonths(cycle),
+                    onTap: chooseCycle,
+                  ),
+                  FinanceFieldRow(
+                    key: const ValueKey('calc-asof'),
+                    controller: asOf,
+                    label: l10n.financeValuationDate,
+                    hint: 'YYYY-MM-DD',
+                    check: (v) => LedgerDate.tryParse(v.trim()) == null
+                        ? l10n.financeValuationDateError
+                        : null,
+                  ),
+                  FinanceFieldRow(
+                    key: const ValueKey('calc-due'),
+                    controller: due,
+                    label: l10n.financeServiceDue,
+                    hint: 'YYYY-MM-DD',
+                    onChanged: (_) => changePeriod(),
+                    check: (v) => LedgerDate.tryParse(v.trim()) == null
+                        ? l10n.financeDueError
+                        : null,
+                  ),
+                ],
+              ),
+              AppSection(
+                footer: l10n.financeEstimateNoWrite,
+                children: [
+                  AppRow(
+                    key: const ValueKey('calc-algorithm'),
+                    title: l10n.financeAlgorithmTitle,
+                    trailing: Icon(
+                      algorithmOpen
+                          ? Icons.expand_less_rounded
+                          : Icons.expand_more_rounded,
+                      color: p.text3,
+                    ),
+                    onTap: () => setState(() => algorithmOpen = !algorithmOpen),
+                  ),
+                  if (algorithmOpen)
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 4, 16, 14),
+                      child: Text(
+                        l10n.financeAlgorithmNote,
+                        style: TextStyle(
+                          fontSize: 13.5,
+                          height: 1.55,
+                          color: p.text2,
+                        ),
+                      ),
+                    ),
+                ],
               ),
             ],
           ),
-          InfoNote(
-            referencedPeriods != null
-                ? context.l10n.financeReferenceBasis(sourceName ?? '')
-                : rebuilt
-                ? context.l10n.financeIndependentRebuilt
-                : context.l10n.financeIndependentNote,
-          ),
-          TextFormField(
-            key: const ValueKey('calc-price'),
-            controller: price,
-            keyboardType: const TextInputType.numberWithOptions(decimal: true),
-            decoration: InputDecoration(
-              errorMaxLines: 5,
-              labelText: context.l10n.financeRenewalAmount,
-            ),
-            validator: (v) => Money.parseMinor(v!) == null
-                ? context.l10n.financeAmountError
-                : null,
-          ),
-          const SizedBox(height: 18),
-          DropdownButtonFormField<String>(
-            key: ValueKey('calc-currency-$currency'),
-            initialValue: currency,
-            isExpanded: true,
-            itemHeight: null,
-            decoration: InputDecoration(
-              errorMaxLines: 5,
-              labelText: context.l10n.financeOriginalCurrency,
-            ),
-            items: Money.currencies
-                .map((c) => DropdownMenuItem(value: c, child: Text(c)))
-                .toList(),
-            onChanged: (v) => setState(() => currency = v!),
-          ),
-          const SizedBox(height: 18),
-          DropdownButtonFormField<int>(
-            key: ValueKey('calc-cycle-$cycle'),
-            initialValue: cycle,
-            isExpanded: true,
-            itemHeight: null,
-            decoration: InputDecoration(
-              errorMaxLines: 5,
-              labelText: context.l10n.financeCycle,
-            ),
-            items: [1, 3, 6, 12, 24, 36]
-                .map(
-                  (c) => DropdownMenuItem(
-                    value: c,
-                    child: Builder(
-                      builder: (context) =>
-                          Text(context.l10n.financeEveryMonths(c)),
-                    ),
-                  ),
-                )
-                .toList(),
-            onChanged: (v) {
-              if (v != cycle) {
-                changePeriod();
-                setState(() => cycle = v!);
-              }
-            },
-          ),
-          const SizedBox(height: 18),
-          TextFormField(
-            key: const ValueKey('calc-asof'),
-            controller: asOf,
-            decoration: InputDecoration(
-              errorMaxLines: 5,
-              labelText: context.l10n.financeValuationDate,
-              hintText: 'YYYY-MM-DD',
-            ),
-            validator: (v) => LedgerDate.tryParse(v!.trim()) == null
-                ? context.l10n.financeValuationDateError
-                : null,
-          ),
-          const SizedBox(height: 18),
-          TextFormField(
-            key: const ValueKey('calc-due'),
-            controller: due,
-            onChanged: (_) => changePeriod(),
-            decoration: InputDecoration(
-              errorMaxLines: 5,
-              labelText: context.l10n.financeServiceDue,
-              hintText: 'YYYY-MM-DD',
-            ),
-            validator: (v) => LedgerDate.tryParse(v!.trim()) == null
-                ? context.l10n.financeDueError
-                : null,
-          ),
-          const SizedBox(height: 16),
-          ExpansionTile(
-            tilePadding: EdgeInsets.zero,
-            title: Text(context.l10n.financeAlgorithmTitle),
-            children: [InfoNote(context.l10n.financeAlgorithmNote)],
-          ),
-          const SizedBox(height: 16),
-          FilledButton(
-            key: const ValueKey('calculate-value'),
-            onPressed: calculate,
-            child: Text(context.l10n.financeCalculateValue),
-          ),
-          InfoNote(context.l10n.financeEstimateNoWrite),
-        ],
-      ),
-    ),
-  );
+        ),
+      ],
+    );
+  }
 }
 
 class CalculationResultPage extends StatefulWidget {
@@ -438,14 +458,59 @@ class _CalculationResultPageState extends State<CalculationResultPage> {
     }
   }
 
+  bool quoteOpen = false;
+
+  Future<void> choosePayer() async {
+    final picked = await showAppPicker<FeePayer>(
+      context,
+      title: context.l10n.financeFeePayer,
+      selected: payer,
+      options: [
+        AppPickerOption(
+          key: const ValueKey('quote-payer-buyer'),
+          value: FeePayer.buyer,
+          title: context.l10n.financeBuyerPays,
+        ),
+        AppPickerOption(
+          key: const ValueKey('quote-payer-seller'),
+          value: FeePayer.seller,
+          title: context.l10n.financeSellerPays,
+        ),
+        AppPickerOption(
+          key: const ValueKey('quote-payer-split'),
+          value: FeePayer.split,
+          title: context.l10n.financeSplitFee,
+        ),
+      ],
+    );
+    if (picked != null && mounted) {
+      clearQuote();
+      setState(() => payer = picked);
+    }
+  }
+
+  String _payerLabel(FeePayer value) => switch (value) {
+    FeePayer.buyer => context.l10n.financeBuyerPays,
+    FeePayer.seller => context.l10n.financeSellerPays,
+    FeePayer.split => context.l10n.financeSplitFee,
+  };
+
   @override
-  Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(title: Text(context.l10n.financeResultTitle)),
-    body: ListView(
-      padding: const EdgeInsets.all(20),
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final p = context.palette;
+    final share = shareData;
+    return AppScaffold(
+      largeTitle: false,
+      title: l10n.financeResultTitle,
       children: [
-        LedgerBadge(context.l10n.financeEstimatedOnly),
-        const SizedBox(height: 16),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 14, 16, 12),
+          child: Align(
+            alignment: AlignmentDirectional.centerStart,
+            child: StatusPill(l10n.financeEstimatedOnly),
+          ),
+        ),
         ValuationCard(
           value: widget.value,
           renewal: widget.renewal,
@@ -454,176 +519,168 @@ class _CalculationResultPageState extends State<CalculationResultPage> {
           asOf: widget.asOf,
           fx: widget.fx,
         ),
-        InfoNote(shareData.periodBasis),
-        Wrap(
-          spacing: 10,
-          runSpacing: 10,
+        FinanceNote(share.periodBasis),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+          child: AppButton(
+            key: const ValueKey('preview-png'),
+            label: l10n.financePreviewPng,
+            icon: Icons.image_outlined,
+            expand: true,
+            onPressed: () {
+              final snapshot = shareData;
+              Navigator.push<void>(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => CalculationPreview(data: snapshot),
+                ),
+              );
+            },
+          ),
+        ),
+        AppSection(
           children: [
-            OutlinedButton.icon(
-              onPressed: () => Navigator.pop(context),
-              icon: const Icon(Icons.edit_outlined),
-              label: Text(context.l10n.financeEditInputs),
+            AppRow(
+              key: const ValueKey('result-edit'),
+              icon: Icons.edit_outlined,
+              iconColor: AppTints.slate,
+              title: l10n.financeEditInputs,
+              onTap: () => Navigator.pop(context),
             ),
-            OutlinedButton.icon(
-              onPressed: copy,
-              icon: const Icon(Icons.copy_outlined),
-              label: Text(context.l10n.financeCopyResult),
+            AppRow(
+              key: const ValueKey('result-copy'),
+              icon: Icons.copy_outlined,
+              iconColor: AppTints.teal,
+              title: l10n.financeCopyResult,
+              onTap: copy,
             ),
           ],
         ),
-        const SizedBox(height: 16),
-        FilledButton.icon(
-          key: const ValueKey('preview-png'),
-          onPressed: () {
-            final snapshot = shareData;
-            Navigator.push<void>(
-              context,
-              MaterialPageRoute(
-                builder: (_) => CalculationPreview(data: snapshot),
+        AppSection(
+          key: const ValueKey('quote-panel'),
+          children: [
+            AppRow(
+              title: l10n.financeQuoteTitle,
+              trailing: Icon(
+                quoteOpen
+                    ? Icons.expand_less_rounded
+                    : Icons.expand_more_rounded,
+                color: p.text3,
               ),
-            );
-          },
-          icon: const Icon(Icons.image_outlined),
-          label: Text(context.l10n.financePreviewPng),
+              onTap: () => setState(() => quoteOpen = !quoteOpen),
+            ),
+          ],
         ),
-        const SizedBox(height: 20),
-        LedgerCard(
-          child: ExpansionTile(
-            key: const ValueKey('quote-panel'),
-            maintainState: true,
-            tilePadding: EdgeInsets.zero,
-            title: Text(context.l10n.financeQuoteTitle),
-            children: [
-              Form(
-                key: quoteForm,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
+        Visibility(
+          visible: quoteOpen,
+          maintainState: true,
+          child: Form(
+            key: quoteForm,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                FinanceNote(l10n.financeQuoteNote),
+                AppSection(
+                  footer: l10n.financeSplitFeeNote,
                   children: [
-                    InfoNote(context.l10n.financeQuoteNote),
-                    TextFormField(
+                    FinanceFieldRow(
                       key: const ValueKey('quote-offer'),
                       controller: offer,
+                      label: l10n.financeSellerQuote(widget.fx.displayCurrency),
                       onChanged: (_) => clearQuote(),
                       keyboardType: const TextInputType.numberWithOptions(
                         decimal: true,
                       ),
-                      decoration: InputDecoration(
-                        errorMaxLines: 5,
-                        labelText: context.l10n.financeSellerQuote(
-                          widget.fx.displayCurrency,
-                        ),
-                      ),
-                      validator: (v) => Money.parseMinor(v!) == null
-                          ? context.l10n.financeQuoteAmountError
+                      check: (v) => Money.parseMinor(v) == null
+                          ? l10n.financeQuoteAmountError
                           : null,
                     ),
-                    const SizedBox(height: 18),
-                    TextFormField(
+                    FinanceFieldRow(
                       key: const ValueKey('quote-fee'),
                       controller: fee,
+                      label: l10n.financeTransferFee,
                       onChanged: (_) => clearQuote(),
                       keyboardType: const TextInputType.numberWithOptions(
                         decimal: true,
                       ),
-                      decoration: InputDecoration(
-                        errorMaxLines: 5,
-                        labelText: context.l10n.financeTransferFee,
-                      ),
-                      validator: (v) => Money.parseMinor(v!) == null
-                          ? context.l10n.financeQuoteFeeError
+                      check: (v) => Money.parseMinor(v) == null
+                          ? l10n.financeQuoteFeeError
                           : null,
                     ),
-                    const SizedBox(height: 18),
-                    DropdownButtonFormField<String>(
-                      initialValue: feeCurrency,
-                      isExpanded: true,
-                      itemHeight: null,
-                      decoration: InputDecoration(
-                        errorMaxLines: 5,
-                        labelText: context.l10n.financeFeeCurrency,
+                    AppFormRow(
+                      label: l10n.financeFeeCurrency,
+                      child: AppSegmented<String>(
+                        key: const ValueKey('quote-fee-currency'),
+                        compact: true,
+                        options: {for (final c in Money.currencies) c: c},
+                        value: feeCurrency,
+                        onChanged: (v) {
+                          clearQuote();
+                          setState(() => feeCurrency = v);
+                        },
                       ),
-                      items: Money.currencies
-                          .map(
-                            (c) => DropdownMenuItem(value: c, child: Text(c)),
-                          )
-                          .toList(),
-                      onChanged: (v) {
-                        clearQuote();
-                        setState(() => feeCurrency = v!);
-                      },
                     ),
-                    const SizedBox(height: 18),
-                    DropdownButtonFormField<FeePayer>(
-                      initialValue: payer,
-                      isExpanded: true,
-                      itemHeight: null,
-                      decoration: InputDecoration(
-                        errorMaxLines: 5,
-                        labelText: context.l10n.financeFeePayer,
-                      ),
-                      items: [
-                        DropdownMenuItem(
-                          value: FeePayer.buyer,
-                          child: Builder(
-                            builder: (context) =>
-                                Text(context.l10n.financeBuyerPays),
-                          ),
-                        ),
-                        DropdownMenuItem(
-                          value: FeePayer.seller,
-                          child: Builder(
-                            builder: (context) =>
-                                Text(context.l10n.financeSellerPays),
-                          ),
-                        ),
-                        DropdownMenuItem(
-                          value: FeePayer.split,
-                          child: Builder(
-                            builder: (context) =>
-                                Text(context.l10n.financeSplitFee),
-                          ),
-                        ),
-                      ],
-                      onChanged: (v) {
-                        clearQuote();
-                        setState(() => payer = v!);
-                      },
+                    AppFormRow.pick(
+                      key: const ValueKey('quote-payer'),
+                      label: l10n.financeFeePayer,
+                      value: _payerLabel(payer),
+                      onTap: choosePayer,
                     ),
-                    InfoNote(context.l10n.financeSplitFeeNote),
-                    OutlinedButton(
-                      onPressed: settle,
-                      child: Text(context.l10n.financeCalculateQuote),
-                    ),
-                    if (quoteError != null)
-                      InfoNote(quoteError!.messageFor(context.l10n)),
-                    if (quote != null) ...[
-                      FinanceLine(
-                        context.l10n.financePremiumLabel,
-                        '${quote!.premium} ${quote!.currency}',
-                      ),
-                      FinanceLine(
-                        context.l10n.financeBuyerSellerFee,
-                        '${quote!.buyerFee} / ${quote!.sellerFee} ${quote!.currency}',
-                      ),
-                      FinanceLine(
-                        context.l10n.financeBuyerEstimate,
-                        '${quote!.buyerTotal} ${quote!.currency}',
-                      ),
-                      FinanceLine(
-                        context.l10n.financeSellerEstimate,
-                        '${quote!.sellerNet} ${quote!.currency}',
-                      ),
-                    ],
                   ],
                 ),
-              ),
-            ],
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+                  child: AppButton(
+                    key: const ValueKey('calculate-quote'),
+                    label: l10n.financeCalculateQuote,
+                    kind: AppButtonKind.tonal,
+                    expand: true,
+                    onPressed: settle,
+                  ),
+                ),
+                if (quoteError != null)
+                  AppBanner(
+                    tone: AppTone.red,
+                    icon: Icons.error_outline_rounded,
+                    text: quoteError!.messageFor(l10n),
+                    margin: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+                  ),
+                if (quote != null)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 12),
+                    child: AppCard(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          FinanceLine(
+                            l10n.financePremiumLabel,
+                            '${quote!.premium} ${quote!.currency}',
+                          ),
+                          FinanceLine(
+                            l10n.financeBuyerSellerFee,
+                            '${quote!.buyerFee} / ${quote!.sellerFee} ${quote!.currency}',
+                          ),
+                          FinanceLine(
+                            l10n.financeBuyerEstimate,
+                            '${quote!.buyerTotal} ${quote!.currency}',
+                          ),
+                          FinanceLine(
+                            l10n.financeSellerEstimate,
+                            '${quote!.sellerNet} ${quote!.currency}',
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+              ],
+            ),
           ),
         ),
-        InfoNote(
-          context.l10n.financeRoundingNote(shareData.fx, shareData.fxSource),
+        FinanceNote(
+          l10n.financeRoundingNote(share.fx, share.fxSource),
+          padding: const EdgeInsets.fromLTRB(32, 16, 32, 0),
         ),
       ],
-    ),
-  );
+    );
+  }
 }

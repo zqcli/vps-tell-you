@@ -1346,6 +1346,63 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
+  String uiFinanceDisplayChip(String currency) {
+    return '显示 $currency';
+  }
+
+  @override
+  String get uiFinanceCurrencyNote => '只换算显示，不改变原币记录。';
+
+  @override
+  String get uiFinanceTileRemaining => '剩余价值';
+
+  @override
+  String get uiFinanceTileRenewals => '30 天内续费';
+
+  @override
+  String uiFinanceBannerMissingFx(int count) {
+    return '$count 项金额缺少汇率，未计入合计';
+  }
+
+  @override
+  String uiFinanceGapMissingFx(int count) {
+    return '缺汇率 $count 项';
+  }
+
+  @override
+  String uiFinanceGapUnknown(int count) {
+    return '金额未知 $count 项';
+  }
+
+  @override
+  String uiFinanceMonthShort(String month) {
+    return '$month 月';
+  }
+
+  @override
+  String get uiFinanceForecastBasis => '按当前续费价';
+
+  @override
+  String get uiFinanceToolsHeader => '记录与工具';
+
+  @override
+  String uiFinanceServerCount(int count) {
+    return '$count 台';
+  }
+
+  @override
+  String get uiFinanceFootnote => '金额按当前续费价和手动参考汇率折算，仅供参考，不代表厂商实际账单。';
+
+  @override
+  String get uiFinanceVoidedPill => '已撤销';
+
+  @override
+  String get uiFinanceArchivedPill => '已归档';
+
+  @override
+  String get uiFinanceAccountPill => '账户账单';
+
+  @override
   String financeForecastMonth(int year, int month, int count) {
     return '$year 年 $month 月 · $count 笔';
   }
