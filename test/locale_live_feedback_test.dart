@@ -1,6 +1,8 @@
 import 'dart:io';
 import 'dart:ui' as ui;
 
+import 'package:flutter/cupertino.dart'
+    show CupertinoDatePicker, CupertinoDatePickerMode;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/rendering.dart';
@@ -11,6 +13,7 @@ import 'package:vps_tell_you/connections/connection_pages.dart';
 import 'package:vps_tell_you/connections/ssh_service.dart';
 import 'package:vps_tell_you/connections/terminal_page.dart';
 import 'package:vps_tell_you/core/app_theme.dart';
+import 'package:vps_tell_you/core/ui/ui.dart';
 import 'package:vps_tell_you/core/value_types.dart';
 import 'package:vps_tell_you/data/ledger_store.dart';
 import 'package:vps_tell_you/l10n/generated/app_localizations.dart';
@@ -310,17 +313,12 @@ void main() {
         tester,
         ReminderPage(controller: ledger, serverId: 'fixture'),
       );
-      await tester.tap(find.byType(SwitchListTile));
-      final save = find.text(en.saveReminderRules);
-      await reveal(tester, save);
+      await tester.tap(find.byType(AppSwitchRow));
+      await tester.pumpAndSettle();
       await blockSnacks(tester);
-      // The queue blocker obscures the lower page; invoke this visible button's
-      // existing action rather than changing or reissuing the save operation.
-      final saveButton = find.ancestor(
-        of: save,
-        matching: find.byType(FilledButton),
-      );
-      tester.widget<FilledButton>(saveButton).onPressed!();
+      // The queue blocker sits at the bottom; the Save action lives in the
+      // navigation bar, so it stays tappable.
+      await tester.tap(find.byKey(const ValueKey('reminder-save')));
       await tester.pumpAndSettle();
       final saved = (await store.reminderRules()).single;
       expect(saved.enabled, isFalse);
@@ -386,7 +384,7 @@ void main() {
         find.byKey(const ValueKey('group-name')),
         'Raw group',
       );
-      await tester.tap(find.widgetWithText(FilledButton, en.save));
+      await tester.tap(find.text(en.save));
       await tester.pumpAndSettle();
       expect(find.text(en.groupSaveFailed), findsOneWidget);
       await change(tester, 'zh');
@@ -507,76 +505,44 @@ void main() {
     );
   }
 
-  testWidgets('open time picker relocalizes all labels and keeps 24h draft', (
+  testWidgets('open time picker keeps its 24h draft across locale changes', (
     tester,
   ) async {
     await mount(tester, ReminderPage(controller: ledger, serverId: 'fixture'));
     await reveal(tester, find.text('09:00'));
     await tester.tap(find.text('09:00'));
     await tester.pumpAndSettle();
-    final dialog = find.byType(TimePickerDialog);
-    Finder pickerText(String value) =>
-        find.descendant(of: dialog, matching: find.text(value));
-    final pickerState = tester.state(dialog);
-    var material = MaterialLocalizations.of(tester.element(dialog));
-    expect(pickerText(material.timePickerDialHelpText), findsOneWidget);
-    expect(MediaQuery.of(tester.element(dialog)).alwaysUse24HourFormat, isTrue);
-    await tester.tap(find.byTooltip(material.inputTimeModeButtonLabel));
-    await tester.pumpAndSettle();
-    final inputs = find.descendant(
-      of: dialog,
-      matching: find.byType(TextFormField),
+    final picker = find.byType(CupertinoDatePicker);
+    expect(picker, findsOneWidget);
+    expect(tester.widget<CupertinoDatePicker>(picker).use24hFormat, isTrue);
+    expect(
+      tester.widget<CupertinoDatePicker>(picker).mode,
+      CupertinoDatePickerMode.time,
     );
-    await tester.enterText(inputs.at(0), '17');
-    await tester.enterText(inputs.at(1), '42');
-    final hour = tester.widget<TextFormField>(inputs.at(0)).controller!;
-    final minute = tester.widget<TextFormField>(inputs.at(1)).controller!;
+    final pickerState = tester.state(picker);
+    final route = ModalRoute.of(tester.element(picker));
+    tester
+        .widget<CupertinoDatePicker>(picker)
+        .onDateTimeChanged(DateTime(2000, 1, 1, 17, 42));
+    await tester.pumpAndSettle();
     await change(tester, 'zh');
-    material = MaterialLocalizations.of(tester.element(dialog));
-    expect(tester.state(dialog), same(pickerState));
-    expect(pickerText(material.timePickerInputHelpText), findsOneWidget);
-    expect(pickerText(material.timePickerHourLabel), findsOneWidget);
-    expect(pickerText(material.timePickerMinuteLabel), findsOneWidget);
-    expect(pickerText(material.cancelButtonLabel), findsOneWidget);
-    expect(pickerText(material.okButtonLabel), findsOneWidget);
-    expect(find.byTooltip(material.dialModeButtonLabel), findsOneWidget);
-    expect(tester.widget<TextFormField>(inputs.at(0)).controller, same(hour));
-    expect(tester.widget<TextFormField>(inputs.at(1)).controller, same(minute));
-    expect(hour.text, '17');
-    expect(minute.text, '42');
+    expect(tester.state(picker), same(pickerState));
+    expect(ModalRoute.of(tester.element(picker)), same(route));
+    expect(find.text(zh.reminderTime), findsWidgets);
+    await change(tester, 'en');
+    expect(tester.state(picker), same(pickerState));
+    expect(find.text(en.reminderTime), findsWidgets);
     expect(ledger.mutations, 0);
     expect((await store.reminderRules()).single.minuteOfDay, 9 * 60);
-    await tester.tap(pickerText(material.okButtonLabel));
-    await tester.pumpAndSettle();
-    expect(find.text('17:42'), findsOneWidget);
-    expect((await store.reminderRules()).single.minuteOfDay, 9 * 60);
-    await tester.tap(find.text('17:42'));
-    await tester.pumpAndSettle();
-    await change(tester, 'en');
-    material = MaterialLocalizations.of(tester.element(dialog));
-    await tester.tap(find.byTooltip(material.inputTimeModeButtonLabel));
-    await tester.pumpAndSettle();
-    await tester.enterText(inputs.at(0), '99');
-    await tester.tap(pickerText(material.okButtonLabel));
-    await tester.pumpAndSettle();
-    expect(pickerText(material.invalidTimeLabel), findsOneWidget);
-    await change(tester, 'zh');
-    material = MaterialLocalizations.of(tester.element(dialog));
-    expect(pickerText(material.invalidTimeLabel), findsOneWidget);
-    await tester.tap(pickerText(material.cancelButtonLabel));
-    await tester.pumpAndSettle();
-    expect(find.text('17:42'), findsOneWidget);
-    await tester.tap(find.text('17:42'));
-    await tester.pumpAndSettle();
     await tester.binding.handlePopRoute();
     await tester.pumpAndSettle();
+    expect(picker, findsNothing);
     expect(find.text('17:42'), findsOneWidget);
     expect(ledger.mutations, 0);
     expect(reminders.schedules, 0);
     expect(reminders.requests, 0);
-    final save = find.text(zh.saveReminderRules);
-    await reveal(tester, save);
-    await tester.tap(save);
+    expect((await store.reminderRules()).single.minuteOfDay, 9 * 60);
+    await tester.tap(find.byKey(const ValueKey('reminder-save')));
     await tester.pumpAndSettle();
     expect((await store.reminderRules()).single.minuteOfDay, 17 * 60 + 42);
     expect(ledger.mutations, 1);

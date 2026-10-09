@@ -10,7 +10,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:share_plus/share_plus.dart';
 
-import '../core/app_theme.dart';
+import '../core/ui/ui.dart';
 import '../data/ledger_store.dart';
 import '../servers/ledger_controller.dart';
 import '../servers/refresh_failure_notice.dart';
@@ -290,7 +290,7 @@ class _BackupPageState extends State<BackupPage> {
       status = null;
     });
     try {
-      final confirmed = await confirmAction(
+      final confirmed = await showAppConfirm(
         context,
         title: LocalizedText((l10n) => l10n.restoreEmptyLedgerQuestion),
         message: LocalizedText(
@@ -337,116 +337,146 @@ class _BackupPageState extends State<BackupPage> {
   @override
   Widget build(BuildContext context) => ListenableBuilder(
     listenable: widget.controller,
-    builder: (context, _) => Scaffold(
-      appBar: AppBar(title: Text(context.l10n.ledgerBackupRestore)),
-      body: ListView(
-        padding: const EdgeInsets.all(20),
+    builder: (context, _) {
+      final l10n = context.l10n;
+      final p = context.palette;
+      final export = exportSnapshot;
+      final preview = restorePreview;
+      return AppScaffold(
+        title: l10n.ledgerBackupRestore,
+        largeTitle: false,
         children: [
           if (widget.controller.refreshFailed)
-            RefreshFailureNotice(controller: widget.controller),
-          LedgerCard(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  context.l10n.plainJsonVersion,
-                  style: TextStyle(fontWeight: FontWeight.w700),
-                ),
-                InfoNote(context.l10n.backupContentsWarning),
-                Text(context.l10n.notIncluded),
-                for (final item in LedgerBackupSnapshot.exclusionsFor(
-                  context.l10n,
-                ))
-                  InfoNote(item),
-              ],
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+              child: RefreshFailureNotice(controller: widget.controller),
+            ),
+          AppSection(
+            header: l10n.plainJsonVersion,
+            children: [_NoteRow(l10n.backupContentsWarning)],
+          ),
+          AppSection(
+            header: l10n.notIncluded.replaceFirst(RegExp(r'[：:]\s*$'), ''),
+            children: [
+              for (final item in LedgerBackupSnapshot.exclusionsFor(l10n))
+                _NoteRow(item),
+            ],
+          ),
+          _ButtonBlock(
+            AppButton(
+              expand: true,
+              kind: AppButtonKind.tonal,
+              icon: Icons.backup_outlined,
+              label: l10n.generateBackupPreview,
+              onPressed: busy || widget.controller.busy ? null : prepareExport,
             ),
           ),
-          const SizedBox(height: 16),
-          OutlinedButton.icon(
-            onPressed: busy || widget.controller.busy ? null : prepareExport,
-            icon: const Icon(Icons.backup_outlined),
-            label: Text(context.l10n.generateBackupPreview),
-          ),
-          if (exportSnapshot != null) ...[
-            LedgerCard(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(context.l10n.exportPreview),
-                  Text(_counts(exportSnapshot!.counts)),
-                  Text(
-                    context.l10n.backupGeneratedTime(
-                      (_backupTime(exportSnapshot!.exportedAt)).toString(),
-                    ),
-                  ),
-                  Builder(
-                    builder: (buttonContext) => FilledButton.icon(
-                      onPressed: busy ? null : () => writeExport(buttonContext),
-                      icon: Icon(
-                        transfer.canShare ? Icons.ios_share : Icons.save_alt,
-                      ),
-                      label: Text(
-                        transfer.canShare
-                            ? context.l10n.shareUnencryptedBackup
-                            : context.l10n.saveJsonBackup,
-                      ),
-                    ),
-                  ),
-                ],
+          if (export != null) ...[
+            AppSection(
+              header: l10n.exportPreview,
+              children: [
+                _NoteRow(_counts(export.counts), color: p.text),
+                _NoteRow(
+                  l10n.backupGeneratedTime(_backupTime(export.exportedAt)),
+                ),
+              ],
+            ),
+            _ButtonBlock(
+              Builder(
+                builder: (buttonContext) => AppButton(
+                  expand: true,
+                  icon: transfer.canShare ? Icons.ios_share : Icons.save_alt,
+                  label: transfer.canShare
+                      ? l10n.shareUnencryptedBackup
+                      : l10n.saveJsonBackup,
+                  onPressed: busy ? null : () => writeExport(buttonContext),
+                ),
               ),
             ),
           ],
-          const SizedBox(height: 16),
-          InfoNote(context.l10n.restoreEmptyOnlyHelp),
-          OutlinedButton.icon(
-            onPressed: busy || !widget.controller.canMutate
-                ? null
-                : pickRestore,
-            icon: const Icon(Icons.file_open_outlined),
-            label: Text(context.l10n.chooseJsonPreviewRestore),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(32, 24, 32, 0),
+            child: Text(
+              l10n.restoreEmptyOnlyHelp,
+              style: context.footnoteStyle,
+            ),
           ),
-          if (restorePreview != null)
-            LedgerCard(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(context.l10n.restorePreview),
-                  Text(_counts(restorePreview!.counts)),
-                  Text(
-                    context.l10n.backupTime(
-                      (_backupTime(restorePreview!.snapshot.exportedAt))
-                          .toString(),
-                    ),
-                  ),
-                  InfoNote(context.l10n.restoreContentsHelp),
-                  for (final conflict in restorePreview!.conflictsFor(
-                    context.l10n,
-                  ))
-                    Text(
-                      conflict,
-                      style: TextStyle(
-                        color: Theme.of(context).colorScheme.error,
-                      ),
-                    ),
-                  FilledButton(
-                    onPressed:
-                        busy ||
-                            !restorePreview!.canRestore ||
-                            !widget.controller.canMutate
-                        ? null
-                        : restore,
-                    child: Text(context.l10n.restoreToEmptyLedger),
-                  ),
-                ],
+          _ButtonBlock(
+            AppButton(
+              expand: true,
+              kind: AppButtonKind.tonal,
+              icon: Icons.file_open_outlined,
+              label: l10n.chooseJsonPreviewRestore,
+              onPressed: busy || !widget.controller.canMutate
+                  ? null
+                  : pickRestore,
+            ),
+          ),
+          if (preview != null) ...[
+            AppSection(
+              header: l10n.restorePreview,
+              footer: l10n.restoreContentsHelp,
+              children: [
+                _NoteRow(_counts(preview.counts), color: p.text),
+                _NoteRow(
+                  l10n.backupTime(_backupTime(preview.snapshot.exportedAt)),
+                ),
+                for (final conflict in preview.conflictsFor(l10n))
+                  _NoteRow(conflict, color: p.red),
+              ],
+            ),
+            _ButtonBlock(
+              AppButton(
+                expand: true,
+                label: l10n.restoreToEmptyLedger,
+                onPressed:
+                    busy || !preview.canRestore || !widget.controller.canMutate
+                    ? null
+                    : restore,
               ),
             ),
-          if (busy) const LinearProgressIndicator(),
+          ],
+          if (busy)
+            const Padding(
+              padding: EdgeInsets.fromLTRB(16, 16, 16, 0),
+              child: LinearProgressIndicator(),
+            ),
           if (status != null)
             Padding(
-              padding: const EdgeInsets.symmetric(vertical: 16),
-              child: SelectableText(status!.messageFor(context.l10n)),
+              padding: const EdgeInsets.fromLTRB(32, 16, 32, 0),
+              child: SelectableText(
+                status!.messageFor(l10n),
+                style: context.footnoteStyle,
+              ),
             ),
         ],
+      );
+    },
+  );
+}
+
+class _ButtonBlock extends StatelessWidget {
+  const _ButtonBlock(this.button);
+  final Widget button;
+  @override
+  Widget build(BuildContext context) =>
+      Padding(padding: const EdgeInsets.fromLTRB(16, 16, 16, 0), child: button);
+}
+
+/// Free-form paragraph row inside a grouped section.
+class _NoteRow extends StatelessWidget {
+  const _NoteRow(this.text, {this.color});
+  final String text;
+  final Color? color;
+  @override
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+    child: Text(
+      text,
+      style: TextStyle(
+        fontSize: 14,
+        height: 1.4,
+        color: color ?? context.palette.text2,
       ),
     ),
   );

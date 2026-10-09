@@ -93,8 +93,7 @@ void main() {
       await reveal(tester, '到期不再使用');
       await tester.tap(find.text('到期不再使用'));
       await tester.pump();
-      await reveal(tester, '保存提醒规则');
-      await tester.tap(find.text('保存提醒规则'));
+      await tester.tap(find.byKey(const ValueKey('reminder-save')));
       await tester.pumpAndSettle();
       final saved = (await store.reminderRules()).single;
       expect(saved.leadDays, [30, 7, 3, 1]);
@@ -221,7 +220,10 @@ void main() {
         );
         await tester.pumpAndSettle();
         for (var i = 0; i < 10; i++) {
-          await tester.drag(find.byType(ListView), const Offset(0, -350));
+          await tester.drag(
+            find.byType(Scrollable).first,
+            const Offset(0, -350),
+          );
           await tester.pumpAndSettle();
           expect(tester.takeException(), isNull);
         }

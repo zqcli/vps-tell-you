@@ -412,93 +412,171 @@ class _AppTabBar extends StatelessWidget {
 class ToolsPage extends StatelessWidget {
   const ToolsPage({super.key, required this.controller});
   final LedgerController controller;
+
+  void _open(BuildContext context, WidgetBuilder builder) =>
+      Navigator.push<void>(context, MaterialPageRoute(builder: builder));
+
   @override
-  Widget build(BuildContext context) => ListView(
-    padding: const EdgeInsets.all(20),
-    children: [
-      Text(
-        context.l10n.tools,
-        style: TextStyle(fontSize: 28, fontWeight: FontWeight.w800),
-      ),
-      InfoNote(context.l10n.toolsDescription),
-      Container(
-        decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.primaryContainer,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: Theme.of(context).colorScheme.outlineVariant,
-          ),
-        ),
-        child: SettingRow(
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    return AppScaffold(
+      title: l10n.tools,
+      children: [
+        const SizedBox(height: 4),
+        _ToolTile(
+          wide: true,
           icon: Icons.calculate_outlined,
-          title: context.l10n.remainingValueCalculator,
-          subtitle: context.l10n.calculatorDescription,
-          onTap: () => Navigator.push<void>(
-            context,
-            MaterialPageRoute(
-              builder: (_) => CalculatorPage(controller: controller),
+          color: AppTints.blue,
+          title: l10n.remainingValueCalculator,
+          subtitle: l10n.uiTabsCalculatorTile,
+          onTap: () =>
+              _open(context, (_) => CalculatorPage(controller: controller)),
+        ),
+        _ToolRow(
+          left: _ToolTile(
+            icon: Icons.terminal,
+            color: AppTints.slate,
+            title: l10n.sshQuickConnect,
+            subtitle: l10n.uiTabsSshTile,
+            onTap: () =>
+                _open(context, (_) => SshConnectPage(ledger: controller)),
+          ),
+          right: _ToolTile(
+            icon: Icons.monitor_heart_outlined,
+            color: AppTints.green,
+            title: l10n.tcpConnectionTest,
+            subtitle: l10n.uiTabsTcpTile,
+            onTap: () => _open(context, (_) => const TcpTestPage()),
+          ),
+        ),
+        _ToolRow(
+          left: _ToolTile(
+            icon: Icons.code,
+            color: AppTints.purple,
+            title: l10n.commandSnippets,
+            subtitle: l10n.uiTabsSnippetsTile,
+            onTap: () =>
+                _open(context, (_) => SnippetListPage(store: controller.store)),
+          ),
+          right: _ToolTile(
+            icon: Icons.power_settings_new,
+            color: AppTints.red,
+            title: l10n.powerControl,
+            subtitle: l10n.uiTabsPowerTile,
+            onTap: () => _open(
+              context,
+              (_) => SshConnectPage(ledger: controller, powerMode: true),
             ),
           ),
         ),
-      ),
-      SectionTitle(context.l10n.connectionsTroubleshooting),
-      LedgerCard(
-        padding: EdgeInsets.zero,
-        child: Column(
-          children: [
-            SettingRow(
-              icon: Icons.terminal,
-              title: context.l10n.sshQuickConnect,
-              subtitle: context.l10n.sshQuickConnectDescription,
-              onTap: () => Navigator.push<void>(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => SshConnectPage(ledger: controller),
-                ),
-              ),
-            ),
-            const Divider(),
-            SettingRow(
-              icon: Icons.monitor_heart_outlined,
-              title: context.l10n.tcpConnectionTest,
-              subtitle: context.l10n.tcpConnectionDescription,
-              onTap: () => Navigator.push<void>(
-                context,
-                MaterialPageRoute(builder: (_) => const TcpTestPage()),
-              ),
-            ),
-            const Divider(),
-            SettingRow(
-              icon: Icons.code,
-              title: context.l10n.commandSnippets,
-              subtitle: context.l10n.commandSnippetsDescription,
-              onTap: () => Navigator.push<void>(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => SnippetListPage(store: controller.store),
-                ),
-              ),
-            ),
-          ],
+        Padding(
+          padding: const EdgeInsets.fromLTRB(32, 12, 32, 0),
+          child: Text(l10n.powerControlWarning, style: context.footnoteStyle),
         ),
+      ],
+    );
+  }
+}
+
+/// Two equally tall square-ish tiles side by side.
+class _ToolRow extends StatelessWidget {
+  const _ToolRow({required this.left, required this.right});
+  final Widget left, right;
+
+  @override
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.fromLTRB(16, 10, 16, 0),
+    child: IntrinsicHeight(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Expanded(child: left),
+          const SizedBox(width: 10),
+          Expanded(child: right),
+        ],
       ),
-      SectionTitle(context.l10n.singleServerMaintenance),
-      LedgerCard(
-        padding: EdgeInsets.zero,
-        child: SettingRow(
-          icon: Icons.power_settings_new,
-          title: context.l10n.powerControl,
-          subtitle: context.l10n.powerControlDescription,
-          onTap: () => Navigator.push<void>(
-            context,
-            MaterialPageRoute(
-              builder: (_) =>
-                  SshConnectPage(ledger: controller, powerMode: true),
-            ),
-          ),
-        ),
-      ),
-      InfoNote(context.l10n.powerControlWarning),
-    ],
+    ),
   );
+}
+
+/// Tile of the tools grid: coloured icon square, title and a short caption.
+/// [wide] tiles span the full width (icon left, chevron right).
+class _ToolTile extends StatelessWidget {
+  const _ToolTile({
+    required this.icon,
+    required this.color,
+    required this.title,
+    required this.subtitle,
+    required this.onTap,
+    this.wide = false,
+  });
+  final IconData icon;
+  final Color color;
+  final String title, subtitle;
+  final VoidCallback onTap;
+  final bool wide;
+
+  @override
+  Widget build(BuildContext context) {
+    final p = context.palette;
+    final titleText = Text(
+      title,
+      style: const TextStyle(fontSize: 15.5, fontWeight: FontWeight.w600),
+    );
+    final subtitleText = Padding(
+      padding: const EdgeInsets.only(top: 2),
+      child: Text(
+        subtitle,
+        style: TextStyle(fontSize: 12.5, height: 1.35, color: p.text2),
+      ),
+    );
+    final Widget content = wide
+        ? Padding(
+            padding: const EdgeInsets.all(14),
+            child: Row(
+              children: [
+                AppIconSquare(icon: icon, color: color, size: 38),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [titleText, subtitleText],
+                  ),
+                ),
+                const SizedBox(width: 8),
+                const AppChevron(),
+              ],
+            ),
+          )
+        : ConstrainedBox(
+            constraints: const BoxConstraints(minHeight: 118),
+            child: Padding(
+              padding: const EdgeInsets.all(14),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  AppIconSquare(icon: icon, color: color, size: 38),
+                  const Spacer(),
+                  const SizedBox(height: 14),
+                  titleText,
+                  subtitleText,
+                ],
+              ),
+            ),
+          );
+    return Padding(
+      padding: wide
+          ? const EdgeInsets.symmetric(horizontal: 16)
+          : EdgeInsets.zero,
+      child: Material(
+        color: p.surface,
+        borderRadius: BorderRadius.circular(18),
+        clipBehavior: Clip.antiAlias,
+        child: Semantics(
+          button: true,
+          child: InkWell(onTap: onTap, child: content),
+        ),
+      ),
+    );
+  }
 }
