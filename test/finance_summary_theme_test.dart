@@ -217,10 +217,8 @@ void main() {
       find.descendant(of: summary, matching: find.byType(Material)).first,
     );
     expect(card.color, colors.surface);
-    expect(
-      (card.shape! as RoundedRectangleBorder).side.color,
-      colors.outlineVariant,
-    );
+    // Cards are borderless rounded surfaces in the redesigned theme.
+    expect((card.shape! as RoundedRectangleBorder).side, BorderSide.none);
     final totals = tester.widgetList<FinanceTotalView>(
       find.descendant(of: summary, matching: find.byType(FinanceTotalView)),
     );

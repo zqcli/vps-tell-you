@@ -234,20 +234,22 @@ void main() {
             reason: '$mode ${pair.key}',
           );
         }
-        final fieldBorder =
-            (theme.inputDecorationTheme.enabledBorder! as OutlineInputBorder)
-                .borderSide
-                .color;
-        final buttonBorder = theme.outlinedButtonTheme.style!.side!
-            .resolve({})!
-            .color;
-        for (final color in [fieldBorder, buttonBorder]) {
-          expect(_contrast(color, colors.surface), greaterThanOrEqualTo(3));
-          expect(
-            _contrast(color, theme.scaffoldBackgroundColor),
-            greaterThanOrEqualTo(3),
-          );
-        }
+        // Fields are borderless inline controls and outlined buttons render
+        // as tonal buttons: there is no border to contrast, so the tonal
+        // label must be legible on its fill instead.
+        expect(
+          theme.inputDecorationTheme.enabledBorder,
+          same(InputBorder.none),
+        );
+        final tonal = theme.outlinedButtonTheme.style!;
+        expect(tonal.side!.resolve({}), BorderSide.none);
+        expect(
+          _contrast(
+            tonal.foregroundColor!.resolve({})!,
+            tonal.backgroundColor!.resolve({})!,
+          ),
+          greaterThanOrEqualTo(4.5),
+        );
         expect(
           colors.surface.computeLuminance(),
           brightness == Brightness.dark ? lessThan(.03) : greaterThan(.9),
