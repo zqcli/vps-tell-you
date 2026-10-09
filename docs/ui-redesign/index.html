@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>vps tell you · UI 重设计 Demo</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="stage">
+  <aside class="panel" id="leftPanel">
+    <div class="brand-line"><b>vps tell you</b><span>移动端 UI 重设计 · 交互 Demo v1</span></div>
+    <div class="ctl">
+      <label>设备预览（界面统一）</label>
+      <div class="seg-ctl" data-key="platform">
+        <button data-v="ios" class="on">iOS</button><button data-v="android">Android</button>
+      </div>
+    </div>
+    <div class="ctl">
+      <label>外观</label>
+      <div class="seg-ctl" data-key="theme">
+        <button data-v="light" class="on">浅色</button><button data-v="dark">深色</button>
+      </div>
+    </div>
+    <div class="ctl">
+      <label>台账数据</label>
+      <div class="seg-ctl" data-key="data">
+        <button data-v="demo" class="on">示例数据</button><button data-v="empty">空台账</button>
+      </div>
+    </div>
+    <div class="ctl">
+      <label>快速跳转</label>
+      <div class="jump">
+        <button onclick="App.jump('servers')">服务器</button>
+        <button onclick="App.jump('detail')">服务器详情</button>
+        <button onclick="App.jump('costs')">费用</button>
+        <button onclick="App.jump('tools')">工具</button>
+        <button onclick="App.jump('settings')">设置</button>
+        <button onclick="App.jump('form')">添加 / 编辑表单</button>
+        <button onclick="App.jump('reminder')">到期提醒</button>
+        <button onclick="App.jump('ssh')">SSH 连接面板</button>
+      </div>
+    </div>
+    <div class="principles">
+      <h4>设计原则</h4>
+      <ol>
+        <li><b>一套界面，两端一致</b>：以 iOS 为基准，Android 使用完全相同的组件和交互，只保留系统字体、状态栏和系统返回键 / 手势。</li>
+        <li><b>列表优先，少用描边</b>：去掉白卡外 1px 描边和描边按钮，用分组列表、浅色填充、层级字重来区分层次。</li>
+        <li><b>先给结论，说明后置</b>：说明文字放到分组底部的小字或 ⓘ 弹层里；状态用色彩胶囊表示，不再整段说明。</li>
+        <li><b>手势与就地操作</b>：下拉刷新、左滑常用/归档、长按快捷菜单、底部弹层筛选，少用页面中间的对话框。</li>
+        <li><b>安全边界不变</b>：归档、电源、凭据、主机指纹等确认流程一个不少，只换成更符合平台习惯的呈现方式。</li>
+      </ol>
+      <p class="tip">在手机里试试：<br>· 列表行<b>左滑</b> / <b>长按</b><br>· 列表顶部<b>下拉</b>刷新<br>· 向上滚动，看<b>大标题收起</b><br>· 详情页快捷操作、费用页切换</p>
+    </div>
+  </aside>
+
+  <div class="device-wrap">
+    <div class="device ios light" id="device">
+      <div class="screen" id="screen">
+        <div class="statusbar" id="statusbar">
+          <span class="sb-time">9:41</span>
+          <span class="sb-island"></span>
+          <span class="sb-icons">
+            <svg viewBox="0 0 18 12" width="18" height="12"><rect x="0" y="8" width="3" height="4" rx="1"/><rect x="5" y="5.5" width="3" height="6.5" rx="1"/><rect x="10" y="3" width="3" height="9" rx="1"/><rect x="15" y="0" width="3" height="12" rx="1"/></svg>
+            <svg viewBox="0 0 16 12" width="16" height="12"><path d="M8 2.6c2.3 0 4.4.9 6 2.4l1.1-1.2A10 10 0 0 0 8 1 10 10 0 0 0 .9 3.8L2 5a8.6 8.6 0 0 1 6-2.4zm0 3.3c1.4 0 2.6.5 3.6 1.4l1.1-1.2A7 7 0 0 0 8 4.3a7 7 0 0 0-4.7 1.8l1.1 1.2c1-.9 2.2-1.4 3.6-1.4zm0 3.3c.5 0 1 .2 1.3.5L8 11.2 6.7 9.7c.3-.3.8-.5 1.3-.5z"/></svg>
+            <svg viewBox="0 0 27 12" width="27" height="12"><rect x=".5" y=".5" width="22" height="11" rx="3.5" fill="none" stroke="currentColor" opacity=".4"/><rect x="2" y="2" width="17" height="8" rx="2"/><rect x="24" y="4" width="1.5" height="4" rx=".75" opacity=".5"/></svg>
+          </span>
+        </div>
+        <div class="pages" id="pages"></div>
+        <nav class="tabbar" id="tabbar"></nav>
+        <button class="fab" id="fab" onclick="App.openAddSheet()"></button>
+        <div class="overlay" id="overlay"></div>
+        <div class="toast" id="toast"></div>
+        <div class="home-ind"></div>
+      </div>
+    </div>
+  </div>
+
+  <aside class="panel right" id="rightPanel">
+    <h4 id="noteTitle">本页改进</h4>
+    <div id="notes"></div>
+    <div class="cmp">
+      <div class="cmp-h"><span>当前版本截图</span><button onclick="App.toggleCmp()" id="cmpBtn">放大</button></div>
+      <div class="cmp-img" id="cmpImg"></div>
+    </div>
+  </aside>
+</div>
+<script src="app.js"></script>
+</body>
+</html>
