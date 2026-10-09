@@ -520,6 +520,9 @@ class _SmallBarDelegate extends SliverPersistentHeaderDelegate {
     double shrinkOffset,
     bool overlapsContent,
   ) {
+    // A pinned header whose min and max extent are equal never reports
+    // `overlapsContent`; the scroll offset (shrinkOffset) is the reliable signal.
+    final scrolled = overlapsContent || shrinkOffset > 0;
     final bar = Padding(
       padding: EdgeInsets.only(top: _top),
       child: SizedBox(
@@ -527,7 +530,10 @@ class _SmallBarDelegate extends SliverPersistentHeaderDelegate {
         child: NavigationToolbar(
           leading: leading,
           middle: Opacity(
-            opacity: revealTitleOnScroll && !overlapsContent ? 0 : 1,
+            opacity:
+                revealTitleOnScroll && !overlapsContent && shrinkOffset < 70
+                ? 0
+                : 1,
             child: Semantics(
               header: true,
               child: Text(
@@ -548,7 +554,7 @@ class _SmallBarDelegate extends SliverPersistentHeaderDelegate {
         ),
       ),
     );
-    if (!overlapsContent) {
+    if (!scrolled) {
       return ColoredBox(color: palette.bg, child: bar);
     }
     return ClipRect(
