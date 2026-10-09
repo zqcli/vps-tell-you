@@ -11,6 +11,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:local_auth/local_auth.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:vps_tell_you/core/app_theme.dart';
+import 'package:vps_tell_you/core/ui/ui.dart';
 import 'package:vps_tell_you/data/ledger_store.dart';
 import 'package:vps_tell_you/l10n/generated/app_localizations.dart';
 import 'package:vps_tell_you/l10n/generated/app_localizations_en.dart';
@@ -323,7 +324,7 @@ void main() {
       await switchEnglish(tester);
       expect(find.text(en.securityCredentialNameRequired), findsOneWidget);
       expect(find.text(en.securityDefaultUsernameRequired), findsOneWidget);
-      final field = tester.widget<TextFormField>(
+      final field = tester.widget<AppTextField>(
         find.byKey(const ValueKey('credential-secret')),
       );
       expect(field.controller!.text, 'SYNTHETIC_UNSAVED_PASSWORD');
@@ -375,7 +376,7 @@ void main() {
       await switchEnglish(tester);
       expect(
         tester
-            .widget<TextFormField>(
+            .widget<AppTextField>(
               find.byKey(const ValueKey('credential-secret')),
             )
             .controller!
@@ -384,7 +385,7 @@ void main() {
       );
       expect(
         tester
-            .widget<TextFormField>(
+            .widget<AppTextField>(
               find.byKey(const ValueKey('credential-passphrase')),
             )
             .controller!
@@ -393,7 +394,7 @@ void main() {
       );
       expect(
         tester
-            .widget<CheckboxListTile>(
+            .widget<AppSwitchRow>(
               find.byKey(const ValueKey('credential-save-passphrase')),
             )
             .value,
@@ -426,7 +427,7 @@ void main() {
       await tapText(tester, en.cancel);
       expect(
         tester
-            .widget<TextFormField>(
+            .widget<AppTextField>(
               find.byKey(const ValueKey('credential-secret')),
             )
             .controller!
@@ -518,22 +519,19 @@ void main() {
       await tapText(tester, en.securityBeginHostReverification);
       expect(
         tester
-            .widget<FilledButton>(
-              find.widgetWithText(
-                FilledButton,
-                en.securityReverifyReplaceTrust,
-              ),
+            .widget<AppButton>(
+              find.widgetWithText(AppButton, en.securityReverifyReplaceTrust),
             )
             .onPressed,
         isNull,
       );
-      await tester.ensureVisible(find.byType(CheckboxListTile));
-      await tester.tap(find.byType(CheckboxListTile));
+      await tester.ensureVisible(find.byType(AppSwitchRow));
+      await tester.tap(find.byType(AppSwitchRow));
       await tester.pump();
       locale.value = const Locale('zh');
       await tester.pumpAndSettle();
       expect(
-        tester.widget<CheckboxListTile>(find.byType(CheckboxListTile)).value,
+        tester.widget<AppSwitchRow>(find.byType(AppSwitchRow)).value,
         isTrue,
       );
       expect(
@@ -562,14 +560,14 @@ void main() {
     expect(find.text(en.securityConnectionUsernameRequired), findsOneWidget);
     expect(
       tester
-          .widget<TextFormField>(find.byKey(const ValueKey('ssh-host')))
+          .widget<AppTextField>(find.byKey(const ValueKey('ssh-host')))
           .controller!
           .text,
       'synthetic.example',
     );
     expect(
       tester
-          .widget<TextFormField>(find.byKey(const ValueKey('ssh-port')))
+          .widget<AppTextField>(find.byKey(const ValueKey('ssh-port')))
           .controller!
           .text,
       '70000',
@@ -610,7 +608,9 @@ void main() {
       );
       expect(
         tester
-            .widget<TextField>(find.byKey(const ValueKey('trust-public-key')))
+            .widget<AppTextField>(
+              find.byKey(const ValueKey('trust-public-key')),
+            )
             .controller!
             .text,
         localizationIdentity().publicKey,

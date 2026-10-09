@@ -7,6 +7,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:vps_tell_you/core/app_theme.dart';
+import 'package:vps_tell_you/core/ui/ui.dart';
 import 'package:vps_tell_you/data/ledger_store.dart';
 import 'package:vps_tell_you/security/host_trust_pages.dart';
 import 'package:vps_tell_you/security/security_controller.dart';
@@ -167,7 +168,7 @@ void main() {
       await fill(tester, 'credential-passphrase', 'fixture-passphrase-only');
       final option = find.byKey(const ValueKey('credential-save-passphrase'));
       await tester.ensureVisible(option);
-      expect(tester.widget<CheckboxListTile>(option).value, isFalse);
+      expect(tester.widget<AppSwitchRow>(option).value, isFalse);
       if (remember) {
         await tester.tap(option);
         await tester.pump();
@@ -227,7 +228,7 @@ void main() {
       );
       expect(
         tester
-            .widget<TextFormField>(
+            .widget<AppTextField>(
               find.byKey(const ValueKey('credential-secret')),
             )
             .controller!
@@ -242,7 +243,7 @@ void main() {
       await tester.pump();
       expect(
         tester
-            .widget<TextFormField>(
+            .widget<AppTextField>(
               find.byKey(const ValueKey('credential-secret')),
             )
             .controller!
@@ -300,7 +301,7 @@ void main() {
       await tap(tester, '选择私钥文件');
       expect(
         tester
-            .widget<TextFormField>(
+            .widget<AppTextField>(
               find.byKey(const ValueKey('credential-secret')),
             )
             .controller!
@@ -398,7 +399,7 @@ void main() {
       await tap(tester, '取消');
       expect(
         tester
-            .widget<TextFormField>(find.byKey(const ValueKey('ssh-username')))
+            .widget<AppTextField>(find.byKey(const ValueKey('ssh-username')))
             .controller!
             .text,
         'root',
@@ -433,7 +434,7 @@ void main() {
       await tester.ensureVisible(find.text('确认删除'));
       expect(
         tester
-            .widget<FilledButton>(find.widgetWithText(FilledButton, '确认删除'))
+            .widget<AppButton>(find.widgetWithText(AppButton, '确认删除'))
             .onPressed,
         isNull,
       );
@@ -457,9 +458,7 @@ void main() {
       await tester.ensureVisible(find.text('保存已核验的主机信任'));
       expect(
         tester
-            .widget<FilledButton>(
-              find.widgetWithText(FilledButton, '保存已核验的主机信任'),
-            )
+            .widget<AppButton>(find.widgetWithText(AppButton, '保存已核验的主机信任'))
             .onPressed,
         isNull,
       );
@@ -482,9 +481,7 @@ void main() {
       await tester.ensureVisible(find.text('重新核实并替换信任'));
       expect(
         tester
-            .widget<FilledButton>(
-              find.widgetWithText(FilledButton, '重新核实并替换信任'),
-            )
+            .widget<AppButton>(find.widgetWithText(AppButton, '重新核实并替换信任'))
             .onPressed,
         isNull,
       );

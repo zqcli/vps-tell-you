@@ -3611,6 +3611,18 @@
   "@securityRejectBack": {
     "description": "Security: RejectBack. App-authored UI text; do not translate user data or protocol tokens."
   },
+  "uiSecurityVerified": "已核验",
+  "@uiSecurityVerified": {
+    "description": "Security: status pill text for host key state."
+  },
+  "uiSecurityUnverified": "未核验",
+  "@uiSecurityUnverified": {
+    "description": "Security: status pill text for host key state."
+  },
+  "uiSecurityKeyChanged": "公钥已变化",
+  "@uiSecurityKeyChanged": {
+    "description": "Security: status pill text for host key state."
+  },
   "securitySavingHostTrust": "正在保存已确认的信任。完成前暂时不能返回。",
   "@securitySavingHostTrust": {
     "description": "Security: SavingHostTrust. App-authored UI text; do not translate user data or protocol tokens."

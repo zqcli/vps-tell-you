@@ -4398,6 +4398,15 @@ class AppLocalizationsZh extends AppLocalizations {
   String get securityRejectBack => '拒绝并返回';
 
   @override
+  String get uiSecurityVerified => '已核验';
+
+  @override
+  String get uiSecurityUnverified => '未核验';
+
+  @override
+  String get uiSecurityKeyChanged => '公钥已变化';
+
+  @override
   String get securitySavingHostTrust => '正在保存已确认的信任。完成前暂时不能返回。';
 
   @override

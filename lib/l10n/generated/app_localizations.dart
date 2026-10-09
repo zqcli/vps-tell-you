@@ -8000,6 +8000,24 @@ abstract class AppLocalizations {
   /// **'拒绝并返回'**
   String get securityRejectBack;
 
+  /// Security: status pill text for host key state.
+  ///
+  /// In zh, this message translates to:
+  /// **'已核验'**
+  String get uiSecurityVerified;
+
+  /// Security: status pill text for host key state.
+  ///
+  /// In zh, this message translates to:
+  /// **'未核验'**
+  String get uiSecurityUnverified;
+
+  /// Security: status pill text for host key state.
+  ///
+  /// In zh, this message translates to:
+  /// **'公钥已变化'**
+  String get uiSecurityKeyChanged;
+
   /// Security: SavingHostTrust. App-authored UI text; do not translate user data or protocol tokens.
   ///
   /// In zh, this message translates to:
