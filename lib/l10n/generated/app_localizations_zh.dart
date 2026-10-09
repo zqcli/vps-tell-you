@@ -2749,6 +2749,23 @@ class AppLocalizationsZh extends AppLocalizations {
   String get serverNoMatchesHelp => '试试调整筛选；已归档记录可在设置中恢复。';
 
   @override
+  String get uiServersDueSoon => '30 天内到期';
+
+  @override
+  String get uiServersArchive => '归档';
+
+  @override
+  String get uiServersReset => '重置';
+
+  @override
+  String uiServersShowCount(int count) {
+    return '显示 $count 台';
+  }
+
+  @override
+  String get uiServersRowHint => '左滑或长按服务器查看快捷操作';
+
+  @override
   String get serverClearFilters => '清除筛选';
 
   @override

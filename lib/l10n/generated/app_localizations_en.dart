@@ -3162,6 +3162,30 @@ class AppLocalizationsEn extends AppLocalizations {
       'Try adjusting the filters. Restore archived records in Settings.';
 
   @override
+  String get uiServersDueSoon => 'Due in 30 days';
+
+  @override
+  String get uiServersArchive => 'Archive';
+
+  @override
+  String get uiServersReset => 'Reset';
+
+  @override
+  String uiServersShowCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Show $count servers',
+      one: 'Show 1 server',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get uiServersRowHint =>
+      'Swipe left or long-press a server for quick actions';
+
+  @override
   String get serverClearFilters => 'Clear filters';
 
   @override

@@ -2357,6 +2357,18 @@
   "serverNoUnarchived": "没有未归档服务器",
   "serverNoMatches": "没有符合条件的记录",
   "serverNoMatchesHelp": "试试调整筛选；已归档记录可在设置中恢复。",
+  "uiServersDueSoon": "30 天内到期",
+  "uiServersArchive": "归档",
+  "uiServersReset": "重置",
+  "uiServersShowCount": "显示 {count} 台",
+  "@uiServersShowCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "uiServersRowHint": "左滑或长按服务器查看快捷操作",
   "serverClearFilters": "清除筛选",
   "serverListObservationHelp": "显示本地资料和最近一次面板查询结果，不持续监控。\n到期天数按设备日期计算；未来 30 天包含今天及后 29 天。",
   "serverCostsMissing": "费用待补充",
