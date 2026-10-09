@@ -1,9 +1,11 @@
 import 'dart:async';
+import 'dart:ui' show ImageFilter;
 
 import 'package:flutter/material.dart';
 
 import 'core/app_theme.dart';
 import 'core/app_viewport.dart';
+import 'core/ui/ui.dart';
 import 'connections/connection_pages.dart';
 import 'connections/snippet_pages.dart';
 import 'connections/tcp_test_page.dart';
@@ -36,6 +38,7 @@ class _LedgerAppState extends State<LedgerApp> with WidgetsBindingObserver {
   LedgerController? controller;
   final navigatorKey = GlobalKey<NavigatorState>();
   final _viewport = AppViewportObserver();
+  final _titleObserver = AppRouteTitles.createObserver();
   String? pendingReminder;
   bool reminderFrameQueued = false;
   bool loading = true;
@@ -160,7 +163,8 @@ class _LedgerAppState extends State<LedgerApp> with WidgetsBindingObserver {
   Widget build(BuildContext context) => MaterialApp(
     title: 'vps tell you',
     navigatorKey: navigatorKey,
-    navigatorObservers: [securityRouteObserver, _viewport],
+    navigatorObservers: [securityRouteObserver, _viewport, _titleObserver],
+    scrollBehavior: const AppScrollBehavior(),
     debugShowCheckedModeBanner: false,
     theme: appTheme(),
     darkTheme: appTheme(brightness: Brightness.dark),
@@ -234,6 +238,11 @@ class _LedgerAppState extends State<LedgerApp> with WidgetsBindingObserver {
   );
 }
 
+/// Root shell with the four tabs and an iOS-style translucent tab bar.
+///
+/// Tabs are created lazily and keep their state (scroll position, search
+/// text) while hidden. Tapping the selected tab scrolls its page to the top.
+/// Pushed pages are full-screen routes above the shell.
 class HomeShell extends StatefulWidget {
   const HomeShell({super.key, required this.controller});
   final LedgerController controller;
@@ -243,99 +252,161 @@ class HomeShell extends StatefulWidget {
 
 class _HomeShellState extends State<HomeShell> {
   int tab = 0;
+  final _visited = <int>{0};
+  final _scrollControllers = List.generate(4, (_) => ScrollController());
+
+  @override
+  void dispose() {
+    for (final controller in _scrollControllers) {
+      controller.dispose();
+    }
+    super.dispose();
+  }
+
+  void _select(int index) {
+    if (index == tab) {
+      final scroll = _scrollControllers[index];
+      if (scroll.hasClients && scroll.offset > 0) {
+        scroll.animateTo(
+          0,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeOutCubic,
+        );
+      }
+      return;
+    }
+    setState(() {
+      tab = index;
+      _visited.add(index);
+    });
+  }
+
+  Widget _page(int index) => switch (index) {
+    0 => ServerList(controller: widget.controller),
+    1 => FinancePage(controller: widget.controller),
+    2 => ToolsPage(controller: widget.controller),
+    _ => SettingsPage(controller: widget.controller),
+  };
+
   @override
   Widget build(BuildContext context) => ListenableBuilder(
     listenable: widget.controller,
     builder: (context, _) => Scaffold(
-      body: SafeArea(
-        bottom: false,
-        child: switch (tab) {
-          0 => ServerList(controller: widget.controller),
-          1 => FinancePage(controller: widget.controller),
-          2 => ToolsPage(controller: widget.controller),
-          _ => SettingsPage(controller: widget.controller),
-        },
+      // Flip to `true` once every tab page is an [AppScaffold] to let content
+      // scroll under the translucent tab bar.
+      extendBody: false,
+      body: Stack(
+        fit: StackFit.expand,
+        children: [
+          for (var i = 0; i < 4; i++)
+            if (_visited.contains(i))
+              Offstage(
+                key: ValueKey('tab-page-$i'),
+                offstage: tab != i,
+                child: TickerMode(
+                  enabled: tab == i,
+                  child: PrimaryScrollController(
+                    controller: _scrollControllers[i],
+                    child: _page(i),
+                  ),
+                ),
+              ),
+        ],
       ),
-      bottomNavigationBar: DecoratedBox(
-        decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.surface,
-          border: Border(
-            top: BorderSide(
-              color: Theme.of(context).colorScheme.outlineVariant,
-            ),
+      bottomNavigationBar: _AppTabBar(selected: tab, onSelect: _select),
+    ),
+  );
+}
+
+class _AppTabBar extends StatelessWidget {
+  const _AppTabBar({required this.selected, required this.onSelect});
+  final int selected;
+  final ValueChanged<int> onSelect;
+
+  static const _icons = [
+    (Icons.dns_outlined, Icons.dns_rounded),
+    (Icons.bar_chart_rounded, Icons.bar_chart_rounded),
+    (Icons.build_outlined, Icons.build_rounded),
+    (Icons.settings_outlined, Icons.settings_rounded),
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    final p = context.palette;
+    final labels = [
+      context.l10n.servers,
+      context.l10n.costs,
+      context.l10n.tools,
+      context.l10n.settings,
+    ];
+    final idle = p.isDark ? p.text3 : const Color(0xFF8E939E);
+    return ClipRect(
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            color: p.barBg,
+            border: Border(top: BorderSide(color: p.separator, width: .5)),
           ),
-        ),
-        child: SafeArea(
-          top: false,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 8),
-            child: Row(
-              children: [
-                for (var i = 0; i < 4; i++)
-                  Expanded(
-                    child: Semantics(
-                      selected: tab == i,
-                      button: true,
-                      enabled: true,
-                      child: InkWell(
-                        key: ValueKey('tab-$i'),
-                        onTap: () => setState(() => tab = i),
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(
-                            vertical: 6,
-                            horizontal: 2,
-                          ),
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(
-                                [
-                                  Icons.dns_outlined,
-                                  Icons.bar_chart_rounded,
-                                  Icons.build_outlined,
-                                  Icons.settings_outlined,
-                                ][i],
-                                color: tab == i
-                                    ? Theme.of(context).colorScheme.primary
-                                    : Theme.of(context)
-                                          .colorScheme
-                                          .onSurfaceVariant,
-                                size: 23,
+          child: SafeArea(
+            top: false,
+            child: MediaQuery.withClampedTextScaling(
+              maxScaleFactor: 1.3,
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(4, 6, 4, 4),
+                child: Row(
+                  children: [
+                    for (var i = 0; i < 4; i++)
+                      Expanded(
+                        child: Semantics(
+                          selected: selected == i,
+                          button: true,
+                          enabled: true,
+                          child: GestureDetector(
+                            key: ValueKey('tab-$i'),
+                            behavior: HitTestBehavior.opaque,
+                            onTap: () => onSelect(i),
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(
+                                vertical: 2,
+                                horizontal: 2,
                               ),
-                              const SizedBox(height: 4),
-                              Text(
-                                [
-                                  context.l10n.servers,
-                                  context.l10n.costs,
-                                  context.l10n.tools,
-                                  context.l10n.settings,
-                                ][i],
-                                textAlign: TextAlign.center,
-                                style: TextStyle(
-                                  fontSize: 11,
-                                  fontWeight: tab == i
-                                      ? FontWeight.w600
-                                      : FontWeight.normal,
-                                  color: tab == i
-                                      ? Theme.of(context).colorScheme.primary
-                                      : Theme.of(context)
-                                            .colorScheme
-                                            .onSurfaceVariant,
-                                ),
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    selected == i ? _icons[i].$2 : _icons[i].$1,
+                                    size: 26,
+                                    color: selected == i ? p.primary : idle,
+                                  ),
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    labels[i],
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(
+                                      fontSize: 10.5,
+                                      height: 1.2,
+                                      fontWeight: FontWeight.w500,
+                                      color: selected == i ? p.primary : idle,
+                                    ),
+                                  ),
+                                ],
                               ),
-                            ],
+                            ),
                           ),
                         ),
                       ),
-                    ),
-                  ),
-              ],
+                  ],
+                ),
+              ),
             ),
           ),
         ),
       ),
-    ),
-  );
+    );
+  }
 }
 
 class ToolsPage extends StatelessWidget {

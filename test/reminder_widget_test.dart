@@ -144,10 +144,19 @@ void main() {
         expect(await store.themeMode(), 'dark');
         final previous = platform.pending.values.first.at;
         platform.zone = 'America/New_York';
-        tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.paused);
-        tester.binding.handleAppLifecycleStateChanged(
+        // Real platforms walk through every intermediate state; widgets that
+        // keep an `AppLifecycleListener` (any mounted text field, such as the
+        // search field of a preserved tab) assert on illegal jumps.
+        for (final state in [
+          AppLifecycleState.inactive,
+          AppLifecycleState.hidden,
+          AppLifecycleState.paused,
+          AppLifecycleState.hidden,
+          AppLifecycleState.inactive,
           AppLifecycleState.resumed,
-        );
+        ]) {
+          tester.binding.handleAppLifecycleStateChanged(state);
+        }
         await tester.pumpAndSettle();
         expect(
           platform.pending.values.first.at.toUtc(),
