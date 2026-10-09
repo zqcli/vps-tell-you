@@ -278,17 +278,15 @@ Future<bool> showAppConfirm(
   required Object action,
   bool dangerous = false,
 }) async {
-  final l10n = context.l10n;
-  final titleText = localizedText(title, l10n);
-  final messageText = localizedText(message, l10n);
-  final actionText = localizedText(action, l10n);
+  // Strings are resolved inside the route builders so that an open prompt
+  // follows an app-language change (localisation callbacks are re-run).
   if (dangerous) {
     var confirmed = false;
     await showCupertinoModalPopup<void>(
       context: context,
       builder: (sheetContext) => CupertinoActionSheet(
-        title: Text(titleText),
-        message: Text(messageText),
+        title: Text(localizedText(title, sheetContext.l10n)),
+        message: Text(localizedText(message, sheetContext.l10n)),
         actions: [
           CupertinoActionSheetAction(
             isDestructiveAction: true,
@@ -296,12 +294,12 @@ Future<bool> showAppConfirm(
               confirmed = true;
               Navigator.pop(sheetContext);
             },
-            child: Text(actionText),
+            child: Text(localizedText(action, sheetContext.l10n)),
           ),
         ],
         cancelButton: CupertinoActionSheetAction(
           onPressed: () => Navigator.pop(sheetContext),
-          child: Text(l10n.cancel),
+          child: Text(sheetContext.l10n.cancel),
         ),
       ),
     );
@@ -311,17 +309,17 @@ Future<bool> showAppConfirm(
         context: context,
         barrierDismissible: true,
         builder: (dialogContext) => CupertinoAlertDialog(
-          title: Text(titleText),
-          content: Text(messageText),
+          title: Text(localizedText(title, dialogContext.l10n)),
+          content: Text(localizedText(message, dialogContext.l10n)),
           actions: [
             CupertinoDialogAction(
               onPressed: () => Navigator.pop(dialogContext, false),
-              child: Text(l10n.cancel),
+              child: Text(dialogContext.l10n.cancel),
             ),
             CupertinoDialogAction(
               isDefaultAction: true,
               onPressed: () => Navigator.pop(dialogContext, true),
-              child: Text(actionText),
+              child: Text(localizedText(action, dialogContext.l10n)),
             ),
           ],
         ),

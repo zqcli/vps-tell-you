@@ -710,10 +710,18 @@ class AppTextField extends StatelessWidget {
     this.style,
     this.suffix,
     this.errorText,
+    this.enableInteractiveSelection,
+    this.enableIMEPersonalizedLearning = true,
   });
 
   final TextEditingController? controller;
   final String? hint;
+
+  /// Passed to [TextField]; `false` for secrets that must not be selectable.
+  final bool? enableInteractiveSelection;
+
+  /// Passed to [TextField]; `false` keeps secrets out of keyboard learning.
+  final bool enableIMEPersonalizedLearning;
 
   /// Accessibility label (the visible label lives in the surrounding row).
   final String? label;
@@ -765,6 +773,8 @@ class AppTextField extends StatelessWidget {
       autofocus: autofocus,
       autocorrect: autocorrect,
       enableSuggestions: enableSuggestions,
+      enableInteractiveSelection: enableInteractiveSelection,
+      enableIMEPersonalizedLearning: enableIMEPersonalizedLearning,
       inputFormatters: inputFormatters,
       textCapitalization: textCapitalization,
       autofillHints: autofillHints,
