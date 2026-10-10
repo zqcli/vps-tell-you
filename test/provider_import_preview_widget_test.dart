@@ -16,7 +16,6 @@ import 'package:vps_tell_you/l10n/generated/app_localizations_en.dart';
 import 'package:vps_tell_you/l10n/generated/app_localizations_zh.dart';
 import 'package:vps_tell_you/l10n/localized_message.dart';
 import 'package:vps_tell_you/security/security_controller.dart';
-import 'package:vps_tell_you/core/ui/ui.dart';
 import 'package:vps_tell_you/servers/ledger_controller.dart';
 import 'package:vps_tell_you/servers/server_resources.dart';
 

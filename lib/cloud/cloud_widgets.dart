@@ -111,8 +111,8 @@ class CloudNotice extends StatelessWidget {
     liveRegion: true,
     child: AppBanner(
       text: localizedText(message, context.l10n),
-      tone: tone ?? (error ? AppTone.red : AppTone.blue),
-      icon: (tone ?? (error ? AppTone.red : AppTone.blue)) == AppTone.blue
+      tone: tone ?? (error ? AppTone.amber : AppTone.blue),
+      icon: (tone ?? (error ? AppTone.amber : AppTone.blue)) == AppTone.blue
           ? Icons.info_outline_rounded
           : Icons.error_outline_rounded,
     ),
