@@ -37,13 +37,8 @@ void main() {
       expect(resources.validate(requireComplete: true), isNull);
       final decoded = ServerResources.decode(resources.encode());
       expect(decoded.toJson(), resources.toJson());
-      expect(decoded.specSummary, contains('2 vCPU'));
-      expect(decoded.specSummary, contains('2 GiB RAM'));
-      expect(decoded.specSummary, contains('30 GiB'));
-      expect(
-        decoded.specSummary,
-        contains(resources.trafficUnlimited ? '流量不限量' : '1 TiB 流量'),
-      );
+      // Language-neutral: vCPU · memory · disk (traffic has its own row).
+      expect(decoded.specSummary, '2 vCPU · 2 GiB · 30 GiB');
     }
   });
 

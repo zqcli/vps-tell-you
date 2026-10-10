@@ -270,7 +270,9 @@ void main() {
           expect(saved.amountMinor, 1250);
           expect(saved.currency, 'USD');
           expect(saved.startDate, record.startDate);
-          expect(saved.dueDate, record.dueDate);
+          // The due date was auto-derived (start + 12 months), so it follows
+          // the cycle change to 36 months (start + 36 months).
+          expect(saved.dueDate, const LedgerDate(2029, 1, 1));
           expect(await store.payments(), isEmpty);
           expect(tester.takeException(), isNull);
         } finally {

@@ -4831,7 +4831,7 @@ abstract class AppLocalizations {
   /// No description provided for @resourceNewPeriodHelp.
   ///
   /// In zh, this message translates to:
-  /// **'新建默认按月，请按套餐确认；也可选“未设置”。'**
+  /// **'新建默认按月，可改。'**
   String get resourceNewPeriodHelp;
 
   /// No description provided for @resourcePeriodHelp.
@@ -4861,7 +4861,7 @@ abstract class AppLocalizations {
   /// No description provided for @resourceLocalHelp.
   ///
   /// In zh, this message translates to:
-  /// **'未知可留空，容量按 1024 进制。仅维护本地硬件，API 刷新不会覆盖，也不更改远端配置或 SSH 地址。'**
+  /// **'容量按 1024 进制；面板刷新不会覆盖手动资料。'**
   String get resourceLocalHelp;
 
   /// No description provided for @resourceIpAddress.
@@ -4891,7 +4891,7 @@ abstract class AppLocalizations {
   /// No description provided for @resourceUnlimitedHelp.
   ///
   /// In zh, this message translates to:
-  /// **'仅在套餐明确不限量时开启；未知或 API 返回 0 请保持关闭。'**
+  /// **'仅套餐明确不限量时开启。'**
   String get resourceUnlimitedHelp;
 
   /// No description provided for @resourceMemoryCapacity.
@@ -5251,7 +5251,7 @@ abstract class AppLocalizations {
   /// No description provided for @resourceCardHelp.
   ///
   /// In zh, this message translates to:
-  /// **'仅保存本地硬件资料，面板刷新不会覆盖。未填写的项目可稍后补充。'**
+  /// **'仅本地资料，面板刷新不会覆盖。'**
   String get resourceCardHelp;
 
   /// No description provided for @serverSavedDisplayStale.
@@ -5899,7 +5899,7 @@ abstract class AppLocalizations {
   /// No description provided for @serverFormHelp.
   ///
   /// In zh, this message translates to:
-  /// **'名称和厂商必填；硬件和费用可稍后补充。仅保存本地台账，不修改远端。'**
+  /// **'仅保存在本机，不会修改远端。'**
   String get serverFormHelp;
 
   /// No description provided for @serverBasicData.
@@ -5989,7 +5989,7 @@ abstract class AppLocalizations {
   /// No description provided for @serverPaymentLockHelp.
   ///
   /// In zh, this message translates to:
-  /// **'存在续费生成的服务期时，计费方式、周期和日期不可直接修改。请在付款详情核对可撤销范围；后续资料已改变时可能无法撤销。续费价和币种仍可调整，历史实付不变。'**
+  /// **'已有续费付款：计费方式、周期和日期不可改；续费价与币种仍可改。'**
   String get serverPaymentLockHelp;
 
   /// No description provided for @serverCostUnknownOption.
@@ -6025,13 +6025,13 @@ abstract class AppLocalizations {
   /// No description provided for @serverDatesHelp.
   ///
   /// In zh, this message translates to:
-  /// **'日期选填，到期当天不计入服务期。只填到期日期时，会按续费周期推算开始日期；未填到期日期则无法计算剩余价值。'**
+  /// **'到期日默认按开始日加周期计算，可手动修改。'**
   String get serverDatesHelp;
 
   /// No description provided for @serverAmountHelp.
   ///
   /// In zh, this message translates to:
-  /// **'金额填 0 表示免费；金额未知请选择“费用未知”。按所选币种保存，参考汇率仅用于折算。保存费用不会记录付款。'**
+  /// **'0 表示免费；未知请选“未知”。不会记录付款。'**
   String get serverAmountHelp;
 
   /// No description provided for @serverOptionalNotes.
@@ -6043,7 +6043,7 @@ abstract class AppLocalizations {
   /// No description provided for @serverNotesSafety.
   ///
   /// In zh, this message translates to:
-  /// **'不要在备注中保存密码、私钥或令牌；登录凭据请在“密钥与安全”管理。'**
+  /// **'请勿在备注保存密码、私钥或令牌。'**
   String get serverNotesSafety;
 
   /// No description provided for @serverSave.
@@ -6109,7 +6109,7 @@ abstract class AppLocalizations {
   /// No description provided for @uiFormUnknownCostFootnote.
   ///
   /// In zh, this message translates to:
-  /// **'费用未知时不会按 0 计算，也不会计入费用合计。'**
+  /// **'费用未知时不计入合计。'**
   String get uiFormUnknownCostFootnote;
 
   /// No description provided for @uiFormVcpuDecrease.
@@ -6165,6 +6165,18 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'按量'**
   String get uiFormBillingMetered;
+
+  /// No description provided for @r2FormAddressHelp.
+  ///
+  /// In zh, this message translates to:
+  /// **'地址留空时取硬件 IP 或主机名；SSH 地址另设。'**
+  String get r2FormAddressHelp;
+
+  /// No description provided for @r2FormProviderLocked.
+  ///
+  /// In zh, this message translates to:
+  /// **'提供商请在详情页更改。'**
+  String get r2FormProviderLocked;
 
   /// No description provided for @serverWaitForOperation.
   ///

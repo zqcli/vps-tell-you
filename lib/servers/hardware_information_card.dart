@@ -17,7 +17,7 @@ class HardwareInformationCard extends StatelessWidget {
     final data = resources;
     String bytes(int? value) => value == null
         ? context.l10n.serverNotEntered
-        : ServerResources.formatBytes(value, exact: true);
+        : ServerResources.formatBytes(value);
     String period(int? months) => switch (months) {
       1 => context.l10n.resourceMonth,
       3 => context.l10n.resourceQuarter,

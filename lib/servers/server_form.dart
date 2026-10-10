@@ -1,6 +1,8 @@
 import '../l10n/localized_message.dart';
 import '../l10n/locale_preference.dart';
 import '../l10n/generated/app_localizations.dart';
+import '../l10n/generated/app_localizations_en.dart';
+import '../l10n/generated/app_localizations_zh.dart';
 
 import 'dart:math' as math;
 import 'dart:ui' show SemanticsValidationResult;
@@ -23,6 +25,7 @@ import '../core/value_types.dart';
 import 'ledger_controller.dart';
 import 'server_record.dart';
 import 'server_resource_fields.dart';
+import 'server_resources.dart';
 
 class ServerForm extends StatefulWidget {
   const ServerForm({
@@ -69,6 +72,11 @@ class _ServerFormState extends State<ServerForm> {
   ProviderRecord? selectedProvider;
   bool choosingProvider = false;
   bool saving = false;
+
+  /// True while the due date is the value derived from start date + cycle (or
+  /// still empty). A manual change of the due date turns it off, so later
+  /// start/cycle edits never overwrite what the user typed.
+  late bool _dueAuto;
   bool get termsLocked =>
       widget.record != null &&
       widget.controller.hasPaymentPeriods(widget.record!.id);
@@ -83,7 +91,6 @@ class _ServerFormState extends State<ServerForm> {
       'region': TextEditingController(text: s?.region),
       'purpose': TextEditingController(text: s?.purpose),
       'os': TextEditingController(text: s?.os),
-      'spec': TextEditingController(text: s?.spec),
       'notes': TextEditingController(text: s?.notes),
       'amount': TextEditingController(text: s?.money?.decimal),
       'start': TextEditingController(text: s?.startDate?.toString()),
@@ -93,6 +100,11 @@ class _ServerFormState extends State<ServerForm> {
     currency = s?.currency ?? 'USD';
     cycle = s?.cycleMonths ?? 12;
     groupId = s?.groupId;
+    final start = s?.startDate, due = s?.dueDate;
+    _dueAuto = due == null || (start != null && start.addMonths(cycle) == due);
+    // The IP row appears only while the address is not itself an IP.
+    _hostIsIp = _addressIsIp;
+    fields['host']!.addListener(_refreshAddress);
     if (widget.focusHardware) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!mounted) {
@@ -106,8 +118,20 @@ class _ServerFormState extends State<ServerForm> {
     }
   }
 
+  bool _hostIsIp = true;
+  bool get _addressIsIp {
+    final host = fields['host']!.text.trim();
+    return host.isEmpty || ServerResources.validIp(host);
+  }
+
+  void _refreshAddress() {
+    final next = _addressIsIp;
+    if (next != _hostIsIp) setState(() => _hostIsIp = next);
+  }
+
   @override
   void dispose() {
+    fields['host']!.removeListener(_refreshAddress);
     for (final field in fields.values) {
       field.dispose();
     }
@@ -241,19 +265,48 @@ class _ServerFormState extends State<ServerForm> {
           AppPickerOption(value: m, title: _cycleDescription(m, l10n)),
       ],
     );
-    if (result != null && mounted) setState(() => cycle = result);
+    if (result != null && mounted) {
+      setState(() {
+        cycle = result;
+        _autoDue();
+      });
+    }
+  }
+
+  /// Due = start + cycle with the renewal month-anchor rules (`addMonths`
+  /// clamps month ends and leap days from the original start day).
+  void _autoDue() {
+    final start = LedgerDate.tryParse(fields['start']!.text.trim());
+    if (start == null || !_dueAuto) return;
+    fields['due']!.text = start.addMonths(cycle).toString();
   }
 
   Future<void> _pickDate(String id, String label) async {
     final current = LedgerDate.tryParse(fields[id]!.text.trim());
+    final start = LedgerDate.tryParse(fields['start']!.text.trim());
     final today = LedgerDate.today(widget.controller.clock());
+    final suggestion = id == 'due' && start != null
+        ? start.addMonths(cycle)
+        : today;
     final result = await showAppSheet<String>(
       context,
       title: label,
-      builder: (_) => _DateSheet(initial: current ?? today),
+      builder: (_) => _DateSheet(initial: current ?? suggestion),
     );
     if (result != null && mounted) {
-      setState(() => fields[id]!.text = result);
+      setState(() {
+        fields[id]!.text = result;
+        if (id == 'start') {
+          // An emptied due date counts as "not set by the user".
+          if (fields['due']!.text.isEmpty) _dueAuto = true;
+          _autoDue();
+        } else if (id == 'due') {
+          final start = LedgerDate.tryParse(fields['start']!.text.trim());
+          _dueAuto =
+              result.isEmpty ||
+              (start != null && start.addMonths(cycle).toString() == result);
+        }
+      });
     }
   }
 
@@ -552,6 +605,33 @@ class _ServerFormState extends State<ServerForm> {
     }
   }
 
+  /// Whether [spec] is something this app generated for the record's stored
+  /// hardware (current short form or the older long forms in either language).
+  bool _isAutoSpec(ServerRecord record, String spec) {
+    final resources = record.resources;
+    if (resources == null) return false;
+    if (spec == resources.specSummary) return true;
+    for (final l10n in [AppLocalizationsZh(), AppLocalizationsEn()]) {
+      final long = [
+        if (resources.vcpu != null) '${resources.vcpu} vCPU',
+        if (resources.ramBytes != null)
+          '${ServerResources.formatBytes(resources.ramBytes!)} RAM',
+        if (resources.diskBytes != null)
+          l10n.resourceDiskQuota(
+            ServerResources.formatBytes(resources.diskBytes!),
+          ),
+        if (resources.trafficUnlimited)
+          l10n.resourceUnlimitedTraffic
+        else if (resources.trafficBytes != null)
+          l10n.resourceTrafficQuota(
+            ServerResources.formatBytes(resources.trafficBytes!),
+          ),
+      ].join(' · ');
+      if (spec == long) return true;
+    }
+    return false;
+  }
+
   Future<void> save() async {
     if (saving ||
         !widget.controller.canMutate ||
@@ -559,6 +639,12 @@ class _ServerFormState extends State<ServerForm> {
       return;
     }
     _hasValidated = true;
+    // One address concept: an IP typed as the address is also the hardware IP
+    // (the IP row is hidden then). A domain leaves the stored IP untouched.
+    final typedHost = fields['host']!.text.trim();
+    if (typedHost.isNotEmpty && ServerResources.validIp(typedHost)) {
+      _resources.currentState?.ip = typedHost;
+    }
     final invalid = _form.currentState!.validateGranularly();
     final resources = _resources.currentState?.validateAndRead(
       invalidFields: invalid,
@@ -573,22 +659,33 @@ class _ServerFormState extends State<ServerForm> {
     final old = widget.record;
     final now = widget.controller.clock();
     String text(String key) => fields[key]!.text.trim();
+    final l10n = context.l10n;
+    // The specification is generated from the hardware. Free text written by
+    // an older version is never dropped: with known hardware it moves to the
+    // notes, without hardware it stays as the specification.
+    final generated = resources.specSummaryFor(l10n);
+    final legacy = old?.spec.trim() ?? '';
+    final legacyIsCustom = legacy.isNotEmpty && !_isAutoSpec(old!, legacy);
+    var notes = text('notes');
+    if (generated.isNotEmpty && legacyIsCustom && !notes.contains(legacy)) {
+      notes = notes.isEmpty
+          ? '${l10n.serverSpecifications}: $legacy'
+          : '$notes\n${l10n.serverSpecifications}: $legacy';
+    }
     final s = ServerRecord(
       id: old?.id ?? newLocalId(),
       name: text('name'),
       // Legacy vendor text stays historical; providerId is current ownership.
       vendor: old?.vendor ?? selectedProvider?.name ?? '',
       providerId: old == null ? selectedProvider?.id : old.providerId,
-      host: old == null && text('host').isEmpty
+      host: text('host').isEmpty
           ? (resources.ip.isNotEmpty ? resources.ip : resources.hostname)
           : text('host'),
       region: text('region'),
       purpose: text('purpose'),
       os: text('os'),
-      spec: text('spec') == old?.resources?.specSummary
-          ? resources.specSummary
-          : text('spec'),
-      notes: text('notes'),
+      spec: generated.isNotEmpty ? generated : legacy,
+      notes: notes,
       resources: resources,
       groupId: groupId,
       favorite: old?.favorite ?? false,
@@ -694,15 +791,13 @@ class _ServerFormState extends State<ServerForm> {
                           ),
                           const SizedBox(height: 6),
                           Text(
-                            widget.record == null
-                                ? l10n.serverNewHostHelp
-                                : l10n.serverSavedHostHelp,
+                            l10n.r2FormAddressHelp,
                             style: context.footnoteStyle,
                           ),
                           if (widget.record != null) ...[
                             const SizedBox(height: 6),
                             Text(
-                              l10n.providerUiChangeFromDetails,
+                              l10n.r2FormProviderLocked,
                               style: context.footnoteStyle,
                             ),
                           ],
@@ -766,13 +861,6 @@ class _ServerFormState extends State<ServerForm> {
                           l10n.serverOperatingSystem,
                           semanticLabel: l10n.serverOptionalOs,
                         ),
-                        _textRow(
-                          'spec',
-                          l10n.uiFormSpec,
-                          semanticLabel: l10n.serverOptionalSpec,
-                          hint: l10n.serverSpecExample,
-                          max: 200,
-                        ),
                       ],
                     ),
                     ServerResourceFields(
@@ -781,6 +869,7 @@ class _ServerFormState extends State<ServerForm> {
                       enabled: !saving,
                       importing: false,
                       collapsible: true,
+                      hideIp: _hostIsIp,
                       defaultTrafficPeriodMonths: widget.record == null
                           ? 1
                           : null,

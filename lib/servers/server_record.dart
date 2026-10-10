@@ -214,3 +214,12 @@ class ServerRecord {
     isDemo: row['is_demo'] == 1,
   );
 }
+
+/// Specification text for display, search and export: generated from the
+/// hardware (`2 vCPU · 2 GiB · 40 GiB`) whenever any of vCPU / memory / disk
+/// is known, otherwise the legacy free-text [ServerRecord.spec] of older
+/// records. The form stores the same value into `spec` on save.
+String serverSpecSummary(ServerRecord server, AppLocalizations l10n) {
+  final generated = server.resources?.specSummaryFor(l10n) ?? '';
+  return generated.isNotEmpty ? generated : server.spec;
+}

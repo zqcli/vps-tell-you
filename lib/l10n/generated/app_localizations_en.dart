@@ -3158,7 +3158,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get resourceNewPeriodHelp =>
-      'New records default to monthly. Check your plan, or choose Not set.';
+      'New records default to monthly; you can change it.';
 
   @override
   String get resourcePeriodHelp =>
@@ -3177,7 +3177,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get resourceLocalHelp =>
-      'Leave unknown values blank. Capacities use base 1024. These are local hardware details only: API refreshes do not overwrite them, and they do not change remote settings or the SSH address.';
+      'Capacities use 1024 units; panel refresh never overwrites manual edits.';
 
   @override
   String get resourceIpAddress => 'IP address';
@@ -3193,7 +3193,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get resourceUnlimitedHelp =>
-      'Enable only if the plan explicitly includes unlimited traffic. Leave off when unknown or when the API returns 0.';
+      'Turn on only if the plan is explicitly unlimited.';
 
   @override
   String get resourceMemoryCapacity => 'Memory capacity';
@@ -3413,7 +3413,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get resourceCardHelp =>
-      'Only local hardware details are saved. Panel refreshes do not overwrite them. Add missing details later.';
+      'Local data only; panel refresh never overwrites it.';
 
   @override
   String get serverSavedDisplayStale =>
@@ -3790,7 +3790,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get serverFormHelp =>
-      'Name and provider are required. Add hardware and cost details later. Saves only to the local ledger; remote servers are unchanged.';
+      'Saved on this device only; remote servers are unchanged.';
 
   @override
   String get serverBasicData => 'Basic details';
@@ -3839,7 +3839,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get serverPaymentLockHelp =>
-      'When renewal-generated service periods exist, billing type, cycle, and dates cannot be edited directly. Check which payments can be voided in payment details; later changes may prevent voiding. Renewal price and currency can still be changed. Historical payments remain unchanged.';
+      'Renewal payments exist: billing type, cycle and dates are locked; price and currency can change.';
 
   @override
   String get serverCostUnknownOption => 'Cost unknown · Add later';
@@ -3858,18 +3858,18 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get serverDatesHelp =>
-      'Dates are optional. The expiry date is excluded from the service period. If only the expiry date is entered, the start date is calculated from the renewal cycle. Remaining value cannot be calculated without an expiry date.';
+      'Due date defaults to start date plus cycle; you can change it.';
 
   @override
   String get serverAmountHelp =>
-      'Enter 0 for free. Choose Cost unknown if the amount is unknown. Amounts are saved in the selected currency; reference rates are only for conversion. Saving a cost does not record a payment.';
+      '0 means free; choose Unknown if unsure. No payment is recorded.';
 
   @override
   String get serverOptionalNotes => 'Notes (optional)';
 
   @override
   String get serverNotesSafety =>
-      'Do not save passwords, private keys, or tokens in notes. Manage login credentials under Keys and security.';
+      'Do not store passwords, private keys or tokens in notes.';
 
   @override
   String get serverSave => 'Save server';
@@ -3902,8 +3902,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get uiFormPickDate => 'Choose date';
 
   @override
-  String get uiFormUnknownCostFootnote =>
-      'Unknown cost is not counted as 0 and is left out of cost totals.';
+  String get uiFormUnknownCostFootnote => 'Unknown cost is left out of totals.';
 
   @override
   String get uiFormVcpuDecrease => 'Decrease vCPU';
@@ -3931,6 +3930,14 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get uiFormBillingMetered => 'Metered';
+
+  @override
+  String get r2FormAddressHelp =>
+      'Empty address uses the hardware IP or hostname; SSH address is separate.';
+
+  @override
+  String get r2FormProviderLocked =>
+      'Change the provider from the detail page.';
 
   @override
   String get serverWaitForOperation =>

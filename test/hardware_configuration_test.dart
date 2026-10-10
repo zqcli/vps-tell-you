@@ -304,11 +304,18 @@ void main() {
         tester,
       ) async {
         await mount(tester);
-        for (final field in ServerResources.fieldKeys) {
+        // The IP is the address itself: no separate hardware IP row while the
+        // address is empty or an IP.
+        for (final field in ServerResources.fieldKeys.difference({'ip'})) {
           expect(find.byKey(ValueKey('resource-$field')), findsOneWidget);
         }
+        expect(find.byKey(const ValueKey('resource-ip')), findsNothing);
         await fill(tester, 'field-name', 'Manual server');
-        await fill(tester, 'resource-${target.$1}', target.$2);
+        await fill(
+          tester,
+          target.$1 == 'ip' ? 'field-host' : 'resource-${target.$1}',
+          target.$2,
+        );
         await fill(tester, 'resource-vcpu', '4');
         await tapSave(tester);
         final saved = (await store.servers()).single;
@@ -334,7 +341,11 @@ void main() {
           'ramBytes': '1536',
           'vcpu': '3',
         }.entries) {
-          await fill(tester, 'resource-${entry.key}', entry.value);
+          await fill(
+            tester,
+            entry.key == 'ip' ? 'field-host' : 'resource-${entry.key}',
+            entry.value,
+          );
         }
         final period = find.byKey(const ValueKey('resource-traffic-period'));
         await chooseOption(tester, period, '每年');
@@ -434,21 +445,50 @@ void main() {
       },
     );
 
-    for (final host in ['192.0.2.45', 'gateway.example', '']) {
-      testWidgets('editing hardware does not overwrite existing host "$host"', (
-        tester,
-      ) async {
-        final record = await seed(host: host, resources: _complete());
-        await mount(tester, record: record);
-        await fill(tester, 'resource-ip', '192.0.2.99');
-        await fill(tester, 'resource-hostname', 'changed.example');
-        await tapSave(tester);
-        final saved = (await store.servers()).single;
-        expect(saved.host, host);
-        expect(saved.resources!.ip, '192.0.2.99');
-        expect(saved.resources!.hostname, 'changed.example');
-        expect(saved.resources!.trafficPeriodMonths, isNull);
-      });
-    }
+    testWidgets('editing the address IP updates the hardware IP with it', (
+      tester,
+    ) async {
+      final record = await seed(host: '192.0.2.45', resources: _complete());
+      await mount(tester, record: record);
+      expect(find.byKey(const ValueKey('resource-ip')), findsNothing);
+      await fill(tester, 'field-host', '192.0.2.99');
+      await fill(tester, 'resource-hostname', 'changed.example');
+      await tapSave(tester);
+      final saved = (await store.servers()).single;
+      expect(saved.host, '192.0.2.99');
+      expect(saved.resources!.ip, '192.0.2.99');
+      expect(saved.resources!.apiFields, isNot(contains('ip')));
+      expect(saved.resources!.hostname, 'changed.example');
+      expect(saved.resources!.trafficPeriodMonths, isNull);
+    });
+
+    testWidgets('a domain address stays separate from the hardware IP', (
+      tester,
+    ) async {
+      final record = await seed(
+        host: 'gateway.example',
+        resources: _complete(),
+      );
+      await mount(tester, record: record);
+      await fill(tester, 'resource-ip', '192.0.2.99');
+      await fill(tester, 'resource-hostname', 'changed.example');
+      await tapSave(tester);
+      final saved = (await store.servers()).single;
+      expect(saved.host, 'gateway.example');
+      expect(saved.resources!.ip, '192.0.2.99');
+      expect(saved.resources!.hostname, 'changed.example');
+    });
+
+    testWidgets('an empty address takes the hardware IP when saved', (
+      tester,
+    ) async {
+      final record = await seed(host: '', resources: _complete());
+      await mount(tester, record: record);
+      await fill(tester, 'resource-hostname', 'changed.example');
+      await tapSave(tester);
+      final saved = (await store.servers()).single;
+      expect(saved.host, '192.0.2.45');
+      expect(saved.resources!.ip, '192.0.2.45');
+    });
   });
 }

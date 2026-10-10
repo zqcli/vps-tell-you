@@ -95,6 +95,7 @@ class ServerResourceFields extends StatefulWidget {
     this.defaultTrafficPeriodMonths,
     this.collapsible = false,
     this.initiallyExpanded = true,
+    this.hideIp = false,
     this.margin = const EdgeInsets.symmetric(horizontal: 16),
   });
   final ServerResources? initial;
@@ -110,6 +111,11 @@ class ServerResourceFields extends StatefulWidget {
 
   /// Outer margin of the grouped section.
   final EdgeInsets margin;
+
+  /// Leave the IP row out (the surrounding form already asks for an address
+  /// that is the IP). The stored value is kept and can be set through
+  /// [ServerResourceFieldsState.ip].
+  final bool hideIp;
   @override
   State<ServerResourceFields> createState() => ServerResourceFieldsState();
 }
@@ -137,6 +143,9 @@ class ServerResourceFieldsState extends State<ServerResourceFields> {
 
   final _fields = <String, TextEditingController>{};
   final _units = <String, int>{};
+
+  /// Untouched initial capacities keep their exact bytes (see initState).
+  final _exact = <String, ({int bytes, String text, int factor})>{};
   late bool _unlimited;
   int? _trafficPeriodMonths;
   static const units = {
@@ -172,15 +181,17 @@ class ServerResourceFieldsState extends State<ServerResourceFields> {
     }
     for (final key in ['ramBytes', 'diskBytes', 'trafficBytes']) {
       final bytes = data[key];
-      final factor = bytes is int && bytes > 0
-          ? units.values.toList().reversed.firstWhere((f) => bytes % f == 0)
-          : key == 'ramBytes'
-          ? units['MiB']!
-          : units['GiB']!;
-      _units[key] = factor;
-      _fields[key] = TextEditingController(
-        text: bytes is int && bytes > 0 ? (bytes ~/ factor).toString() : '',
-      );
+      if (bytes is int && bytes > 0) {
+        // Show the best unit with a short number. The text may be rounded, so
+        // the exact stored value is kept until the user changes text or unit.
+        final shown = ServerResources.editableAmount(bytes);
+        _units[key] = shown.factor;
+        _fields[key] = TextEditingController(text: shown.text);
+        _exact[key] = (bytes: bytes, text: shown.text, factor: shown.factor);
+      } else {
+        _units[key] = key == 'ramBytes' ? units['MiB']! : units['GiB']!;
+        _fields[key] = TextEditingController();
+      }
     }
   }
 
@@ -192,18 +203,33 @@ class ServerResourceFieldsState extends State<ServerResourceFields> {
     super.dispose();
   }
 
+  /// Current IP text, including while its row is hidden.
+  String get ip => _fields['ip']!.text.trim();
+  set ip(String value) => _fields['ip']!.text = value.trim();
+
   int? _bytes(String key) {
     final text = _fields[key]!.text.trim();
+    final exact = _exact[key];
+    if (exact != null && exact.text == text && exact.factor == _units[key]) {
+      return exact.bytes;
+    }
     if (!RegExp(r'^(?:0|[1-9][0-9]*)(?:\.[0-9]{1,9})?$').hasMatch(text)) {
       return null;
     }
     final parts = text.split('.');
     final scale = BigInt.from(10).pow(parts.length == 1 ? 0 : parts[1].length);
     final amount = BigInt.parse(parts.join()) * BigInt.from(_units[key]!);
+    var value = amount ~/ scale;
     if (amount % scale != BigInt.zero) {
-      return null;
+      // The form shows sizes with two decimals (`1.86 GiB`), so a value typed
+      // with up to two decimals in MiB or larger is rounded to the nearest
+      // byte. Anything finer must still be an exact whole number of bytes.
+      final decimals = parts.length == 1 ? 0 : parts[1].length;
+      if (decimals > 2 || _units[key]! < units['MiB']!) {
+        return null;
+      }
+      value = (amount * BigInt.two + scale) ~/ (scale * BigInt.two);
     }
-    final value = amount ~/ scale;
     return value > BigInt.zero && value <= BigInt.from(maxValue)
         ? value.toInt()
         : null;
@@ -670,7 +696,7 @@ class ServerResourceFieldsState extends State<ServerResourceFields> {
                         : null,
                   ),
                 ),
-                _textRow('ip', l10n.resourceIpAddress),
+                if (!widget.hideIp) _textRow('ip', l10n.resourceIpAddress),
                 _textRow('hostname', l10n.resourceHostname),
               ],
             ),

@@ -2709,7 +2709,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get resourcePeriod => '周期';
 
   @override
-  String get resourceNewPeriodHelp => '新建默认按月，请按套餐确认；也可选“未设置”。';
+  String get resourceNewPeriodHelp => '新建默认按月，可改。';
 
   @override
   String get resourcePeriodHelp => '周期独立于容量单位；未知选“未设置”。';
@@ -2725,8 +2725,7 @@ class AppLocalizationsZh extends AppLocalizations {
       '核对并补齐六项后导入；容量按 1024 进制，0 不代表不限量。资料不全时可暂不选择此实例，待补齐后再导入。';
 
   @override
-  String get resourceLocalHelp =>
-      '未知可留空，容量按 1024 进制。仅维护本地硬件，API 刷新不会覆盖，也不更改远端配置或 SSH 地址。';
+  String get resourceLocalHelp => '容量按 1024 进制；面板刷新不会覆盖手动资料。';
 
   @override
   String get resourceIpAddress => 'IP 地址';
@@ -2741,7 +2740,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get resourceTrafficQuotaLabel => '流量额度';
 
   @override
-  String get resourceUnlimitedHelp => '仅在套餐明确不限量时开启；未知或 API 返回 0 请保持关闭。';
+  String get resourceUnlimitedHelp => '仅套餐明确不限量时开启。';
 
   @override
   String get resourceMemoryCapacity => '内存容量';
@@ -2935,7 +2934,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get resourceUnlimitedConfirmed => '不限量（已确认）';
 
   @override
-  String get resourceCardHelp => '仅保存本地硬件资料，面板刷新不会覆盖。未填写的项目可稍后补充。';
+  String get resourceCardHelp => '仅本地资料，面板刷新不会覆盖。';
 
   @override
   String get serverSavedDisplayStale => '写入已保存，显示内容暂未更新';
@@ -3278,7 +3277,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get serverEditTitle => '编辑服务器';
 
   @override
-  String get serverFormHelp => '名称和厂商必填；硬件和费用可稍后补充。仅保存本地台账，不修改远端。';
+  String get serverFormHelp => '仅保存在本机，不会修改远端。';
 
   @override
   String get serverBasicData => '基本资料';
@@ -3323,8 +3322,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get serverCostDetails => '费用资料';
 
   @override
-  String get serverPaymentLockHelp =>
-      '存在续费生成的服务期时，计费方式、周期和日期不可直接修改。请在付款详情核对可撤销范围；后续资料已改变时可能无法撤销。续费价和币种仍可调整，历史实付不变。';
+  String get serverPaymentLockHelp => '已有续费付款：计费方式、周期和日期不可改；续费价与币种仍可改。';
 
   @override
   String get serverCostUnknownOption => '费用未知 · 稍后补充';
@@ -3342,18 +3340,16 @@ class AppLocalizationsZh extends AppLocalizations {
   String get serverMetered => '按量付费';
 
   @override
-  String get serverDatesHelp =>
-      '日期选填，到期当天不计入服务期。只填到期日期时，会按续费周期推算开始日期；未填到期日期则无法计算剩余价值。';
+  String get serverDatesHelp => '到期日默认按开始日加周期计算，可手动修改。';
 
   @override
-  String get serverAmountHelp =>
-      '金额填 0 表示免费；金额未知请选择“费用未知”。按所选币种保存，参考汇率仅用于折算。保存费用不会记录付款。';
+  String get serverAmountHelp => '0 表示免费；未知请选“未知”。不会记录付款。';
 
   @override
   String get serverOptionalNotes => '备注（选填）';
 
   @override
-  String get serverNotesSafety => '不要在备注中保存密码、私钥或令牌；登录凭据请在“密钥与安全”管理。';
+  String get serverNotesSafety => '请勿在备注保存密码、私钥或令牌。';
 
   @override
   String get serverSave => '保存服务器';
@@ -3386,7 +3382,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get uiFormPickDate => '选择日期';
 
   @override
-  String get uiFormUnknownCostFootnote => '费用未知时不会按 0 计算，也不会计入费用合计。';
+  String get uiFormUnknownCostFootnote => '费用未知时不计入合计。';
 
   @override
   String get uiFormVcpuDecrease => '减少 vCPU';
@@ -3414,6 +3410,12 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get uiFormBillingMetered => '按量';
+
+  @override
+  String get r2FormAddressHelp => '地址留空时取硬件 IP 或主机名；SSH 地址另设。';
+
+  @override
+  String get r2FormProviderLocked => '提供商请在详情页更改。';
 
   @override
   String get serverWaitForOperation => '请等待当前操作完成';

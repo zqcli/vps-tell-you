@@ -218,9 +218,11 @@ void main() {
               expect(result.trafficPeriodMonths, period.value);
               expect(result.trafficBytes, 9007199254740991);
             }
+            // Shown in the best unit (8192 TiB); the exact stored bytes are
+            // kept (asserted above) because the field was not edited.
             expect(
               fieldController(tester, 'resource-trafficBytes').text,
-              '9007199254740991',
+              '8192',
             );
             final unlimited = find.byKey(
               const ValueKey('resource-traffic-unlimited'),

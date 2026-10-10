@@ -310,6 +310,8 @@ void main() {
     'small viewport reveals invalid IP and keeps the save action reachable',
     (tester) async {
       await mount(tester, 320, 2, height: 560);
+      // The IP row only exists next to a domain address.
+      await fill(tester, 'field-host', 'gateway.example');
       await fill(tester, 'resource-ip', '0.0.0.0');
       await fill(tester, 'field-notes', 'A draft survives validation');
       await tapSave(tester);
@@ -329,7 +331,9 @@ void main() {
     'new entry explains required fields and keeps unknown hardware quiet',
     (tester) async {
       await mount(tester, 390, 1, create: true);
-      expect(find.textContaining('名称和厂商必填'), findsOneWidget);
+      // Only the name is required (asterisk); the help is a single short line.
+      expect(find.textContaining('仅保存在本机'), findsOneWidget);
+      expect(find.textContaining('名称和厂商必填'), findsNothing);
       expect(find.text('未知可留空，之后可手动补充'), findsNothing);
       expect(find.text('容量单位按 1024 进制'), findsNothing);
       expect(find.textContaining('凭据库将在后续阶段提供'), findsNothing);
