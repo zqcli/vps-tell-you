@@ -1,6 +1,6 @@
 # vps tell you
 
-本地优先的个人 VPS 台账，Flutter 原生应用。当前为 **开发测试版 0.1.0**，以 V6.2 为视觉与交互基础。Android / iOS 工程已生成，Linux 用于原生开发与验证。
+本地优先的个人 VPS 台账，Flutter 原生应用。当前为 **开发测试版 0.1.0**。界面采用 iOS 风格的统一移动端设计，iOS 与 Android 共用同一套组件和交互，规范见 [MOBILE_UI_REDESIGN](docs/MOBILE_UI_REDESIGN.md)。Android / iOS 工程已生成，Linux 用于原生开发与验证。
 
 ## 当前可以做什么
 
@@ -81,7 +81,7 @@ flutter run -d <simulator-id>
 
 ## 代码结构与数据规则
 
-- `lib/core`：V6.2 视觉组件、纯 Dart 日期 / Money 值类型
+- `lib/core`：主题色板与 `lib/core/ui` 设计组件（用法见 `lib/core/ui/README.md`）、纯 Dart 日期 / Money 值类型
 - `lib/data`：schema v11、真实旧版本及两种 v10 分支结构的事务迁移、SQLite 事务与平台打开方式
 - `lib/servers`：本地字段模型、ChangeNotifier 控制器、列表 / 表单 / 详情
 - `lib/finance`：纯 Dart 财务 / FX、付款、计算器、白名单 PNG 导出
