@@ -231,7 +231,14 @@ void main() {
       await tap(tester, keyed('terminal-commands'));
       expect(find.text('发送'), findsOneWidget);
       expect(find.text('发送并执行'), findsOneWidget);
-      expect(find.text(escapedCommandPreview(target.label)), findsOneWidget);
+      // The top bar subtitle shows the same address; look in the panel.
+      expect(
+        find.descendant(
+          of: keyed('terminal-command-scroll'),
+          matching: find.text(escapedCommandPreview(target.label)),
+        ),
+        findsOneWidget,
+      );
       expect(find.text(escapedCommandPreview(exact)), findsOneWidget);
       expect(keyed('draft-exact-preview'), findsOneWidget);
       expect(find.byType(CheckboxListTile), findsNothing);

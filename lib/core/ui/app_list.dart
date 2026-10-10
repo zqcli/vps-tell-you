@@ -714,6 +714,8 @@ class AppTextField extends StatelessWidget {
     this.errorText,
     this.enableInteractiveSelection,
     this.enableIMEPersonalizedLearning = true,
+    this.smartDashesType,
+    this.smartQuotesType,
   });
 
   final TextEditingController? controller;
@@ -754,6 +756,11 @@ class AppTextField extends StatelessWidget {
   /// Error text drawn by the field itself (prefer [AppFormRow.errorText]).
   final String? errorText;
 
+  /// Pass [SmartDashesType.disabled] / [SmartQuotesType.disabled] for fields
+  /// whose text must stay byte-exact (commands).
+  final SmartDashesType? smartDashesType;
+  final SmartQuotesType? smartQuotesType;
+
   @override
   Widget build(BuildContext context) {
     final p = context.palette;
@@ -777,6 +784,8 @@ class AppTextField extends StatelessWidget {
       enableSuggestions: enableSuggestions,
       enableInteractiveSelection: enableInteractiveSelection,
       enableIMEPersonalizedLearning: enableIMEPersonalizedLearning,
+      smartDashesType: smartDashesType,
+      smartQuotesType: smartQuotesType,
       inputFormatters: inputFormatters,
       textCapitalization: textCapitalization,
       autofillHints: autofillHints,

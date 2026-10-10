@@ -11,6 +11,7 @@ import 'package:vps_tell_you/connections/snippet.dart';
 import 'package:vps_tell_you/connections/ssh_service.dart';
 import 'package:vps_tell_you/connections/terminal_page.dart';
 import 'package:vps_tell_you/core/app_theme.dart';
+import 'package:vps_tell_you/core/ui/ui.dart';
 import 'package:vps_tell_you/data/ledger_store.dart';
 import 'package:vps_tell_you/security/host_trust.dart';
 import 'package:vps_tell_you/security/security_controller.dart';
@@ -333,8 +334,15 @@ void main() {
       );
       await mount(tester);
       await textTap(tester, '插入片段');
-      await textTap(tester, '预览并插入草稿');
-      expect(find.text(escapedCommandPreview(content)), findsOneWidget);
+      // Row tap opens the preview sheet; the row itself shows an excerpt too.
+      await textTap(tester, 'Synthetic multiline');
+      expect(
+        find.descendant(
+          of: find.byType(BottomSheet),
+          matching: find.text(escapedCommandPreview(content)),
+        ),
+        findsOneWidget,
+      );
       expect(ssh.writes, isEmpty);
       await textTap(tester, '仅插入待发送草稿');
       expect(await currentDraft(tester), content);
@@ -604,7 +612,7 @@ void main() {
       expect(ssh.connections, 0);
       expect(
         tester
-            .widget<FilledButton>(find.byKey(const ValueKey('connect-start')))
+            .widget<AppButton>(find.byKey(const ValueKey('connect-start')))
             .onPressed,
         isNull,
       );
@@ -778,7 +786,7 @@ void main() {
       expect(ssh.connections, 0);
       expect(
         tester
-            .widget<TextFormField>(find.byKey(const ValueKey('connect-user')))
+            .widget<AppTextField>(find.byKey(const ValueKey('connect-user')))
             .controller!
             .text,
         'deploy',
@@ -786,7 +794,7 @@ void main() {
       await textTap(tester, '使用默认用户名：root');
       expect(
         tester
-            .widget<TextFormField>(find.byKey(const ValueKey('connect-user')))
+            .widget<AppTextField>(find.byKey(const ValueKey('connect-user')))
             .controller!
             .text,
         'root',
@@ -987,7 +995,7 @@ void main() {
         ),
       );
       final activate = tester
-          .widget<FilledButton>(find.byKey(const ValueKey('connect-start')))
+          .widget<AppButton>(find.byKey(const ValueKey('connect-start')))
           .onPressed!;
       // Same pre-frame callback, before the disabled state can be rebuilt.
       activate();
@@ -1003,7 +1011,7 @@ void main() {
       expect(sessions.single.disposed, isTrue);
       expect(
         tester
-            .widget<FilledButton>(find.byKey(const ValueKey('connect-start')))
+            .widget<AppButton>(find.byKey(const ValueKey('connect-start')))
             .onPressed,
         isNotNull,
       );

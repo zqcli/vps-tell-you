@@ -10,20 +10,27 @@ import 'snippet.dart';
 import 'ssh_service.dart';
 import 'terminal_font.dart';
 
-const terminalChromeColor = Color(0xFF151F2F);
+// Chrome follows the redesign demo terminal (docs/ui-redesign/style.css).
+const terminalChromeColor = Color(0xFF151A21);
+const terminalHairlineColor = Color(0xFF1D232C);
+const terminalKeyColor = Color(0xFF232A35);
+const _terminalKeyArmedColor = Color(0xFF3A4E7A);
+const _terminalAccent = Color(0xFF2F5BEA);
+const terminalMutedColor = Color(0xFF8A93A2);
+const terminalLinkColor = Color(0xFF8FB0FF);
 const mobileTerminalTheme = TerminalTheme(
-  cursor: Color(0xFFD3E0F6),
+  cursor: Color(0xFFD6DEEB),
   selection: Color(0x806B91CD),
-  foreground: Color(0xFFD6E1F0),
-  background: Color(0xFF0B1220),
-  black: Color(0xFF121B2A),
+  foreground: Color(0xFFD6DEEB),
+  background: Color(0xFF0E1116),
+  black: Color(0xFF1D232C),
   red: Color(0xFFEB767D),
-  green: Color(0xFF8CE4B6),
+  green: Color(0xFF3DD08A),
   yellow: Color(0xFFEED18F),
-  blue: Color(0xFF82B5F4),
+  blue: Color(0xFF82AAFF),
   magenta: Color(0xFFC8A0EC),
   cyan: Color(0xFF7BD8DE),
-  white: Color(0xFFD6E1F0),
+  white: Color(0xFFD6DEEB),
   brightBlack: Color(0xFF7E8CA3),
   brightRed: Color(0xFFFFA0A7),
   brightGreen: Color(0xFFB4F1D0),
@@ -33,8 +40,8 @@ const mobileTerminalTheme = TerminalTheme(
   brightCyan: Color(0xFFADF0F3),
   brightWhite: Color(0xFFF4F7FC),
   searchHitBackground: Color(0xFFEED18F),
-  searchHitBackgroundCurrent: Color(0xFF8CE4B6),
-  searchHitForeground: Color(0xFF0B1220),
+  searchHitBackgroundCurrent: Color(0xFF3DD08A),
+  searchHitForeground: Color(0xFF0E1116),
 );
 
 /// Built-in suggestions use the same local draft and exact-send review as
@@ -70,6 +77,38 @@ List<CommandSnippet> terminalQuickCommandsFor(AppLocalizations l10n) =>
       ),
     ];
 
+/// Rounded dark key cap inside a >=48px touch target. The tap target is the
+/// surrounding [TextButton]; only the cap is painted.
+class _KeyCap extends StatelessWidget {
+  const _KeyCap({
+    required this.child,
+    required this.enabled,
+    this.accent = false,
+    this.armed = false,
+  });
+  final Widget child;
+  final bool enabled, accent, armed;
+
+  @override
+  Widget build(BuildContext context) => Opacity(
+    opacity: enabled ? 1 : .4,
+    child: Container(
+      constraints: const BoxConstraints(minWidth: 42, minHeight: 34),
+      padding: const EdgeInsets.symmetric(horizontal: 10),
+      alignment: Alignment.center,
+      decoration: BoxDecoration(
+        color: accent
+            ? _terminalAccent
+            : armed
+            ? _terminalKeyArmedColor
+            : terminalKeyColor,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: child,
+    ),
+  );
+}
+
 class TerminalKeyBar extends StatelessWidget {
   const TerminalKeyBar({
     super.key,
@@ -86,147 +125,183 @@ class TerminalKeyBar extends StatelessWidget {
   final VoidCallback? onPaste;
   final void Function(TerminalKey key, {bool ctrl}) onKey;
 
+  static const _keyText = TextStyle(
+    fontFamily: terminalFontFamily,
+    fontSize: 13,
+    height: 1.2,
+  );
+
+  ButtonStyle _style({double minWidth = 48}) => TextButton.styleFrom(
+    minimumSize: Size(minWidth, 48),
+    padding: const EdgeInsets.symmetric(horizontal: 3, vertical: 7),
+    foregroundColor: mobileTerminalTheme.foreground,
+    disabledForegroundColor: mobileTerminalTheme.foreground,
+    textStyle: _keyText,
+    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+  );
+
   @override
   Widget build(BuildContext context) => Material(
     color: terminalChromeColor,
-    child: Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        const Divider(height: 1),
-        // Do not wrap. The strip remains one row above the keyboard, even with
-        // accessibility text scaling; all controls have >=48px touch targets.
-        Row(
-          children: [
-            ExcludeFocus(
-              child: Tooltip(
-                message: hasDraft
-                    ? context.l10n.terminalCommandsWithDraft
-                    : context.l10n.terminalCommandsSnippets,
-                child: TextButton.icon(
-                  key: const ValueKey('terminal-commands'),
-                  onPressed: onCommands,
-                  style: TextButton.styleFrom(
-                    minimumSize: const Size(64, 48),
-                    padding: const EdgeInsets.symmetric(horizontal: 12),
+    child: DecoratedBox(
+      decoration: const BoxDecoration(
+        border: Border(top: BorderSide(color: terminalHairlineColor)),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Do not wrap. The strip remains one row above the keyboard, even
+          // with accessibility text scaling; all controls have >=48px touch
+          // targets.
+          Row(
+            children: [
+              const SizedBox(width: 5),
+              ExcludeFocus(
+                child: Tooltip(
+                  message: hasDraft
+                      ? context.l10n.terminalCommandsWithDraft
+                      : context.l10n.terminalCommandsSnippets,
+                  child: TextButton(
+                    key: const ValueKey('terminal-commands'),
+                    onPressed: onCommands,
+                    style: _style(minWidth: 64).copyWith(
+                      foregroundColor: const WidgetStatePropertyAll(
+                        Colors.white,
+                      ),
+                    ),
+                    child: _KeyCap(
+                      enabled: true,
+                      accent: true,
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Badge(
+                            isLabelVisible: hasDraft,
+                            child: const Icon(Icons.code_rounded, size: 18),
+                          ),
+                          const SizedBox(width: 6),
+                          Text(
+                            context.l10n.terminalCommands,
+                            style: const TextStyle(
+                              fontSize: 13,
+                              height: 1.2,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
-                  icon: Badge(
-                    isLabelVisible: hasDraft,
-                    child: const Icon(Icons.code_rounded, size: 20),
-                  ),
-                  label: Text(context.l10n.terminalCommands),
                 ),
               ),
-            ),
-            const SizedBox(height: 32, child: VerticalDivider(width: 1)),
-            Expanded(
-              child: SingleChildScrollView(
-                key: const ValueKey('terminal-key-scroll'),
-                scrollDirection: Axis.horizontal,
-                padding: const EdgeInsets.symmetric(horizontal: 4),
-                child: Row(
-                  children: [
-                    ExcludeFocus(
-                      child: TextButton(
-                        key: const ValueKey('terminal-control'),
-                        onPressed: connected ? onControl : null,
-                        style: TextButton.styleFrom(
-                          minimumSize: const Size(52, 48),
-                          padding: const EdgeInsets.symmetric(horizontal: 10),
-                          backgroundColor: controlArmed
-                              ? const Color(0xFF315586)
-                              : null,
-                        ),
-                        child: Semantics(
-                          toggled: controlArmed,
-                          label: context.l10n.terminalControlHelp,
-                          excludeSemantics: true,
-                          child: const Text('Ctrl'),
-                        ),
-                      ),
-                    ),
-                    ExcludeFocus(
-                      child: Tooltip(
-                        message: context.l10n.terminalControlPaste,
+              const SizedBox(width: 3),
+              Expanded(
+                child: SingleChildScrollView(
+                  key: const ValueKey('terminal-key-scroll'),
+                  scrollDirection: Axis.horizontal,
+                  padding: const EdgeInsets.symmetric(horizontal: 2),
+                  child: Row(
+                    children: [
+                      ExcludeFocus(
                         child: TextButton(
-                          key: const ValueKey('terminal-paste'),
-                          onPressed: onPaste,
-                          style: TextButton.styleFrom(
-                            minimumSize: const Size(64, 48),
-                            padding: const EdgeInsets.symmetric(horizontal: 10),
+                          key: const ValueKey('terminal-control'),
+                          onPressed: connected ? onControl : null,
+                          style: _style(minWidth: 52),
+                          child: Semantics(
+                            toggled: controlArmed,
+                            label: context.l10n.terminalControlHelp,
+                            excludeSemantics: true,
+                            child: _KeyCap(
+                              enabled: connected,
+                              armed: controlArmed,
+                              child: const Text('Ctrl'),
+                            ),
                           ),
-                          child: const Text('Ctrl V'),
                         ),
                       ),
-                    ),
-                    for (final item in <(String, TerminalKey, bool, IconData?)>[
-                      ('Esc', TerminalKey.escape, false, null),
-                      ('Tab', TerminalKey.tab, false, null),
-                      ('Ctrl+C', TerminalKey.keyC, true, null),
-                      (
-                        context.l10n.terminalArrowUp,
-                        TerminalKey.arrowUp,
-                        false,
-                        Icons.keyboard_arrow_up,
-                      ),
-                      (
-                        context.l10n.terminalArrowDown,
-                        TerminalKey.arrowDown,
-                        false,
-                        Icons.keyboard_arrow_down,
-                      ),
-                      (
-                        context.l10n.terminalArrowLeft,
-                        TerminalKey.arrowLeft,
-                        false,
-                        Icons.keyboard_arrow_left,
-                      ),
-                      (
-                        context.l10n.terminalArrowRight,
-                        TerminalKey.arrowRight,
-                        false,
-                        Icons.keyboard_arrow_right,
-                      ),
-                      (
-                        'Enter',
-                        TerminalKey.enter,
-                        false,
-                        Icons.keyboard_return,
-                      ),
-                      ('Home', TerminalKey.home, false, null),
-                      ('End', TerminalKey.end, false, null),
-                    ])
                       ExcludeFocus(
                         child: Tooltip(
-                          message: item.$1,
-                          excludeFromSemantics: true,
+                          message: context.l10n.terminalControlPaste,
                           child: TextButton(
-                            key: ValueKey('terminal-key-${item.$2.name}'),
-                            onPressed: connected
-                                ? () => onKey(item.$2, ctrl: item.$3)
-                                : null,
-                            style: TextButton.styleFrom(
-                              minimumSize: const Size(48, 48),
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 10,
-                              ),
+                            key: const ValueKey('terminal-paste'),
+                            onPressed: onPaste,
+                            style: _style(minWidth: 64),
+                            child: _KeyCap(
+                              enabled: onPaste != null,
+                              child: const Text('Ctrl V'),
                             ),
-                            child: item.$4 == null
-                                ? Text(item.$1)
-                                : Icon(
-                                    item.$4,
-                                    size: 21,
-                                    semanticLabel: item.$1,
-                                  ),
                           ),
                         ),
                       ),
-                  ],
+                      for (final item
+                          in <(String, TerminalKey, bool, IconData?)>[
+                            ('Esc', TerminalKey.escape, false, null),
+                            ('Tab', TerminalKey.tab, false, null),
+                            ('Ctrl+C', TerminalKey.keyC, true, null),
+                            (
+                              context.l10n.terminalArrowUp,
+                              TerminalKey.arrowUp,
+                              false,
+                              Icons.keyboard_arrow_up,
+                            ),
+                            (
+                              context.l10n.terminalArrowDown,
+                              TerminalKey.arrowDown,
+                              false,
+                              Icons.keyboard_arrow_down,
+                            ),
+                            (
+                              context.l10n.terminalArrowLeft,
+                              TerminalKey.arrowLeft,
+                              false,
+                              Icons.keyboard_arrow_left,
+                            ),
+                            (
+                              context.l10n.terminalArrowRight,
+                              TerminalKey.arrowRight,
+                              false,
+                              Icons.keyboard_arrow_right,
+                            ),
+                            (
+                              'Enter',
+                              TerminalKey.enter,
+                              false,
+                              Icons.keyboard_return,
+                            ),
+                            ('Home', TerminalKey.home, false, null),
+                            ('End', TerminalKey.end, false, null),
+                          ])
+                        ExcludeFocus(
+                          child: Tooltip(
+                            message: item.$1,
+                            excludeFromSemantics: true,
+                            child: TextButton(
+                              key: ValueKey('terminal-key-${item.$2.name}'),
+                              onPressed: connected
+                                  ? () => onKey(item.$2, ctrl: item.$3)
+                                  : null,
+                              style: _style(),
+                              child: _KeyCap(
+                                enabled: connected,
+                                child: item.$4 == null
+                                    ? Text(item.$1)
+                                    : Icon(
+                                        item.$4,
+                                        size: 21,
+                                        semanticLabel: item.$1,
+                                      ),
+                              ),
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
                 ),
               ),
-            ),
-          ],
-        ),
-      ],
+            ],
+          ),
+        ],
+      ),
     ),
   );
 }
@@ -300,15 +375,32 @@ class _TerminalCommandSheetState extends State<TerminalCommandSheet> {
   });
 
   Widget _sendActions(BuildContext context, bool enabled) {
-    final normal = OutlinedButton.icon(
+    final shape = RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(12),
+    );
+    final normal = FilledButton.icon(
       key: const ValueKey('terminal-send'),
       onPressed: enabled ? () => _send(false) : null,
+      style: FilledButton.styleFrom(
+        minimumSize: const Size(0, 48),
+        shape: shape,
+        backgroundColor: terminalKeyColor,
+        foregroundColor: mobileTerminalTheme.foreground,
+        disabledBackgroundColor: terminalKeyColor.withValues(alpha: .5),
+      ),
       icon: const Icon(Icons.send_outlined, size: 18),
       label: Text(context.l10n.terminalSend),
     );
     final execute = FilledButton.icon(
       key: const ValueKey('terminal-send-execute'),
       onPressed: enabled ? () => _send(true) : null,
+      style: FilledButton.styleFrom(
+        minimumSize: const Size(0, 48),
+        shape: shape,
+        backgroundColor: _terminalAccent,
+        foregroundColor: Colors.white,
+        disabledBackgroundColor: _terminalAccent.withValues(alpha: .35),
+      ),
       icon: const Icon(Icons.keyboard_return, size: 18),
       label: Text(context.l10n.terminalSendExecute),
     );
@@ -361,21 +453,35 @@ class _TerminalCommandSheetState extends State<TerminalCommandSheet> {
             heightFactor: .88,
             child: Column(
               children: [
+                Container(
+                  width: 36,
+                  height: 5,
+                  margin: const EdgeInsets.only(top: 6),
+                  decoration: BoxDecoration(
+                    color: terminalMutedColor.withValues(alpha: .5),
+                    borderRadius: BorderRadius.circular(3),
+                  ),
+                ),
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 8, 8, 0),
+                  padding: const EdgeInsets.fromLTRB(20, 4, 8, 0),
                   child: Row(
                     children: [
                       Expanded(
                         child: Text(
                           context.l10n.terminalCommandsSnippets,
-                          style: Theme.of(context).textTheme.titleLarge,
+                          style: Theme.of(context).textTheme.titleMedium!
+                              .copyWith(fontWeight: FontWeight.w600),
                         ),
                       ),
                       IconButton(
                         key: const ValueKey('terminal-commands-close'),
                         tooltip: context.l10n.terminalBack,
                         onPressed: () => Navigator.pop(context),
-                        icon: const Icon(Icons.close),
+                        style: IconButton.styleFrom(
+                          backgroundColor: terminalKeyColor,
+                          foregroundColor: terminalMutedColor,
+                        ),
+                        icon: const Icon(Icons.close, size: 18),
                       ),
                     ],
                   ),
@@ -390,7 +496,8 @@ class _TerminalCommandSheetState extends State<TerminalCommandSheet> {
                         Text(
                           context.l10n.terminalQuickCommands,
                           key: const ValueKey('terminal-command-choices'),
-                          style: Theme.of(context).textTheme.titleSmall,
+                          style: Theme.of(context).textTheme.bodySmall!
+                              .copyWith(color: terminalMutedColor),
                         ),
                         const SizedBox(height: 8),
                         Wrap(
@@ -403,10 +510,16 @@ class _TerminalCommandSheetState extends State<TerminalCommandSheet> {
                               ActionChip(
                                 key: ValueKey(command.id),
                                 tooltip: command.name,
+                                backgroundColor: terminalKeyColor,
+                                side: BorderSide.none,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
                                 label: Text(
                                   command.content,
                                   style: const TextStyle(
                                     fontFamily: terminalFontFamily,
+                                    fontSize: 13,
                                   ),
                                 ),
                                 onPressed: _busy
@@ -423,6 +536,9 @@ class _TerminalCommandSheetState extends State<TerminalCommandSheet> {
                           alignment: Alignment.centerLeft,
                           child: TextButton.icon(
                             key: const ValueKey('terminal-insert-snippet'),
+                            style: TextButton.styleFrom(
+                              foregroundColor: terminalLinkColor,
+                            ),
                             onPressed: _busy
                                 ? null
                                 : () => _run(widget.insertSnippet),
@@ -433,7 +549,7 @@ class _TerminalCommandSheetState extends State<TerminalCommandSheet> {
                             label: Text(context.l10n.terminalInsertSnippet),
                           ),
                         ),
-                        const Divider(height: 24),
+                        const Divider(height: 24, color: terminalHairlineColor),
                         TextField(
                           key: const ValueKey('terminal-draft'),
                           controller: widget.draft,
@@ -466,12 +582,31 @@ class _TerminalCommandSheetState extends State<TerminalCommandSheet> {
                           decoration: InputDecoration(
                             labelText: context.l10n.terminalDraft,
                             hintText: context.l10n.terminalDraftHint,
+                            filled: true,
+                            fillColor: mobileTerminalTheme.background,
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide.none,
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide.none,
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: const BorderSide(
+                                color: _terminalAccent,
+                              ),
+                            ),
                           ),
                         ),
                         Align(
                           alignment: Alignment.centerRight,
                           child: TextButton.icon(
                             key: const ValueKey('terminal-draft-paste'),
+                            style: TextButton.styleFrom(
+                              foregroundColor: terminalLinkColor,
+                            ),
                             onPressed: _busy
                                 ? null
                                 : () => _run(() async {

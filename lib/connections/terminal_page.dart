@@ -552,7 +552,7 @@ class _TerminalPageState extends State<TerminalPage>
       backgroundColor: terminalChromeColor,
       clipBehavior: Clip.antiAlias,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
       ),
       isScrollControlled: true,
       useSafeArea: true,
@@ -993,6 +993,59 @@ class _TerminalPageState extends State<TerminalPage>
     SshStatus.failed => context.l10n.terminalFailed,
   };
 
+  /// Status chip under the title: green when connected, amber while
+  /// connecting, red when failed, grey otherwise.
+  Widget _statusPill(BuildContext context) {
+    final (Color fg, Color bg) = switch (_service.status) {
+      SshStatus.connected => (
+        mobileTerminalTheme.green,
+        mobileTerminalTheme.green.withValues(alpha: .15),
+      ),
+      SshStatus.connecting ||
+      SshStatus.verifying ||
+      SshStatus.authenticating => (
+        mobileTerminalTheme.yellow,
+        mobileTerminalTheme.yellow.withValues(alpha: .15),
+      ),
+      SshStatus.failed => (
+        mobileTerminalTheme.red,
+        mobileTerminalTheme.red.withValues(alpha: .15),
+      ),
+      _ => (terminalMutedColor, const Color(0x14FFFFFF)),
+    };
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 1),
+      decoration: BoxDecoration(
+        color: bg,
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 5,
+            height: 5,
+            decoration: BoxDecoration(color: fg, shape: BoxShape.circle),
+          ),
+          const SizedBox(width: 4),
+          Flexible(
+            child: Text(
+              _statusLabel,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: Theme.of(context).textTheme.bodySmall!.copyWith(
+                fontSize: 11,
+                height: 1.15,
+                fontWeight: FontWeight.w600,
+                color: fg,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final keyboardVisible = MediaQuery.viewInsetsOf(context).bottom > 0;
@@ -1029,12 +1082,20 @@ class _TerminalPageState extends State<TerminalPage>
             appBar: AppBar(
               toolbarHeight: headerHeight,
               backgroundColor: terminalChromeColor,
+              surfaceTintColor: Colors.transparent,
+              elevation: 0,
+              scrolledUnderElevation: 0,
+              shape: const Border(
+                bottom: BorderSide(color: terminalHairlineColor),
+              ),
+              actionsIconTheme: const IconThemeData(color: terminalLinkColor),
               centerTitle: false,
               titleSpacing: 0,
               leading: IconButton(
                 tooltip: context.l10n.terminalExit,
                 onPressed: _requestLeave,
-                icon: const Icon(Icons.arrow_back),
+                color: terminalLinkColor,
+                icon: const Icon(Icons.close),
               ),
               title: Semantics(
                 button: true,
@@ -1063,19 +1124,26 @@ class _TerminalPageState extends State<TerminalPage>
                             ),
                       ),
                       if (!compactChrome)
-                        Text(
-                          '$_statusLabel · ${escapedCommandPreview(widget.target.label)}',
+                        Row(
                           key: const ValueKey('terminal-status'),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: Theme.of(context).textTheme.bodySmall!
-                              .copyWith(
-                                fontSize: 11,
-                                height: 1.15,
-                                color: _connected
-                                    ? const Color(0xFF8CE4B6)
-                                    : const Color(0xFFB9C5D9),
+                          children: [
+                            Flexible(flex: 2, child: _statusPill(context)),
+                            const SizedBox(width: 6),
+                            Expanded(
+                              child: Text(
+                                escapedCommandPreview(widget.target.label),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                textDirection: TextDirection.ltr,
+                                style: const TextStyle(
+                                  fontFamily: terminalFontFamily,
+                                  fontSize: 11,
+                                  height: 1.15,
+                                  color: terminalMutedColor,
+                                ),
                               ),
+                            ),
+                          ],
                         ),
                     ],
                   ),
@@ -1103,6 +1171,10 @@ class _TerminalPageState extends State<TerminalPage>
                 ),
                 PopupMenuButton<String>(
                   tooltip: context.l10n.terminalMenu,
+                  color: terminalKeyColor,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                   onOpened: () => setState(_closeKeyboard),
                   onSelected: (action) {
                     switch (action) {
@@ -1317,6 +1389,10 @@ class _TerminalPageState extends State<TerminalPage>
                                 right: 12,
                                 child: FloatingActionButton.small(
                                   heroTag: null,
+                                  backgroundColor: terminalKeyColor,
+                                  foregroundColor:
+                                      mobileTerminalTheme.foreground,
+                                  elevation: 1,
                                   key: const ValueKey('terminal-scroll-bottom'),
                                   tooltip: context.l10n.terminalLatestOutput,
                                   onPressed: _scrollToBottom,

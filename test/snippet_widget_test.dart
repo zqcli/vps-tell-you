@@ -6,6 +6,7 @@ import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:vps_tell_you/connections/snippet.dart';
 import 'package:vps_tell_you/connections/snippet_pages.dart';
 import 'package:vps_tell_you/core/app_theme.dart';
+import 'package:vps_tell_you/core/ui/ui.dart';
 import 'package:vps_tell_you/data/ledger_store.dart';
 
 void main() {
@@ -65,11 +66,22 @@ void main() {
     await tester.pumpAndSettle();
   }
 
+  // The list row beneath shows the same escaped excerpt; look in the sheet.
+  Finder inSheet(String text) =>
+      find.descendant(of: find.byType(BottomSheet), matching: find.text(text));
+
   Future<void> tap(WidgetTester tester, String text) async {
     final finder = find.text(text).last;
     await tester.ensureVisible(finder);
     await tester.tap(finder);
     await tester.pumpAndSettle();
+  }
+
+  // The row's "…" action sheet replaced the inline Edit / Delete buttons.
+  Future<void> rowAction(WidgetTester tester, String action) async {
+    await tester.tap(find.byTooltip('更多操作').last);
+    await tester.pumpAndSettle();
+    await tap(tester, action);
   }
 
   testWidgets(
@@ -80,16 +92,16 @@ void main() {
       await tester.enterText(find.byKey(const Key('snippet-name')), 'Fixture');
       const content = '  printf test\r\nnext\t\x1b\x00  \n';
       await tester.enterText(find.byKey(const Key('snippet-content')), content);
-      await tap(tester, '完整预览');
+      await tester.pump();
+      // The editor shows the full escaped preview inline.
       expect(find.text(escapedCommandPreview(content)), findsOneWidget);
       expect(await store.snippets(), isEmpty);
-      await tap(tester, '关闭');
-      await tap(tester, '保存片段');
+      await tap(tester, '保存');
       expect((await store.snippets()).single.content, content);
-      await tap(tester, '编辑');
+      await rowAction(tester, '编辑');
       expect(
         tester
-            .widget<TextFormField>(find.byKey(const Key('snippet-content')))
+            .widget<AppTextField>(find.byKey(const Key('snippet-content')))
             .controller!
             .text,
         content,
@@ -98,19 +110,18 @@ void main() {
         find.byKey(const Key('snippet-content')),
         'unsaved',
       );
-      await tester.tap(find.byTooltip('取消片段编辑'));
-      await tester.pumpAndSettle();
+      await tap(tester, '取消');
       await tap(tester, '放弃修改');
       expect((await store.snippets()).single.content, content);
-      await tap(tester, '编辑');
+      await rowAction(tester, '编辑');
       await tester.enterText(find.byKey(const Key('snippet-name')), 'Renamed');
-      await tap(tester, '保存片段');
+      await tap(tester, '保存');
       expect((await store.snippets()).single.revision, 1);
       expect(find.text('Renamed'), findsOneWidget);
-      await tap(tester, '删除');
+      await rowAction(tester, '删除');
       await tap(tester, '取消');
       expect(await store.snippets(), hasLength(1));
-      await tap(tester, '删除');
+      await rowAction(tester, '删除');
       await tap(tester, '删除片段');
       expect(await store.snippets(), isEmpty);
       expect(tester.takeException(), isNull);
@@ -135,12 +146,12 @@ void main() {
           selection = result;
         },
       );
-      await tap(tester, '预览并插入草稿');
-      expect(find.text(escapedCommandPreview(content)), findsOneWidget);
+      await tap(tester, 'Fixture');
+      expect(inSheet(escapedCommandPreview(content)), findsOneWidget);
       expect(returned, isFalse);
       await tap(tester, '取消');
       expect(returned, isFalse);
-      await tap(tester, '预览并插入草稿');
+      await tap(tester, 'Fixture');
       await tap(tester, '仅插入待发送草稿');
       expect(returned, isTrue);
       expect(selection!.content, content);
@@ -159,17 +170,17 @@ void main() {
         isNew: true,
       );
       await mount(tester, scale: 2, select: true);
-      await tap(tester, '预览并插入草稿');
-      expect(find.text(escapedCommandPreview(content)), findsOneWidget);
+      await tap(tester, '长名称' * 20);
+      expect(inSheet(escapedCommandPreview(content)), findsOneWidget);
       expect(tester.takeException(), isNull);
       await tap(tester, '取消');
-      await tap(tester, '编辑');
+      await rowAction(tester, '编辑');
       await tester.scrollUntilVisible(
-        find.text('保存片段'),
+        find.byKey(const ValueKey('snippet-escaped-preview')),
         300,
         scrollable: find
             .descendant(
-              of: find.byType(ListView),
+              of: find.byType(CustomScrollView).last,
               matching: find.byType(Scrollable),
             )
             .first,
@@ -184,12 +195,11 @@ void main() {
     (tester) async {
       await mount(tester);
       await tap(tester, '新增片段');
-      await tap(tester, '保存片段');
+      await tap(tester, '保存');
       expect(find.text('名称需为 1–80 个字符'), findsOneWidget);
       expect(await store.snippets(), isEmpty);
       await tester.enterText(find.byKey(const Key('snippet-name')), 'Draft');
-      await tester.tap(find.byTooltip('取消片段编辑'));
-      await tester.pumpAndSettle();
+      await tap(tester, '取消');
       await tap(tester, '放弃修改');
       expect(await store.snippets(), isEmpty);
     },

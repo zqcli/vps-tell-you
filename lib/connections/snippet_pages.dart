@@ -1,70 +1,97 @@
 import '../l10n/localized_message.dart';
 import '../l10n/locale_preference.dart';
 
+import 'package:flutter/cupertino.dart' show CupertinoActivityIndicator;
 import 'package:flutter/material.dart';
 
-import '../core/app_theme.dart';
+import '../core/ui/ui.dart';
 import '../data/ledger_store.dart';
 import '../servers/server_record.dart';
+import 'connection_form.dart';
 import 'snippet.dart';
 
+/// Full escaped preview. In picker mode it ends with the explicit
+/// "insert into draft" action; closing never inserts or sends anything.
 Future<bool> _preview(
   BuildContext context,
   CommandSnippet snippet, {
   bool selectForDraft = false,
 }) async =>
-    await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        scrollable: true,
-        title: Text(escapedCommandPreview(snippet.name)),
-        content: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+    await showAppSheet<bool>(
+      context,
+      title: escapedCommandPreview(snippet.name),
+      builder: (sheetContext) {
+        final l10n = sheetContext.l10n;
+        final palette = sheetContext.palette;
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text(context.l10n.snippetFullEscapedPreview),
-            InfoNote(context.l10n.snippetEscapeLegend),
-            SelectableText(
-              escapedCommandPreview(snippet.content),
-              textDirection: TextDirection.ltr,
-              style: const TextStyle(fontFamily: 'monospace'),
+            AppSection(
+              topSpacing: 4,
+              header: l10n.snippetFullEscapedPreview,
+              footer: l10n.snippetEscapeLegend,
+              children: [
+                AppRow.custom(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    child: SelectableText(
+                      escapedCommandPreview(snippet.content),
+                      textDirection: TextDirection.ltr,
+                      style: kMonoTextStyle.copyWith(
+                        fontSize: 13.5,
+                        height: 1.45,
+                        color: palette.text,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
-            InfoNote(context.l10n.snippetPreviewNoSend),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(32, 10, 32, 0),
+              child: Text(
+                l10n.snippetPreviewNoSend,
+                style: sheetContext.footnoteStyle,
+              ),
+            ),
+            if (selectForDraft)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    AppButton(
+                      label: l10n.snippetInsertDraftOnly,
+                      expand: true,
+                      onPressed: () => Navigator.pop(sheetContext, true),
+                    ),
+                    const SizedBox(height: 8),
+                    AppButton(
+                      label: l10n.cancel,
+                      kind: AppButtonKind.plain,
+                      expand: true,
+                      onPressed: () => Navigator.pop(sheetContext, false),
+                    ),
+                  ],
+                ),
+              ),
           ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: Text(
-              selectForDraft
-                  ? context.l10n.cancel
-                  : context.l10n.connectionClose,
-            ),
-          ),
-          if (selectForDraft)
-            FilledButton(
-              onPressed: () => Navigator.pop(context, true),
-              child: Text(context.l10n.snippetInsertDraftOnly),
-            ),
-        ],
-      ),
+        );
+      },
     ) ??
     false;
 
 void _failure(BuildContext context, Object error) {
-  ScaffoldMessenger.of(context).showSnackBar(
-    SnackBar(
-      content: Builder(
-        builder: (context) => Text(
-          error is LedgerConflict
-              ? context.l10n.snippetChanged
-              : error is LocalizedMessage
-              ? error.messageFor(context.l10n)
-              : error is ArgumentError
-              ? localizedText(error.message ?? '', context.l10n)
-              : context.l10n.snippetOperationFailed,
-        ),
-      ),
-    ),
+  final l10n = context.l10n;
+  showAppToast(
+    context,
+    error is LedgerConflict
+        ? l10n.snippetChanged
+        : error is LocalizedMessage
+        ? error.messageFor(l10n)
+        : error is ArgumentError
+        ? localizedText(error.message ?? '', l10n)
+        : l10n.snippetOperationFailed,
   );
 }
 
@@ -119,12 +146,9 @@ class _SnippetListPageState extends State<SnippetListPage> {
       return;
     }
     setState(() => busy = true);
-    final saved = await Navigator.push<CommandSnippet>(
+    final saved = await showAppModal<CommandSnippet>(
       context,
-      MaterialPageRoute(
-        builder: (_) =>
-            SnippetEditorPage(store: widget.store, snippet: snippet),
-      ),
+      builder: (_) => SnippetEditorPage(store: widget.store, snippet: snippet),
     );
     if (!mounted) {
       return;
@@ -164,7 +188,7 @@ class _SnippetListPageState extends State<SnippetListPage> {
       return;
     }
     setState(() => busy = true);
-    final confirmed = await confirmAction(
+    final confirmed = await showAppConfirm(
       context,
       title: LocalizedText((l10n) => l10n.snippetDeleteQuestion),
       message: LocalizedText(
@@ -201,89 +225,149 @@ class _SnippetListPageState extends State<SnippetListPage> {
     }
   }
 
-  @override
-  Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(
-      title: Text(
-        widget.selectForDraft
-            ? context.l10n.snippetChoose
-            : context.l10n.commandSnippets,
+  void _menu(CommandSnippet snippet) {
+    final l10n = context.l10n;
+    showAppActionMenu<void>(
+      context,
+      title: escapedCommandPreview(snippet.name),
+      actions: [
+        AppMenuAction(
+          label: widget.selectForDraft
+              ? l10n.snippetPreviewInsert
+              : l10n.snippetFullPreview,
+          onPressed: () => preview(snippet),
+        ),
+        AppMenuAction(label: l10n.serverEdit, onPressed: () => edit(snippet)),
+        AppMenuAction(
+          label: l10n.connectionDelete,
+          destructive: true,
+          onPressed: () => remove(snippet),
+        ),
+      ],
+    );
+  }
+
+  /// First characters only: the full escaped text lives in the preview.
+  String _excerpt(String content) =>
+      escapedCommandPreview(String.fromCharCodes(content.runes.take(160)));
+
+  Widget _row(BuildContext context, CommandSnippet snippet) {
+    final palette = context.palette;
+    final l10n = context.l10n;
+    return AppRow.custom(
+      key: ValueKey('snippet-${snippet.id}'),
+      onTap: () => preview(snippet),
+      trailing: IconButton(
+        tooltip: l10n.uiConnMoreActions,
+        onPressed: busy ? null : () => _menu(snippet),
+        icon: Icon(Icons.more_horiz_rounded, color: palette.text2),
       ),
-    ),
-    body: loading
-        ? const Center(child: CircularProgressIndicator())
-        : failed
-        ? Center(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(context.l10n.snippetReadFailed),
-                TextButton(
-                  onPressed: load,
-                  child: Text(context.l10n.serverReload),
-                ),
-              ],
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 10),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              escapedCommandPreview(snippet.name),
+              style: TextStyle(fontSize: 16, height: 1.3, color: palette.text),
             ),
-          )
-        : ListView(
-            padding: const EdgeInsets.all(20),
-            children: [
-              InfoNote(
-                widget.selectForDraft
-                    ? context.l10n.snippetSelectPreviewHelp
-                    : context.l10n.snippetPlaintextHelp,
+            const SizedBox(height: 3),
+            Text(
+              _excerpt(snippet.content),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              textDirection: TextDirection.ltr,
+              style: kMonoTextStyle.copyWith(
+                fontSize: 12.5,
+                height: 1.35,
+                color: palette.text2,
               ),
-              FilledButton.icon(
-                onPressed: busy ? null : () => edit(),
-                icon: const Icon(Icons.add),
-                label: Text(context.l10n.snippetAdd),
-              ),
-              const SizedBox(height: 16),
-              if (snippets.isEmpty) InfoNote(context.l10n.snippetEmptyHelp),
-              for (final snippet in snippets) ...[
-                LedgerCard(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        escapedCommandPreview(snippet.name),
-                        style: Theme.of(context).textTheme.titleMedium,
-                      ),
-                      Text(
-                        context.l10n.snippetCharacterCount(
-                          (snippet.content.length).toString(),
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Wrap(
-                        spacing: 8,
-                        runSpacing: 8,
-                        children: [
-                          OutlinedButton(
-                            onPressed: busy ? null : () => preview(snippet),
-                            child: Text(
-                              widget.selectForDraft
-                                  ? context.l10n.snippetPreviewInsert
-                                  : context.l10n.snippetFullPreview,
-                            ),
-                          ),
-                          TextButton(
-                            onPressed: busy ? null : () => edit(snippet),
-                            child: Text(context.l10n.serverEdit),
-                          ),
-                          TextButton(
-                            onPressed: busy ? null : () => remove(snippet),
-                            child: Text(context.l10n.connectionDelete),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 12),
-              ],
-            ],
-          ),
+            ),
+            const SizedBox(height: 3),
+            Text(
+              l10n.snippetCharacterCount(snippet.content.length.toString()),
+              style: TextStyle(fontSize: 12, color: palette.text3),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  List<Widget> _body(BuildContext context) {
+    final l10n = context.l10n;
+    if (loading) {
+      return const [
+        Padding(
+          padding: EdgeInsets.only(top: 80),
+          child: Center(child: CupertinoActivityIndicator()),
+        ),
+      ];
+    }
+    if (failed) {
+      return [
+        AppEmptyState(
+          icon: Icons.error_outline_rounded,
+          title: l10n.snippetReadFailed,
+          actions: [
+            AppButton(
+              label: l10n.serverReload,
+              kind: AppButtonKind.tonal,
+              onPressed: load,
+            ),
+          ],
+        ),
+      ];
+    }
+    final note = Padding(
+      padding: const EdgeInsets.fromLTRB(32, 10, 32, 0),
+      child: Text(
+        widget.selectForDraft
+            ? l10n.snippetSelectPreviewHelp
+            : l10n.snippetPlaintextHelp,
+        style: context.footnoteStyle,
+      ),
+    );
+    if (snippets.isEmpty) {
+      return [
+        AppEmptyState(
+          icon: Icons.bookmarks_outlined,
+          title: l10n.commandSnippets,
+          message: l10n.snippetEmptyHelp,
+          actions: [
+            AppButton(
+              label: l10n.snippetAdd,
+              icon: Icons.add,
+              onPressed: busy ? null : () => edit(),
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
+        note,
+      ];
+    }
+    return [
+      AppSection(
+        children: [for (final snippet in snippets) _row(context, snippet)],
+      ),
+      note,
+    ];
+  }
+
+  @override
+  Widget build(BuildContext context) => AppScaffold(
+    title: widget.selectForDraft
+        ? context.l10n.snippetChoose
+        : context.l10n.commandSnippets,
+    largeTitle: !widget.selectForDraft,
+    actions: [
+      AppNavButton.icon(
+        Icons.add,
+        tooltip: context.l10n.snippetAdd,
+        onPressed: busy || loading || failed ? null : () => edit(),
+      ),
+    ],
+    children: _body(context),
   );
 }
 
@@ -346,7 +430,7 @@ class _SnippetEditorPageState extends State<SnippetEditorPage> {
       return;
     }
     if (dirty &&
-        !await confirmAction(
+        !await showAppConfirm(
           context,
           title: LocalizedText((l10n) => l10n.snippetDiscardQuestion),
           message: LocalizedText((l10n) => l10n.snippetDiscardHelp),
@@ -392,90 +476,109 @@ class _SnippetEditorPageState extends State<SnippetEditorPage> {
   }
 
   @override
-  Widget build(BuildContext context) => PopScope(
-    canPop: allowPop || (!dirty && !saving),
-    onPopInvokedWithResult: (didPop, result) {
-      if (!didPop) {
-        cancel();
-      }
-    },
-    child: Scaffold(
-      appBar: AppBar(
-        title: Text(
-          widget.snippet == null
-              ? context.l10n.snippetAdd
-              : context.l10n.snippetEdit,
-        ),
-        leading: IconButton(
-          tooltip: context.l10n.snippetCancelEdit,
-          onPressed: saving ? null : cancel,
-          icon: const Icon(Icons.arrow_back),
-        ),
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final palette = context.palette;
+    return PopScope(
+      canPop: allowPop || (!dirty && !saving),
+      onPopInvokedWithResult: (didPop, result) {
+        if (!didPop) {
+          cancel();
+        }
+      },
+      child: AppScaffold.modal(
+        title: widget.snippet == null ? l10n.snippetAdd : l10n.snippetEdit,
+        onCancel: saving ? null : cancel,
+        onAction: saving ? null : save,
+        actionBusy: saving,
+        children: [
+          Form(
+            key: form,
+            onChanged: () {
+              if (!dirty) {
+                setState(() => dirty = true);
+              }
+            },
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                AppSection(
+                  topSpacing: 8,
+                  footer: l10n.snippetSaveSafety,
+                  children: [
+                    ValidatedTextRow(
+                      fieldKey: const Key('snippet-name'),
+                      label: l10n.snippetName,
+                      controller: name,
+                      enabled: !saving,
+                      maxLength: CommandSnippet.maxNameLength,
+                      autocorrect: true,
+                      enableSuggestions: true,
+                      validator: (value) =>
+                          value.trim().isEmpty ||
+                              value.length > CommandSnippet.maxNameLength
+                          ? l10n.serverNameRange
+                          : null,
+                    ),
+                  ],
+                ),
+                AppSection(
+                  footer: l10n.snippetExactContentHelp,
+                  children: [
+                    ValidatedTextRow(
+                      fieldKey: const Key('snippet-content'),
+                      label: l10n.snippetFullContent,
+                      controller: content,
+                      stacked: true,
+                      enabled: !saving,
+                      minLines: 6,
+                      maxLines: 16,
+                      maxLength: CommandSnippet.maxContentLength,
+                      exactText: true,
+                      mono: true,
+                      keyboardType: TextInputType.multiline,
+                      validator: (value) =>
+                          value.trim().isEmpty ||
+                              value.length > CommandSnippet.maxContentLength
+                          ? l10n.snippetContentRange
+                          : null,
+                    ),
+                  ],
+                ),
+                ListenableBuilder(
+                  listenable: content,
+                  builder: (context, _) => AppSection(
+                    header: l10n.snippetFullEscapedPreview,
+                    footer: l10n.snippetEscapeLegend,
+                    children: [
+                      AppRow.custom(
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          child: ConstrainedBox(
+                            constraints: const BoxConstraints(maxHeight: 180),
+                            child: SingleChildScrollView(
+                              child: SelectableText(
+                                escapedCommandPreview(content.text),
+                                key: const ValueKey('snippet-escaped-preview'),
+                                textDirection: TextDirection.ltr,
+                                style: kMonoTextStyle.copyWith(
+                                  fontSize: 13,
+                                  height: 1.45,
+                                  color: palette.text,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
-      body: Form(
-        key: form,
-        onChanged: () {
-          if (!dirty) {
-            setState(() => dirty = true);
-          }
-        },
-        child: ListView(
-          padding: const EdgeInsets.all(20),
-          children: [
-            InfoNote(context.l10n.snippetSaveSafety),
-            TextFormField(
-              key: const Key('snippet-name'),
-              controller: name,
-              enabled: !saving,
-              maxLength: CommandSnippet.maxNameLength,
-              decoration: InputDecoration(labelText: context.l10n.snippetName),
-              validator: (value) =>
-                  value == null ||
-                      value.trim().isEmpty ||
-                      value.length > CommandSnippet.maxNameLength
-                  ? context.l10n.serverNameRange
-                  : null,
-            ),
-            const SizedBox(height: 12),
-            TextFormField(
-              key: const Key('snippet-content'),
-              controller: content,
-              enabled: !saving,
-              minLines: 6,
-              maxLines: 16,
-              maxLength: CommandSnippet.maxContentLength,
-              autocorrect: false,
-              enableSuggestions: false,
-              smartDashesType: SmartDashesType.disabled,
-              smartQuotesType: SmartQuotesType.disabled,
-              keyboardType: TextInputType.multiline,
-              decoration: InputDecoration(
-                labelText: context.l10n.snippetFullContent,
-              ),
-              validator: (value) =>
-                  value == null ||
-                      value.trim().isEmpty ||
-                      value.length > CommandSnippet.maxContentLength
-                  ? context.l10n.snippetContentRange
-                  : null,
-            ),
-            InfoNote(context.l10n.snippetExactContentHelp),
-            OutlinedButton(
-              onPressed: saving ? null : () => _preview(context, draft),
-              child: Text(context.l10n.snippetFullPreview),
-            ),
-            const SizedBox(height: 12),
-            FilledButton(
-              onPressed: saving ? null : save,
-              child: Text(
-                saving
-                    ? context.l10n.connectionSaving
-                    : context.l10n.snippetSave,
-              ),
-            ),
-          ],
-        ),
-      ),
-    ),
-  );
+    );
+  }
 }
