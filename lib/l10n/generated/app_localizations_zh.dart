@@ -3133,6 +3133,63 @@ class AppLocalizationsZh extends AppLocalizations {
   String get serverSave => '保存服务器';
 
   @override
+  String get uiFormProvider => '提供商';
+
+  @override
+  String get uiFormPurpose => '用途';
+
+  @override
+  String get uiFormRegion => '地区';
+
+  @override
+  String get uiFormSpec => '规格补充';
+
+  @override
+  String get uiFormOptional => '选填';
+
+  @override
+  String get uiFormNameHint => '例如 HK-01';
+
+  @override
+  String get uiFormDone => '完成';
+
+  @override
+  String get uiFormSetUnknown => '设为未知';
+
+  @override
+  String get uiFormPickDate => '选择日期';
+
+  @override
+  String get uiFormUnknownCostFootnote => '费用未知时不会按 0 计算，也不会计入费用合计。';
+
+  @override
+  String get uiFormVcpuDecrease => '减少 vCPU';
+
+  @override
+  String get uiFormVcpuIncrease => '增加 vCPU';
+
+  @override
+  String get uiFormCollapse => '收起硬件信息';
+
+  @override
+  String get uiFormExpand => '展开硬件信息';
+
+  @override
+  String get uiFormMemory => '内存';
+
+  @override
+  String get uiFormDisk => '磁盘';
+
+  @override
+  String get uiFormTraffic => '流量';
+
+  @override
+  String get uiFormBillingPrepaid => '预付';
+
+  @override
+  String get uiFormBillingMetered => '按量';
+
+  @override
   String get serverWaitForOperation => '请等待当前操作完成';
 
   @override

@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:vps_tell_you/core/app_theme.dart';
+import 'package:vps_tell_you/core/ui/ui.dart';
 import 'package:vps_tell_you/core/value_types.dart';
 import 'package:vps_tell_you/data/ledger_store.dart';
 import 'package:vps_tell_you/servers/ledger_controller.dart';
@@ -94,7 +95,7 @@ void main() {
       scrollable: find.byType(Scrollable).first,
     );
     await tester.enterText(notes, 'Changed notes');
-    await tester.tap(find.text('保存服务器'));
+    await tester.tap(find.text('保存'));
     await tester.pumpAndSettle();
     final saved = (await store.servers()).single;
     expect(saved.notes, 'Changed notes');
@@ -116,10 +117,10 @@ void main() {
     await tester.pump();
     await tester.ensureVisible(hostname);
     expect(
-      tester.widget<TextFormField>(hostname).controller!.text,
+      tester.widget<AppTextField>(hostname).controller!.text,
       'Changed-Hostname',
     );
-    await tester.tap(find.text('保存服务器'));
+    await tester.tap(find.text('保存'));
     await tester.pumpAndSettle();
     final saved = (await store.servers()).single;
     expect(saved.resources!.hostname, 'Changed-Hostname');
@@ -130,22 +131,24 @@ void main() {
     tester,
   ) async {
     await mount(tester);
-    final vcpu = find.byKey(const ValueKey('resource-vcpu'));
-    await tester.ensureVisible(vcpu);
-    await tester.enterText(vcpu, '0');
+    // vCPU is a stepper whose cleared state is "unknown", so it cannot hold an
+    // invalid value; the disk capacity field exercises the same behaviour.
+    final disk = find.byKey(const ValueKey('resource-diskBytes'));
+    await tester.ensureVisible(disk);
+    await tester.enterText(disk, '0');
     FocusManager.instance.primaryFocus?.unfocus();
     await tester.pump();
     final notes = find.byKey(const ValueKey('field-notes'));
     await tester.ensureVisible(notes);
     await tester.enterText(notes, 'Not yet saved');
-    await tester.tap(find.text('保存服务器'));
+    await tester.tap(find.text('保存'));
     await tester.pumpAndSettle();
     final saved = (await store.servers()).single;
     expect(saved.notes, isEmpty);
     expect(saved.resources!.toJson(), record.resources!.toJson());
-    await tester.ensureVisible(vcpu);
-    expect(tester.widget<TextFormField>(vcpu).controller!.text, '0');
-    expect(find.text('请填写 1–65536 的整数核数'), findsOneWidget);
+    await tester.ensureVisible(disk);
+    expect(tester.widget<AppTextField>(disk).controller!.text, '0');
+    expect(find.text('请填写大于 0 的容量，精确到整字节'), findsOneWidget);
   });
   testWidgets(
     'editing a name can save before resource fields scroll into view',
@@ -155,7 +158,7 @@ void main() {
         find.byKey(const ValueKey('field-name')),
         'Changed name',
       );
-      await tester.tap(find.text('保存服务器'));
+      await tester.tap(find.text('保存'));
       await tester.pumpAndSettle();
       final saved = (await store.servers()).single;
       expect(saved.name, 'Changed name');

@@ -13,6 +13,7 @@ import 'package:vps_tell_you/cloud/provider_pages.dart';
 import 'package:vps_tell_you/cloud/cloud_widgets.dart';
 import 'package:vps_tell_you/cloud/server_cloud_binding_page.dart';
 import 'package:vps_tell_you/core/app_theme.dart';
+import 'package:vps_tell_you/core/ui/ui.dart';
 import 'package:vps_tell_you/data/ledger_store.dart';
 import 'package:vps_tell_you/l10n/generated/app_localizations.dart';
 import 'package:vps_tell_you/l10n/generated/app_localizations_en.dart';
@@ -539,7 +540,9 @@ void main() {
           final target = find.byKey(ValueKey(item.key));
           await reveal(tester, target);
           final widget = tester.widget(target);
-          final controller = widget is TextField
+          final controller = widget is AppTextField
+              ? widget.controller
+              : widget is TextField
               ? widget.controller
               : (widget as TextFormField).controller;
           expect(controller!.text, item.value);

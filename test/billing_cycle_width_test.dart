@@ -13,6 +13,8 @@ import 'package:vps_tell_you/servers/ledger_controller.dart';
 import 'package:vps_tell_you/servers/server_form.dart';
 import 'package:vps_tell_you/servers/server_record.dart';
 
+import 'support/form_test_helpers.dart';
+
 void main() {
   final evidence = Platform.environment['VPS_CYCLE_WIDTH_EVIDENCE_DIR'];
   var fontsLoaded = false;
@@ -21,7 +23,6 @@ void main() {
   late LedgerController ledger;
   late ServerRecord record;
   final now = DateTime.utc(2026, 10, 7, 12);
-  const labels = {1: '月', 3: '季', 6: '半年', 12: '年', 24: '2年', 36: '3年'};
 
   setUp(() async {
     sqfliteFfiInit();
@@ -57,10 +58,6 @@ void main() {
   });
 
   Finder field(String id) => find.byKey(ValueKey('field-$id'));
-  Finder cycleButton() => find.descendant(
-    of: field('cycle'),
-    matching: find.byType(DropdownButton<int>),
-  );
 
   Future<void> reveal(WidgetTester tester) async {
     await Scrollable.ensureVisible(
@@ -200,39 +197,33 @@ void main() {
     }
   }
 
-  void expectFeeRow(WidgetTester tester, double width, String cycleLabel) {
+  Future<void> select<T>(WidgetTester tester, String id, T value) async {
+    final title = value is int
+        ? (value == 12 ? '每年' : '每 $value 个月')
+        : value.toString();
+    await chooseOption(tester, field(id), title);
+  }
+
+  /// Amount, currency and cycle each keep their complete text inside the
+  /// grouped rows without overflowing the screen.
+  void expectFeeRows(WidgetTester tester, double width, String cycleText) {
     final amount = tester.getRect(field('amount'));
     final currency = tester.getRect(field('currency'));
     final cycle = tester.getRect(field('cycle'));
-    expect(amount.top, closeTo(currency.top, 0.01));
-    expect(currency.top, closeTo(cycle.top, 0.01));
-    expect(amount.right + 6, closeTo(currency.left, 0.01));
-    expect(currency.right + 6, closeTo(cycle.left, 0.01));
-    expect(amount.left, greaterThanOrEqualTo(20));
-    expect(cycle.right, lessThanOrEqualTo(width - 20 + 0.01));
-    for (final rect in [amount, currency, cycle]) {
-      expect(rect.width, greaterThanOrEqualTo(48));
-      expect(rect.height, greaterThanOrEqualTo(48));
+    expect(amount.top, closeTo(currency.top, 12));
+    expect(amount.right, lessThan(currency.left));
+    expect(cycle.top, greaterThan(amount.bottom - 1));
+    for (final rect in [currency, cycle]) {
+      expect(rect.right, lessThanOrEqualTo(width + 0.01));
+      expect(rect.height, greaterThanOrEqualTo(44));
     }
-    for (final entry in {
-      'amount': '金额',
-      'currency': '币种',
-      'cycle': '周期',
-    }.entries) {
-      expectCompleteText(
-        tester,
-        find.descendant(of: field(entry.key), matching: find.text(entry.value)),
-        entry.value,
-        within: tester.getRect(field(entry.key)),
-        floatingLabel: true,
-      );
-    }
-    expectCompleteText(
-      tester,
-      find.descendant(of: field('cycle'), matching: find.text(cycleLabel)),
-      cycleLabel,
-      within: cycle,
+    expect(amount.left, greaterThanOrEqualTo(16));
+    expect(amount.width, greaterThanOrEqualTo(48));
+    final value = find.descendant(
+      of: field('cycle'),
+      matching: find.text(cycleText),
     );
+    expectCompleteText(tester, value, cycleText, within: cycle);
     expect(tester.takeException(), isNull);
   }
 
@@ -251,41 +242,6 @@ void main() {
     });
   }
 
-  Future<void> select<T>(WidgetTester tester, String id, T value) async {
-    await Scrollable.ensureVisible(tester.element(field(id)), alignment: 0.12);
-    await tester.pumpAndSettle();
-    final dropdown = tester.widget<DropdownButton<T>>(
-      find.descendant(of: field(id), matching: find.byType(DropdownButton<T>)),
-    );
-    final option = dropdown.items!.singleWhere((item) => item.value == value);
-    await tester.tap(field(id));
-    await tester.pumpAndSettle();
-    // Inspect the popup's built text: localized options use a Builder so an
-    // already-open route can update its label when the app language changes.
-    final menuOption = find.byWidget(option);
-    // Long labels make the small-screen menu scroll. Its last options may
-    // not have an element until the popup's own scrollable reaches them.
-    if (menuOption.evaluate().isEmpty) {
-      await tester.scrollUntilVisible(
-        menuOption,
-        100,
-        scrollable: find.byType(Scrollable).last,
-      );
-    }
-    final menuText = find.descendant(
-      of: menuOption,
-      matching: find.byType(Text),
-    );
-    expect(menuText, findsOneWidget);
-    final label = tester.widget<Text>(menuText).data!;
-    await tester.ensureVisible(menuText);
-    await tester.pumpAndSettle();
-    expect(menuText.hitTestable(), findsOneWidget);
-    expectCompleteText(tester, menuText, label);
-    await tester.tap(menuText);
-    await tester.pumpAndSettle();
-  }
-
   for (final width in [320.0, 360.0, 390.0]) {
     for (final scale in [1.0, 2.0]) {
       testWidgets('cycle contents remain complete at $width px / $scale text', (
@@ -294,25 +250,21 @@ void main() {
         final semantics = tester.ensureSemantics();
         try {
           await mount(tester, width: width, scale: scale);
-          for (final entry in labels.entries) {
-            await select(tester, 'cycle', entry.key);
+          for (final months in [1, 3, 6, 12, 24, 36]) {
+            await select(tester, 'cycle', months);
             await reveal(tester);
-            expectFeeRow(tester, width, entry.value);
+            expectFeeRows(tester, width, months == 12 ? '每年' : '每 $months 个月');
             final spoken = tester.getSemantics(field('cycle')).label;
             expect(spoken, contains('续费周期'));
-            expect(
-              spoken,
-              contains(entry.key == 12 ? '每年' : '每 ${entry.key} 个月'),
-            );
-            if (entry.key == 12 || entry.key == 6) {
+            expect(spoken, contains(months == 12 ? '每年' : '每 $months 个月'));
+            if (months == 12 || months == 6) {
               await capture(
                 tester,
-                'cycle-${entry.key}-${width.toInt()}-${scale.toInt()}x',
+                'cycle-$months-${width.toInt()}-${scale.toInt()}x',
               );
             }
           }
-          await tester.tap(find.text('保存服务器'));
-          await tester.pumpAndSettle();
+          await tapSave(tester);
           final saved = (await store.servers()).single;
           expect(saved.cycleMonths, 36);
           expect(saved.amountMinor, 1250);
@@ -328,64 +280,27 @@ void main() {
     }
   }
 
-  testWidgets(
-    'cycle sizes to its selection while amount receives extra space',
-    (tester) async {
-      await mount(tester);
-      final yearWidth = tester.getSize(field('cycle')).width;
-      final amountWidth = tester.getSize(field('amount')).width;
-      expect(yearWidth, lessThan(80));
-      expect(amountWidth, greaterThan(yearWidth));
-      await select(tester, 'cycle', 6);
-      final halfYearWidth = tester.getSize(field('cycle')).width;
-      expect(halfYearWidth, greaterThan(yearWidth));
-      expect(halfYearWidth, lessThan(100));
-      expect(
-        tester.getSize(field('amount')).width,
-        closeTo(amountWidth - (halfYearWidth - yearWidth), 0.01),
-      );
-      tester.view.physicalSize = const Size(760, 844);
-      await tester.pumpAndSettle();
-      expect(
-        tester.getSize(field('cycle')).width,
-        closeTo(halfYearWidth, 0.01),
-      );
-      await select(tester, 'cycle', 12);
-      expect(tester.getSize(field('cycle')).width, closeTo(yearWidth, 0.01));
-      expect(
-        tester.getSize(field('amount')).width,
-        closeTo(amountWidth + 370, 0.01),
-      );
-      expectFeeRow(tester, 760, '年');
-    },
-  );
-
   testWidgets('resizing and text scaling preserve edits with every currency', (
     tester,
   ) async {
     final scale = ValueNotifier<double>(1);
     addTearDown(scale.dispose);
     await mount(tester, textScale: scale, brightness: Brightness.dark);
-    final amount = tester.widget<TextFormField>(field('amount')).controller!;
+    final amount = fieldController(tester, 'field-amount');
     await tester.enterText(field('amount'), '9999999999.99');
     amount.selection = const TextSelection.collapsed(offset: 7);
     FocusManager.instance.primaryFocus?.unfocus();
     await select(tester, 'cycle', 6);
-    final initialWidth = tester.getSize(field('cycle')).width;
     tester.view.physicalSize = const Size(320, 844);
     scale.value = 2;
     await tester.pumpAndSettle();
     await reveal(tester);
-    expect(
-      tester.widget<TextFormField>(field('amount')).controller,
-      same(amount),
-    );
+    expect(fieldController(tester, 'field-amount'), same(amount));
     expect(amount.text, '9999999999.99');
     expect(amount.selection.baseOffset, 7);
-    expect(tester.getSize(field('cycle')).width, greaterThan(initialWidth));
     for (final currency in Money.currencies) {
       await select(tester, 'currency', currency);
-      expectFeeRow(tester, 320, '半年');
+      expectFeeRows(tester, 320, '每 6 个月');
       expectCompleteText(
         tester,
         find.descendant(of: field('currency'), matching: find.text(currency)),
@@ -395,8 +310,7 @@ void main() {
       expect(find.textContaining('9999999999.99 $currency'), findsOneWidget);
     }
     await capture(tester, 'cycle-resized-dark-320-2x');
-    await tester.tap(find.text('保存服务器'));
-    await tester.pumpAndSettle();
+    await tapSave(tester);
     final saved = (await store.servers()).single;
     expect(saved.cycleMonths, 6);
     expect(saved.amountMinor, Money.maxMinor);
@@ -405,63 +319,46 @@ void main() {
   });
 
   testWidgets(
-    'all full menu names stay reachable on a small doubled-text view',
+    'all full period names stay reachable on a small doubled-text view',
     (tester) async {
       await mount(tester, width: 320, height: 560, scale: 2);
       await tester.tap(field('cycle'));
       await tester.pumpAndSettle();
       for (final months in [1, 3, 6, 12, 24, 36]) {
         final name = months == 12 ? '每年' : '每 $months 个月';
-        final option = find.text(name).last;
+        final option = find.descendant(
+          of: find.byType(BottomSheet),
+          matching: find.text(name),
+        );
         await tester.ensureVisible(option);
         await tester.pumpAndSettle();
         expect(option.hitTestable(), findsOneWidget);
         expectCompleteText(tester, option, name);
-        expect(
-          tester
-              .renderObject<RenderParagraph>(option)
-              .getBoxesForSelection(
-                TextSelection(baseOffset: 0, extentOffset: name.length),
-              ),
-          hasLength(1),
-          reason:
-              'The popup must give each standard period a full readable line',
-        );
       }
       await capture(tester, 'cycle-menu-320-560-2x');
-      await tester.binding.handlePopRoute();
+      await tester.tap(find.byKey(const ValueKey('app-sheet-close')));
       await tester.pumpAndSettle();
-      expectFeeRow(tester, 320, '年');
+      expectFeeRows(tester, 320, '每年');
       expect((await store.servers()).single.cycleMonths, 12);
       await select(tester, 'cycle', 36);
-      expectFeeRow(tester, 320, '3年');
+      expectFeeRows(tester, 320, '每 36 个月');
       expect(tester.takeException(), isNull);
     },
   );
 
-  testWidgets('cycle retains focus styling and a full padded touch target', (
+  testWidgets('cycle row is a full-height touch target that opens the picker', (
     tester,
   ) async {
     await mount(tester);
-    final dropdown = tester.widget<DropdownButton<int>>(cycleButton());
-    final buttonRect = tester.getRect(cycleButton());
-    expect(buttonRect.width, greaterThanOrEqualTo(48));
-    expect(buttonRect.height, greaterThanOrEqualTo(48));
-    expect(
-      dropdown.menuWidth!,
-      greaterThan(tester.getSize(field('cycle')).width),
-    );
-    dropdown.focusNode!.requestFocus();
-    await tester.pumpAndSettle();
-    expect(tester.widget<InputDecorator>(field('cycle')).isFocused, isTrue);
-    await tester.tapAt(Offset(buttonRect.center.dx, buttonRect.top + 2));
+    final rect = tester.getRect(field('cycle'));
+    expect(rect.height, greaterThanOrEqualTo(48));
+    await tester.tapAt(Offset(rect.center.dx, rect.top + 2));
     await tester.pumpAndSettle();
     expect(find.text('每 36 个月').hitTestable(), findsOneWidget);
-    await tester.binding.handlePopRoute();
+    await tester.tap(find.byKey(const ValueKey('app-sheet-close')));
     await tester.pumpAndSettle();
-    expect(tester.widget<DropdownButton<int>>(cycleButton()).value, 12);
-    expect(tester.widget<InputDecorator>(field('cycle')).isFocused, isTrue);
-    expect(tester.takeException(), isNull);
+    expect(find.byType(BottomSheet), findsNothing);
+    expect((await store.servers()).single.cycleMonths, 12);
   });
 
   testWidgets('legacy period stays literal and is never silently normalized', (
@@ -469,60 +366,52 @@ void main() {
   ) async {
     record = ServerRecord.fromMap({...record.toMap(), 'cycle_months': 18});
     await mount(tester, width: 320, scale: 2);
-    expectFeeRow(tester, 320, '18个月');
-    final dropdown = tester.widget<DropdownButton<int>>(cycleButton());
-    expect(dropdown.value, 18);
+    expectFeeRows(tester, 320, '每 18 个月');
     expect(find.textContaining('每 18 个月续费金额'), findsOneWidget);
     expect(record.cycleMonths, 18);
     await capture(tester, 'cycle-legacy-18-320-2x');
     await select(tester, 'cycle', 3);
-    expectFeeRow(tester, 320, '季');
-    await tester.tap(find.text('保存服务器'));
-    await tester.pumpAndSettle();
+    expectFeeRows(tester, 320, '每 3 个月');
+    await tapSave(tester);
     expect((await store.servers()).single.cycleMonths, 3);
     expect(await store.payments(), isEmpty);
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets(
-    'locked cycle keeps compact geometry and immutable paid history',
-    (tester) async {
-      await store.recordPayment(
-        id: 'cycle-width-payment',
-        server: record,
-        amount: const Money('USD', 1250),
-        paidDate: const LedgerDate(2026, 10, 7),
-        cycleCount: 1,
-        until: const LedgerDate(2028, 1, 1),
-        confirmed: true,
-      );
-      await ledger.refresh();
-      record = ledger.byId(record.id)!;
-      final payments = (await store.payments()).map((p) => p.toMap()).toList();
-      final periods = (await store.servicePeriods())
-          .map((p) => p.toMap())
-          .toList();
-      await mount(tester, width: 320, scale: 2);
-      expectFeeRow(tester, 320, '年');
-      expect(
-        tester.widget<DropdownButton<int>>(cycleButton()).onChanged,
-        isNull,
-      );
-      await tester.tap(field('cycle'));
-      await tester.pumpAndSettle();
-      expect(find.text('每 36 个月'), findsNothing);
-      expect(tester.getSize(field('cycle')).width, lessThan(90));
-      await tester.enterText(field('amount'), '0');
-      FocusManager.instance.primaryFocus?.unfocus();
-      await tester.tap(find.text('保存服务器'));
-      await tester.pumpAndSettle();
-      expect((await store.servers()).single.cycleMonths, 12);
-      expect((await store.payments()).map((p) => p.toMap()).toList(), payments);
-      expect(
-        (await store.servicePeriods()).map((p) => p.toMap()).toList(),
-        periods,
-      );
-      expect(tester.takeException(), isNull);
-    },
-  );
+  testWidgets('locked cycle keeps its layout and immutable paid history', (
+    tester,
+  ) async {
+    await store.recordPayment(
+      id: 'cycle-width-payment',
+      server: record,
+      amount: const Money('USD', 1250),
+      paidDate: const LedgerDate(2026, 10, 7),
+      cycleCount: 1,
+      until: const LedgerDate(2028, 1, 1),
+      confirmed: true,
+    );
+    await ledger.refresh();
+    record = ledger.byId(record.id)!;
+    final payments = (await store.payments()).map((p) => p.toMap()).toList();
+    final periods = (await store.servicePeriods())
+        .map((p) => p.toMap())
+        .toList();
+    await mount(tester, width: 320, scale: 2);
+    expectFeeRows(tester, 320, '每年');
+    await tester.tap(field('cycle'));
+    await tester.pumpAndSettle();
+    // No picker opens for locked terms; the lock is explained instead.
+    expect(find.byType(BottomSheet), findsNothing);
+    expect(find.text('每 36 个月'), findsNothing);
+    await tester.enterText(field('amount'), '0');
+    FocusManager.instance.primaryFocus?.unfocus();
+    await tapSave(tester);
+    expect((await store.servers()).single.cycleMonths, 12);
+    expect((await store.payments()).map((p) => p.toMap()).toList(), payments);
+    expect(
+      (await store.servicePeriods()).map((p) => p.toMap()).toList(),
+      periods,
+    );
+    expect(tester.takeException(), isNull);
+  });
 }

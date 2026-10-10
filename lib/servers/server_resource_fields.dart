@@ -1,14 +1,90 @@
+import '../l10n/generated/app_localizations.dart';
 import '../l10n/locale_preference.dart';
 
+import 'dart:math' as math;
 import 'dart:ui' show SemanticsValidationResult;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
-import '../core/app_theme.dart';
+import '../core/ui/ui.dart';
 import 'server_resources.dart';
+
+/// Single-line width of [text] at the user's text scale, used to decide
+/// whether a label and its control still fit on one form row.
+double measureFormText(
+  BuildContext context,
+  String text,
+  double size, [
+  FontWeight? weight,
+]) {
+  final painter = TextPainter(
+    text: TextSpan(
+      text: text,
+      style: TextStyle(fontSize: size, fontWeight: weight),
+    ),
+    textScaler: MediaQuery.textScalerOf(context),
+    textDirection: Directionality.of(context),
+    locale: Localizations.maybeLocaleOf(context),
+  )..layout();
+  final width = painter.width;
+  painter.dispose();
+  return width;
+}
+
+/// Width of a compact [AppSegmented]: Cupertino gives every segment the width
+/// of the widest label plus 40 px of padding, separators and inset.
+double compactSegmentWidth(BuildContext context, Iterable<String> labels) {
+  var widest = 0.0;
+  for (final label in labels) {
+    widest = math.max(
+      widest,
+      measureFormText(context, label, 13, FontWeight.w600),
+    );
+  }
+  return labels.length * (widest.ceilToDouble() + 40) + 4;
+}
+
+/// Single-choice bottom sheet whose rows are built from the *current* locale,
+/// so an open picker follows a live language change. Returns the chosen value
+/// or `null` when dismissed.
+Future<T?> showFormPicker<T>(
+  BuildContext context, {
+  required String title,
+  required List<AppPickerOption<T>> Function(AppLocalizations l10n) options,
+  T? selected,
+  String Function(AppLocalizations l10n)? footnote,
+}) => showAppSheet<T>(
+  context,
+  title: title,
+  builder: (sheetContext) {
+    final l10n = sheetContext.l10n;
+    final p = sheetContext.palette;
+    return AppSection(
+      topSpacing: 4,
+      footer: footnote?.call(l10n),
+      children: [
+        for (final option in options(l10n))
+          AppRow(
+            key: option.key,
+            title: option.title,
+            subtitle: option.subtitle,
+            trailing: option.value == selected
+                ? Icon(Icons.check_rounded, size: 22, color: p.primary)
+                : null,
+            onTap: () => Navigator.pop(sheetContext, option.value),
+          ),
+      ],
+    );
+  },
+);
 
 /// An explicit local completion form. Merely editing it never starts a request
 /// or establishes SSH configuration/trust.
+///
+/// Renders one grouped inset section (label left, control right) with an
+/// optional collapsible header. The section brings its own horizontal [margin];
+/// pass [EdgeInsets.zero] when the surrounding container already pads.
 class ServerResourceFields extends StatefulWidget {
   const ServerResourceFields({
     super.key,
@@ -17,6 +93,9 @@ class ServerResourceFields extends StatefulWidget {
     this.enabled = true,
     this.importing = true,
     this.defaultTrafficPeriodMonths,
+    this.collapsible = false,
+    this.initiallyExpanded = true,
+    this.margin = const EdgeInsets.symmetric(horizontal: 16),
   });
   final ServerResources? initial;
   final Map<String, Object?> observed;
@@ -24,6 +103,13 @@ class ServerResourceFields extends StatefulWidget {
 
   /// Only used for new configurations; existing unknown periods stay unknown.
   final int? defaultTrafficPeriodMonths;
+
+  /// Header toggles the group. Collapsed fields stay mounted, so their drafts
+  /// are kept and still validated by [ServerResourceFieldsState.validateAndRead].
+  final bool collapsible, initiallyExpanded;
+
+  /// Outer margin of the grouped section.
+  final EdgeInsets margin;
   @override
   State<ServerResourceFields> createState() => ServerResourceFieldsState();
 }
@@ -32,6 +118,7 @@ class ServerResourceFieldsState extends State<ServerResourceFields> {
   final _form = GlobalKey<FormState>();
   bool _hasValidated = false;
   String? _validationLocale;
+  late bool _expanded = widget.initiallyExpanded || !widget.collapsible;
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
@@ -183,6 +270,8 @@ class ServerResourceFieldsState extends State<ServerResourceFields> {
     _hasValidated = true;
     final invalid = _form.currentState!.validateGranularly();
     if (invalid.isNotEmpty) {
+      // A collapsed group would hide the message the user must fix.
+      if (!_expanded) setState(() => _expanded = true);
       invalidFields?.addAll(invalid);
       return null;
     }
@@ -232,293 +321,439 @@ class ServerResourceFieldsState extends State<ServerResourceFields> {
         : context.l10n.resourceFieldValidBytes;
   }
 
-  Widget _field(String key, String label) => Padding(
-    padding: const EdgeInsets.only(bottom: 18),
-    child: TextFormField(
-      key: ValueKey('resource-$key'),
-      controller: _fields[key],
-      enabled: widget.enabled,
-      maxLength: key == 'hostname'
-          ? 253
-          : key == 'ip'
-          ? 45
-          : 32,
-      keyboardType: key == 'vcpu' ? TextInputType.number : TextInputType.text,
-      textInputAction: TextInputAction.next,
-      autocorrect: false,
-      enableSuggestions: false,
-      decoration: InputDecoration(
-        labelText: label,
-        counterText: '',
-        helperText: _source(key),
-        helperMaxLines: 3,
-        errorMaxLines: 4,
-      ),
-      validator: (_) => _validate(key),
-      onChanged: (_) => setState(() {}),
-    ),
+  double _textWidth(String text, double size, [FontWeight? weight]) =>
+      measureFormText(context, text, size, weight);
+
+  Widget _semantic(String label, String? error, Widget child) => Semantics(
+    label: label,
+    hint: error,
+    validationResult: error == null
+        ? SemanticsValidationResult.valid
+        : SemanticsValidationResult.invalid,
+    child: child,
   );
 
-  InputDecoration _compactDecoration(String label) => InputDecoration(
-    labelText: label,
-    floatingLabelBehavior: FloatingLabelBehavior.always,
-    contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 16),
-    counterText: '',
-  );
-
-  Widget _trafficPeriodValue(int months) {
-    final l10n = context.l10n;
-    final fullLabel = months == 0
-        ? l10n.notSet
-        : ServerResources.trafficPeriodsFor(l10n)[months]!;
-    final compactLabel = switch (months) {
-      0 => l10n.resourceTrafficPeriodUnsetShort,
-      1 => l10n.resourceTrafficPeriodMonthShort,
-      3 => l10n.resourceTrafficPeriodQuarterShort,
-      12 => l10n.resourceTrafficPeriodYearShort,
-      _ => fullLabel,
-    };
-    return Tooltip(
-      message: fullLabel,
-      child: Semantics(
-        label: fullLabel,
-        excludeSemantics: true,
-        child: Text(compactLabel),
-      ),
+  /// Row plus the small provenance line under it.
+  Widget _block(Widget row, String key) {
+    final source = _source(key);
+    // Plain manual entry is the default of this form and needs no caption;
+    // API provenance (and every state of the import flow) stays visible.
+    if (source == null ||
+        (!widget.importing && source == context.l10n.resourceSourceManual)) {
+      return row;
+    }
+    final p = context.palette;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        row,
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
+          child: Text(
+            source,
+            style: TextStyle(fontSize: 12.5, height: 1.3, color: p.text3),
+          ),
+        ),
+      ],
     );
   }
 
-  Widget _capacityField(String key, String label, {bool traffic = false}) {
-    final enabled = widget.enabled && !(traffic && _unlimited);
-    final style = Theme.of(context).textTheme.bodyMedium;
-    // Reserve the complete unit word at the user's text size. The remaining
-    // space is shared by the editable number and period; unknown periods can
-    // wrap instead of clipping at narrow widths or with enlarged text.
-    var unitWidth = 64.0;
-    for (final unit in units.keys) {
-      final painter = TextPainter(
-        text: TextSpan(text: unit, style: style),
-        textScaler: MediaQuery.textScalerOf(context),
-        textDirection: Directionality.of(context),
-      )..layout();
-      if (painter.width + 48 > unitWidth) {
-        unitWidth = painter.width + 48;
-      }
-      painter.dispose();
-    }
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 18),
-      child: FormField<void>(
-        validator: (_) => _validate(key),
-        builder: (field) => Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            // Keep long labels, provenance and help outside the narrow controls.
-            // Only the capacity, unit and optional quota period share this row.
-            Text(label),
-            const SizedBox(height: 8),
-            Row(
-              key: ValueKey('resource-row-$key'),
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(
-                  flex: 1,
-                  child: Semantics(
+  Widget _textRow(String key, String label) => FormField<void>(
+    validator: (_) => _validate(key),
+    builder: (field) => _block(
+      AppFormRow(
+        label: label,
+        errorText: field.errorText,
+        child: _semantic(
+          label,
+          field.errorText,
+          AppTextField(
+            key: ValueKey('resource-$key'),
+            controller: _fields[key],
+            enabled: widget.enabled,
+            maxLength: key == 'hostname' ? 253 : 45,
+            hint: context.l10n.serverUnknown,
+            label: label,
+            textInputAction: TextInputAction.next,
+            autocorrect: false,
+            enableSuggestions: false,
+            onChanged: (_) => setState(() {}),
+          ),
+        ),
+      ),
+      key,
+    ),
+  );
+
+  void _setVcpu(int value) {
+    setState(() => _fields['vcpu']!.text = value == 0 ? '' : '$value');
+  }
+
+  Future<void> _enterVcpu() async {
+    final value = await showAppSheet<int>(
+      context,
+      title: context.l10n.resourceVcpuCount,
+      builder: (_) => _VcpuEntry(initial: _fields['vcpu']!.text.trim()),
+    );
+    if (value != null && mounted) _setVcpu(value);
+  }
+
+  Widget _vcpuRow() {
+    final l10n = context.l10n;
+    return FormField<void>(
+      validator: (_) => _validate('vcpu'),
+      builder: (field) {
+        final count = (int.tryParse(_fields['vcpu']!.text.trim()) ?? 0).clamp(
+          0,
+          ServerResources.maxVcpu,
+        );
+        return _block(
+          AppFormRow(
+            label: l10n.resourceVcpuCount,
+            errorText: field.errorText,
+            child: Opacity(
+              opacity: widget.enabled ? 1 : .45,
+              // Tapping the number (the gap between the two buttons) opens an
+              // exact entry sheet, so large counts do not need many taps.
+              child: GestureDetector(
+                onTap: widget.enabled ? _enterVcpu : null,
+                child: AppStepper(
+                  key: const ValueKey('resource-vcpu'),
+                  value: count,
+                  min: 0,
+                  max: ServerResources.maxVcpu,
+                  // 0 is the explicit "unknown" state, never stored as 0.
+                  format: (v) => v == 0 ? '—' : '$v',
+                  onChanged: widget.enabled ? _setVcpu : null,
+                  decrementLabel: l10n.uiFormVcpuDecrease,
+                  incrementLabel: l10n.uiFormVcpuIncrease,
+                  decrementKey: const ValueKey('resource-vcpu-decrease'),
+                  incrementKey: const ValueKey('resource-vcpu-increase'),
+                ),
+              ),
+            ),
+          ),
+          'vcpu',
+        );
+      },
+    );
+  }
+
+  Widget _capacityRow(String key, String label, String semanticLabel) {
+    final enabled = widget.enabled && !(key == 'trafficBytes' && _unlimited);
+    return FormField<void>(
+      validator: (_) => _validate(key),
+      builder: (field) {
+        final input = _semantic(
+          semanticLabel,
+          field.errorText,
+          AppTextField(
+            key: ValueKey('resource-$key'),
+            controller: _fields[key],
+            enabled: enabled,
+            maxLength: 32,
+            hint: context.l10n.serverUnknown,
+            label: semanticLabel,
+            textInputAction: TextInputAction.next,
+            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+            onChanged: (_) => setState(() {}),
+          ),
+        );
+        final unit = Semantics(
+          label: context.l10n.resourceUnitSemantics(semanticLabel),
+          child: IgnorePointer(
+            ignoring: !enabled,
+            child: Opacity(
+              opacity: enabled ? 1 : .45,
+              child: AppSegmented<int>(
+                key: ValueKey('resource-unit-$key'),
+                compact: true,
+                options: {
+                  for (final unit in units.entries) unit.value: unit.key,
+                },
+                value: _units[key]!,
+                onChanged: (factor) => setState(() => _units[key] = factor),
+              ),
+            ),
+          ),
+        );
+        return _block(
+          LayoutBuilder(
+            builder: (context, box) {
+              // AppFormRow pads 16 px per side and gives its label at most 45%.
+              final inner = box.maxWidth - 32;
+              final labelWidth = math.min(
+                _textWidth(label, 16).ceilToDouble() + 1,
+                inner * .45,
+              );
+              final segment = compactSegmentWidth(context, units.keys);
+              final inline = inner - labelWidth - 12 >= 64 + 8 + segment;
+              if (inline) {
+                return AppFormRow(
+                  key: ValueKey('resource-row-$key'),
+                  label: label,
+                  errorText: field.errorText,
+                  child: Row(
+                    children: [
+                      Expanded(child: input),
+                      const SizedBox(width: 8),
+                      unit,
+                    ],
+                  ),
+                );
+              }
+              // Four unit choices do not fit beside the value on a phone, so
+              // the selector sits right-aligned on its own line below it.
+              return Column(
+                key: ValueKey('resource-row-$key'),
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  AppFormRow(
                     label: label,
-                    hint: field.errorText,
-                    validationResult: field.hasError
-                        ? SemanticsValidationResult.invalid
-                        : SemanticsValidationResult.valid,
-                    child: TextFormField(
-                      key: ValueKey('resource-$key'),
-                      controller: _fields[key],
-                      enabled: enabled,
-                      maxLength: 32,
-                      textInputAction: TextInputAction.next,
-                      style: style,
-                      keyboardType: const TextInputType.numberWithOptions(
-                        decimal: true,
-                      ),
-                      decoration:
-                          _compactDecoration(context.l10n.resourceCapacity)
-                              .copyWith(
-                                // The shared row owns validation so its message can use
-                                // the full width below all three controls.
-                                error: field.hasError
-                                    ? const SizedBox.shrink()
-                                    : null,
-                              ),
-                      onChanged: (_) => setState(() {}),
-                    ),
+                    errorText: field.errorText,
+                    child: input,
                   ),
-                ),
-                const SizedBox(width: 6),
-                SizedBox(
-                  width: unitWidth,
-                  child: Semantics(
-                    label: context.l10n.resourceUnitSemantics(
-                      (label).toString(),
-                    ),
-                    child: DropdownButtonFormField<int>(
-                      key: ValueKey('resource-unit-$key'),
-                      initialValue: _units[key],
-                      isExpanded: true,
-                      isDense: false,
-                      itemHeight: null,
-                      selectedItemBuilder: (context) => [
-                        for (final unit in units.keys) Text(unit),
-                      ],
-                      style: style,
-                      iconSize: 16,
-                      decoration: _compactDecoration(context.l10n.resourceUnit),
-                      items: [
-                        for (final unit in units.entries)
-                          DropdownMenuItem(
-                            value: unit.value,
-                            child: Text(unit.key),
-                          ),
-                      ],
-                      onChanged: enabled
-                          ? (unit) => setState(() => _units[key] = unit!)
-                          : null,
-                    ),
-                  ),
-                ),
-                if (traffic) ...[
-                  const SizedBox(width: 6),
-                  Expanded(
-                    flex: 1,
-                    child: Semantics(
-                      label: context.l10n.resourceTrafficPeriod,
-                      child: DropdownButtonFormField<int>(
-                        key: const ValueKey('resource-traffic-period'),
-                        initialValue: _trafficPeriodMonths ?? 0,
-                        isExpanded: true,
-                        isDense: false,
-                        itemHeight: null,
-                        selectedItemBuilder: (context) => [
-                          if (_trafficPeriodMonths == null)
-                            _trafficPeriodValue(0)
-                          else
-                            const SizedBox.shrink(),
-                          for (final period
-                              in ServerResources.trafficPeriodsFor(context.l10n)
-                                  .keys)
-                            if (period == _trafficPeriodMonths)
-                              _trafficPeriodValue(period)
-                            else
-                              const SizedBox.shrink(),
-                        ],
-                        style: style,
-                        iconSize: 16,
-                        decoration: _compactDecoration(
-                          context.l10n.resourcePeriod,
-                        ),
-                        items: [
-                          DropdownMenuItem(
-                            value: 0,
-                            child: Builder(
-                              builder: (context) => Text(context.l10n.notSet),
-                            ),
-                          ),
-                          for (final period
-                              in ServerResources.trafficPeriodsFor(context.l10n)
-                                  .keys)
-                            DropdownMenuItem(
-                              value: period,
-                              child: Builder(
-                                builder: (context) => Text(
-                                  ServerResources.trafficPeriodsFor(
-                                    context.l10n,
-                                  )[period]!,
-                                ),
-                              ),
-                            ),
-                        ],
-                        onChanged: widget.enabled
-                            ? (value) => setState(
-                                () => _trafficPeriodMonths = value == 0
-                                    ? null
-                                    : value,
-                              )
-                            : null,
-                      ),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
+                    child: Align(
+                      alignment: AlignmentDirectional.centerEnd,
+                      child: FittedBox(fit: BoxFit.scaleDown, child: unit),
                     ),
                   ),
                 ],
+              );
+            },
+          ),
+          key,
+        );
+      },
+    );
+  }
+
+  static String _periodText(AppLocalizations l10n, int? months) {
+    final label = ServerResources.trafficPeriodsFor(l10n)[months];
+    return label == null
+        ? l10n.notSet
+        : l10n.resourceEveryPeriod(label.toLowerCase());
+  }
+
+  Future<void> _pickPeriod() async {
+    final newDefault =
+        widget.defaultTrafficPeriodMonths == 1 && widget.initial == null;
+    final result = await showFormPicker<int>(
+      context,
+      title: context.l10n.resourceTrafficPeriod,
+      selected: _trafficPeriodMonths ?? 0,
+      options: (l10n) => [
+        for (final months in ServerResources.trafficPeriodsFor(l10n).keys)
+          AppPickerOption(value: months, title: _periodText(l10n, months)),
+        AppPickerOption(value: 0, title: l10n.notSet),
+      ],
+      footnote: (l10n) =>
+          newDefault ? l10n.resourceNewPeriodHelp : l10n.resourcePeriodHelp,
+    );
+    if (result != null && mounted) {
+      setState(() => _trafficPeriodMonths = result == 0 ? null : result);
+    }
+  }
+
+  Widget _header() {
+    final p = context.palette;
+    final l10n = context.l10n;
+    final title = Text(
+      widget.importing ? l10n.resourceSixRequired : l10n.resourceHardware,
+      style: TextStyle(fontSize: 13, color: p.text2),
+    );
+    final inset = widget.margin.horizontal / 2 + 16;
+    if (!widget.collapsible) {
+      return Padding(
+        padding: EdgeInsets.fromLTRB(inset, 22, inset, 7),
+        child: title,
+      );
+    }
+    return Semantics(
+      button: true,
+      expanded: _expanded,
+      label: _expanded ? l10n.uiFormCollapse : l10n.uiFormExpand,
+      excludeSemantics: true,
+      onTap: () => setState(() => _expanded = !_expanded),
+      child: Material(
+        type: MaterialType.transparency,
+        child: InkWell(
+          key: const ValueKey('resource-toggle'),
+          onTap: () => setState(() => _expanded = !_expanded),
+          child: Padding(
+            padding: EdgeInsets.fromLTRB(inset, 22, inset, 7),
+            child: Row(
+              children: [
+                Expanded(child: title),
+                AnimatedRotation(
+                  turns: _expanded ? .5 : 0,
+                  duration: const Duration(milliseconds: 200),
+                  child: Icon(
+                    Icons.expand_more_rounded,
+                    size: 20,
+                    color: p.text2,
+                  ),
+                ),
               ],
             ),
-            if (field.hasError) ...[
-              const SizedBox(height: 6),
-              Semantics(
-                liveRegion: true,
-                child: Text(
-                  field.errorText!,
-                  style: Theme.of(context).textTheme.bodySmall
-                      ?.copyWith(color: Theme.of(context).colorScheme.error),
-                ),
-              ),
-            ],
-            if (_source(key) case final source?) ...[
-              const SizedBox(height: 6),
-              Text(source, style: Theme.of(context).textTheme.bodySmall),
-            ],
-            if (traffic) ...[
-              const SizedBox(height: 6),
-              Text(
-                widget.defaultTrafficPeriodMonths == 1 && widget.initial == null
-                    ? context.l10n.resourceNewPeriodHelp
-                    : context.l10n.resourcePeriodHelp,
-                style: Theme.of(context).textTheme.bodySmall,
-              ),
-            ],
-          ],
+          ),
         ),
       ),
     );
   }
 
   @override
-  Widget build(BuildContext context) => Form(
-    key: _form,
-    child: Column(
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final footnote = widget.importing
+        ? l10n.resourceImportHelp
+        : l10n.resourceLocalHelp;
+    return Form(
+      key: _form,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          _header(),
+          Visibility(
+            visible: _expanded,
+            maintainState: true,
+            child: AppSection(
+              topSpacing: 0,
+              margin: widget.margin,
+              footerWidget: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Text(footnote, style: context.footnoteStyle),
+                  const SizedBox(height: 6),
+                  Text(
+                    l10n.resourceUnlimitedHelp,
+                    style: context.footnoteStyle,
+                  ),
+                ],
+              ),
+              children: [
+                _vcpuRow(),
+                _capacityRow(
+                  'ramBytes',
+                  l10n.uiFormMemory,
+                  l10n.resourceMemoryCapacity,
+                ),
+                _capacityRow(
+                  'diskBytes',
+                  l10n.uiFormDisk,
+                  l10n.resourceDiskCapacity,
+                ),
+                _capacityRow(
+                  'trafficBytes',
+                  l10n.uiFormTraffic,
+                  l10n.resourceTrafficQuotaLabel,
+                ),
+                Opacity(
+                  opacity: widget.enabled ? 1 : .45,
+                  child: AppFormRow.pick(
+                    key: const ValueKey('resource-traffic-period'),
+                    label: l10n.resourceTrafficPeriod,
+                    value: _periodText(l10n, _trafficPeriodMonths),
+                    onTap: widget.enabled ? _pickPeriod : null,
+                  ),
+                ),
+                Semantics(
+                  toggled: _unlimited,
+                  child: AppSwitchRow(
+                    key: const ValueKey('resource-traffic-unlimited'),
+                    title: l10n.resourceUnlimitedTraffic,
+                    value: _unlimited,
+                    onChanged: widget.enabled
+                        ? (value) => setState(() => _unlimited = value)
+                        : null,
+                  ),
+                ),
+                _textRow('ip', l10n.resourceIpAddress),
+                _textRow('hostname', l10n.resourceHostname),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Exact vCPU entry used by the stepper's number. Empty means unknown.
+class _VcpuEntry extends StatefulWidget {
+  const _VcpuEntry({required this.initial});
+  final String initial;
+  @override
+  State<_VcpuEntry> createState() => _VcpuEntryState();
+}
+
+class _VcpuEntryState extends State<_VcpuEntry> {
+  late final _controller = TextEditingController(text: widget.initial);
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _done() {
+    final value = int.tryParse(_controller.text.trim()) ?? 0;
+    Navigator.pop(context, value.clamp(0, ServerResources.maxVcpu));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    return Column(
+      mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        SectionTitle(
-          widget.importing
-              ? context.l10n.resourceSixRequired
-              : context.l10n.resourceHardware,
+        AppSection(
+          topSpacing: 4,
+          children: [
+            AppFormRow(
+              label: l10n.resourceVcpuCount,
+              child: AppTextField(
+                key: const ValueKey('resource-vcpu-entry'),
+                controller: _controller,
+                autofocus: true,
+                maxLength: 5,
+                hint: l10n.serverUnknown,
+                label: l10n.resourceVcpuCount,
+                keyboardType: TextInputType.number,
+                textInputAction: TextInputAction.done,
+                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                onSubmitted: (_) => _done(),
+              ),
+            ),
+          ],
         ),
-        InfoNote(
-          widget.importing
-              ? context.l10n.resourceImportHelp
-              : context.l10n.resourceLocalHelp,
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+          child: Row(
+            children: [
+              Expanded(
+                child: AppButton(
+                  key: const ValueKey('resource-vcpu-unknown'),
+                  label: l10n.uiFormSetUnknown,
+                  kind: AppButtonKind.tonal,
+                  onPressed: () => Navigator.pop(context, 0),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: AppButton(
+                  key: const ValueKey('resource-vcpu-done'),
+                  label: l10n.uiFormDone,
+                  onPressed: _done,
+                ),
+              ),
+            ],
+          ),
         ),
-        _field('ip', context.l10n.resourceIpAddress),
-        _field('hostname', context.l10n.resourceHostname),
-        _capacityField('diskBytes', context.l10n.resourceDiskCapacity),
-        _capacityField(
-          'trafficBytes',
-          context.l10n.resourceTrafficQuotaLabel,
-          traffic: true,
-        ),
-        SwitchListTile(
-          key: const ValueKey('resource-traffic-unlimited'),
-          contentPadding: EdgeInsets.zero,
-          value: _unlimited,
-          onChanged: widget.enabled
-              ? (value) => setState(() => _unlimited = value)
-              : null,
-          title: Text(context.l10n.resourceUnlimitedTraffic),
-        ),
-        Text(
-          context.l10n.resourceUnlimitedHelp,
-          style: Theme.of(context).textTheme.bodySmall,
-        ),
-        const SizedBox(height: 18),
-        _capacityField('ramBytes', context.l10n.resourceMemoryCapacity),
-        _field('vcpu', context.l10n.resourceVcpuCount),
       ],
-    ),
-  );
+    );
+  }
 }

@@ -3594,6 +3594,64 @@ class AppLocalizationsEn extends AppLocalizations {
   String get serverSave => 'Save server';
 
   @override
+  String get uiFormProvider => 'Provider';
+
+  @override
+  String get uiFormPurpose => 'Purpose';
+
+  @override
+  String get uiFormRegion => 'Region';
+
+  @override
+  String get uiFormSpec => 'Spec note';
+
+  @override
+  String get uiFormOptional => 'Optional';
+
+  @override
+  String get uiFormNameHint => 'e.g. HK-01';
+
+  @override
+  String get uiFormDone => 'Done';
+
+  @override
+  String get uiFormSetUnknown => 'Set unknown';
+
+  @override
+  String get uiFormPickDate => 'Choose date';
+
+  @override
+  String get uiFormUnknownCostFootnote =>
+      'Unknown cost is not counted as 0 and is left out of cost totals.';
+
+  @override
+  String get uiFormVcpuDecrease => 'Decrease vCPU';
+
+  @override
+  String get uiFormVcpuIncrease => 'Increase vCPU';
+
+  @override
+  String get uiFormCollapse => 'Collapse hardware details';
+
+  @override
+  String get uiFormExpand => 'Expand hardware details';
+
+  @override
+  String get uiFormMemory => 'Memory';
+
+  @override
+  String get uiFormDisk => 'Disk';
+
+  @override
+  String get uiFormTraffic => 'Traffic';
+
+  @override
+  String get uiFormBillingPrepaid => 'Prepaid';
+
+  @override
+  String get uiFormBillingMetered => 'Metered';
+
+  @override
   String get serverWaitForOperation =>
       'Wait for the current operation to finish';
 

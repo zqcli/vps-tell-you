@@ -9,6 +9,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:vps_tell_you/app.dart';
 import 'package:vps_tell_you/cloud/cloud_controller.dart';
+import 'package:vps_tell_you/core/ui/ui.dart';
 import 'package:vps_tell_you/data/ledger_store.dart';
 import 'package:vps_tell_you/l10n/generated/app_localizations.dart';
 import 'package:vps_tell_you/l10n/locale_preference.dart';
@@ -272,10 +273,10 @@ void main() {
         MaterialPageRoute(builder: (_) => ServerForm(controller: controller)),
       );
       await tester.pumpAndSettle();
-      final field = find.byType(TextFormField).first;
+      final field = find.byType(AppTextField).first;
       await tester.enterText(field, 'User draft 原样保留');
       final state = tester.state(find.byType(ServerForm));
-      final input = tester.widget<TextFormField>(field).controller;
+      final input = tester.widget<AppTextField>(field).controller;
       final route = ModalRoute.of(tester.element(find.byType(ServerForm)));
       final navigation = navigator.currentState;
       await controller.setLanguage(LocalePreference.english);
@@ -285,7 +286,7 @@ void main() {
         tester.widget<ServerForm>(find.byType(ServerForm)).controller,
         same(controller),
       );
-      expect(tester.widget<TextFormField>(field).controller, same(input));
+      expect(tester.widget<AppTextField>(field).controller, same(input));
       expect(
         ModalRoute.of(tester.element(find.byType(ServerForm))),
         same(route),

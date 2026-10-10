@@ -1,18 +1,22 @@
 import 'dart:io';
 import 'dart:ui' as ui;
 
+import 'package:flutter/cupertino.dart' show CupertinoDatePicker;
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:vps_tell_you/core/app_theme.dart';
+import 'package:vps_tell_you/core/ui/ui.dart';
 import 'package:vps_tell_you/core/value_types.dart';
 import 'package:vps_tell_you/data/ledger_store.dart';
 import 'package:vps_tell_you/servers/ledger_controller.dart';
 import 'package:vps_tell_you/servers/server_form.dart';
 import 'package:vps_tell_you/servers/server_record.dart';
 import 'package:vps_tell_you/servers/server_resources.dart';
+
+import 'support/form_test_helpers.dart';
 
 void main() {
   final evidence = Platform.environment['VPS_BILLING_REVIEW_EVIDENCE_DIR'];
@@ -160,21 +164,42 @@ void main() {
     await tester.pumpAndSettle();
   }
 
+  /// Billing is a segmented control; currency and cycle are picker sheets.
   Future<void> select<T>(WidgetTester tester, String id, T value) async {
     await reveal(tester, field(id));
-    final dropdown = tester.widget<DropdownButton<T>>(
-      find.descendant(of: field(id), matching: find.byType(DropdownButton<T>)),
+    if (value is BillingKind) {
+      final label = switch (value) {
+        BillingKind.prepaid => '预付',
+        BillingKind.metered => '按量',
+        BillingKind.unknown => '未知',
+      };
+      await tester.tap(
+        find.descendant(of: field(id), matching: find.text(label)),
+      );
+      await tester.pumpAndSettle();
+      return;
+    }
+    await chooseOption(
+      tester,
+      field(id),
+      value is int ? (value == 12 ? '每年' : '每 $value 个月') : '$value',
     );
-    final option = dropdown.items!.singleWhere((item) => item.value == value);
-    await tester.tap(field(id));
-    await tester.pumpAndSettle();
-    await tester.tap(find.byWidget(option.child).last);
-    await tester.pumpAndSettle();
   }
 
-  Future<void> save(WidgetTester tester) async {
-    await tester.tap(find.text('保存服务器'));
-    await tester.pumpAndSettle();
+  Future<void> save(WidgetTester tester) => tapSave(tester);
+
+  Future<void> date(WidgetTester tester, String id, DateTime? value) =>
+      pickDate(tester, field(id), value);
+
+  String rowDate(WidgetTester tester, String id) {
+    final texts = find.descendant(of: field(id), matching: find.byType(Text));
+    return tester
+        .widgetList<Text>(texts)
+        .map((t) => t.data ?? '')
+        .firstWhere(
+          (t) => RegExp(r'^\d{4}-\d{2}-\d{2}$').hasMatch(t),
+          orElse: () => '',
+        );
   }
 
   Future<void> capture(WidgetTester tester, String name) async {
@@ -193,40 +218,21 @@ void main() {
   }
 
   void expectFullDate(WidgetTester tester, String id, String expected) {
-    final input = tester.widget<TextFormField>(field(id));
-    expect(input.controller!.text, expected);
-    expect(input.controller!.text, isNot(contains('\n')));
-    final editor = find.descendant(
-      of: field(id),
-      matching: find.byType(EditableText),
+    final text = find.descendant(of: field(id), matching: find.text(expected));
+    expect(text, findsOneWidget);
+    final paragraph = tester.renderObject<RenderParagraph>(text);
+    expect(paragraph.didExceedMaxLines, isFalse);
+    expect(
+      paragraph.getBoxesForSelection(
+        TextSelection(baseOffset: 0, extentOffset: expected.length),
+      ),
+      hasLength(1),
+      reason: 'The ISO date must stay complete on one line',
     );
-    final render = tester.state<EditableTextState>(editor).renderEditable;
-    for (var offset = 0; offset < expected.length; offset++) {
-      final boxes = render.getBoxesForSelection(
-        TextSelection(baseOffset: offset, extentOffset: offset + 1),
-      );
-      expect(boxes, isNotEmpty);
-      for (final box in boxes) {
-        expect(box.left, greaterThanOrEqualTo(-0.01));
-        expect(box.right, lessThanOrEqualTo(render.size.width + 0.01));
-        expect(box.top, greaterThanOrEqualTo(-0.01));
-        expect(box.bottom, lessThanOrEqualTo(render.size.height + 0.01));
-      }
-    }
-    // Flutter snaps the caret to physical pixels after computing text metrics.
-    // The glyph boxes above remain strict; only this raster alignment may add
-    // up to one physical pixel at the editable's edge.
-    final rasterTolerance = 1 / tester.view.devicePixelRatio + 0.01;
-    for (var offset = 0; offset <= expected.length; offset++) {
-      final caret = render.getLocalRectForCaret(TextPosition(offset: offset));
-      expect(caret.left, greaterThanOrEqualTo(-0.01));
-      expect(caret.right, lessThanOrEqualTo(render.size.width + 2.01));
-      expect(caret.top, greaterThanOrEqualTo(-rasterTolerance));
-      expect(
-        caret.bottom,
-        lessThanOrEqualTo(render.size.height + rasterTolerance),
-      );
-    }
+    expect(
+      tester.getRect(text).right,
+      lessThanOrEqualTo(tester.getRect(field(id)).right),
+    );
   }
 
   for (final width in [320.0, 360.0, 390.0]) {
@@ -236,31 +242,16 @@ void main() {
       await mount(tester, width: width);
       await reveal(tester, find.byKey(const ValueKey('row-fees')));
       await capture(tester, 'fee-row-${width.toInt()}-2x');
-      await reveal(tester, find.byKey(const ValueKey('row-dates')));
-      await tester.pumpAndSettle();
+      await reveal(tester, field('start'));
       final start = tester.getRect(field('start'));
       final due = tester.getRect(field('due'));
-      expect(start.top, closeTo(due.top, 0.01));
-      expect(start.right, lessThan(due.left));
-      expect(due.right, lessThanOrEqualTo(width - 20));
+      // Date rows are stacked full-width rows of the group.
+      expect(start.bottom, lessThanOrEqualTo(due.top + 0.01));
+      expect(due.right, lessThanOrEqualTo(width - 16));
+      expect(start.height, greaterThanOrEqualTo(48));
       expectFullDate(tester, 'start', '2024-02-29');
       expectFullDate(tester, 'due', '2027-01-01');
       await capture(tester, 'complete-dates-${width.toInt()}-2x');
-      for (final entry in {
-        'amount': '金额',
-        'currency': '币种',
-        'cycle': '周期',
-      }.entries) {
-        final label = find.descendant(
-          of: field(entry.key),
-          matching: find.text(entry.value),
-        );
-        expect(
-          tester.renderObject<RenderParagraph>(label).didExceedMaxLines,
-          isFalse,
-          reason: '${entry.value} must remain fully readable at $width / 2x',
-        );
-      }
       await save(tester);
       final saved = (await store.servers()).single;
       expect(saved.startDate, record.startDate);
@@ -271,37 +262,25 @@ void main() {
     });
   }
 
-  testWidgets('date reflow and next action preserve exact edits and cursor', (
-    tester,
-  ) async {
-    final scale = ValueNotifier<double>(1);
-    addTearDown(scale.dispose);
-    await mount(tester, width: 390, scale: scale);
+  testWidgets('date sheet sets, clears and keeps exact values', (tester) async {
+    await mount(tester, width: 390, scale: ValueNotifier<double>(1));
     await fill(tester, 'amount', '9999999999.99');
-    await fill(tester, 'start', '2026-10-06');
-    await fill(tester, 'due', '2028-02-29');
-    final controller = tester.widget<TextFormField>(field('start')).controller!;
-    controller.selection = const TextSelection.collapsed(offset: 7);
-    tester.view.physicalSize = const Size(320, 844);
-    scale.value = 2;
-    await tester.pumpAndSettle();
-    await reveal(tester, field('start'));
-    expect(
-      tester.widget<TextFormField>(field('start')).controller,
-      same(controller),
-    );
-    expect(controller.selection.baseOffset, 7);
+    await date(tester, 'start', DateTime(2026, 10, 6));
+    await date(tester, 'due', DateTime(2028, 2, 29));
     expectFullDate(tester, 'start', '2026-10-06');
     expectFullDate(tester, 'due', '2028-02-29');
-    await tester.showKeyboard(field('start'));
-    await tester.testTextInput.receiveAction(TextInputAction.next);
+    // Reopening starts from the stored date; closing without "done" keeps it.
+    await reveal(tester, field('start'));
+    await tester.tap(field('start'));
     await tester.pumpAndSettle();
-    final dueEditor = tester.widget<EditableText>(
-      find.descendant(of: field('due'), matching: find.byType(EditableText)),
-    );
-    expect(dueEditor.focusNode.hasFocus, isTrue);
-    expect(controller.text, '2026-10-06');
-    FocusManager.instance.primaryFocus?.unfocus();
+    expect(find.byType(CupertinoDatePicker), findsOneWidget);
+    await tester.tap(find.byKey(const ValueKey('app-sheet-close')));
+    await tester.pumpAndSettle();
+    expectFullDate(tester, 'start', '2026-10-06');
+    // "Set unknown" clears the date.
+    await date(tester, 'start', null);
+    expect(rowDate(tester, 'start'), isEmpty);
+    await date(tester, 'start', DateTime(2026, 10, 6));
     await save(tester);
     final saved = (await store.servers()).single;
     expect(saved.startDate, const LedgerDate(2026, 10, 6));
@@ -312,15 +291,32 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('full-width row errors retain field identity and semantics', (
+  testWidgets('resizing and text scaling keep every draft and the cursor', (
     tester,
   ) async {
+    final scale = ValueNotifier<double>(1);
+    addTearDown(scale.dispose);
+    await mount(tester, width: 390, scale: scale);
+    await fill(tester, 'amount', '9999999999.99');
+    final controller = fieldController(tester, 'field-amount');
+    controller.selection = const TextSelection.collapsed(offset: 7);
+    tester.view.physicalSize = const Size(320, 844);
+    scale.value = 2;
+    await tester.pumpAndSettle();
+    await reveal(tester, field('amount'));
+    expect(fieldController(tester, 'field-amount'), same(controller));
+    expect(controller.text, '9999999999.99');
+    expect(controller.selection.baseOffset, 7);
+    expectFullDate(tester, 'start', '2024-02-29');
+    expectFullDate(tester, 'due', '2027-01-01');
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('row errors retain field identity and semantics', (tester) async {
     final semantics = tester.ensureSemantics();
     try {
       await mount(tester);
       await fill(tester, 'amount', '1.234');
-      await fill(tester, 'start', '2026-02-29');
-      await fill(tester, 'due', '2027-13-01');
       await fill(tester, 'notes', 'Preserve all corrections');
       await save(tester);
       expect(field('amount').hitTestable(), findsOneWidget);
@@ -336,37 +332,20 @@ void main() {
       expect(node.validationResult, ui.SemanticsValidationResult.invalid);
       await capture(tester, 'amount-error-320-2x');
       await fill(tester, 'amount', '0.01');
+      // Dates can only be set through the picker, so an invalid order is the
+      // one date error a user can produce; it is marked on the due row.
+      await date(tester, 'start', DateTime(2026, 10, 6));
+      await date(tester, 'due', DateTime(2026, 10, 6));
       await save(tester);
-      expect(field('start').hitTestable(), findsOneWidget);
-      expect(find.text('开始日期：'), findsOneWidget);
-      expect(find.text('到期日期：'), findsOneWidget);
-      final dateErrors = find.text('请使用有效日期，例如 2026-10-06');
-      expect(dateErrors, findsNWidgets(2));
-      for (final error in dateErrors.evaluate()) {
-        expect(
-          (error.renderObject! as RenderParagraph).didExceedMaxLines,
-          isFalse,
-        );
-      }
-      for (final id in ['start', 'due']) {
-        await reveal(tester, field(id));
-        await tester.pumpAndSettle();
-        node = tester.getSemantics(field(id));
-        expect(node.label, contains(id == 'start' ? '服务开始日（选填）' : '服务到期日（选填）'));
-        expect(node.hint, contains('请使用有效日期，例如 2026-10-06'));
-        expect(node.validationResult, ui.SemanticsValidationResult.invalid);
-      }
-      await capture(tester, 'both-date-errors-320-2x');
-      await fill(tester, 'start', '2026-10-06');
-      await fill(tester, 'due', '2026-10-06');
-      await save(tester);
-      expect(find.text('开始日期：'), findsNothing);
-      expect(find.text('到期日期：'), findsOneWidget);
       expect(find.text('到期日必须晚于开始日').hitTestable(), findsOneWidget);
+      node = tester.getSemantics(field('due'));
+      expect(node.label, contains('服务到期日（选填）'));
+      expect(node.hint, contains('到期日必须晚于开始日'));
+      expect(node.validationResult, ui.SemanticsValidationResult.invalid);
       node = tester.getSemantics(field('start'));
       expect(node.validationResult, ui.SemanticsValidationResult.valid);
-      expect(node.hint, isNot(contains('请使用有效日期')));
-      await fill(tester, 'due', '2027-01-01');
+      await capture(tester, 'date-error-320-2x');
+      await date(tester, 'due', DateTime(2027, 1, 1));
       await save(tester);
       final saved = (await store.servers()).single;
       expect(saved.amountMinor, 1);
@@ -379,7 +358,7 @@ void main() {
     }
   });
 
-  testWidgets('all compact payment periods retain their full spoken meaning', (
+  testWidgets('all payment periods retain their full spoken meaning', (
     tester,
   ) async {
     final semantics = tester.ensureSemantics();
@@ -390,14 +369,8 @@ void main() {
         final node = tester.getSemantics(field('cycle'));
         expect(node.label, contains('续费周期'));
         expect(node.label, contains(months == 12 ? '每年' : '每 $months 个月'));
-        final amountRect = tester.getRect(field('amount'));
-        final currencyRect = tester.getRect(field('currency'));
-        final cycleRect = tester.getRect(field('cycle'));
-        expect(amountRect.top, closeTo(currencyRect.top, 0.01));
-        expect(currencyRect.top, closeTo(cycleRect.top, 0.01));
-        expect(amountRect.right, lessThan(currencyRect.left));
-        expect(currencyRect.right, lessThan(cycleRect.left));
-        expect(cycleRect.right, lessThanOrEqualTo(300));
+        expect(field('cycle').hitTestable(), findsOneWidget);
+        expect(tester.getRect(field('cycle')).right, lessThanOrEqualTo(320));
       }
       await capture(tester, 'compact-period-320-2x');
       await tester.tap(field('cycle'));
@@ -424,7 +397,6 @@ void main() {
   ) async {
     await mount(tester);
     await fill(tester, 'amount', '1.234');
-    await fill(tester, 'start', 'not-a-date');
     await save(tester);
     await select(tester, 'billing', BillingKind.unknown);
     expect(field('amount'), findsNothing);
@@ -439,8 +411,8 @@ void main() {
     await tester.pumpAndSettle();
     await select(tester, 'billing', BillingKind.prepaid);
     await fill(tester, 'amount', '0');
-    await fill(tester, 'start', '');
-    await fill(tester, 'due', '');
+    await date(tester, 'start', null);
+    await date(tester, 'due', null);
     await save(tester);
     saved = (await store.servers()).single;
     expect(saved.billing, BillingKind.prepaid);
@@ -489,28 +461,24 @@ void main() {
         .map((p) => p.toMap())
         .toList();
     await mount(tester);
-    expect(
-      tester
-          .widget<DropdownButtonFormField<BillingKind>>(field('billing'))
-          .onChanged,
-      isNull,
-    );
-    expect(
-      tester
-          .widget<DropdownButton<int>>(
-            find.descendant(
-              of: field('cycle'),
-              matching: find.byType(DropdownButton<int>),
-            ),
-          )
-          .onChanged,
-      isNull,
-    );
-    for (final id in ['start', 'due']) {
-      expect(tester.widget<TextFormField>(field(id)).enabled, isFalse);
+    // Locked: billing, cycle and dates explain the lock and never change.
+    for (final id in ['cycle', 'start', 'due']) {
+      await reveal(tester, field(id));
+      await tester.tap(field(id));
+      await tester.pumpAndSettle();
+      expect(find.byType(BottomSheet), findsNothing);
+      expect(find.byType(CupertinoDatePicker), findsNothing);
     }
-    await reveal(tester, field('start'));
+    await reveal(tester, field('billing'));
+    await tester.tap(
+      find.descendant(of: field('billing'), matching: find.text('按量')),
+      warnIfMissed: false,
+    );
     await tester.pumpAndSettle();
+    expect(
+      tester.widget<AppSegmented<BillingKind>>(field('billing')).value,
+      BillingKind.prepaid,
+    );
     expectFullDate(tester, 'start', record.startDate.toString());
     expectFullDate(tester, 'due', record.dueDate.toString());
     await capture(tester, 'locked-dates-320-2x');

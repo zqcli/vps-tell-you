@@ -5,12 +5,20 @@ import '../l10n/generated/app_localizations.dart';
 import 'dart:math' as math;
 import 'dart:ui' show SemanticsValidationResult;
 
+import 'package:flutter/cupertino.dart'
+    show
+        CupertinoDatePicker,
+        CupertinoDatePickerMode,
+        CupertinoTextThemeData,
+        CupertinoTheme,
+        CupertinoThemeData;
 import 'package:flutter/material.dart';
 
 import '../cloud/provider_pages.dart';
 import '../cloud/provider_record.dart';
 import '../core/app_theme.dart';
 import '../core/form_feedback.dart';
+import '../core/ui/ui.dart';
 import '../core/value_types.dart';
 import 'ledger_controller.dart';
 import 'server_record.dart';
@@ -53,7 +61,6 @@ class _ServerFormState extends State<ServerForm> {
   }
 
   final _resources = GlobalKey<ServerResourceFieldsState>();
-  final _cycleFocus = FocusNode();
   late final Map<String, TextEditingController> fields;
   late BillingKind billing;
   late String currency;
@@ -68,7 +75,6 @@ class _ServerFormState extends State<ServerForm> {
   @override
   void initState() {
     super.initState();
-    _cycleFocus.addListener(_refreshCycleFocus);
     final s = widget.record;
     selectedProvider = widget.businessProvider;
     fields = {
@@ -100,12 +106,8 @@ class _ServerFormState extends State<ServerForm> {
     }
   }
 
-  void _refreshCycleFocus() => setState(() {});
-
   @override
   void dispose() {
-    _cycleFocus.removeListener(_refreshCycleFocus);
-    _cycleFocus.dispose();
     for (final field in fields.values) {
       field.dispose();
     }
@@ -145,466 +147,389 @@ class _ServerFormState extends State<ServerForm> {
     return null;
   }
 
-  Widget field(
-    String id,
-    String label, {
-    String? hint,
-    bool required = false,
-    int max = 80,
-    int lines = 1,
-  }) => Padding(
-    padding: const EdgeInsets.only(bottom: 18),
-    child: TextFormField(
-      key: ValueKey('field-$id'),
-      controller: fields[id],
-      enabled: !saving && !(termsLocked && (id == 'start' || id == 'due')),
-      maxLines: lines,
-      maxLength: max,
-      keyboardType: lines > 1 ? TextInputType.multiline : TextInputType.text,
-      textInputAction: lines > 1
-          ? TextInputAction.newline
-          : TextInputAction.next,
-      autocorrect: id != 'host',
-      decoration: InputDecoration(
-        labelText: label,
-        hintText: hint,
-        counterText: '',
-        errorMaxLines: 4,
-      ),
-      validator: (value) =>
-          _validateField(id, label, value, required: required),
-    ),
-  );
+  // ---- grouped form rows -------------------------------------------------
 
-  Widget select<T>(
-    String label,
-    T value,
-    List<DropdownMenuItem<T>> items,
-    ValueChanged<T?> changed, {
-    String? id,
-    Map<T, String>? selectedLabels,
-    bool compact = false,
-    String? shortLabel,
-  }) {
-    final enabled =
-        !saving && !(termsLocked && (id == 'billing' || id == 'cycle'));
-    final dropdown = Semantics(
-      label: compact ? label : null,
-      child: DropdownButtonFormField<T>(
-        key: id == null ? null : ValueKey('field-$id'),
-        initialValue: value,
-        isExpanded: true,
-        iconSize: compact ? 16 : 24,
-        isDense: id == null,
-        itemHeight: null,
-        style: id == null ? null : Theme.of(context).textTheme.bodyMedium,
-        selectedItemBuilder: id == null
-            ? null
-            : (context) => [
-                for (final item in items)
-                  item.value == value
-                      ? selectedLabels == null
-                            ? item.child
-                            : Semantics(
-                                label: compact && item.child is Text
-                                    ? (item.child as Text).data
-                                    : null,
-                                excludeSemantics: compact,
-                                child: Text(selectedLabels[value]!),
-                              )
-                      : const SizedBox.shrink(),
-              ],
-        decoration: compact
-            ? InputDecoration(
-                labelText: shortLabel ?? label,
-                floatingLabelBehavior: FloatingLabelBehavior.always,
-                contentPadding: const EdgeInsets.symmetric(
-                  horizontal: 4,
-                  vertical: 14,
-                ),
-                constraints: const BoxConstraints(minHeight: 48),
-              )
-            : InputDecoration(labelText: label),
-        items: items,
-        onChanged: enabled ? changed : null,
-      ),
-    );
-    return Padding(
-      key: id == null ? null : ValueKey('row-$id'),
-      padding: EdgeInsets.only(bottom: compact ? 0 : 18),
-      child: dropdown,
-    );
-  }
-
-  Widget _compactInput(
-    String id,
-    String label,
-    String semanticLabel,
-    String? error, {
-    bool date = false,
-  }) => Semantics(
-    label: semanticLabel,
+  Widget _semantic(String label, String? error, Widget child) => Semantics(
+    label: label,
     hint: error,
     validationResult: error == null
         ? SemanticsValidationResult.valid
         : SemanticsValidationResult.invalid,
-    child: TextFormField(
-      key: ValueKey('field-$id'),
-      controller: fields[id],
-      enabled: !saving && !(termsLocked && date),
-      maxLength: date ? 10 : 13,
-      minLines: date ? 1 : null,
-      // Soft wrapping preserves the complete date at enlarged text sizes. It
-      // never inserts a newline into the stored ISO date or changes parsing.
-      maxLines: date ? null : 1,
-      style: Theme.of(context).textTheme.bodyMedium,
-      keyboardType: date
-          ? TextInputType.datetime
-          : const TextInputType.numberWithOptions(decimal: true),
-      textInputAction: TextInputAction.next,
-      autocorrect: false,
-      enableSuggestions: false,
-      decoration: InputDecoration(
-        labelText: label,
-        hintText: date ? 'YYYY-MM-DD' : null,
-        floatingLabelBehavior: FloatingLabelBehavior.always,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 4, vertical: 14),
-        counterText: '',
-        error: error == null ? null : const SizedBox.shrink(),
+    child: child,
+  );
+
+  Widget _textRow(
+    String id,
+    String label, {
+    required String semanticLabel,
+    String? hint,
+    bool required = false,
+    int max = 80,
+    TextStyle? style,
+  }) => FormField<void>(
+    validator: (_) =>
+        _validateField(id, label, fields[id]!.text, required: required),
+    builder: (state) => AppFormRow(
+      label: label,
+      required: required,
+      errorText: state.errorText,
+      child: _semantic(
+        semanticLabel,
+        state.errorText,
+        AppTextField(
+          key: ValueKey('field-$id'),
+          controller: fields[id],
+          enabled: !saving,
+          maxLength: max,
+          hint: hint ?? context.l10n.uiFormOptional,
+          label: semanticLabel,
+          style: style,
+          textInputAction: TextInputAction.next,
+          autocorrect: id != 'host',
+          enableSuggestions: id != 'host',
+        ),
       ),
     ),
   );
 
-  Widget _rowError(String error, {String? label}) => Padding(
-    padding: const EdgeInsets.only(top: 6),
-    child: Semantics(
-      liveRegion: true,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          if (label != null)
-            Text(
-              '$label：',
-              style: Theme.of(context).textTheme.bodySmall
-                  ?.copyWith(color: Theme.of(context).colorScheme.error),
-            ),
-          Text(
-            error,
-            style: Theme.of(context).textTheme.bodySmall
-                ?.copyWith(color: Theme.of(context).colorScheme.error),
-          ),
-        ],
-      ),
-    ),
+  void _explainLock() => showAppToast(
+    context,
+    context.l10n.serverPaymentLockHelp,
+    duration: const Duration(seconds: 6),
   );
-
-  double _textWidth(String text, TextStyle? style) {
-    final painter = TextPainter(
-      text: TextSpan(text: text, style: style),
-      textScaler: MediaQuery.textScalerOf(context),
-      textDirection: Directionality.of(context),
-      locale: Localizations.maybeLocaleOf(context),
-    )..layout();
-    final width = painter.width;
-    painter.dispose();
-    return width;
-  }
-
-  double _floatingLabelWidth(String label) {
-    final theme = Theme.of(context);
-    final style = theme.textTheme.bodyLarge?.merge(
-      WidgetStateProperty.resolveAs(
-        theme.inputDecorationTheme.floatingLabelStyle ??
-            theme.inputDecorationTheme.labelStyle,
-        const <WidgetState>{},
-      ),
-    );
-    // Material scales the floating label after applying the text scaler.
-    return (_textWidth(label, style) * .75).ceilToDouble();
-  }
 
   String _cycleDescription(int months, AppLocalizations l10n) =>
       months == 12 ? l10n.serverEveryYear : l10n.serverEveryMonths(months);
 
-  Widget _cycleSelect(Map<int, String> labels) {
-    final enabled = !saving && !termsLocked;
-    final style = Theme.of(context).textTheme.bodyMedium;
-    var menuWidth = 128.0;
-    for (final months in labels.keys) {
-      menuWidth = math.max(
-        menuWidth,
-        (_textWidth(_cycleDescription(months, context.l10n), style) + 40)
-            .ceilToDouble(),
-      );
-    }
-    return Padding(
-      key: const ValueKey('row-cycle'),
-      padding: EdgeInsets.zero,
-      child: Semantics(
-        label: context.l10n.serverRenewalCycle,
-        child: InputDecorator(
-          key: const ValueKey('field-cycle'),
-          isFocused: enabled && _cycleFocus.hasFocus,
-          decoration: InputDecoration(
-            labelText: context.l10n.resourcePeriod,
-            enabled: enabled,
-            floatingLabelBehavior: FloatingLabelBehavior.always,
-            // Put vertical padding inside the button so tapping above or
-            // below the selected text still opens the menu. Keep the label
-            // inset aligned with the adjacent amount and currency fields.
-            contentPadding: const EdgeInsets.symmetric(horizontal: 4),
-            constraints: const BoxConstraints(minHeight: 48),
-          ),
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
-            child: DropdownButtonHideUnderline(
-              child: DropdownButton<int>(
-                value: cycle,
-                focusNode: _cycleFocus,
-                isExpanded: true,
-                itemHeight: null,
-                style: style,
-                iconSize: 16,
-                icon: const Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 4),
-                  child: Icon(Icons.arrow_drop_down),
-                ),
-                padding: const EdgeInsets.symmetric(vertical: 14),
-                // The closed field follows the short selected value. The popup
-                // independently fits the full period names at the text scale;
-                // Flutter bounds it to the available viewport for legacy values.
-                menuWidth: menuWidth,
-                borderRadius: BorderRadius.circular(12),
-                selectedItemBuilder: (context) => [
-                  for (final months in labels.keys)
-                    months == cycle
-                        ? Semantics(
-                            label: _cycleDescription(months, context.l10n),
-                            excludeSemantics: true,
-                            child: Text(labels[months]!),
-                          )
-                        : const SizedBox.shrink(),
-                ],
-                items: [
-                  for (final months in labels.keys)
-                    DropdownMenuItem(
-                      value: months,
-                      child: Builder(
-                        builder: (context) =>
-                            Text(_cycleDescription(months, context.l10n)),
-                      ),
-                    ),
-                ],
-                onChanged: enabled
-                    ? (months) => setState(() => cycle = months!)
-                    : null,
-              ),
-            ),
-          ),
-        ),
-      ),
+  Future<void> _pickGroup() async {
+    final result = await showFormPicker<String>(
+      context,
+      title: context.l10n.serverGroup,
+      selected: groupId ?? '',
+      options: (l10n) => [
+        AppPickerOption(value: '', title: l10n.ungrouped),
+        for (final group in widget.controller.groups)
+          AppPickerOption(value: group.id, title: group.name),
+      ],
     );
+    if (result != null && mounted) {
+      setState(() => groupId = result == '' ? null : result);
+    }
   }
 
-  Widget _feeRow() {
-    final amountLabel = billing == BillingKind.metered
-        ? context.l10n.serverMonthlyEstimate
-        : context.l10n.serverRenewalAmount;
-    final standardCycleLabels = {
-      1: context.l10n.resourceMonth,
-      3: context.l10n.resourceQuarter,
-      6: context.l10n.serverHalfYear,
-      12: context.l10n.resourceYear,
-      24: context.l10n.serverTwoYears,
-      36: context.l10n.serverThreeYears,
-    };
-    final cycleLabels = {
-      ...standardCycleLabels,
-      // Keep an unexpected legacy value visible until the user changes it;
-      // building the form must not assert or silently normalize stored data.
-      if (!standardCycleLabels.containsKey(cycle))
-        cycle: context.l10n.serverCompactMonths(cycle),
-    };
-    final valueStyle = Theme.of(context).textTheme.bodyMedium;
-    var currencyWidth = 64.0;
-    for (final currency in Money.currencies) {
-      currencyWidth = math.max(
-        currencyWidth,
-        _textWidth(currency, valueStyle) + 44,
-      );
+  Future<void> _pickCurrency() async {
+    final result = await showFormPicker<String>(
+      context,
+      title: context.l10n.serverOriginalCurrency,
+      selected: currency,
+      options: (_) => [
+        for (final code in Money.currencies)
+          AppPickerOption(value: code, title: code),
+      ],
+    );
+    if (result != null && mounted) setState(() => currency = result);
+  }
+
+  Future<void> _pickCycle() async {
+    final months = {1, 3, 6, 12, 24, 36, cycle}.toList()..sort();
+    final result = await showFormPicker<int>(
+      context,
+      title: context.l10n.serverRenewalCycle,
+      selected: cycle,
+      options: (l10n) => [
+        for (final m in months)
+          AppPickerOption(value: m, title: _cycleDescription(m, l10n)),
+      ],
+    );
+    if (result != null && mounted) setState(() => cycle = result);
+  }
+
+  Future<void> _pickDate(String id, String label) async {
+    final current = LedgerDate.tryParse(fields[id]!.text.trim());
+    final today = LedgerDate.today(widget.controller.clock());
+    final result = await showAppSheet<String>(
+      context,
+      title: label,
+      builder: (_) => _DateSheet(initial: current ?? today),
+    );
+    if (result != null && mounted) {
+      setState(() => fields[id]!.text = result);
     }
-    // Padding and outline gaps keep 8 px on each side outside the cycle's
-    // 48 px hit target. The floating labels must also remain fully visible.
-    final cycleMinWidth = math.max(
-      64.0,
-      _floatingLabelWidth(context.l10n.resourcePeriod) + 16,
-    );
-    final amountMinWidth = math.max(
-      48.0,
-      _floatingLabelWidth(context.l10n.serverAmount) + 16,
-    );
-    // Include the compact dropdown's icon, padded hit target and outline
-    // gaps, rounding up fractional text widths. The selected value, not the
-    // longest menu item or free row space, determines the closed width.
-    final cyclePreferredWidth = math.max(
-      cycleMinWidth,
-      (_textWidth(cycleLabels[cycle]!, valueStyle) + 44).ceilToDouble(),
-    );
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 18),
-      child: FormField<void>(
-        validator: (_) => _validateField(
-          'amount',
-          amountLabel,
-          fields['amount']!.text,
-          required: true,
-        ),
-        builder: (field) => Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            LayoutBuilder(
-              builder: (context, constraints) {
-                // Leave the amount label and a usable editor visible at
-                // narrow widths. Longer cycle values can soft-wrap; their
-                // complete meaning also remains in the menu and summary.
-                final cycleWidth = math.max(
-                  cycleMinWidth,
-                  math.min(
-                    cyclePreferredWidth,
-                    constraints.maxWidth - currencyWidth - 12 - amountMinWidth,
+  }
+
+  Widget _billingRow() {
+    final l10n = context.l10n;
+    final labels = {
+      BillingKind.prepaid: l10n.uiFormBillingPrepaid,
+      BillingKind.metered: l10n.uiFormBillingMetered,
+      BillingKind.unknown: l10n.serverUnknown,
+    };
+    return LayoutBuilder(
+      builder: (context, box) {
+        final inner = box.maxWidth - 32;
+        final segment = compactSegmentWidth(context, labels.values);
+        final label = l10n.serverBillingType;
+        final labelWidth = math.min(
+          measureFormText(context, label, 16).ceilToDouble() + 1,
+          inner * .45,
+        );
+        final inline = inner - labelWidth - 12 >= segment;
+        final segmented = AppSegmented<BillingKind>(
+          key: const ValueKey('field-billing'),
+          compact: true,
+          options: labels,
+          value: billing,
+          onChanged: (kind) => setState(() => billing = kind),
+        );
+        Widget control = Semantics(
+          label: '$label ${labels[billing]}',
+          child: segmented,
+        );
+        if (saving || termsLocked) {
+          // The segmented control has no disabled state: absorb taps and, for
+          // paid history, explain why the billing type cannot change.
+          control = GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTap: termsLocked && !saving ? _explainLock : null,
+            child: Opacity(opacity: .45, child: IgnorePointer(child: control)),
+          );
+        }
+        return AppFormRow(
+          key: const ValueKey('row-billing'),
+          label: label,
+          stacked: !inline,
+          child: inline
+              ? control
+              : Align(
+                  alignment: AlignmentDirectional.centerEnd,
+                  child: Padding(
+                    padding: const EdgeInsets.only(top: 6, bottom: 6),
+                    child: FittedBox(fit: BoxFit.scaleDown, child: control),
                   ),
-                );
-                return Row(
-                  key: const ValueKey('row-fees'),
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Expanded(
-                      child: _compactInput(
-                        'amount',
-                        context.l10n.serverAmount,
-                        amountLabel,
-                        field.errorText,
-                      ),
-                    ),
-                    const SizedBox(width: 6),
-                    SizedBox(
-                      width: currencyWidth,
-                      child: select<String>(
-                        context.l10n.serverOriginalCurrency,
-                        currency,
-                        Money.currencies
-                            .map(
-                              (c) => DropdownMenuItem(value: c, child: Text(c)),
-                            )
-                            .toList(),
-                        (v) => setState(() => currency = v!),
-                        id: 'currency',
-                        compact: true,
-                        shortLabel: context.l10n.serverCurrency,
-                      ),
-                    ),
-                    if (billing == BillingKind.prepaid) ...[
-                      const SizedBox(width: 6),
-                      SizedBox(
-                        width: cycleWidth,
-                        child: _cycleSelect(cycleLabels),
-                      ),
-                    ],
-                  ],
-                );
-              },
+                ),
+        );
+      },
+    );
+  }
+
+  Widget _currencyButton() {
+    final l10n = context.l10n;
+    final p = context.palette;
+    return Semantics(
+      button: true,
+      excludeSemantics: true,
+      label: '${l10n.serverOriginalCurrency} $currency',
+      onTap: saving ? null : _pickCurrency,
+      child: InkWell(
+        key: const ValueKey('field-currency'),
+        onTap: saving ? null : _pickCurrency,
+        borderRadius: BorderRadius.circular(8),
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 6),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  currency,
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: p.text,
+                    fontFeatures: kTabularFigures,
+                  ),
+                ),
+                Icon(Icons.expand_more_rounded, size: 18, color: p.text3),
+              ],
             ),
-            if (field.errorText case final error?) _rowError(error),
-            const SizedBox(height: 6),
-            ValueListenableBuilder<TextEditingValue>(
-              valueListenable: fields['amount']!,
-              builder: (context, value, _) {
-                final minor = Money.parseMinor(value.text);
-                final amount = minor == null
-                    ? ''
-                    : '${Money(currency, minor).decimal} $currency · ';
-                final period = billing == BillingKind.metered
-                    ? context.l10n.serverMonthlyCostEstimate
-                    : context.l10n.serverRenewalPriceHelp(
-                        (cycle == 12
-                                ? context.l10n.serverEveryYear
-                                : context.l10n.serverEveryMonths(cycle))
-                            .toString(),
-                      );
-                // Keep the complete amount readable even while a narrow
-                // single-line editor scrolls its digits at larger text sizes.
-                return Text(
-                  '$amount$period',
-                  style: Theme.of(context).textTheme.bodySmall,
-                );
-              },
-            ),
-          ],
+          ),
         ),
       ),
     );
   }
 
-  Map<String, String> _dateErrors() {
-    final errors = <String, String>{};
-    for (final id in ['start', 'due']) {
-      final error = _validateField(
-        id,
-        id == 'start'
-            ? context.l10n.serverStartDate
-            : context.l10n.serverDueDate,
-        fields[id]!.text,
-      );
-      if (error != null) {
-        errors[id] = error;
-      }
-    }
-    return errors;
+  Widget _amountRow(String amountLabel) {
+    return FormField<void>(
+      validator: (_) => _validateField(
+        'amount',
+        amountLabel,
+        fields['amount']!.text,
+        required: true,
+      ),
+      builder: (state) => LayoutBuilder(
+        builder: (context, box) {
+          // Label, a usable amount editor and the widest currency code must
+          // share one line; otherwise the label moves above the editor.
+          final inner = box.maxWidth - 32;
+          var codeWidth = 0.0;
+          for (final code in Money.currencies) {
+            codeWidth = math.max(
+              codeWidth,
+              measureFormText(context, code, 16).ceilToDouble(),
+            );
+          }
+          final currencyWidth = math.max(44.0, codeWidth + 12 + 18);
+          final labelWidth = math.min(
+            measureFormText(context, amountLabel, 16).ceilToDouble() + 1,
+            inner * .45,
+          );
+          final inline = inner - labelWidth - 12 - 4 - currencyWidth >= 72;
+          return AppFormRow(
+            key: const ValueKey('row-fees'),
+            label: amountLabel,
+            stacked: !inline,
+            errorText: state.errorText,
+            child: Row(
+              children: [
+                Expanded(
+                  child: _semantic(
+                    amountLabel,
+                    state.errorText,
+                    AppTextField(
+                      key: const ValueKey('field-amount'),
+                      controller: fields['amount'],
+                      enabled: !saving,
+                      maxLength: 13,
+                      hint: '0.00',
+                      label: amountLabel,
+                      keyboardType: const TextInputType.numberWithOptions(
+                        decimal: true,
+                      ),
+                      textInputAction: TextInputAction.next,
+                      autocorrect: false,
+                      enableSuggestions: false,
+                      textAlign: inline ? TextAlign.end : TextAlign.start,
+                      style: const TextStyle(fontFeatures: kTabularFigures),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 4),
+                _currencyButton(),
+              ],
+            ),
+          );
+        },
+      ),
+    );
   }
 
-  Widget _dateRow() => FormField<void>(
-    validator: (_) => _dateErrors().values.firstOrNull,
-    builder: (field) {
-      final errors = field.hasError ? _dateErrors() : const <String, String>{};
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Row(
-            key: const ValueKey('row-dates'),
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                child: _compactInput(
-                  'start',
-                  context.l10n.serverStartDate,
-                  context.l10n.serverOptionalStart,
-                  errors['start'],
-                  date: true,
+  Widget _cycleRow() {
+    final l10n = context.l10n;
+    final onTap = saving ? null : (termsLocked ? _explainLock : _pickCycle);
+    return Semantics(
+      key: const ValueKey('field-cycle'),
+      button: true,
+      enabled: !termsLocked && !saving,
+      excludeSemantics: true,
+      label: '${l10n.serverRenewalCycle} ${_cycleDescription(cycle, l10n)}',
+      onTap: onTap,
+      child: Opacity(
+        opacity: termsLocked || saving ? .45 : 1,
+        child: AppFormRow.pick(
+          label: l10n.serverRenewalCycle,
+          value: _cycleDescription(cycle, l10n),
+          onTap: onTap,
+        ),
+      ),
+    );
+  }
+
+  Widget _dateRow(String id, String label, String semanticLabel) =>
+      FormField<void>(
+        validator: (_) => _validateField(id, label, fields[id]!.text),
+        builder: (state) {
+          final p = context.palette;
+          final text = fields[id]!.text.trim();
+          final locked = termsLocked;
+          return _semantic(
+            semanticLabel,
+            state.errorText,
+            AppFormRow(
+              key: ValueKey('field-$id'),
+              label: label,
+              errorText: state.errorText,
+              onTap: saving
+                  ? null
+                  : locked
+                  ? _explainLock
+                  : () => _pickDate(id, label),
+              child: Opacity(
+                opacity: locked || saving ? .45 : 1,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Flexible(
+                      // Never wrap an ISO date: shrink it instead.
+                      child: FittedBox(
+                        fit: BoxFit.scaleDown,
+                        alignment: AlignmentDirectional.centerEnd,
+                        child: Text(
+                          text.isEmpty ? context.l10n.serverUnknown : text,
+                          maxLines: 1,
+                          softWrap: false,
+                          style: TextStyle(
+                            fontSize: 16,
+                            color: text.isEmpty ? p.text3 : p.text,
+                            fontFeatures: kTabularFigures,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Icon(
+                      Icons.calendar_today_outlined,
+                      size: 18,
+                      color: p.text2,
+                    ),
+                  ],
                 ),
               ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: _compactInput(
-                  'due',
-                  context.l10n.serverDueDate,
-                  context.l10n.serverOptionalDue,
-                  errors['due'],
-                  date: true,
-                ),
-              ),
-            ],
-          ),
-          for (final error in errors.entries)
-            _rowError(
-              error.value,
-              label: error.key == 'start'
-                  ? context.l10n.serverStartDate
-                  : context.l10n.serverDueDate,
             ),
-        ],
+          );
+        },
       );
-    },
-  );
+
+  Widget _costFootnote(String amountLabel) {
+    final l10n = context.l10n;
+    final style = context.footnoteStyle;
+    final notes = <Widget>[
+      if (termsLocked) Text(l10n.serverPaymentLockHelp, style: style),
+      if (billing == BillingKind.unknown)
+        Text(l10n.uiFormUnknownCostFootnote, style: style)
+      else ...[
+        ValueListenableBuilder<TextEditingValue>(
+          valueListenable: fields['amount']!,
+          builder: (context, value, _) {
+            final minor = Money.parseMinor(value.text);
+            final amount = minor == null
+                ? ''
+                : '${Money(currency, minor).decimal} $currency · ';
+            final period = billing == BillingKind.metered
+                ? l10n.serverMonthlyCostEstimate
+                : l10n.serverRenewalPriceHelp(
+                    _cycleDescription(cycle, l10n).toString(),
+                  );
+            // Keep the complete amount readable even while a narrow
+            // single-line editor scrolls its digits at larger text sizes.
+            return Text('$amount$period', style: style);
+          },
+        ),
+        if (billing == BillingKind.prepaid)
+          Text(l10n.serverDatesHelp, style: style),
+        Text(l10n.serverAmountHelp, style: style),
+      ],
+    ];
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        for (var i = 0; i < notes.length; i++) ...[
+          if (i > 0) const SizedBox(height: 6),
+          notes[i],
+        ],
+      ],
+    );
+  }
 
   Future<void> chooseProvider() async {
     if (choosingProvider || saving || widget.record != null) return;
@@ -710,177 +635,286 @@ class _ServerFormState extends State<ServerForm> {
   }
 
   @override
-  Widget build(BuildContext context) => ListenableBuilder(
-    listenable: widget.controller,
-    builder: (context, _) => PopScope(
-      canPop: !saving,
-      child: Scaffold(
-        appBar: AppBar(
-          title: Text(
-            widget.record == null
-                ? context.l10n.serverManualAdd
-                : context.l10n.serverEditTitle,
-          ),
-          actions: [
-            TextButton(
-              onPressed: saving ? null : () => Navigator.pop(context),
-              child: Text(context.l10n.cancel),
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final canSave =
+        !saving &&
+        widget.controller.canMutate &&
+        !widget.controller.cloud.needsReload;
+    final amountLabel = billing == BillingKind.metered
+        ? l10n.serverMonthlyEstimate
+        : l10n.serverRenewalAmount;
+    final providerName = widget.record == null
+        ? widget.controller.cloud.providers
+                  .where((p) => p.id == selectedProvider?.id)
+                  .firstOrNull
+                  ?.name ??
+              selectedProvider?.name
+        : serverProviderLabel(context, widget.controller, widget.record!);
+    final canChooseProvider =
+        widget.record == null &&
+        !saving &&
+        !choosingProvider &&
+        widget.controller.canMutate;
+    final groupName =
+        widget.controller.groups
+            .where((g) => g.id == groupId)
+            .firstOrNull
+            ?.name ??
+        l10n.ungrouped;
+    return ListenableBuilder(
+      listenable: widget.controller,
+      builder: (context, _) => PopScope(
+        canPop: !saving,
+        child: AppScaffold.modal(
+          title: widget.record == null
+              ? l10n.serverManualAdd
+              : l10n.serverEditTitle,
+          actionLabel: l10n.save,
+          onAction: canSave ? save : null,
+          actionBusy: saving,
+          slivers: [
+            // One non-lazy child keeps every field mounted, so scrolling can
+            // neither discard edits nor prevent validation of off-screen rows.
+            SliverToBoxAdapter(
+              child: Form(
+                key: _form,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    AppSection(
+                      header: l10n.serverBasicData,
+                      topSpacing: 8,
+                      footerWidget: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          Text(
+                            l10n.serverFormHelp,
+                            style: context.footnoteStyle,
+                          ),
+                          const SizedBox(height: 6),
+                          Text(
+                            widget.record == null
+                                ? l10n.serverNewHostHelp
+                                : l10n.serverSavedHostHelp,
+                            style: context.footnoteStyle,
+                          ),
+                          if (widget.record != null) ...[
+                            const SizedBox(height: 6),
+                            Text(
+                              l10n.providerUiChangeFromDetails,
+                              style: context.footnoteStyle,
+                            ),
+                          ],
+                        ],
+                      ),
+                      children: [
+                        _textRow(
+                          'name',
+                          l10n.serverName,
+                          semanticLabel: l10n.serverName,
+                          hint: l10n.uiFormNameHint,
+                          required: true,
+                        ),
+                        if (widget.record == null)
+                          AppFormRow.pick(
+                            key: const ValueKey('form-provider'),
+                            label: l10n.uiFormProvider,
+                            value: providerName,
+                            placeholder: l10n.providerUiUnspecified,
+                            onTap: canChooseProvider ? chooseProvider : null,
+                          )
+                        else
+                          AppFormRow(
+                            key: const ValueKey('form-provider'),
+                            label: l10n.uiFormProvider,
+                            child: Text(
+                              providerName ?? l10n.providerUiUnspecified,
+                              textAlign: TextAlign.end,
+                              style: TextStyle(
+                                fontSize: 16,
+                                color: context.palette.text2,
+                              ),
+                            ),
+                          ),
+                        _textRow(
+                          'host',
+                          l10n.serverHostAddress,
+                          semanticLabel: l10n.serverOptionalHost,
+                          hint: l10n.serverHostExample,
+                          max: 253,
+                          style: kMonoTextStyle.copyWith(fontSize: 15),
+                        ),
+                        AppFormRow.pick(
+                          key: const ValueKey('field-group'),
+                          label: l10n.serverGroup,
+                          value: groupName,
+                          onTap: saving ? null : _pickGroup,
+                        ),
+                        _textRow(
+                          'purpose',
+                          l10n.uiFormPurpose,
+                          semanticLabel: l10n.serverOptionalPurpose,
+                        ),
+                        _textRow(
+                          'region',
+                          l10n.uiFormRegion,
+                          semanticLabel: l10n.serverOptionalRegion,
+                        ),
+                        _textRow(
+                          'os',
+                          l10n.serverOperatingSystem,
+                          semanticLabel: l10n.serverOptionalOs,
+                        ),
+                        _textRow(
+                          'spec',
+                          l10n.uiFormSpec,
+                          semanticLabel: l10n.serverOptionalSpec,
+                          hint: l10n.serverSpecExample,
+                          max: 200,
+                        ),
+                      ],
+                    ),
+                    ServerResourceFields(
+                      key: _resources,
+                      initial: widget.record?.resources,
+                      enabled: !saving,
+                      importing: false,
+                      collapsible: true,
+                      defaultTrafficPeriodMonths: widget.record == null
+                          ? 1
+                          : null,
+                    ),
+                    AppSection(
+                      header: l10n.serverCostDetails,
+                      footerWidget: _costFootnote(amountLabel),
+                      children: [
+                        _billingRow(),
+                        if (billing != BillingKind.unknown)
+                          _amountRow(amountLabel),
+                        if (billing == BillingKind.prepaid) ...[
+                          _cycleRow(),
+                          _dateRow(
+                            'start',
+                            l10n.serverStartDate,
+                            l10n.serverOptionalStart,
+                          ),
+                          _dateRow(
+                            'due',
+                            l10n.serverDueDate,
+                            l10n.serverOptionalDue,
+                          ),
+                        ],
+                      ],
+                    ),
+                    AppSection(
+                      header: l10n.serverNotes,
+                      footer: l10n.serverNotesSafety,
+                      children: [
+                        AppRow.custom(
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 8),
+                            child: AppTextField(
+                              key: const ValueKey('field-notes'),
+                              controller: fields['notes'],
+                              enabled: !saving,
+                              maxLength: 4000,
+                              minLines: 3,
+                              maxLines: 8,
+                              hint: l10n.uiFormOptional,
+                              label: l10n.serverOptionalNotes,
+                              textAlign: TextAlign.start,
+                              keyboardType: TextInputType.multiline,
+                              textInputAction: TextInputAction.newline,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
             ),
           ],
         ),
-        body: Form(
-          key: _form,
-          // This bounded form owns nested resource state. Keep every field
-          // mounted so scrolling cannot discard edits or prevent validation.
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                InfoNote(context.l10n.serverFormHelp),
-                SectionTitle(context.l10n.serverBasicData),
-                field('name', context.l10n.serverName, required: true),
-                LedgerCard(
-                  padding: EdgeInsets.zero,
-                  child: SettingRow(
-                    key: const ValueKey('form-provider'),
-                    icon: Icons.business_outlined,
-                    title: widget.record == null
-                        ? widget.controller.cloud.providers
-                                  .where((p) => p.id == selectedProvider?.id)
-                                  .firstOrNull
-                                  ?.name ??
-                              selectedProvider?.name ??
-                              context.l10n.providerUiUnspecified
-                        : serverProviderLabel(
-                            context,
-                            widget.controller,
-                            widget.record!,
-                          ),
-                    subtitle: widget.record == null
-                        ? context.l10n.providerUiChooseAnother
-                        : context.l10n.providerUiChangeFromDetails,
-                    onTap:
-                        widget.record != null ||
-                            saving ||
-                            choosingProvider ||
-                            !widget.controller.canMutate
-                        ? null
-                        : chooseProvider,
-                  ),
-                ),
-                const SizedBox(height: 18),
-                field(
-                  'host',
-                  context.l10n.serverOptionalHost,
-                  hint: context.l10n.serverHostExample,
-                  max: 253,
-                ),
-                InfoNote(
-                  widget.record == null
-                      ? context.l10n.serverNewHostHelp
-                      : context.l10n.serverSavedHostHelp,
-                ),
-                select<String>(context.l10n.serverGroup, groupId ?? '', [
-                  DropdownMenuItem(
-                    value: '',
-                    child: Builder(
-                      builder: (context) => Text(context.l10n.ungrouped),
-                    ),
-                  ),
-                  ...widget.controller.groups.map(
-                    (g) => DropdownMenuItem(value: g.id, child: Text(g.name)),
-                  ),
-                ], (v) => setState(() => groupId = v == '' ? null : v)),
-                field('purpose', context.l10n.serverOptionalPurpose),
-                field('region', context.l10n.serverOptionalRegion),
-                field('os', context.l10n.serverOptionalOs),
-                field(
-                  'spec',
-                  context.l10n.serverOptionalSpec,
-                  hint: context.l10n.serverSpecExample,
-                  max: 200,
-                ),
-                ServerResourceFields(
-                  key: _resources,
-                  initial: widget.record?.resources,
-                  enabled: !saving,
-                  importing: false,
-                  defaultTrafficPeriodMonths: widget.record == null ? 1 : null,
-                ),
-                SectionTitle(context.l10n.serverCostDetails),
-                if (termsLocked) InfoNote(context.l10n.serverPaymentLockHelp),
-                select<BillingKind>(
-                  context.l10n.serverBillingType,
-                  billing,
-                  [
-                    DropdownMenuItem(
-                      value: BillingKind.unknown,
-                      child: Builder(
-                        builder: (context) =>
-                            Text(context.l10n.serverCostUnknownOption),
-                      ),
-                    ),
-                    DropdownMenuItem(
-                      value: BillingKind.prepaid,
-                      child: Builder(
-                        builder: (context) =>
-                            Text(context.l10n.serverPrepaidOption),
-                      ),
-                    ),
-                    DropdownMenuItem(
-                      value: BillingKind.metered,
-                      child: Builder(
-                        builder: (context) =>
-                            Text(context.l10n.serverMeteredOption),
-                      ),
-                    ),
-                  ],
-                  (v) => setState(() => billing = v!),
-                  id: 'billing',
-                  selectedLabels: {
-                    BillingKind.unknown: context.l10n.billingCostUnknown,
-                    BillingKind.prepaid: context.l10n.serverPrepaid,
-                    BillingKind.metered: context.l10n.serverMetered,
-                  },
-                ),
-                if (billing != BillingKind.unknown) ...[
-                  _feeRow(),
-                  if (billing == BillingKind.prepaid) ...[
-                    _dateRow(),
-                    InfoNote(context.l10n.serverDatesHelp),
-                  ],
-                  InfoNote(context.l10n.serverAmountHelp),
-                ],
-                field(
-                  'notes',
-                  context.l10n.serverOptionalNotes,
-                  max: 4000,
-                  lines: 4,
-                ),
-                InfoNote(context.l10n.serverNotesSafety),
-              ],
-            ),
-          ),
-        ),
-        bottomNavigationBar: SafeArea(
-          top: false,
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: FilledButton(
-              onPressed:
-                  saving ||
-                      !widget.controller.canMutate ||
-                      widget.controller.cloud.needsReload
-                  ? null
-                  : save,
-              child: Text(
-                saving ? context.l10n.saving : context.l10n.serverSave,
+      ),
+    );
+  }
+}
+
+/// Date wheel in a sheet. Pops an ISO date, or `''` for "set unknown"; closing
+/// the sheet any other way leaves the draft unchanged.
+class _DateSheet extends StatefulWidget {
+  const _DateSheet({required this.initial});
+  final LedgerDate initial;
+  @override
+  State<_DateSheet> createState() => _DateSheetState();
+}
+
+class _DateSheetState extends State<_DateSheet> {
+  late DateTime _value = DateTime(
+    widget.initial.year,
+    widget.initial.month,
+    widget.initial.day,
+  );
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final p = context.palette;
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        SizedBox(
+          height: 216,
+          child: CupertinoTheme(
+            data: CupertinoThemeData(
+              brightness: p.isDark ? Brightness.dark : Brightness.light,
+              textTheme: CupertinoTextThemeData(
+                dateTimePickerTextStyle: TextStyle(fontSize: 21, color: p.text),
               ),
             ),
+            child: CupertinoDatePicker(
+              mode: CupertinoDatePickerMode.date,
+              initialDateTime: _value,
+              minimumYear: 1,
+              maximumYear: 9999,
+              onDateTimeChanged: (value) => _value = value,
+            ),
           ),
         ),
-      ),
-    ),
-  );
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+          child: Row(
+            children: [
+              Expanded(
+                child: AppButton(
+                  key: const ValueKey('date-sheet-unknown'),
+                  label: l10n.uiFormSetUnknown,
+                  kind: AppButtonKind.tonal,
+                  onPressed: () => Navigator.pop(context, ''),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: AppButton(
+                  key: const ValueKey('date-sheet-done'),
+                  label: l10n.uiFormDone,
+                  onPressed: () => Navigator.pop(
+                    context,
+                    LedgerDate(
+                      _value.year,
+                      _value.month,
+                      _value.day,
+                    ).toString(),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
 }

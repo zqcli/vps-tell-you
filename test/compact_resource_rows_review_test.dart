@@ -3,8 +3,11 @@ import 'dart:ui' show SemanticsValidationResult;
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:vps_tell_you/core/app_theme.dart';
+import 'package:vps_tell_you/core/ui/ui.dart';
 import 'package:vps_tell_you/servers/server_resource_fields.dart';
 import 'package:vps_tell_you/servers/server_resources.dart';
+
+import 'support/form_test_helpers.dart';
 
 void main() {
   Future<GlobalKey<ServerResourceFieldsState>> mount(
@@ -55,15 +58,6 @@ void main() {
     await tester.pumpAndSettle();
   }
 
-  Future<void> select(WidgetTester tester, String id, String value) async {
-    final field = find.byKey(ValueKey(id));
-    await tester.ensureVisible(field);
-    await tester.tap(field);
-    await tester.pumpAndSettle();
-    await tester.tap(find.text(value).last);
-    await tester.pumpAndSettle();
-  }
-
   Future<void> toggleUnlimited(WidgetTester tester) async {
     final field = find.byKey(const ValueKey('resource-traffic-unlimited'));
     await tester.ensureVisible(field);
@@ -87,11 +81,11 @@ void main() {
 
     await fill(tester, 'ramBytes', '1.5');
     expect(key.currentState!.validateAndRead()!.ramBytes, 1572864);
-    await select(tester, 'resource-unit-ramBytes', 'B');
+    await chooseUnit(tester, 'ramBytes', 'B');
     expect(key.currentState!.validateAndRead(), isNull);
     await tester.pumpAndSettle();
     expect(find.text('请填写大于 0 的容量，精确到整字节'), findsOneWidget);
-    await select(tester, 'resource-unit-ramBytes', 'GiB');
+    await chooseUnit(tester, 'ramBytes', 'GiB');
     expect(key.currentState!.validateAndRead()!.ramBytes, 1610612736);
     await tester.pumpAndSettle();
     expect(find.text('请填写大于 0 的容量，精确到整字节'), findsNothing);
@@ -121,11 +115,15 @@ void main() {
     expect(result.trafficBytes, isNull);
     await tester.pumpAndSettle();
     expect(find.text('请填写大于 0 的容量，精确到整字节'), findsNothing);
-    await select(tester, 'resource-traffic-period', '年');
+    await chooseOption(
+      tester,
+      find.byKey(const ValueKey('resource-traffic-period')),
+      '每年',
+    );
     expect(key.currentState!.validateAndRead()!.trafficPeriodMonths, 12);
     await toggleUnlimited(tester);
     expect(key.currentState!.validateAndRead(), isNull);
-    await select(tester, 'resource-unit-trafficBytes', 'B');
+    await chooseUnit(tester, 'trafficBytes', 'B');
     await fill(tester, 'trafficBytes', '9007199254740991');
     result = key.currentState!.validateAndRead()!;
     expect(result.trafficBytes, ServerResources.maxBytes);
@@ -176,17 +174,21 @@ void main() {
     tester.view.physicalSize = const Size(390, 844);
     await tester.pumpAndSettle();
     await fill(tester, 'trafficBytes', '1.25');
-    await select(tester, 'resource-unit-trafficBytes', 'TiB');
-    await select(tester, 'resource-traffic-period', '季');
+    await chooseUnit(tester, 'trafficBytes', 'TiB');
+    await chooseOption(
+      tester,
+      find.byKey(const ValueKey('resource-traffic-period')),
+      '每季',
+    );
     final before = key.currentState!.validateAndRead()!.toJson();
     final input = find.byKey(const ValueKey('resource-trafficBytes'));
-    final controller = tester.widget<TextFormField>(input).controller!;
+    final controller = tester.widget<AppTextField>(input).controller!;
     controller.selection = const TextSelection.collapsed(offset: 2);
     tester.view.physicalSize = const Size(320, 844);
     scale.value = 2;
     await tester.pumpAndSettle();
     await tester.ensureVisible(input);
-    expect(tester.widget<TextFormField>(input).controller, same(controller));
+    expect(tester.widget<AppTextField>(input).controller, same(controller));
     expect(controller.text, '1.25');
     expect(controller.selection.baseOffset, 2);
     expect(key.currentState!.validateAndRead()!.toJson(), before);

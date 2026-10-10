@@ -657,18 +657,20 @@ class AppFormRow extends StatelessWidget implements AppSectionItem {
       type: MaterialType.transparency,
       child: onTap == null ? line : InkWell(onTap: onTap, child: line),
     );
-    if (errorText == null) return withTap;
+    // Always a Column: when the error appears or clears the field below must
+    // keep its State (focus, selection, IME connection).
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         withTap,
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
-          child: Text(
-            errorText!,
-            style: TextStyle(fontSize: 12.5, height: 1.3, color: p.red),
+        if (errorText != null)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
+            child: Text(
+              errorText!,
+              style: TextStyle(fontSize: 12.5, height: 1.3, color: p.red),
+            ),
           ),
-        ),
       ],
     );
   }

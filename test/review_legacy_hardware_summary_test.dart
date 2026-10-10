@@ -10,6 +10,8 @@ import 'package:vps_tell_you/servers/server_form.dart';
 import 'package:vps_tell_you/servers/server_record.dart';
 import 'package:vps_tell_you/servers/server_resources.dart';
 
+import 'support/form_test_helpers.dart';
+
 void main() {
   late Directory directory;
   late LedgerStore store;
@@ -66,13 +68,8 @@ void main() {
           ),
         );
         await tester.pumpAndSettle();
-        final vcpu = find.byKey(const ValueKey('resource-vcpu'));
-        await tester.ensureVisible(vcpu);
-        await tester.enterText(vcpu, '4');
-        FocusManager.instance.primaryFocus?.unfocus();
-        await tester.pump();
-        await tester.tap(find.text('保存服务器'));
-        await tester.pumpAndSettle();
+        await setVcpu(tester, 4);
+        await tapSave(tester);
         final saved = (await store.servers()).single;
         expect(saved.resources!.vcpu, 4);
         expect(saved.resources!.trafficPeriodMonths, isNull);
