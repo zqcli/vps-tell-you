@@ -61,6 +61,8 @@ class _SshConnectPageState extends State<SshConnectPage> {
   final _username = TextEditingController();
   String? _serverId, _credentialId;
   LocalizedMessage? _error;
+  // Why the last attempt never became a session (auth, host key, timeout).
+  String? _sessionError;
   bool _loading = true, _opening = false;
 
   @override
@@ -114,7 +116,10 @@ class _SshConnectPageState extends State<SshConnectPage> {
     if (server?.isDemo == true || server?.archived == true) {
       return;
     }
-    setState(() => _opening = true);
+    setState(() {
+      _opening = true;
+      _sessionError = null;
+    });
     try {
       final target = SshTarget(
         name: server?.name ?? '',
@@ -125,9 +130,9 @@ class _SshConnectPageState extends State<SshConnectPage> {
         credentialId: _credentialId!,
         serverId: _serverId,
       );
-      await Navigator.push<void>(
+      final failure = await Navigator.push<String>(
         context,
-        MaterialPageRoute(
+        MaterialPageRoute<String>(
           settings: const RouteSettings(name: sshTerminalRouteName),
           builder: (_) => TerminalPage(
             ledger: widget.ledger,
@@ -139,6 +144,9 @@ class _SshConnectPageState extends State<SshConnectPage> {
           ),
         ),
       );
+      if (mounted && failure != null) {
+        setState(() => _sessionError = failure);
+      }
     } catch (_) {
       if (mounted) {
         setState(
@@ -313,6 +321,12 @@ class _SshConnectPageState extends State<SshConnectPage> {
                     tone: AppTone.red,
                     icon: Icons.power_settings_new_rounded,
                     text: l10n.connectionPowerAfterConnect,
+                  ),
+                if (_sessionError != null)
+                  AppBanner(
+                    tone: AppTone.red,
+                    icon: Icons.error_outline_rounded,
+                    text: _sessionError!,
                   ),
                 if (_error != null) ...[
                   AppBanner(

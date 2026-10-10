@@ -4002,7 +4002,12 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get terminalBackgroundHelp =>
-      '离开或进入后台会断开会话；不会自动重连或重放输入。长任务建议在远端使用 tmux / screen。';
+      '会话结束、离开或进入后台都会关闭此页，不会自动重连或重放输入。长任务建议在远端使用 tmux / screen。';
+
+  @override
+  String r2ConnDisconnectHelp(String p0) {
+    return '$p0\n未放入 tmux / screen 的远端任务可能中断；未发送的草稿将丢弃。';
+  }
 
   @override
   String get terminalOfflineFont => '离线字体：DejaVu Sans Mono · 中文使用设备字体回退';
@@ -4040,10 +4045,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get terminalDiscardExit => '丢弃并退出';
 
   @override
-  String get terminalBackgroundDisconnected => '应用进入后台，连接已清理。需要手动重连，不会重放输入。';
+  String get terminalBackgroundDisconnected => '应用进入后台，连接已断开';
 
   @override
-  String get terminalTargetChanged => '目标已变化，连接和草稿已清空。请手动连接新目标。';
+  String get terminalTargetChanged => '目标已变化，连接已断开';
 
   @override
   String get terminalPowerMenuHelp => '连接后在“终端菜单”选择 SSH 重启或关机，并完成两次确认。';

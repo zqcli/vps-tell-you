@@ -523,11 +523,10 @@ void main() {
 
       ssh.disconnect();
       await tester.pumpAndSettle();
-      expectButtonsDisabled();
-      expect(
-        tester.widget<TextField>(key('terminal-draft')).controller!.text,
-        payload,
-      );
+      // The ended session closes the panel; the draft is discarded silently.
+      expect(key('terminal-send'), findsNothing);
+      expect(key('terminal-draft'), findsNothing);
+      expect(find.byType(AlertDialog), findsNothing);
       expect(ssh.writeAttempts.length, 1);
       expect(tester.takeException(), isNull);
     },
