@@ -309,16 +309,11 @@ class _FinancePageState extends State<FinancePage> {
           _upcoming(context, c, events),
           _distribution(context, c, records, monthly),
           _forecast(context, c, forecast),
-          _tools(context, c, records.length, payments.length, paid),
+          _tools(context, c, payments.length, paid),
           FinanceNote(
             l10n.uiFinanceFootnote,
             padding: const EdgeInsets.fromLTRB(32, 16, 32, 0),
           ),
-          if (monthly.missingFx > 0)
-            FinanceNote(
-              l10n.financeMissingFxExcluded,
-              padding: const EdgeInsets.fromLTRB(32, 6, 32, 0),
-            ),
         ],
       );
     },
@@ -575,7 +570,6 @@ class _FinancePageState extends State<FinancePage> {
   Widget _tools(
     BuildContext context,
     LedgerController c,
-    int serverCount,
     int paymentCount,
     FinanceTotal paid,
   ) {
@@ -600,15 +594,6 @@ class _FinancePageState extends State<FinancePage> {
             (_) =>
                 PaymentListPage(controller: c, groupId: groupId, recent: true),
           ),
-        ),
-        AppRow(
-          key: const ValueKey('finance-inventory'),
-          icon: Icons.dns_outlined,
-          iconColor: AppTints.slate,
-          title: l10n.financeInventoryDetail,
-          value: l10n.uiFinanceServerCount(serverCount),
-          chevron: true,
-          onTap: () => detail(FinanceMetric.inventory),
         ),
         _CalculatorEntry(onTap: openCalculator),
       ],
@@ -1197,7 +1182,7 @@ class _ForecastBar extends StatelessWidget {
   }
 }
 
-enum FinanceMetric { monthly, value, inventory, incomplete }
+enum FinanceMetric { monthly, value, incomplete }
 
 class FinanceDetailPage extends StatelessWidget {
   const FinanceDetailPage({
@@ -1226,7 +1211,6 @@ class FinanceDetailPage extends StatelessWidget {
         title: switch (metric) {
           FinanceMetric.monthly => l10n.financeMonthlyDetail,
           FinanceMetric.value => l10n.financeValueDetail,
-          FinanceMetric.inventory => l10n.financeInventoryDetail,
           FinanceMetric.incomplete => l10n.financeIncompleteDetail,
         },
         actions: [

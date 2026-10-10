@@ -308,7 +308,7 @@
   "financeNoRenewalDate": "This record has no usable renewal date. Check the prepaid billing type, expiry date, and supported date range.",
   "financeRecordAccountBill": "Record an account bill",
   "financeLocalPaymentOnly": "Records a local ledger entry only. No payment is made to the provider.",
-  "financeAccountBillNote": "Records the whole account bill separately and counts it once. No panel account connection is needed. It is not allocated to instances and does not create service periods or remaining value.",
+  "financeAccountBillNote": "Standalone bill, counted once. Not split across servers; creates no service period.",
   "financeAccountName": "Account display name",
   "financeAccountNameHint": "For example: Provider · Personal account",
   "financePaidAmount": "Amount paid",
@@ -317,7 +317,7 @@
   "financeRenewalCount": "Number of renewal cycles",
   "financeNewDue": "New expiry date",
   "financeNewDueHint": "Must match the date calculated from the selected cycles",
-  "financePaymentRenewalNote": "The amount paid is saved separately and does not replace the renewal price. Only whole-cycle renewals are supported. If the provider includes bonus time or a different expiry date, check it first rather than inventing cycles.",
+  "financePaymentRenewalNote": "The amount paid is stored separately and does not change the renewal price. Whole cycles only.",
   "financeBillStart": "Billing period start (optional)",
   "financeBillEnd": "Billing period end (optional)",
   "financeOptionalNote": "Note (optional)",
@@ -328,7 +328,7 @@
   "financePaymentTarget": "Payment target",
   "financeAllPayments": "All payment records",
   "financeRecent30": "Last 30 days",
-  "financeShowVoided": "Show voided records",
+  "financeShowVoided": "Show deleted",
   "financeRecordedPaidTotal": "Total recorded payments",
   "financeNoPayments": "— No payment records yet",
   "financePaymentDetails": "Payment breakdown",
@@ -345,10 +345,22 @@
   "financeType": "Type",
   "financeAccountBill": "Account bill",
   "financeBillServicePeriod": "Billing / Service period",
-  "financeVoidedStatus": "Voided, excluded from payment totals",
+  "financeVoidedStatus": "Deleted, excluded from payment totals",
   "financeRecordedStatus": "Recorded",
-  "financePaymentHistoryNote": "This is a past payment in its original currency. Changes to renewal prices or reference rates do not rewrite it. To correct it, void it and enter it again. Voiding may be unavailable if related details have since changed.",
+  "financePaymentHistoryNote": "Original-currency history; it does not follow renewal prices or exchange rates.",
   "financeVoidThisRecord": "Void this record",
+  "r2FinanceEdit": "Edit",
+  "r2FinanceEditTitle": "Edit payment",
+  "r2FinanceEditHint": "Only edits the bookkeeping. Service periods, due date and cycles stay as they are.",
+  "r2FinanceDelete": "Delete record",
+  "r2FinanceDeleteTitle": "Delete this payment record?",
+  "r2FinanceDeleteAccountMsg": "Deletes this bill from the local ledger only. No server is affected and nothing is refunded by the provider. It no longer counts towards payment totals.",
+  "r2FinanceDeleteKeepMsg": "Deletes the payment record only. Service periods and the due date stay as they are (the server has changed since, so the renewal cannot be rolled back). Nothing is refunded by the provider.",
+  "r2FinanceDeleteChoiceMsg": "You can also roll back this renewal (restore the previous due date and remove its service periods), or delete only the record and keep the periods and due date. Neither option refunds anything at the provider.",
+  "r2FinanceDeleteRollback": "Delete and roll back renewal",
+  "r2FinanceDeleteKeep": "Delete record only, keep periods",
+  "r2FinanceDeleted": "Payment record deleted",
+  "r2FinanceUpdated": "Payment record updated",
   "financeVoidBlocked": "Details have changed. Please check them. After later edits, payments, or archiving, an old record cannot overwrite the current details.",
   "financeRulesTitle": "How these figures are calculated",
   "financeTitle": "Costs",
@@ -595,7 +607,7 @@
       }
     }
   },
-  "financeExtendFromDue": "Extends from the original expiry date, {date}, preserving unused time. Dates follow the original renewal anchor and month-end rules.",
+  "financeExtendFromDue": "Extends from the current due date, {date}.",
   "@financeExtendFromDue": {
     "placeholders": {
       "date": {
@@ -625,7 +637,7 @@
       }
     }
   },
-  "financeValidPaymentsNote": "{count, plural, one{1 valid record} other{{count} valid records}}; this may not be your complete billing history. Voided records are excluded.",
+  "financeValidPaymentsNote": "{count, plural, one{1 record} other{{count} records}}; deleted ones are excluded.",
   "@financeValidPaymentsNote": {
     "placeholders": {
       "count": {
@@ -633,7 +645,7 @@
       }
     }
   },
-  "financePaymentGroupNote": "Current group: {group}. Account bills are not allocated to groups. Payment history retains payments for archived servers.",
+  "financePaymentGroupNote": "Group: {group}. Account bills are not included.",
   "@financePaymentGroupNote": {
     "placeholders": {
       "group": {
@@ -793,7 +805,7 @@
     }
   },
   "uiFinanceFootnote": "Amounts use current renewal prices and manual reference exchange rates. For reference only; they are not vendor bills.",
-  "uiFinanceVoidedPill": "Voided",
+  "uiFinanceVoidedPill": "Deleted",
   "uiFinanceArchivedPill": "Archived",
   "uiFinanceAccountPill": "Account bill",
   "financeForecastMonth": "{year}-{month} · {count, plural, one{1 renewal} other{{count} renewals}}",

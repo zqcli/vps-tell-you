@@ -1829,7 +1829,7 @@ abstract class AppLocalizations {
   /// No description provided for @financeAccountBillNote.
   ///
   /// In zh, this message translates to:
-  /// **'独立记录整份账户账单，仅计一次。不要求连接面板账户，不分摊到实例，也不产生服务期或剩余价值。'**
+  /// **'独立账单，仅计一次；不分摊到实例，不产生服务期。'**
   String get financeAccountBillNote;
 
   /// No description provided for @financeAccountName.
@@ -1883,7 +1883,7 @@ abstract class AppLocalizations {
   /// No description provided for @financePaymentRenewalNote.
   ///
   /// In zh, this message translates to:
-  /// **'本次实付独立保存，不覆盖续费金额。目前仅支持整周期续费；厂商含赠送期或到期日不同的，请先核对，不要填写虚构周期。'**
+  /// **'实付单独保存，不改续费价。仅支持整周期续费。'**
   String get financePaymentRenewalNote;
 
   /// No description provided for @financeBillStart.
@@ -1949,7 +1949,7 @@ abstract class AppLocalizations {
   /// No description provided for @financeShowVoided.
   ///
   /// In zh, this message translates to:
-  /// **'显示已撤销'**
+  /// **'显示已删除'**
   String get financeShowVoided;
 
   /// No description provided for @financeRecordedPaidTotal.
@@ -2051,7 +2051,7 @@ abstract class AppLocalizations {
   /// No description provided for @financeVoidedStatus.
   ///
   /// In zh, this message translates to:
-  /// **'已撤销，不计入实付统计'**
+  /// **'已删除，不计入实付统计'**
   String get financeVoidedStatus;
 
   /// No description provided for @financeRecordedStatus.
@@ -2063,7 +2063,7 @@ abstract class AppLocalizations {
   /// No description provided for @financePaymentHistoryNote.
   ///
   /// In zh, this message translates to:
-  /// **'这是原币历史实付，不随续费价或参考汇率重写。如需更正，可撤销后重新录入；后续资料已改变时可能无法撤销。'**
+  /// **'原币历史实付，不随续费价或汇率变化。'**
   String get financePaymentHistoryNote;
 
   /// No description provided for @financeVoidThisRecord.
@@ -2071,6 +2071,78 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'撤销此次记录'**
   String get financeVoidThisRecord;
+
+  /// No description provided for @r2FinanceEdit.
+  ///
+  /// In zh, this message translates to:
+  /// **'编辑'**
+  String get r2FinanceEdit;
+
+  /// No description provided for @r2FinanceEditTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'编辑付款记录'**
+  String get r2FinanceEditTitle;
+
+  /// No description provided for @r2FinanceEditHint.
+  ///
+  /// In zh, this message translates to:
+  /// **'只修改记账信息，不改变服务期、到期日或周期数。'**
+  String get r2FinanceEditHint;
+
+  /// No description provided for @r2FinanceDelete.
+  ///
+  /// In zh, this message translates to:
+  /// **'删除记录'**
+  String get r2FinanceDelete;
+
+  /// No description provided for @r2FinanceDeleteTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'删除此付款记录？'**
+  String get r2FinanceDeleteTitle;
+
+  /// No description provided for @r2FinanceDeleteAccountMsg.
+  ///
+  /// In zh, this message translates to:
+  /// **'仅在本地删除这条账单记录，不影响任何服务器，也不会向厂商退款。删除后不计入实付统计。'**
+  String get r2FinanceDeleteAccountMsg;
+
+  /// No description provided for @r2FinanceDeleteKeepMsg.
+  ///
+  /// In zh, this message translates to:
+  /// **'仅删除付款记录。服务期与到期日保持不变（服务器资料已变更，无法回退续期），也不会向厂商退款。'**
+  String get r2FinanceDeleteKeepMsg;
+
+  /// No description provided for @r2FinanceDeleteChoiceMsg.
+  ///
+  /// In zh, this message translates to:
+  /// **'可同时回退本次续费（还原到期日并移除本次服务期），或仅删除记录并保留服务期与到期日。两种方式都不会向厂商退款。'**
+  String get r2FinanceDeleteChoiceMsg;
+
+  /// No description provided for @r2FinanceDeleteRollback.
+  ///
+  /// In zh, this message translates to:
+  /// **'删除并回退续费'**
+  String get r2FinanceDeleteRollback;
+
+  /// No description provided for @r2FinanceDeleteKeep.
+  ///
+  /// In zh, this message translates to:
+  /// **'仅删除记录，保留服务期'**
+  String get r2FinanceDeleteKeep;
+
+  /// No description provided for @r2FinanceDeleted.
+  ///
+  /// In zh, this message translates to:
+  /// **'付款记录已删除'**
+  String get r2FinanceDeleted;
+
+  /// No description provided for @r2FinanceUpdated.
+  ///
+  /// In zh, this message translates to:
+  /// **'付款记录已更新'**
+  String get r2FinanceUpdated;
 
   /// No description provided for @financeVoidBlocked.
   ///
@@ -2488,7 +2560,7 @@ abstract class AppLocalizations {
   /// No description provided for @financeExtendFromDue.
   ///
   /// In zh, this message translates to:
-  /// **'从原到期日 {date} 延长，保留当前未用时长。按原续费日推算，并保留月底日期规则。'**
+  /// **'从原到期日 {date} 起延长。'**
   String financeExtendFromDue(String date);
 
   /// No description provided for @financeNextRenewalPrice.
@@ -2506,13 +2578,13 @@ abstract class AppLocalizations {
   /// No description provided for @financeValidPaymentsNote.
   ///
   /// In zh, this message translates to:
-  /// **'{count} 笔有效记录，不代表完整历史账单。已撤销记录不计入。'**
+  /// **'{count} 笔有效记录，已删除的不计入。'**
   String financeValidPaymentsNote(int count);
 
   /// No description provided for @financePaymentGroupNote.
   ///
   /// In zh, this message translates to:
-  /// **'当前分组：{group}。不分摊账户账单；历史记录保留归档付款。'**
+  /// **'当前分组：{group}，不含账户账单。'**
   String financePaymentGroupNote(String group);
 
   /// No description provided for @financeVoidedName.
@@ -2650,7 +2722,7 @@ abstract class AppLocalizations {
   /// No description provided for @uiFinanceVoidedPill.
   ///
   /// In zh, this message translates to:
-  /// **'已撤销'**
+  /// **'已删除'**
   String get uiFinanceVoidedPill;
 
   /// No description provided for @uiFinanceArchivedPill.

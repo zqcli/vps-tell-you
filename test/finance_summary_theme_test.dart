@@ -276,15 +276,11 @@ void main() {
             expect(total.total, 4);
             expect(total.missingFx, 1);
             expect(total.unknown, 1);
-            final l10n = AppLocalizations.of(tester.element(summary));
-            final inventory = find.byKey(const ValueKey('finance-inventory'));
-            await reveal(tester, inventory);
+            // The server-composition entry was removed on purpose: it
+            // duplicated the monthly breakdown.
             expect(
-              find.descendant(
-                of: inventory,
-                matching: find.text(l10n.uiFinanceServerCount(4)),
-              ),
-              findsOneWidget,
+              find.byKey(const ValueKey('finance-inventory')),
+              findsNothing,
             );
             await reveal(tester, monthly);
             await capture(tester, '$prefix-monthly');
@@ -307,7 +303,6 @@ void main() {
             for (final destination in [
               (monthly, FinanceMetric.monthly),
               (value, FinanceMetric.value),
-              (inventory, FinanceMetric.inventory),
             ]) {
               await reveal(tester, destination.$1);
               await tester.tap(destination.$1);

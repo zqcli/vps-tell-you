@@ -5,6 +5,7 @@ import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:vps_tell_you/core/value_types.dart';
 import 'package:vps_tell_you/data/ledger_store.dart';
 import 'package:vps_tell_you/finance/finance_math.dart';
+import 'package:vps_tell_you/finance/finance_models.dart';
 import 'package:vps_tell_you/servers/server_record.dart';
 
 import 'ledger_backup_test.dart' show backupNow, backupServer;
@@ -55,6 +56,44 @@ void main() {
       final snapshot = await source.exportLedgerBackup();
       await target.restoreLedgerBackup(snapshot);
       expect((await target.exportLedgerBackup()).encode(), snapshot.encode());
+    },
+  );
+
+  test(
+    'a payment deleted while keeping its term and an edited one round trip',
+    () async {
+      await source.saveServer(backupServer(), isNew: true);
+      Future<PaymentRecord> renew(String id) async {
+        final server = (await source.servers()).single;
+        return source.recordPayment(
+          id: id,
+          server: server,
+          amount: const Money('USD', 123),
+          paidDate: const LedgerDate(2026, 1, 1),
+          cycleCount: 1,
+          until: renewalDate(server, 1),
+          confirmed: true,
+        );
+      }
+
+      final kept = await renew('kept-term');
+      final edited = await renew('edited');
+      await source.deletePayment(original: kept);
+      await source.editPayment(
+        original: edited,
+        amount: const Money('CNY', 999),
+        paidDate: const LedgerDate(2026, 1, 2),
+        note: 'fixed',
+      );
+      final snapshot = await source.exportLedgerBackup();
+      await target.restoreLedgerBackup(snapshot);
+      expect((await target.exportLedgerBackup()).encode(), snapshot.encode());
+      expect(
+        (await target.servicePeriods()).where(
+          (p) => p.paymentId == 'kept-term',
+        ),
+        hasLength(1),
+      );
     },
   );
 
