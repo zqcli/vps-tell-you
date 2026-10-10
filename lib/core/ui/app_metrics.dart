@@ -4,7 +4,12 @@ import '../app_palette.dart';
 
 /// One figure of an [AppMetricStrip]: a short [label] above a [value].
 class AppMetric {
-  const AppMetric({required this.label, required this.value, this.valueColor});
+  const AppMetric({
+    required this.label,
+    required this.value,
+    this.valueColor,
+    this.onTap,
+  });
 
   /// Short caption (one word or two, e.g. "Days left").
   final String label;
@@ -15,6 +20,10 @@ class AppMetric {
 
   /// Overrides the primary text colour (for example red for "overdue").
   final Color? valueColor;
+
+  /// Makes the column tappable (filters, drill-down). Keep the column's
+  /// semantics as a button.
+  final VoidCallback? onTap;
 }
 
 /// A row of 2–4 small KPIs, the iOS "summary strip" used by Health, Stocks and
@@ -29,7 +38,9 @@ class AppMetric {
 ///   one row → rows of two columns → a single column of
 ///   caption-left / figure-right lines. A figure is never clipped or wrapped.
 ///
-/// Put it inside an [AppCard] (it has no surface or margin of its own).
+/// Put it inside an [AppCard] (it has no surface or margin of its own). On a
+/// gradient hero use `onGradient: true` (white text, translucent hairlines).
+/// Columns with [AppMetric.onTap] get a pressed highlight and button semantics.
 ///
 /// ```dart
 /// AppMetricStrip(metrics: [
@@ -39,22 +50,32 @@ class AppMetric {
 /// ])
 /// ```
 class AppMetricStrip extends StatelessWidget {
-  const AppMetricStrip({super.key, required this.metrics});
+  const AppMetricStrip({
+    super.key,
+    required this.metrics,
+    this.onGradient = false,
+  });
 
   final List<AppMetric> metrics;
+
+  /// White-on-gradient colours instead of the palette's text colours.
+  final bool onGradient;
 
   static const _gutter = 12.0;
   static const _labelSize = 13.0;
   static const _valueSize = 17.0;
 
-  static TextStyle _labelStyle(AppPalette p) =>
-      TextStyle(fontSize: _labelSize, height: 1.3, color: p.text2);
+  TextStyle _labelStyle(AppPalette p) => TextStyle(
+    fontSize: _labelSize,
+    height: 1.3,
+    color: onGradient ? Colors.white.withValues(alpha: .85) : p.text2,
+  );
 
-  static TextStyle _valueStyle(AppPalette p, Color? color) => TextStyle(
+  TextStyle _valueStyle(AppPalette p, Color? color) => TextStyle(
     fontSize: _valueSize,
     height: 1.3,
     fontWeight: FontWeight.w600,
-    color: color ?? p.text,
+    color: onGradient ? Colors.white : (color ?? p.text),
     fontFeatures: kTabularFigures,
   );
 
@@ -119,14 +140,25 @@ class AppMetricStrip extends StatelessWidget {
         Widget hairline(Axis axis) => SizedBox(
           width: axis == Axis.vertical ? .5 : null,
           height: axis == Axis.horizontal ? .5 : null,
-          child: ColoredBox(color: p.separator),
+          child: ColoredBox(
+            color: onGradient
+                ? Colors.white.withValues(alpha: .28)
+                : p.separator,
+          ),
         );
 
         Widget semantic(AppMetric m, Widget child) => Semantics(
           container: true,
+          button: m.onTap != null,
           label: '${m.label} ${m.value}',
           excludeSemantics: true,
-          child: child,
+          onTap: m.onTap,
+          child: m.onTap == null
+              ? child
+              : Material(
+                  type: MaterialType.transparency,
+                  child: InkWell(onTap: m.onTap, child: child),
+                ),
         );
 
         if (columns == null) {
@@ -150,10 +182,17 @@ class AppMetricStrip extends StatelessWidget {
                         const SizedBox(width: _gutter),
                         // Figure first (non-flex) so the caption wraps, never
                         // the figure.
-                        Text(
-                          metrics[i].value,
-                          textAlign: TextAlign.end,
-                          style: _valueStyle(p, metrics[i].valueColor),
+                        // An extreme figure wraps inside 65 % of the width
+                        // instead of overflowing.
+                        ConstrainedBox(
+                          constraints: BoxConstraints(
+                            maxWidth: box.maxWidth * .65,
+                          ),
+                          child: Text(
+                            metrics[i].value,
+                            textAlign: TextAlign.end,
+                            style: _valueStyle(p, metrics[i].valueColor),
+                          ),
                         ),
                       ],
                     ),

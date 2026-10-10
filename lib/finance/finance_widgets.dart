@@ -204,8 +204,9 @@ class FinanceTotalView extends StatelessWidget {
               total.formatted,
               style: const TextStyle(
                 color: Colors.white,
-                fontSize: 18,
-                fontWeight: FontWeight.w700,
+                fontSize: 17,
+                height: 1.3,
+                fontWeight: FontWeight.w600,
                 fontFeatures: kTabularFigures,
               ),
             ),
@@ -376,9 +377,19 @@ class ValuationCard extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           FinanceLine(context.l10n.financeValuationAndDue, '$asOf / $due'),
-          FinanceLine(
-            context.l10n.financeRemainingDays,
-            context.l10n.financeDaysValue(value.remainingDays),
+          const SizedBox(height: 6),
+          AppMetricStrip(
+            metrics: [
+              AppMetric(
+                label: context.l10n.r2CopyMetricDaysLeft,
+                value: context.l10n.financeDaysValue(value.remainingDays),
+              ),
+              AppMetric(
+                label: context.l10n.r2CopyMetricDaily,
+                value:
+                    '${formatRational(value.dailyMinor, digits: 4)} ${renewal.currency}',
+              ),
+            ],
           ),
           FinanceLine(
             context.l10n.financeRenewalCycle,
@@ -387,10 +398,6 @@ class ValuationCard extends StatelessWidget {
               renewal.currency,
               cycleMonths,
             ),
-          ),
-          FinanceLine(
-            context.l10n.financeDailyShown,
-            '${formatRational(value.dailyMinor, digits: 4)} ${renewal.currency}',
           ),
           if (value.futurePeriods > 0)
             FinanceNote(

@@ -795,6 +795,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get financeDailyShown => '所示周期日均';
 
   @override
+  String get r2CopyMetricDaysLeft => '剩余天数';
+
+  @override
+  String get r2CopyMetricDaily => '日均';
+
+  @override
   String get financeInferredPeriods => '部分服务起点由到期日与日历周期反推；不代表历史付款证明。';
 
   @override

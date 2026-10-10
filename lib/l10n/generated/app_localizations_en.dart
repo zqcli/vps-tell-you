@@ -857,6 +857,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get financeDailyShown => 'Daily average for the shown period';
 
   @override
+  String get r2CopyMetricDaysLeft => 'Days left';
+
+  @override
+  String get r2CopyMetricDaily => 'Daily';
+
+  @override
   String get financeInferredPeriods =>
       'Some service start dates are inferred from the expiry date and calendar cycle. They are not proof of past payment.';
 

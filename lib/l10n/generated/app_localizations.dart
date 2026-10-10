@@ -1532,6 +1532,18 @@ abstract class AppLocalizations {
   /// **'所示周期日均'**
   String get financeDailyShown;
 
+  /// No description provided for @r2CopyMetricDaysLeft.
+  ///
+  /// In zh, this message translates to:
+  /// **'剩余天数'**
+  String get r2CopyMetricDaysLeft;
+
+  /// No description provided for @r2CopyMetricDaily.
+  ///
+  /// In zh, this message translates to:
+  /// **'日均'**
+  String get r2CopyMetricDaily;
+
   /// No description provided for @financeInferredPeriods.
   ///
   /// In zh, this message translates to:

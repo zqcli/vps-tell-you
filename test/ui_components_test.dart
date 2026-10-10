@@ -936,5 +936,31 @@ void main() {
         expect(tester.takeException(), isNull);
       });
     }
+
+    testWidgets('tappable columns call back; onGradient renders white', (
+      tester,
+    ) async {
+      var taps = 0;
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: appTheme(),
+          home: Scaffold(
+            body: AppMetricStrip(
+              onGradient: true,
+              metrics: [
+                const AppMetric(label: 'Val', value: '12.4'),
+                AppMetric(label: 'Day', value: '7 d', onTap: () => taps++),
+              ],
+            ),
+          ),
+        ),
+      );
+      await tester.tap(find.text('7 d'));
+      expect(taps, 1);
+      await tester.tap(find.text('12.4'));
+      expect(taps, 1);
+      expect(tester.widget<Text>(find.text('12.4')).style!.color, Colors.white);
+      expect(tester.takeException(), isNull);
+    });
   });
 }

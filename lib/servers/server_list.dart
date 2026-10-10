@@ -426,28 +426,32 @@ class _ServerListState extends State<ServerList> {
         ],
       ),
       if (showStats && all.isNotEmpty)
-        AppStatGrid(
-          children: [
-            AppStatTile(
-              value: '$overdue',
-              label: l10n.serverExpired,
-              tone: AppTone.red,
-              onTap: () => c.updateFilters(category: ServerFilter.pending),
+        Padding(
+          padding: const EdgeInsets.only(top: 12),
+          child: AppCard(
+            child: AppMetricStrip(
+              metrics: [
+                AppMetric(
+                  label: l10n.serverExpired,
+                  value: '$overdue',
+                  valueColor: context.palette.red,
+                  onTap: () => c.updateFilters(category: ServerFilter.pending),
+                ),
+                AppMetric(
+                  label: l10n.uiServersDueSoon,
+                  value: '${pending.length - overdue}',
+                  valueColor: context.palette.amber,
+                  onTap: () => c.updateFilters(category: ServerFilter.pending),
+                ),
+                AppMetric(
+                  label: l10n.financeMonthlyReference,
+                  value: monthly.covered > 0 && monthly.missingFx == 0
+                      ? monthly.formatted
+                      : '—',
+                ),
+              ],
             ),
-            AppStatTile(
-              value: '${pending.length - overdue}',
-              label: l10n.uiServersDueSoon,
-              tone: AppTone.amber,
-              onTap: () => c.updateFilters(category: ServerFilter.pending),
-            ),
-            AppStatTile(
-              value: monthly.covered > 0 && monthly.missingFx == 0
-                  ? monthly.formatted
-                  : '—',
-              label: l10n.financeMonthlyReference,
-              compactValue: true,
-            ),
-          ],
+          ),
         ),
       Padding(
         padding: const EdgeInsets.fromLTRB(32, 22, 20, 4),

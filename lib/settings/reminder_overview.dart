@@ -472,91 +472,6 @@ class _ReminderListPageState extends State<ReminderListPage> {
   );
 }
 
-/// Three equal-width figures: scheduled / not covered / no reminder.
-class ReminderMetricStrip extends StatelessWidget {
-  const ReminderMetricStrip({
-    super.key,
-    required this.scheduled,
-    required this.notCovered,
-    required this.noReminder,
-    this.onNotCovered,
-    this.onNoReminder,
-  });
-  final int scheduled, notCovered, noReminder;
-  final VoidCallback? onNotCovered, onNoReminder;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = context.l10n;
-    final p = context.palette;
-    Widget metric(
-      String label,
-      int value, {
-      Color? color,
-      VoidCallback? onTap,
-    }) => Expanded(
-      child: InkWell(
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 6),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                '$value',
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.w700,
-                  color: color ?? p.text,
-                  fontFeatures: kTabularFigures,
-                ),
-              ),
-              const SizedBox(height: 2),
-              Text(
-                label,
-                textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 12.5, color: p.text2),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-    Widget divider() =>
-        SizedBox(width: .5, child: ColoredBox(color: p.separator));
-    return AppCard(
-      padding: EdgeInsets.zero,
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(14),
-        child: Material(
-          type: MaterialType.transparency,
-          child: IntrinsicHeight(
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                metric(l10n.r2TabsMetricScheduled, scheduled),
-                divider(),
-                metric(
-                  l10n.r2TabsMetricNotCovered,
-                  notCovered,
-                  color: notCovered > 0 ? p.amber : null,
-                  onTap: onNotCovered,
-                ),
-                divider(),
-                metric(
-                  l10n.r2TabsMetricNoReminder,
-                  noReminder,
-                  onTap: onNoReminder,
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
 /// Overview block of [NotificationPage]: metrics, the next [previewLimit]
 /// notifications grouped by date, and the entry to the full lists.
 class ReminderOverviewBlock extends StatefulWidget {
@@ -602,16 +517,32 @@ class _ReminderOverviewBlockState extends State<ReminderOverviewBlock> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         const SizedBox(height: 16),
-        ReminderMetricStrip(
-          scheduled: overview.scheduledCount,
-          notCovered: overview.notCoveredCount,
-          noReminder: overview.excluded.length,
-          onNotCovered: overview.notCoveredCount == 0
-              ? null
-              : () => _openList(ReminderListFilter.notCovered),
-          onNoReminder: overview.excluded.isEmpty
-              ? null
-              : () => _openList(ReminderListFilter.none),
+        AppCard(
+          child: AppMetricStrip(
+            metrics: [
+              AppMetric(
+                label: l10n.r2TabsMetricScheduled,
+                value: '${overview.scheduledCount}',
+              ),
+              AppMetric(
+                label: l10n.r2TabsMetricNotCovered,
+                value: '${overview.notCoveredCount}',
+                valueColor: overview.notCoveredCount > 0
+                    ? context.palette.amber
+                    : null,
+                onTap: overview.notCoveredCount == 0
+                    ? null
+                    : () => _openList(ReminderListFilter.notCovered),
+              ),
+              AppMetric(
+                label: l10n.r2TabsMetricNoReminder,
+                value: '${overview.excluded.length}',
+                onTap: overview.excluded.isEmpty
+                    ? null
+                    : () => _openList(ReminderListFilter.none),
+              ),
+            ],
+          ),
         ),
         if (overview.notCoveredCount > 0)
           Padding(

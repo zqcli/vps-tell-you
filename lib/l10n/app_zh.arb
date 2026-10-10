@@ -462,6 +462,8 @@
   "financeRemainingDays": "剩余服务天数",
   "financeRenewalCycle": "续费 / 周期",
   "financeDailyShown": "所示周期日均",
+  "r2CopyMetricDaysLeft": "剩余天数",
+  "r2CopyMetricDaily": "日均",
   "financeInferredPeriods": "部分服务起点由到期日与日历周期反推；不代表历史付款证明。",
   "financeValueDisclaimer": "仅表示服务时长的价格折算，不是退款承诺或成交价。",
   "financeShownPeriod": "所示周期",

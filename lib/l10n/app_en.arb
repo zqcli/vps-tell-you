@@ -293,6 +293,8 @@
   "financeRemainingDays": "Remaining service days",
   "financeRenewalCycle": "Renewal price / Cycle",
   "financeDailyShown": "Daily average for the shown period",
+  "r2CopyMetricDaysLeft": "Days left",
+  "r2CopyMetricDaily": "Daily",
   "financeInferredPeriods": "Some service start dates are inferred from the expiry date and calendar cycle. They are not proof of past payment.",
   "financeValueDisclaimer": "This is a price-based estimate of unused service time, not a refund promise or sale price.",
   "financeShownPeriod": "Shown period",

@@ -796,9 +796,16 @@ class _SummaryTile extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Same caption / figure typography as [AppMetricStrip]; these
+            // tiles stay separate because they navigate and may carry a
+            // coverage line under the figure.
             Text(
               label,
-              style: const TextStyle(color: Colors.white, fontSize: 12),
+              style: TextStyle(
+                color: Colors.white.withValues(alpha: .85),
+                fontSize: 13,
+                height: 1.3,
+              ),
             ),
             const SizedBox(height: 2),
             FinanceTotalView(total: total, layout: FinanceTotalLayout.tile),
