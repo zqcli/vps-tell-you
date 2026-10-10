@@ -183,12 +183,16 @@ class _AppSheetFrame extends StatelessWidget {
 /// One entry of [showAppActionMenu].
 class AppMenuAction<T> {
   const AppMenuAction({
+    this.key,
     required this.label,
     this.value,
     this.onPressed,
     this.destructive = false,
     this.isDefault = false,
   });
+
+  /// Key of the rendered button (for tests / lookups).
+  final Key? key;
 
   /// Button text.
   final String label;
@@ -235,6 +239,7 @@ Future<T?> showAppActionMenu<T>(
       actions: [
         for (final action in actions)
           CupertinoActionSheetAction(
+            key: action.key,
             isDestructiveAction: action.destructive,
             isDefaultAction: action.isDefault,
             onPressed: () {

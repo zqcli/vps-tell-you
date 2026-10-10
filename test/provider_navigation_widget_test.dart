@@ -129,6 +129,14 @@ void main() {
     await tester.pumpAndSettle();
   }
 
+  /// "Change provider" lives in the detail page's more-actions menu.
+  Future<void> changeProviderFromMenu(WidgetTester tester) async {
+    await tester.tap(find.byTooltip('More actions'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('server-change-provider')));
+    await tester.pumpAndSettle();
+  }
+
   Future<void> tap(WidgetTester tester, String key) async {
     final finder = find.byKey(ValueKey(key));
     if (finder.evaluate().isEmpty) {
@@ -418,7 +426,7 @@ void main() {
       final adapter = await account('single', north, v1: true, imported: true);
       final before = ledger.byId(adapter.pinnedServerId!)!;
       await mount(tester, ServerDetail(controller: ledger, id: before.id));
-      await tap(tester, 'server-change-provider');
+      await changeProviderFromMenu(tester);
       await tap(tester, 'choose-provider-south');
       expect(find.textContaining('Adapter single'), findsWidgets);
       expect(find.text('Unlink and change provider'), findsOneWidget);
@@ -426,7 +434,7 @@ void main() {
       await tester.pumpAndSettle();
       expect(ledger.byId(before.id)!.providerId, north.id);
       expect(ledger.cloud.bindings, hasLength(1));
-      await tap(tester, 'server-change-provider');
+      await changeProviderFromMenu(tester);
       await tap(tester, 'choose-provider-south');
       await tester.tap(find.text('Unlink and change provider'));
       await tester.pumpAndSettle();

@@ -9,6 +9,7 @@ library;
 
 export '../app_palette.dart';
 export 'app_list.dart';
+export 'app_metrics.dart';
 export 'app_overlays.dart';
 export 'app_scaffold.dart';
 export 'app_widgets.dart';

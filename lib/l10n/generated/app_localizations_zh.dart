@@ -3029,7 +3029,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get serverNoPanelLink => '未关联面板账户';
 
   @override
-  String get serverPanelLinkHelp => '关联已保存的面板账户与实例。关联或刷新均不会更改本地硬件信息，请在上方手动编辑。';
+  String get serverPanelLinkHelp => '面板刷新只更新 API 观测，不会覆盖你手动填写的资料。';
 
   @override
   String get serverLinkPanel => '关联面板账户';
@@ -3067,13 +3067,13 @@ class AppLocalizationsZh extends AppLocalizations {
   String get serverServiceDue => '服务到期日';
 
   @override
-  String get serverUnknownCostHelp => '未知金额不会按 0 计算。可在“基本信息 / 编辑”中补充费用资料。';
+  String get serverUnknownCostHelp => '未填写的金额不会按 0 计算。';
 
   @override
-  String get serverMeteredValueHelp => '按量费用作为月估算，不产生剩余价值。可在编辑服务器时维护费用资料。';
+  String get serverMeteredValueHelp => '按量计费只作月估算，不计算剩余价值。';
 
   @override
-  String get serverRenewalValueHelp => '按当前续费价折算已知服务期；历史实付另计，不覆盖续费价。';
+  String get serverRenewalValueHelp => '剩余价值仅为按续费价折算的参考，不是退款或成交价。';
 
   @override
   String get serverReminderPlan => '到期提醒与使用计划';
@@ -3115,8 +3115,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get serverPower => '单机电源';
 
   @override
-  String get serverConnectionSafety =>
-      '首次连接需核对主机指纹；指纹变化会暂停登录。重启或关机需再次核对目标，且不会停止厂商计费。';
+  String get serverConnectionSafety => '首次连接需核对主机指纹；关机或重启不会停止厂商计费。';
 
   @override
   String get serverNotes => '备注';
@@ -3206,6 +3205,15 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get uiDetailQuickPower => '电源';
+
+  @override
+  String get r2DetailMetricValue => '剩余价值';
+
+  @override
+  String get r2DetailMetricDays => '剩余天数';
+
+  @override
+  String get r2DetailMetricDaily => '日均';
 
   @override
   String serverRequiredField(String p0) {
