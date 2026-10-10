@@ -190,6 +190,96 @@ class AppLocalizationsZh extends AppLocalizations {
   String get reminderCoverage => '提醒范围';
 
   @override
+  String get r2TabsMetricScheduled => '已安排';
+
+  @override
+  String get r2TabsMetricNotCovered => '未覆盖';
+
+  @override
+  String get r2TabsMetricNoReminder => '未提醒';
+
+  @override
+  String get r2TabsUpcoming => '即将提醒';
+
+  @override
+  String r2TabsShowAll(String n) {
+    return '显示全部（$n）';
+  }
+
+  @override
+  String get r2TabsToday => '今天';
+
+  @override
+  String get r2TabsTomorrow => '明天';
+
+  @override
+  String get r2TabsWithinWeek => '7 天内';
+
+  @override
+  String r2TabsMonth(String year, String month) {
+    return '$year 年 $month 月';
+  }
+
+  @override
+  String r2TabsRowSub(String lead, String due) {
+    return '$lead · 到期 $due';
+  }
+
+  @override
+  String get r2TabsNotCoveredPill => '未覆盖';
+
+  @override
+  String get r2TabsCoverageNote =>
+      '超出系统上限（iOS 64 / Android 256）或 366 天以后的提醒不会安排。';
+
+  @override
+  String get r2TabsNoReminderServers => '未提醒的服务器';
+
+  @override
+  String get r2TabsReasonArchived => '已归档';
+
+  @override
+  String get r2TabsReasonDemo => '演示数据';
+
+  @override
+  String get r2TabsReasonNoDate => '未填到期日';
+
+  @override
+  String get r2TabsReasonNotPrepaid => '非预付费';
+
+  @override
+  String get r2TabsReasonOff => '提醒已关闭';
+
+  @override
+  String get r2TabsReasonNoUpcoming => '暂无待发提醒';
+
+  @override
+  String get r2TabsAllReminders => '全部提醒';
+
+  @override
+  String get r2TabsFilterAll => '全部';
+
+  @override
+  String get r2TabsSearchHint => '搜索服务器名称';
+
+  @override
+  String get r2TabsEmpty => '没有符合条件的项目';
+
+  @override
+  String get r2TabsNoUpcoming => '暂无即将提醒';
+
+  @override
+  String get r2TabsEnableHelp => '需同时开启系统通知和各服务器的提醒。';
+
+  @override
+  String get r2TabsPermissionHelp => '已拒绝时，请到系统设置中开启通知。';
+
+  @override
+  String r2TabsNotifyScheduled(String n) {
+    return '已安排 $n 条';
+  }
+
+  @override
   String get reminderHorizonHelp =>
       '只提交未来 366 天内已知的到期提醒；过去的提醒时间不补发。iOS 最多排入最近 64 条，Android 最多 256 条，其余显示为未安排。请定期打开应用更新提醒。';
 

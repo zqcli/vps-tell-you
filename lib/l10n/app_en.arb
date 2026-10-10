@@ -58,6 +58,67 @@
   "notificationPermissionHelp": "If permission was denied or the notification channel is off, change it in device settings. Then return to the app and check reminder status again.",
   "checkReminderStatus": "Check reminder status again",
   "reminderCoverage": "Reminder coverage",
+  "r2TabsMetricScheduled": "Scheduled",
+  "r2TabsMetricNotCovered": "Not covered",
+  "r2TabsMetricNoReminder": "No reminder",
+  "r2TabsUpcoming": "Upcoming",
+  "r2TabsShowAll": "Show all ({n})",
+  "@r2TabsShowAll": {
+    "placeholders": {
+      "n": {
+        "type": "String"
+      }
+    }
+  },
+  "r2TabsToday": "Today",
+  "r2TabsTomorrow": "Tomorrow",
+  "r2TabsWithinWeek": "Next 7 days",
+  "r2TabsMonth": "{year}-{month}",
+  "@r2TabsMonth": {
+    "placeholders": {
+      "year": {
+        "type": "String"
+      },
+      "month": {
+        "type": "String"
+      }
+    }
+  },
+  "r2TabsRowSub": "{lead} · due {due}",
+  "@r2TabsRowSub": {
+    "placeholders": {
+      "lead": {
+        "type": "String"
+      },
+      "due": {
+        "type": "String"
+      }
+    }
+  },
+  "r2TabsNotCoveredPill": "Not covered",
+  "r2TabsCoverageNote": "Reminders over the OS limit (iOS 64 / Android 256) or more than 366 days away are not scheduled.",
+  "r2TabsNoReminderServers": "Servers without reminders",
+  "r2TabsReasonArchived": "Archived",
+  "r2TabsReasonDemo": "Demo data",
+  "r2TabsReasonNoDate": "No due date",
+  "r2TabsReasonNotPrepaid": "Not prepaid",
+  "r2TabsReasonOff": "Reminders off",
+  "r2TabsReasonNoUpcoming": "Nothing upcoming",
+  "r2TabsAllReminders": "All reminders",
+  "r2TabsFilterAll": "All",
+  "r2TabsSearchHint": "Search server name",
+  "r2TabsEmpty": "Nothing to show",
+  "r2TabsNoUpcoming": "No upcoming reminders",
+  "r2TabsEnableHelp": "Needs both system notifications and per-server reminders.",
+  "r2TabsPermissionHelp": "If denied, enable notifications in system settings.",
+  "r2TabsNotifyScheduled": "{n} scheduled",
+  "@r2TabsNotifyScheduled": {
+    "placeholders": {
+      "n": {
+        "type": "String"
+      }
+    }
+  },
   "reminderHorizonHelp": "Only known expiry reminders within the next 366 days are submitted. Past reminder times are not retried. Up to 64 upcoming reminders on iOS or 256 on Android can be scheduled; the rest are shown as not scheduled. Open the app regularly to update them.",
   "reminderDeliveryHelp": "The app checks permission and the device time zone when reopened. Open it after travel; otherwise, existing reminders may still use the previous time zone. Power saving, focus modes, and device restrictions may delay or block reminders. Scheduled does not mean delivered.",
   "reminderPrivacyHelp": "Reminders contain only the expiry date and a prompt to check it. They omit server names, addresses, accounts, and amounts. They do not make payments or change provider renewal settings.",

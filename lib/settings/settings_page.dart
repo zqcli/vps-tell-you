@@ -133,7 +133,12 @@ class _SettingsPageState extends State<SettingsPage> {
 
   String notificationValue(BuildContext context) =>
       switch (controller.reminders.state) {
-        ReminderSyncState.ready => context.l10n.uiTabsNotifyAllowed,
+        ReminderSyncState.ready =>
+          controller.reminders.planned.isEmpty
+              ? context.l10n.uiTabsNotifyAllowed
+              : context.l10n.r2TabsNotifyScheduled(
+                  controller.reminders.planned.length.toString(),
+                ),
         ReminderSyncState.denied => context.l10n.uiTabsNotifyDenied,
         ReminderSyncState.unsupported => context.l10n.uiTabsNotifyUnsupported,
         ReminderSyncState.idle => context.l10n.uiTabsNotifyUnchecked,

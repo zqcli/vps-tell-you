@@ -193,6 +193,10 @@ class ReminderScheduler extends ChangeNotifier {
   String? timezoneName;
   int submitted = 0, uncovered = 0;
   List<PlannedReminder> planned = const [];
+
+  /// Candidates left out of the last submission (over the OS capacity or
+  /// beyond the 366-day horizon). Display only; never resubmitted.
+  List<PlannedReminder> notCovered = const [];
   Future<void> _tail = Future.value();
   int _generation = 0;
   bool _disposed = false;
@@ -237,6 +241,7 @@ class ReminderScheduler extends ChangeNotifier {
         if (!platform.supported) {
           submitted = uncovered = 0;
           planned = const [];
+          notCovered = const [];
           state = ReminderSyncState.unsupported;
           return;
         }
@@ -257,6 +262,7 @@ class ReminderScheduler extends ChangeNotifier {
           }
           submitted = uncovered = 0;
           planned = const [];
+          notCovered = const [];
           state = ReminderSyncState.denied;
           return;
         }
@@ -314,6 +320,10 @@ class ReminderScheduler extends ChangeNotifier {
         }
         timezoneName = zone;
         planned = List.unmodifiable(selected);
+        final chosen = {for (final r in selected) r.notificationId};
+        notCovered = List.unmodifiable(
+          plan.selected.where((r) => !chosen.contains(r.notificationId)),
+        );
         submitted = selected.length;
         uncovered = plan.selected.length - selected.length;
         state = ReminderSyncState.ready;

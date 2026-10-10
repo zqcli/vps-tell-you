@@ -209,6 +209,98 @@ class AppLocalizationsEn extends AppLocalizations {
   String get reminderCoverage => 'Reminder coverage';
 
   @override
+  String get r2TabsMetricScheduled => 'Scheduled';
+
+  @override
+  String get r2TabsMetricNotCovered => 'Not covered';
+
+  @override
+  String get r2TabsMetricNoReminder => 'No reminder';
+
+  @override
+  String get r2TabsUpcoming => 'Upcoming';
+
+  @override
+  String r2TabsShowAll(String n) {
+    return 'Show all ($n)';
+  }
+
+  @override
+  String get r2TabsToday => 'Today';
+
+  @override
+  String get r2TabsTomorrow => 'Tomorrow';
+
+  @override
+  String get r2TabsWithinWeek => 'Next 7 days';
+
+  @override
+  String r2TabsMonth(String year, String month) {
+    return '$year-$month';
+  }
+
+  @override
+  String r2TabsRowSub(String lead, String due) {
+    return '$lead · due $due';
+  }
+
+  @override
+  String get r2TabsNotCoveredPill => 'Not covered';
+
+  @override
+  String get r2TabsCoverageNote =>
+      'Reminders over the OS limit (iOS 64 / Android 256) or more than 366 days away are not scheduled.';
+
+  @override
+  String get r2TabsNoReminderServers => 'Servers without reminders';
+
+  @override
+  String get r2TabsReasonArchived => 'Archived';
+
+  @override
+  String get r2TabsReasonDemo => 'Demo data';
+
+  @override
+  String get r2TabsReasonNoDate => 'No due date';
+
+  @override
+  String get r2TabsReasonNotPrepaid => 'Not prepaid';
+
+  @override
+  String get r2TabsReasonOff => 'Reminders off';
+
+  @override
+  String get r2TabsReasonNoUpcoming => 'Nothing upcoming';
+
+  @override
+  String get r2TabsAllReminders => 'All reminders';
+
+  @override
+  String get r2TabsFilterAll => 'All';
+
+  @override
+  String get r2TabsSearchHint => 'Search server name';
+
+  @override
+  String get r2TabsEmpty => 'Nothing to show';
+
+  @override
+  String get r2TabsNoUpcoming => 'No upcoming reminders';
+
+  @override
+  String get r2TabsEnableHelp =>
+      'Needs both system notifications and per-server reminders.';
+
+  @override
+  String get r2TabsPermissionHelp =>
+      'If denied, enable notifications in system settings.';
+
+  @override
+  String r2TabsNotifyScheduled(String n) {
+    return '$n scheduled';
+  }
+
+  @override
   String get reminderHorizonHelp =>
       'Only known expiry reminders within the next 366 days are submitted. Past reminder times are not retried. Up to 64 upcoming reminders on iOS or 256 on Android can be scheduled; the rest are shown as not scheduled. Open the app regularly to update them.';
 
