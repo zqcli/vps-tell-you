@@ -109,6 +109,52 @@ class AppLocalizationsEn extends AppLocalizations {
       'After shutdown, use the provider panel to power on. SSH cannot power on a stopped server. Restarting or shutting down does not stop provider billing.';
 
   @override
+  String get uiTabsCalculatorTile =>
+      'Standalone estimate or from a server; export a privacy-safe image';
+
+  @override
+  String get uiTabsSshTile => 'Pick a configured server';
+
+  @override
+  String get uiTabsTcpTile => 'Probe one host and port';
+
+  @override
+  String get uiTabsSnippetsTile => 'Saved commands, sent as a draft';
+
+  @override
+  String get uiTabsPowerTile => 'Reboot or power off over SSH';
+
+  @override
+  String get uiTabsLedgerSection => 'Ledger';
+
+  @override
+  String get uiTabsSecuritySection => 'Security';
+
+  @override
+  String get uiTabsPreferencesSection => 'Preferences';
+
+  @override
+  String get uiTabsDataSection => 'Data';
+
+  @override
+  String get uiTabsNotifyAllowed => 'Allowed';
+
+  @override
+  String get uiTabsNotifyDenied => 'Not allowed';
+
+  @override
+  String get uiTabsNotifyUnsupported => 'Unsupported';
+
+  @override
+  String get uiTabsNotifyUnchecked => 'Not checked';
+
+  @override
+  String get uiTabsNotifyChecking => 'Checking';
+
+  @override
+  String get uiTabsNotifyFailed => 'Check failed';
+
+  @override
   String get usageContinue => 'Keep using';
 
   @override
@@ -194,6 +240,34 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get reminderSaveHelp =>
       'Tap Save reminder rules to apply changes. If reminders are enabled and you choose Stop using at expiry, reminders will still prompt you to check provider renewal settings.';
+
+  @override
+  String get uiTabsReminderSaveHelp =>
+      'Tap Save at the top right to apply changes. If reminders are enabled and you choose Stop using at expiry, reminders will still prompt you to check provider renewal settings.';
+
+  @override
+  String uiTabsReminderDue(String name, String date) {
+    return '$name expires on $date.';
+  }
+
+  @override
+  String uiTabsReminderPreview(String dates, String time) {
+    return 'You will be reminded on $dates at $time (device time zone). Notifications never include names, IPs or amounts.';
+  }
+
+  @override
+  String get uiTabsReminderPreviewNone =>
+      'No upcoming reminder time with these settings. Notifications never include names, IPs or amounts.';
+
+  @override
+  String get uiTabsUsageContinueHint => 'Reminds you to renew before expiry';
+
+  @override
+  String get uiTabsUsageUndecidedHint => 'Reminds you to decide';
+
+  @override
+  String get uiTabsUsageStopHint =>
+      'Still reminds you to verify and cancel auto-renewal';
 
   @override
   String get demoNoNotifications =>

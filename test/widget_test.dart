@@ -251,7 +251,10 @@ void main() {
           await tester.tap(find.byKey(ValueKey('tab-$tab')));
           await tester.pumpAndSettle();
           expect(tester.takeException(), isNull, reason: 'tab $tab');
-          await tester.drag(find.byType(ListView).first, const Offset(0, -500));
+          await tester.drag(
+            find.byType(Scrollable).first,
+            const Offset(0, -500),
+          );
           await tester.pumpAndSettle();
           expect(tester.takeException(), isNull);
         }

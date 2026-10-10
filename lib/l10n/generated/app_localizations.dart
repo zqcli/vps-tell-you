@@ -272,6 +272,96 @@ abstract class AppLocalizations {
   /// **'关机后无法通过 SSH 开机，需使用厂商面板。重启或关机不会停止厂商计费。'**
   String get powerControlWarning;
 
+  /// No description provided for @uiTabsCalculatorTile.
+  ///
+  /// In zh, this message translates to:
+  /// **'独立试算或引用服务器，可导出不含隐私的图片'**
+  String get uiTabsCalculatorTile;
+
+  /// No description provided for @uiTabsSshTile.
+  ///
+  /// In zh, this message translates to:
+  /// **'选择已配置的服务器'**
+  String get uiTabsSshTile;
+
+  /// No description provided for @uiTabsTcpTile.
+  ///
+  /// In zh, this message translates to:
+  /// **'单目标端口探测'**
+  String get uiTabsTcpTile;
+
+  /// No description provided for @uiTabsSnippetsTile.
+  ///
+  /// In zh, this message translates to:
+  /// **'常用命令，插入草稿后发送'**
+  String get uiTabsSnippetsTile;
+
+  /// No description provided for @uiTabsPowerTile.
+  ///
+  /// In zh, this message translates to:
+  /// **'经 SSH 重启或关机'**
+  String get uiTabsPowerTile;
+
+  /// No description provided for @uiTabsLedgerSection.
+  ///
+  /// In zh, this message translates to:
+  /// **'台账'**
+  String get uiTabsLedgerSection;
+
+  /// No description provided for @uiTabsSecuritySection.
+  ///
+  /// In zh, this message translates to:
+  /// **'安全'**
+  String get uiTabsSecuritySection;
+
+  /// No description provided for @uiTabsPreferencesSection.
+  ///
+  /// In zh, this message translates to:
+  /// **'偏好'**
+  String get uiTabsPreferencesSection;
+
+  /// No description provided for @uiTabsDataSection.
+  ///
+  /// In zh, this message translates to:
+  /// **'数据'**
+  String get uiTabsDataSection;
+
+  /// No description provided for @uiTabsNotifyAllowed.
+  ///
+  /// In zh, this message translates to:
+  /// **'已允许'**
+  String get uiTabsNotifyAllowed;
+
+  /// No description provided for @uiTabsNotifyDenied.
+  ///
+  /// In zh, this message translates to:
+  /// **'未允许'**
+  String get uiTabsNotifyDenied;
+
+  /// No description provided for @uiTabsNotifyUnsupported.
+  ///
+  /// In zh, this message translates to:
+  /// **'不支持'**
+  String get uiTabsNotifyUnsupported;
+
+  /// No description provided for @uiTabsNotifyUnchecked.
+  ///
+  /// In zh, this message translates to:
+  /// **'未检查'**
+  String get uiTabsNotifyUnchecked;
+
+  /// No description provided for @uiTabsNotifyChecking.
+  ///
+  /// In zh, this message translates to:
+  /// **'检查中'**
+  String get uiTabsNotifyChecking;
+
+  /// No description provided for @uiTabsNotifyFailed.
+  ///
+  /// In zh, this message translates to:
+  /// **'检查失败'**
+  String get uiTabsNotifyFailed;
+
   /// No description provided for @usageContinue.
   ///
   /// In zh, this message translates to:
@@ -409,6 +499,48 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'修改后点“保存提醒规则”生效。若启用提醒并选择“到期不再使用”，仍会提醒核对厂商的续费设置。'**
   String get reminderSaveHelp;
+
+  /// No description provided for @uiTabsReminderSaveHelp.
+  ///
+  /// In zh, this message translates to:
+  /// **'修改后点右上角“保存”生效。若启用提醒并选择“到期不再使用”，仍会提醒核对厂商的续费设置。'**
+  String get uiTabsReminderSaveHelp;
+
+  /// No description provided for @uiTabsReminderDue.
+  ///
+  /// In zh, this message translates to:
+  /// **'{name} 将于 {date} 到期。'**
+  String uiTabsReminderDue(String name, String date);
+
+  /// No description provided for @uiTabsReminderPreview.
+  ///
+  /// In zh, this message translates to:
+  /// **'将在 {dates} {time} 提醒（设备时区）。通知不包含名称、IP 或金额。'**
+  String uiTabsReminderPreview(String dates, String time);
+
+  /// No description provided for @uiTabsReminderPreviewNone.
+  ///
+  /// In zh, this message translates to:
+  /// **'按当前设置没有未来的提醒时间。通知不包含名称、IP 或金额。'**
+  String get uiTabsReminderPreviewNone;
+
+  /// No description provided for @uiTabsUsageContinueHint.
+  ///
+  /// In zh, this message translates to:
+  /// **'到期前提醒续费'**
+  String get uiTabsUsageContinueHint;
+
+  /// No description provided for @uiTabsUsageUndecidedHint.
+  ///
+  /// In zh, this message translates to:
+  /// **'提醒你做出决定'**
+  String get uiTabsUsageUndecidedHint;
+
+  /// No description provided for @uiTabsUsageStopHint.
+  ///
+  /// In zh, this message translates to:
+  /// **'仍提醒核对并取消自动续费'**
+  String get uiTabsUsageStopHint;
 
   /// No description provided for @demoNoNotifications.
   ///

@@ -357,10 +357,7 @@ void main() {
         await tester.pumpAndSettle();
         await tester.tap(find.text('Open reminders'));
         await tester.pumpAndSettle();
-        await tester.scrollUntilVisible(find.text('保存提醒规则'), 300);
-        await tester.ensureVisible(find.text('保存提醒规则'));
-        await tester.pumpAndSettle();
-        await tester.tap(find.text('保存提醒规则'));
+        await tester.tap(find.byKey(const ValueKey('reminder-save')));
         await tester.pumpAndSettle();
         expect((await store.reminderRules()).single.revision, 1);
         if (newerRoute) {
@@ -383,9 +380,7 @@ void main() {
           expect(find.text('Newer notification route'), findsOneWidget);
           await tapPageBack(tester);
           await tester.pumpAndSettle();
-          await tester.ensureVisible(find.text('保存提醒规则'));
-          await tester.pumpAndSettle();
-          await tester.tap(find.text('保存提醒规则'));
+          await tester.tap(find.byKey(const ValueKey('reminder-save')));
           await tester.pumpAndSettle();
           expect((await store.reminderRules()).single.revision, 2);
         }

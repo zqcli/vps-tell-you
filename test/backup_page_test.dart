@@ -5,11 +5,13 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
+import 'package:flutter/cupertino.dart' show CupertinoAlertDialog;
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:vps_tell_you/core/app_theme.dart';
+import 'package:vps_tell_you/core/ui/ui.dart';
 import 'package:vps_tell_you/data/ledger_store.dart';
 import 'package:vps_tell_you/servers/ledger_controller.dart';
 import 'package:vps_tell_you/settings/backup_page.dart';
@@ -253,7 +255,8 @@ void main() {
         () async => Future<void>.delayed(const Duration(milliseconds: 30)),
       );
       await tester.pump(const Duration(milliseconds: 300));
-      if (find.byType(AlertDialog).evaluate().isEmpty) {
+      if (find.byType(AlertDialog).evaluate().isEmpty &&
+          find.byType(CupertinoAlertDialog).evaluate().isEmpty) {
         await tester.pumpAndSettle();
       }
     }
@@ -289,7 +292,7 @@ void main() {
         expect(find.text('目标台账已有分组'), findsOneWidget);
         expect(
           tester
-              .widget<FilledButton>(find.widgetWithText(FilledButton, '恢复到空台账'))
+              .widget<AppButton>(find.widgetWithText(AppButton, '恢复到空台账'))
               .onPressed,
           isNull,
         );
