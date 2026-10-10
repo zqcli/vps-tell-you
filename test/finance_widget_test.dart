@@ -13,6 +13,7 @@ import 'package:vps_tell_you/data/ledger_store.dart';
 import 'package:vps_tell_you/finance/calculation_share.dart';
 import 'package:vps_tell_you/finance/calculator_page.dart';
 import 'package:vps_tell_you/finance/finance_page.dart';
+import 'package:vps_tell_you/finance/finance_widgets.dart';
 import 'package:vps_tell_you/finance/finance_math.dart';
 import 'package:vps_tell_you/finance/finance_models.dart';
 import 'package:vps_tell_you/finance/fx_page.dart';
@@ -221,7 +222,11 @@ void main() {
       await tester.pageBack();
       await tester.pumpAndSettle();
       await reveal(tester, find.byKey(const ValueKey('forecast-2027-01-01')));
+      // Bars only select a month; the row under the chart opens its renewals.
       await tester.tap(find.byKey(const ValueKey('forecast-2027-01-01')));
+      await tester.pumpAndSettle();
+      await reveal(tester, find.byKey(const ValueKey('forecast-open')));
+      await tester.tap(find.byKey(const ValueKey('forecast-open')));
       await tester.pumpAndSettle();
       expect(find.text('2027 年 1 月续费'), findsOneWidget);
       expect(find.text(server.name), findsOneWidget);
@@ -288,8 +293,8 @@ void main() {
       await reveal(tester, find.byKey(const ValueKey('quote-offer')));
       expect(
         tester
-            .widget<TextFormField>(find.byKey(const ValueKey('quote-offer')))
-            .controller!
+            .widget<FinanceFieldRow>(find.byKey(const ValueKey('quote-offer')))
+            .controller
             .text,
         '0.01',
       );
@@ -349,7 +354,10 @@ void main() {
       ]) {
         await mount(tester, page, scale: 2);
         for (var i = 0; i < 14; i++) {
-          await tester.drag(find.byType(ListView).first, const Offset(0, -500));
+          await tester.drag(
+            find.byType(CustomScrollView).first,
+            const Offset(0, -500),
+          );
           await tester.pumpAndSettle();
           expect(
             tester.takeException(),

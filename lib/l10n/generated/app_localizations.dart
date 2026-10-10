@@ -2443,6 +2443,96 @@ abstract class AppLocalizations {
   /// **'{label} · {count} 台'**
   String financeSliceLabel(String label, int count);
 
+  /// No description provided for @uiFinanceDisplayChip.
+  ///
+  /// In zh, this message translates to:
+  /// **'显示 {currency}'**
+  String uiFinanceDisplayChip(String currency);
+
+  /// No description provided for @uiFinanceCurrencyNote.
+  ///
+  /// In zh, this message translates to:
+  /// **'只换算显示，不改变原币记录。'**
+  String get uiFinanceCurrencyNote;
+
+  /// No description provided for @uiFinanceTileRemaining.
+  ///
+  /// In zh, this message translates to:
+  /// **'剩余价值'**
+  String get uiFinanceTileRemaining;
+
+  /// No description provided for @uiFinanceTileRenewals.
+  ///
+  /// In zh, this message translates to:
+  /// **'30 天内续费'**
+  String get uiFinanceTileRenewals;
+
+  /// No description provided for @uiFinanceBannerMissingFx.
+  ///
+  /// In zh, this message translates to:
+  /// **'{count} 项金额缺少汇率，未计入合计'**
+  String uiFinanceBannerMissingFx(int count);
+
+  /// No description provided for @uiFinanceGapMissingFx.
+  ///
+  /// In zh, this message translates to:
+  /// **'缺汇率 {count} 项'**
+  String uiFinanceGapMissingFx(int count);
+
+  /// No description provided for @uiFinanceGapUnknown.
+  ///
+  /// In zh, this message translates to:
+  /// **'金额未知 {count} 项'**
+  String uiFinanceGapUnknown(int count);
+
+  /// No description provided for @uiFinanceMonthShort.
+  ///
+  /// In zh, this message translates to:
+  /// **'{month} 月'**
+  String uiFinanceMonthShort(String month);
+
+  /// No description provided for @uiFinanceForecastBasis.
+  ///
+  /// In zh, this message translates to:
+  /// **'按当前续费价'**
+  String get uiFinanceForecastBasis;
+
+  /// No description provided for @uiFinanceToolsHeader.
+  ///
+  /// In zh, this message translates to:
+  /// **'记录与工具'**
+  String get uiFinanceToolsHeader;
+
+  /// No description provided for @uiFinanceServerCount.
+  ///
+  /// In zh, this message translates to:
+  /// **'{count} 台'**
+  String uiFinanceServerCount(int count);
+
+  /// No description provided for @uiFinanceFootnote.
+  ///
+  /// In zh, this message translates to:
+  /// **'金额按当前续费价和手动参考汇率折算，仅供参考，不代表厂商实际账单。'**
+  String get uiFinanceFootnote;
+
+  /// No description provided for @uiFinanceVoidedPill.
+  ///
+  /// In zh, this message translates to:
+  /// **'已撤销'**
+  String get uiFinanceVoidedPill;
+
+  /// No description provided for @uiFinanceArchivedPill.
+  ///
+  /// In zh, this message translates to:
+  /// **'已归档'**
+  String get uiFinanceArchivedPill;
+
+  /// No description provided for @uiFinanceAccountPill.
+  ///
+  /// In zh, this message translates to:
+  /// **'账户账单'**
+  String get uiFinanceAccountPill;
+
   /// No description provided for @financeForecastMonth.
   ///
   /// In zh, this message translates to:

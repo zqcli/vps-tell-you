@@ -8,11 +8,13 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:vps_tell_you/app.dart';
 import 'package:vps_tell_you/core/app_theme.dart';
+import 'package:vps_tell_you/core/ui/ui.dart';
 import 'package:vps_tell_you/core/value_types.dart';
 import 'package:vps_tell_you/data/ledger_store.dart';
 import 'package:vps_tell_you/finance/calculation_share.dart';
 import 'package:vps_tell_you/finance/calculator_page.dart';
 import 'package:vps_tell_you/finance/finance_page.dart';
+import 'package:vps_tell_you/finance/finance_widgets.dart';
 import 'package:vps_tell_you/l10n/generated/app_localizations.dart';
 import 'package:vps_tell_you/l10n/generated/app_localizations_en.dart';
 import 'package:vps_tell_you/l10n/generated/app_localizations_zh.dart';
@@ -153,11 +155,17 @@ void main() {
   Future<String> input(WidgetTester tester, String key) async {
     final field = find.byKey(ValueKey(key));
     await reveal(tester, field);
-    return tester.widget<TextFormField>(field).controller!.text;
+    return tester.widget<FinanceFieldRow>(field).controller.text;
   }
 
   Future<void> back(WidgetTester tester) async {
-    final button = find.byType(BackButton).hitTestable();
+    // Redesigned pages use the app bar back button; the PNG preview page keeps
+    // the Material one.
+    final button = find
+        .byWidgetPredicate(
+          (w) => w is BackButton || w.key == const ValueKey('app-nav-back'),
+        )
+        .hitTestable();
     expect(button, findsOneWidget);
     await tester.tap(button);
     await tester.pumpAndSettle();
@@ -227,9 +235,11 @@ void main() {
         expect(find.text(l10n.calculatorDescription), findsOneWidget);
         final entryTop = contentTop(entry);
         expect(entryTop, greaterThan(summaryTop));
+        // The redesigned Costs page lists renewals first and keeps the
+        // calculator in the closing "records & tools" group.
         final upcoming = find.textContaining(l10n.financeUpcomingRenewals);
         await reveal(tester, upcoming);
-        expect(entryTop, lessThan(contentTop(upcoming)));
+        expect(entryTop, greaterThan(contentTop(upcoming)));
         await tap(tester, entry);
         expect(find.byType(CalculatorPage), findsOneWidget);
         expect(find.text(l10n.financeIndependentNote), findsOneWidget);
@@ -280,11 +290,7 @@ void main() {
       expect(data.hasAction(ui.SemanticsAction.tap), isTrue);
       expect(data.label, contains(en.remainingValueCalculator));
       expect(data.label, contains(en.calculatorDescription));
-      final activate = tester
-          .widget<SettingRow>(
-            find.descendant(of: entry, matching: find.byType(SettingRow)),
-          )
-          .onTap!;
+      final activate = tester.widget<AppRow>(entry).onTap!;
       activate();
       activate();
       await tester.pumpAndSettle();
@@ -310,9 +316,9 @@ void main() {
     await ledger.refresh();
     final before = (await store.exportLedgerBackup()).encode();
     await mount(tester);
-    await tester.tap(find.byType(DropdownButtonFormField<String>));
+    await tester.tap(find.byKey(const ValueKey('finance-scope')));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Production').last);
+    await tester.tap(find.byKey(ValueKey('finance-group-$groupId')));
     await tester.pumpAndSettle();
     await reveal(tester, entry);
     final financeState = tester.state(find.byType(FinancePage));
@@ -332,14 +338,14 @@ void main() {
     await back(tester);
     expect(tester.state(find.byType(FinancePage)), same(financeState));
     expect(position.pixels, offset);
-    await reveal(tester, find.byKey(ValueKey('finance-group-$groupId')));
+    // The scope chip still shows the selected group.
+    await reveal(tester, find.byKey(const ValueKey('finance-scope')));
     expect(
-      tester
-          .state<FormFieldState<String>>(
-            find.byKey(ValueKey('finance-group-$groupId')),
-          )
-          .value,
-      groupId,
+      find.descendant(
+        of: find.byKey(const ValueKey('finance-scope')),
+        matching: find.text('Production'),
+      ),
+      findsOneWidget,
     );
     expect((await store.exportLedgerBackup()).encode(), before);
   });
@@ -444,10 +450,7 @@ void main() {
               await capture(tester, '$language-${brightness.name}-overview');
             }
             await reveal(tester, entry);
-            final row = find.descendant(
-              of: entry,
-              matching: find.byType(SettingRow),
-            );
+            final row = entry;
             expect(row.hitTestable(), findsOneWidget);
             expect(tester.getSize(row).height, greaterThanOrEqualTo(48));
             for (final text in tester.widgetList<Text>(

@@ -866,6 +866,63 @@
       }
     }
   },
+  "uiFinanceDisplayChip": "显示 {currency}",
+  "@uiFinanceDisplayChip": {
+    "placeholders": {
+      "currency": {
+        "type": "String"
+      }
+    }
+  },
+  "uiFinanceCurrencyNote": "只换算显示，不改变原币记录。",
+  "uiFinanceTileRemaining": "剩余价值",
+  "uiFinanceTileRenewals": "30 天内续费",
+  "uiFinanceBannerMissingFx": "{count} 项金额缺少汇率，未计入合计",
+  "@uiFinanceBannerMissingFx": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "uiFinanceGapMissingFx": "缺汇率 {count} 项",
+  "@uiFinanceGapMissingFx": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "uiFinanceGapUnknown": "金额未知 {count} 项",
+  "@uiFinanceGapUnknown": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "uiFinanceMonthShort": "{month} 月",
+  "@uiFinanceMonthShort": {
+    "placeholders": {
+      "month": {
+        "type": "String"
+      }
+    }
+  },
+  "uiFinanceForecastBasis": "按当前续费价",
+  "uiFinanceToolsHeader": "记录与工具",
+  "uiFinanceServerCount": "{count} 台",
+  "@uiFinanceServerCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "uiFinanceFootnote": "金额按当前续费价和手动参考汇率折算，仅供参考，不代表厂商实际账单。",
+  "uiFinanceVoidedPill": "已撤销",
+  "uiFinanceArchivedPill": "已归档",
+  "uiFinanceAccountPill": "账户账单",
   "financeForecastMonth": "{year} 年 {month} 月 · {count} 笔",
   "@financeForecastMonth": {
     "placeholders": {

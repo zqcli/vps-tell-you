@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 
 import '../l10n/locale_preference.dart';
-import '../core/app_theme.dart';
+import '../core/app_theme.dart' show showFailure;
+import '../core/ui/ui.dart';
 import '../core/value_types.dart';
 import '../servers/ledger_controller.dart';
 import '../servers/refresh_failure_notice.dart';
 import 'finance_models.dart';
+import 'finance_widgets.dart';
 
 class FxPage extends StatefulWidget {
   const FxPage({super.key, required this.controller});
@@ -81,98 +83,101 @@ class _FxPageState extends State<FxPage> {
   @override
   Widget build(BuildContext context) => ListenableBuilder(
     listenable: widget.controller,
-    builder: (context, _) => PopScope(
-      canPop: !saving,
-      child: Scaffold(
-        appBar: AppBar(
-          title: Text(context.l10n.financeFxTitle),
-          actions: [
-            TextButton(
-              onPressed: saving ? null : () => Navigator.pop(context),
-              child: Text(context.l10n.financeCancel),
-            ),
-          ],
-        ),
-        body: Form(
-          key: form,
-          child: ListView(
-            padding: const EdgeInsets.all(20),
-            children: [
-              if (widget.controller.refreshFailed)
-                RefreshFailureNotice(controller: widget.controller),
-              InfoNote(context.l10n.financeFxScope),
-              DropdownButtonFormField<String>(
-                initialValue: currency,
-                isExpanded: true,
-                itemHeight: null,
-                decoration: InputDecoration(
-                  errorMaxLines: 5,
-                  labelText: context.l10n.financeDisplayCurrency,
-                ),
-                items: Money.currencies
-                    .map((c) => DropdownMenuItem(value: c, child: Text(c)))
-                    .toList(),
-                onChanged: saving ? null : (v) => setState(() => currency = v!),
-              ),
-              const SizedBox(height: 18),
-              for (final entry in [
-                (usd, context.l10n.financeUsdRate, 'fx-usd'),
-                (eur, context.l10n.financeEurRate, 'fx-eur'),
-              ]) ...[
-                TextFormField(
-                  key: ValueKey(entry.$3),
-                  controller: entry.$1,
-                  enabled: !saving,
-                  keyboardType: const TextInputType.numberWithOptions(
-                    decimal: true,
+    builder: (context, _) {
+      final l10n = context.l10n;
+      final canSave = !saving && widget.controller.canMutate;
+      return PopScope(
+        canPop: !saving,
+        child: FinanceModalFrame(
+          child: Form(
+            key: form,
+            child: AppScaffold.modal(
+              title: l10n.financeFxTitle,
+              cancelLabel: l10n.financeCancel,
+              actionLabel: l10n.save,
+              actionBusy: saving,
+              onAction: canSave ? save : null,
+              children: [
+                if (widget.controller.refreshFailed)
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+                    child: RefreshFailureNotice(controller: widget.controller),
                   ),
-                  decoration: InputDecoration(
-                    errorMaxLines: 5,
-                    labelText: entry.$2,
-                    hintText: context.l10n.financeUnknownRateHint,
-                  ),
-                  validator: (value) {
-                    final text = value!.trim();
-                    if (text.isEmpty) return null;
-                    if (!RegExp(r'^\d{1,9}(\.\d{1,8})?$').hasMatch(text) ||
-                        (double.tryParse(text) ?? 0) <= 0) {
-                      return context.l10n.financeRateError;
-                    }
-                    return null;
-                  },
+                AppSection(
+                  footer: l10n.financeFxScope,
+                  children: [
+                    AppFormRow(
+                      label: l10n.financeDisplayCurrency,
+                      child: AppSegmented<String>(
+                        key: const ValueKey('fx-currency'),
+                        compact: true,
+                        options: {for (final c in Money.currencies) c: c},
+                        value: currency,
+                        onChanged: (v) {
+                          if (!saving) setState(() => currency = v);
+                        },
+                      ),
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 18),
+                AppSection(
+                  header: l10n.financeFxTitle,
+                  footer: l10n.financeFxBasis,
+                  children: [
+                    for (final entry in [
+                      (usd, l10n.financeUsdRate, 'fx-usd'),
+                      (eur, l10n.financeEurRate, 'fx-eur'),
+                    ])
+                      FinanceFieldRow(
+                        key: ValueKey(entry.$3),
+                        controller: entry.$1,
+                        label: entry.$2,
+                        hint: l10n.financeUnknownRateHint,
+                        enabled: !saving,
+                        keyboardType: const TextInputType.numberWithOptions(
+                          decimal: true,
+                        ),
+                        check: (value) {
+                          final text = value.trim();
+                          if (text.isEmpty) return null;
+                          if (!RegExp(r'^\d{1,9}(\.\d{1,8})?$')
+                                  .hasMatch(text) ||
+                              (double.tryParse(text) ?? 0) <= 0) {
+                            return l10n.financeRateError;
+                          }
+                          return null;
+                        },
+                      ),
+                    FinanceFieldRow(
+                      key: const ValueKey('fx-date'),
+                      controller: date,
+                      label: l10n.financeRateDate,
+                      hint: 'YYYY-MM-DD',
+                      enabled: !saving,
+                      check: (v) {
+                        final value = LedgerDate.tryParse(v.trim());
+                        return value == null ||
+                                value.compareTo(widget.controller.today) > 0
+                            ? l10n.financePastDateError
+                            : null;
+                      },
+                    ),
+                  ],
+                ),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 20, 16, 0),
+                  child: AppButton(
+                    key: const ValueKey('save-fx'),
+                    label: saving ? l10n.financeSaving : l10n.financeSaveFx,
+                    expand: true,
+                    onPressed: canSave ? save : null,
+                  ),
+                ),
               ],
-              TextFormField(
-                key: const ValueKey('fx-date'),
-                controller: date,
-                enabled: !saving,
-                decoration: InputDecoration(
-                  errorMaxLines: 5,
-                  labelText: context.l10n.financeRateDate,
-                  hintText: 'YYYY-MM-DD',
-                ),
-                validator: (v) {
-                  final value = LedgerDate.tryParse(v!.trim());
-                  return value == null ||
-                          value.compareTo(widget.controller.today) > 0
-                      ? context.l10n.financePastDateError
-                      : null;
-                },
-              ),
-              InfoNote(context.l10n.financeFxBasis),
-              FilledButton(
-                onPressed: saving || !widget.controller.canMutate ? null : save,
-                child: Text(
-                  saving
-                      ? context.l10n.financeSaving
-                      : context.l10n.financeSaveFx,
-                ),
-              ),
-            ],
+            ),
           ),
         ),
-      ),
-    ),
+      );
+    },
   );
 }
