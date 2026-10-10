@@ -446,6 +446,168 @@ abstract class AppLocalizations {
   /// **'提醒范围'**
   String get reminderCoverage;
 
+  /// No description provided for @r2TabsMetricScheduled.
+  ///
+  /// In zh, this message translates to:
+  /// **'已安排'**
+  String get r2TabsMetricScheduled;
+
+  /// No description provided for @r2TabsMetricNotCovered.
+  ///
+  /// In zh, this message translates to:
+  /// **'未覆盖'**
+  String get r2TabsMetricNotCovered;
+
+  /// No description provided for @r2TabsMetricNoReminder.
+  ///
+  /// In zh, this message translates to:
+  /// **'未提醒'**
+  String get r2TabsMetricNoReminder;
+
+  /// No description provided for @r2TabsUpcoming.
+  ///
+  /// In zh, this message translates to:
+  /// **'即将提醒'**
+  String get r2TabsUpcoming;
+
+  /// No description provided for @r2TabsShowAll.
+  ///
+  /// In zh, this message translates to:
+  /// **'显示全部（{n}）'**
+  String r2TabsShowAll(String n);
+
+  /// No description provided for @r2TabsToday.
+  ///
+  /// In zh, this message translates to:
+  /// **'今天'**
+  String get r2TabsToday;
+
+  /// No description provided for @r2TabsTomorrow.
+  ///
+  /// In zh, this message translates to:
+  /// **'明天'**
+  String get r2TabsTomorrow;
+
+  /// No description provided for @r2TabsWithinWeek.
+  ///
+  /// In zh, this message translates to:
+  /// **'7 天内'**
+  String get r2TabsWithinWeek;
+
+  /// No description provided for @r2TabsMonth.
+  ///
+  /// In zh, this message translates to:
+  /// **'{year} 年 {month} 月'**
+  String r2TabsMonth(String year, String month);
+
+  /// No description provided for @r2TabsRowSub.
+  ///
+  /// In zh, this message translates to:
+  /// **'{lead} · 到期 {due}'**
+  String r2TabsRowSub(String lead, String due);
+
+  /// No description provided for @r2TabsNotCoveredPill.
+  ///
+  /// In zh, this message translates to:
+  /// **'未覆盖'**
+  String get r2TabsNotCoveredPill;
+
+  /// No description provided for @r2TabsCoverageNote.
+  ///
+  /// In zh, this message translates to:
+  /// **'超出系统上限（iOS 64 / Android 256）或 366 天以后的提醒不会安排。'**
+  String get r2TabsCoverageNote;
+
+  /// No description provided for @r2TabsNoReminderServers.
+  ///
+  /// In zh, this message translates to:
+  /// **'未提醒的服务器'**
+  String get r2TabsNoReminderServers;
+
+  /// No description provided for @r2TabsReasonArchived.
+  ///
+  /// In zh, this message translates to:
+  /// **'已归档'**
+  String get r2TabsReasonArchived;
+
+  /// No description provided for @r2TabsReasonDemo.
+  ///
+  /// In zh, this message translates to:
+  /// **'演示数据'**
+  String get r2TabsReasonDemo;
+
+  /// No description provided for @r2TabsReasonNoDate.
+  ///
+  /// In zh, this message translates to:
+  /// **'未填到期日'**
+  String get r2TabsReasonNoDate;
+
+  /// No description provided for @r2TabsReasonNotPrepaid.
+  ///
+  /// In zh, this message translates to:
+  /// **'非预付费'**
+  String get r2TabsReasonNotPrepaid;
+
+  /// No description provided for @r2TabsReasonOff.
+  ///
+  /// In zh, this message translates to:
+  /// **'提醒已关闭'**
+  String get r2TabsReasonOff;
+
+  /// No description provided for @r2TabsReasonNoUpcoming.
+  ///
+  /// In zh, this message translates to:
+  /// **'暂无待发提醒'**
+  String get r2TabsReasonNoUpcoming;
+
+  /// No description provided for @r2TabsAllReminders.
+  ///
+  /// In zh, this message translates to:
+  /// **'全部提醒'**
+  String get r2TabsAllReminders;
+
+  /// No description provided for @r2TabsFilterAll.
+  ///
+  /// In zh, this message translates to:
+  /// **'全部'**
+  String get r2TabsFilterAll;
+
+  /// No description provided for @r2TabsSearchHint.
+  ///
+  /// In zh, this message translates to:
+  /// **'搜索服务器名称'**
+  String get r2TabsSearchHint;
+
+  /// No description provided for @r2TabsEmpty.
+  ///
+  /// In zh, this message translates to:
+  /// **'没有符合条件的项目'**
+  String get r2TabsEmpty;
+
+  /// No description provided for @r2TabsNoUpcoming.
+  ///
+  /// In zh, this message translates to:
+  /// **'暂无即将提醒'**
+  String get r2TabsNoUpcoming;
+
+  /// No description provided for @r2TabsEnableHelp.
+  ///
+  /// In zh, this message translates to:
+  /// **'需同时开启系统通知和各服务器的提醒。'**
+  String get r2TabsEnableHelp;
+
+  /// No description provided for @r2TabsPermissionHelp.
+  ///
+  /// In zh, this message translates to:
+  /// **'已拒绝时，请到系统设置中开启通知。'**
+  String get r2TabsPermissionHelp;
+
+  /// No description provided for @r2TabsNotifyScheduled.
+  ///
+  /// In zh, this message translates to:
+  /// **'已安排 {n} 条'**
+  String r2TabsNotifyScheduled(String n);
+
   /// No description provided for @reminderHorizonHelp.
   ///
   /// In zh, this message translates to:

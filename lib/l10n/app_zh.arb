@@ -72,6 +72,67 @@
   "notificationPermissionHelp": "已拒绝或关闭通知渠道时，请到设备系统设置中调整；修改后返回应用，重新核对提醒状态。",
   "checkReminderStatus": "重新核对提醒状态",
   "reminderCoverage": "提醒范围",
+  "r2TabsMetricScheduled": "已安排",
+  "r2TabsMetricNotCovered": "未覆盖",
+  "r2TabsMetricNoReminder": "未提醒",
+  "r2TabsUpcoming": "即将提醒",
+  "r2TabsShowAll": "显示全部（{n}）",
+  "@r2TabsShowAll": {
+    "placeholders": {
+      "n": {
+        "type": "String"
+      }
+    }
+  },
+  "r2TabsToday": "今天",
+  "r2TabsTomorrow": "明天",
+  "r2TabsWithinWeek": "7 天内",
+  "r2TabsMonth": "{year} 年 {month} 月",
+  "@r2TabsMonth": {
+    "placeholders": {
+      "year": {
+        "type": "String"
+      },
+      "month": {
+        "type": "String"
+      }
+    }
+  },
+  "r2TabsRowSub": "{lead} · 到期 {due}",
+  "@r2TabsRowSub": {
+    "placeholders": {
+      "lead": {
+        "type": "String"
+      },
+      "due": {
+        "type": "String"
+      }
+    }
+  },
+  "r2TabsNotCoveredPill": "未覆盖",
+  "r2TabsCoverageNote": "超出系统上限（iOS 64 / Android 256）或 366 天以后的提醒不会安排。",
+  "r2TabsNoReminderServers": "未提醒的服务器",
+  "r2TabsReasonArchived": "已归档",
+  "r2TabsReasonDemo": "演示数据",
+  "r2TabsReasonNoDate": "未填到期日",
+  "r2TabsReasonNotPrepaid": "非预付费",
+  "r2TabsReasonOff": "提醒已关闭",
+  "r2TabsReasonNoUpcoming": "暂无待发提醒",
+  "r2TabsAllReminders": "全部提醒",
+  "r2TabsFilterAll": "全部",
+  "r2TabsSearchHint": "搜索服务器名称",
+  "r2TabsEmpty": "没有符合条件的项目",
+  "r2TabsNoUpcoming": "暂无即将提醒",
+  "r2TabsEnableHelp": "需同时开启系统通知和各服务器的提醒。",
+  "r2TabsPermissionHelp": "已拒绝时，请到系统设置中开启通知。",
+  "r2TabsNotifyScheduled": "已安排 {n} 条",
+  "@r2TabsNotifyScheduled": {
+    "placeholders": {
+      "n": {
+        "type": "String"
+      }
+    }
+  },
   "reminderHorizonHelp": "只提交未来 366 天内已知的到期提醒；过去的提醒时间不补发。iOS 最多排入最近 64 条，Android 最多 256 条，其余显示为未安排。请定期打开应用更新提醒。",
   "reminderDeliveryHelp": "应用回到前台会重新读取权限和设备时区。旅行后请打开应用核对；未打开时已提交的提醒可能仍按旧时区投递。系统节电、专注模式及厂商限制可能延迟或阻止提醒，已安排不代表已经送达。",
   "reminderPrivacyHelp": "提醒内容只包含到期日期和核对提示，不包含服务器名称、地址、账户或金额。不自动付款、不修改厂商续费设置。",

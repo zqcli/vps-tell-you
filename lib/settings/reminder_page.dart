@@ -10,6 +10,7 @@ import '../core/ui/ui.dart';
 import '../data/ledger_store.dart';
 import '../servers/ledger_controller.dart';
 import '../servers/server_record.dart';
+import 'reminder_overview.dart';
 import 'reminder_rule.dart';
 import 'reminder_scheduler.dart';
 
@@ -62,7 +63,10 @@ class _NotificationPageState extends State<NotificationPage> {
 
   @override
   Widget build(BuildContext context) => ListenableBuilder(
-    listenable: widget.controller.reminders,
+    listenable: Listenable.merge([
+      widget.controller,
+      widget.controller.reminders,
+    ]),
     builder: (context, _) {
       final l10n = context.l10n;
       final reminders = widget.controller.reminders;
@@ -82,7 +86,7 @@ class _NotificationPageState extends State<NotificationPage> {
               ),
             ],
           ),
-          _Footnote(l10n.reminderEnableHelp),
+          _Footnote(l10n.r2TabsEnableHelp),
           if (reminders.platform.supported) ...[
             _ButtonBlock(
               AppButton(
@@ -93,7 +97,7 @@ class _NotificationPageState extends State<NotificationPage> {
                 onPressed: requesting ? null : request,
               ),
             ),
-            _Footnote(l10n.notificationPermissionHelp),
+            _Footnote(l10n.r2TabsPermissionHelp),
           ],
           _ButtonBlock(
             AppButton(
@@ -106,12 +110,26 @@ class _NotificationPageState extends State<NotificationPage> {
                   : reminders.reconcile,
             ),
           ),
+          if (reminders.state == ReminderSyncState.ready)
+            ReminderOverviewBlock(controller: widget.controller),
           AppSection(
-            header: l10n.reminderCoverage,
             children: [
-              _NoteRow(l10n.reminderHorizonHelp),
-              _NoteRow(l10n.reminderDeliveryHelp),
-              _NoteRow(l10n.reminderPrivacyHelp),
+              AppRow(
+                title: l10n.reminderCoverage,
+                chevron: true,
+                onTap: () => showAppSheet<void>(
+                  context,
+                  title: l10n.reminderCoverage,
+                  builder: (_) => AppSection(
+                    topSpacing: 4,
+                    children: [
+                      _NoteRow(l10n.reminderHorizonHelp),
+                      _NoteRow(l10n.reminderDeliveryHelp),
+                      _NoteRow(l10n.reminderPrivacyHelp),
+                    ],
+                  ),
+                ),
+              ),
             ],
           ),
         ],
