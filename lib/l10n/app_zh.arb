@@ -2471,6 +2471,52 @@
   "serverConnectionSafety": "首次连接需核对主机指纹；指纹变化会暂停登录。重启或关机需再次核对目标，且不会停止厂商计费。",
   "serverNotes": "备注",
   "serverSavedMetadata": "本地保存于 {p0}\n服务器 ID：{p1}",
+  "uiDetailCopy": "复制",
+  "uiDetailMenuValuation": "用于剩余价值试算",
+  "uiDetailPurpose": "用途",
+  "uiDetailRegion": "地区",
+  "uiDetailDueOn": "到期 {date}",
+  "@uiDetailDueOn": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "uiDetailConverted": "折合 {currency}",
+  "@uiDetailConverted": {
+    "placeholders": {
+      "currency": {
+        "type": "String"
+      }
+    }
+  },
+  "uiDetailDaily": "日均",
+  "uiDetailRemainingDays": "剩余天数",
+  "uiDetailPayments": "付款记录",
+  "uiDetailValuation": "价值试算",
+  "uiDetailFillIn": "补填",
+  "uiDetailHostKey": "主机公钥",
+  "uiDetailHostKeyTrusted": "已核验",
+  "uiDetailHostKeyFirstUse": "首次连接时核验",
+  "uiDetailNotConfigured": "未配置",
+  "uiDetailNeedSshTitle": "尚未配置 SSH",
+  "uiDetailNeedSshMessage": "为 {name} 设置地址、端口、用户名和登录凭据后，才能连接或执行电源操作。",
+  "@uiDetailNeedSshMessage": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "uiDetailGoConfigure": "去配置",
+  "uiDetailArchivedUnavailable": "已归档的服务器不能进行此操作。",
+  "uiDetailNotPrepaid": "只有预付服务器可以记录续费付款。",
+  "uiDetailCannotRenew": "到期日或续费周期资料不完整，暂时无法记录续费付款。请先补充费用资料。",
+  "uiDetailReadOnly": "本地数据读取未完成或正在处理，暂时不能记录付款。请先重新读取。",
+  "uiDetailQuickSsh": "SSH 连接",
+  "uiDetailQuickPayment": "记录付款",
+  "uiDetailQuickPower": "电源",
   "@serverSavedMetadata": {
     "placeholders": {
       "p0": {

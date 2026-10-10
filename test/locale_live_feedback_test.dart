@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'dart:ui' as ui;
 
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/rendering.dart';
@@ -245,7 +246,9 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.text(en.serverArchiveLocal));
     await tester.pumpAndSettle();
-    await tester.tap(find.widgetWithText(FilledButton, en.serverArchiveLocal));
+    await tester.tap(
+      find.widgetWithText(CupertinoActionSheetAction, en.serverArchiveLocal),
+    );
     await tester.pumpAndSettle();
   }
 

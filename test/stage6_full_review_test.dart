@@ -123,8 +123,13 @@ void main() {
   Future<void> tapPageBack(WidgetTester tester) async {
     // WidgetTester.pageBack searches the English tooltip before Cupertino.
     // The real app's Material delegates correctly localize that tooltip.
-    final back = find.byType(BackButton);
-    expect(back, findsOneWidget, reason: 'One Material back button expected');
+    // Migrated pages use the design-system back button; others still use the
+    // Material one.
+    final custom = find.byKey(const ValueKey('app-nav-back'));
+    final back = custom.evaluate().isNotEmpty
+        ? custom
+        : find.byType(BackButton);
+    expect(back, findsOneWidget, reason: 'One back button expected');
     expect(back.hitTestable(), findsOneWidget);
     final tooltip = MaterialLocalizations.of(tester.element(back))
         .backButtonTooltip;

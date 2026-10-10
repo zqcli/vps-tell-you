@@ -5,6 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:vps_tell_you/app.dart';
 import 'package:vps_tell_you/core/app_theme.dart';
+import 'package:vps_tell_you/core/ui/ui.dart';
 import 'package:vps_tell_you/data/ledger_store.dart';
 import 'package:vps_tell_you/servers/ledger_controller.dart';
 import 'package:vps_tell_you/servers/server_detail.dart';
@@ -84,7 +85,7 @@ void main() {
       await fill(tester, 'host', '192.0.2.42');
       await tester.tap(find.text('保存服务器'));
       await tester.pumpAndSettle();
-      expect(find.text('服务器详情'), findsOneWidget);
+      expect(find.byType(ServerDetail), findsOneWidget);
       expect((await store.servers()).single.host, '192.0.2.42');
       await tester.tap(find.text('编辑'));
       await tester.pumpAndSettle();
@@ -95,7 +96,9 @@ void main() {
       await tester.tap(find.text('编辑'));
       await tester.pumpAndSettle();
       await fill(tester, 'name', 'Unsaved back');
-      await tester.pageBack();
+      // The edit form is a sheet above the detail page, which has its own
+      // back button; the topmost one belongs to the form.
+      await tester.tap(find.byTooltip('Back').last);
       await tester.pumpAndSettle();
       expect((await store.servers()).single.name, 'My VPS');
       await tester.pageBack();
@@ -140,20 +143,20 @@ void main() {
       expect(committed.name, 'Committed edit');
       expect(committed.revision, original.revision + 1);
       expect(controller.byId(original.id)!.name, original.name);
-      expect(find.text('服务器详情'), findsOneWidget);
+      expect(find.byType(ServerDetail), findsOneWidget);
       expect(find.text('写入已保存，显示内容暂未更新'), findsOneWidget);
       expect(
         tester
-            .widget<TextButton>(find.widgetWithText(TextButton, '编辑'))
+            .widget<AppNavButton>(find.widgetWithText(AppNavButton, '编辑'))
             .onPressed,
         isNull,
       );
       expect(
         tester
-            .widget<IconButton>(
+            .widget<AppNavButton>(
               find.byWidgetPredicate(
                 (widget) =>
-                    widget is IconButton &&
+                    widget is AppNavButton &&
                     widget.tooltip == (original.favorite ? '取消常用' : '设为常用'),
               ),
             )
@@ -162,11 +165,13 @@ void main() {
       );
       expect(
         tester
-            .widget<PopupMenuButton<String>>(
-              find.byType(PopupMenuButton<String>),
+            .widget<AppNavButton>(
+              find.byWidgetPredicate(
+                (widget) => widget is AppNavButton && widget.tooltip == '更多操作',
+              ),
             )
-            .enabled,
-        isFalse,
+            .onPressed,
+        isNull,
       );
 
       await tester.tap(find.text('重新读取'));
@@ -179,7 +184,8 @@ void main() {
       await tester.pumpAndSettle();
       expect(controller.refreshFailed, isFalse);
       expect(find.text('写入已保存，显示内容暂未更新'), findsNothing);
-      expect(find.text('Committed edit'), findsOneWidget);
+      // Hero title plus the (transparent) collapsed bar title.
+      expect(find.text('Committed edit'), findsWidgets);
       await tester.tap(find.text('编辑'));
       await tester.pumpAndSettle();
       expect(
@@ -254,7 +260,7 @@ void main() {
           ServerDetail(controller: controller, id: controller.active.first.id),
           scale: scale,
         );
-        await tester.drag(find.byType(ListView), const Offset(0, -600));
+        await tester.drag(find.byType(CustomScrollView), const Offset(0, -600));
         await tester.pumpAndSettle();
         expect(tester.takeException(), isNull, reason: 'detail');
         await mount(

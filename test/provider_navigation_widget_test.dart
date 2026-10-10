@@ -8,6 +8,7 @@ import 'package:vps_tell_you/cloud/cloud_models.dart';
 import 'package:vps_tell_you/cloud/cloud_pages.dart';
 import 'package:vps_tell_you/cloud/provider_pages.dart';
 import 'package:vps_tell_you/core/app_theme.dart';
+import 'package:vps_tell_you/core/ui/ui.dart';
 import 'package:vps_tell_you/data/ledger_store.dart';
 import 'package:vps_tell_you/l10n/generated/app_localizations.dart';
 import 'package:vps_tell_you/security/security_controller.dart';
@@ -381,7 +382,7 @@ void main() {
         scrollable: find.byType(Scrollable).first,
         maxScrolls: 40,
       );
-      expect(tester.widget<OutlinedButton>(bindingButton).onPressed, isNotNull);
+      expect(tester.widget<AppRow>(bindingButton).onTap, isNotNull);
       await back(tester);
       await back(tester);
       await tester.pumpAndSettle();
