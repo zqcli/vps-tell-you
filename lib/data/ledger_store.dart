@@ -779,37 +779,153 @@ class LedgerStore {
       if (payment.voided) {
         return;
       }
-      final now = clock().toUtc().toIso8601String();
-      if (!payment.isAccount) {
-        final count = await txn.update(
-          'servers',
-          {
-            'due_date': payment.previousDue.toString(),
-            'revision': payment.appliedServerRevision! + 1,
-            'updated_at': now,
-          },
-          where: 'id = ? AND revision = ? AND due_date = ? AND archived_at IS NULL',
-          whereArgs: [
-            payment.serverId,
-            payment.appliedServerRevision,
-            payment.until.toString(),
-          ],
-        );
-        if (count != 1) {
-          throw const LedgerConflict();
-        }
-        await txn.delete(
-          'service_periods',
-          where: 'payment_id = ?',
-          whereArgs: [id],
-        );
-      }
-      await txn.update(
-        'payments',
-        {'voided_at': now},
-        where: 'id = ?',
-        whereArgs: [id],
+      await _voidPayment(txn, payment, rollbackRenewal: !payment.isAccount);
+    });
+  }
+
+  /// Marks [payment] voided (a tombstone: the row and its idempotency key stay,
+  /// so neither an old undo nor a repeated request can revive it; every total
+  /// already excludes voided rows).
+  ///
+  /// With [rollbackRenewal] the server due date and the periods this payment
+  /// added are restored, guarded by the server revision it produced. Without
+  /// it the periods stay linked to the (voided) payment so the term history is
+  /// unchanged; the backup validator accepts that shape.
+  Future<void> _voidPayment(
+    Transaction txn,
+    PaymentRecord payment, {
+    required bool rollbackRenewal,
+  }) async {
+    final now = clock().toUtc().toIso8601String();
+    if (rollbackRenewal && !payment.isAccount) {
+      final count = await txn.update(
+        'servers',
+        {
+          'due_date': payment.previousDue.toString(),
+          'revision': payment.appliedServerRevision! + 1,
+          'updated_at': now,
+        },
+        where:
+            'id = ? AND revision = ? AND due_date = ? AND archived_at IS NULL',
+        whereArgs: [
+          payment.serverId,
+          payment.appliedServerRevision,
+          payment.until.toString(),
+        ],
       );
+      if (count != 1) {
+        throw const LedgerConflict();
+      }
+      await txn.delete(
+        'service_periods',
+        where: 'payment_id = ?',
+        whereArgs: [payment.id],
+      );
+    }
+    await txn.update(
+      'payments',
+      {'voided_at': now},
+      where: 'id = ?',
+      whereArgs: [payment.id],
+    );
+  }
+
+  /// Loads the stored row of [original] and requires it to be unchanged.
+  /// Payments have no revision column, so the whole row is the version token.
+  Future<PaymentRecord> _currentPayment(
+    Transaction txn,
+    PaymentRecord original,
+  ) async {
+    final rows = await txn.query(
+      'payments',
+      where: 'id = ?',
+      whereArgs: [original.id],
+    );
+    if (rows.isEmpty) {
+      throw const LedgerConflict();
+    }
+    final current = PaymentRecord.fromMap(rows.single);
+    if (jsonEncode(current.toMap()) != jsonEncode(original.toMap())) {
+      throw const LedgerConflict();
+    }
+    return current;
+  }
+
+  /// Edits the bookkeeping fields of a payment: amount, currency, paid date,
+  /// note and (account bills) the account name. Never touches the due date,
+  /// cycle count, from/until or service periods. [original] is the row the
+  /// caller loaded; any change since then raises [LedgerConflict].
+  Future<PaymentRecord> editPayment({
+    required PaymentRecord original,
+    required Money amount,
+    required LedgerDate paidDate,
+    String note = '',
+    String? accountLabel,
+  }) async {
+    final label = accountLabel?.trim();
+    return _db.transaction((txn) async {
+      final current = await _currentPayment(txn, original);
+      if (current.voided) {
+        throw LocalizedArgumentError((l10n) => l10n.paymentAlreadyVoided);
+      }
+      _validatePayment(current.id, amount, paidDate, note);
+      final values = <String, Object?>{
+        'amount_minor': amount.minor,
+        'currency': amount.currency,
+        'paid_date': paidDate.toString(),
+        'note': note,
+      };
+      if (current.isAccount) {
+        if (label == null || label.isEmpty || label.length > 80) {
+          throw LocalizedArgumentError((l10n) => l10n.invalidAccountName);
+        }
+        // The backup format requires target_name == account_label.
+        values['account_label'] = label;
+        values['target_name'] = label;
+      }
+      final count = await txn.update(
+        'payments',
+        values,
+        where: 'id = ? AND voided_at IS NULL',
+        whereArgs: [current.id],
+      );
+      if (count != 1) {
+        throw const LedgerConflict();
+      }
+      return PaymentRecord.fromMap(
+        (await txn.query(
+          'payments',
+          where: 'id = ?',
+          whereArgs: [current.id],
+        )).single,
+      );
+    });
+  }
+
+  /// Deletes a payment record (soft: a voided tombstone, see [_voidPayment]).
+  ///
+  /// [rollbackRenewal] additionally restores the server's previous due date and
+  /// removes the periods this payment added; it requires the server to still
+  /// be exactly as the payment left it, otherwise [LedgerConflict]. Without it
+  /// the term stays as it is. Deleting an already deleted payment is a no-op.
+  Future<void> deletePayment({
+    required PaymentRecord original,
+    bool rollbackRenewal = false,
+  }) async {
+    await _db.transaction((txn) async {
+      final rows = await txn.query(
+        'payments',
+        where: 'id = ?',
+        whereArgs: [original.id],
+      );
+      if (rows.isEmpty) {
+        throw const LedgerConflict();
+      }
+      if (PaymentRecord.fromMap(rows.single).voided) {
+        return;
+      }
+      final current = await _currentPayment(txn, original);
+      await _voidPayment(txn, current, rollbackRenewal: rollbackRenewal);
     });
   }
 

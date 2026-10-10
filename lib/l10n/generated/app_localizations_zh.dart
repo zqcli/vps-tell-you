@@ -939,8 +939,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get financeLocalPaymentOnly => '仅本地记账，不向厂商发起支付。';
 
   @override
-  String get financeAccountBillNote =>
-      '独立记录整份账户账单，仅计一次。不要求连接面板账户，不分摊到实例，也不产生服务期或剩余价值。';
+  String get financeAccountBillNote => '独立账单，仅计一次；不分摊到实例，不产生服务期。';
 
   @override
   String get financeAccountName => '账户显示名称';
@@ -967,8 +966,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get financeNewDueHint => '须与所选周期推算的日期一致';
 
   @override
-  String get financePaymentRenewalNote =>
-      '本次实付独立保存，不覆盖续费金额。目前仅支持整周期续费；厂商含赠送期或到期日不同的，请先核对，不要填写虚构周期。';
+  String get financePaymentRenewalNote => '实付单独保存，不改续费价。仅支持整周期续费。';
 
   @override
   String get financeBillStart => '账期开始日（选填）';
@@ -1001,7 +999,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get financeRecent30 => '近 30 天';
 
   @override
-  String get financeShowVoided => '显示已撤销';
+  String get financeShowVoided => '显示已删除';
 
   @override
   String get financeRecordedPaidTotal => '已记录实付合计';
@@ -1053,17 +1051,55 @@ class AppLocalizationsZh extends AppLocalizations {
   String get financeBillServicePeriod => '对应账期 / 服务期';
 
   @override
-  String get financeVoidedStatus => '已撤销，不计入实付统计';
+  String get financeVoidedStatus => '已删除，不计入实付统计';
 
   @override
   String get financeRecordedStatus => '已记录';
 
   @override
-  String get financePaymentHistoryNote =>
-      '这是原币历史实付，不随续费价或参考汇率重写。如需更正，可撤销后重新录入；后续资料已改变时可能无法撤销。';
+  String get financePaymentHistoryNote => '原币历史实付，不随续费价或汇率变化。';
 
   @override
   String get financeVoidThisRecord => '撤销此次记录';
+
+  @override
+  String get r2FinanceEdit => '编辑';
+
+  @override
+  String get r2FinanceEditTitle => '编辑付款记录';
+
+  @override
+  String get r2FinanceEditHint => '只修改记账信息，不改变服务期、到期日或周期数。';
+
+  @override
+  String get r2FinanceDelete => '删除记录';
+
+  @override
+  String get r2FinanceDeleteTitle => '删除此付款记录？';
+
+  @override
+  String get r2FinanceDeleteAccountMsg =>
+      '仅在本地删除这条账单记录，不影响任何服务器，也不会向厂商退款。删除后不计入实付统计。';
+
+  @override
+  String get r2FinanceDeleteKeepMsg =>
+      '仅删除付款记录。服务期与到期日保持不变（服务器资料已变更，无法回退续期），也不会向厂商退款。';
+
+  @override
+  String get r2FinanceDeleteChoiceMsg =>
+      '可同时回退本次续费（还原到期日并移除本次服务期），或仅删除记录并保留服务期与到期日。两种方式都不会向厂商退款。';
+
+  @override
+  String get r2FinanceDeleteRollback => '删除并回退续费';
+
+  @override
+  String get r2FinanceDeleteKeep => '仅删除记录，保留服务期';
+
+  @override
+  String get r2FinanceDeleted => '付款记录已删除';
+
+  @override
+  String get r2FinanceUpdated => '付款记录已更新';
 
   @override
   String get financeVoidBlocked => '资料已改变，请核对。后续编辑、付款或归档后不能用旧记录覆盖现有资料。';
@@ -1331,7 +1367,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String financeExtendFromDue(String date) {
-    return '从原到期日 $date 延长，保留当前未用时长。按原续费日推算，并保留月底日期规则。';
+    return '从原到期日 $date 起延长。';
   }
 
   @override
@@ -1350,12 +1386,12 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String financeValidPaymentsNote(int count) {
-    return '$count 笔有效记录，不代表完整历史账单。已撤销记录不计入。';
+    return '$count 笔有效记录，已删除的不计入。';
   }
 
   @override
   String financePaymentGroupNote(String group) {
-    return '当前分组：$group。不分摊账户账单；历史记录保留归档付款。';
+    return '当前分组：$group，不含账户账单。';
   }
 
   @override
@@ -1465,7 +1501,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get uiFinanceFootnote => '金额按当前续费价和手动参考汇率折算，仅供参考，不代表厂商实际账单。';
 
   @override
-  String get uiFinanceVoidedPill => '已撤销';
+  String get uiFinanceVoidedPill => '已删除';
 
   @override
   String get uiFinanceArchivedPill => '已归档';

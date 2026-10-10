@@ -473,26 +473,24 @@ void main() {
     });
 
     testWidgets(
-      'open payment confirmation retranslates and cancellation is inert',
+      'delete confirmation shows the full copy in both languages and cancellation is inert',
       (tester) async {
-        final page = PaymentDetailPage(
-          controller: ledger,
-          id: 'finance-l10n-payment',
-        );
-        await mount(tester, page);
-        await reveal(tester, find.text(en.financeVoidThisRecord));
-        await tester.tap(find.text(en.financeVoidThisRecord));
-        await tester.pumpAndSettle();
-        expect(find.text(en.financeVoidTitle), findsOneWidget);
-        expect(find.text(en.financeVoidAccountNote), findsOneWidget);
-        await tester.pumpWidget(app(page, locale: 'zh'));
-        await tester.pumpAndSettle();
-        expect(find.text(zh.financeVoidTitle), findsOneWidget);
-        expect(find.text(zh.financeVoidAccountNote), findsOneWidget);
-        await tester.tap(find.text('取消'));
-        await tester.pumpAndSettle();
-        expect(ledger.payments.single.voided, isFalse);
-        expect(find.byType(AlertDialog), findsNothing);
+        for (final (locale, l10n) in [('en', en), ('zh', zh)]) {
+          final page = PaymentDetailPage(
+            controller: ledger,
+            id: 'finance-l10n-payment',
+          );
+          await mount(tester, page, locale: locale);
+          await reveal(tester, find.byKey(const ValueKey('payment-delete')));
+          await tester.tap(find.byKey(const ValueKey('payment-delete')));
+          await tester.pumpAndSettle();
+          expect(find.text(l10n.r2FinanceDeleteTitle), findsOneWidget);
+          expect(find.text(l10n.r2FinanceDeleteAccountMsg), findsOneWidget);
+          await tester.tap(find.text(l10n.cancel));
+          await tester.pumpAndSettle();
+          expect(ledger.payments.single.voided, isFalse);
+          expect(find.text(l10n.r2FinanceDeleteTitle), findsNothing);
+        }
       },
     );
 

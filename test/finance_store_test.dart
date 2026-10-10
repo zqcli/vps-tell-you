@@ -522,6 +522,286 @@ void main() {
     expect(c.fx.displayCurrency, 'CNY');
     c.dispose();
   });
+
+  group('edit and delete payments', () {
+    Future<PaymentRecord> stored(String id) async =>
+        (await store.payments()).singleWhere((p) => p.id == id);
+
+    test(
+      'edit changes only bookkeeping fields; periods, due date and cycle stay',
+      () async {
+        await store.saveServer(fixture(), isNew: true);
+        final created = await pay(await only(), cycles: 2);
+        final serverBefore = (await only()).toMap();
+        final periodsBefore = (await store.servicePeriods())
+            .map((p) => p.toMap())
+            .toList();
+        final edited = await store.editPayment(
+          original: created,
+          amount: const Money('USD', 4321),
+          paidDate: d('2026-09-01'),
+          note: 'corrected',
+        );
+        expect(edited.amount.currency, 'USD');
+        expect(edited.amount.minor, 4321);
+        expect(edited.paidDate, d('2026-09-01'));
+        expect(edited.note, 'corrected');
+        expect(edited.cycleCount, 2);
+        expect(edited.until, created.until);
+        expect(edited.from, created.from);
+        expect(edited.requestFingerprint, created.requestFingerprint);
+        expect((await only()).toMap(), serverBefore);
+        expect(
+          (await store.servicePeriods()).map((p) => p.toMap()).toList(),
+          periodsBefore,
+        );
+        // The edit persists, and the original idempotency key still maps to
+        // the same record instead of creating a second payment.
+        await reopen();
+        expect((await stored('payment')).amount.minor, 4321);
+        expect((await store.payments()).length, 1);
+      },
+    );
+
+    test('edit works after the server was edited or renewed again', () async {
+      await store.saveServer(fixture(), isNew: true);
+      final first = await pay(await only(), id: 'first');
+      await pay(await only(), id: 'second');
+      await store.setFavorite(await only(), true);
+      final c = LedgerController(store);
+      await c.refresh();
+      expect(c.canUndoPayment(first), isFalse);
+      final edited = await store.editPayment(
+        original: first,
+        amount: const Money('CNY', 500),
+        paidDate: first.paidDate,
+        note: '',
+      );
+      expect(edited.amount.currency, 'CNY');
+      expect(edited.amount.minor, 500);
+      expect((await only()).dueDate, d('2029-01-01'));
+      c.dispose();
+    });
+
+    test('account bill edit renames label and target together', () async {
+      final bill = await store.recordAccountPayment(
+        id: 'account',
+        accountLabel: 'Old',
+        amount: const Money('CNY', 10),
+        paidDate: d('2026-09-01'),
+      );
+      final edited = await store.editPayment(
+        original: bill,
+        amount: const Money('CNY', 20),
+        paidDate: d('2026-09-02'),
+        accountLabel: '  New name ',
+      );
+      expect(edited.accountLabel, 'New name');
+      expect(edited.targetName, 'New name');
+      await expectLater(
+        store.editPayment(
+          original: edited,
+          amount: const Money('CNY', 20),
+          paidDate: d('2026-09-02'),
+          accountLabel: '   ',
+        ),
+        throwsArgumentError,
+      );
+    });
+
+    test(
+      'invalid edits and a stale original leave the row untouched',
+      () async {
+        await store.saveServer(fixture(), isNew: true);
+        final created = await pay(await only());
+        for (final bad in [
+          (const Money('USD', -1), d('2026-09-01')),
+          (const Money('GBP', 1), d('2026-09-01')),
+          (const Money('USD', 1), LedgerDate.today(now).addDays(1)),
+        ]) {
+          await expectLater(
+            store.editPayment(
+              original: created,
+              amount: bad.$1,
+              paidDate: bad.$2,
+            ),
+            throwsArgumentError,
+          );
+        }
+        expect((await stored('payment')).toMap(), created.toMap());
+        final winner = await store.editPayment(
+          original: created,
+          amount: const Money('USD', 7),
+          paidDate: created.paidDate,
+        );
+        // A second editor still holding the first snapshot is rejected.
+        await expectLater(
+          store.editPayment(
+            original: created,
+            amount: const Money('USD', 8),
+            paidDate: created.paidDate,
+          ),
+          throwsA(isA<LedgerConflict>()),
+        );
+        await expectLater(
+          store.deletePayment(original: created),
+          throwsA(isA<LedgerConflict>()),
+        );
+        expect((await stored('payment')).toMap(), winner.toMap());
+      },
+    );
+
+    test('SQLite abort during edit rolls the whole update back', () async {
+      await store.saveServer(fixture(), isNew: true);
+      final created = await pay(await only());
+      final db = await raw();
+      await db.execute(
+        "CREATE TRIGGER abort_edit BEFORE UPDATE OF note ON payments BEGIN SELECT RAISE(ABORT, 'test edit rollback'); END",
+      );
+      await expectLater(
+        store.editPayment(
+          original: created,
+          amount: const Money('USD', 999),
+          paidDate: created.paidDate,
+          note: 'changed',
+        ),
+        throwsA(isA<DatabaseException>()),
+      );
+      expect((await stored('payment')).toMap(), created.toMap());
+      await db.execute('DROP TRIGGER abort_edit');
+      await db.close();
+    });
+
+    test(
+      'delete with rollback restores due date and periods like undo',
+      () async {
+        await store.saveServer(fixture(), isNew: true);
+        final before = await only();
+        final created = await pay(before, cycles: 2);
+        await store.deletePayment(original: created, rollbackRenewal: true);
+        final restored = await only();
+        expect(restored.dueDate, before.dueDate);
+        expect((await store.servicePeriods()).length, 1);
+        expect((await stored('payment')).voided, isTrue);
+        expect(
+          recentPayments(await store.payments(), LedgerDate.today(now)),
+          isEmpty,
+        );
+      },
+    );
+
+    test('delete with rollback is refused once the server moved on', () async {
+      await store.saveServer(fixture(), isNew: true);
+      final first = await pay(await only(), id: 'first');
+      await pay(await only(), id: 'second');
+      final serverBefore = (await only()).toMap();
+      await expectLater(
+        store.deletePayment(original: first, rollbackRenewal: true),
+        throwsA(isA<LedgerConflict>()),
+      );
+      expect((await only()).toMap(), serverBefore);
+      expect((await stored('first')).voided, isFalse);
+      expect((await store.servicePeriods()).length, 3);
+    });
+
+    test('delete keeping the term voids only the record: periods and due stay, totals drop it', () async {
+      await store.saveServer(fixture(), isNew: true);
+      final first = await pay(await only(), id: 'first', minor: 700);
+      await pay(await only(), id: 'second', minor: 300);
+      final serverBefore = (await only()).toMap();
+      final periodsBefore = (await store.servicePeriods())
+          .map((p) => p.toMap())
+          .toList();
+      await store.deletePayment(original: first);
+      expect((await only()).toMap(), serverBefore);
+      expect(
+        (await store.servicePeriods()).map((p) => p.toMap()).toList(),
+        periodsBefore,
+      );
+      final deleted = await stored('first');
+      expect(deleted.voided, isTrue);
+      final totals = aggregateAmounts(
+        recentPayments(
+          await store.payments(),
+          LedgerDate.today(now),
+        ).map((p) => FinanceAmount.money(p.amount)),
+        const FxSettings(displayCurrency: 'EUR'),
+      );
+      expect(totals.convertedMinor, Rational.of(300));
+      // Repeating the delete is a no-op.
+      await store.deletePayment(original: first);
+      await store.deletePayment(original: deleted);
+      expect((await only()).toMap(), serverBefore);
+    });
+
+    test(
+      'a deleted payment can be neither edited, undone nor re-recorded',
+      () async {
+        await store.saveServer(fixture(), isNew: true);
+        final server = await only();
+        final created = await pay(server);
+        await store.deletePayment(original: created);
+        final deleted = await stored('payment');
+        final serverAfter = (await only()).toMap();
+        await expectLater(
+          store.editPayment(
+            original: deleted,
+            amount: const Money('EUR', 1),
+            paidDate: deleted.paidDate,
+          ),
+          throwsArgumentError,
+        );
+        // An old undo token (the id) does nothing and cannot revert the term.
+        await store.undoPayment('payment');
+        expect((await only()).toMap(), serverAfter);
+        expect((await store.servicePeriods()).length, 2);
+        // The idempotency key stays used after a reopen.
+        await reopen();
+        await expectLater(pay(server), throwsArgumentError);
+        expect((await store.payments()).single.voided, isTrue);
+      },
+    );
+
+    test('SQLite abort during delete+rollback restores everything', () async {
+      await store.saveServer(fixture(), isNew: true);
+      final created = await pay(await only(), cycles: 2);
+      final serverBefore = (await only()).toMap();
+      final periodsBefore = (await store.servicePeriods())
+          .map((p) => p.toMap())
+          .toList();
+      final db = await raw();
+      await db.execute(
+        "CREATE TRIGGER abort_void BEFORE UPDATE OF voided_at ON payments BEGIN SELECT RAISE(ABORT, 'test delete rollback'); END",
+      );
+      await expectLater(
+        store.deletePayment(original: created, rollbackRenewal: true),
+        throwsA(isA<DatabaseException>()),
+      );
+      expect((await only()).toMap(), serverBefore);
+      expect(
+        (await store.servicePeriods()).map((p) => p.toMap()).toList(),
+        periodsBefore,
+      );
+      expect((await stored('payment')).toMap(), created.toMap());
+      await db.execute('DROP TRIGGER abort_void');
+      await db.close();
+    });
+
+    test('account bill delete drops it from totals', () async {
+      final bill = await store.recordAccountPayment(
+        id: 'account',
+        accountLabel: 'Provider',
+        amount: const Money('CNY', 10),
+        paidDate: LedgerDate.today(now),
+      );
+      await store.deletePayment(original: bill);
+      expect((await stored('account')).voided, isTrue);
+      expect(
+        recentPayments(await store.payments(), LedgerDate.today(now)),
+        isEmpty,
+      );
+    });
+  });
 }
 
 Future<void> createV1(DatabaseExecutor db) async {

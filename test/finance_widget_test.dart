@@ -184,6 +184,136 @@ void main() {
     },
   );
 
+  group('edit and delete from the payment detail page', () {
+    Future<PaymentRecord> record({int cycles = 1, String id = 'p1'}) async {
+      final current = controller.byId(server.id)!;
+      final payment = await store.recordPayment(
+        id: id,
+        server: current,
+        amount: const Money('USD', 3650),
+        paidDate: today,
+        cycleCount: cycles,
+        until: renewalDate(current, cycles),
+        confirmed: true,
+        note: 'first',
+      );
+      await controller.refresh();
+      return payment;
+    }
+
+    testWidgets(
+      'edit still works after the server was edited and keeps terms',
+      (tester) async {
+        final payment = await record();
+        await store.setFavorite(controller.byId(server.id)!, true);
+        await controller.refresh();
+        expect(controller.canUndoPayment(payment), isFalse);
+        final dueBefore = controller.byId(server.id)!.dueDate;
+        final periodsBefore = controller.periodsFor(server.id).length;
+        await mount(
+          tester,
+          PaymentDetailPage(controller: controller, id: payment.id),
+        );
+        await tester.tap(find.byKey(const ValueKey('payment-edit')));
+        await tester.pumpAndSettle();
+        await fill(tester, 'edit-amount', '12.50');
+        await fill(tester, 'edit-note', 'corrected');
+        await tester.tap(find.text('EUR'));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('保存'));
+        await tester.pumpAndSettle();
+        final saved = controller.payments.single;
+        expect(saved.amount.minor, 1250);
+        expect(saved.amount.currency, 'EUR');
+        expect(saved.note, 'corrected');
+        expect(controller.byId(server.id)!.dueDate, dueBefore);
+        expect(controller.periodsFor(server.id).length, periodsBefore);
+        expect(find.text('付款记录已更新'), findsOneWidget);
+        expect(tester.takeException(), isNull);
+      },
+    );
+
+    testWidgets('invalid edit shows the error and writes nothing', (
+      tester,
+    ) async {
+      final payment = await record();
+      await mount(
+        tester,
+        PaymentDetailPage(controller: controller, id: payment.id),
+      );
+      await tester.tap(find.byKey(const ValueKey('payment-edit')));
+      await tester.pumpAndSettle();
+      await fill(tester, 'edit-amount', 'abc');
+      await tester.tap(find.text('保存'));
+      await tester.pumpAndSettle();
+      expect(find.text('请输入有效实付金额，0 表示免费'), findsOneWidget);
+      expect(controller.payments.single.amount.minor, 3650);
+    });
+
+    testWidgets(
+      'latest renewal offers rollback; rolling back restores the term',
+      (tester) async {
+        final before = controller.byId(server.id)!;
+        final payment = await record(cycles: 2);
+        await mount(
+          tester,
+          PaymentDetailPage(controller: controller, id: payment.id),
+        );
+        await tester.tap(find.byKey(const ValueKey('payment-delete')));
+        await tester.pumpAndSettle();
+        expect(find.text('删除并回退续费'), findsOneWidget);
+        expect(find.text('仅删除记录，保留服务期'), findsOneWidget);
+        await tester.tap(find.text('删除并回退续费'));
+        await tester.pumpAndSettle();
+        expect(controller.payments.single.voided, isTrue);
+        expect(controller.byId(server.id)!.dueDate, before.dueDate);
+        expect(controller.periodsFor(server.id).length, 1);
+      },
+    );
+
+    testWidgets('delete-only keeps periods and due date', (tester) async {
+      final payment = await record();
+      final due = controller.byId(server.id)!.dueDate;
+      await mount(
+        tester,
+        PaymentDetailPage(controller: controller, id: payment.id),
+      );
+      await tester.tap(find.byKey(const ValueKey('payment-delete')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('仅删除记录，保留服务期'));
+      await tester.pumpAndSettle();
+      expect(controller.payments.single.voided, isTrue);
+      expect(controller.byId(server.id)!.dueDate, due);
+      expect(controller.periodsFor(server.id).length, 2);
+    });
+
+    testWidgets(
+      'after the server changed only the record can be deleted, with the full warning',
+      (tester) async {
+        final payment = await record();
+        await store.setFavorite(controller.byId(server.id)!, true);
+        await controller.refresh();
+        await mount(
+          tester,
+          PaymentDetailPage(controller: controller, id: payment.id),
+        );
+        await tester.tap(find.byKey(const ValueKey('payment-delete')));
+        await tester.pumpAndSettle();
+        expect(find.text('删除并回退续费'), findsNothing);
+        expect(find.textContaining('服务期与到期日保持不变'), findsOneWidget);
+        await tester.tap(find.text('取消'));
+        await tester.pumpAndSettle();
+        expect(controller.payments.single.voided, isFalse);
+        await tester.tap(find.byKey(const ValueKey('payment-delete')));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('删除记录').last);
+        await tester.pumpAndSettle();
+        expect(controller.payments.single.voided, isTrue);
+        expect(controller.periodsFor(server.id).length, 2);
+      },
+    );
+  });
+
   testWidgets(
     'FX cancel preserves missing rates, save updates only display; finance drilldowns share scope',
     (tester) async {

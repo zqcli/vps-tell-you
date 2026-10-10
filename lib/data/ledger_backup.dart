@@ -261,10 +261,12 @@ class LedgerBackupSnapshot {
           );
         }
       } else {
+        // A deleted payment keeps its periods when the user chose to delete
+        // only the record (store.deletePayment without rollback), so the
+        // owning payment may be voided.
         final payment = byPayment[paymentId];
         if (payment == null ||
             payment['server_id'] != server.id ||
-            payment['voided_at'] != null ||
             row['inferred'] != 0) {
           throw LocalizedFormatException(
             (l10n) => l10n.backupInvalidPeriodPayment,

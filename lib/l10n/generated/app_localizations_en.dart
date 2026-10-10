@@ -1026,7 +1026,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get financeAccountBillNote =>
-      'Records the whole account bill separately and counts it once. No panel account connection is needed. It is not allocated to instances and does not create service periods or remaining value.';
+      'Standalone bill, counted once. Not split across servers; creates no service period.';
 
   @override
   String get financeAccountName => 'Account display name';
@@ -1056,7 +1056,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get financePaymentRenewalNote =>
-      'The amount paid is saved separately and does not replace the renewal price. Only whole-cycle renewals are supported. If the provider includes bonus time or a different expiry date, check it first rather than inventing cycles.';
+      'The amount paid is stored separately and does not change the renewal price. Whole cycles only.';
 
   @override
   String get financeBillStart => 'Billing period start (optional)';
@@ -1092,7 +1092,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get financeRecent30 => 'Last 30 days';
 
   @override
-  String get financeShowVoided => 'Show voided records';
+  String get financeShowVoided => 'Show deleted';
 
   @override
   String get financeRecordedPaidTotal => 'Total recorded payments';
@@ -1149,17 +1149,57 @@ class AppLocalizationsEn extends AppLocalizations {
   String get financeBillServicePeriod => 'Billing / Service period';
 
   @override
-  String get financeVoidedStatus => 'Voided, excluded from payment totals';
+  String get financeVoidedStatus => 'Deleted, excluded from payment totals';
 
   @override
   String get financeRecordedStatus => 'Recorded';
 
   @override
   String get financePaymentHistoryNote =>
-      'This is a past payment in its original currency. Changes to renewal prices or reference rates do not rewrite it. To correct it, void it and enter it again. Voiding may be unavailable if related details have since changed.';
+      'Original-currency history; it does not follow renewal prices or exchange rates.';
 
   @override
   String get financeVoidThisRecord => 'Void this record';
+
+  @override
+  String get r2FinanceEdit => 'Edit';
+
+  @override
+  String get r2FinanceEditTitle => 'Edit payment';
+
+  @override
+  String get r2FinanceEditHint =>
+      'Only edits the bookkeeping. Service periods, due date and cycles stay as they are.';
+
+  @override
+  String get r2FinanceDelete => 'Delete record';
+
+  @override
+  String get r2FinanceDeleteTitle => 'Delete this payment record?';
+
+  @override
+  String get r2FinanceDeleteAccountMsg =>
+      'Deletes this bill from the local ledger only. No server is affected and nothing is refunded by the provider. It no longer counts towards payment totals.';
+
+  @override
+  String get r2FinanceDeleteKeepMsg =>
+      'Deletes the payment record only. Service periods and the due date stay as they are (the server has changed since, so the renewal cannot be rolled back). Nothing is refunded by the provider.';
+
+  @override
+  String get r2FinanceDeleteChoiceMsg =>
+      'You can also roll back this renewal (restore the previous due date and remove its service periods), or delete only the record and keep the periods and due date. Neither option refunds anything at the provider.';
+
+  @override
+  String get r2FinanceDeleteRollback => 'Delete and roll back renewal';
+
+  @override
+  String get r2FinanceDeleteKeep => 'Delete record only, keep periods';
+
+  @override
+  String get r2FinanceDeleted => 'Payment record deleted';
+
+  @override
+  String get r2FinanceUpdated => 'Payment record updated';
 
   @override
   String get financeVoidBlocked =>
@@ -1487,7 +1527,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String financeExtendFromDue(String date) {
-    return 'Extends from the original expiry date, $date, preserving unused time. Dates follow the original renewal anchor and month-end rules.';
+    return 'Extends from the current due date, $date.';
   }
 
   @override
@@ -1509,15 +1549,15 @@ class AppLocalizationsEn extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count valid records',
-      one: '1 valid record',
+      other: '$count records',
+      one: '1 record',
     );
-    return '$_temp0; this may not be your complete billing history. Voided records are excluded.';
+    return '$_temp0; deleted ones are excluded.';
   }
 
   @override
   String financePaymentGroupNote(String group) {
-    return 'Current group: $group. Account bills are not allocated to groups. Payment history retains payments for archived servers.';
+    return 'Group: $group. Account bills are not included.';
   }
 
   @override
@@ -1698,7 +1738,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'Amounts use current renewal prices and manual reference exchange rates. For reference only; they are not vendor bills.';
 
   @override
-  String get uiFinanceVoidedPill => 'Voided';
+  String get uiFinanceVoidedPill => 'Deleted';
 
   @override
   String get uiFinanceArchivedPill => 'Archived';
