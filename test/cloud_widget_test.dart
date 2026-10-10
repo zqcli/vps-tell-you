@@ -24,6 +24,7 @@ import 'package:vps_tell_you/servers/server_detail.dart';
 import 'package:vps_tell_you/servers/server_record.dart';
 import 'package:vps_tell_you/settings/settings_page.dart';
 
+import 'support/form_test_helpers.dart';
 import 'security_store_test.dart' show FakeSecretStore, FakeDeviceAuth;
 import 'cloud_store_test.dart' show completedResources;
 
@@ -186,6 +187,11 @@ void main() {
   }
 
   Future<void> fill(WidgetTester tester, String key, String value) async {
+    if (key == 'resource-vcpu') {
+      // vCPU is a stepper; an empty value is its unknown state.
+      await setVcpu(tester, value.isEmpty ? null : int.parse(value));
+      return;
+    }
     final field = find.byKey(ValueKey(key));
     await reveal(tester, field);
     await tester.enterText(field, value);
@@ -459,7 +465,7 @@ void main() {
       expect(secrets.writes, 0);
       final cpu = find.byKey(const ValueKey('resource-vcpu'));
       await reveal(tester, cpu);
-      expect(tester.widget<TextFormField>(cpu).controller!.text, isEmpty);
+      expect(vcpuText(tester), isEmpty);
       await fill(tester, 'resource-vcpu', '2');
       await fill(tester, 'cloud-v1-name', 'Synthetic Rack VPS');
       await tapKey(tester, 'cloud-import-submit');
@@ -1256,13 +1262,7 @@ void main() {
         find.byKey(const ValueKey('cloud-return-to-instance')),
         findsNothing,
       );
-      expect(
-        tester
-            .widget<TextFormField>(find.byKey(const ValueKey('resource-vcpu')))
-            .controller!
-            .text,
-        '2',
-      );
+      expect(vcpuText(tester), '2');
       await tapKey(tester, 'cloud-import-submit');
       expect(cloud.accounts, hasLength(1));
       expect(ledger.active, hasLength(1));
@@ -1295,21 +1295,16 @@ void main() {
     await tester.pumpAndSettle();
     await fill(tester, 'resource-vcpu', '2');
     await tapKey(tester, 'cloud-import-submit');
+    // The hardware group is now ordered vCPU, memory, disk, traffic, IP,
+    // hostname; the earliest invalid field in that visual order (memory) is
+    // revealed, while the later IP error stays in the tree for correction.
     expect(
-      find.byKey(const ValueKey('resource-ip')).hitTestable(),
+      find.byKey(const ValueKey('resource-ramBytes')).hitTestable(),
       findsOneWidget,
     );
-    expect(
-      find.text('请填写有效 IPv4 或 IPv6，不能为全零地址').hitTestable(),
-      findsOneWidget,
-    );
-    expect(
-      tester
-          .widget<TextFormField>(find.byKey(const ValueKey('resource-vcpu')))
-          .controller!
-          .text,
-      '2',
-    );
+    expect(find.text('请填写大于 0 的容量，精确到整字节').hitTestable(), findsWidgets);
+    expect(find.text('请填写有效 IPv4 或 IPv6，不能为全零地址'), findsOneWidget);
+    expect(vcpuText(tester), '2');
     expect(cloud.accounts, isEmpty);
     expect(calls, 1);
     expect(tester.takeException(), isNull);

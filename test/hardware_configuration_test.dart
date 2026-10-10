@@ -12,6 +12,8 @@ import 'package:vps_tell_you/servers/server_record.dart';
 import 'package:vps_tell_you/servers/server_resource_fields.dart';
 import 'package:vps_tell_you/servers/server_resources.dart';
 
+import 'support/form_test_helpers.dart';
+
 ServerResources _complete() => ServerResources(
   ip: '192.0.2.45',
   hostname: 'fixture.example',
@@ -143,6 +145,11 @@ void main() {
     }
 
     Future<void> fill(WidgetTester tester, String key, String value) async {
+      if (key == 'vcpu') {
+        // vCPU is a stepper; an empty value is its explicit unknown state.
+        await setVcpu(tester, value.isEmpty ? null : int.parse(value));
+        return;
+      }
       final field = find.byKey(ValueKey('resource-$key'));
       await tester.ensureVisible(field);
       await tester.enterText(field, value);
@@ -183,26 +190,13 @@ void main() {
       expect(key.currentState!.validateAndRead()!.trafficPeriodMonths, 1);
       await fill(tester, 'trafficBytes', '2');
       final period = find.byKey(const ValueKey('resource-traffic-period'));
-      await tester.ensureVisible(period);
-      await tester.tap(period);
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('季').last);
-      await tester.pumpAndSettle();
+      await chooseOption(tester, period, '每季');
       expect(key.currentState!.validateAndRead()!.trafficPeriodMonths, 3);
       expect(key.currentState!.validateAndRead()!.trafficBytes, 2147483648);
-      final unit = find.byKey(const ValueKey('resource-unit-trafficBytes'));
-      await tester.ensureVisible(unit);
-      await tester.tap(unit);
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('TiB').last);
-      await tester.pumpAndSettle();
+      await chooseUnit(tester, 'trafficBytes', 'TiB');
       expect(key.currentState!.validateAndRead()!.trafficPeriodMonths, 3);
       expect(key.currentState!.validateAndRead()!.trafficBytes, 2199023255552);
-      await tester.ensureVisible(period);
-      await tester.tap(period);
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('未设置').last);
-      await tester.pumpAndSettle();
+      await chooseOption(tester, period, '未设置');
       expect(key.currentState!.validateAndRead()!.trafficPeriodMonths, isNull);
       expect(key.currentState!.validateAndRead()!.trafficBytes, 2199023255552);
       expect(tester.takeException(), isNull);
@@ -228,8 +222,7 @@ void main() {
       await fill(tester, 'hostname', 'https://wrong.example');
       expect(key.currentState!.validateAndRead(), isNull);
       await fill(tester, 'hostname', '');
-      await fill(tester, 'vcpu', '0');
-      expect(key.currentState!.validateAndRead(), isNull);
+      // A stepper cannot hold 0; "unknown" is its cleared state and is valid.
       await fill(tester, 'vcpu', '');
       expect(key.currentState!.validateAndRead(), isNotNull);
     });
@@ -275,11 +268,15 @@ void main() {
     }
 
     Future<void> fill(WidgetTester tester, String key, String value) async {
+      if (key == 'resource-vcpu') {
+        await setVcpu(tester, value.isEmpty ? null : int.parse(value));
+        return;
+      }
       final field = find.byKey(ValueKey(key));
       await tester.ensureVisible(field);
       await tester.enterText(field, value);
       FocusManager.instance.primaryFocus?.unfocus();
-      await tester.pump();
+      await tester.pumpAndSettle();
     }
 
     Future<ServerRecord> seed({
@@ -313,8 +310,7 @@ void main() {
         await fill(tester, 'field-name', 'Manual server');
         await fill(tester, 'resource-${target.$1}', target.$2);
         await fill(tester, 'resource-vcpu', '4');
-        await tester.tap(find.text('保存服务器'));
-        await tester.pumpAndSettle();
+        await tapSave(tester);
         final saved = (await store.servers()).single;
         expect(saved.host, target.$2);
         expect(saved.resources!.vcpu, 4);
@@ -341,14 +337,9 @@ void main() {
           await fill(tester, 'resource-${entry.key}', entry.value);
         }
         final period = find.byKey(const ValueKey('resource-traffic-period'));
-        await tester.ensureVisible(period);
-        await tester.tap(period);
-        await tester.pumpAndSettle();
-        await tester.tap(find.text('年').last);
-        await tester.pumpAndSettle();
+        await chooseOption(tester, period, '每年');
         await fill(tester, 'field-notes', 'Only local hardware');
-        await tester.tap(find.text('保存服务器'));
-        await tester.pumpAndSettle();
+        await tapSave(tester);
         final first = (await store.servers()).single;
         await tester.pumpWidget(const SizedBox());
         await tester.runAsync(() async {
@@ -391,8 +382,7 @@ void main() {
     ) async {
       await mount(tester);
       await fill(tester, 'field-name', 'Unknown hardware');
-      await tester.tap(find.text('保存服务器'));
-      await tester.pumpAndSettle();
+      await tapSave(tester);
       final saved = (await store.servers()).single;
       expect(saved.host, isEmpty);
       expect(
@@ -423,8 +413,7 @@ void main() {
       await fill(tester, 'field-name', 'Manual server');
       await fill(tester, 'field-host', 'gateway.example');
       await fill(tester, 'resource-ip', '192.0.2.40');
-      await tester.tap(find.text('保存服务器'));
-      await tester.pumpAndSettle();
+      await tapSave(tester);
       final saved = (await store.servers()).single;
       expect(saved.host, 'gateway.example');
       expect(saved.resources!.ip, '192.0.2.40');
@@ -436,8 +425,7 @@ void main() {
         final record = await seed(host: 'legacy.example');
         await mount(tester, record: record);
         await fill(tester, 'field-name', 'Edited legacy');
-        await tester.tap(find.text('保存服务器'));
-        await tester.pumpAndSettle();
+        await tapSave(tester);
         final saved = (await store.servers()).single;
         expect(saved.name, 'Edited legacy');
         expect(saved.host, 'legacy.example');
@@ -454,8 +442,7 @@ void main() {
         await mount(tester, record: record);
         await fill(tester, 'resource-ip', '192.0.2.99');
         await fill(tester, 'resource-hostname', 'changed.example');
-        await tester.tap(find.text('保存服务器'));
-        await tester.pumpAndSettle();
+        await tapSave(tester);
         final saved = (await store.servers()).single;
         expect(saved.host, host);
         expect(saved.resources!.ip, '192.0.2.99');

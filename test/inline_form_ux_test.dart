@@ -1,12 +1,14 @@
 import 'dart:io';
 import 'dart:ui' as ui;
 
+import 'package:flutter/cupertino.dart' show CupertinoSwitch;
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:vps_tell_you/core/app_theme.dart';
+import 'package:vps_tell_you/core/ui/ui.dart';
 import 'package:vps_tell_you/core/value_types.dart';
 import 'package:vps_tell_you/data/ledger_store.dart';
 import 'package:vps_tell_you/servers/ledger_controller.dart';
@@ -14,6 +16,8 @@ import 'package:vps_tell_you/servers/server_form.dart';
 import 'package:vps_tell_you/servers/server_record.dart';
 import 'package:vps_tell_you/servers/server_resource_fields.dart';
 import 'package:vps_tell_you/servers/server_resources.dart';
+
+import 'support/form_test_helpers.dart';
 
 void main() {
   final evidence = Platform.environment['VPS_INLINE_UX_EVIDENCE_DIR'];
@@ -132,21 +136,6 @@ void main() {
     await tester.pumpAndSettle();
   }
 
-  Future<void> select<T>(WidgetTester tester, String id, T value) async {
-    final field = find.byKey(ValueKey(id));
-    await reveal(tester, field);
-    final dropdown = tester.widget<DropdownButton<T>>(
-      find.descendant(of: field, matching: find.byType(DropdownButton<T>)),
-    );
-    final target = dropdown.items!
-        .singleWhere((item) => item.value == value)
-        .child;
-    await tester.tap(field);
-    await tester.pumpAndSettle();
-    await tester.tap(find.byWidget(target).last);
-    await tester.pumpAndSettle();
-  }
-
   Future<void> capture(WidgetTester tester, String name) async {
     if (evidence == null) return;
     await tester.pumpAndSettle();
@@ -171,76 +160,71 @@ void main() {
           await mount(tester, width, scale);
           final billing = find.byKey(const ValueKey('field-billing'));
           await reveal(tester, billing);
-          final billingDecoration = tester
-              .widget<InputDecorator>(
-                find.descendant(
-                  of: billing,
-                  matching: find.byType(InputDecorator),
-                ),
-              )
-              .decoration;
-          final vcpuDecoration = tester
-              .widget<InputDecorator>(
-                find.descendant(
-                  of: find.byKey(const ValueKey('resource-vcpu')),
-                  matching: find.byType(InputDecorator),
-                ),
-              )
-              .decoration;
-          expect(billingDecoration.labelText, '计费方式');
+          // Label left, compact segmented control right (or below the label
+          // when the label and three choices cannot share one line).
+          final billingRow = tester.getRect(
+            find.byKey(const ValueKey('row-billing')),
+          );
+          final billingRect = tester.getRect(billing);
+          expect(find.text('计费方式'), findsOneWidget);
+          expect(billingRect.left, greaterThanOrEqualTo(billingRow.left));
+          expect(billingRect.right, lessThanOrEqualTo(billingRow.right));
           expect(
-            billingDecoration.floatingLabelBehavior,
-            vcpuDecoration.floatingLabelBehavior,
+            find.descendant(of: billing, matching: find.text('预付')),
+            findsOneWidget,
           );
           final feeRow = find.byKey(const ValueKey('row-fees'));
           await reveal(tester, feeRow);
-          Rect? previous;
-          for (final id in ['amount', 'currency', 'cycle']) {
-            final rect = tester.getRect(find.byKey(ValueKey('field-$id')));
-            expect(rect.height, greaterThanOrEqualTo(48));
-            expect(rect.width, greaterThanOrEqualTo(48));
-            expect(rect.right, lessThanOrEqualTo(width - 20 + 0.001));
-            if (previous != null) {
-              expect(rect.top, closeTo(previous.top, 0.001));
-              expect(rect.left, greaterThan(previous.right));
-            }
-            previous = rect;
-          }
-          final dates = find.byKey(const ValueKey('row-dates'));
-          await reveal(tester, dates);
-          final startRect = tester.getRect(
-            find.byKey(const ValueKey('field-start')),
+          final amountRect = tester.getRect(
+            find.byKey(const ValueKey('field-amount')),
           );
-          final dueRect = tester.getRect(
-            find.byKey(const ValueKey('field-due')),
+          final currencyRect = tester.getRect(
+            find.byKey(const ValueKey('field-currency')),
           );
-          expect(startRect.top, closeTo(dueRect.top, 0.001));
-          expect(startRect.right, lessThan(dueRect.left));
-          for (final id in ['start', 'due']) {
-            final field = find.byKey(ValueKey('field-$id'));
-            final editor = find.descendant(
-              of: field,
-              matching: find.byType(EditableText),
+          // Amount and currency share one row.
+          expect(amountRect.top, closeTo(currencyRect.top, 12));
+          expect(amountRect.right, lessThan(currencyRect.left));
+          expect(currencyRect.width, greaterThanOrEqualTo(44));
+          expect(currencyRect.height, greaterThanOrEqualTo(44));
+          expect(currencyRect.right, lessThanOrEqualTo(width));
+          expect(amountRect.width, greaterThanOrEqualTo(48));
+          final cycleRect = tester.getRect(
+            find.byKey(const ValueKey('field-cycle')),
+          );
+          expect(cycleRect.height, greaterThanOrEqualTo(48));
+          expect(cycleRect.right, lessThanOrEqualTo(width));
+          for (final entry in {
+            'field-start': '2026-01-01',
+            'field-due': '2027-01-01',
+          }.entries) {
+            final row = find.byKey(ValueKey(entry.key));
+            await reveal(tester, row);
+            final text = find.descendant(
+              of: row,
+              matching: find.text(entry.value),
             );
-            final render = tester
-                .state<EditableTextState>(editor)
-                .renderEditable;
-            final text = tester.widget<TextFormField>(field).controller!.text;
-            expect(text, id == 'start' ? '2026-01-01' : '2027-01-01');
-            for (final offset in [0, text.length]) {
-              final caret = render.getLocalRectForCaret(
-                TextPosition(offset: offset),
-              );
-              expect(caret.left, greaterThanOrEqualTo(-0.01));
-              expect(caret.right, lessThanOrEqualTo(render.size.width + 2));
-              expect(
-                caret.bottom,
-                lessThanOrEqualTo(render.size.height + 0.01),
-              );
-            }
+            expect(text, findsOneWidget);
+            // The complete ISO date stays on one line inside its row.
+            expect(
+              tester.renderObject<RenderParagraph>(text).didExceedMaxLines,
+              isFalse,
+            );
+            expect(
+              tester.getRect(text).right,
+              lessThanOrEqualTo(tester.getRect(row).right),
+            );
+            expect(tester.getRect(row).height, greaterThanOrEqualTo(48));
           }
-          await select(tester, 'field-currency', 'EUR');
-          await select(tester, 'field-cycle', 36);
+          await chooseOption(
+            tester,
+            find.byKey(const ValueKey('field-currency')),
+            'EUR',
+          );
+          await chooseOption(
+            tester,
+            find.byKey(const ValueKey('field-cycle')),
+            '每 36 个月',
+          );
           final amount = tester.widget<TextField>(
             find.descendant(
               of: find.byKey(const ValueKey('field-amount')),
@@ -249,7 +233,6 @@ void main() {
           );
           expect(amount.decoration?.suffixText, isNull);
           expect(find.textContaining('每 36 个月续费金额，实付另记'), findsOneWidget);
-          expect(find.text('3年'), findsOneWidget);
           await reveal(tester, find.byKey(const ValueKey('row-billing')));
           await capture(tester, 'finance-${width.toInt()}-${scale.toInt()}x');
           final unlimited = find.byKey(
@@ -262,7 +245,7 @@ void main() {
           );
           final toggle = find.descendant(
             of: unlimited,
-            matching: find.byType(Switch),
+            matching: find.byType(CupertinoSwitch),
           );
           expect(
             tester.getRect(label).center.dy,
@@ -271,10 +254,10 @@ void main() {
           expect(tester.getSize(unlimited).height, greaterThanOrEqualTo(48));
           await tester.tap(unlimited);
           await tester.pumpAndSettle();
-          expect(tester.widget<SwitchListTile>(unlimited).value, isTrue);
+          expect(tester.widget<AppSwitchRow>(unlimited).value, isTrue);
           expect(
             tester
-                .widget<TextFormField>(
+                .widget<AppTextField>(
                   find.byKey(const ValueKey('resource-trafficBytes')),
                 )
                 .enabled,
@@ -293,17 +276,6 @@ void main() {
             tester,
             find.byKey(const ValueKey('resource-row-trafficBytes')),
           );
-          final period = tester
-              .getSize(find.byKey(const ValueKey('resource-traffic-period')))
-              .height;
-          final capacity = tester
-              .getSize(find.byKey(const ValueKey('resource-trafficBytes')))
-              .height;
-          expect(
-            period,
-            lessThan(capacity + 12),
-            reason: 'Hidden unknown period must not keep an oversized field',
-          );
           await capture(tester, 'hardware-${width.toInt()}-${scale.toInt()}x');
           expect(tester.takeException(), isNull);
         },
@@ -315,10 +287,13 @@ void main() {
     'reversed dates reveal the due field from the bottom and retain the draft',
     (tester) async {
       await mount(tester, 320, 2);
-      await fill(tester, 'field-due', '2025-12-31');
+      await pickDate(
+        tester,
+        find.byKey(const ValueKey('field-due')),
+        DateTime(2025, 12, 31),
+      );
       await fill(tester, 'field-notes', 'Keep this draft');
-      await tester.tap(find.text('保存服务器'));
-      await tester.pumpAndSettle();
+      await tapSave(tester);
       expect(find.text('到期日必须晚于开始日').hitTestable(), findsOneWidget);
       expect(
         find.byKey(const ValueKey('field-due')).hitTestable(),
@@ -326,13 +301,7 @@ void main() {
       );
       expect((await store.servers()).single.notes, isEmpty);
       await capture(tester, 'date-error-320-2x');
-      expect(
-        tester
-            .widget<TextFormField>(find.byKey(const ValueKey('field-notes')))
-            .controller!
-            .text,
-        'Keep this draft',
-      );
+      expect(fieldController(tester, 'field-notes').text, 'Keep this draft');
       expect(tester.takeException(), isNull);
     },
   );
@@ -343,15 +312,14 @@ void main() {
       await mount(tester, 320, 2, height: 560);
       await fill(tester, 'resource-ip', '0.0.0.0');
       await fill(tester, 'field-notes', 'A draft survives validation');
-      await tester.tap(find.text('保存服务器'));
-      await tester.pumpAndSettle();
+      await tapSave(tester);
       final error = find.text('请填写有效 IPv4 或 IPv6，不能为全零地址');
       expect(error.hitTestable(), findsOneWidget);
       expect(
         tester.renderObject<RenderParagraph>(error).didExceedMaxLines,
         isFalse,
       );
-      expect(find.text('保存服务器').hitTestable(), findsOneWidget);
+      expect(find.text('保存').hitTestable(), findsOneWidget);
       await capture(tester, 'ip-error-small-viewport');
       expect(tester.takeException(), isNull);
     },

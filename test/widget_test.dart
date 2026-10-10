@@ -60,7 +60,9 @@ void main() {
     final target = find.byKey(ValueKey('field-$id'));
     await tester.ensureVisible(target);
     await tester.enterText(target, text);
-    await tester.pump();
+    // The pinned navigation bar only hit-tests reliably once the focused
+    // field has finished scrolling into view.
+    await tester.pumpAndSettle();
   }
 
   testWidgets(
@@ -83,7 +85,7 @@ void main() {
       await tester.pumpAndSettle();
       await fill(tester, 'name', 'My VPS');
       await fill(tester, 'host', '192.0.2.42');
-      await tester.tap(find.text('保存服务器'));
+      await tester.tap(find.text('保存'));
       await tester.pumpAndSettle();
       expect(find.byType(ServerDetail), findsOneWidget);
       expect((await store.servers()).single.host, '192.0.2.42');
@@ -96,9 +98,9 @@ void main() {
       await tester.tap(find.text('编辑'));
       await tester.pumpAndSettle();
       await fill(tester, 'name', 'Unsaved back');
-      // The edit form is a sheet above the detail page, which has its own
-      // back button; the topmost one belongs to the form.
-      await tester.tap(find.byTooltip('Back').last);
+      // The edit form is a modal sheet without a back button; the system back
+      // action dismisses only the topmost route.
+      await tester.binding.handlePopRoute();
       await tester.pumpAndSettle();
       expect((await store.servers()).single.name, 'My VPS');
       await tester.pageBack();
@@ -111,7 +113,7 @@ void main() {
       await tester.tap(find.byKey(const ValueKey('add-manual')));
       await tester.pumpAndSettle();
       await fill(tester, 'name', 'Cancelled new');
-      await tester.pageBack();
+      await tester.binding.handlePopRoute();
       await tester.pumpAndSettle();
       expect((await store.servers()).length, 1);
       expect(tester.takeException(), isNull);
@@ -134,7 +136,7 @@ void main() {
       await tester.pumpAndSettle();
       await fill(tester, 'name', 'Committed edit');
       failing.fail = true;
-      await tester.tap(find.text('保存服务器'));
+      await tester.tap(find.text('保存'));
       await tester.pumpAndSettle();
 
       final committed = (await store.servers()).singleWhere(
@@ -190,13 +192,13 @@ void main() {
       await tester.pumpAndSettle();
       expect(
         tester
-            .widget<TextFormField>(find.byKey(const ValueKey('field-name')))
+            .widget<AppTextField>(find.byKey(const ValueKey('field-name')))
             .controller!
             .text,
         'Committed edit',
       );
       await fill(tester, 'name', 'Edited after recovery');
-      await tester.tap(find.text('保存服务器'));
+      await tester.tap(find.text('保存'));
       await tester.pumpAndSettle();
       final recovered = (await store.servers()).singleWhere(
         (s) => s.id == original.id,

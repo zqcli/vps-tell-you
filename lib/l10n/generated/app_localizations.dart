@@ -6052,6 +6052,120 @@ abstract class AppLocalizations {
   /// **'保存服务器'**
   String get serverSave;
 
+  /// No description provided for @uiFormProvider.
+  ///
+  /// In zh, this message translates to:
+  /// **'提供商'**
+  String get uiFormProvider;
+
+  /// No description provided for @uiFormPurpose.
+  ///
+  /// In zh, this message translates to:
+  /// **'用途'**
+  String get uiFormPurpose;
+
+  /// No description provided for @uiFormRegion.
+  ///
+  /// In zh, this message translates to:
+  /// **'地区'**
+  String get uiFormRegion;
+
+  /// No description provided for @uiFormSpec.
+  ///
+  /// In zh, this message translates to:
+  /// **'规格补充'**
+  String get uiFormSpec;
+
+  /// No description provided for @uiFormOptional.
+  ///
+  /// In zh, this message translates to:
+  /// **'选填'**
+  String get uiFormOptional;
+
+  /// No description provided for @uiFormNameHint.
+  ///
+  /// In zh, this message translates to:
+  /// **'例如 HK-01'**
+  String get uiFormNameHint;
+
+  /// No description provided for @uiFormDone.
+  ///
+  /// In zh, this message translates to:
+  /// **'完成'**
+  String get uiFormDone;
+
+  /// No description provided for @uiFormSetUnknown.
+  ///
+  /// In zh, this message translates to:
+  /// **'设为未知'**
+  String get uiFormSetUnknown;
+
+  /// No description provided for @uiFormPickDate.
+  ///
+  /// In zh, this message translates to:
+  /// **'选择日期'**
+  String get uiFormPickDate;
+
+  /// No description provided for @uiFormUnknownCostFootnote.
+  ///
+  /// In zh, this message translates to:
+  /// **'费用未知时不会按 0 计算，也不会计入费用合计。'**
+  String get uiFormUnknownCostFootnote;
+
+  /// No description provided for @uiFormVcpuDecrease.
+  ///
+  /// In zh, this message translates to:
+  /// **'减少 vCPU'**
+  String get uiFormVcpuDecrease;
+
+  /// No description provided for @uiFormVcpuIncrease.
+  ///
+  /// In zh, this message translates to:
+  /// **'增加 vCPU'**
+  String get uiFormVcpuIncrease;
+
+  /// No description provided for @uiFormCollapse.
+  ///
+  /// In zh, this message translates to:
+  /// **'收起硬件信息'**
+  String get uiFormCollapse;
+
+  /// No description provided for @uiFormExpand.
+  ///
+  /// In zh, this message translates to:
+  /// **'展开硬件信息'**
+  String get uiFormExpand;
+
+  /// No description provided for @uiFormMemory.
+  ///
+  /// In zh, this message translates to:
+  /// **'内存'**
+  String get uiFormMemory;
+
+  /// No description provided for @uiFormDisk.
+  ///
+  /// In zh, this message translates to:
+  /// **'磁盘'**
+  String get uiFormDisk;
+
+  /// No description provided for @uiFormTraffic.
+  ///
+  /// In zh, this message translates to:
+  /// **'流量'**
+  String get uiFormTraffic;
+
+  /// No description provided for @uiFormBillingPrepaid.
+  ///
+  /// In zh, this message translates to:
+  /// **'预付'**
+  String get uiFormBillingPrepaid;
+
+  /// No description provided for @uiFormBillingMetered.
+  ///
+  /// In zh, this message translates to:
+  /// **'按量'**
+  String get uiFormBillingMetered;
+
   /// No description provided for @serverWaitForOperation.
   ///
   /// In zh, this message translates to:

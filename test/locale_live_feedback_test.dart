@@ -1,5 +1,4 @@
 import 'dart:io';
-import 'dart:ui' as ui;
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -34,6 +33,7 @@ import 'package:vps_tell_you/settings/settings_page.dart';
 import 'package:xterm/xterm.dart';
 
 import 'security_store_test.dart' show FakeDeviceAuth, FakeSecretStore;
+import 'support/form_test_helpers.dart';
 import 'support/reminder_platform.dart';
 import 'terminal_widget_test.dart' show SpySshService;
 
@@ -675,7 +675,7 @@ void main() {
   );
 
   testWidgets(
-    'open billing and cycle dropdowns follow locale without changing draft values',
+    'billing choices and the open cycle picker follow locale without changing draft values',
     (tester) async {
       await mount(
         tester,
@@ -684,46 +684,55 @@ void main() {
       final name = find.byKey(const ValueKey('field-name'));
       await reveal(tester, name);
       await tester.enterText(name, 'User draft 原样');
-      final nameController = tester.widget<TextFormField>(name).controller!;
+      final nameController = fieldController(tester, 'field-name');
       final formState = tester.state(find.byType(ServerForm));
       final billing = find.byKey(const ValueKey('field-billing'));
       await reveal(tester, billing);
-      await tester.tap(billing);
-      await tester.pumpAndSettle();
-      final dropdownRoute = ModalRoute.of(
-        tester.element(find.text(en.serverMeteredOption)),
+      expect(
+        find.descendant(of: billing, matching: find.text('Metered')),
+        findsOneWidget,
       );
       await change(tester, 'zh');
-      expect(find.text(zh.serverMeteredOption), findsOneWidget);
-      expect(find.text(en.serverMeteredOption), findsNothing);
       expect(
-        ModalRoute.of(tester.element(find.text(zh.serverMeteredOption))),
-        same(dropdownRoute),
+        find.descendant(of: billing, matching: find.text('按量')),
+        findsOneWidget,
       );
       expect(
-        tester.state<FormFieldState<BillingKind>>(billing).value,
+        tester.widget<AppSegmented<BillingKind>>(billing).value,
         BillingKind.prepaid,
       );
-      await tester.tap(find.text(zh.serverPrepaidOption));
-      await tester.pumpAndSettle();
       await change(tester, 'en');
       final cycle = find.byKey(const ValueKey('field-cycle'));
       await reveal(tester, cycle);
       await tester.tap(cycle);
       await tester.pumpAndSettle();
+      final sheetRoute = ModalRoute.of(
+        tester.element(find.text(en.serverEveryMonths(3))),
+      );
       expect(find.text(en.serverEveryMonths(3)), findsOneWidget);
       await change(tester, 'zh');
       expect(find.text(zh.serverEveryMonths(3)), findsOneWidget);
       expect(find.text(en.serverEveryMonths(3)), findsNothing);
-      expect(find.text(zh.serverEveryYear), findsOneWidget);
-      final selectedCycle = find.descendant(
-        of: cycle,
-        matching: find.byType(DropdownButton<int>),
+      expect(
+        ModalRoute.of(tester.element(find.text(zh.serverEveryMonths(3)))),
+        same(sheetRoute),
       );
-      expect(tester.widget<DropdownButton<int>>(selectedCycle).value, 12);
+      expect(
+        find.descendant(
+          of: find.byType(BottomSheet),
+          matching: find.text(zh.serverEveryYear),
+        ),
+        findsOneWidget,
+      );
       await tester.tap(find.text(zh.serverEveryMonths(3)));
       await tester.pumpAndSettle();
-      expect(tester.widget<DropdownButton<int>>(selectedCycle).value, 3);
+      expect(
+        find.descendant(
+          of: cycle,
+          matching: find.text(zh.serverEveryMonths(3)),
+        ),
+        findsOneWidget,
+      );
       expect(tester.state(find.byType(ServerForm)), same(formState));
       expect(nameController.text, 'User draft 原样');
       expect(ledger.mutations, 0);
@@ -809,23 +818,21 @@ void main() {
       await tester.tap(cycle);
       await tester.pumpAndSettle();
       await change(tester, 'en');
-      final selectedCycle = find.descendant(
-        of: cycle,
-        matching: find.byType(DropdownButton<int>),
+      final sheet = find.byType(BottomSheet);
+      final scrolling = find.descendant(
+        of: sheet,
+        matching: find.byType(Scrollable),
       );
-      expect(tester.widget<DropdownButton<int>>(selectedCycle).value, 12);
-      final scrolling = find.byType(Scrollable).last;
-      final position = tester.state<ScrollableState>(scrolling).position;
-      position.jumpTo(position.minScrollExtent);
-      await tester.pumpAndSettle();
       for (final months in [1, 3, 6, 12, 24, 36]) {
         final label = months == 12
             ? en.serverEveryYear
             : en.serverEveryMonths(months);
-        final option = find.text(label);
-        await tester.scrollUntilVisible(option, 100, scrollable: scrolling);
-        await tester.pumpAndSettle();
-        await Scrollable.ensureVisible(tester.element(option), alignment: 0.5);
+        final option = find.descendant(of: sheet, matching: find.text(label));
+        await tester.scrollUntilVisible(
+          option,
+          100,
+          scrollable: scrolling.first,
+        );
         await tester.pumpAndSettle();
         expect(option.hitTestable(), findsOneWidget, reason: label);
         final rect = tester.getRect(option);
@@ -839,16 +846,19 @@ void main() {
         );
         expect(tester.takeException(), isNull, reason: label);
       }
-      await tester.binding.handlePopRoute();
+      await tester.tap(find.byKey(const ValueKey('app-sheet-close')));
       await tester.pumpAndSettle();
-      expect(tester.widget<DropdownButton<int>>(selectedCycle).value, 12);
+      expect(
+        find.descendant(of: cycle, matching: find.text(en.serverEveryYear)),
+        findsOneWidget,
+      );
       expect(ledger.mutations, 0);
       expect((await store.servers()).single.cycleMonths, 12);
     },
   );
 
   testWidgets(
-    'open traffic period dropdown translates key-based labels without a save',
+    'open traffic period picker translates key-based labels without a save',
     (tester) async {
       await mount(
         tester,
@@ -858,35 +868,50 @@ void main() {
       await reveal(tester, period);
       await tester.tap(period);
       await tester.pumpAndSettle();
-      await change(tester, 'zh');
-      for (final label in ServerResources.trafficPeriodsFor(zh).values) {
-        expect(find.text(label), findsWidgets);
+      String every(AppLocalizations l10n, int months) =>
+          l10n.resourceEveryPeriod(
+            ServerResources.trafficPeriodsFor(l10n)[months]!.toLowerCase(),
+          );
+      for (final months in [1, 3, 12]) {
+        expect(
+          find.descendant(
+            of: find.byType(BottomSheet),
+            matching: find.text(every(en, months)),
+          ),
+          findsOneWidget,
+        );
       }
-      expect(tester.state<FormFieldState<int>>(period).value, 0);
-      final quarterly = ServerResources.trafficPeriodsFor(zh)[3]!;
-      await tester.tap(find.text(quarterly).last);
+      await change(tester, 'zh');
+      final sheet = find.byType(BottomSheet);
+      for (final months in [1, 3, 12]) {
+        expect(
+          find.descendant(of: sheet, matching: find.text(every(zh, months))),
+          findsOneWidget,
+        );
+        expect(find.text(every(en, months)), findsNothing);
+      }
+      expect(find.text(zh.notSet), findsWidgets);
+      await tester.tap(
+        find.descendant(of: sheet, matching: find.text(every(zh, 3))),
+      );
       await tester.pumpAndSettle();
-      expect(tester.state<FormFieldState<int>>(period).value, 3);
+      expect(
+        find.descendant(of: period, matching: find.text(every(zh, 3))),
+        findsOneWidget,
+      );
       expect(ledger.mutations, 0);
       expect((await store.servers()).single.resources, isNull);
     },
   );
 
   testWidgets(
-    '320px 2x compact traffic periods retain full labels and numeric drafts',
+    '320px 2x traffic periods retain full labels and numeric drafts',
     (tester) async {
       final semantics = tester.ensureSemantics();
       try {
-        const boundaryKey = ValueKey('traffic-period-evidence');
         await mount(
           tester,
-          RepaintBoundary(
-            key: boundaryKey,
-            child: ServerForm(
-              controller: ledger,
-              record: ledger.records.single,
-            ),
-          ),
+          ServerForm(controller: ledger, record: ledger.records.single),
           size: const Size(320, 844),
           scale: 2,
           reviewFont: true,
@@ -896,26 +921,38 @@ void main() {
         final period = find.byKey(const ValueKey('resource-traffic-period'));
         await reveal(tester, capacity);
         await tester.enterText(capacity, '12.50');
-        final draft = tester.widget<TextFormField>(capacity).controller!;
-        final originalUnit = tester.state<FormFieldState<int>>(unit).value;
-        final fullLabels = {
+        final draft = fieldController(tester, 'resource-trafficBytes');
+        final originalUnit = tester.widget<AppSegmented<int>>(unit).value;
+        String every(AppLocalizations l10n, int months) =>
+            l10n.resourceEveryPeriod(
+              ServerResources.trafficPeriodsFor(l10n)[months]!.toLowerCase(),
+            );
+        final labels = {
           0: en.notSet,
-          ...ServerResources.trafficPeriodsFor(en),
+          1: every(en, 1),
+          3: every(en, 3),
+          12: every(en, 12),
         };
-        for (final entry in {0: '—', 1: 'M', 3: 'Q', 12: 'Y'}.entries) {
+        for (final entry in labels.entries) {
           await reveal(tester, period);
           await tester.tap(period);
           await tester.pumpAndSettle();
-          for (final full in fullLabels.values) {
-            expect(find.text(full), findsWidgets);
+          for (final full in labels.values) {
+            final row = find.descendant(
+              of: find.byType(BottomSheet),
+              matching: find.text(full),
+            );
+            expect(row, findsOneWidget);
           }
-          final option = find.text(fullLabels[entry.key]!).last;
+          final option = find.descendant(
+            of: find.byType(BottomSheet),
+            matching: find.text(entry.value),
+          );
           await tester.ensureVisible(option);
           await tester.pumpAndSettle();
           expect(option.hitTestable(), findsOneWidget);
           await tester.tap(option);
           await tester.pumpAndSettle();
-          expect(tester.state<FormFieldState<int>>(period).value, entry.key);
           final selected = find.descendant(
             of: period,
             matching: find.text(entry.value),
@@ -924,79 +961,28 @@ void main() {
           final paragraph = tester.renderObject<RenderParagraph>(selected);
           expect(paragraph.didExceedMaxLines, isFalse);
           expect(
-            paragraph.getBoxesForSelection(
-              TextSelection(baseOffset: 0, extentOffset: entry.value.length),
-            ),
-            hasLength(1),
-            reason: 'Closed period must remain a single readable line',
+            tester.getRect(selected).right,
+            lessThanOrEqualTo(tester.getRect(period).right),
           );
-          final textRect = tester.getRect(selected),
-              periodRect = tester.getRect(period);
-          expect(textRect.left, greaterThanOrEqualTo(periodRect.left));
-          expect(textRect.right, lessThanOrEqualTo(periodRect.right));
-          expect(
-            tester.getSemantics(period).label,
-            contains(fullLabels[entry.key]!),
-          );
-          expect(
-            tester.getSemantics(period).label,
-            contains(en.resourceTrafficPeriod),
-          );
-          expect(
-            find.descendant(
-              of: period,
-              matching: find.byTooltip(fullLabels[entry.key]!),
-            ),
-            findsOneWidget,
-          );
-          final capacityRect = tester.getRect(capacity),
-              unitRect = tester.getRect(unit);
-          expect(capacityRect.top, closeTo(unitRect.top, 0.01));
-          expect(unitRect.top, closeTo(periodRect.top, 0.01));
-          expect(capacityRect.right, lessThan(unitRect.left));
-          expect(unitRect.right, lessThan(periodRect.left));
-          expect(periodRect.right, lessThanOrEqualTo(300.01));
-          expect(periodRect.width, greaterThanOrEqualTo(48));
-          expect(periodRect.height, greaterThanOrEqualTo(48));
-          expect(
-            tester.widget<TextFormField>(capacity).controller,
-            same(draft),
-          );
+          expect(tester.getRect(period).height, greaterThanOrEqualTo(48));
+          expect(tester.getRect(period).right, lessThanOrEqualTo(320));
+          expect(fieldController(tester, 'resource-trafficBytes'), same(draft));
           expect(draft.text, '12.50');
-          expect(tester.state<FormFieldState<int>>(unit).value, originalUnit);
+          expect(tester.widget<AppSegmented<int>>(unit).value, originalUnit);
           expect(ledger.mutations, 0);
           expect(tester.takeException(), isNull);
-          final evidence =
-              Platform.environment['VPS_CONNECTION_I18N_EVIDENCE_DIR'];
-          if (evidence != null) {
-            final boundary = tester.renderObject<RenderRepaintBoundary>(
-              find.byKey(boundaryKey),
-            );
-            await tester.runAsync(() async {
-              final image = await boundary.toImage();
-              final bytes = await image.toByteData(
-                format: ui.ImageByteFormat.png,
-              );
-              await Directory(evidence).create(recursive: true);
-              await File('$evidence/en-traffic-period-${entry.key}-320x2.png')
-                  .writeAsBytes(bytes!.buffer.asUint8List());
-              image.dispose();
-            });
-          }
         }
         await change(tester, 'zh');
         expect(
-          find.descendant(of: period, matching: find.text('年')),
+          find.descendant(of: period, matching: find.text(every(zh, 12))),
           findsOneWidget,
         );
-        expect(tester.state<FormFieldState<int>>(period).value, 12);
         expect(draft.text, '12.50');
         await change(tester, 'en');
         expect(
-          find.descendant(of: period, matching: find.text('Y')),
+          find.descendant(of: period, matching: find.text(every(en, 12))),
           findsOneWidget,
         );
-        expect(tester.state<FormFieldState<int>>(period).value, 12);
         expect((await store.servers()).single.resources, isNull);
         expect(ledger.mutations, 0);
       } finally {

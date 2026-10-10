@@ -3,10 +3,12 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
+import 'package:vps_tell_you/core/ui/ui.dart';
 import 'package:vps_tell_you/core/value_types.dart';
 import 'package:vps_tell_you/data/ledger_store.dart';
 import 'package:vps_tell_you/l10n/generated/app_localizations.dart';
 import 'package:vps_tell_you/l10n/generated/app_localizations_en.dart';
+import 'package:vps_tell_you/l10n/generated/app_localizations_zh.dart';
 import 'package:vps_tell_you/servers/ledger_controller.dart';
 import 'package:vps_tell_you/servers/server_form.dart';
 import 'package:vps_tell_you/servers/server_record.dart';
@@ -108,32 +110,44 @@ void main() {
       'payment terms stay locked by field ID in English and Chinese',
       (tester) async {
         await mount(tester, ServerForm(controller: ledger, record: record));
-        await reveal(tester, find.byKey(const ValueKey('field-billing')));
-        final billing = tester.widget<DropdownButtonFormField<BillingKind>>(
-          find.byKey(const ValueKey('field-billing')),
+        Future<void> expectLocked(String metered, String lockHelp) async {
+          final billing = find.byKey(const ValueKey('field-billing'));
+          await reveal(tester, billing);
+          expect(
+            tester.widget<AppSegmented<BillingKind>>(billing).value,
+            BillingKind.prepaid,
+          );
+          // The segmented control cannot be disabled: it absorbs the tap and
+          // explains the lock instead of changing the billing type.
+          expect(find.text(lockHelp), findsOneWidget);
+          await tester.tap(
+            find.descendant(of: billing, matching: find.text(metered)),
+            warnIfMissed: false,
+          );
+          await tester.pump();
+          expect(find.text(lockHelp), findsNWidgets(2));
+          expect(
+            tester.widget<AppSegmented<BillingKind>>(billing).value,
+            BillingKind.prepaid,
+          );
+          for (final id in ['field-cycle', 'field-start', 'field-due']) {
+            await reveal(tester, find.byKey(ValueKey(id)));
+            await tester.tap(find.byKey(ValueKey(id)));
+            await tester.pumpAndSettle();
+            expect(find.byType(BottomSheet), findsNothing);
+          }
+        }
+
+        await expectLocked(
+          'Metered',
+          AppLocalizationsEn().serverPaymentLockHelp,
         );
-        expect(billing.onChanged, isNull);
-        await reveal(tester, find.byKey(const ValueKey('row-cycle')));
-        final cycle = tester.widget<DropdownButton<int>>(
-          find.descendant(
-            of: find.byKey(const ValueKey('row-cycle')),
-            matching: find.byType(DropdownButton<int>),
-          ),
-        );
-        expect(cycle.onChanged, isNull);
         locale.value = const Locale('zh');
         await tester.pumpAndSettle();
-        expect(
-          tester
-              .widget<DropdownButton<int>>(
-                find.descendant(
-                  of: find.byKey(const ValueKey('row-cycle')),
-                  matching: find.byType(DropdownButton<int>),
-                ),
-              )
-              .onChanged,
-          isNull,
-        );
+        ScaffoldMessenger.of(tester.element(find.byType(Scaffold).first))
+            .clearSnackBars();
+        await tester.pumpAndSettle();
+        await expectLocked('按量', AppLocalizationsZh().serverPaymentLockHelp);
         expect(ledger.records.single.toMap(), record.toMap());
         expect(record.spec, '用户自填中文规格');
         await tester.pumpWidget(const SizedBox());

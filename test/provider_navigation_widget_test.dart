@@ -230,7 +230,7 @@ void main() {
         find.byKey(const ValueKey('field-name')),
         'Manual unknown',
       );
-      await tester.tap(find.text('Save server'));
+      await tester.tap(find.text('Save'));
       await tester.pumpAndSettle();
       final saved = (await store.servers()).single;
       expect(saved.providerId, isNull);
@@ -519,7 +519,7 @@ void main() {
         find.byKey(const ValueKey('field-name')),
         'Owned manual device',
       );
-      await tester.tap(find.text('Save server'));
+      await tester.tap(find.text('Save'));
       await tester.pumpAndSettle();
       final saved = (await store.servers()).single;
       expect(saved.providerId, north.id);

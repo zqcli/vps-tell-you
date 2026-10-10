@@ -14,10 +14,12 @@ import 'package:vps_tell_you/l10n/generated/app_localizations_en.dart';
 import 'package:vps_tell_you/l10n/generated/app_localizations_zh.dart';
 import 'package:vps_tell_you/l10n/localized_message.dart';
 import 'package:vps_tell_you/security/security_controller.dart';
+import 'package:vps_tell_you/core/ui/ui.dart';
 import 'package:vps_tell_you/servers/ledger_controller.dart';
 import 'package:vps_tell_you/servers/server_resources.dart';
 
 import 'cloud_controller_test.dart' show CallbackCloudAdapter, CloudTestSecrets;
+import 'support/form_test_helpers.dart';
 import 'support/provider_fixture.dart';
 import 'support/reminder_platform.dart';
 
@@ -290,6 +292,11 @@ void main() {
   }
 
   Future<void> fill(WidgetTester tester, String key, String value) async {
+    if (key == 'resource-vcpu') {
+      // vCPU is a stepper; an empty value is its unknown state.
+      await setVcpu(tester, value.isEmpty ? null : int.parse(value));
+      return;
+    }
     final target = find.byKey(ValueKey(key));
     await reveal(tester, target);
     await tester.enterText(target, value);
@@ -374,7 +381,7 @@ void main() {
         await reveal(tester, find.byKey(const ValueKey('resource-hostname')));
         expect(
           tester
-              .widget<TextFormField>(
+              .widget<AppTextField>(
                 find.byKey(const ValueKey('resource-hostname')),
               )
               .controller!

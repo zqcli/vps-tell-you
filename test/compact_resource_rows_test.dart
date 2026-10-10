@@ -6,8 +6,11 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:vps_tell_you/core/app_theme.dart';
+import 'package:vps_tell_you/core/ui/ui.dart';
 import 'package:vps_tell_you/servers/server_resource_fields.dart';
 import 'package:vps_tell_you/servers/server_resources.dart';
+
+import 'support/form_test_helpers.dart';
 
 void main() {
   final evidence = Platform.environment['VPS_COMPACT_ROWS_EVIDENCE_DIR'];
@@ -84,15 +87,18 @@ void main() {
     return key;
   }
 
-  Future<void> select(WidgetTester tester, String id, String value) async {
-    final field = find.byKey(ValueKey(id));
-    await tester.ensureVisible(field);
-    await tester.tap(field);
-    await tester.pumpAndSettle();
-    await tester.tap(find.text(value).last);
-    await tester.pumpAndSettle();
-    expect(tester.takeException(), isNull);
-  }
+  /// The unit selector is a compact segmented control; disabled rows absorb
+  /// taps with an [IgnorePointer] because the control has no disabled state.
+  bool unitIgnoresTaps(WidgetTester tester, String field) => tester
+      .widget<IgnorePointer>(
+        find
+            .ancestor(
+              of: find.byKey(ValueKey('resource-unit-$field')),
+              matching: find.byType(IgnorePointer),
+            )
+            .first,
+      )
+      .ignoring;
 
   Future<void> capture(WidgetTester tester, String name) async {
     if (evidence == null) return;
@@ -136,12 +142,19 @@ void main() {
               final unit = tester.getRect(
                 find.byKey(ValueKey('resource-unit-$field')),
               );
-              expect(value.top, unit.top);
-              expect(value.right, lessThan(unit.left));
-              expect(value.width, greaterThanOrEqualTo(64));
-              expect(value.height, greaterThanOrEqualTo(48));
+              // Beside the value when the row is wide enough, otherwise on
+              // its own line below it; never clipped or overlapping.
+              expect(
+                unit.top >= value.bottom - 0.01 || value.right <= unit.left,
+                isTrue,
+                reason: 'unit selector must not overlap the value field',
+              );
+              expect(value.width, greaterThanOrEqualTo(48));
+              expect(value.height, greaterThanOrEqualTo(40));
               expect(unit.width, greaterThanOrEqualTo(48));
-              expect(unit.height, greaterThanOrEqualTo(48));
+              // The selector scales down (never clips) when four units cannot
+              // fit the width at large text sizes.
+              expect(unit.height, greaterThanOrEqualTo(20));
               final selectedUnit = find.descendant(
                 of: find.byKey(ValueKey('resource-unit-$field')),
                 matching: find.text(
@@ -166,17 +179,15 @@ void main() {
                 reason:
                     'Selected capacity units must remain complete on one line',
               );
-              expect(value.left, greaterThanOrEqualTo(20));
-              expect(unit.right, lessThanOrEqualTo(width - 20 + 0.001));
+              expect(value.left, greaterThanOrEqualTo(16));
+              expect(unit.right, lessThanOrEqualTo(width - 16 + 0.001));
               if (field == 'trafficBytes') {
                 final period = tester.getRect(
                   find.byKey(const ValueKey('resource-traffic-period')),
                 );
-                expect(period.top, value.top);
-                expect(period.left, greaterThan(unit.right));
-                expect(period.right, lessThanOrEqualTo(width - 20 + 0.001));
-                expect(period.width, greaterThanOrEqualTo(48));
-                expect(period.height, greaterThanOrEqualTo(48));
+                expect(period.top, greaterThan(unit.top));
+                expect(period.right, lessThanOrEqualTo(width - 16 + 0.001));
+                expect(period.height, greaterThanOrEqualTo(44));
                 if (!importing) {
                   await capture(
                     tester,
@@ -186,27 +197,31 @@ void main() {
               }
               expect(tester.takeException(), isNull);
             }
-            await select(tester, 'resource-unit-ramBytes', 'GiB');
+            await chooseUnit(tester, 'ramBytes', 'GiB');
             final ram = find.byKey(const ValueKey('resource-ramBytes'));
             await tester.ensureVisible(ram);
             await tester.enterText(ram, '1.5');
             await tester.pumpAndSettle();
             expect(key.currentState!.validateAndRead()!.ramBytes, 1610612736);
             for (final period in {
-              '月': 1,
-              '季': 3,
-              '年': 12,
+              '每月': 1,
+              '每季': 3,
+              '每年': 12,
               '未设置': null,
             }.entries) {
-              await select(tester, 'resource-traffic-period', period.key);
+              await chooseOption(
+                tester,
+                find.byKey(const ValueKey('resource-traffic-period')),
+                period.key,
+              );
               final result = key.currentState!.validateAndRead()!;
               expect(result.trafficPeriodMonths, period.value);
               expect(result.trafficBytes, 9007199254740991);
             }
-            final text = tester.widget<TextFormField>(
-              find.byKey(const ValueKey('resource-trafficBytes')),
+            expect(
+              fieldController(tester, 'resource-trafficBytes').text,
+              '9007199254740991',
             );
-            expect(text.controller!.text, '9007199254740991');
             final unlimited = find.byKey(
               const ValueKey('resource-traffic-unlimited'),
             );
@@ -215,21 +230,19 @@ void main() {
             await tester.pumpAndSettle();
             expect(
               tester
-                  .widget<TextFormField>(
+                  .widget<AppTextField>(
                     find.byKey(const ValueKey('resource-trafficBytes')),
                   )
                   .enabled,
               isFalse,
             );
-            expect(
-              tester
-                  .widget<DropdownButtonFormField<int>>(
-                    find.byKey(const ValueKey('resource-unit-trafficBytes')),
-                  )
-                  .onChanged,
-              isNull,
+            expect(unitIgnoresTaps(tester, 'trafficBytes'), isTrue);
+            // The quota period stays editable for unlimited traffic.
+            await chooseOption(
+              tester,
+              find.byKey(const ValueKey('resource-traffic-period')),
+              '每季',
             );
-            await select(tester, 'resource-traffic-period', '季');
             expect(key.currentState!.validateAndRead()!.trafficPeriodMonths, 3);
             expect(
               key.currentState!.validateAndRead()!.trafficUnlimited,
@@ -244,7 +257,7 @@ void main() {
             );
             expect(tester.takeException(), isNull);
             if (!importing) {
-              await select(tester, 'resource-unit-trafficBytes', 'TiB');
+              await chooseUnit(tester, 'trafficBytes', 'TiB');
               final traffic = find.byKey(
                 const ValueKey('resource-trafficBytes'),
               );
@@ -283,25 +296,18 @@ void main() {
       for (final field in ['ramBytes', 'diskBytes', 'trafficBytes']) {
         expect(
           tester
-              .widget<TextFormField>(find.byKey(ValueKey('resource-$field')))
+              .widget<AppTextField>(find.byKey(ValueKey('resource-$field')))
               .enabled,
           isFalse,
         );
-        expect(
-          tester
-              .widget<DropdownButtonFormField<int>>(
-                find.byKey(ValueKey('resource-unit-$field')),
-              )
-              .onChanged,
-          isNull,
-        );
+        expect(unitIgnoresTaps(tester, field), isTrue);
       }
       expect(
         tester
-            .widget<DropdownButtonFormField<int>>(
+            .widget<AppFormRow>(
               find.byKey(const ValueKey('resource-traffic-period')),
             )
-            .onChanged,
+            .onTap,
         isNull,
       );
       expect(key.currentState!.validateAndRead()!.toJson(), initial.toJson());

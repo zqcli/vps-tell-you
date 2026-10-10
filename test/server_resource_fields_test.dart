@@ -39,6 +39,17 @@ void main() {
     await tester.pump();
   }
 
+  Future<void> stepVcpu(WidgetTester tester, int delta) async {
+    final button = find.byKey(
+      ValueKey(delta > 0 ? 'resource-vcpu-increase' : 'resource-vcpu-decrease'),
+    );
+    for (var i = 0; i < delta.abs(); i++) {
+      await tester.ensureVisible(button);
+      await tester.tap(button);
+      await tester.pump();
+    }
+  }
+
   final observed = <String, Object?>{
     'ip': '192.0.2.20',
     'hostname': 'Test-VM',
@@ -56,7 +67,7 @@ void main() {
       expect(result.apiFields, ServerResources.fieldKeys);
       expect(result.trafficBytes, 1649267441664);
       await fill(tester, 'hostname', 'Local-Override');
-      await fill(tester, 'vcpu', '4');
+      await stepVcpu(tester, 2);
       result = key.currentState!.validateAndRead()!;
       expect(result.hostname, 'Local-Override');
       expect(result.vcpu, 4);
@@ -81,11 +92,10 @@ void main() {
       );
       expect(key.currentState!.validateAndRead(), isNull);
       await tester.pump();
-      await fill(tester, 'vcpu', '0');
       await fill(tester, 'ramBytes', '0');
       await fill(tester, 'trafficBytes', '0');
       expect(key.currentState!.validateAndRead(), isNull);
-      await fill(tester, 'vcpu', '2');
+      await stepVcpu(tester, 2);
       await fill(tester, 'ramBytes', '1536');
       final unlimited = find.byKey(
         const ValueKey('resource-traffic-unlimited'),
@@ -148,4 +158,41 @@ void main() {
       expect(updated.apiFields, {'ip', 'hostname'});
     },
   );
+
+  testWidgets('vCPU stepper has an explicit unknown state and exact entry', (
+    tester,
+  ) async {
+    final key = await mount(tester, observed: {...observed, 'vcpu': null});
+    final stepper = find.byKey(const ValueKey('resource-vcpu'));
+    expect(
+      find.descendant(of: stepper, matching: find.text('—')),
+      findsOneWidget,
+    );
+    expect(key.currentState!.validateAndRead(), isNull);
+    await tester.pump();
+    expect(find.text('请填写 1–65536 的整数核数'), findsOneWidget);
+    await stepVcpu(tester, 1);
+    expect(key.currentState!.validateAndRead()!.vcpu, 1);
+    await stepVcpu(tester, -1);
+    expect(
+      find.descendant(of: stepper, matching: find.text('—')),
+      findsOneWidget,
+    );
+    // Tapping the number opens an exact entry sheet; clamping keeps it valid.
+    await tester.tap(find.descendant(of: stepper, matching: find.text('—')));
+    await tester.pumpAndSettle();
+    await tester.enterText(
+      find.byKey(const ValueKey('resource-vcpu-entry')),
+      '64',
+    );
+    await tester.tap(find.byKey(const ValueKey('resource-vcpu-done')));
+    await tester.pumpAndSettle();
+    expect(key.currentState!.validateAndRead()!.vcpu, 64);
+    await tester.tap(find.descendant(of: stepper, matching: find.text('64')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('resource-vcpu-unknown')));
+    await tester.pumpAndSettle();
+    expect(key.currentState!.validateAndRead(), isNull);
+    expect(tester.takeException(), isNull);
+  });
 }
