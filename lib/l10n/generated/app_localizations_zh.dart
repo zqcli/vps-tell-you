@@ -3399,6 +3399,42 @@ class AppLocalizationsZh extends AppLocalizations {
   String get connectionReviewConnect => '核对并连接';
 
   @override
+  String get uiConnTarget => '目标';
+
+  @override
+  String get uiConnCredential => '凭据';
+
+  @override
+  String get uiConnStatus => '状态';
+
+  @override
+  String get uiConnHostKey => '主机公钥';
+
+  @override
+  String get uiConnHostKeyVerified => '已核验';
+
+  @override
+  String get uiConnHostKeyFirstUse => '首次连接需核验';
+
+  @override
+  String get uiConnResult => '结果';
+
+  @override
+  String get uiConnSource => '来源';
+
+  @override
+  String get uiConnFinished => '结束时间（本机）';
+
+  @override
+  String get uiConnElapsed => '耗时';
+
+  @override
+  String get uiConnActualAddress => '实际地址';
+
+  @override
+  String get uiConnMoreActions => '更多操作';
+
+  @override
   String get snippetFullEscapedPreview => '完整内容预览（转义显示）';
 
   @override

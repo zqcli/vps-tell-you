@@ -6142,6 +6142,78 @@ abstract class AppLocalizations {
   /// **'核对并连接'**
   String get connectionReviewConnect;
 
+  /// No description provided for @uiConnTarget.
+  ///
+  /// In zh, this message translates to:
+  /// **'目标'**
+  String get uiConnTarget;
+
+  /// No description provided for @uiConnCredential.
+  ///
+  /// In zh, this message translates to:
+  /// **'凭据'**
+  String get uiConnCredential;
+
+  /// No description provided for @uiConnStatus.
+  ///
+  /// In zh, this message translates to:
+  /// **'状态'**
+  String get uiConnStatus;
+
+  /// No description provided for @uiConnHostKey.
+  ///
+  /// In zh, this message translates to:
+  /// **'主机公钥'**
+  String get uiConnHostKey;
+
+  /// No description provided for @uiConnHostKeyVerified.
+  ///
+  /// In zh, this message translates to:
+  /// **'已核验'**
+  String get uiConnHostKeyVerified;
+
+  /// No description provided for @uiConnHostKeyFirstUse.
+  ///
+  /// In zh, this message translates to:
+  /// **'首次连接需核验'**
+  String get uiConnHostKeyFirstUse;
+
+  /// No description provided for @uiConnResult.
+  ///
+  /// In zh, this message translates to:
+  /// **'结果'**
+  String get uiConnResult;
+
+  /// No description provided for @uiConnSource.
+  ///
+  /// In zh, this message translates to:
+  /// **'来源'**
+  String get uiConnSource;
+
+  /// No description provided for @uiConnFinished.
+  ///
+  /// In zh, this message translates to:
+  /// **'结束时间（本机）'**
+  String get uiConnFinished;
+
+  /// No description provided for @uiConnElapsed.
+  ///
+  /// In zh, this message translates to:
+  /// **'耗时'**
+  String get uiConnElapsed;
+
+  /// No description provided for @uiConnActualAddress.
+  ///
+  /// In zh, this message translates to:
+  /// **'实际地址'**
+  String get uiConnActualAddress;
+
+  /// No description provided for @uiConnMoreActions.
+  ///
+  /// In zh, this message translates to:
+  /// **'更多操作'**
+  String get uiConnMoreActions;
+
   /// No description provided for @snippetFullEscapedPreview.
   ///
   /// In zh, this message translates to:

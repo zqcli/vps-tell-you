@@ -3888,6 +3888,42 @@ class AppLocalizationsEn extends AppLocalizations {
   String get connectionReviewConnect => 'Review and connect';
 
   @override
+  String get uiConnTarget => 'Target';
+
+  @override
+  String get uiConnCredential => 'Credential';
+
+  @override
+  String get uiConnStatus => 'Status';
+
+  @override
+  String get uiConnHostKey => 'Host key';
+
+  @override
+  String get uiConnHostKeyVerified => 'Verified';
+
+  @override
+  String get uiConnHostKeyFirstUse => 'Verify on first connect';
+
+  @override
+  String get uiConnResult => 'Result';
+
+  @override
+  String get uiConnSource => 'Source';
+
+  @override
+  String get uiConnFinished => 'Finished (device)';
+
+  @override
+  String get uiConnElapsed => 'Elapsed';
+
+  @override
+  String get uiConnActualAddress => 'Actual address';
+
+  @override
+  String get uiConnMoreActions => 'More actions';
+
+  @override
   String get snippetFullEscapedPreview => 'Full content preview (escaped)';
 
   @override

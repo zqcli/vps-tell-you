@@ -101,8 +101,28 @@ class _PowerTargetDialogState extends State<_PowerTargetDialog> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Text(context.l10n.powerEnterTarget),
-              SelectableText(widget.target),
+              Text(
+                context.l10n.powerEnterTarget,
+                style: TextStyle(color: context.palette.text2),
+              ),
+              const SizedBox(height: 8),
+              DecoratedBox(
+                decoration: BoxDecoration(
+                  color: context.palette.fill,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 10,
+                  ),
+                  child: SelectableText(
+                    widget.target,
+                    textDirection: TextDirection.ltr,
+                    style: kMonoTextStyle.copyWith(fontSize: 14),
+                  ),
+                ),
+              ),
               const SizedBox(height: 16),
               TextField(
                 key: const ValueKey('power-confirm-target'),
@@ -114,7 +134,16 @@ class _PowerTargetDialogState extends State<_PowerTargetDialog> {
                   labelText: context.l10n.powerTargetFormat,
                 ),
               ),
-              if (!current) InfoNote(context.l10n.powerConfirmationInvalidated),
+              if (!current)
+                Padding(
+                  padding: const EdgeInsets.only(top: 12),
+                  child: Text(
+                    context.l10n.powerConfirmationInvalidated,
+                    style: context.footnoteStyle.copyWith(
+                      color: context.palette.red,
+                    ),
+                  ),
+                ),
             ],
           ),
         ),
@@ -126,8 +155,8 @@ class _PowerTargetDialogState extends State<_PowerTargetDialog> {
           FilledButton(
             key: const ValueKey('power-confirm-submit'),
             style: FilledButton.styleFrom(
-              backgroundColor: Theme.of(context).colorScheme.error,
-              foregroundColor: Theme.of(context).colorScheme.onError,
+              backgroundColor: context.palette.red,
+              foregroundColor: Colors.white,
             ),
             onPressed: current && !_submitted && _input.text == widget.target
                 ? () {

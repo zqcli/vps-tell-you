@@ -143,10 +143,10 @@ void main() {
       await mount(tester, controller, scale: 2);
       await tap(tester, '开始测试');
       await tester.pumpAndSettle();
-      await tester.ensureVisible(find.text('来源：本机 TCP 连接测试'));
+      await tester.ensureVisible(find.text('本机 TCP 连接测试'));
       await tester.pumpAndSettle();
       expect(find.text('TCP 连接成功'), findsOneWidget);
-      expect(find.textContaining('结束时间：2026-10-06'), findsOneWidget);
+      expect(find.textContaining('2026-10-06'), findsOneWidget);
       expect(tester.takeException(), isNull);
     },
   );

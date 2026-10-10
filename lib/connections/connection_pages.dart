@@ -2,14 +2,16 @@ import '../l10n/localized_message.dart';
 import '../l10n/locale_preference.dart';
 
 import 'package:flutter/foundation.dart';
+import 'package:flutter/cupertino.dart' show CupertinoActivityIndicator;
 import 'package:flutter/material.dart';
 
-import '../core/app_theme.dart';
 import '../core/app_viewport.dart';
+import '../core/ui/ui.dart';
 import '../security/host_trust.dart';
 import '../security/security_pages.dart';
 import '../security/ssh_configuration_page.dart';
 import '../servers/ledger_controller.dart';
+import 'connection_form.dart';
 import 'ssh_service.dart';
 import 'terminal_page.dart';
 
@@ -150,212 +152,321 @@ class _SshConnectPageState extends State<SshConnectPage> {
     }
   }
 
+  /// Local metadata only: a pinned key for this host and port means the
+  /// first-use verification is already done. Nothing is contacted here.
+  bool? get _hostKeyTrusted {
+    try {
+      final host = normalizedHost(_host.text);
+      final port = int.tryParse(_port.text);
+      if (port == null) {
+        return null;
+      }
+      return widget.ledger.security.hostTrusts.any(
+        (item) => item.host == host && item.port == port,
+      );
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Future<void> _pickServer() async {
+    final l10n = context.l10n;
+    final id = await showAppPicker<String>(
+      context,
+      title: l10n.connectionTargetServer,
+      selected: _serverId ?? '',
+      options: [
+        AppPickerOption(value: '', title: l10n.connectionTemporaryTarget),
+        for (final item in widget.ledger.active)
+          AppPickerOption(
+            value: item.id,
+            title:
+                '${item.name}${item.isDemo ? l10n.connectionDemoSuffix : ''}',
+          ),
+      ],
+    );
+    if (id == null || !mounted) {
+      return;
+    }
+    setState(() => _selectServer(id == '' ? null : id));
+  }
+
+  Future<void> _manageCredentials() async {
+    await Navigator.push<void>(
+      context,
+      MaterialPageRoute(builder: (_) => SecurityPage(ledger: widget.ledger)),
+    );
+    if (mounted) {
+      setState(() {});
+    }
+  }
+
+  /// Built from the sheet's own context so that an open list follows a live
+  /// language change.
+  Future<String?> _chooseCredential() => showAppSheet<String>(
+    context,
+    title: context.l10n.connectionSavedCredentials,
+    builder: (sheetContext) {
+      final palette = sheetContext.palette;
+      return AppSection(
+        topSpacing: 4,
+        children: [
+          for (final item in widget.ledger.security.credentials)
+            AppRow(
+              title:
+                  '${item.name} · ${credentialKind(item, l10n: sheetContext.l10n)}',
+              trailing: item.id == _credentialId
+                  ? Icon(Icons.check_rounded, size: 22, color: palette.primary)
+                  : null,
+              onTap: () => Navigator.pop(sheetContext, item.id),
+            ),
+        ],
+      );
+    },
+  );
+
+  Future<void> _pickCredential(FormFieldState<String> field) async {
+    if (widget.ledger.security.credentials.isEmpty) {
+      await _manageCredentials();
+      return;
+    }
+    final id = await _chooseCredential();
+    if (id == null || !mounted) {
+      return;
+    }
+    setState(() => _credentialId = id);
+    if (field.hasError) {
+      field.validate();
+    }
+  }
+
+  Future<void> _editSavedSettings() async {
+    await Navigator.push<void>(
+      context,
+      MaterialPageRoute(
+        builder: (_) =>
+            SshConfigurationPage(ledger: widget.ledger, serverId: _serverId!),
+      ),
+    );
+    if (mounted) {
+      setState(() => _selectServer(_serverId));
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final security = widget.ledger.security;
     final server = widget.ledger.byId(_serverId ?? '');
     final credential = security.credentials
         .where((item) => item.id == _credentialId)
         .firstOrNull;
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          widget.powerMode
-              ? context.l10n.connectionChoosePowerTarget
-              : context.l10n.sshQuickConnect,
-        ),
-      ),
-      body: _loading
-          ? const Center(child: CircularProgressIndicator())
-          : Form(
-              key: _form,
-              child: ListView(
-                padding: const EdgeInsets.all(20),
-                children: [
-                  InfoNote(context.l10n.connectionIdentityFirst),
-                  if (kIsWeb)
-                    InfoNote(context.l10n.connectionWebPreviewWarning),
-                  if (_error != null) ...[
-                    InfoNote(_error!.messageFor(context.l10n)),
-                    TextButton(
-                      onPressed: _load,
-                      child: Text(context.l10n.connectionReloadDetails),
-                    ),
-                  ],
-                  DropdownButtonFormField<String>(
-                    key: const ValueKey('connect-target'),
-                    initialValue: _serverId ?? '',
-                    isExpanded: true,
-                    decoration: InputDecoration(
-                      labelText: context.l10n.connectionTargetServer,
-                    ),
-                    items: [
-                      DropdownMenuItem(
-                        value: '',
-                        child: Builder(
-                          builder: (context) =>
-                              Text(context.l10n.connectionTemporaryTarget),
-                        ),
+    final trusted = _hostKeyTrusted;
+    final notes = [
+      l10n.connectionIdentityFirst,
+      l10n.connectionTemporaryChangesHelp,
+      if (widget.initialDraft.isNotEmpty) l10n.connectionSnippetDraftOnly,
+    ];
+    final canConnect =
+        !(_opening ||
+            kIsWeb ||
+            server?.isDemo == true ||
+            security.needsReload ||
+            _error != null);
+    return AppScaffold(
+      title: widget.powerMode
+          ? l10n.connectionChoosePowerTarget
+          : l10n.sshQuickConnect,
+      largeTitle: false,
+      bottomBar: _loading
+          ? null
+          : AppButton(
+              key: const ValueKey('connect-start'),
+              label: l10n.connectionReviewConnect,
+              icon: widget.powerMode
+                  ? Icons.power_settings_new_rounded
+                  : Icons.terminal,
+              destructive: widget.powerMode,
+              expand: true,
+              onPressed: canConnect ? _connect : null,
+            ),
+      children: [
+        if (_loading)
+          const Padding(
+            padding: EdgeInsets.only(top: 80),
+            child: Center(child: CupertinoActivityIndicator()),
+          )
+        else
+          Form(
+            key: _form,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                if (kIsWeb)
+                  AppBanner(
+                    tone: AppTone.amber,
+                    icon: Icons.warning_amber_rounded,
+                    text: l10n.connectionWebPreviewWarning,
+                  ),
+                if (widget.powerMode)
+                  AppBanner(
+                    tone: AppTone.red,
+                    icon: Icons.power_settings_new_rounded,
+                    text: l10n.connectionPowerAfterConnect,
+                  ),
+                if (_error != null) ...[
+                  AppBanner(
+                    tone: AppTone.red,
+                    icon: Icons.error_outline_rounded,
+                    text: _error!.messageFor(l10n),
+                  ),
+                  AppSection(
+                    topSpacing: 10,
+                    children: [
+                      AppRow(
+                        title: l10n.connectionReloadDetails,
+                        center: true,
+                        onTap: _load,
                       ),
-                      for (final item in widget.ledger.active)
-                        DropdownMenuItem(
-                          value: item.id,
-                          child: Builder(
-                            builder: (context) => Text(
-                              '${item.name}${item.isDemo ? context.l10n.connectionDemoSuffix : ''}',
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                        ),
                     ],
-                    onChanged: (value) => setState(() {
-                      _selectServer(value == '' ? null : value);
-                    }),
-                  ),
-                  if (server?.isDemo == true)
-                    InfoNote(context.l10n.connectionDemoBlocked),
-                  const SizedBox(height: 16),
-                  TextFormField(
-                    key: const ValueKey('connect-host'),
-                    controller: _host,
-                    autocorrect: false,
-                    enableSuggestions: false,
-                    decoration: InputDecoration(
-                      labelText: context.l10n.serverHostAddress,
-                      hintText: context.l10n.connectionAddressHint,
-                    ),
-                    validator: (value) {
-                      try {
-                        normalizedHost(value ?? '');
-                        return null;
-                      } catch (_) {
-                        return context.l10n.connectionValidHost;
-                      }
-                    },
-                  ),
-                  const SizedBox(height: 16),
-                  TextFormField(
-                    key: const ValueKey('connect-port'),
-                    controller: _port,
-                    keyboardType: TextInputType.number,
-                    decoration: InputDecoration(
-                      labelText: context.l10n.connectionPort,
-                    ),
-                    validator: (value) {
-                      final port = int.tryParse(value ?? '');
-                      return port == null || port < 1 || port > 65535
-                          ? context.l10n.connectionPortRange
-                          : null;
-                    },
-                  ),
-                  const SizedBox(height: 16),
-                  TextFormField(
-                    key: const ValueKey('connect-user'),
-                    controller: _username,
-                    autocorrect: false,
-                    enableSuggestions: false,
-                    maxLength: 64,
-                    decoration: InputDecoration(
-                      labelText: context.l10n.connectionUsername,
-                    ),
-                    validator: (value) =>
-                        value == null ||
-                            value.trim().isEmpty ||
-                            RegExp(r'[\x00-\x20\x7f]').hasMatch(value.trim())
-                        ? context.l10n.connectionValidUsername
-                        : null,
-                  ),
-                  DropdownButtonFormField<String>(
-                    key: ValueKey(
-                      'connect-credential-$_serverId-$_credentialId',
-                    ),
-                    initialValue: credential?.id,
-                    isExpanded: true,
-                    decoration: InputDecoration(
-                      labelText: context.l10n.connectionSavedCredentials,
-                    ),
-                    items: [
-                      for (final item in security.credentials)
-                        DropdownMenuItem(
-                          value: item.id,
-                          child: Builder(
-                            builder: (context) => Text(
-                              '${item.name} · ${credentialKind(item, l10n: context.l10n)}',
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                        ),
-                    ],
-                    onChanged: (id) => setState(() => _credentialId = id),
-                    validator: (_) => credential == null
-                        ? context.l10n.connectionChooseCredentials
-                        : null,
-                  ),
-                  if (credential != null &&
-                      credential.defaultUsername.isNotEmpty)
-                    TextButton(
-                      onPressed: () => setState(
-                        () => _username.text = credential.defaultUsername,
-                      ),
-                      child: Text(
-                        context.l10n.connectionUseDefaultUsername(
-                          (credential.defaultUsername).toString(),
-                        ),
-                      ),
-                    ),
-                  TextButton(
-                    onPressed: () async {
-                      await Navigator.push<void>(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => SecurityPage(ledger: widget.ledger),
-                        ),
-                      );
-                      if (mounted) {
-                        setState(() {});
-                      }
-                    },
-                    child: Text(context.l10n.connectionManageCredentials),
-                  ),
-                  if (_serverId != null)
-                    TextButton(
-                      onPressed: () async {
-                        await Navigator.push<void>(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => SshConfigurationPage(
-                              ledger: widget.ledger,
-                              serverId: _serverId!,
-                            ),
-                          ),
-                        );
-                        if (mounted) {
-                          setState(() => _selectServer(_serverId));
-                        }
-                      },
-                      child: Text(context.l10n.connectionEditSavedSettings),
-                    ),
-                  InfoNote(context.l10n.connectionTemporaryChangesHelp),
-                  if (widget.initialDraft.isNotEmpty)
-                    InfoNote(context.l10n.connectionSnippetDraftOnly),
-                  if (widget.powerMode)
-                    InfoNote(context.l10n.connectionPowerAfterConnect),
-                  FilledButton.icon(
-                    key: const ValueKey('connect-start'),
-                    onPressed:
-                        _opening ||
-                            kIsWeb ||
-                            server?.isDemo == true ||
-                            security.needsReload ||
-                            _error != null
-                        ? null
-                        : _connect,
-                    icon: const Icon(Icons.terminal),
-                    label: Text(context.l10n.connectionReviewConnect),
                   ),
                 ],
-              ),
+                AppSection(
+                  header: l10n.uiConnTarget,
+                  footer: server?.isDemo == true
+                      ? l10n.connectionDemoBlocked
+                      : null,
+                  children: [
+                    AppFormRow.pick(
+                      key: const ValueKey('connect-target'),
+                      label: l10n.connectionTargetServer,
+                      value: server == null
+                          ? l10n.connectionTemporaryTarget
+                          : '${server.name}${server.isDemo ? l10n.connectionDemoSuffix : ''}',
+                      onTap: _pickServer,
+                    ),
+                    ValidatedTextRow(
+                      fieldKey: const ValueKey('connect-host'),
+                      label: l10n.serverHostAddress,
+                      hint: l10n.connectionAddressHint,
+                      controller: _host,
+                      mono: true,
+                      keyboardType: TextInputType.url,
+                      onChanged: (_) => setState(() {}),
+                      validator: (value) {
+                        try {
+                          normalizedHost(value);
+                          return null;
+                        } catch (_) {
+                          return l10n.connectionValidHost;
+                        }
+                      },
+                    ),
+                    ValidatedTextRow(
+                      fieldKey: const ValueKey('connect-port'),
+                      label: l10n.connectionPort,
+                      controller: _port,
+                      mono: true,
+                      keyboardType: TextInputType.number,
+                      onChanged: (_) => setState(() {}),
+                      validator: (value) {
+                        final port = int.tryParse(value);
+                        return port == null || port < 1 || port > 65535
+                            ? l10n.connectionPortRange
+                            : null;
+                      },
+                    ),
+                    ValidatedTextRow(
+                      fieldKey: const ValueKey('connect-user'),
+                      label: l10n.connectionUsername,
+                      controller: _username,
+                      maxLength: 64,
+                      validator: (value) =>
+                          value.trim().isEmpty ||
+                              RegExp(r'[\x00-\x20\x7f]').hasMatch(value.trim())
+                          ? l10n.connectionValidUsername
+                          : null,
+                    ),
+                  ],
+                ),
+                AppSection(
+                  header: l10n.uiConnCredential,
+                  children: [
+                    FormField<String>(
+                      validator: (_) =>
+                          security.credentials.any(
+                            (item) => item.id == _credentialId,
+                          )
+                          ? null
+                          : l10n.connectionChooseCredentials,
+                      builder: (field) => AppFormRow.pick(
+                        key: ValueKey(
+                          'connect-credential-$_serverId-$_credentialId',
+                        ),
+                        label: l10n.connectionSavedCredentials,
+                        value: credential == null
+                            ? null
+                            : '${credential.name} · ${credentialKind(credential, l10n: l10n)}',
+                        placeholder: '—',
+                        errorText: field.errorText,
+                        onTap: () => _pickCredential(field),
+                      ),
+                    ),
+                    if (credential != null &&
+                        credential.defaultUsername.isNotEmpty)
+                      AppRow(
+                        title: l10n.connectionUseDefaultUsername(
+                          credential.defaultUsername,
+                        ),
+                        center: true,
+                        onTap: () => setState(
+                          () => _username.text = credential.defaultUsername,
+                        ),
+                      ),
+                    AppRow(
+                      title: l10n.connectionManageCredentials,
+                      chevron: true,
+                      onTap: _manageCredentials,
+                    ),
+                    if (_serverId != null)
+                      AppRow(
+                        title: l10n.connectionEditSavedSettings,
+                        chevron: true,
+                        onTap: _editSavedSettings,
+                      ),
+                  ],
+                ),
+                AppSection(
+                  header: l10n.uiConnStatus,
+                  footerWidget: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      for (final note in notes)
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 6),
+                          child: Text(note, style: context.footnoteStyle),
+                        ),
+                    ],
+                  ),
+                  children: [
+                    AppKeyValueRow(
+                      label: l10n.uiConnHostKey,
+                      valueWidget: trusted == null
+                          ? null
+                          : StatusPill(
+                              trusted
+                                  ? l10n.uiConnHostKeyVerified
+                                  : l10n.uiConnHostKeyFirstUse,
+                              tone: trusted ? AppTone.green : AppTone.amber,
+                              dot: true,
+                            ),
+                    ),
+                  ],
+                ),
+              ],
             ),
+          ),
+      ],
     );
   }
 }

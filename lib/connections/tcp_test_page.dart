@@ -1,9 +1,11 @@
 import '../l10n/localized_message.dart';
 import '../l10n/locale_preference.dart';
 
+import 'package:flutter/cupertino.dart' show CupertinoActivityIndicator;
 import 'package:flutter/material.dart';
 
-import '../core/app_theme.dart';
+import '../core/ui/ui.dart';
+import 'connection_form.dart';
 import 'tcp_test.dart';
 
 class TcpTestPage extends StatefulWidget {
@@ -87,117 +89,184 @@ class _TcpTestPageState extends State<TcpTestPage> with WidgetsBindingObserver {
     );
   }
 
+  String _clock(DateTime t) {
+    String two(int v) => v.toString().padLeft(2, '0');
+    return '${t.year}-${two(t.month)}-${two(t.day)} '
+        '${two(t.hour)}:${two(t.minute)}:${two(t.second)}';
+  }
+
+  AppTone _tone(TcpOutcome outcome) => switch (outcome) {
+    TcpOutcome.connected => AppTone.green,
+    TcpOutcome.cancelled => AppTone.neutral,
+    TcpOutcome.refused ||
+    TcpOutcome.timedOut ||
+    TcpOutcome.failed => AppTone.red,
+  };
+
+  /// Label and pill share one wrapping row so a long failure text is never
+  /// truncated at large text scales.
+  Widget _resultRow(BuildContext context, Widget pill, {bool busy = false}) =>
+      AppRow.custom(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 12),
+          child: Wrap(
+            alignment: WrapAlignment.spaceBetween,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            spacing: 12,
+            runSpacing: 6,
+            children: [
+              Text(
+                context.l10n.uiConnResult,
+                style: TextStyle(fontSize: 16, color: context.palette.text),
+              ),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (busy) ...[
+                    const CupertinoActivityIndicator(radius: 8),
+                    const SizedBox(width: 8),
+                  ],
+                  Flexible(child: pill),
+                ],
+              ),
+            ],
+          ),
+        ),
+      );
+
   @override
   Widget build(BuildContext context) => ListenableBuilder(
     listenable: controller,
     builder: (context, _) {
+      final l10n = context.l10n;
       final result = controller.result;
-      return Scaffold(
-        appBar: AppBar(title: Text(context.l10n.tcpSingleTarget)),
-        body: Form(
-          key: form,
-          child: ListView(
-            padding: const EdgeInsets.all(20),
-            children: [
-              InfoNote(context.l10n.tcpTestExplanation),
-              TextFormField(
-                key: const Key('tcp-host'),
-                controller: host,
-                autocorrect: false,
-                enableSuggestions: false,
-                decoration: InputDecoration(labelText: context.l10n.tcpAddress),
-                onChanged: (_) => controller.clearTarget(),
-                validator: (value) {
-                  try {
-                    TcpTarget(host: value ?? '', port: 22);
-                    return null;
-                  } on ArgumentError catch (error) {
-                    return localizedText(error, context.l10n);
-                  }
-                },
+      final running = controller.running;
+      return AppScaffold(
+        title: l10n.tcpSingleTarget,
+        largeTitle: false,
+        bottomBar: running
+            ? AppButton(
+                label: l10n.tcpCancel,
+                kind: AppButtonKind.tonal,
+                expand: true,
+                onPressed: controller.cancel,
+              )
+            : AppButton(
+                label: l10n.tcpStart,
+                icon: Icons.network_check_rounded,
+                expand: true,
+                onPressed: start,
               ),
-              const SizedBox(height: 14),
-              TextFormField(
-                key: const Key('tcp-port'),
-                controller: port,
-                keyboardType: TextInputType.number,
-                decoration: InputDecoration(
-                  labelText: context.l10n.connectionPort,
-                ),
-                onChanged: (_) => controller.clearTarget(),
-                validator: (value) {
-                  final parsed = int.tryParse(value?.trim() ?? '');
-                  return parsed == null || parsed < 1 || parsed > 65535
-                      ? context.l10n.tcpValidPort
-                      : null;
-                },
-              ),
-              const SizedBox(height: 20),
-              if (controller.running) ...[
-                const LinearProgressIndicator(),
-                const SizedBox(height: 12),
-                Text(
-                  context.l10n.tcpTestingTarget(
-                    (controller.target!.label).toString(),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                OutlinedButton(
-                  onPressed: controller.cancel,
-                  child: Text(context.l10n.tcpCancel),
-                ),
-              ] else
-                FilledButton(
-                  onPressed: start,
-                  child: Text(context.l10n.tcpStart),
-                ),
-              InfoNote(
-                context.l10n.tcpTimeoutHelp(controller.timeout.inSeconds),
-              ),
-              if (result != null)
-                LedgerCard(
-                  child: Column(
+        children: [
+          Form(
+            key: form,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                AppSection(
+                  header: l10n.uiConnTarget,
+                  footerWidget: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        result.labelFor(context.l10n),
-                        style: Theme.of(context).textTheme.titleLarge,
+                        l10n.tcpTestExplanation,
+                        style: context.footnoteStyle,
                       ),
-                      const SizedBox(height: 10),
-                      SelectableText(
-                        context.l10n.tcpTarget(
-                          (result.target.label).toString(),
-                        ),
-                      ),
-                      if (result.remoteAddress != null)
-                        SelectableText(
-                          context.l10n.tcpActualAddress(
-                            (result.remoteAddress).toString(),
-                          ),
-                        ),
+                      const SizedBox(height: 6),
                       Text(
-                        context.l10n.tcpResultSource(
-                          result.sourceFor(context.l10n),
-                        ),
+                        l10n.tcpTimeoutHelp(controller.timeout.inSeconds),
+                        style: context.footnoteStyle,
                       ),
-                      Text(
-                        context.l10n.tcpFinished(
-                          (result.finishedAt.toLocal().toIso8601String())
-                              .toString(),
-                        ),
-                      ),
-                      Text(
-                        context.l10n.tcpElapsed(
-                          (result.elapsed.inMilliseconds).toString(),
-                        ),
-                      ),
-                      InfoNote(context.l10n.tcpOneObservation),
                     ],
                   ),
+                  children: [
+                    ValidatedTextRow(
+                      fieldKey: const Key('tcp-host'),
+                      label: l10n.tcpAddress,
+                      controller: host,
+                      mono: true,
+                      keyboardType: TextInputType.url,
+                      onChanged: (_) => controller.clearTarget(),
+                      validator: (value) {
+                        try {
+                          TcpTarget(host: value, port: 22);
+                          return null;
+                        } on ArgumentError catch (error) {
+                          return localizedText(error, l10n);
+                        }
+                      },
+                    ),
+                    ValidatedTextRow(
+                      fieldKey: const Key('tcp-port'),
+                      label: l10n.connectionPort,
+                      controller: port,
+                      mono: true,
+                      keyboardType: TextInputType.number,
+                      onChanged: (_) => controller.clearTarget(),
+                      validator: (value) {
+                        final parsed = int.tryParse(value.trim());
+                        return parsed == null || parsed < 1 || parsed > 65535
+                            ? l10n.tcpValidPort
+                            : null;
+                      },
+                    ),
+                  ],
                 ),
-            ],
+                if (running)
+                  AppSection(
+                    header: l10n.uiConnResult,
+                    children: [
+                      _resultRow(
+                        context,
+                        StatusPill(
+                          l10n.tcpTestingTarget(controller.target!.label),
+                        ),
+                        busy: true,
+                      ),
+                    ],
+                  )
+                else if (result != null)
+                  AppSection(
+                    header: l10n.uiConnResult,
+                    footer: l10n.tcpOneObservation,
+                    children: [
+                      _resultRow(
+                        context,
+                        StatusPill(
+                          result.labelFor(l10n),
+                          tone: _tone(result.outcome),
+                          dot: true,
+                        ),
+                      ),
+                      AppKeyValueRow(
+                        label: l10n.uiConnTarget,
+                        value: result.target.label,
+                        mono: true,
+                      ),
+                      if (result.remoteAddress != null)
+                        AppKeyValueRow(
+                          label: l10n.uiConnActualAddress,
+                          value: result.remoteAddress,
+                          mono: true,
+                        ),
+                      AppKeyValueRow(
+                        label: l10n.uiConnSource,
+                        value: result.sourceFor(l10n),
+                      ),
+                      AppKeyValueRow(
+                        label: l10n.uiConnFinished,
+                        value: _clock(result.finishedAt.toLocal()),
+                      ),
+                      AppKeyValueRow(
+                        label: l10n.uiConnElapsed,
+                        value: '${result.elapsed.inMilliseconds} ms',
+                      ),
+                    ],
+                  ),
+              ],
+            ),
           ),
-        ),
+        ],
       );
     },
   );
