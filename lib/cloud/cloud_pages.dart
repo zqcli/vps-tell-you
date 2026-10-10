@@ -293,6 +293,7 @@ class _CloudAuthorizationPageState extends State<CloudAuthorizationPage>
     label: label,
     controller: controller,
     secret: true,
+    required: true,
     enabled: !reading && !kIsWeb,
     validator: (text) =>
         text.isEmpty ? context.l10n.cloudRequiredField(label) : null,
@@ -342,6 +343,7 @@ class _CloudAuthorizationPageState extends State<CloudAuthorizationPage>
                     key: const ValueKey('cloud-alias'),
                     label: context.l10n.cloudAliasLabel,
                     controller: alias,
+                    required: true,
                     enabled: !reading,
                     maxLength: 80,
                     validator: (text) => text.trim().isEmpty
@@ -352,6 +354,7 @@ class _CloudAuthorizationPageState extends State<CloudAuthorizationPage>
                     key: const ValueKey('cloud-endpoint'),
                     label: context.l10n.cloudEndpointLabel,
                     controller: endpoint,
+                    required: true,
                     enabled: !reading,
                     readOnly: widget.existing != null,
                     keyboardType: TextInputType.url,

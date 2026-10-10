@@ -73,6 +73,58 @@ AppTone _scopeTone(CloudAccount account) => switch (account.authScope) {
   AdapterAuthScope.unknown => AppTone.amber,
 };
 
+/// Adapter instance row: name, detail lines and the scope pill underneath, so
+/// long names keep the full row width.
+AppRow _instanceRow(
+  BuildContext context, {
+  required Key key,
+  required CloudAccount account,
+  required List<String> lines,
+  bool chevron = true,
+  VoidCallback? onTap,
+  VoidCallback? onLongPress,
+}) {
+  final p = context.palette;
+  return AppRow.custom(
+    key: key,
+    leading: const AppIconSquare(
+      icon: Icons.cloud_outlined,
+      color: AppTints.purple,
+    ),
+    chevron: chevron,
+    onTap: onTap,
+    onLongPress: onLongPress,
+    child: Padding(
+      padding: const EdgeInsets.symmetric(vertical: 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            account.alias,
+            style: TextStyle(fontSize: 16, height: 1.3, color: p.text),
+          ),
+          for (final line in lines)
+            Padding(
+              padding: const EdgeInsets.only(top: 2),
+              child: Text(
+                line,
+                style: TextStyle(fontSize: 13, height: 1.35, color: p.text2),
+              ),
+            ),
+          const SizedBox(height: 6),
+          Align(
+            alignment: AlignmentDirectional.centerStart,
+            child: StatusPill(
+              _scopeLabel(context, account),
+              tone: _scopeTone(account),
+            ),
+          ),
+        ],
+      ),
+    ),
+  );
+}
+
 /// Shared status for all provider routes. A successful write followed by a
 /// failed reload stays committed, and cannot be submitted a second time.
 class _ProviderNotices extends StatelessWidget {
@@ -659,20 +711,15 @@ class _ProviderDetailsPageState extends State<ProviderDetailsPage> {
                   enabled: false,
                 ),
               for (final account in accounts) ...[
-                AppRow(
+                _instanceRow(
+                  context,
                   key: ValueKey('provider-instance-${account.id}'),
-                  icon: Icons.cloud_outlined,
-                  iconColor: AppTints.purple,
-                  title: account.alias,
-                  subtitle:
-                      '${cloudProviderName(account.adapterType)} · '
-                      '${context.l10n.providerUiLinkedCount(ledger.cloud.bindings.where((b) => b.accountId == account.id).length)}\n'
-                      '${account.endpoint}',
-                  trailing: StatusPill(
-                    _scopeLabel(context, account),
-                    tone: _scopeTone(account),
-                  ),
-                  chevron: true,
+                  account: account,
+                  lines: [
+                    '${cloudProviderName(account.adapterType)} · '
+                        '${context.l10n.providerUiLinkedCount(ledger.cloud.bindings.where((b) => b.accountId == account.id).length)}',
+                    account.endpoint,
+                  ],
                   onTap: opening
                       ? null
                       : () => open(() async {
@@ -1219,18 +1266,22 @@ class _ProviderAdaptersPageState extends State<_ProviderAdaptersPage> {
                       account.authScope != AdapterAuthScope.unknown &&
                       !(account.authScope == AdapterAuthScope.singleDevice &&
                           account.pinnedServerId != null);
-                  return AppRow(
+                  return _instanceRow(
+                    context,
                     key: ValueKey('choose-instance-${account.id}'),
-                    icon: Icons.cloud_outlined,
-                    iconColor: AppTints.purple,
-                    title: account.alias,
-                    subtitle:
-                        '${cloudProviderName(account.adapterType)} · ${context.l10n.providerUiLinkedCount(widget.ledger.cloud.bindings.where((b) => b.accountId == account.id).length)}\n'
-                        '${account.authScope == AdapterAuthScope.singleDevice && account.pinnedServerId != null ? context.l10n.providerUiPinnedHelp(widget.ledger.byId(account.pinnedServerId!)?.name ?? account.pinnedServerId!) : account.endpoint}',
-                    trailing: StatusPill(
-                      _scopeLabel(context, account),
-                      tone: _scopeTone(account),
-                    ),
+                    account: account,
+                    lines: [
+                      '${cloudProviderName(account.adapterType)} · ${context.l10n.providerUiLinkedCount(widget.ledger.cloud.bindings.where((b) => b.accountId == account.id).length)}',
+                      account.authScope == AdapterAuthScope.singleDevice &&
+                              account.pinnedServerId != null
+                          ? context.l10n.providerUiPinnedHelp(
+                              widget.ledger
+                                      .byId(account.pinnedServerId!)
+                                      ?.name ??
+                                  account.pinnedServerId!,
+                            )
+                          : account.endpoint,
+                    ],
                     chevron: selectable,
                     onTap: selectable ? () => open(account) : null,
                   );

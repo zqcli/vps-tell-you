@@ -366,49 +366,51 @@ class _ServerCloudBindingPageState extends State<ServerCloudBindingPage> {
                     ),
                   ],
                 ),
-              AppSection(
-                header: context.l10n.providerUiChooseInstance,
-                footer: provider != null && !provider.needsReview
-                    ? context.l10n.providerUiInstanceChoiceHelp
-                    : null,
-                children: [
-                  if (provider != null &&
-                      !provider.needsReview &&
-                      accounts.isEmpty)
-                    AppRow(title: context.l10n.cloudNoSavedAccounts),
-                  for (final account in accounts)
-                    AppRow(
-                      key: ValueKey('server-cloud-account-${account.id}'),
-                      icon: Icons.cloud_outlined,
-                      iconColor: AppTints.purple,
-                      title: account.alias,
-                      subtitle: [
-                        cloudProviderName(account.adapterType),
-                        _scopeLabel(account),
-                        account.endpoint,
-                        if (_accountRestriction(account) case final reason?)
-                          localizedText(reason, context.l10n),
-                      ].join('\n'),
-                      trailing: _accountId == account.id
-                          ? Icon(
-                              Icons.check_rounded,
-                              size: 22,
-                              color: context.palette.primary,
-                            )
-                          : null,
-                      enabled:
-                          !_blocked && _accountRestriction(account) == null,
-                      onTap: _blocked || _accountRestriction(account) != null
-                          ? null
-                          : () => setState(() {
-                              _accountId = account.id;
-                              _selected = current?.accountId == account.id
-                                  ? current
-                                  : null;
-                            }),
-                    ),
-                ],
-              ),
+              if (accounts.isNotEmpty ||
+                  (provider != null && !provider.needsReview))
+                AppSection(
+                  header: context.l10n.providerUiChooseInstance,
+                  footer: provider != null && !provider.needsReview
+                      ? context.l10n.providerUiInstanceChoiceHelp
+                      : null,
+                  children: [
+                    if (provider != null &&
+                        !provider.needsReview &&
+                        accounts.isEmpty)
+                      AppRow(title: context.l10n.cloudNoSavedAccounts),
+                    for (final account in accounts)
+                      AppRow(
+                        key: ValueKey('server-cloud-account-${account.id}'),
+                        icon: Icons.cloud_outlined,
+                        iconColor: AppTints.purple,
+                        title: account.alias,
+                        subtitle: [
+                          cloudProviderName(account.adapterType),
+                          _scopeLabel(account),
+                          account.endpoint,
+                          if (_accountRestriction(account) case final reason?)
+                            localizedText(reason, context.l10n),
+                        ].join('\n'),
+                        trailing: _accountId == account.id
+                            ? Icon(
+                                Icons.check_rounded,
+                                size: 22,
+                                color: context.palette.primary,
+                              )
+                            : null,
+                        enabled:
+                            !_blocked && _accountRestriction(account) == null,
+                        onTap: _blocked || _accountRestriction(account) != null
+                            ? null
+                            : () => setState(() {
+                                _accountId = account.id;
+                                _selected = current?.accountId == account.id
+                                    ? current
+                                    : null;
+                              }),
+                      ),
+                  ],
+                ),
               if (selectedAccount != null)
                 AppSection(
                   header: context.l10n.cloudSelectReadInstance,
