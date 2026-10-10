@@ -73,10 +73,14 @@ void main() {
         final saved = (await store.servers()).single;
         expect(saved.resources!.vcpu, 4);
         expect(saved.resources!.trafficPeriodMonths, isNull);
-        expect(
-          saved.spec,
-          customSummary ? custom : saved.resources!.specSummary,
-        );
+        // The specification is always generated from the hardware now.
+        expect(saved.spec, '4 vCPU · 2 GiB · 20 GiB');
+        // Older user-written text is never lost: it moves to the notes.
+        if (customSummary) {
+          expect(saved.notes, contains(custom));
+        } else {
+          expect(saved.notes, isEmpty);
+        }
         expect(tester.takeException(), isNull);
       },
     );

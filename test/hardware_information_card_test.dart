@@ -45,16 +45,29 @@ void main() {
     await directory.delete(recursive: true);
   });
 
-  test('precise hardware capacities never round off stored bytes', () {
-    expect(ServerResources.formatBytes(1073741824, exact: true), '1 GiB');
-    expect(
-      ServerResources.formatBytes(1073741825, exact: true),
-      '1073741825 B',
-    );
-    expect(
-      ServerResources.formatBytes(9007199254740991, exact: true),
-      '9007199254740991 B',
-    );
+  test('capacities display in the best binary unit, bytes only below 1 KiB', () {
+    String f(int b) => ServerResources.formatBytes(b);
+    expect(f(0), '0 B');
+    expect(f(1023), '1023 B');
+    expect(f(1024), '1 KiB');
+    expect(f(1073741824), '1 GiB');
+    expect(f(1073741825), '1 GiB');
+    // Decimal "2 GB" / "50 GB" style API values: true binary size, 2 decimals.
+    expect(f(2000000000), '1.86 GiB');
+    expect(f(50000000000), '46.57 GiB');
+    expect(f(1610612736), '1.5 GiB');
+    expect(f(1048575 * 1024), '1 GiB');
+    expect(f(1099511627776), '1 TiB');
+    expect(f(9007199254740991), '8 PiB');
+  });
+
+  test('editable amount picks MiB / GiB / TiB with short decimals', () {
+    ({int factor, String text}) e(int b) => ServerResources.editableAmount(b);
+    expect(e(2000000000), (factor: 1073741824, text: '1.86'));
+    expect(e(1610612736), (factor: 1073741824, text: '1.5'));
+    expect(e(1099511627776), (factor: 1099511627776, text: '1'));
+    expect(e(512), (factor: 1, text: '512'));
+    expect(e(1048576 * 1023 + 1048000).factor, 1073741824);
   });
 
   testWidgets(
@@ -80,7 +93,7 @@ void main() {
       await tester.tap(edit);
       await tester.pumpAndSettle();
       expect(find.byType(ServerForm), findsOneWidget);
-      final ip = find.byKey(const ValueKey('resource-ip'));
+      final ip = find.byKey(const ValueKey('resource-hostname'));
       expect(tester.getRect(ip).top, greaterThan(0));
       expect(tester.getRect(ip).bottom, lessThan(844));
       expect(

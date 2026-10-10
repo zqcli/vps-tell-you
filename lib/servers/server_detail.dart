@@ -930,7 +930,7 @@ class ServerDetail extends StatelessWidget {
               ),
               AppKeyValueRow(
                 label: l10n.serverSpecifications,
-                value: s.spec,
+                value: serverSpecSummary(s, l10n),
                 placeholder: l10n.serverNotEntered,
               ),
             ],

@@ -4,6 +4,8 @@ import 'package:vps_tell_you/core/app_theme.dart';
 import 'package:vps_tell_you/servers/server_resource_fields.dart';
 import 'package:vps_tell_you/servers/server_resources.dart';
 
+import 'support/form_test_helpers.dart';
+
 void main() {
   Future<GlobalKey<ServerResourceFieldsState>> mount(
     WidgetTester tester, {
@@ -152,12 +154,51 @@ void main() {
       );
       final key = await mount(tester, initial: initial);
       expect(key.currentState!.validateAndRead()!.toJson(), initial.toJson());
+      // Shown as a short number in the best unit, not as raw bytes...
+      expect(fieldController(tester, 'resource-ramBytes').text, '1');
+      expect(fieldController(tester, 'resource-diskBytes').text, '1');
+      expect(fieldController(tester, 'resource-trafficBytes').text, '1');
+      // ...while the untouched exact values (and API provenance) survive.
+      await chooseUnit(tester, 'diskBytes', 'B');
       await fill(tester, 'diskBytes', '1073741826');
       final updated = key.currentState!.validateAndRead()!;
       expect(updated.diskBytes, 1073741826);
       expect(updated.apiFields, {'ip', 'hostname'});
+      expect(updated.ramBytes, 1048577);
+      expect(updated.trafficBytes, 1099511627777);
     },
   );
+
+  testWidgets('API sizes open in the best unit with a short rounded number', (
+    tester,
+  ) async {
+    // 2 000 000 000 B is "2 GB" decimal: 1.86 GiB, not 2000000000 B.
+    final initial = ServerResources(
+      ip: '192.0.2.9',
+      hostname: 'api.example',
+      vcpu: 2,
+      ramBytes: 2000000000,
+      diskBytes: 53687091200,
+      trafficBytes: 1500000000000,
+      apiFields: {'ramBytes', 'diskBytes', 'trafficBytes'},
+    );
+    final key = await mount(tester, initial: initial);
+    expect(fieldController(tester, 'resource-ramBytes').text, '1.86');
+    expect(fieldController(tester, 'resource-diskBytes').text, '50');
+    expect(fieldController(tester, 'resource-trafficBytes').text, '1.36');
+    final untouched = key.currentState!.validateAndRead()!;
+    expect(untouched.ramBytes, 2000000000);
+    expect(untouched.trafficBytes, 1500000000000);
+    expect(untouched.apiFields, {'ramBytes', 'diskBytes', 'trafficBytes'});
+    // Typing the same text again keeps the exact value; a different number is
+    // a manual edit and drops the API provenance.
+    await fill(tester, 'ramBytes', '1.86');
+    expect(key.currentState!.validateAndRead()!.ramBytes, 2000000000);
+    await fill(tester, 'ramBytes', '1.87');
+    final edited = key.currentState!.validateAndRead()!;
+    expect(edited.ramBytes, isNot(2000000000));
+    expect(edited.apiFields, {'diskBytes', 'trafficBytes'});
+  });
 
   testWidgets('vCPU stepper has an explicit unknown state and exact entry', (
     tester,

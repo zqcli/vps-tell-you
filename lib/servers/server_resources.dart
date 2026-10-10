@@ -226,37 +226,67 @@ class ServerResources {
     return '$quota · ${trafficPeriodMonths == null ? l10n.resourcePeriodNotSet : l10n.resourceEveryPeriod(trafficPeriodLabelFor(l10n).toLowerCase())}';
   }
 
+  /// Language-neutral hardware summary such as `2 vCPU · 2 GiB · 40 GiB`
+  /// (vCPU, memory, disk). Empty when none of the three is known. Traffic is
+  /// shown separately because it also needs its period.
   String get specSummary => specSummaryFor(defaultLocalizations);
   String specSummaryFor(AppLocalizations l10n) => [
     if (vcpu != null) '$vcpu vCPU',
-    if (ramBytes != null) '${formatBytes(ramBytes!)} RAM',
-    if (diskBytes != null)
-      l10n.resourceDiskQuota((formatBytes(diskBytes!)).toString()),
-    // Keep the established automatic summary stable for existing records.
-    // The separately stored period is shown in the hardware section.
-    if (trafficUnlimited)
-      l10n.resourceUnlimitedTraffic
-    else if (trafficBytes != null)
-      l10n.resourceTrafficQuota((formatBytes(trafficBytes!)).toString()),
+    if (ramBytes != null) formatBytes(ramBytes!),
+    if (diskBytes != null) formatBytes(diskBytes!),
   ].join(' · ');
 
-  static String formatBytes(int bytes, {bool exact = false}) {
-    const units = ['B', 'KiB', 'MiB', 'GiB', 'TiB', 'PiB'];
-    var divisor = 1;
+  static const _units = ['B', 'KiB', 'MiB', 'GiB', 'TiB', 'PiB'];
+
+  /// Decimal text with at most [digits] fraction digits, no trailing zeros.
+  static String _decimal(double value, int digits) => value
+      .toStringAsFixed(digits)
+      .replaceFirst(RegExp(r'0+$'), '')
+      .replaceFirst(RegExp(r'\.$'), '');
+
+  /// Human readable binary size: the largest unit that keeps the number at or
+  /// above 1, rounded to two decimals (`1.86 GiB`, `2 GiB`, `512 MiB`).
+  /// Raw bytes are only used below 1 KiB. Providers that sell decimal sizes
+  /// (e.g. 2 000 000 000 B = "2 GB") therefore appear as `1.86 GiB`, which is
+  /// the true binary size; the stored exact byte count is never altered.
+  static String formatBytes(int bytes) {
+    if (bytes < 1024) return '$bytes B';
     var unit = 0;
-    while (unit < units.length - 1 && bytes >= divisor * 1024) {
+    var divisor = 1;
+    while (unit < _units.length - 1 && bytes >= divisor * 1024) {
       divisor *= 1024;
       unit++;
     }
-    if (exact && bytes % divisor != 0) {
-      return '$bytes B';
+    var amount = double.parse((bytes / divisor).toStringAsFixed(2));
+    if (amount >= 1024 && unit < _units.length - 1) {
+      // 1023.999 MiB rounds to 1024: present it in the next unit instead.
+      unit++;
+      amount = double.parse((bytes / (divisor * 1024)).toStringAsFixed(2));
     }
-    final amount = bytes % divisor == 0
-        ? (bytes ~/ divisor).toString()
-        : (bytes / divisor)
-              .toStringAsFixed(2)
-              .replaceFirst(RegExp(r'0+$'), '')
-              .replaceFirst(RegExp(r'\.$'), '');
-    return '$amount ${units[unit]}';
+    return '${_decimal(amount, 2)} ${_units[unit]}';
+  }
+
+  /// Unit and number used to *edit* a stored byte count in the form: the
+  /// largest of MiB / GiB / TiB that keeps the value at or above 1 (plain
+  /// bytes below 1 MiB), with at most two decimals. The text can be rounded,
+  /// so the form keeps the exact stored value until the user edits it.
+  static ({int factor, String text}) editableAmount(int bytes) {
+    const mib = 1048576, gib = 1073741824, tib = 1099511627776;
+    var factor = bytes >= tib
+        ? tib
+        : bytes >= gib
+        ? gib
+        : bytes >= mib
+        ? mib
+        : 1;
+    var amount = factor == 1 ? bytes.toDouble() : bytes / factor;
+    if (factor != 1) {
+      amount = double.parse(amount.toStringAsFixed(2));
+      if (amount >= 1024 && factor != tib) {
+        factor *= 1024;
+        amount = double.parse((bytes / factor).toStringAsFixed(2));
+      }
+    }
+    return (factor: factor, text: factor == 1 ? '$bytes' : _decimal(amount, 2));
   }
 }
