@@ -780,11 +780,9 @@ class _ServerRowState extends State<ServerRow> {
     }
   }
 
-  void recordPayment() => Navigator.push<bool>(
+  void recordPayment() => showAppModal<bool>(
     context,
-    MaterialPageRoute(
-      builder: (_) => PaymentForm(controller: c, server: s),
-    ),
+    builder: (_) => PaymentForm(controller: c, server: s),
   );
 
   Future<void> openMenu() {

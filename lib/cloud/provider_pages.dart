@@ -1035,13 +1035,11 @@ class _AddServerPageState extends State<AddServerPage> {
     if (opening || finishing || !_canEdit(widget.ledger)) return;
     setState(() => opening = true);
     try {
-      final id = await Navigator.push<String>(
+      final id = await showAppModal<String>(
         context,
-        MaterialPageRoute(
-          builder: (_) => ServerForm(
-            controller: widget.ledger,
-            businessProvider: selection?.provider,
-          ),
+        builder: (_) => ServerForm(
+          controller: widget.ledger,
+          businessProvider: selection?.provider,
         ),
       );
       if (id != null && mounted) finish(id);

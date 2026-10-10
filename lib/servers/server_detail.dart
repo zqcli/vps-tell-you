@@ -309,7 +309,10 @@ class ServerDetail extends StatelessWidget {
               showAppToast(context, paymentBlock);
               return;
             }
-            _push(context, PaymentForm(controller: controller, server: s));
+            showAppModal<bool>(
+              context,
+              builder: (_) => PaymentForm(controller: controller, server: s),
+            );
           },
         ),
         AppQuickAction(

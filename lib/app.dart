@@ -292,9 +292,9 @@ class _HomeShellState extends State<HomeShell> {
   Widget build(BuildContext context) => ListenableBuilder(
     listenable: widget.controller,
     builder: (context, _) => Scaffold(
-      // Flip to `true` once every tab page is an [AppScaffold] to let content
-      // scroll under the translucent tab bar.
-      extendBody: false,
+      // Every tab page is an [AppScaffold], which pads its end by the inset
+      // this adds, so content can scroll under the translucent tab bar.
+      extendBody: true,
       body: Stack(
         fit: StackFit.expand,
         children: [

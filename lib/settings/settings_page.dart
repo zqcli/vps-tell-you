@@ -211,7 +211,10 @@ class _SettingsPageState extends State<SettingsPage> {
                 title: l10n.currenciesReferenceRates,
                 value: controller.fx.displayCurrency.toString(),
                 chevron: true,
-                onTap: () => push((_) => FxPage(controller: controller)),
+                onTap: () => showAppModal<void>(
+                  context,
+                  builder: (_) => FxPage(controller: controller),
+                ),
               ),
               AppRow(
                 icon: Icons.notifications_none,
