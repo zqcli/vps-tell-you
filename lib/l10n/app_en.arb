@@ -3553,6 +3553,26 @@
   "@providerUiTitle": {
     "description": "Provider navigation and ownership UI."
   },
+  "uiCloudProvidersTitle": "Providers",
+  "@uiCloudProvidersTitle": {
+    "description": "Cloud / provider UI."
+  },
+  "uiCloudNeedsReviewPill": "Ownership pending",
+  "@uiCloudNeedsReviewPill": {
+    "description": "Cloud / provider UI."
+  },
+  "uiCloudOwnerSection": "Provider",
+  "@uiCloudOwnerSection": {
+    "description": "Cloud / provider UI."
+  },
+  "uiCloudMethodSection": "How to add",
+  "@uiCloudMethodSection": {
+    "description": "Cloud / provider UI."
+  },
+  "uiCloudAddFooter": "Panel keys are stored only in secure device storage. Reading never changes the remote panel.",
+  "@uiCloudAddFooter": {
+    "description": "Cloud / provider UI."
+  },
   "providerUiDetails": "Provider details",
   "@providerUiDetails": {
     "description": "Provider navigation and ownership UI."

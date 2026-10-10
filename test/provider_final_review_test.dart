@@ -4,6 +4,8 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
+import 'package:vps_tell_you/cloud/cloud_widgets.dart';
+import 'package:vps_tell_you/core/ui/ui.dart';
 import 'package:vps_tell_you/cloud/cloud_controller.dart';
 import 'package:vps_tell_you/cloud/cloud_models.dart';
 import 'package:vps_tell_you/cloud/cloud_pages.dart';
@@ -162,7 +164,7 @@ void main() {
     await mount(tester, CloudImportPage(ledger: ledger, inventory: inventory));
     final done = find.byKey(const ValueKey('cloud-import-done'));
     await reveal(tester, done);
-    final press = tester.widget<OutlinedButton>(done).onPressed!;
+    final press = tester.widget<AppButton>(done).onPressed!;
     press();
     press();
     await tester.pumpAndSettle();
@@ -302,7 +304,7 @@ void main() {
       );
       final select = find.byKey(const ValueKey('cloud-select-7/2/3'));
       await reveal(tester, select);
-      expect(tester.widget<CheckboxListTile>(select).onChanged, isNull);
+      expect(tester.widget<CloudCheckRow>(select).onChanged, isNull);
       expect(
         find.text(AppLocalizationsEn().cloudAccountFailureIdentity),
         findsOneWidget,

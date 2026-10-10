@@ -2,6 +2,8 @@ import 'support/provider_fixture.dart';
 
 import 'dart:io';
 
+import 'package:vps_tell_you/cloud/cloud_widgets.dart';
+import 'package:vps_tell_you/core/ui/ui.dart';
 import 'package:vps_tell_you/l10n/generated/app_localizations_zh.dart';
 
 import 'package:flutter/material.dart';
@@ -229,11 +231,11 @@ void main() {
     final target = find.byKey(const ValueKey('server-cloud-instance-a-7/2/3'));
     await tester.ensureVisible(target);
     await tester.pumpAndSettle();
-    expect(tester.widget<CheckboxListTile>(target).onChanged, isNull);
+    expect(tester.widget<CloudCheckRow>(target).onChanged, isNull);
     expect(find.textContaining('已关联：Local other · 不可覆盖'), findsOneWidget);
     expect(
       tester
-          .widget<FilledButton>(find.byKey(const ValueKey('server-cloud-save')))
+          .widget<AppButton>(find.byKey(const ValueKey('server-cloud-save')))
           .onPressed,
       isNull,
     );
@@ -279,8 +281,8 @@ void main() {
       await mount(tester, scale: 2);
       final account = find.byKey(const ValueKey('server-cloud-account-rack'));
       await reveal(tester, account);
-      expect(tester.widget<ListTile>(account).enabled, isFalse);
-      expect(tester.widget<ListTile>(account).onTap, isNull);
+      expect(tester.widget<AppRow>(account).enabled, isFalse);
+      expect(tester.widget<AppRow>(account).onTap, isNull);
       expect(
         find.textContaining(AppLocalizationsZh().adapterSingletonPinned),
         findsWidgets,
@@ -289,10 +291,10 @@ void main() {
         const ValueKey('server-cloud-instance-rack-single'),
       );
       await reveal(tester, instance);
-      expect(tester.widget<CheckboxListTile>(instance).onChanged, isNull);
+      expect(tester.widget<CloudCheckRow>(instance).onChanged, isNull);
       final save = find.byKey(const ValueKey('server-cloud-save'));
       await reveal(tester, save);
-      expect(tester.widget<FilledButton>(save).onPressed, isNull);
+      expect(tester.widget<AppButton>(save).onPressed, isNull);
       expect(await store.cloudBindings(), isEmpty);
       expect((await store.servers()).map((s) => s.toMap()).toList(), before);
       expect(cloud.accounts.single.pinnedServerId, 'other');
@@ -370,9 +372,7 @@ void main() {
       expect((await store.cloudBindings()).single.accountId, 'b');
       expect(
         tester
-            .widget<FilledButton>(
-              find.byKey(const ValueKey('server-cloud-save')),
-            )
+            .widget<AppButton>(find.byKey(const ValueKey('server-cloud-save')))
             .onPressed,
         isNull,
       );
@@ -395,9 +395,7 @@ void main() {
       expect(find.byType(ServerCloudBindingPage), findsOneWidget);
       expect(
         tester
-            .widget<FilledButton>(
-              find.byKey(const ValueKey('server-cloud-save')),
-            )
+            .widget<AppButton>(find.byKey(const ValueKey('server-cloud-save')))
             .onPressed,
         isNull,
       );

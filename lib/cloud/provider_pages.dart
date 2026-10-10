@@ -1,6 +1,9 @@
+import 'package:flutter/cupertino.dart'
+    show CupertinoAlertDialog, CupertinoDialogAction, showCupertinoDialog;
 import 'package:flutter/material.dart';
 
 import '../core/app_theme.dart';
+import '../core/ui/ui.dart';
 import '../data/ledger_store.dart';
 import '../l10n/locale_preference.dart';
 import '../l10n/localized_message.dart';
@@ -64,6 +67,64 @@ String _scopeLabel(BuildContext context, CloudAccount account) =>
       AdapterAuthScope.unknown => context.l10n.providerUiUnknownScope,
     };
 
+AppTone _scopeTone(CloudAccount account) => switch (account.authScope) {
+  AdapterAuthScope.singleDevice => AppTone.blue,
+  AdapterAuthScope.account => AppTone.green,
+  AdapterAuthScope.unknown => AppTone.amber,
+};
+
+/// Adapter instance row: name, detail lines and the scope pill underneath, so
+/// long names keep the full row width.
+AppRow _instanceRow(
+  BuildContext context, {
+  required Key key,
+  required CloudAccount account,
+  required List<String> lines,
+  bool chevron = true,
+  VoidCallback? onTap,
+  VoidCallback? onLongPress,
+}) {
+  final p = context.palette;
+  return AppRow.custom(
+    key: key,
+    leading: const AppIconSquare(
+      icon: Icons.cloud_outlined,
+      color: AppTints.purple,
+    ),
+    chevron: chevron,
+    onTap: onTap,
+    onLongPress: onLongPress,
+    child: Padding(
+      padding: const EdgeInsets.symmetric(vertical: 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            account.alias,
+            style: TextStyle(fontSize: 16, height: 1.3, color: p.text),
+          ),
+          for (final line in lines)
+            Padding(
+              padding: const EdgeInsets.only(top: 2),
+              child: Text(
+                line,
+                style: TextStyle(fontSize: 13, height: 1.35, color: p.text2),
+              ),
+            ),
+          const SizedBox(height: 6),
+          Align(
+            alignment: AlignmentDirectional.centerStart,
+            child: StatusPill(
+              _scopeLabel(context, account),
+              tone: _scopeTone(account),
+            ),
+          ),
+        ],
+      ),
+    ),
+  );
+}
+
 /// Shared status for all provider routes. A successful write followed by a
 /// failed reload stays committed, and cannot be submitted a second time.
 class _ProviderNotices extends StatelessWidget {
@@ -73,20 +134,38 @@ class _ProviderNotices extends StatelessWidget {
   Widget build(BuildContext context) => Column(
     crossAxisAlignment: CrossAxisAlignment.stretch,
     children: [
-      if (ledger.refreshFailed) RefreshFailureNotice(controller: ledger),
+      if (ledger.refreshFailed)
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 10, 16, 0),
+          child: RefreshFailureNotice(controller: ledger),
+        ),
       if (ledger.cloud.needsReload) ...[
         CloudNotice(context.l10n.cloudMetadataIncomplete, error: true),
-        OutlinedButton(
-          onPressed: ledger.cloud.busy ? null : ledger.cloud.reload,
-          child: Text(context.l10n.cloudReloadMetadata),
+        AppSection(
+          topSpacing: 10,
+          children: [
+            AppRow(
+              center: true,
+              title: context.l10n.cloudReloadMetadata,
+              enabled: !ledger.cloud.busy,
+              onTap: ledger.cloud.busy ? null : ledger.cloud.reload,
+            ),
+          ],
         ),
       ] else if (ledger.cloud.localizedError != null)
         CloudNotice(ledger.cloud.localizedError!, error: true),
       if (ledger.cloud.cleanupPending) ...[
         CloudNotice(context.l10n.cloudCleanupNotice, error: true),
-        OutlinedButton(
-          onPressed: ledger.cloud.busy ? null : ledger.cloud.retryCleanup,
-          child: Text(context.l10n.cloudRetryCleanup),
+        AppSection(
+          topSpacing: 10,
+          children: [
+            AppRow(
+              center: true,
+              title: context.l10n.cloudRetryCleanup,
+              enabled: !ledger.cloud.busy,
+              onTap: ledger.cloud.busy ? null : ledger.cloud.retryCleanup,
+            ),
+          ],
         ),
       ],
     ],
@@ -97,7 +176,7 @@ Future<ProviderRecord?> editProvider(
   BuildContext context,
   LedgerController ledger, {
   ProviderRecord? provider,
-}) => showDialog<ProviderRecord>(
+}) => showCupertinoDialog<ProviderRecord>(
   context: context,
   builder: (_) => _ProviderNameDialog(ledger: ledger, provider: provider),
 );
@@ -164,47 +243,69 @@ class _ProviderNameDialogState extends State<_ProviderNameDialog> {
   }
 
   @override
-  Widget build(BuildContext context) => PopScope(
-    canPop: !saving,
-    child: AlertDialog(
-      scrollable: true,
-      title: Text(
-        widget.provider == null
-            ? context.l10n.providerUiAdd
-            : context.l10n.providerUiRename,
-      ),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          TextField(
-            key: const ValueKey('provider-name'),
-            controller: name,
-            autofocus: true,
-            enabled: !saving,
-            maxLength: 80,
-            textCapitalization: TextCapitalization.words,
-            decoration: InputDecoration(labelText: context.l10n.providerUiName),
-            onSubmitted: (_) => save(),
+  Widget build(BuildContext context) {
+    final p = context.palette;
+    return PopScope(
+      canPop: !saving,
+      child: CupertinoAlertDialog(
+        title: Text(
+          widget.provider == null
+              ? context.l10n.providerUiAdd
+              : context.l10n.providerUiRename,
+        ),
+        content: Padding(
+          padding: const EdgeInsets.only(top: 12),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              CloudPromptField(
+                fieldKey: const ValueKey('provider-name'),
+                controller: name,
+                hint: context.l10n.providerUiName,
+                enabled: !saving,
+                textCapitalization: TextCapitalization.words,
+                onSubmitted: (_) => save(),
+              ),
+              if (widget.provider?.needsReview == true)
+                Padding(
+                  padding: const EdgeInsets.only(top: 10),
+                  child: Text(
+                    context.l10n.providerUiRenameReviewHelp,
+                    textAlign: TextAlign.start,
+                    style: TextStyle(fontSize: 12.5, color: p.text2),
+                  ),
+                ),
+              if (error != null)
+                Padding(
+                  padding: const EdgeInsets.only(top: 10),
+                  child: Semantics(
+                    liveRegion: true,
+                    child: Text(
+                      localizedText(error!, context.l10n),
+                      textAlign: TextAlign.start,
+                      style: TextStyle(fontSize: 13, color: p.red),
+                    ),
+                  ),
+                ),
+            ],
           ),
-          if (widget.provider?.needsReview == true)
-            InfoNote(context.l10n.providerUiRenameReviewHelp),
-          if (error != null) CloudNotice(error!, error: true),
+        ),
+        actions: [
+          CupertinoDialogAction(
+            onPressed: saving ? null : () => Navigator.pop(context),
+            child: Text(context.l10n.cancel),
+          ),
+          CupertinoDialogAction(
+            key: const ValueKey('provider-save'),
+            isDefaultAction: true,
+            onPressed: saving ? null : save,
+            child: Text(saving ? context.l10n.cloudSaving : context.l10n.save),
+          ),
         ],
       ),
-      actions: [
-        TextButton(
-          onPressed: saving ? null : () => Navigator.pop(context),
-          child: Text(context.l10n.cancel),
-        ),
-        FilledButton(
-          key: const ValueKey('provider-save'),
-          onPressed: saving ? null : save,
-          child: Text(saving ? context.l10n.cloudSaving : context.l10n.save),
-        ),
-      ],
-    ),
-  );
+    );
+  }
 }
 
 class ProvidersPage extends StatefulWidget {
@@ -243,79 +344,91 @@ class _ProvidersPageState extends State<ProvidersPage> {
   @override
   Widget build(BuildContext context) => ListenableBuilder(
     listenable: widget.ledger,
-    builder: (context, _) => Scaffold(
-      appBar: AppBar(
-        title: Text(context.l10n.providerUiTitle),
+    builder: (context, _) {
+      final ledger = widget.ledger;
+      final providers = ledger.cloud.providers;
+      final canAdd = !opening && _canEdit(ledger);
+      final unspecified = ledger.records
+          .where((s) => s.providerId == null)
+          .length;
+      return AppScaffold(
+        title: context.l10n.uiCloudProvidersTitle,
+        // An empty list shows its single primary action in the body instead
+        // of a second, duplicated "+" in the bar.
         actions: [
-          IconButton(
-            key: const ValueKey('provider-add'),
-            tooltip: context.l10n.providerUiAdd,
-            onPressed: opening || !_canEdit(widget.ledger) ? null : add,
-            icon: const Icon(Icons.add),
-          ),
+          if (providers.isNotEmpty)
+            AppNavButton.icon(
+              Icons.add,
+              key: const ValueKey('provider-add'),
+              tooltip: context.l10n.providerUiAdd,
+              onPressed: canAdd ? add : null,
+            ),
         ],
-      ),
-      body: ListView(
-        padding: const EdgeInsets.all(20),
         children: [
-          InfoNote(context.l10n.providerUiHierarchyHelp),
-          _ProviderNotices(widget.ledger),
-          if (widget.ledger.cloud.providers.isEmpty)
-            LedgerCard(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Text(
-                    context.l10n.providerUiEmpty,
-                    style: Theme.of(context).textTheme.titleLarge,
-                  ),
-                  InfoNote(context.l10n.providerUiEmptyHelp),
-                  FilledButton.icon(
-                    onPressed: opening || !_canEdit(widget.ledger) ? null : add,
-                    icon: const Icon(Icons.add),
-                    label: Text(context.l10n.providerUiAdd),
-                  ),
-                ],
-              ),
-            ),
-          for (final provider in widget.ledger.cloud.providers)
-            Padding(
-              padding: const EdgeInsets.only(bottom: 12),
-              child: LedgerCard(
-                padding: EdgeInsets.zero,
-                child: SettingRow(
-                  key: ValueKey('provider-${provider.id}'),
-                  icon: provider.needsReview
-                      ? Icons.help_outline
-                      : Icons.business_outlined,
-                  title: provider.name,
-                  subtitle:
-                      '${_providerSummary(context, widget.ledger, provider)}'
-                      '${provider.needsReview ? '\n${context.l10n.providerUiNeedsReview}' : ''}',
-                  onTap: opening
-                      ? null
-                      : () => open(() async {
-                          await Navigator.push<void>(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => ProviderDetailsPage(
-                                ledger: widget.ledger,
-                                providerId: provider.id,
-                              ),
-                            ),
-                          );
-                        }),
+          _ProviderNotices(ledger),
+          if (providers.isEmpty)
+            AppEmptyState(
+              icon: Icons.business_outlined,
+              title: context.l10n.providerUiEmpty,
+              message: context.l10n.providerUiEmptyHelp,
+              actions: [
+                AppButton(
+                  key: const ValueKey('provider-add'),
+                  label: context.l10n.providerUiAdd,
+                  icon: Icons.add,
+                  onPressed: canAdd ? add : null,
                 ),
-              ),
+              ],
+            )
+          else
+            AppSection(
+              topSpacing: 8,
+              footer: context.l10n.providerUiHierarchyHelp,
+              children: [
+                for (final provider in providers)
+                  AppRow(
+                    key: ValueKey('provider-${provider.id}'),
+                    leading: ProviderAvatar(name: provider.name),
+                    title: provider.name,
+                    subtitle: _providerSummary(context, ledger, provider),
+                    trailing: provider.needsReview
+                        ? StatusPill(
+                            context.l10n.uiCloudNeedsReviewPill,
+                            tone: AppTone.amber,
+                          )
+                        : null,
+                    chevron: true,
+                    onTap: opening
+                        ? null
+                        : () => open(() async {
+                            await Navigator.push<void>(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => ProviderDetailsPage(
+                                  ledger: ledger,
+                                  providerId: provider.id,
+                                ),
+                              ),
+                            );
+                          }),
+                  ),
+              ],
             ),
-          InfoNote(
-            context.l10n.providerUiUnspecifiedCount(
-              widget.ledger.records.where((s) => s.providerId == null).length,
+          if (providers.isNotEmpty || unspecified > 0)
+            AppSection(
+              children: [
+                AppRow(
+                  leading: const ProviderAvatar(name: null),
+                  title: context.l10n.providerUiUnspecified,
+                  subtitle: context.l10n.providerUiUnspecifiedCount(
+                    unspecified,
+                  ),
+                ),
+              ],
             ),
-          ),
         ],
-      ),
-    ),
+      );
+    },
   );
 }
 
@@ -354,25 +467,25 @@ class _ProviderPickerPageState extends State<ProviderPickerPage> {
   @override
   Widget build(BuildContext context) => ListenableBuilder(
     listenable: widget.ledger,
-    builder: (context, _) => Scaffold(
-      appBar: AppBar(title: Text(context.l10n.providerUiChoose)),
-      body: ListView(
-        padding: const EdgeInsets.all(20),
-        children: [
-          _ProviderNotices(widget.ledger),
-          _ProviderChoices(
-            ledger: widget.ledger,
-            allowUnspecified: widget.allowUnspecified,
-            enabled: !opening && _canEdit(widget.ledger),
-            onSelected: choose,
-            onAdd: add,
-          ),
-        ],
-      ),
+    builder: (context, _) => AppScaffold(
+      title: context.l10n.providerUiChoose,
+      largeTitle: false,
+      children: [
+        _ProviderNotices(widget.ledger),
+        _ProviderChoices(
+          ledger: widget.ledger,
+          allowUnspecified: widget.allowUnspecified,
+          enabled: !opening && _canEdit(widget.ledger),
+          onSelected: choose,
+          onAdd: add,
+        ),
+      ],
     ),
   );
 }
 
+/// Grouped provider choices: confirmed providers, "new provider" and, when
+/// allowed, the explicit "unspecified" (manual only) row.
 class _ProviderChoices extends StatelessWidget {
   const _ProviderChoices({
     required this.ledger,
@@ -380,57 +493,66 @@ class _ProviderChoices extends StatelessWidget {
     required this.enabled,
     required this.onSelected,
     required this.onAdd,
+    this.header,
   });
   final LedgerController ledger;
   final bool allowUnspecified, enabled;
   final ValueChanged<ProviderSelection> onSelected;
   final VoidCallback onAdd;
+  final String? header;
   @override
   Widget build(BuildContext context) => Column(
     crossAxisAlignment: CrossAxisAlignment.stretch,
     children: [
-      InfoNote(context.l10n.providerUiChooseHelp),
-      for (final provider in ledger.cloud.providers)
-        Padding(
-          padding: const EdgeInsets.only(bottom: 12),
-          child: LedgerCard(
-            padding: EdgeInsets.zero,
-            child: SettingRow(
+      AppSection(
+        header: header,
+        topSpacing: header == null ? 8 : null,
+        footer: context.l10n.providerUiChooseHelp,
+        children: [
+          for (final provider in ledger.cloud.providers)
+            AppRow(
               key: ValueKey('choose-provider-${provider.id}'),
-              icon: provider.needsReview
-                  ? Icons.help_outline
-                  : Icons.business_outlined,
+              leading: ProviderAvatar(name: provider.name),
               title: provider.name,
               subtitle: provider.needsReview
                   ? context.l10n.providerUiNeedsReview
                   : _providerSummary(context, ledger, provider),
+              trailing: provider.needsReview
+                  ? StatusPill(
+                      context.l10n.uiCloudNeedsReviewPill,
+                      tone: AppTone.amber,
+                    )
+                  : null,
+              enabled: enabled && !provider.needsReview,
               onTap: enabled && !provider.needsReview
                   ? () => onSelected(ProviderSelection(provider))
                   : null,
             ),
+          AppRow(
+            key: const ValueKey('choose-provider-add'),
+            icon: Icons.add_rounded,
+            iconColor: AppTints.green,
+            title: context.l10n.providerUiAdd,
+            enabled: enabled,
+            onTap: enabled ? onAdd : null,
           ),
-        ),
-      OutlinedButton.icon(
-        key: const ValueKey('choose-provider-add'),
-        onPressed: enabled ? onAdd : null,
-        icon: const Icon(Icons.add),
-        label: Text(context.l10n.providerUiAdd),
+        ],
       ),
-      if (allowUnspecified) ...[
-        const SizedBox(height: 12),
-        LedgerCard(
-          padding: EdgeInsets.zero,
-          child: SettingRow(
-            key: const ValueKey('choose-provider-unspecified'),
-            icon: Icons.edit_note,
-            title: context.l10n.providerUiUnspecified,
-            subtitle: context.l10n.providerUiUnspecifiedHelp,
-            onTap: enabled
-                ? () => onSelected(const ProviderSelection(null))
-                : null,
-          ),
+      if (allowUnspecified)
+        AppSection(
+          children: [
+            AppRow(
+              key: const ValueKey('choose-provider-unspecified'),
+              leading: const ProviderAvatar(name: null),
+              title: context.l10n.providerUiUnspecified,
+              subtitle: context.l10n.providerUiUnspecifiedHelp,
+              enabled: enabled,
+              onTap: enabled
+                  ? () => onSelected(const ProviderSelection(null))
+                  : null,
+            ),
+          ],
         ),
-      ],
     ],
   );
 }
@@ -460,6 +582,25 @@ class _ProviderDetailsPageState extends State<ProviderDetailsPage> {
     }
   }
 
+  Future<void> menu(
+    LedgerController ledger,
+    ProviderRecord provider,
+    bool editable,
+  ) => showAppActionMenu<void>(
+    context,
+    title: provider.name,
+    actions: [
+      AppMenuAction(
+        label: context.l10n.providerUiRename,
+        onPressed: editable
+            ? () => open(() async {
+                await editProvider(context, ledger, provider: provider);
+              })
+            : null,
+      ),
+    ],
+  );
+
   @override
   Widget build(BuildContext context) => ListenableBuilder(
     listenable: widget.ledger,
@@ -469,15 +610,16 @@ class _ProviderDetailsPageState extends State<ProviderDetailsPage> {
           .where((p) => p.id == (resolvedProviderId ?? widget.providerId))
           .firstOrNull;
       if (provider == null) {
-        return Scaffold(
-          appBar: AppBar(title: Text(context.l10n.providerUiDetails)),
-          body: ListView(
-            padding: const EdgeInsets.all(20),
-            children: [
-              _ProviderNotices(ledger),
-              InfoNote(context.l10n.providerUiUnavailable),
-            ],
-          ),
+        return AppScaffold(
+          title: context.l10n.providerUiDetails,
+          largeTitle: false,
+          children: [
+            _ProviderNotices(ledger),
+            CloudNotice(
+              context.l10n.providerUiUnavailable,
+              tone: AppTone.amber,
+            ),
+          ],
         );
       }
       final accounts = ledger.cloud.accounts
@@ -487,218 +629,240 @@ class _ProviderDetailsPageState extends State<ProviderDetailsPage> {
           .where((s) => s.providerId == provider.id)
           .toList();
       final editable = !opening && _canEdit(ledger);
-      return Scaffold(
-        appBar: AppBar(
-          title: Text(context.l10n.providerUiDetails),
-          actions: [
-            IconButton(
-              tooltip: context.l10n.providerUiRename,
-              onPressed: editable
-                  ? () => open(() async {
-                      await editProvider(context, ledger, provider: provider);
-                    })
-                  : null,
-              icon: const Icon(Icons.edit_outlined),
+      final pins = [
+        for (final account in accounts)
+          if (account.pinnedServerId != null)
+            context.l10n.providerUiPinnedHelp(
+              ledger.byId(account.pinnedServerId!)?.name ??
+                  account.pinnedServerId!,
             ),
-          ],
-        ),
-        body: ListView(
-          padding: const EdgeInsets.all(20),
-          children: [
-            _ProviderNotices(ledger),
-            Text(
-              provider.name,
-              style: Theme.of(context).textTheme.headlineSmall,
-            ),
-            InfoNote(_providerSummary(context, ledger, provider)),
-            if (provider.needsReview)
-              CloudNotice(context.l10n.providerUiReviewHelp, error: true),
-            if (!provider.needsReview)
-              FilledButton.icon(
-                key: const ValueKey('provider-add-server'),
-                onPressed: editable
-                    ? () => open(() async {
-                        final id = await Navigator.push<String>(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => AddServerPage(
-                              ledger: ledger,
-                              provider: provider,
-                            ),
-                          ),
-                        );
-                        if (id != null &&
-                            context.mounted &&
-                            ledger.byId(id) != null) {
-                          await Navigator.push<void>(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) =>
-                                  ServerDetail(controller: ledger, id: id),
-                            ),
-                          );
-                        }
-                      })
-                    : null,
-                icon: const Icon(Icons.add),
-                label: Text(context.l10n.serverAdd),
-              ),
-            SectionTitle(context.l10n.providerUiInstances),
-            if (accounts.isEmpty)
-              LedgerCard(child: InfoNote(context.l10n.providerUiNoInstances)),
-            for (final account in accounts)
-              Padding(
-                padding: const EdgeInsets.only(bottom: 12),
-                child: LedgerCard(
-                  padding: EdgeInsets.zero,
+      ];
+      return AppScaffold(
+        title: context.l10n.providerUiDetails,
+        largeTitle: false,
+        actions: [
+          AppNavButton.icon(
+            Icons.more_horiz,
+            key: const ValueKey('provider-menu'),
+            tooltip: context.l10n.serverMoreActions,
+            onPressed: editable ? () => menu(ledger, provider, editable) : null,
+          ),
+        ],
+        children: [
+          _ProviderNotices(ledger),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 12, 20, 4),
+            child: Row(
+              children: [
+                ProviderAvatar(name: provider.name, size: 60),
+                const SizedBox(width: 14),
+                Expanded(
                   child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      SettingRow(
-                        key: ValueKey('provider-instance-${account.id}'),
-                        icon: Icons.cloud_outlined,
-                        title: account.alias,
-                        subtitle:
-                            '${cloudProviderName(account.adapterType)} · '
-                            '${_scopeLabel(context, account)}\n'
-                            '${context.l10n.providerUiLinkedCount(ledger.cloud.bindings.where((b) => b.accountId == account.id).length)}\n'
-                            '${account.endpoint}',
-                        onTap: opening
-                            ? null
-                            : () => open(() async {
-                                await Navigator.push<void>(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (_) => CloudAccountDetailsPage(
-                                      ledger: ledger,
-                                      accountId: account.id,
-                                    ),
-                                  ),
-                                );
-                              }),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            if (account.pinnedServerId != null)
-                              InfoNote(
-                                context.l10n.providerUiPinnedHelp(
-                                  ledger.byId(account.pinnedServerId!)?.name ??
-                                      account.pinnedServerId!,
-                                ),
-                              ),
-                            if (provider.needsReview)
-                              OutlinedButton.icon(
-                                key: ValueKey('confirm-provider-${account.id}'),
-                                onPressed: editable
-                                    ? () => open(() async {
-                                        final saved =
-                                            await confirmAdapterProviderOwnership(
-                                              context,
-                                              ledger,
-                                              account,
-                                            );
-                                        if (saved &&
-                                            mounted &&
-                                            !ledger.cloud.providers.any(
-                                              (p) => p.id == provider.id,
-                                            )) {
-                                          final resolved = ledger.cloud.accounts
-                                              .where((a) => a.id == account.id)
-                                              .firstOrNull;
-                                          if (resolved != null) {
-                                            setState(
-                                              () => resolvedProviderId =
-                                                  resolved.businessProviderId,
-                                            );
-                                          }
-                                        }
-                                      })
-                                    : null,
-                                icon: const Icon(Icons.fact_check_outlined),
-                                label: Text(
-                                  context.l10n.providerUiConfirmOwnership,
-                                ),
-                              )
-                            else
-                              TextButton.icon(
-                                onPressed: editable
-                                    ? () => open(() async {
-                                        await cloudAccountMenu(
-                                          context,
-                                          ledger,
-                                          account,
-                                        );
-                                      })
-                                    : null,
-                                icon: const Icon(Icons.more_horiz),
-                                label: Text(context.l10n.serverMoreActions),
-                              ),
-                          ],
+                      Text(
+                        provider.name,
+                        style: TextStyle(
+                          fontSize: 22,
+                          height: 1.25,
+                          fontWeight: FontWeight.w700,
+                          color: context.palette.text,
                         ),
                       ),
+                      const SizedBox(height: 3),
+                      Text(
+                        _providerSummary(context, ledger, provider),
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: context.palette.text2,
+                        ),
+                      ),
+                      if (provider.needsReview)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 6),
+                          child: StatusPill(
+                            context.l10n.uiCloudNeedsReviewPill,
+                            tone: AppTone.amber,
+                          ),
+                        ),
                     ],
                   ),
                 ),
-              ),
-            if (!provider.needsReview)
-              OutlinedButton.icon(
-                key: const ValueKey('provider-add-instance'),
-                onPressed: editable
-                    ? () => open(() async {
-                        await Navigator.push<bool>(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => CloudTemplatesPage(
-                              ledger: ledger,
-                              businessProvider: provider,
+              ],
+            ),
+          ),
+          if (provider.needsReview)
+            CloudNotice(context.l10n.providerUiReviewHelp, tone: AppTone.amber),
+          AppSection(
+            header: context.l10n.providerUiInstances,
+            footerWidget: pins.isEmpty
+                ? null
+                : Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      for (final pin in pins)
+                        Text(pin, style: context.footnoteStyle),
+                    ],
+                  ),
+            children: [
+              if (accounts.isEmpty)
+                AppRow(
+                  title: context.l10n.providerUiNoInstances,
+                  enabled: false,
+                ),
+              for (final account in accounts) ...[
+                _instanceRow(
+                  context,
+                  key: ValueKey('provider-instance-${account.id}'),
+                  account: account,
+                  lines: [
+                    '${cloudProviderName(account.adapterType)} · '
+                        '${context.l10n.providerUiLinkedCount(ledger.cloud.bindings.where((b) => b.accountId == account.id).length)}',
+                    account.endpoint,
+                  ],
+                  onTap: opening
+                      ? null
+                      : () => open(() async {
+                          await Navigator.push<void>(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => CloudAccountDetailsPage(
+                                ledger: ledger,
+                                accountId: account.id,
+                              ),
                             ),
-                          ),
-                        );
-                      })
-                    : null,
-                icon: const Icon(Icons.add_link),
-                label: Text(context.l10n.providerUiAddInstance),
-              ),
-            SectionTitle(context.l10n.providerUiDevices),
-            if (servers.isEmpty) InfoNote(context.l10n.providerUiNoDevices),
-            for (final server in servers)
-              Padding(
-                padding: const EdgeInsets.only(bottom: 10),
-                child: LedgerCard(
-                  padding: EdgeInsets.zero,
-                  child: SettingRow(
-                    key: ValueKey('provider-device-${server.id}'),
-                    icon: Icons.dns_outlined,
-                    title: server.name,
-                    subtitle: [
-                      if (server.archived) context.l10n.archivedRecords,
-                      server.host,
-                      ledger.cloud.bindingFor(server.id) == null
-                          ? context.l10n.providerUiManualDevice
-                          : context.l10n.providerUiLinkedDevice,
-                    ].where((s) => s.isNotEmpty).join(' · '),
-                    onTap: opening
-                        ? null
-                        : () => open(() async {
+                          );
+                        }),
+                  onLongPress: provider.needsReview || !editable
+                      ? null
+                      : () => open(() async {
+                          await cloudAccountMenu(context, ledger, account);
+                        }),
+                ),
+                if (provider.needsReview)
+                  AppRow(
+                    key: ValueKey('confirm-provider-${account.id}'),
+                    icon: Icons.fact_check_outlined,
+                    iconColor: AppTints.orange,
+                    title: context.l10n.providerUiConfirmOwnership,
+                    enabled: editable,
+                    chevron: true,
+                    onTap: editable
+                        ? () => open(() async {
+                            final saved = await confirmAdapterProviderOwnership(
+                              context,
+                              ledger,
+                              account,
+                            );
+                            if (saved &&
+                                mounted &&
+                                !ledger.cloud.providers.any(
+                                  (p) => p.id == provider.id,
+                                )) {
+                              final resolved = ledger.cloud.accounts
+                                  .where((a) => a.id == account.id)
+                                  .firstOrNull;
+                              if (resolved != null) {
+                                setState(
+                                  () => resolvedProviderId =
+                                      resolved.businessProviderId,
+                                );
+                              }
+                            }
+                          })
+                        : null,
+                  ),
+              ],
+              if (!provider.needsReview)
+                AppRow(
+                  key: const ValueKey('provider-add-instance'),
+                  center: true,
+                  title: context.l10n.providerUiAddInstance,
+                  enabled: editable,
+                  onTap: editable
+                      ? () => open(() async {
+                          await Navigator.push<bool>(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => CloudTemplatesPage(
+                                ledger: ledger,
+                                businessProvider: provider,
+                              ),
+                            ),
+                          );
+                        })
+                      : null,
+                ),
+            ],
+          ),
+          AppSection(
+            header: context.l10n.providerUiDevices,
+            footer: context.l10n.cloudReadOnlyBoundary,
+            children: [
+              if (servers.isEmpty)
+                AppRow(title: context.l10n.providerUiNoDevices, enabled: false),
+              for (final server in servers)
+                AppRow(
+                  key: ValueKey('provider-device-${server.id}'),
+                  icon: Icons.dns_outlined,
+                  iconColor: AppTints.slate,
+                  title: server.name,
+                  subtitle: [
+                    if (server.archived) context.l10n.archivedRecords,
+                    server.host,
+                    ledger.cloud.bindingFor(server.id) == null
+                        ? context.l10n.providerUiManualDevice
+                        : context.l10n.providerUiLinkedDevice,
+                  ].where((s) => s.isNotEmpty).join(' · '),
+                  chevron: true,
+                  onTap: opening
+                      ? null
+                      : () => open(() async {
+                          await Navigator.push<void>(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => ServerDetail(
+                                controller: ledger,
+                                id: server.id,
+                              ),
+                            ),
+                          );
+                        }),
+                ),
+              if (!provider.needsReview)
+                AppRow(
+                  key: const ValueKey('provider-add-server'),
+                  center: true,
+                  title: context.l10n.serverAdd,
+                  enabled: editable,
+                  onTap: editable
+                      ? () => open(() async {
+                          final id = await Navigator.push<String>(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => AddServerPage(
+                                ledger: ledger,
+                                provider: provider,
+                              ),
+                            ),
+                          );
+                          if (id != null &&
+                              context.mounted &&
+                              ledger.byId(id) != null) {
                             await Navigator.push<void>(
                               context,
                               MaterialPageRoute(
-                                builder: (_) => ServerDetail(
-                                  controller: ledger,
-                                  id: server.id,
-                                ),
+                                builder: (_) =>
+                                    ServerDetail(controller: ledger, id: id),
                               ),
                             );
-                          }),
-                  ),
+                          }
+                        })
+                      : null,
                 ),
-              ),
-            InfoNote(context.l10n.cloudReadOnlyBoundary),
-          ],
-        ),
+            ],
+          ),
+        ],
       );
     },
   );
@@ -726,7 +890,7 @@ Future<bool> confirmAdapterProviderOwnership(
       .where((b) => b.accountId == current.id)
       .map((b) => ledger.byId(b.serverId)?.name ?? b.serverId)
       .toList();
-  final confirmed = await confirmAction(
+  final confirmed = await showAppConfirm(
     context,
     title: LocalizedText((l10n) => l10n.providerUiConfirmOwnership),
     message: LocalizedText(
@@ -793,7 +957,7 @@ Future<bool> changeServerProvider(
       .where((a) => a.id == binding?.accountId)
       .firstOrNull;
   final oldName = serverProviderLabel(context, ledger, current);
-  final confirmed = await confirmAction(
+  final confirmed = await showAppConfirm(
     context,
     title: LocalizedText((l10n) => l10n.providerUiChange),
     message: LocalizedText(
@@ -829,6 +993,8 @@ Future<bool> changeServerProvider(
   }
 }
 
+/// Unified add flow, laid out like the demo's add sheet: a provider section
+/// (explicit choice first, then a single picker row) and two method cards.
 class AddServerPage extends StatefulWidget {
   const AddServerPage({super.key, required this.ledger, this.provider});
   final LedgerController ledger;
@@ -920,86 +1086,93 @@ class _AddServerPageState extends State<AddServerPage> {
           selection != null &&
           (selected == null || (provider != null && !provider.needsReview));
       final enabled = !opening && !finishing && _canEdit(widget.ledger);
+      final name = provider?.name ?? selected?.name;
       return PopScope<String>(
         canPop: finishing || selection == null || widget.provider != null,
         onPopInvokedWithResult: (didPop, _) {
           if (!didPop && !opening) setState(() => selection = null);
         },
-        child: Scaffold(
-          appBar: AppBar(title: Text(context.l10n.serverAdd)),
-          body: ListView(
-            padding: const EdgeInsets.all(20),
-            children: [
-              _ProviderNotices(widget.ledger),
-              if (selection == null) ...[
-                Text(
-                  context.l10n.providerUiChoose,
-                  style: Theme.of(context).textTheme.headlineSmall,
-                ),
-                _ProviderChoices(
-                  ledger: widget.ledger,
-                  allowUnspecified: true,
-                  enabled: enabled,
-                  onAdd: addProvider,
-                  onSelected: (value) => setState(() => selection = value),
-                ),
-              ] else ...[
-                LedgerCard(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      Text(
-                        context.l10n.providerUiSelected,
-                        style: Theme.of(context).textTheme.bodySmall,
-                      ),
-                      Text(
-                        provider?.name ??
-                            selected?.name ??
-                            context.l10n.providerUiUnspecified,
-                        style: Theme.of(context).textTheme.titleLarge,
-                      ),
-                      if (widget.provider == null)
-                        TextButton(
-                          key: const ValueKey('add-change-provider'),
-                          onPressed: enabled
-                              ? () => setState(() => selection = null)
-                              : null,
-                          child: Text(context.l10n.providerUiChooseAnother),
-                        ),
-                    ],
+        child: AppScaffold(
+          title: context.l10n.serverAdd,
+          largeTitle: false,
+          children: [
+            _ProviderNotices(widget.ledger),
+            if (selection == null)
+              _ProviderChoices(
+                ledger: widget.ledger,
+                allowUnspecified: true,
+                enabled: enabled,
+                header: context.l10n.uiCloudOwnerSection,
+                onAdd: addProvider,
+                onSelected: (value) => setState(() => selection = value),
+              )
+            else ...[
+              AppSection(
+                header: context.l10n.uiCloudOwnerSection,
+                topSpacing: 8,
+                children: [
+                  AppRow(
+                    key: const ValueKey('add-change-provider'),
+                    leading: ProviderAvatar(name: name),
+                    title: name ?? context.l10n.providerUiUnspecified,
+                    subtitle: name == null
+                        ? context.l10n.providerUiUnspecifiedHelp
+                        : context.l10n.providerUiSelected,
+                    chevron: widget.provider == null,
+                    onTap: widget.provider == null && enabled
+                        ? () => setState(() => selection = null)
+                        : null,
                   ),
+                ],
+              ),
+              if (!available)
+                CloudNotice(
+                  context.l10n.providerUiUnavailable,
+                  tone: AppTone.amber,
                 ),
-                SectionTitle(context.l10n.providerUiChooseMethod),
-                if (!available)
-                  CloudNotice(context.l10n.providerUiUnavailable, error: true),
-                LedgerCard(
-                  padding: EdgeInsets.zero,
-                  child: SettingRow(
+              AppSection(
+                header: context.l10n.uiCloudMethodSection,
+                children: [
+                  AppRow(
                     key: const ValueKey('add-manual'),
-                    icon: Icons.edit_note,
+                    leading: const AppIconSquare(
+                      icon: Icons.edit_outlined,
+                      color: AppTints.blue,
+                      size: 38,
+                    ),
                     title: context.l10n.serverManualAdd,
                     subtitle: context.l10n.providerUiManualHelp,
+                    chevron: true,
+                    enabled: enabled && available,
                     onTap: enabled && available ? manual : null,
                   ),
-                ),
-                const SizedBox(height: 12),
-                LedgerCard(
-                  padding: EdgeInsets.zero,
-                  child: SettingRow(
+                ],
+              ),
+              AppSection(
+                topSpacing: 12,
+                footer: context.l10n.uiCloudAddFooter,
+                children: [
+                  AppRow(
                     key: const ValueKey('add-automatic'),
-                    icon: Icons.cloud_download_outlined,
+                    leading: const AppIconSquare(
+                      icon: Icons.cloud_download_outlined,
+                      color: AppTints.purple,
+                      size: 38,
+                    ),
                     title: context.l10n.providerUiAutomatic,
                     subtitle: provider == null
                         ? context.l10n.providerUiAutoNeedsProvider
                         : context.l10n.providerUiAutomaticHelp,
+                    chevron: provider != null,
+                    enabled: enabled && available && provider != null,
                     onTap: enabled && available && provider != null
                         ? () => automatic(provider)
                         : null,
                   ),
-                ),
-              ],
+                ],
+              ),
             ],
-          ),
+          ],
         ),
       );
     },
@@ -1074,69 +1247,66 @@ class _ProviderAdaptersPageState extends State<_ProviderAdaptersPage> {
       final accounts = widget.ledger.cloud.accounts
           .where((a) => a.businessProviderId == widget.provider.id)
           .toList();
-      return Scaffold(
-        appBar: AppBar(title: Text(context.l10n.providerUiChooseInstance)),
-        body: ListView(
-          padding: const EdgeInsets.all(20),
-          children: [
-            _ProviderNotices(widget.ledger),
-            Text(
-              current?.name ?? widget.provider.name,
-              style: Theme.of(context).textTheme.headlineSmall,
-            ),
-            InfoNote(context.l10n.providerUiInstanceChoiceHelp),
-            for (final account in accounts)
-              Padding(
-                padding: const EdgeInsets.only(bottom: 12),
-                child: LedgerCard(
-                  padding: EdgeInsets.zero,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      SettingRow(
-                        key: ValueKey('choose-instance-${account.id}'),
-                        icon: Icons.cloud_outlined,
-                        title: account.alias,
-                        subtitle:
-                            '${cloudProviderName(account.adapterType)} · ${_scopeLabel(context, account)}\n'
-                            '${context.l10n.providerUiLinkedCount(widget.ledger.cloud.bindings.where((b) => b.accountId == account.id).length)}\n'
-                            '${account.authScope == AdapterAuthScope.singleDevice && account.pinnedServerId != null ? context.l10n.providerUiPinnedHelp(widget.ledger.byId(account.pinnedServerId!)?.name ?? account.pinnedServerId!) : account.endpoint}',
-                        // A singleton pin survives unlinking. Zero current bindings does
-                        // not mean these credentials can authorize a new local device.
-                        onTap:
-                            enabled &&
-                                account.authScope != AdapterAuthScope.unknown &&
-                                !(account.authScope ==
-                                        AdapterAuthScope.singleDevice &&
-                                    account.pinnedServerId != null)
-                            ? () => open(account)
-                            : null,
-                      ),
-                      if (account.pinnedServerId != null &&
-                          widget.ledger.byId(account.pinnedServerId!) != null)
-                        Padding(
-                          padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-                          child: TextButton.icon(
-                            key: ValueKey('pinned-device-${account.id}'),
-                            onPressed: opening
-                                ? null
-                                : () => openPinned(account),
-                            icon: const Icon(Icons.dns_outlined),
-                            label: Text(context.l10n.serverDetails),
-                          ),
-                        ),
+      return AppScaffold(
+        title: context.l10n.providerUiChooseInstance,
+        largeTitle: false,
+        children: [
+          _ProviderNotices(widget.ledger),
+          AppSection(
+            header: current?.name ?? widget.provider.name,
+            footer: context.l10n.providerUiInstanceChoiceHelp,
+            children: [
+              for (final account in accounts) ...[
+                () {
+                  // A singleton pin survives unlinking. Zero current bindings
+                  // does not mean these credentials can authorize a new local
+                  // device.
+                  final selectable =
+                      enabled &&
+                      account.authScope != AdapterAuthScope.unknown &&
+                      !(account.authScope == AdapterAuthScope.singleDevice &&
+                          account.pinnedServerId != null);
+                  return _instanceRow(
+                    context,
+                    key: ValueKey('choose-instance-${account.id}'),
+                    account: account,
+                    lines: [
+                      '${cloudProviderName(account.adapterType)} · ${context.l10n.providerUiLinkedCount(widget.ledger.cloud.bindings.where((b) => b.accountId == account.id).length)}',
+                      account.authScope == AdapterAuthScope.singleDevice &&
+                              account.pinnedServerId != null
+                          ? context.l10n.providerUiPinnedHelp(
+                              widget.ledger
+                                      .byId(account.pinnedServerId!)
+                                      ?.name ??
+                                  account.pinnedServerId!,
+                            )
+                          : account.endpoint,
                     ],
+                    chevron: selectable,
+                    onTap: selectable ? () => open(account) : null,
+                  );
+                }(),
+                if (account.pinnedServerId != null &&
+                    widget.ledger.byId(account.pinnedServerId!) != null)
+                  AppRow(
+                    key: ValueKey('pinned-device-${account.id}'),
+                    icon: Icons.dns_outlined,
+                    iconColor: AppTints.slate,
+                    title: context.l10n.serverDetails,
+                    chevron: true,
+                    onTap: opening ? null : () => openPinned(account),
                   ),
-                ),
+              ],
+              AppRow(
+                key: const ValueKey('choose-instance-add'),
+                center: true,
+                title: context.l10n.providerUiAddInstance,
+                enabled: enabled,
+                onTap: enabled ? () => open(null) : null,
               ),
-            OutlinedButton.icon(
-              key: const ValueKey('choose-instance-add'),
-              onPressed: enabled ? () => open(null) : null,
-              icon: const Icon(Icons.add_link),
-              label: Text(context.l10n.providerUiAddInstance),
-            ),
-          ],
-        ),
+            ],
+          ),
+        ],
       );
     },
   );

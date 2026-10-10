@@ -488,7 +488,15 @@ void main() {
             final field = find.byKey(const ValueKey('cloud-token'));
             await _reveal(tester, field);
             expect(
-              tester.widget<TextFormField>(field).controller!.text,
+              tester
+                  .widget<EditableText>(
+                    find.descendant(
+                      of: field,
+                      matching: find.byType(EditableText),
+                    ),
+                  )
+                  .controller
+                  .text,
               isEmpty,
             );
             await tester.enterText(field, 'UNSAVED_SYNTHETIC_TOKEN');
@@ -529,7 +537,15 @@ void main() {
             final field = find.byKey(const ValueKey('pay-account'));
             await _reveal(tester, field);
             expect(
-              tester.widget<FinanceFieldRow>(field).controller.text,
+              tester
+                  .widget<EditableText>(
+                    find.descendant(
+                      of: field,
+                      matching: find.byType(EditableText),
+                    ),
+                  )
+                  .controller
+                  .text,
               isEmpty,
             );
             await tester.enterText(field, 'Unsaved synthetic bill');

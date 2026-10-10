@@ -4,6 +4,8 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
+import 'package:vps_tell_you/cloud/cloud_widgets.dart';
+import 'package:vps_tell_you/core/ui/ui.dart';
 import 'package:vps_tell_you/cloud/cloud_controller.dart';
 import 'package:vps_tell_you/cloud/cloud_models.dart';
 import 'package:vps_tell_you/cloud/cloud_pages.dart';
@@ -350,20 +352,19 @@ void main() {
         );
         final select = find.byKey(const ValueKey('cloud-select-7/2/1'));
         await reveal(tester, select);
-        expect(tester.widget<CheckboxListTile>(select).onChanged, isNull);
-        final colors = Theme.of(tester.element(select)).colorScheme;
-        expect(
-          (tester.widget<CheckboxListTile>(select).title! as Text).style!.color,
-          colors.onSurface,
+        expect(tester.widget<CloudCheckRow>(select).onChanged, isNull);
+        // A row that cannot be selected yet stays fully legible.
+        final palette = tester.element(select).palette;
+        final title = find.descendant(
+          of: select,
+          matching: find.text('Device 1'),
         );
+        expect(tester.widget<Text>(title.first).style!.color, palette.text);
         final address = find.descendant(
           of: select,
           matching: find.text('192.0.2.1'),
         );
-        expect(
-          DefaultTextStyle.of(tester.element(address)).style.color,
-          colors.onSurfaceVariant,
-        );
+        expect(tester.widget<Text>(address).style!.color, palette.text2);
         await tap(tester, 'cloud-complete-7/2/1');
         await tap(tester, 'cloud-resource-done');
         expect(cloud.saveCalls, 0);
@@ -373,7 +374,7 @@ void main() {
         await fill(tester, 'resource-ip', '192.0.2.200');
         await tap(tester, 'cloud-resource-done');
         await reveal(tester, select);
-        expect(tester.widget<CheckboxListTile>(select).value, isTrue);
+        expect(tester.widget<CloudCheckRow>(select).value, isTrue);
         await tap(tester, 'cloud-complete-7/2/30');
         await tester.binding.handlePopRoute();
         await tester.pumpAndSettle();
@@ -506,9 +507,7 @@ void main() {
       await reveal(tester, find.byKey(const ValueKey('cloud-import-retry')));
       expect(
         tester
-            .widget<FilledButton>(
-              find.byKey(const ValueKey('cloud-import-retry')),
-            )
+            .widget<AppButton>(find.byKey(const ValueKey('cloud-import-retry')))
             .onPressed,
         isNull,
       );
@@ -643,7 +642,7 @@ void main() {
       await tap(tester, 'cloud-complete-7/2/1');
       final done = find.byKey(const ValueKey('cloud-resource-done'));
       await reveal(tester, done);
-      final finish = tester.widget<FilledButton>(done).onPressed!;
+      final finish = tester.widget<AppButton>(done).onPressed!;
       finish();
       finish();
       await tester.pumpAndSettle();
@@ -652,7 +651,7 @@ void main() {
       expect(tester.takeException(), isNull);
       await tap(tester, 'cloud-complete-7/2/1');
       await reveal(tester, done);
-      final staleFinish = tester.widget<FilledButton>(done).onPressed!;
+      final staleFinish = tester.widget<AppButton>(done).onPressed!;
       Navigator.of(tester.element(done)).pop();
       staleFinish();
       await tester.pumpAndSettle();
@@ -718,9 +717,7 @@ void main() {
     await reveal(tester, find.byKey(const ValueKey('cloud-import-retry')));
     expect(
       tester
-          .widget<FilledButton>(
-            find.byKey(const ValueKey('cloud-import-retry')),
-          )
+          .widget<AppButton>(find.byKey(const ValueKey('cloud-import-retry')))
           .onPressed,
       isNull,
     );
@@ -765,8 +762,8 @@ void main() {
       );
       final checkbox = find.byKey(const ValueKey('cloud-select-7/2/1'));
       await reveal(tester, checkbox);
-      expect(tester.widget<CheckboxListTile>(checkbox).value, isTrue);
-      expect(tester.widget<CheckboxListTile>(checkbox).onChanged, isNull);
+      expect(tester.widget<CloudCheckRow>(checkbox).value, isTrue);
+      expect(tester.widget<CloudCheckRow>(checkbox).onChanged, isNull);
       final existing = AppLocalizationsEn().cloudRecordWithState(
         'Device 1',
         AppLocalizationsEn().cloudArchivedSuffix,
@@ -796,7 +793,7 @@ void main() {
       );
       final done = find.byKey(const ValueKey('cloud-import-done'));
       await reveal(tester, done);
-      final finish = tester.widget<OutlinedButton>(done).onPressed!;
+      final finish = tester.widget<AppButton>(done).onPressed!;
       if (backFirst) {
         await tester.binding.handlePopRoute();
       } else {
@@ -829,7 +826,7 @@ void main() {
     await tester.pump();
     final back = find.byKey(const ValueKey('cloud-import-return-verify'));
     await reveal(tester, back);
-    final finish = tester.widget<OutlinedButton>(back).onPressed!;
+    final finish = tester.widget<AppButton>(back).onPressed!;
     finish();
     finish();
     await tester.pumpAndSettle();
@@ -857,7 +854,7 @@ void main() {
     );
     final done = find.byKey(const ValueKey('cloud-read-done'));
     await reveal(tester, done);
-    final finish = tester.widget<FilledButton>(done).onPressed!;
+    final finish = tester.widget<AppButton>(done).onPressed!;
     finish();
     finish();
     await tester.pumpAndSettle();
@@ -905,8 +902,8 @@ void main() {
         );
         final checkbox = find.byKey(const ValueKey('cloud-select-7/2/1'));
         await reveal(tester, checkbox);
-        expect(tester.widget<CheckboxListTile>(checkbox).value, isFalse);
-        expect(tester.widget<CheckboxListTile>(checkbox).onChanged, isNull);
+        expect(tester.widget<CloudCheckRow>(checkbox).value, isFalse);
+        expect(tester.widget<CloudCheckRow>(checkbox).onChanged, isNull);
         expect(
           find.text(AppLocalizationsEn().cloudImportExisting),
           findsNothing,
@@ -919,8 +916,8 @@ void main() {
           find.text(AppLocalizationsEn().cloudAccountFailureIdentity),
           findsOneWidget,
         );
-        await reveal(tester, find.widgetWithText(TextButton, 'Device 1'));
-        expect(find.widgetWithText(TextButton, 'Device 1'), findsOneWidget);
+        await reveal(tester, find.widgetWithText(AppRow, 'Device 1'));
+        expect(find.widgetWithText(AppRow, 'Device 1'), findsOneWidget);
         expect(
           find.byKey(const ValueKey('cloud-complete-7/2/1')),
           findsNothing,
@@ -928,7 +925,7 @@ void main() {
         await reveal(tester, find.byKey(const ValueKey('cloud-import-submit')));
         expect(
           tester
-              .widget<FilledButton>(
+              .widget<AppButton>(
                 find.byKey(const ValueKey('cloud-import-submit')),
               )
               .onPressed,
@@ -967,8 +964,8 @@ void main() {
       );
       final checkbox = find.byKey(const ValueKey('cloud-select-7/2/1'));
       await reveal(tester, checkbox);
-      expect(tester.widget<CheckboxListTile>(checkbox).value, isFalse);
-      expect(tester.widget<CheckboxListTile>(checkbox).onChanged, isNull);
+      expect(tester.widget<CloudCheckRow>(checkbox).value, isFalse);
+      expect(tester.widget<CloudCheckRow>(checkbox).onChanged, isNull);
       expect(find.text(AppLocalizationsEn().cloudImportExisting), findsNothing);
       await reveal(
         tester,
@@ -981,7 +978,7 @@ void main() {
       await reveal(tester, find.byKey(const ValueKey('cloud-import-submit')));
       expect(
         tester
-            .widget<FilledButton>(
+            .widget<AppButton>(
               find.byKey(const ValueKey('cloud-import-submit')),
             )
             .onPressed,
@@ -1025,7 +1022,7 @@ void main() {
     );
     final checkbox = find.byKey(const ValueKey('cloud-select-single'));
     await reveal(tester, checkbox);
-    expect(tester.widget<CheckboxListTile>(checkbox).onChanged, isNull);
+    expect(tester.widget<CloudCheckRow>(checkbox).onChanged, isNull);
     await reveal(
       tester,
       find.text(AppLocalizationsEn().providerUiPinnedHelp(original.name)),

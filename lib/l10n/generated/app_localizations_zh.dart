@@ -4864,6 +4864,21 @@ class AppLocalizationsZh extends AppLocalizations {
   String get providerUiTitle => '提供商管理';
 
   @override
+  String get uiCloudProvidersTitle => '提供商';
+
+  @override
+  String get uiCloudNeedsReviewPill => '归属待确认';
+
+  @override
+  String get uiCloudOwnerSection => '归属提供商';
+
+  @override
+  String get uiCloudMethodSection => '添加方式';
+
+  @override
+  String get uiCloudAddFooter => '面板密钥只存入设备安全存储，读取不会修改远端。';
+
+  @override
   String get providerUiDetails => '提供商详情';
 
   @override

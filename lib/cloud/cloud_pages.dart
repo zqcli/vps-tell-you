@@ -1,10 +1,19 @@
 import 'dart:async';
 
+import 'package:flutter/cupertino.dart'
+    show
+        CupertinoActionSheet,
+        CupertinoActionSheetAction,
+        CupertinoActivityIndicator,
+        CupertinoAlertDialog,
+        CupertinoDialogAction,
+        showCupertinoDialog,
+        showCupertinoModalPopup;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
-import '../core/app_theme.dart';
 import '../core/form_feedback.dart';
+import '../core/ui/ui.dart';
 import '../l10n/locale_preference.dart';
 import '../l10n/localized_message.dart';
 import '../servers/ledger_controller.dart';
@@ -19,13 +28,7 @@ Future<void> _reloadLedger(LedgerController ledger) =>
     ledger.refreshAfterCloudCommit();
 
 void _cloudMessage(BuildContext context, Object message) =>
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Builder(
-          builder: (context) => Text(localizedText(message, context.l10n)),
-        ),
-      ),
-    );
+    showAppToast(context, localizedText(message, context.l10n));
 
 /// Compatibility route; all entry points now use business providers first.
 class CloudAccountsPage extends StatelessWidget {
@@ -67,38 +70,33 @@ class _CloudTemplatesPageState extends State<CloudTemplatesPage> {
   }
 
   @override
-  Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(title: Text(context.l10n.cloudAddAccount)),
-    body: ListView(
-      padding: const EdgeInsets.all(20),
-      children: [
-        const CloudSteps(1),
-        Text(
-          context.l10n.cloudChooseTemplate,
-          style: TextStyle(fontSize: 25, fontWeight: FontWeight.w700),
-        ),
-        InfoNote(context.l10n.cloudTemplateInfo),
-        for (final provider in CloudProvider.values)
-          Padding(
-            padding: const EdgeInsets.only(bottom: 14),
-            child: LedgerCard(
-              padding: EdgeInsets.zero,
-              child: SettingRow(
-                icon: Icons.cloud_outlined,
-                title: cloudProviderName(provider),
-                subtitle: switch (provider) {
-                  CloudProvider.solusVm1 => context.l10n.cloudV1TemplateInfo,
-                  CloudProvider.solusVm2 => context.l10n.cloudV2TemplateInfo,
-                  CloudProvider.rackNerd =>
-                    context.l10n.cloudRackNerdTemplateInfo,
-                },
-                onTap: () => choose(context, provider),
-              ),
+  Widget build(BuildContext context) => AppScaffold(
+    title: context.l10n.cloudAddAccount,
+    largeTitle: false,
+    children: [
+      const CloudSteps(1),
+      AppSection(
+        header: context.l10n.cloudChooseTemplate,
+        footer: context.l10n.cloudTemplateInfo,
+        children: [
+          for (final provider in CloudProvider.values)
+            AppRow(
+              icon: Icons.cloud_outlined,
+              iconColor: AppTints.purple,
+              title: cloudProviderName(provider),
+              subtitle: switch (provider) {
+                CloudProvider.solusVm1 => context.l10n.cloudV1TemplateInfo,
+                CloudProvider.solusVm2 => context.l10n.cloudV2TemplateInfo,
+                CloudProvider.rackNerd =>
+                  context.l10n.cloudRackNerdTemplateInfo,
+              },
+              chevron: true,
+              onTap: () => choose(context, provider),
             ),
-          ),
-        InfoNote(context.l10n.cloudSupportedPanels),
-      ],
-    ),
+        ],
+      ),
+      CloudFootnote(context.l10n.cloudSupportedPanels),
+    ],
   );
 }
 
@@ -290,22 +288,15 @@ class _CloudAuthorizationPageState extends State<CloudAuthorizationPage>
     TextEditingController controller,
     String label,
     String fieldKey,
-  ) => Padding(
-    padding: const EdgeInsets.only(top: 16),
-    child: TextFormField(
-      key: ValueKey(fieldKey),
-      controller: controller,
-      enabled: !reading && !kIsWeb,
-      obscureText: true,
-      autocorrect: false,
-      enableSuggestions: false,
-      enableIMEPersonalizedLearning: false,
-      keyboardType: TextInputType.visiblePassword,
-      decoration: InputDecoration(labelText: label, errorMaxLines: 5),
-      validator: (value) => value == null || value.isEmpty
-          ? context.l10n.cloudRequiredField(label)
-          : null,
-    ),
+  ) => cloudFormField(
+    key: ValueKey(fieldKey),
+    label: label,
+    controller: controller,
+    secret: true,
+    required: true,
+    enabled: !reading && !kIsWeb,
+    validator: (text) =>
+        text.isEmpty ? context.l10n.cloudRequiredField(label) : null,
   );
 
   @override
@@ -313,125 +304,136 @@ class _CloudAuthorizationPageState extends State<CloudAuthorizationPage>
     onPopInvokedWithResult: (didPop, _) {
       if (didPop) cancel(update: false);
     },
-    child: Scaffold(
-      appBar: AppBar(
-        title: Text(
-          widget.existing == null
-              ? context.l10n.cloudConnectProvider(
-                  cloudProviderName(widget.provider),
-                )
-              : context.l10n.cloudReauthorize,
-        ),
-      ),
-      body: Form(
-        key: form,
-        child: ListView(
-          padding: const EdgeInsets.all(20),
-          children: [
-            const CloudSteps(2),
-            LedgerCard(
-              child: Text(
-                '${cloudProviderName(widget.provider)} · ${singleInstance ? context.l10n.cloudSingleVpsApi : context.l10n.cloudUserAccountApi}',
-                style: const TextStyle(fontWeight: FontWeight.w700),
+    child: AppScaffold(
+      title: widget.existing == null
+          ? context.l10n.cloudConnectProvider(
+              cloudProviderName(widget.provider),
+            )
+          : context.l10n.cloudReauthorize,
+      largeTitle: false,
+      children: [
+        Form(
+          key: form,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const CloudSteps(2),
+              AppSection(
+                children: [
+                  AppRow(
+                    icon: Icons.cloud_outlined,
+                    iconColor: AppTints.purple,
+                    title:
+                        '${cloudProviderName(widget.provider)} · ${singleInstance ? context.l10n.cloudSingleVpsApi : context.l10n.cloudUserAccountApi}',
+                  ),
+                ],
               ),
-            ),
-            if (kIsWeb)
-              CloudNotice(context.l10n.cloudWebPreviewNotice, error: true),
-            const SizedBox(height: 20),
-            TextFormField(
-              key: const ValueKey('cloud-alias'),
-              controller: alias,
-              enabled: !reading,
-              maxLength: 80,
-              decoration: InputDecoration(
-                labelText: context.l10n.cloudAliasLabel,
-                errorMaxLines: 5,
+              if (kIsWeb)
+                CloudNotice(context.l10n.cloudWebPreviewNotice, error: true),
+              AppSection(
+                footerWidget: CloudFootnotes([
+                  rackNerd
+                      ? context.l10n.cloudRackNerdEndpointInfo
+                      : context.l10n.cloudEndpointInfo,
+                  if (widget.existing != null)
+                    context.l10n.cloudEndpointIdentityInfo,
+                ]),
+                children: [
+                  cloudFormField(
+                    key: const ValueKey('cloud-alias'),
+                    label: context.l10n.cloudAliasLabel,
+                    controller: alias,
+                    required: true,
+                    enabled: !reading,
+                    maxLength: 80,
+                    validator: (text) => text.trim().isEmpty
+                        ? context.l10n.cloudAliasRequired
+                        : null,
+                  ),
+                  cloudFormField(
+                    key: const ValueKey('cloud-endpoint'),
+                    label: context.l10n.cloudEndpointLabel,
+                    controller: endpoint,
+                    required: true,
+                    enabled: !reading,
+                    readOnly: widget.existing != null,
+                    keyboardType: TextInputType.url,
+                    hint: widget.provider == CloudProvider.solusVm1
+                        ? 'https://panel.example.com:5656'
+                        : 'https://panel.example.com',
+                    onChanged: (_) => setState(() => error = null),
+                    validator: (_) => parsedEndpoint == null
+                        ? rackNerd
+                              ? context.l10n.cloudRackNerdEndpointValidation
+                              : context.l10n.cloudEndpointValidation
+                        : null,
+                  ),
+                ],
               ),
-              validator: (value) => value == null || value.trim().isEmpty
-                  ? context.l10n.cloudAliasRequired
-                  : null,
-            ),
-            const SizedBox(height: 12),
-            TextFormField(
-              key: const ValueKey('cloud-endpoint'),
-              controller: endpoint,
-              enabled: !reading,
-              readOnly: widget.existing != null,
-              autocorrect: false,
-              enableSuggestions: false,
-              keyboardType: TextInputType.url,
-              decoration: InputDecoration(
-                labelText: context.l10n.cloudEndpointLabel,
-                errorMaxLines: 6,
-                hintText: widget.provider == CloudProvider.solusVm1
-                    ? 'https://panel.example.com:5656'
-                    : 'https://panel.example.com',
-              ),
-              onChanged: (_) => setState(() => error = null),
-              validator: (_) => parsedEndpoint == null
-                  ? rackNerd
-                        ? context.l10n.cloudRackNerdEndpointValidation
-                        : context.l10n.cloudEndpointValidation
-                  : null,
-            ),
-            InfoNote(
-              rackNerd
-                  ? context.l10n.cloudRackNerdEndpointInfo
-                  : context.l10n.cloudEndpointInfo,
-            ),
-            if (parsedEndpoint case final target?)
-              CloudNotice(
-                context.l10n.cloudVerifyTarget(
-                  target.normalizedConsolePath
-                      ? context.l10n.cloudConsolePathRemoved
-                      : target.normalizedApiPath
-                      ? context.l10n.cloudRackNerdApiPathRemoved
-                      : '',
-                  target.origin.toString(),
+              if (parsedEndpoint case final target?)
+                CloudNotice(
+                  context.l10n.cloudVerifyTarget(
+                    target.normalizedConsolePath
+                        ? context.l10n.cloudConsolePathRemoved
+                        : target.normalizedApiPath
+                        ? context.l10n.cloudRackNerdApiPathRemoved
+                        : '',
+                    target.origin.toString(),
+                  ),
                 ),
+              AppSection(
+                footerWidget: CloudFootnotes([
+                  if (singleInstance)
+                    rackNerd
+                        ? context.l10n.cloudRackNerdCredentialsInfo
+                        : context.l10n.cloudV1CredentialsInfo
+                  else
+                    context.l10n.cloudV2CredentialsInfo,
+                  if (!singleInstance && widget.existing != null)
+                    context.l10n.cloudV2ReauthorizationInfo,
+                ]),
+                children: [
+                  if (singleInstance) ...[
+                    secretField(keyField, 'API Key', 'cloud-key'),
+                    secretField(hashField, 'API Hash', 'cloud-hash'),
+                  ] else
+                    secretField(token, 'API Token', 'cloud-token'),
+                ],
               ),
-            if (widget.existing != null)
-              InfoNote(context.l10n.cloudEndpointIdentityInfo),
-            if (singleInstance) ...[
-              secretField(keyField, 'API Key', 'cloud-key'),
-              secretField(hashField, 'API Hash', 'cloud-hash'),
-              InfoNote(
-                rackNerd
-                    ? context.l10n.cloudRackNerdCredentialsInfo
-                    : context.l10n.cloudV1CredentialsInfo,
-              ),
-            ] else ...[
-              secretField(token, 'API Token', 'cloud-token'),
-              InfoNote(context.l10n.cloudV2CredentialsInfo),
+              if (singleInstance && widget.existing != null)
+                CloudNotice(
+                  context.l10n.cloudV1ReauthorizationInfo,
+                  tone: AppTone.amber,
+                ),
+              if (error != null) CloudNotice(error!, error: true),
+              if (reading)
+                AppSection(
+                  footer: context.l10n.cloudVerifyingInfo,
+                  children: [
+                    const AppRow.custom(
+                      child: Center(child: CupertinoActivityIndicator()),
+                    ),
+                    AppRow(
+                      key: const ValueKey('cancel-cloud-verify'),
+                      center: true,
+                      title: context.l10n.cloudCancelVerification,
+                      onTap: cancel,
+                    ),
+                  ],
+                )
+              else
+                CloudAction(
+                  buttonKey: const ValueKey('verify-cloud'),
+                  label: context.l10n.cloudVerifyRead,
+                  icon: Icons.link,
+                  onPressed: kIsWeb ? null : verify,
+                ),
+              CloudFootnote(context.l10n.cloudVerifyScopeInfo),
+              CloudFootnote(context.l10n.cloudCredentialMemoryInfo),
             ],
-            if (singleInstance && widget.existing != null)
-              CloudNotice(context.l10n.cloudV1ReauthorizationInfo, error: true),
-            if (!singleInstance && widget.existing != null)
-              InfoNote(context.l10n.cloudV2ReauthorizationInfo),
-            CloudNotice(context.l10n.cloudVerifyScopeInfo),
-            if (error != null) CloudNotice(error!, error: true),
-            if (reading) ...[
-              const Padding(
-                padding: EdgeInsets.all(12),
-                child: Center(child: CircularProgressIndicator()),
-              ),
-              InfoNote(context.l10n.cloudVerifyingInfo),
-              OutlinedButton(
-                key: const ValueKey('cancel-cloud-verify'),
-                onPressed: cancel,
-                child: Text(context.l10n.cloudCancelVerification),
-              ),
-            ] else
-              FilledButton.icon(
-                key: const ValueKey('verify-cloud'),
-                onPressed: kIsWeb ? null : verify,
-                icon: const Icon(Icons.link),
-                label: Text(context.l10n.cloudVerifyRead),
-              ),
-            InfoNote(context.l10n.cloudCredentialMemoryInfo),
-          ],
+          ),
         ),
-      ),
+      ],
     ),
   );
 }
@@ -876,21 +878,26 @@ class _CloudImportPageState extends State<CloudImportPage>
     }
   }
 
-  Widget openDevice(String id) => TextButton.icon(
-    onPressed: saving || widget.ledger.byId(id) == null
-        ? null
-        : () => Navigator.push<void>(
-            context,
-            MaterialPageRoute(
-              builder: (_) => ServerDetail(controller: widget.ledger, id: id),
-            ),
-          ),
-    icon: const Icon(Icons.dns_outlined),
-    label: Text(deviceName(id)),
-  );
+  Widget openDevice(String id) {
+    final available = !saving && widget.ledger.byId(id) != null;
+    return AppRow(
+      icon: Icons.dns_outlined,
+      iconColor: AppTints.slate,
+      title: deviceName(id),
+      chevron: true,
+      enabled: available,
+      onTap: available
+          ? () => Navigator.push<void>(
+              context,
+              MaterialPageRoute(
+                builder: (_) => ServerDetail(controller: widget.ledger, id: id),
+              ),
+            )
+          : null,
+    );
+  }
 
-  Widget instanceCard(CloudInstance instance) {
-    final colors = Theme.of(context).colorScheme;
+  Widget instanceCard(CloudInstance instance, {String? header}) {
     final key = keyFor(instance);
     final conflicting = conflictingIds(instance);
     final identityConflict = hasIdentityConflict(instance);
@@ -902,163 +909,118 @@ class _CloudImportPageState extends State<CloudImportPage>
         ? const <String>[]
         : addressHints(instance);
     final ready = complete(instance);
-    return Padding(
+    final (statusText, statusTone) = identityConflict
+        ? (context.l10n.cloudImportIdentityConflict, AppTone.red)
+        : result?.imported == true
+        ? (context.l10n.cloudImportImported, AppTone.green)
+        : linked
+        ? (context.l10n.cloudImportExisting, AppTone.blue)
+        : failures.containsKey(key)
+        ? (context.l10n.cloudImportFailed, AppTone.red)
+        : unprocessed.contains(key)
+        ? (context.l10n.cloudImportUnprocessed, AppTone.amber)
+        : ready
+        ? (context.l10n.cloudImportReady, AppTone.green)
+        : (context.l10n.cloudImportNeedsCompletion, AppTone.amber);
+    final addresses = [instance.ipv4, instance.ipv6].whereType<String>();
+    return AppSection(
       key: singleInstance ? singleSelection : null,
-      padding: const EdgeInsets.only(bottom: 12),
-      child: LedgerCard(
-        padding: EdgeInsets.zero,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            CheckboxListTile(
-              key: ValueKey('cloud-select-$key'),
-              value: !identityConflict && (linked || selected.contains(key)),
-              onChanged:
-                  blocked ||
-                      identityConflict ||
-                      linked ||
-                      pinnedServerId != null ||
-                      (!singleInstance && !ready)
-                  ? null
-                  : (checked) => setState(() {
-                      if (checked == true) {
-                        selected.add(key);
-                      } else {
-                        selected.remove(key);
-                      }
-                    }),
-              controlAffinity: ListTileControlAffinity.leading,
-              contentPadding: const EdgeInsets.symmetric(
-                horizontal: 12,
-                vertical: 8,
-              ),
-              title: Text(
-                singleInstance
-                    ? context.l10n.cloudV1Instance
-                    : instance.name ??
-                          context.l10n.cloudInstanceFallback(
-                            instance.serverId?.toString() ??
-                                context.l10n.cloudPowerUnknown,
-                          ),
-                style: TextStyle(color: colors.onSurface),
-              ),
-              subtitle: DefaultTextStyle.merge(
-                style: TextStyle(color: colors.onSurfaceVariant),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    LedgerBadge(
-                      identityConflict
-                          ? context.l10n.cloudImportIdentityConflict
-                          : result?.imported == true
-                          ? context.l10n.cloudImportImported
-                          : linked
-                          ? context.l10n.cloudImportExisting
-                          : failures.containsKey(key)
-                          ? context.l10n.cloudImportFailed
-                          : unprocessed.contains(key)
-                          ? context.l10n.cloudImportUnprocessed
-                          : ready
-                          ? context.l10n.cloudImportReady
-                          : context.l10n.cloudImportNeedsCompletion,
+      header: header,
+      topSpacing: header == null ? 12 : null,
+      children: [
+        CloudCheckRow(
+          key: ValueKey('cloud-select-$key'),
+          value: !identityConflict && (linked || selected.contains(key)),
+          onChanged:
+              blocked ||
+                  identityConflict ||
+                  linked ||
+                  pinnedServerId != null ||
+                  (!singleInstance && !ready)
+              ? null
+              : (checked) => setState(() {
+                  if (checked) {
+                    selected.add(key);
+                  } else {
+                    selected.remove(key);
+                  }
+                }),
+          title: singleInstance
+              ? context.l10n.cloudV1Instance
+              : instance.name ??
+                    context.l10n.cloudInstanceFallback(
+                      instance.serverId?.toString() ??
+                          context.l10n.cloudPowerUnknown,
                     ),
-                    if (!singleInstance)
-                      Text(
-                        context.l10n.cloudProjectInstance(
-                          (instance.projectName ?? instance.projectId)
-                                  ?.toString() ??
-                              context.l10n.cloudPowerUnknown,
-                          instance.serverId?.toString() ??
-                              context.l10n.cloudPowerUnknown,
-                        ),
-                      ),
-                    Text(
-                      singleInstance
-                          ? context.l10n.cloudV1Identity
-                          : [
-                              instance.ipv4,
-                              instance.ipv6,
-                            ].whereType<String>().join(' / ').isEmpty
-                          ? context.l10n.cloudIpNotProvided
-                          : [
-                              instance.ipv4,
-                              instance.ipv6,
-                            ].whereType<String>().join(' / '),
-                    ),
-                    Text(
-                      context.l10n.cloudPowerLastRead(
-                        cloudPowerLabel(instance.power, l10n: context.l10n),
-                      ),
-                    ),
-                    if (!singleInstance &&
-                        ready &&
-                        !linked &&
-                        !identityConflict)
-                      Text(drafts[key]!.resources.specSummaryFor(context.l10n)),
-                  ],
-                ),
+          status: Align(
+            alignment: AlignmentDirectional.centerStart,
+            child: StatusPill(statusText, tone: statusTone),
+          ),
+          details: [
+            if (!singleInstance)
+              context.l10n.cloudProjectInstance(
+                (instance.projectName ?? instance.projectId)?.toString() ??
+                    context.l10n.cloudPowerUnknown,
+                instance.serverId?.toString() ?? context.l10n.cloudPowerUnknown,
               ),
+            singleInstance
+                ? context.l10n.cloudV1Identity
+                : addresses.isEmpty
+                ? context.l10n.cloudIpNotProvided
+                : addresses.join(' / '),
+            context.l10n.cloudPowerLastRead(
+              cloudPowerLabel(instance.power, l10n: context.l10n),
             ),
-            if (identityConflict)
-              const Padding(
-                padding: EdgeInsets.symmetric(horizontal: 16),
-                child: CloudNotice(CloudAccountFailure.identity, error: true),
-              ),
-            if (ids.length > 1 && !identityConflict)
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: CloudNotice(
-                  context.l10n.cloudImportExistingConflict(ids.length),
-                  error: true,
-                ),
-              ),
-            for (final id in ids) openDevice(id),
-            if (hints.isNotEmpty)
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: InfoNote(
-                  context.l10n.cloudImportAddressHint(hints.join('、')),
-                ),
-              ),
-            if (failures[key] case final message?)
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: CloudNotice(message, error: true),
-              ),
-            if (!singleInstance && !linked && !identityConflict)
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-                child: OutlinedButton.icon(
-                  key: ValueKey('cloud-complete-$key'),
-                  onPressed: blocked ? null : () => edit(instance),
-                  icon: const Icon(Icons.edit_outlined),
-                  label: Text(
-                    ready
-                        ? context.l10n.cloudImportReviewResources
-                        : context.l10n.cloudImportCompleteResources,
-                  ),
-                ),
-              ),
+            if (!singleInstance && ready && !linked && !identityConflict)
+              drafts[key]!.resources.specSummaryFor(context.l10n),
           ],
         ),
-      ),
+        if (identityConflict)
+          const CloudInlineNote(CloudAccountFailure.identity, error: true),
+        if (ids.length > 1 && !identityConflict)
+          CloudInlineNote(
+            context.l10n.cloudImportExistingConflict(ids.length),
+            error: true,
+          ),
+        for (final id in ids) openDevice(id),
+        if (hints.isNotEmpty)
+          CloudInlineNote(context.l10n.cloudImportAddressHint(hints.join('、'))),
+        if (failures[key] case final message?)
+          CloudInlineNote(message, error: true),
+        if (!singleInstance && !linked && !identityConflict)
+          AppRow(
+            key: ValueKey('cloud-complete-$key'),
+            icon: Icons.edit_outlined,
+            iconColor: ready ? AppTints.green : AppTints.orange,
+            title: ready
+                ? context.l10n.cloudImportReviewResources
+                : context.l10n.cloudImportCompleteResources,
+            chevron: true,
+            enabled: !blocked,
+            onTap: blocked ? null : () => edit(instance),
+          ),
+      ],
     );
   }
 
-  Widget body(List<Widget> children) => singleInstance
-      ? SingleChildScrollView(
-          controller: scroll,
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: children,
-          ),
-        )
-      : ListView(
-          controller: scroll,
-          padding: const EdgeInsets.all(20),
-          children: children,
-        );
+  /// Single-device forms keep every field mounted (one box in a sliver);
+  /// long device inventories scroll lazily.
+  Widget page(List<Widget> children) => AppScaffold(
+    title: context.l10n.cloudChooseInstances,
+    largeTitle: false,
+    controller: scroll,
+    slivers: singleInstance
+        ? [
+            SliverToBoxAdapter(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: children,
+              ),
+            ),
+          ]
+        : null,
+    children: singleInstance ? const [] : children,
+  );
 
   @override
   Widget build(BuildContext context) => ListenableBuilder(
@@ -1074,209 +1036,232 @@ class _CloudImportPageState extends State<CloudImportPage>
           if (!authorizationSaved) cloud.cancelVerification();
         }
       },
-      child: Scaffold(
-        appBar: AppBar(title: Text(context.l10n.cloudChooseInstances)),
-        body: body([
-          const CloudSteps(3),
+      child: page([
+        const CloudSteps(3),
+        CloudNotice(
+          context.l10n.cloudInventoryComplete(
+            snapshot.instances.length,
+            cloudTime(snapshot.completedAt),
+            authorizationSaved ? '' : context.l10n.cloudAuthorizationUnsaved,
+          ),
+        ),
+        AppSection(
+          children: [
+            AppRow(
+              leading: ProviderAvatar(name: businessProvider?.name),
+              title: widget.alias ?? account!.alias,
+              subtitle: businessProvider?.name,
+            ),
+            AppKeyValueRow(
+              label: context.l10n.cloudPanelAddress,
+              value:
+                  widget.verification?.endpoint.toString() ?? account!.endpoint,
+              mono: true,
+            ),
+          ],
+        ),
+        if (authorizationSaved) CloudNotice(context.l10n.cloudImportSaved),
+        if (unavailable)
           CloudNotice(
-            context.l10n.cloudInventoryComplete(
-              snapshot.instances.length,
-              cloudTime(snapshot.completedAt),
-              authorizationSaved ? '' : context.l10n.cloudAuthorizationUnsaved,
-            ),
+            businessProvider?.needsReview == true || businessProvider == null
+                ? context.l10n.providerReviewRequired
+                : context.l10n.adapterScopeUnavailable,
+            tone: AppTone.amber,
           ),
-          Text(
-            widget.alias ?? account!.alias,
-            style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 19),
+        if (needsReload) ...[
+          CloudNotice(context.l10n.cloudSavedReloadFailed, error: true),
+          AppSection(
+            topSpacing: 10,
+            children: [
+              AppRow(
+                key: const ValueKey('cloud-import-reload'),
+                center: true,
+                title: context.l10n.cloudReloadLocal,
+                enabled: !(saving || reloading),
+                onTap: saving || reloading ? null : reloadLocal,
+              ),
+            ],
           ),
-          if (businessProvider != null) Text(businessProvider!.name),
-          SelectableText(
-            widget.verification?.endpoint.toString() ?? account!.endpoint,
-            style: Theme.of(context).textTheme.bodySmall,
-          ),
-          if (authorizationSaved) CloudNotice(context.l10n.cloudImportSaved),
-          if (unavailable)
-            CloudNotice(
-              businessProvider?.needsReview == true || businessProvider == null
-                  ? context.l10n.providerReviewRequired
-                  : context.l10n.adapterScopeUnavailable,
-              error: true,
-            ),
-          if (needsReload) ...[
-            CloudNotice(context.l10n.cloudSavedReloadFailed, error: true),
-            OutlinedButton.icon(
-              key: const ValueKey('cloud-import-reload'),
-              onPressed: saving || reloading ? null : reloadLocal,
-              icon: const Icon(Icons.refresh),
-              label: Text(context.l10n.cloudReloadLocal),
-            ),
-          ],
-          if (pinnedServerId case final id?) ...[
-            CloudNotice(context.l10n.providerUiPinnedHelp(deviceName(id))),
-            openDevice(id),
-          ],
-          if (hasResult) ...[
-            SectionTitle(context.l10n.cloudImportResultsTitle),
-            LedgerCard(
-              key: const ValueKey('cloud-import-results'),
-              child: Text(
-                context.l10n.cloudImportSummary(
+        ],
+        if (pinnedServerId case final id?) ...[
+          CloudNotice(context.l10n.providerUiPinnedHelp(deviceName(id))),
+          AppSection(topSpacing: 10, children: [openDevice(id)]),
+        ],
+        if (hasResult) ...[
+          AppSection(
+            key: const ValueKey('cloud-import-results'),
+            header: context.l10n.cloudImportResultsTitle,
+            children: [
+              AppRow(
+                title: context.l10n.cloudImportSummary(
                   outcomes.values.where((item) => item.imported).length,
                   outcomes.values.where((item) => !item.imported).length,
                   failures.length,
                   unprocessed.length,
                 ),
               ),
-            ),
-            if (interruption != null) CloudNotice(interruption!, error: true),
-          ],
-          const SizedBox(height: 20),
-          if (snapshot.instances.isEmpty)
-            LedgerCard(
-              child: Text(
-                authorizationSaved
+            ],
+          ),
+          if (interruption != null) CloudNotice(interruption!, error: true),
+        ],
+        if (snapshot.instances.isEmpty)
+          AppSection(
+            topSpacing: 12,
+            children: [
+              AppRow(
+                title: authorizationSaved
                     ? context.l10n.cloudEmptyInventory
                     : context.l10n.cloudEmptyVerification,
               ),
-            ),
-          for (final instance in snapshot.instances) instanceCard(instance),
-          if (singleInstance &&
-              snapshot.instances.isNotEmpty &&
-              existingIds(snapshot.instances.single).isEmpty &&
-              !outcomes.containsKey(keyFor(snapshot.instances.single)) &&
-              pinnedServerId == null) ...[
-            if (needsSingleSelection)
-              InfoNote(context.l10n.cloudSelectBeforeComplete),
-            const SizedBox(height: 6),
-            TextField(
-              key: const ValueKey('cloud-v1-name'),
-              controller: displayName,
-              enabled: !blocked,
-              maxLength: 80,
-              decoration: InputDecoration(
-                labelText: context.l10n.cloudLocalDisplayName,
-                helperText: context.l10n.cloudLocalNameInfo,
-                helperMaxLines: 4,
-              ),
-            ),
-            ServerResourceFields(
-              key: resourceForm,
-              enabled: !blocked,
-              observed: observedCloudResources(snapshot.instances.single),
-            ),
-            InfoNote(
-              snapshot.provider == CloudProvider.rackNerd
-                  ? context.l10n.cloudRackNerdResourcesInfo
-                  : context.l10n.cloudV1ResourcesInfo,
-            ),
-          ],
-          if (awaitingRebind) ...[
-            CloudNotice(context.l10n.cloudRebindWarning, error: true),
-            CheckboxListTile(
-              key: const ValueKey('cloud-confirm-rebind'),
-              contentPadding: EdgeInsets.zero,
-              controlAffinity: ListTileControlAffinity.leading,
-              value: confirmRebind,
-              onChanged: blocked
-                  ? null
-                  : (value) => setState(() => confirmRebind = value ?? false),
-              title: Text(context.l10n.cloudConfirmRebind),
-            ),
-          ],
-          InfoNote(
-            context.l10n.cloudImportBoundary(
-              singleInstance
-                  ? context.l10n.cloudV1Deduplication
-                  : context.l10n.cloudV2Deduplication,
-            ),
+            ],
           ),
-          InfoNote(context.l10n.cloudImportFinanceLater),
-          if (error != null) CloudNotice(error!, error: true),
-          if (needsSingleSelection && !blocked)
-            TextButton.icon(
-              key: const ValueKey('cloud-return-to-instance'),
-              onPressed: revealSingleSelection,
-              icon: const Icon(Icons.arrow_upward),
-              label: Text(context.l10n.cloudReturnSelect),
+        for (final (index, instance) in snapshot.instances.indexed)
+          instanceCard(
+            instance,
+            header: index == 0 ? context.l10n.cloudStepInstances : null,
+          ),
+        if (singleInstance &&
+            snapshot.instances.isNotEmpty &&
+            existingIds(snapshot.instances.single).isEmpty &&
+            !outcomes.containsKey(keyFor(snapshot.instances.single)) &&
+            pinnedServerId == null) ...[
+          if (needsSingleSelection)
+            CloudNotice(
+              context.l10n.cloudSelectBeforeComplete,
+              tone: AppTone.amber,
             ),
-          if (!hasResult || newSelection.isNotEmpty)
-            FilledButton.icon(
-              key: const ValueKey('cloud-import-submit'),
-              onPressed:
-                  blocked ||
-                      newSelection.isEmpty ||
-                      pinnedServerId != null ||
-                      (awaitingRebind && !confirmRebind)
-                  ? null
-                  : () => save(),
-              icon: const Icon(Icons.download_outlined),
-              label: Text(
-                saving
-                    ? context.l10n.cloudSaving
-                    : newSelection.isEmpty
-                    ? context.l10n.cloudNoneSelected
-                    : authorizationSaved
-                    ? context.l10n.cloudImportCount(newSelection.length)
-                    : context.l10n.cloudSaveImportCount(newSelection.length),
+          AppSection(
+            footer: context.l10n.cloudLocalNameInfo,
+            children: [
+              AppFormRow(
+                label: context.l10n.cloudLocalDisplayName,
+                child: AppTextField(
+                  key: const ValueKey('cloud-v1-name'),
+                  controller: displayName,
+                  label: context.l10n.cloudLocalDisplayName,
+                  enabled: !blocked,
+                  maxLength: 80,
+                ),
               ),
-            ),
-          if (hasResult && retryKeys.isNotEmpty)
-            FilledButton.icon(
-              key: const ValueKey('cloud-import-retry'),
-              onPressed: blocked || retrySelection.isEmpty
-                  ? null
-                  : () => save(retry: true),
-              icon: const Icon(Icons.refresh),
-              label: Text(
-                retrySelection.isEmpty
-                    ? context.l10n.cloudNoneSelected
-                    : context.l10n.cloudImportRetryCount(retrySelection.length),
+            ],
+          ),
+          ServerResourceFields(
+            key: resourceForm,
+            enabled: !blocked,
+            observed: observedCloudResources(snapshot.instances.single),
+          ),
+          CloudFootnote(
+            snapshot.provider == CloudProvider.rackNerd
+                ? context.l10n.cloudRackNerdResourcesInfo
+                : context.l10n.cloudV1ResourcesInfo,
+          ),
+        ],
+        if (awaitingRebind) ...[
+          CloudNotice(context.l10n.cloudRebindWarning, tone: AppTone.amber),
+          AppSection(
+            topSpacing: 10,
+            children: [
+              CloudCheckRow(
+                key: const ValueKey('cloud-confirm-rebind'),
+                value: confirmRebind,
+                onChanged: blocked
+                    ? null
+                    : (value) => setState(() => confirmRebind = value),
+                title: context.l10n.cloudConfirmRebind,
               ),
-            ),
-          if (widget.verification != null && !authorizationSaved) ...[
-            const SizedBox(height: 12),
-            OutlinedButton(
-              key: const ValueKey('cloud-save-only'),
-              onPressed: blocked || (awaitingRebind && !confirmRebind)
-                  ? null
-                  : () => save(accountOnly: true),
-              child: Text(
-                widget.verification!.existingAccount == null
-                    ? context.l10n.cloudSaveOnly
-                    : rebind
-                    ? context.l10n.cloudUpdateUnlink
-                    : context.l10n.cloudUpdateOnly,
+            ],
+          ),
+        ],
+        CloudFootnote(
+          context.l10n.cloudImportBoundary(
+            singleInstance
+                ? context.l10n.cloudV1Deduplication
+                : context.l10n.cloudV2Deduplication,
+          ),
+        ),
+        CloudFootnote(context.l10n.cloudImportFinanceLater),
+        if (error != null) CloudNotice(error!, error: true),
+        if (needsSingleSelection && !blocked)
+          AppSection(
+            children: [
+              AppRow(
+                key: const ValueKey('cloud-return-to-instance'),
+                center: true,
+                title: context.l10n.cloudReturnSelect,
+                onTap: revealSingleSelection,
               ),
-            ),
-          ],
-          if (saving) ...[
-            InfoNote(context.l10n.cloudSavingInfo),
-            OutlinedButton(
-              key: const ValueKey('cloud-import-cancel'),
-              onPressed: cancelling ? null : stop,
-              child: Text(
-                cancelling
-                    ? context.l10n.cloudImportCancelling
-                    : context.l10n.cloudImportCancel,
-              ),
-            ),
-          ],
-          if ((hasResult || authorizationSaved) && !saving) ...[
-            const SizedBox(height: 12),
-            OutlinedButton(
-              key: const ValueKey('cloud-import-done'),
-              onPressed: finish,
-              child: Text(context.l10n.cloudDone),
-            ),
-          ],
-          if (expired && !saving)
-            OutlinedButton(
-              key: const ValueKey('cloud-import-return-verify'),
-              onPressed: finish,
-              child: Text(context.l10n.cloudReturnVerify),
-            ),
-        ]),
-      ),
+            ],
+          ),
+        if (!hasResult || newSelection.isNotEmpty)
+          CloudAction(
+            buttonKey: const ValueKey('cloud-import-submit'),
+            icon: Icons.download_outlined,
+            onPressed:
+                blocked ||
+                    newSelection.isEmpty ||
+                    pinnedServerId != null ||
+                    (awaitingRebind && !confirmRebind)
+                ? null
+                : () => save(),
+            label: saving
+                ? context.l10n.cloudSaving
+                : newSelection.isEmpty
+                ? context.l10n.cloudNoneSelected
+                : authorizationSaved
+                ? context.l10n.cloudImportCount(newSelection.length)
+                : context.l10n.cloudSaveImportCount(newSelection.length),
+          ),
+        if (hasResult && retryKeys.isNotEmpty)
+          CloudAction(
+            buttonKey: const ValueKey('cloud-import-retry'),
+            icon: Icons.refresh,
+            onPressed: blocked || retrySelection.isEmpty
+                ? null
+                : () => save(retry: true),
+            label: retrySelection.isEmpty
+                ? context.l10n.cloudNoneSelected
+                : context.l10n.cloudImportRetryCount(retrySelection.length),
+          ),
+        if (widget.verification != null && !authorizationSaved)
+          CloudAction(
+            buttonKey: const ValueKey('cloud-save-only'),
+            kind: AppButtonKind.tonal,
+            onPressed: blocked || (awaitingRebind && !confirmRebind)
+                ? null
+                : () => save(accountOnly: true),
+            label: widget.verification!.existingAccount == null
+                ? context.l10n.cloudSaveOnly
+                : rebind
+                ? context.l10n.cloudUpdateUnlink
+                : context.l10n.cloudUpdateOnly,
+          ),
+        if (saving) ...[
+          CloudFootnote(context.l10n.cloudSavingInfo),
+          CloudAction(
+            buttonKey: const ValueKey('cloud-import-cancel'),
+            kind: AppButtonKind.tonal,
+            destructive: true,
+            onPressed: cancelling ? null : stop,
+            label: cancelling
+                ? context.l10n.cloudImportCancelling
+                : context.l10n.cloudImportCancel,
+          ),
+        ],
+        if ((hasResult || authorizationSaved) && !saving)
+          CloudAction(
+            buttonKey: const ValueKey('cloud-import-done'),
+            kind: AppButtonKind.tonal,
+            onPressed: finish,
+            label: context.l10n.cloudDone,
+          ),
+        if (expired && !saving)
+          CloudAction(
+            buttonKey: const ValueKey('cloud-import-return-verify'),
+            kind: AppButtonKind.tonal,
+            onPressed: finish,
+            label: context.l10n.cloudReturnVerify,
+          ),
+      ]),
     ),
   );
 }
@@ -1332,47 +1317,64 @@ class _CloudResourceCompletionPageState
   }
 
   @override
-  Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(title: Text(context.l10n.cloudImportReviewResources)),
-    body: SingleChildScrollView(
-      padding: const EdgeInsets.all(20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Text(
-            widget.instance.name ??
-                context.l10n.cloudInstanceFallback(
-                  widget.instance.serverId.toString(),
+  Widget build(BuildContext context) => AppScaffold(
+    title: context.l10n.cloudImportReviewResources,
+    largeTitle: false,
+    // One box keeps every resource editor mounted while scrolling.
+    slivers: [
+      SliverToBoxAdapter(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
+              child: Text(
+                widget.instance.name ??
+                    context.l10n.cloudInstanceFallback(
+                      widget.instance.serverId.toString(),
+                    ),
+                style: TextStyle(
+                  fontSize: 22,
+                  height: 1.25,
+                  fontWeight: FontWeight.w700,
+                  color: context.palette.text,
                 ),
-            style: Theme.of(context).textTheme.titleLarge,
-          ),
-          InfoNote(context.l10n.cloudImportCompletionInfo),
-          TextField(
-            key: const ValueKey('cloud-device-name'),
-            controller: name,
-            maxLength: 80,
-            decoration: InputDecoration(
-              labelText: context.l10n.cloudLocalDisplayName,
-              helperText: context.l10n.cloudLocalNameInfo,
-              helperMaxLines: 4,
+              ),
             ),
-          ),
-          const SizedBox(height: 12),
-          ServerResourceFields(
-            key: resourceForm,
-            initial: widget.draft.resources,
-            observed: observedCloudResources(widget.instance),
-          ),
-          if (error != null) CloudNotice(error!, error: true),
-          FilledButton.icon(
-            key: const ValueKey('cloud-resource-done'),
-            onPressed: save,
-            icon: const Icon(Icons.check),
-            label: Text(context.l10n.cloudImportCompleteAndSelect),
-          ),
-        ],
+            AppSection(
+              topSpacing: 8,
+              footerWidget: CloudFootnotes([
+                context.l10n.cloudLocalNameInfo,
+                context.l10n.cloudImportCompletionInfo,
+              ]),
+              children: [
+                AppFormRow(
+                  label: context.l10n.cloudLocalDisplayName,
+                  child: AppTextField(
+                    key: const ValueKey('cloud-device-name'),
+                    controller: name,
+                    label: context.l10n.cloudLocalDisplayName,
+                    maxLength: 80,
+                  ),
+                ),
+              ],
+            ),
+            ServerResourceFields(
+              key: resourceForm,
+              initial: widget.draft.resources,
+              observed: observedCloudResources(widget.instance),
+            ),
+            if (error != null) CloudNotice(error!, error: true),
+            CloudAction(
+              buttonKey: const ValueKey('cloud-resource-done'),
+              icon: Icons.check,
+              onPressed: save,
+              label: context.l10n.cloudImportCompleteAndSelect,
+            ),
+          ],
+        ),
       ),
-    ),
+    ],
   );
 }
 
@@ -1526,65 +1528,76 @@ class _CloudReadPageState extends State<CloudReadPage>
         cancel(update: false);
       }
     },
-    child: Scaffold(
-      appBar: AppBar(
-        title: Text(
-          widget.importAfterRead
-              ? context.l10n.cloudReadImportable
-              : context.l10n.cloudRefreshAccount,
+    child: AppScaffold(
+      title: widget.importAfterRead
+          ? context.l10n.cloudReadImportable
+          : context.l10n.cloudRefreshAccount,
+      largeTitle: false,
+      children: [
+        AppSection(
+          topSpacing: 8,
+          children: [
+            AppRow(
+              icon: Icons.cloud_outlined,
+              iconColor: AppTints.purple,
+              title: widget.account.alias,
+              subtitle: widget.account.endpoint,
+            ),
+          ],
         ),
-      ),
-      body: ListView(
-        padding: const EdgeInsets.all(20),
-        children: [
-          Text(
-            widget.account.alias,
-            style: const TextStyle(fontSize: 23, fontWeight: FontWeight.w700),
+        if (reading)
+          AppSection(
+            footer: context.l10n.cloudReadingInfo,
+            children: [
+              const AppRow.custom(
+                child: Padding(
+                  padding: EdgeInsets.symmetric(vertical: 14),
+                  child: Center(child: CupertinoActivityIndicator()),
+                ),
+              ),
+              AppRow(
+                center: true,
+                title: context.l10n.cloudCancelRead,
+                onTap: cancel,
+              ),
+            ],
           ),
-          SelectableText(widget.account.endpoint),
-          if (reading) ...[
-            const Padding(
-              padding: EdgeInsets.all(30),
-              child: Center(child: CircularProgressIndicator()),
-            ),
-            InfoNote(context.l10n.cloudReadingInfo),
-            OutlinedButton(
-              onPressed: cancel,
-              child: Text(context.l10n.cloudCancelRead),
-            ),
-          ],
-          if (error != null) ...[
-            CloudNotice(error!, error: true),
-            OutlinedButton(
-              key: const ValueKey('cloud-read-again'),
-              onPressed: read,
-              child: Text(context.l10n.cloudReadAgain),
-            ),
-          ],
-          if (result != null && !reading && error == null) ...[
-            CloudNotice(
-              context.l10n.cloudInventoryComplete(
-                result!.snapshot.instances.length,
-                cloudTime(result!.snapshot.completedAt),
-                '',
-              ),
-            ),
-            InfoNote(context.l10n.cloudReadCompleteInfo),
-            if (widget.importAfterRead)
-              FilledButton.icon(
-                key: const ValueKey('cloud-read-open-preview'),
-                onPressed: openingPreview ? null : () => openPreview(result!),
-                icon: const Icon(Icons.download_outlined),
-                label: Text(context.l10n.cloudChooseInstances),
-              ),
-            FilledButton(
-              key: const ValueKey('cloud-read-done'),
-              onPressed: finish,
-              child: Text(context.l10n.cloudDone),
-            ),
-          ],
+        if (error != null) ...[
+          CloudNotice(error!, error: true),
+          CloudAction(
+            buttonKey: const ValueKey('cloud-read-again'),
+            kind: AppButtonKind.tonal,
+            icon: Icons.refresh,
+            onPressed: read,
+            label: context.l10n.cloudReadAgain,
+          ),
         ],
-      ),
+        if (result != null && !reading && error == null) ...[
+          CloudNotice(
+            context.l10n.cloudInventoryComplete(
+              result!.snapshot.instances.length,
+              cloudTime(result!.snapshot.completedAt),
+              '',
+            ),
+          ),
+          CloudFootnote(context.l10n.cloudReadCompleteInfo),
+          if (widget.importAfterRead)
+            CloudAction(
+              buttonKey: const ValueKey('cloud-read-open-preview'),
+              icon: Icons.download_outlined,
+              onPressed: openingPreview ? null : () => openPreview(result!),
+              label: context.l10n.cloudChooseInstances,
+            ),
+          CloudAction(
+            buttonKey: const ValueKey('cloud-read-done'),
+            kind: widget.importAfterRead
+                ? AppButtonKind.tonal
+                : AppButtonKind.primary,
+            onPressed: finish,
+            label: context.l10n.cloudDone,
+          ),
+        ],
+      ],
     ),
   );
 }
@@ -1607,65 +1620,46 @@ Future<void> cloudAccountMenu(
           !(needsReview && (action == 'reauthorize' || action == 'import')) &&
           !(action == 'import' &&
               account.authScope == AdapterAuthScope.unknown));
-  final action = await showModalBottomSheet<String>(
+  // An action sheet cannot grey out entries, so unavailable ones are left out
+  // (the message explains a pending provider review). Labels resolve while the
+  // sheet builds, so a language change re-translates it.
+  final action = await showCupertinoModalPopup<String>(
     context: context,
-    isScrollControlled: true,
-    builder: (context) => SafeArea(
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(20, 20, 20, 12),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              account.alias,
-              style: const TextStyle(fontSize: 21, fontWeight: FontWeight.w700),
-            ),
-            InfoNote(
-              '${cloudProviderName(account.provider)} · ${account.endpoint}',
-            ),
-            if (needsReview) InfoNote(context.l10n.providerReviewRequired),
-            for (final row in <(String, IconData, String)>[
-              ('detail', Icons.info_outline, context.l10n.cloudViewDetails),
-              if (needsReview)
-                (
-                  'provider',
-                  Icons.fact_check_outlined,
-                  context.l10n.providerUiConfirmOwnership,
-                ),
-              ('rename', Icons.edit_outlined, context.l10n.cloudRenameAccount),
-              (
-                'reauthorize',
-                Icons.key_outlined,
-                context.l10n.cloudReauthorize,
-              ),
-              (
-                'import',
-                Icons.download_outlined,
-                context.l10n.cloudContinueImport,
-              ),
-              ('servers', Icons.dns_outlined, context.l10n.cloudLinkedServers),
-              ('refresh', Icons.refresh, context.l10n.cloudRefreshAccount),
-              ('unbind', Icons.link_off, context.l10n.cloudUnlinkAccount),
-            ])
-              ListTile(
-                contentPadding: EdgeInsets.zero,
-                leading: Icon(
-                  row.$2,
-                  color: row.$1 == 'unbind'
-                      ? Theme.of(context).colorScheme.error
-                      : Theme.of(context).colorScheme.primary,
-                ),
-                title: Text(row.$3),
-                enabled: actionEnabled(row.$1),
-                onTap: actionEnabled(row.$1)
-                    ? () => Navigator.pop(context, row.$1)
-                    : null,
-              ),
-          ],
+    builder: (sheetContext) {
+      final l10n = sheetContext.l10n;
+      final rows = <(String, String)>[
+        ('detail', l10n.cloudViewDetails),
+        if (needsReview) ('provider', l10n.providerUiConfirmOwnership),
+        ('rename', l10n.cloudRenameAccount),
+        ('reauthorize', l10n.cloudReauthorize),
+        ('import', l10n.cloudContinueImport),
+        ('servers', l10n.cloudLinkedServers),
+        ('refresh', l10n.cloudRefreshAccount),
+        ('unbind', l10n.cloudUnlinkAccount),
+      ];
+      return CupertinoActionSheet(
+        title: Text(account.alias),
+        message: Text(
+          [
+            '${cloudProviderName(account.provider)} · ${account.endpoint}',
+            if (needsReview) l10n.providerReviewRequired,
+          ].join('\n'),
         ),
-      ),
-    ),
+        actions: [
+          for (final (id, label) in rows)
+            if (actionEnabled(id))
+              CupertinoActionSheetAction(
+                isDestructiveAction: id == 'unbind',
+                onPressed: () => Navigator.pop(sheetContext, id),
+                child: Text(label),
+              ),
+        ],
+        cancelButton: CupertinoActionSheetAction(
+          onPressed: () => Navigator.pop(sheetContext),
+          child: Text(l10n.cancel),
+        ),
+      );
+    },
   );
   if (!context.mounted || action == null) return;
   final cloud = ledger.cloud;
@@ -1704,7 +1698,7 @@ Future<void> cloudAccountMenu(
       ),
     );
   } else if (action == 'rename') {
-    final name = await showDialog<String>(
+    final name = await showCupertinoDialog<String>(
       context: context,
       builder: (_) => _CloudRenameDialog(alias: current.alias),
     );
@@ -1735,7 +1729,7 @@ Future<void> cloudAccountMenu(
         .where((binding) => binding.accountId == current.id)
         .map((binding) => binding.serverId)
         .toSet();
-    final ok = await confirmAction(
+    final ok = await showAppConfirm(
       context,
       title: LocalizedText((l10n) => l10n.cloudUnlinkAccountTitle),
       message: LocalizedText(
@@ -1783,39 +1777,62 @@ class CloudAccountDetailsPage extends StatelessWidget {
       final provider = ledger.cloud.providers
           .where((provider) => provider.id == account?.businessProviderId)
           .firstOrNull;
-      return Scaffold(
-        appBar: AppBar(
-          title: Text(
-            associationsOnly
-                ? context.l10n.cloudLinkedServers
-                : context.l10n.cloudAccountDetails,
-          ),
-          actions: [
-            if (account != null)
-              _CloudAccountMenuButton(ledger: ledger, account: account),
-          ],
-        ),
-        body: ListView(
-          padding: const EdgeInsets.all(20),
-          children: [
-            if (account == null)
-              CloudNotice(context.l10n.cloudAccountRemovedNotice)
-            else ...[
-              Text(
-                account.alias,
-                style: const TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.w700,
-                ),
+      final p = context.palette;
+      return AppScaffold(
+        title: associationsOnly
+            ? context.l10n.cloudLinkedServers
+            : context.l10n.cloudAccountDetails,
+        largeTitle: false,
+        actions: [
+          if (account != null)
+            _CloudAccountMenuButton(ledger: ledger, account: account),
+        ],
+        children: [
+          if (account == null)
+            CloudNotice(context.l10n.cloudAccountRemovedNotice)
+          else ...[
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
+              child: Row(
+                children: [
+                  const AppIconSquare(
+                    icon: Icons.cloud_outlined,
+                    color: AppTints.purple,
+                    size: 44,
+                  ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          account.alias,
+                          style: TextStyle(
+                            fontSize: 22,
+                            height: 1.25,
+                            fontWeight: FontWeight.w700,
+                            color: p.text,
+                          ),
+                        ),
+                        Text(
+                          cloudProviderName(account.provider),
+                          style: TextStyle(fontSize: 14, color: p.text2),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ),
-              const SizedBox(height: 12),
-              LedgerCard(
-                padding: EdgeInsets.zero,
-                child: SettingRow(
+            ),
+            AppSection(
+              topSpacing: 12,
+              children: [
+                AppRow(
                   key: const ValueKey('cloud-instance-provider'),
-                  icon: Icons.business_outlined,
+                  leading: ProviderAvatar(name: provider?.name),
                   title: provider?.name ?? context.l10n.providerUiUnspecified,
                   subtitle: context.l10n.providerUiOpenProvider,
+                  chevron: provider != null,
                   onTap: provider == null
                       ? null
                       : () => Navigator.push<void>(
@@ -1828,114 +1845,122 @@ class CloudAccountDetailsPage extends StatelessWidget {
                           ),
                         ),
                 ),
+              ],
+            ),
+            if (provider == null || provider.needsReview) ...[
+              CloudNotice(
+                context.l10n.providerReviewRequired,
+                tone: AppTone.amber,
               ),
-              if (provider == null || provider.needsReview) ...[
-                CloudNotice(context.l10n.providerReviewRequired),
-                OutlinedButton.icon(
-                  key: const ValueKey('cloud-instance-confirm-provider'),
-                  onPressed: ledger.cloud.busy || ledger.cloud.needsReload
-                      ? null
-                      : () => confirmAdapterProviderOwnership(
-                          context,
-                          ledger,
-                          account,
-                        ),
-                  icon: const Icon(Icons.fact_check_outlined),
-                  label: Text(context.l10n.providerUiConfirmOwnership),
-                ),
-              ],
-              if (account.pinnedServerId case final id?)
-                InfoNote(
-                  context.l10n.providerUiPinnedHelp(
-                    ledger.byId(id)?.name ?? context.l10n.cloudLocalRecord,
+              AppSection(
+                topSpacing: 10,
+                children: [
+                  AppRow(
+                    key: const ValueKey('cloud-instance-confirm-provider'),
+                    icon: Icons.fact_check_outlined,
+                    iconColor: AppTints.orange,
+                    title: context.l10n.providerUiConfirmOwnership,
+                    chevron: true,
+                    enabled: !(ledger.cloud.busy || ledger.cloud.needsReload),
+                    onTap: ledger.cloud.busy || ledger.cloud.needsReload
+                        ? null
+                        : () => confirmAdapterProviderOwnership(
+                            context,
+                            ledger,
+                            account,
+                          ),
                   ),
+                ],
+              ),
+            ],
+            if (account.pinnedServerId case final id?)
+              CloudFootnote(
+                context.l10n.providerUiPinnedHelp(
+                  ledger.byId(id)?.name ?? context.l10n.cloudLocalRecord,
                 ),
-              if (!associationsOnly) ...[
-                const SizedBox(height: 18),
-                LedgerCard(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      CloudValue(
-                        context.l10n.cloudTemplateLabel,
-                        cloudProviderName(account.provider),
-                      ),
-                      CloudValue(
-                        context.l10n.cloudPanelAddress,
-                        account.endpoint,
-                      ),
-                      CloudValue(
-                        context.l10n.cloudReadStatus,
-                        cloudAccountStatus(account, l10n: context.l10n),
-                      ),
-                      CloudValue(
-                        context.l10n.cloudLastAttempt,
-                        account.lastAttemptAt == null
-                            ? context.l10n.cloudNoAttempts
-                            : cloudTime(account.lastAttemptAt!),
-                      ),
-                      CloudValue(
-                        context.l10n.cloudVerifiedScope,
-                        account.authScope == AdapterAuthScope.unknown
-                            ? context.l10n.providerUiUnknownScope
-                            : account.provider.isSingleInstance
-                            ? context.l10n.cloudV1Scope
-                            : context.l10n.cloudV2Scope(
-                                account.remoteAccountId?.toString() ??
-                                    context.l10n.cloudPowerUnknown,
-                              ),
-                      ),
-                      CloudValue(
-                        context.l10n.cloudAppCapabilities,
-                        context.l10n.cloudReadCapabilities,
-                      ),
-                      CloudValue(
-                        context.l10n.cloudAuthorizationStorage,
-                        context.l10n.cloudSecureStorageInfo,
-                      ),
-                    ],
+              ),
+            if (!associationsOnly)
+              AppSection(
+                footer: context.l10n.cloudScopeNotice,
+                children: [
+                  CloudValue(
+                    context.l10n.cloudTemplateLabel,
+                    cloudProviderName(account.provider),
                   ),
-                ),
-                InfoNote(context.l10n.cloudScopeNotice),
-              ],
-              SectionTitle(context.l10n.cloudLinkedCount(bindings.length)),
-              if (bindings.isEmpty)
-                LedgerCard(child: Text(context.l10n.cloudNoLinkedInstances)),
-              for (final binding in bindings)
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 10),
-                  child: LedgerCard(
-                    padding: EdgeInsets.zero,
-                    child: SettingRow(
-                      icon: Icons.dns_outlined,
-                      title: context.l10n.cloudRecordWithState(
-                        ledger.byId(binding.serverId)?.name ??
-                            context.l10n.cloudLocalRecord,
-                        ledger.byId(binding.serverId)?.archived == true
-                            ? context.l10n.cloudArchivedSuffix
-                            : '',
-                      ),
-                      subtitle: context.l10n.cloudBindingWithTime(
-                        cloudBindingSummary(binding, l10n: context.l10n),
-                        cloudTime(binding.observedAt),
-                      ),
-                      onTap: ledger.byId(binding.serverId) == null
-                          ? null
-                          : () => Navigator.push<void>(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => ServerDetail(
-                                  controller: ledger,
-                                  id: binding.serverId,
-                                ),
-                              ),
-                            ),
+                  CloudValue(context.l10n.cloudPanelAddress, account.endpoint),
+                  AppKeyValueRow(
+                    label: context.l10n.cloudReadStatus,
+                    valueWidget: StatusPill(
+                      cloudAccountStatus(account, l10n: context.l10n),
+                      tone: account.lastFailure == null
+                          ? AppTone.green
+                          : AppTone.red,
                     ),
                   ),
-                ),
-            ],
+                  CloudValue(
+                    context.l10n.cloudLastAttempt,
+                    account.lastAttemptAt == null
+                        ? context.l10n.cloudNoAttempts
+                        : cloudTime(account.lastAttemptAt!),
+                  ),
+                  CloudValue(
+                    context.l10n.cloudVerifiedScope,
+                    account.authScope == AdapterAuthScope.unknown
+                        ? context.l10n.providerUiUnknownScope
+                        : account.provider.isSingleInstance
+                        ? context.l10n.cloudV1Scope
+                        : context.l10n.cloudV2Scope(
+                            account.remoteAccountId?.toString() ??
+                                context.l10n.cloudPowerUnknown,
+                          ),
+                  ),
+                  CloudValue(
+                    context.l10n.cloudAppCapabilities,
+                    context.l10n.cloudReadCapabilities,
+                  ),
+                  CloudValue(
+                    context.l10n.cloudAuthorizationStorage,
+                    context.l10n.cloudSecureStorageInfo,
+                  ),
+                ],
+              ),
+            AppSection(
+              header: context.l10n.cloudLinkedCount(bindings.length),
+              children: [
+                if (bindings.isEmpty)
+                  AppRow(title: context.l10n.cloudNoLinkedInstances),
+                for (final binding in bindings)
+                  AppRow(
+                    icon: Icons.dns_outlined,
+                    iconColor: AppTints.slate,
+                    title: context.l10n.cloudRecordWithState(
+                      ledger.byId(binding.serverId)?.name ??
+                          context.l10n.cloudLocalRecord,
+                      ledger.byId(binding.serverId)?.archived == true
+                          ? context.l10n.cloudArchivedSuffix
+                          : '',
+                    ),
+                    subtitle: context.l10n.cloudBindingWithTime(
+                      cloudBindingSummary(binding, l10n: context.l10n),
+                      cloudTime(binding.observedAt),
+                    ),
+                    chevron: ledger.byId(binding.serverId) != null,
+                    onTap: ledger.byId(binding.serverId) == null
+                        ? null
+                        : () => Navigator.push<void>(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => ServerDetail(
+                                controller: ledger,
+                                id: binding.serverId,
+                              ),
+                            ),
+                          ),
+                  ),
+              ],
+            ),
           ],
-        ),
+        ],
       );
     },
   );
@@ -1953,10 +1978,10 @@ class _CloudAccountMenuButton extends StatefulWidget {
 class _CloudAccountMenuButtonState extends State<_CloudAccountMenuButton> {
   bool opening = false;
   @override
-  Widget build(BuildContext context) => IconButton(
+  Widget build(BuildContext context) => AppNavButton.icon(
+    Icons.more_horiz,
     key: const ValueKey('cloud-instance-menu'),
     tooltip: context.l10n.serverMoreActions,
-    icon: const Icon(Icons.more_horiz),
     onPressed: opening
         ? null
         : () async {
@@ -1986,37 +2011,49 @@ class _CloudRenameDialogState extends State<_CloudRenameDialog> {
     super.dispose();
   }
 
+  void save() {
+    final value = field.text.trim();
+    if (value.isEmpty || value.length > 80) {
+      setState(() => error = LocalizedText((l10n) => l10n.cloudAliasRange));
+      return;
+    }
+    Navigator.pop(context, value);
+  }
+
   @override
-  Widget build(BuildContext context) => AlertDialog(
-    scrollable: true,
+  Widget build(BuildContext context) => CupertinoAlertDialog(
     title: Text(context.l10n.cloudRenameAccount),
-    content: TextField(
-      key: const ValueKey('cloud-rename'),
-      controller: field,
-      maxLength: 80,
-      autofocus: true,
-      decoration: InputDecoration(
-        labelText: context.l10n.cloudAliasLabel,
-        errorText: error?.messageFor(context.l10n),
-        errorMaxLines: 5,
+    content: Padding(
+      padding: const EdgeInsets.only(top: 12),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          CloudPromptField(
+            fieldKey: const ValueKey('cloud-rename'),
+            controller: field,
+            hint: context.l10n.cloudAliasLabel,
+            onSubmitted: (_) => save(),
+          ),
+          if (error != null)
+            Padding(
+              padding: const EdgeInsets.only(top: 10),
+              child: Text(
+                error!.messageFor(context.l10n),
+                style: TextStyle(fontSize: 13, color: context.palette.red),
+              ),
+            ),
+        ],
       ),
     ),
     actions: [
-      TextButton(
+      CupertinoDialogAction(
         onPressed: () => Navigator.pop(context),
         child: Text(context.l10n.cloudCancel),
       ),
-      FilledButton(
-        onPressed: () {
-          final value = field.text.trim();
-          if (value.isEmpty || value.length > 80) {
-            setState(
-              () => error = LocalizedText((l10n) => l10n.cloudAliasRange),
-            );
-            return;
-          }
-          Navigator.pop(context, value);
-        },
+      CupertinoDialogAction(
+        isDefaultAction: true,
+        onPressed: save,
         child: Text(context.l10n.cloudSaveName),
       ),
     ],
