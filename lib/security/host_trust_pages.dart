@@ -346,7 +346,10 @@ class _HostTrustFormState extends State<HostTrustForm> {
               ),
             ],
           ),
-          SecurityFootnote(l10n.securityRsaHostKeyNotice),
+          AppInfoLink(
+            label: l10n.r2CopyInfoRsaKey,
+            message: l10n.securityRsaHostKeyNotice,
+          ),
         ],
       ),
     );

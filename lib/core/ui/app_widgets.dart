@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 
 import '../app_palette.dart';
 import 'app_list.dart';
+import 'app_overlays.dart';
 
 /// Rounded surface block (radius 14, no border) for free-form content such as
 /// the cost summary on the detail page. For lists of rows use [AppSection].
@@ -1127,6 +1128,81 @@ class AppEmptyState extends StatelessWidget {
             SizedBox(width: double.infinity, child: actions[i]),
           ],
         ],
+      ),
+    );
+  }
+}
+
+/// Footnote-style "ⓘ label" link that opens the long explanation in a sheet,
+/// so rarely needed detail does not take page space.
+///
+/// ```dart
+/// AppInfoLink(label: l10n.credentialHandling, title: l10n.credentialHandling,
+///     message: l10n.credentialHandlingBody)
+/// ```
+class AppInfoLink extends StatelessWidget {
+  const AppInfoLink({
+    super.key,
+    required this.label,
+    required this.message,
+    this.title,
+    this.padding = const EdgeInsets.fromLTRB(32, 8, 32, 0),
+  });
+
+  /// Text next to the ⓘ icon.
+  final String label;
+
+  /// Explanation shown in the sheet.
+  final String message;
+
+  /// Sheet title (defaults to [label]).
+  final String? title;
+  final EdgeInsetsGeometry padding;
+
+  @override
+  Widget build(BuildContext context) {
+    final p = context.palette;
+    return Padding(
+      padding: padding,
+      child: Align(
+        alignment: AlignmentDirectional.centerStart,
+        child: Semantics(
+          button: true,
+          child: InkWell(
+            borderRadius: BorderRadius.circular(6),
+            onTap: () => showAppSheet<void>(
+              context,
+              title: title ?? label,
+              builder: (sheetContext) => Padding(
+                padding: const EdgeInsets.fromLTRB(20, 4, 20, 0),
+                child: Text(
+                  message,
+                  style: TextStyle(fontSize: 15, height: 1.5, color: p.text),
+                ),
+              ),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 4),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.info_outline_rounded, size: 15, color: p.primary),
+                  const SizedBox(width: 5),
+                  Flexible(
+                    child: Text(
+                      label,
+                      style: TextStyle(
+                        fontSize: 12.5,
+                        height: 1.4,
+                        color: p.primary,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
       ),
     );
   }

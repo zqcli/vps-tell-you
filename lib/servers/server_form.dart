@@ -786,11 +786,6 @@ class _ServerFormState extends State<ServerForm> {
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
                           Text(
-                            l10n.serverFormHelp,
-                            style: context.footnoteStyle,
-                          ),
-                          const SizedBox(height: 6),
-                          Text(
                             l10n.r2FormAddressHelp,
                             style: context.footnoteStyle,
                           ),

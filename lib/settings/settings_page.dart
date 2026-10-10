@@ -32,8 +32,7 @@ class _SettingsPageState extends State<SettingsPage> {
       title: context.l10n.language,
       builder: (sheetContext) => AppSection(
         topSpacing: 4,
-        footer:
-            '${sheetContext.l10n.languageDescription}\n${sheetContext.l10n.languageSystemDescription}',
+        footer: sheetContext.l10n.languageSystemDescription,
         children: [
           for (final preference in LocalePreference.values)
             Semantics(

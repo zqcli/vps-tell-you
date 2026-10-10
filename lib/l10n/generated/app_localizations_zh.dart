@@ -19,7 +19,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get languageSystem => '跟随系统';
 
   @override
-  String get languageSystemDescription => '支持简体中文和 English；其他系统语言使用 English。';
+  String get languageSystemDescription => '其他系统语言使用 English。';
 
   @override
   String get languageChinese => '简体中文';
@@ -311,8 +311,7 @@ class AppLocalizationsZh extends AppLocalizations {
       '修改后点“保存提醒规则”生效。若启用提醒并选择“到期不再使用”，仍会提醒核对厂商的续费设置。';
 
   @override
-  String get uiTabsReminderSaveHelp =>
-      '修改后点右上角“保存”生效。若启用提醒并选择“到期不再使用”，仍会提醒核对厂商的续费设置。';
+  String get uiTabsReminderSaveHelp => '点右上角“保存”后生效。';
 
   @override
   String uiTabsReminderDue(String name, String date) {
@@ -381,13 +380,13 @@ class AppLocalizationsZh extends AppLocalizations {
   String get invalidTime => '请输入有效时间';
 
   @override
-  String get reminderDstHelp => '随设备当前时区。夏令时缺失时间向后顺延，重复时间仅提醒一次；整天被跳过的日期不排程。';
+  String get reminderDstHelp => '按设备当前时区；夏令时缺失的时间顺延，重复的只提醒一次。';
 
   @override
   String get myUsagePlan => '我的使用计划';
 
   @override
-  String get usagePlanWarning => '使用计划只是本地记录。计划到期停用不会停止厂商扣费，请另行向厂商确认取消续费。';
+  String get usagePlanWarning => '使用计划仅为本地记录，不会停止厂商扣费；请另行向厂商取消续费。';
 
   @override
   String get savedRuleSchedule => '已保存规则的提醒安排';
@@ -568,8 +567,7 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String get restoreContentsHelp =>
-      '将导入上述台账记录与手动汇率。上方列出的安全资料、备注、提醒和应用偏好均不在备份内。';
+  String get restoreContentsHelp => '仅导入台账记录和手动汇率；上方所列内容不在备份内。';
 
   @override
   String get restoreToEmptyLedger => '恢复到空台账';
@@ -649,7 +647,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get developmentVersion => '开发测试版 · 0.1.0';
 
   @override
-  String get appLocalDataHelp => '数据保存在当前设备，无需应用账号。\n归档记录不会取消服务器服务或停止扣费。';
+  String get appLocalDataHelp => '数据仅保存在本机，无需账号。归档不会取消服务或停止扣费。';
 
   @override
   String get groupSaveFailed => '未能保存分组。请检查名称是否重复，再重试。';
@@ -669,7 +667,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get addGroup => '新增分组';
 
   @override
-  String get groupsHelp => '按用途整理服务器。分组变更仅影响本地台账。';
+  String get groupsHelp => '按用途整理服务器。';
 
   @override
   String get noGroupsHelp => '还没有自定义分组，点右上角 + 新建。';
@@ -702,7 +700,7 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String get archiveHelp => '归档保留服务器资料和 ID。恢复不会连接云主机，也不会启动或续费服务。';
+  String get archiveHelp => '归档保留资料；恢复不会启动或续费服务。';
 
   @override
   String get noArchivedRecords => '没有已归档记录';
@@ -801,10 +799,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get r2CopyMetricDaily => '日均';
 
   @override
-  String get financeInferredPeriods => '部分服务起点由到期日与日历周期反推；不代表历史付款证明。';
+  String get financeInferredPeriods => '服务起点由到期日反推，不代表付款证明。';
 
   @override
-  String get financeValueDisclaimer => '仅表示服务时长的价格折算，不是退款承诺或成交价。';
+  String get financeValueDisclaimer => '按剩余时长折算，不是退款承诺或成交价。';
 
   @override
   String get financeShownPeriod => '所示周期';
@@ -822,7 +820,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get financeFxTitle => '币种与参考汇率';
 
   @override
-  String get financeFxScope => '仅改变参考折算，原币续费价与历史实付保持不变。不会请求实时汇率。留空表示该汇率未知。';
+  String get financeFxScope => '仅影响参考折算，不联网取汇率；留空表示未知。';
 
   @override
   String get financeDisplayCurrency => '合计显示币种';
@@ -846,8 +844,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get financePastDateError => '请输入不晚于今天的有效日期';
 
   @override
-  String get financeFxBasis =>
-      'CNY 为基准，1 CNY = 1 CNY。同币种换算不需要汇率；跨币种缺汇率时只展示可转换部分及覆盖率。';
+  String get financeFxBasis => '以 CNY 为基准；缺少汇率的币种不计入合计。';
 
   @override
   String get financeSaveFx => '保存参考汇率';
@@ -856,7 +853,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get financeReferenceTitle => '引用服务器资料';
 
   @override
-  String get financeReferenceNote => '只复制此刻的续费资料和已知期间。不会修改原服务器。';
+  String get financeReferenceNote => '仅复制当前续费资料，不会修改原服务器。';
 
   @override
   String get financeNoPrepaid => '暂无预付费服务器，可使用独立试算。';
@@ -875,11 +872,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get financeReferenceServer => '引用服务器';
 
   @override
-  String get financeIndependentRebuilt =>
-      '已切换为独立试算：按当前到期日和周期重新推算服务期，假设到期日前服务连续有效。';
+  String get financeIndependentRebuilt => '已切换为独立试算，按到期日和周期重新推算服务期。';
 
   @override
-  String get financeIndependentNote => '独立试算，无需添加服务器。假设到期日前服务连续有效。';
+  String get financeIndependentNote => '独立试算，无需添加服务器；假设到期日前服务连续。';
 
   @override
   String get financeRenewalAmount => '每周期续费金额';
@@ -916,7 +912,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get financeCalculateValue => '计算剩余价值';
 
   @override
-  String get financeEstimateNoWrite => '试算与记账分离，修改输入不会更改任何服务器或付款。';
+  String get financeEstimateNoWrite => '试算不会改动任何服务器或付款。';
 
   @override
   String get financeReferenceRateMissing => '参考汇率缺失';
@@ -949,8 +945,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get financeQuoteTitle => '转让报价试算 · 可选';
 
   @override
-  String get financeQuoteNote =>
-      '仅按报价和下方填写的转移手续费试算，不执行交易。其他费用未计入；请自行确认厂商是否允许转让及相关条款。';
+  String get financeQuoteNote => '仅按报价和手续费试算，不执行交易；请自行确认厂商是否允许转让。';
 
   @override
   String get financeQuoteAmountError => '请输入 0 或正数报价';
@@ -977,8 +972,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get financeSplitFee => '各承担一半';
 
   @override
-  String get financeSplitFeeNote =>
-      '手续费先折算到显示币种的分，再分摊；不足均分的 0.01 由买方承担。双方手续费之和等于总手续费。';
+  String get financeSplitFeeNote => '手续费先折算到分再均摊，不能均分的 0.01 由买方承担。';
 
   @override
   String get financeCalculateQuote => '计算报价与费用';
@@ -1026,7 +1020,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get financeRecordPayment => '记录已付款';
 
   @override
-  String get financeNoRenewalDate => '当前记录没有可用的续期日期。请核对预付类型、到期日与支持的日期范围。';
+  String get financeNoRenewalDate => '没有可用的预付到期日，请先在服务器资料中核对。';
 
   @override
   String get financeRecordAccountBill => '记录账户账单';
@@ -1035,7 +1029,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get financeLocalPaymentOnly => '仅本地记账，不向厂商发起支付。';
 
   @override
-  String get financeAccountBillNote => '独立账单，仅计一次；不分摊到实例，不产生服务期。';
+  String get financeAccountBillNote => '独立账单，仅计一次；不分摊，不产生服务期。';
 
   @override
   String get financeAccountName => '账户显示名称';
@@ -1219,7 +1213,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get financeTotalRemaining => '总体剩余价值  ›';
 
   @override
-  String get financeMonthlyNotPaid => '预付续费价摊月 + 按量月估算，不等于本月实付';
+  String get financeMonthlyNotPaid => '续费价摊月 + 按量估算，不等于本月实付。';
 
   @override
   String get financeUpcomingRenewals => '未来 30 天预计续费';
@@ -1243,17 +1237,16 @@ class AppLocalizationsZh extends AppLocalizations {
   String get financeDistributionEmpty => '添加费用资料后显示分布。';
 
   @override
-  String get financeDistributionNote => '点击分布查看同一口径的服务器明细。费用资料与续费记录均从服务器详情维护。';
+  String get financeDistributionNote => '点击分类查看服务器明细。';
 
   @override
-  String get financeGroupDistributionNote => '当前分组不分摊账户级实付。点击分布查看明细。';
+  String get financeGroupDistributionNote => '账户级实付不分摊到分组；点击分类查看明细。';
 
   @override
   String get financeSixMonthTitle => '本月起六个月 · 预付续费';
 
   @override
-  String get financeForecastNote =>
-      '按当前续费价和周期预测本月剩余日期及后五个自然月。假设继续续费，使用计划不改变预测；不包含按量账单或已过期项目。';
+  String get financeForecastNote => '按当前续费价预测，假设继续续费；不含按量账单和已过期项目。';
 
   @override
   String get financeMonthlyDetail => '月费用明细';
@@ -1280,7 +1273,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get financeNoServersInRange => '此范围没有服务器。';
 
   @override
-  String get financeUnknownZeroNote => '“—”表示未知或不适用，不代表免费。已知金额为 0 时会显示 0.00。';
+  String get financeUnknownZeroNote => '“—”表示未知或不适用，不是免费。';
 
   @override
   String get financeRenewals30Title => '未来 30 天续费安排';
@@ -1292,7 +1285,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get financeExpiredCheck => '已过期 · 先核实';
 
   @override
-  String get financeMeteredRenewalNote => '按量费用在服务器资料中维护月估算，不产生预付续费事件。';
+  String get financeMeteredRenewalNote => '按量计费不产生续费事件，月估算在服务器资料中维护。';
 
   @override
   String get financePngRenderFailed => '图片生成失败，原计算结果已保留。';
@@ -1322,7 +1315,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get financePngPreview => '图片预览';
 
   @override
-  String get financePngPrivacy => '仅含金额、日期、周期和参考汇率。图片不含服务器名称、地址、账户、备注或转让报价试算。';
+  String get financePngPrivacy => '图片仅含金额、日期、周期和参考汇率，不含服务器名称、地址或备注。';
 
   @override
   String get financePngSemantic => '剩余价值计算结果 PNG';
@@ -1340,8 +1333,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get financeSharePng => '系统分享 PNG';
 
   @override
-  String get financePngLocationNote =>
-      '保存位置可能是应用私有目录，不等于相册或公开下载目录。移动端可使用系统分享另存；取消分享不会关闭预览。';
+  String get financePngLocationNote => '文件可能在应用私有目录；可用系统分享另存。';
 
   @override
   String get financeRulesBody =>
@@ -1409,7 +1401,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String financeFuturePeriodsNote(int count) {
-    return '剩余价值含 $count 个尚未开始的周期；进度条仅显示上述周期。';
+    return '含 $count 个尚未开始的周期。';
   }
 
   @override
@@ -1419,7 +1411,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String financeReferenceBasis(String name) {
-    return '引用 $name 的已知期间。修改估值日、金额或币种不会改变已知服务期，也不会修改原服务器。';
+    return '引用 $name 的已知服务期；修改输入不会改动原服务器。';
   }
 
   @override
@@ -1448,7 +1440,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String financeRoundingNote(String rate, String source) {
-    return '$rate\n$source。先精确计算，再四舍五入到分；折算结果仅供参考。';
+    return '$rate\n$source。折算结果仅供参考。';
   }
 
   @override
@@ -1594,7 +1586,7 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String get uiFinanceFootnote => '金额按当前续费价和手动参考汇率折算，仅供参考，不代表厂商实际账单。';
+  String get uiFinanceFootnote => '按续费价和手动汇率折算，仅供参考，非实际账单。';
 
   @override
   String get uiFinanceVoidedPill => '已删除';
@@ -2032,7 +2024,7 @@ class AppLocalizationsZh extends AppLocalizations {
       '本 App 仅使用读取能力，不代表 API 凭据本身只有读取权限。\n适配器实例授权与 SSH 凭据分开管理。解除关联保留台账、费用、付款与 SSH。';
 
   @override
-  String get cloudTemplateInfo => '选择与面板匹配的适配器类型。适配器负责读取技术信息，提供商是供应服务器的商家。';
+  String get cloudTemplateInfo => '选择与面板匹配的适配器类型；提供商是供应服务器的商家。';
 
   @override
   String get cloudV1TemplateInfo => 'Client API Key + Hash\n每组凭据只对应单台 VPS';
@@ -2046,7 +2038,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get cloudSupportedPanels =>
-      '支持 SolusVM 1、SolusVM 2 和 RackNerd ctrl 读取。不提供 API 电源控制，也不会修改远端资源或停止服务商计费。';
+      '支持读取 SolusVM 1 / 2 和 RackNerd ctrl；不控制电源，不修改远端，也不会停止计费。';
 
   @override
   String get cloudReauthorize => '重新授权';
@@ -2073,7 +2065,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get cloudEndpointValidation => '请输入 HTTPS 面板首页地址，不含凭据、参数或 API 路径';
 
   @override
-  String get cloudEndpointInfo => '使用面板首页 HTTPS 地址，可以保留服务商指定端口。不会忽略证书错误或跟随重定向。';
+  String get cloudEndpointInfo => '使用面板首页 HTTPS 地址（可含指定端口）；不忽略证书错误，不跟随重定向。';
 
   @override
   String get cloudRackNerdEndpointValidation =>
@@ -2081,22 +2073,22 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get cloudRackNerdEndpointInfo =>
-      '使用面板首页 HTTPS 地址，可以保留服务商指定端口。仅 RackNerd ctrl 可移除精确的 /api/client/command.php 路径；请核对下方最终地址。不会忽略证书错误或跟随重定向。';
+      '使用面板首页 HTTPS 地址（可含指定端口），请核对下方最终地址；不忽略证书错误，不跟随重定向。';
 
   @override
   String get cloudEndpointIdentityInfo => '面板地址与连接身份绑定。不同面板请另建连接，旧授权不会显示在此处。';
 
   @override
   String get cloudV1CredentialsInfo =>
-      '填写该 VPS 的 Client API Key / Hash。不是管理员 API 凭据或登录密码；需服务商开放 Client API。每组凭据只读取单台 VPS 的状态。';
+      '填写该 VPS 的 Client API Key / Hash（非登录密码或管理员凭据）；需服务商开放 Client API。';
 
   @override
   String get cloudRackNerdCredentialsInfo =>
-      '填写 RackNerd ctrl 面板中该 VPS 的 Client API Key / Hash，不是登录密码或管理员凭据。此连接仅通过兼容客户端接口读取单台 VPS，不据此认定底层面板产品。';
+      '填写 RackNerd ctrl 中该 VPS 的 Client API Key / Hash（非登录密码或管理员凭据）。';
 
   @override
   String get cloudV2CredentialsInfo =>
-      '使用 SolusVM 2 用户区 Account → API Tokens 的 Token。不要使用管理员 Token；可读取范围取决于服务商设置。';
+      '使用 SolusVM 2 用户区 Account → API Tokens 的 Token，不要使用管理员 Token。';
 
   @override
   String get cloudV1ReauthorizationInfo =>
@@ -2107,10 +2099,10 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get cloudVerifyScopeInfo =>
-      '本 App 仅使用读取能力，不代表凭据本身只有读取权限。验证会读取状态或项目与设备；只有下一步保存后，授权才进入设备安全存储。';
+      '本 App 仅读取数据，但凭据本身可能有更多权限。验证只读取状态；保存后凭据才进入设备安全存储。';
 
   @override
-  String get cloudVerifyingInfo => '正在验证并读取完整列表。请求有超时限制；返回或取消会停止本次读取。';
+  String get cloudVerifyingInfo => '正在验证并读取，有超时限制；返回或取消会停止。';
 
   @override
   String get cloudCancelVerification => '取消验证';
@@ -2121,6 +2113,9 @@ class AppLocalizationsZh extends AppLocalizations {
   @override
   String get cloudCredentialMemoryInfo =>
       '凭据输入在验证后或离开时清空，不写入台账、日志或导出。Dart 不保证内存安全擦除。';
+
+  @override
+  String get r2CopyInfoCredentialHandling => '凭据如何处理';
 
   @override
   String get cloudChooseInstances => '选择导入的设备';
@@ -2154,15 +2149,15 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get cloudV1ResourcesInfo =>
-      'SolusVM 1 不提供稳定设备 ID，可读取的资源字段取决于提供商。填写内容仅保存本地，不会触发 SSH、TCP 或远端配置更改。';
+      'SolusVM 1 不提供设备 ID，可读取的字段取决于提供商。填写内容仅存本机。';
 
   @override
   String get cloudRackNerdResourcesInfo =>
-      'RackNerd ctrl 不提供稳定设备 ID。导入前需补齐六项硬件信息，API 未返回的 CPU 核数不能猜测。已填资料只存本机，不会触发 SSH、TCP 或远端配置修改。';
+      'RackNerd ctrl 不提供设备 ID。导入前请补齐六项硬件信息；API 未返回的值不要猜测。';
 
   @override
   String get cloudRebindWarning =>
-      '保存新授权将解除此适配器实例的全部旧设备关联。原有资料、财务与 SSH 设置保留；导入会创建新本地记录，不会覆盖或自动重新关联旧设备。';
+      '保存新授权将解除此实例的全部旧设备关联。原有资料、财务与 SSH 设置保留；导入会创建新记录，不会覆盖或自动重新关联旧设备。';
 
   @override
   String get cloudConfirmRebind => '我确认保存新授权将解除旧设备关联';
@@ -2198,8 +2193,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get cloudRefreshAccount => '刷新适配器实例状态';
 
   @override
-  String get cloudReadingInfo =>
-      '正在读取完整列表与状态，有超时限制。取消或返回会停止本次读取，不改变台账、费用或 SSH。';
+  String get cloudReadingInfo => '正在读取，有超时限制；取消或返回会停止，不改变台账。';
 
   @override
   String get cloudCancelRead => '取消读取';
@@ -2208,8 +2202,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get cloudReadAgain => '重新读取';
 
   @override
-  String get cloudReadCompleteInfo =>
-      '仅更新本适配器实例的 API 观测信息，未覆盖本地资料、费用、付款或 SSH 设置。';
+  String get cloudReadCompleteInfo => '仅更新读取结果，未覆盖本地资料。';
 
   @override
   String get cloudDone => '完成';
@@ -2275,8 +2268,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get cloudSecureStorageInfo => '设备安全存储；不显示或导出 API 凭据';
 
   @override
-  String get cloudScopeNotice =>
-      'API 凭据本身可能拥有更多权限，请在服务商面板核对。没有后台持续监控，读取结果只代表读取时刻。';
+  String get cloudScopeNotice => '凭据本身可能有更多权限，请在服务商面板核对。结果只代表读取时刻。';
 
   @override
   String get cloudNoLinkedInstances => '暂无关联设备，可从适配器实例菜单继续导入。';
@@ -2294,8 +2286,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get cloudLinkPanelAccount => '关联适配器实例';
 
   @override
-  String get cloudLocalBindingInfo =>
-      '此页仅使用已保存的 API 观测信息，不连接面板。没有可选设备或上次读取失败时，请先在适配器实例中手动刷新，再返回重新载入本地列表。';
+  String get cloudLocalBindingInfo => '仅使用已保存的读取结果，不连接面板。没有设备时请先在适配器实例中刷新。';
 
   @override
   String get cloudBindingCommitted => '关联改动已保存，请先重新读取资料；不要重复提交。';
@@ -2597,11 +2588,11 @@ class AppLocalizationsZh extends AppLocalizations {
   String get cloudAuthorizationUnsaved => '\n尚未保存这次授权';
 
   @override
-  String get cloudV1Deduplication => '此授权已固定的设备不会再次创建；解除关联不会解除固定。独立授权之间不会自动合并。';
+  String get cloudV1Deduplication => '已固定到此授权的设备不会重复创建；独立授权之间不自动合并。';
 
   @override
   String get cloudV2Deduplication =>
-      '以适配器类型、面板地址、远端账户、项目与设备 ID 确认重复。IP 或主机名相同仅作核对提示。';
+      '按适配器、面板地址、账户、项目和设备 ID 判断重复；IP 或主机名相同仅作提示。';
 
   @override
   String get cloudArchivedSuffix => ' · 已归档';
@@ -2928,7 +2919,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get serverFirstTitle => '你的第一台 VPS，\n从这里开始';
 
   @override
-  String get serverFirstDescription => '把机器、费用和连接放在一起。\n无需安装监控程序，也可直接手动记录。';
+  String get serverFirstDescription => '到期、费用和连接，一处记录。';
 
   @override
   String get serverAddFirst => '添加第一台服务器';
@@ -2937,8 +2928,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get serverLoadDemoQuestion => '载入演示数据？';
 
   @override
-  String get serverLoadDemoHelp =>
-      '将写入 4 条带“演示”标记的本地记录，地址均为保留地址。不会连接服务器。可在各服务器详情中归档这些记录。';
+  String get serverLoadDemoHelp => '将写入 4 条“演示”记录，使用保留地址，不会连接服务器；可随时归档。';
 
   @override
   String get serverLoadDemo => '载入演示';
@@ -3028,8 +3018,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get serverClearFilters => '清除筛选';
 
   @override
-  String get serverListObservationHelp =>
-      '显示本地资料和最近一次面板查询结果，不持续监控。\n到期天数按设备日期计算；未来 30 天包含今天及后 29 天。';
+  String get serverListObservationHelp => '不持续监控运行状态；到期天数按设备日期计算。';
 
   @override
   String get serverCostsMissing => '费用待补充';
@@ -3161,7 +3150,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get serverNoPanelLink => '未关联面板账户';
 
   @override
-  String get serverPanelLinkHelp => '面板刷新只更新 API 观测，不会覆盖你手动填写的资料。';
+  String get serverPanelLinkHelp => '面板刷新不会覆盖手动填写的资料。';
 
   @override
   String get serverLinkPanel => '关联面板账户';
@@ -3247,7 +3236,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get serverPower => '单机电源';
 
   @override
-  String get serverConnectionSafety => '首次连接需核对主机指纹；关机或重启不会停止厂商计费。';
+  String get serverConnectionSafety => '首次连接需核对主机指纹；关机或重启不会停止计费。';
 
   @override
   String get serverNotes => '备注';
@@ -3462,7 +3451,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get serverCostDetails => '费用资料';
 
   @override
-  String get serverPaymentLockHelp => '已有续费付款：计费方式、周期和日期不可改；续费价与币种仍可改。';
+  String get serverPaymentLockHelp => '已有续费付款：计费方式、周期和日期已锁定。';
 
   @override
   String get serverCostUnknownOption => '费用未知 · 稍后补充';
@@ -3489,7 +3478,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get serverOptionalNotes => '备注（选填）';
 
   @override
-  String get serverNotesSafety => '请勿在备注保存密码、私钥或令牌。';
+  String get serverNotesSafety => '备注不加密，请勿存放密码、私钥或令牌。';
 
   @override
   String get serverSave => '保存服务器';
@@ -3606,8 +3595,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get tcpSingleTarget => '单目标 TCP 测试';
 
   @override
-  String get tcpTestExplanation =>
-      '从当前设备测试一个地址和端口，仅建立并关闭 TCP 连接，不发送应用数据。成功不代表 SSH 可登录、服务器开机状态或业务健康。';
+  String get tcpTestExplanation => '仅测试能否建立 TCP 连接，不发送数据。成功不代表 SSH 可登录或服务正常。';
 
   @override
   String get tcpAddress => 'IP / 域名';
@@ -3817,8 +3805,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get connectionSnippetDraftOnly => '片段将放入独立待发送区。连接、核验、认证都不会发送片段。';
 
   @override
-  String get connectionPowerAfterConnect =>
-      '连接后才能选择重启 / 关机，并再次完成两次确认。没有 SSH 开机或 API 电源功能。';
+  String get connectionPowerAfterConnect => '连接后选择重启 / 关机，需完成两次确认；不支持开机。';
 
   @override
   String get connectionReviewConnect => '核对并连接';
@@ -3900,7 +3887,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get snippetReadFailed => '片段读取失败，未修改本地数据';
 
   @override
-  String get snippetSelectPreviewHelp => '选择后先预览完整内容，只插入待发送草稿。不会自动发送或回车。';
+  String get snippetSelectPreviewHelp => '选择后先预览，只插入草稿，不会自动发送。';
 
   @override
   String get snippetPlaintextHelp =>
@@ -3942,7 +3929,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get snippetCancelEdit => '取消片段编辑';
 
   @override
-  String get snippetSaveSafety => '本地普通文本，不加密保存。请勿填写密码、私钥或令牌。保存不会执行或发送内容。';
+  String get snippetSaveSafety => '片段以明文保存，请勿填写密码、私钥或令牌。';
 
   @override
   String get snippetName => '片段名称';
@@ -3954,8 +3941,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get snippetContentRange => '内容不能为空，最多 16384 个字符';
 
   @override
-  String get snippetExactContentHelp =>
-      '保存会原样保留内容，包括前后空白、多行、回车及控制字符。请使用完整预览核对。';
+  String get snippetExactContentHelp => '内容原样保存，含空白和控制字符；请用完整预览核对。';
 
   @override
   String get connectionSaving => '保存中…';
@@ -4226,14 +4212,13 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String get terminalPassphraseHelp =>
-      '这是私钥解密口令，不是服务器登录密码。仅用于本次连接，不会保存；下次连接需重新输入。';
+  String get terminalPassphraseHelp => '私钥解密口令，不是登录密码；仅用于本次连接，不保存。';
 
   @override
   String get terminalKeyPassphrase => '本次私钥口令';
 
   @override
-  String get terminalPassphraseCleared => '连接已取消或页面进入后台，口令已清空。请取消并重新连接。';
+  String get terminalPassphraseCleared => '口令已清空，请取消后重新连接。';
 
   @override
   String get terminalUnlockOnce => '仅解锁本次连接';
@@ -4486,7 +4471,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get securityAddCredential => '新增凭据';
 
   @override
-  String get securityCredentialStorageNotice => '凭据独立管理，连接只引用凭据。秘密仅保存在系统安全存储中。';
+  String get securityCredentialStorageNotice => '秘密仅保存在系统安全存储中，服务器只引用凭据。';
 
   @override
   String get securitySearchCredentials => '搜索名称、默认用户名';
@@ -4528,7 +4513,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get securityLocalCredentialNotice =>
-      '修改本地凭据不会修改远端密码或 authorized_keys。只有明确发起连接才会使用所选凭据。';
+      '只修改本机凭据，不会改动服务器端密码或 authorized_keys。';
 
   @override
   String get securityViewDetails => '查看详情';
@@ -4611,7 +4596,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get securityPrivateKeyImportNotice =>
-      '支持 OpenSSH / PEM 私钥。只读取所选文件，不保存文件路径。也可用“粘贴完整私钥”保留换行；内容始终隐藏。';
+      '支持 OpenSSH / PEM 私钥；不保存文件路径，内容始终隐藏。';
 
   @override
   String get securityLoginPassword => '登录密码';
@@ -4632,8 +4617,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get securityPrivateKeyPassphrase => '私钥加密口令（如有）';
 
   @override
-  String get securityPrivateKeyPassphraseHelp =>
-      '用于解密所选私钥，不是服务器登录密码。本页不会更改私钥的加密口令';
+  String get securityPrivateKeyPassphraseHelp => '用于解密私钥，不是登录密码。';
 
   @override
   String get securityStoreKeyPassphrase => '在设备安全存储中保存私钥口令';
@@ -4644,7 +4628,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get securityCredentialEditNotice =>
-      '用户名只作为新连接的候选值，不覆盖已有连接。更新凭据只影响以后登录，不修改服务器端密码或密钥。离开到后台会清空未保存秘密。';
+      '用户名仅作新连接的候选值。更新凭据只影响以后登录，不修改服务器端；退到后台会清空未保存内容。';
 
   @override
   String get securityCurrentLinkImpact => '当前关联影响';
@@ -4677,7 +4661,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get securityPublicKeyFingerprintNotice =>
-      '这里不展示或导出私钥。公钥指纹用于辨认登录密钥，与服务器主机指纹不同。';
+      '公钥指纹用于辨认登录密钥，不同于服务器主机指纹；这里不展示私钥。';
 
   @override
   String get securityFingerprintCopied => '公钥指纹已复制';
@@ -4709,7 +4693,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String securityCredentialReferenceCount(int count) {
-    return '$count 台引用此凭据，包含已归档记录。连接用户名分别保存。';
+    return '$count 台服务器引用此凭据（含已归档）。';
   }
 
   @override
@@ -4717,7 +4701,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String securityCredentialDeleteImpact(int count) {
-    return '$count 台服务器将受影响，包含归档记录。请核对下面的每一项。';
+    return '$count 台服务器将受影响（含已归档）。';
   }
 
   @override
@@ -4741,8 +4725,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get securityReplaceCredentialNotice => '仅替换凭据引用，所有服务器当前用户名保持不变。';
 
   @override
-  String get securityDeleteLocalCredentialNotice =>
-      '仅删除本机凭据，不能从本页面恢复。不修改远端密码或 authorized_keys，不取消云服务。';
+  String get securityDeleteLocalCredentialNotice => '仅删除本机凭据，无法恢复；不影响服务器端或云服务。';
 
   @override
   String get securityConfirmCredentialImpact => '我已确认关联影响，删除本地凭据';
@@ -4757,8 +4740,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get securityVerifyHostKey => '核验主机公钥';
 
   @override
-  String get securityHostTrustNotice =>
-      '信任绑定主机地址和端口，并记录算法及完整公钥。登录凭据与服务器主机公钥是两件事。';
+  String get securityHostTrustNotice => '信任绑定主机地址、端口和完整公钥，与登录凭据无关。';
 
   @override
   String get securityNoTrustedHosts =>
@@ -4799,7 +4781,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get securityHostTrustInputNotice =>
-      '输入从厂商控制台或管理员等独立可信渠道取得的主机公钥。此页面只校验输入内容并保存本机信任，不会连接服务器。';
+      '请输入从厂商控制台等独立可信渠道取得的主机公钥。本页只保存本机信任，不连接服务器。';
 
   @override
   String get securityHostAddress => '主机地址';
@@ -4815,7 +4797,10 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get securityRsaHostKeyNotice =>
-      'rsa-sha2-256 / rsa-sha2-512 是签名算法，其 RSA 公钥类型选择 ssh-rsa。只支持结构完整的受支持主机公钥。';
+      'rsa-sha2-256 / 512 是签名算法，公钥类型请选 ssh-rsa。';
+
+  @override
+  String get r2CopyInfoRsaKey => '关于 RSA 主机公钥';
 
   @override
   String get securityChecking => '校验中…';
@@ -4843,7 +4828,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get securityHostVerificationWarning =>
-      '请通过独立渠道核对完整指纹和目标地址。变化可能来自重装，也可能是错误主机或中间人攻击。无法确认时应拒绝。';
+      '请通过独立渠道核对指纹和地址。变化可能是重装，也可能是中间人攻击；无法确认请拒绝。';
 
   @override
   String get securityBeginHostReverification => '开始独立重新核实';
@@ -4876,8 +4861,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get securitySavingHostTrust => '正在保存已确认的信任。完成前暂时不能返回。';
 
   @override
-  String get securityLocalHostTrustOnly =>
-      '只记录本机信任，当前不会连接服务器。拒绝、取消和返回均不保存，也不发送认证资料。';
+  String get securityLocalHostTrustOnly => '只记录本机信任；拒绝、取消或返回均不保存。';
 
   @override
   String get securityDiscardSshTitle => '放弃连接配置？';
@@ -4968,8 +4952,7 @@ class AppLocalizationsZh extends AppLocalizations {
       '用户名属于本台连接。换凭据时只有明确选择“采用默认用户名”才更改它，取消和相同用户名都不会修改其他连接。';
 
   @override
-  String get securityConfigurationOnlyNotice =>
-      '此页只保存连接配置。建立连接时先核验主机身份，再进行登录认证；主机公钥变化时会暂停认证，等待重新核实。';
+  String get securityConfigurationOnlyNotice => '仅保存连接配置。连接时先核验主机公钥，公钥变化会暂停认证。';
 
   @override
   String get securitySaveSshConfiguration => '保存 SSH 配置';
@@ -5089,8 +5072,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get providerUiUnspecifiedHelp => '仅手动添加，可稍后在服务器详情中指定归属。';
 
   @override
-  String get providerUiHierarchyHelp =>
-      '提供商是服务器的业务归属；适配器实例保存一份独立授权，只能读取该授权范围内的设备。';
+  String get providerUiHierarchyHelp => '提供商是服务器的业务归属；适配器实例保存独立授权。';
 
   @override
   String providerUiSummary(int instances, int devices) {
@@ -5182,7 +5164,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get providerUiChooseInstance => '选择适配器实例';
 
   @override
-  String get providerUiInstanceChoiceHelp => '只列出当前提供商的实例。授权范围由适配器类型与验证结果决定。';
+  String get providerUiInstanceChoiceHelp => '只列出当前提供商的实例。';
 
   @override
   String get providerUiReviewHelp =>
@@ -5286,10 +5268,10 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get cloudImportCompletionInfo =>
-      '导入前需核对完整的六项资源。API 未提供的值保持未知；只有明确确认后才选择不限流量。补填或修改仅用于本地配置，不会改写 API 观测信息。';
+      '导入前请核对六项资源；API 未提供的保持未知，确认无限流量才选“不限”。修改仅存本机。';
 
   @override
-  String get cloudImportFinanceLater => '本次仅添加设备与资源配置。财务信息可稍后填写，不会自动创建费用或付款。';
+  String get cloudImportFinanceLater => '本次仅添加设备与资源配置，不会创建费用或付款。';
 
   @override
   String cloudImportSummary(

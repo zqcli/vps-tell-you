@@ -3,7 +3,7 @@
   "language": "语言",
   "languageDescription": "立即切换界面语言，保留当前草稿和连接。",
   "languageSystem": "跟随系统",
-  "languageSystemDescription": "支持简体中文和 English；其他系统语言使用 English。",
+  "languageSystemDescription": "其他系统语言使用 English。",
   "languageChinese": "简体中文",
   "languageEnglish": "English",
   "languageSaveFailed": "未能保存语言设置。当前语言未更改，请重试。",
@@ -142,7 +142,7 @@
   "recordMissingReload": "记录不存在，请返回重新读取。",
   "dueDateNotEntered": "未填写到期日",
   "reminderSaveHelp": "修改后点“保存提醒规则”生效。若启用提醒并选择“到期不再使用”，仍会提醒核对厂商的续费设置。",
-  "uiTabsReminderSaveHelp": "修改后点右上角“保存”生效。若启用提醒并选择“到期不再使用”，仍会提醒核对厂商的续费设置。",
+  "uiTabsReminderSaveHelp": "点右上角“保存”后生效。",
   "uiTabsReminderDue": "{name} 将于 {date} 到期。",
   "@uiTabsReminderDue": {
     "placeholders": {
@@ -190,9 +190,9 @@
   "hour": "时",
   "minute": "分",
   "invalidTime": "请输入有效时间",
-  "reminderDstHelp": "随设备当前时区。夏令时缺失时间向后顺延，重复时间仅提醒一次；整天被跳过的日期不排程。",
+  "reminderDstHelp": "按设备当前时区；夏令时缺失的时间顺延，重复的只提醒一次。",
   "myUsagePlan": "我的使用计划",
-  "usagePlanWarning": "使用计划只是本地记录。计划到期停用不会停止厂商扣费，请另行向厂商确认取消续费。",
+  "usagePlanWarning": "使用计划仅为本地记录，不会停止厂商扣费；请另行向厂商取消续费。",
   "savedRuleSchedule": "已保存规则的提醒安排",
   "serverScheduledCount": "本服务器已安排 {p0} 条",
   "@serverScheduledCount": {
@@ -333,7 +333,7 @@
       }
     }
   },
-  "restoreContentsHelp": "将导入上述台账记录与手动汇率。上方列出的安全资料、备注、提醒和应用偏好均不在备份内。",
+  "restoreContentsHelp": "仅导入台账记录和手动汇率；上方所列内容不在备份内。",
   "restoreToEmptyLedger": "恢复到空台账",
   "appearance": "外观",
   "followSystem": "跟随系统",
@@ -388,7 +388,7 @@
   "backupExclusionsSummary": "不含凭据与主机信任 · 未加密 JSON",
   "about": "关于",
   "developmentVersion": "开发测试版 · 0.1.0",
-  "appLocalDataHelp": "数据保存在当前设备，无需应用账号。\n归档记录不会取消服务器服务或停止扣费。",
+  "appLocalDataHelp": "数据仅保存在本机，无需账号。归档不会取消服务或停止扣费。",
   "groupSaveFailed": "未能保存分组。请检查名称是否重复，再重试。",
   "deleteGroupQuestion": "删除“{p0}”？",
   "@deleteGroupQuestion": {
@@ -401,7 +401,7 @@
   "deleteGroupHelp": "组内所有服务器（含已归档）将移到“未分组”，服务器资料和历史付款保留。不会修改远端服务器。",
   "deleteGroup": "删除分组",
   "addGroup": "新增分组",
-  "groupsHelp": "按用途整理服务器。分组变更仅影响本地台账。",
+  "groupsHelp": "按用途整理服务器。",
   "noGroupsHelp": "还没有自定义分组，点右上角 + 新建。",
   "unarchivedServerCount": "{p0} 台未归档服务器",
   "@unarchivedServerCount": {
@@ -431,7 +431,7 @@
       }
     }
   },
-  "archiveHelp": "归档保留服务器资料和 ID。恢复不会连接云主机，也不会启动或续费服务。",
+  "archiveHelp": "归档保留资料；恢复不会启动或续费服务。",
   "noArchivedRecords": "没有已归档记录",
   "restoreRecord": "恢复记录",
   "renameGroup": "重命名分组",
@@ -464,14 +464,14 @@
   "financeDailyShown": "所示周期日均",
   "r2CopyMetricDaysLeft": "剩余天数",
   "r2CopyMetricDaily": "日均",
-  "financeInferredPeriods": "部分服务起点由到期日与日历周期反推；不代表历史付款证明。",
-  "financeValueDisclaimer": "仅表示服务时长的价格折算，不是退款承诺或成交价。",
+  "financeInferredPeriods": "服务起点由到期日反推，不代表付款证明。",
+  "financeValueDisclaimer": "按剩余时长折算，不是退款承诺或成交价。",
   "financeShownPeriod": "所示周期",
   "financeFuturePeriod": "尚未开始的周期",
   "financeEndedPeriod": "已结束的周期",
   "financeCurrentPeriod": "当前周期",
   "financeFxTitle": "币种与参考汇率",
-  "financeFxScope": "仅改变参考折算，原币续费价与历史实付保持不变。不会请求实时汇率。留空表示该汇率未知。",
+  "financeFxScope": "仅影响参考折算，不联网取汇率；留空表示未知。",
   "financeDisplayCurrency": "合计显示币种",
   "financeUsdRate": "1 USD = 多少 CNY",
   "financeEurRate": "1 EUR = 多少 CNY",
@@ -479,17 +479,17 @@
   "financeRateError": "请输入大于 0 的汇率，最多 8 位小数",
   "financeRateDate": "汇率参考日期",
   "financePastDateError": "请输入不晚于今天的有效日期",
-  "financeFxBasis": "CNY 为基准，1 CNY = 1 CNY。同币种换算不需要汇率；跨币种缺汇率时只展示可转换部分及覆盖率。",
+  "financeFxBasis": "以 CNY 为基准；缺少汇率的币种不计入合计。",
   "financeSaveFx": "保存参考汇率",
   "financeReferenceTitle": "引用服务器资料",
-  "financeReferenceNote": "只复制此刻的续费资料和已知期间。不会修改原服务器。",
+  "financeReferenceNote": "仅复制当前续费资料，不会修改原服务器。",
   "financeNoPrepaid": "暂无预付费服务器，可使用独立试算。",
   "financeDateRangeError": "请核对日期，试算范围限制为 100 年",
   "financeMissingPeriodsError": "引用资料缺少有效服务期。请先补充服务器日期，或修改到期日、周期后使用独立试算。",
   "financeCalculatorTitle": "剩余价值计算器",
   "financeReferenceServer": "引用服务器",
-  "financeIndependentRebuilt": "已切换为独立试算：按当前到期日和周期重新推算服务期，假设到期日前服务连续有效。",
-  "financeIndependentNote": "独立试算，无需添加服务器。假设到期日前服务连续有效。",
+  "financeIndependentRebuilt": "已切换为独立试算，按到期日和周期重新推算服务期。",
+  "financeIndependentNote": "独立试算，无需添加服务器；假设到期日前服务连续。",
   "financeRenewalAmount": "每周期续费金额",
   "financeAmountError": "请填写有效金额，明确免费可填 0",
   "financeOriginalCurrency": "原币种",
@@ -501,7 +501,7 @@
   "financeAlgorithmTitle": "周期与算法说明",
   "financeAlgorithmNote": "剩余价值 = Σ（每周期续费金额 × 该周期未用天数比例）。\n日历周期按真实天数计算，不固定每月 30 天；月底由原到期日锚点倒推，年度处理闰年。估值早于已知开始日不会超过该期整价。\n独立模式向前倒推至覆盖估值日，限制 100 年。到期当天为 0，不检查服务能否转让或退款。",
   "financeCalculateValue": "计算剩余价值",
-  "financeEstimateNoWrite": "试算与记账分离，修改输入不会更改任何服务器或付款。",
+  "financeEstimateNoWrite": "试算不会改动任何服务器或付款。",
   "financeReferenceRateMissing": "参考汇率缺失",
   "financeIndependentBasis": "独立假设：到期日前服务连续有效，期间按到期日倒推。",
   "financeQuoteFxError": "缺少对应汇率，不能计算参考价值与结算金额。",
@@ -512,7 +512,7 @@
   "financeCopyResult": "复制结果",
   "financePreviewPng": "预览 / 保存 PNG",
   "financeQuoteTitle": "转让报价试算 · 可选",
-  "financeQuoteNote": "仅按报价和下方填写的转移手续费试算，不执行交易。其他费用未计入；请自行确认厂商是否允许转让及相关条款。",
+  "financeQuoteNote": "仅按报价和手续费试算，不执行交易；请自行确认厂商是否允许转让。",
   "financeQuoteAmountError": "请输入 0 或正数报价",
   "financeTransferFee": "转移手续费（Push）",
   "financeQuoteFeeError": "请输入 0 或正数手续费",
@@ -521,7 +521,7 @@
   "financeBuyerPays": "买家承担",
   "financeSellerPays": "卖家承担",
   "financeSplitFee": "各承担一半",
-  "financeSplitFeeNote": "手续费先折算到显示币种的分，再分摊；不足均分的 0.01 由买方承担。双方手续费之和等于总手续费。",
+  "financeSplitFeeNote": "手续费先折算到分再均摊，不能均分的 0.01 由买方承担。",
   "financeCalculateQuote": "计算报价与费用",
   "financePremiumLabel": "报价与参考价值差额（溢价 / 折价）",
   "financeBuyerSellerFee": "买方 / 卖方手续费",
@@ -537,10 +537,10 @@
   "financeAccountPaymentSaved": "账户账单已记录一次，实例期限未改变",
   "financePaymentSaved": "付款已记录，服务期与统计已更新",
   "financeRecordPayment": "记录已付款",
-  "financeNoRenewalDate": "当前记录没有可用的续期日期。请核对预付类型、到期日与支持的日期范围。",
+  "financeNoRenewalDate": "没有可用的预付到期日，请先在服务器资料中核对。",
   "financeRecordAccountBill": "记录账户账单",
   "financeLocalPaymentOnly": "仅本地记账，不向厂商发起支付。",
-  "financeAccountBillNote": "独立账单，仅计一次；不分摊到实例，不产生服务期。",
+  "financeAccountBillNote": "独立账单，仅计一次；不分摊，不产生服务期。",
   "financeAccountName": "账户显示名称",
   "financeAccountNameHint": "例如：厂商 · 个人账户",
   "financePaidAmount": "本次实付金额",
@@ -600,7 +600,7 @@
   "financeScope": "统计范围",
   "financeMonthlyReference": "月费用参考",
   "financeTotalRemaining": "总体剩余价值  ›",
-  "financeMonthlyNotPaid": "预付续费价摊月 + 按量月估算，不等于本月实付",
+  "financeMonthlyNotPaid": "续费价摊月 + 按量估算，不等于本月实付。",
   "financeUpcomingRenewals": "未来 30 天预计续费",
   "financeRecentPayments": "近 30 天已记录实付",
   "financeUnrecordedNotZero": "尚无已记录付款，不代表没有支出",
@@ -608,10 +608,10 @@
   "financeByVendor": "按厂商",
   "financeByGroup": "按分组",
   "financeDistributionEmpty": "添加费用资料后显示分布。",
-  "financeDistributionNote": "点击分布查看同一口径的服务器明细。费用资料与续费记录均从服务器详情维护。",
-  "financeGroupDistributionNote": "当前分组不分摊账户级实付。点击分布查看明细。",
+  "financeDistributionNote": "点击分类查看服务器明细。",
+  "financeGroupDistributionNote": "账户级实付不分摊到分组；点击分类查看明细。",
   "financeSixMonthTitle": "本月起六个月 · 预付续费",
-  "financeForecastNote": "按当前续费价和周期预测本月剩余日期及后五个自然月。假设继续续费，使用计划不改变预测；不包含按量账单或已过期项目。",
+  "financeForecastNote": "按当前续费价预测，假设继续续费；不含按量账单和已过期项目。",
   "financeMonthlyDetail": "月费用明细",
   "financeValueDetail": "剩余价值明细",
   "financeInventoryDetail": "服务器构成",
@@ -620,11 +620,11 @@
   "financeExpiredMonthlyExcluded": "已到期，未计入月费用参考",
   "financeUnknownAmount": "日期或费用资料不足，金额未知",
   "financeNoServersInRange": "此范围没有服务器。",
-  "financeUnknownZeroNote": "“—”表示未知或不适用，不代表免费。已知金额为 0 时会显示 0.00。",
+  "financeUnknownZeroNote": "“—”表示未知或不适用，不是免费。",
   "financeRenewals30Title": "未来 30 天续费安排",
   "financeNoKnownRenewals": "此范围没有已知的预付续费。",
   "financeExpiredCheck": "已过期 · 先核实",
-  "financeMeteredRenewalNote": "按量费用在服务器资料中维护月估算，不产生预付续费事件。",
+  "financeMeteredRenewalNote": "按量计费不产生续费事件，月估算在服务器资料中维护。",
   "financePngRenderFailed": "图片生成失败，原计算结果已保留。",
   "financePngSaveFailed": "保存未完成。预览仍保留，请检查空间与权限后重试。",
   "financePngShareSelected": "已选择系统分享操作，请在目标应用核对是否送达。",
@@ -634,13 +634,13 @@
   "financePngShareBusy": "请先完成当前系统分享操作。",
   "financePngShareFailed": "分享未完成，预览仍保留，请重试。",
   "financePngPreview": "图片预览",
-  "financePngPrivacy": "仅含金额、日期、周期和参考汇率。图片不含服务器名称、地址、账户、备注或转让报价试算。",
+  "financePngPrivacy": "图片仅含金额、日期、周期和参考汇率，不含服务器名称、地址或备注。",
   "financePngSemantic": "剩余价值计算结果 PNG",
   "financeRegenerate": "重新生成",
   "financeSavePng": "保存 PNG",
   "financeSharing": "正在分享…",
   "financeSharePng": "系统分享 PNG",
-  "financePngLocationNote": "保存位置可能是应用私有目录，不等于相册或公开下载目录。移动端可使用系统分享另存；取消分享不会关闭预览。",
+  "financePngLocationNote": "文件可能在应用私有目录；可用系统分享另存。",
   "financeRulesBody": "月费用参考：未到期的预付续费价 ÷ 周期月数，加上按量月估算。到期当天及已过期的预付服务不计入；缺少日期或费用时标记为未知。\n\n剩余价值：按各个已知服务期的未用天数折算当前续费价，包含开始日、不含结束日。尚未开始的整期计整价，已结束的期间计 0；按量付费不适用，资料不足时为未知。它不是可退款金额或成交价。\n\n续费预测：假设继续按当前周期和价格续费。未来 30 天含今天及后 29 天；六个月指本月剩余日期和后五个自然月。已过期项目不补推，不包含按量账单；本地使用计划不会改变预测。\n\n近 30 天实付：包含今天及前 29 天已记录的付款。全部范围保留归档服务器的付款，独立账户账单只计一次；按分组查看时不分摊账户账单。\n\n跨币种缺少汇率时，仅合计可折算的部分，并保留原币小计。先精确求和，再四舍五入到分；参考折算不等于实际扣款。",
   "financeApproxAmount": "约 {amount} {currency}",
   "@financeApproxAmount": {
@@ -750,7 +750,7 @@
       }
     }
   },
-  "financeFuturePeriodsNote": "剩余价值含 {count} 个尚未开始的周期；进度条仅显示上述周期。",
+  "financeFuturePeriodsNote": "含 {count} 个尚未开始的周期。",
   "@financeFuturePeriodsNote": {
     "placeholders": {
       "count": {
@@ -769,7 +769,7 @@
       }
     }
   },
-  "financeReferenceBasis": "引用 {name} 的已知期间。修改估值日、金额或币种不会改变已知服务期，也不会修改原服务器。",
+  "financeReferenceBasis": "引用 {name} 的已知服务期；修改输入不会改动原服务器。",
   "@financeReferenceBasis": {
     "placeholders": {
       "name": {
@@ -809,7 +809,7 @@
       }
     }
   },
-  "financeRoundingNote": "{rate}\n{source}。先精确计算，再四舍五入到分；折算结果仅供参考。",
+  "financeRoundingNote": "{rate}\n{source}。折算结果仅供参考。",
   "@financeRoundingNote": {
     "placeholders": {
       "rate": {
@@ -1036,7 +1036,7 @@
       }
     }
   },
-  "uiFinanceFootnote": "金额按当前续费价和手动参考汇率折算，仅供参考，不代表厂商实际账单。",
+  "uiFinanceFootnote": "按续费价和手动汇率折算，仅供参考，非实际账单。",
   "uiFinanceVoidedPill": "已删除",
   "uiFinanceArchivedPill": "已归档",
   "uiFinanceAccountPill": "账户账单",
@@ -1430,7 +1430,7 @@
   "@cloudReadOnlyBoundary": {
     "description": "Panel accounts: read only boundary"
   },
-  "cloudTemplateInfo": "选择与面板匹配的适配器类型。适配器负责读取技术信息，提供商是供应服务器的商家。",
+  "cloudTemplateInfo": "选择与面板匹配的适配器类型；提供商是供应服务器的商家。",
   "@cloudTemplateInfo": {
     "description": "Panel accounts: template info"
   },
@@ -1446,7 +1446,7 @@
   "@cloudRackNerdTemplateInfo": {
     "description": "Panel accounts: RackNerd ctrl single-instance protocol template, without identifying the underlying panel product"
   },
-  "cloudSupportedPanels": "支持 SolusVM 1、SolusVM 2 和 RackNerd ctrl 读取。不提供 API 电源控制，也不会修改远端资源或停止服务商计费。",
+  "cloudSupportedPanels": "支持读取 SolusVM 1 / 2 和 RackNerd ctrl；不控制电源，不修改远端，也不会停止计费。",
   "@cloudSupportedPanels": {
     "description": "Panel accounts: supported panels"
   },
@@ -1482,7 +1482,7 @@
   "@cloudEndpointValidation": {
     "description": "Panel accounts: endpoint validation"
   },
-  "cloudEndpointInfo": "使用面板首页 HTTPS 地址，可以保留服务商指定端口。不会忽略证书错误或跟随重定向。",
+  "cloudEndpointInfo": "使用面板首页 HTTPS 地址（可含指定端口）；不忽略证书错误，不跟随重定向。",
   "@cloudEndpointInfo": {
     "description": "Panel accounts: endpoint info"
   },
@@ -1490,7 +1490,7 @@
   "@cloudRackNerdEndpointValidation": {
     "description": "Panel accounts: RackNerd ctrl-only endpoint validation"
   },
-  "cloudRackNerdEndpointInfo": "使用面板首页 HTTPS 地址，可以保留服务商指定端口。仅 RackNerd ctrl 可移除精确的 /api/client/command.php 路径；请核对下方最终地址。不会忽略证书错误或跟随重定向。",
+  "cloudRackNerdEndpointInfo": "使用面板首页 HTTPS 地址（可含指定端口），请核对下方最终地址；不忽略证书错误，不跟随重定向。",
   "@cloudRackNerdEndpointInfo": {
     "description": "Panel accounts: narrow RackNerd ctrl API-path normalization explanation"
   },
@@ -1498,15 +1498,15 @@
   "@cloudEndpointIdentityInfo": {
     "description": "Panel accounts: endpoint identity info"
   },
-  "cloudV1CredentialsInfo": "填写该 VPS 的 Client API Key / Hash。不是管理员 API 凭据或登录密码；需服务商开放 Client API。每组凭据只读取单台 VPS 的状态。",
+  "cloudV1CredentialsInfo": "填写该 VPS 的 Client API Key / Hash（非登录密码或管理员凭据）；需服务商开放 Client API。",
   "@cloudV1CredentialsInfo": {
     "description": "Panel accounts: v1 credentials info"
   },
-  "cloudRackNerdCredentialsInfo": "填写 RackNerd ctrl 面板中该 VPS 的 Client API Key / Hash，不是登录密码或管理员凭据。此连接仅通过兼容客户端接口读取单台 VPS，不据此认定底层面板产品。",
+  "cloudRackNerdCredentialsInfo": "填写 RackNerd ctrl 中该 VPS 的 Client API Key / Hash（非登录密码或管理员凭据）。",
   "@cloudRackNerdCredentialsInfo": {
     "description": "Panel accounts: RackNerd ctrl Key/Hash credential scope"
   },
-  "cloudV2CredentialsInfo": "使用 SolusVM 2 用户区 Account → API Tokens 的 Token。不要使用管理员 Token；可读取范围取决于服务商设置。",
+  "cloudV2CredentialsInfo": "使用 SolusVM 2 用户区 Account → API Tokens 的 Token，不要使用管理员 Token。",
   "@cloudV2CredentialsInfo": {
     "description": "Panel accounts: v2 credentials info"
   },
@@ -1518,11 +1518,11 @@
   "@cloudV2ReauthorizationInfo": {
     "description": "Panel accounts: v2 reauthorization info"
   },
-  "cloudVerifyScopeInfo": "本 App 仅使用读取能力，不代表凭据本身只有读取权限。验证会读取状态或项目与设备；只有下一步保存后，授权才进入设备安全存储。",
+  "cloudVerifyScopeInfo": "本 App 仅读取数据，但凭据本身可能有更多权限。验证只读取状态；保存后凭据才进入设备安全存储。",
   "@cloudVerifyScopeInfo": {
     "description": "Panel accounts: verify scope info"
   },
-  "cloudVerifyingInfo": "正在验证并读取完整列表。请求有超时限制；返回或取消会停止本次读取。",
+  "cloudVerifyingInfo": "正在验证并读取，有超时限制；返回或取消会停止。",
   "@cloudVerifyingInfo": {
     "description": "Panel accounts: verifying info"
   },
@@ -1535,6 +1535,7 @@
     "description": "Panel accounts: verify read"
   },
   "cloudCredentialMemoryInfo": "凭据输入在验证后或离开时清空，不写入台账、日志或导出。Dart 不保证内存安全擦除。",
+  "r2CopyInfoCredentialHandling": "凭据如何处理",
   "@cloudCredentialMemoryInfo": {
     "description": "Panel accounts: credential memory info"
   },
@@ -1578,15 +1579,15 @@
   "@cloudLocalNameInfo": {
     "description": "Panel accounts: local name info"
   },
-  "cloudV1ResourcesInfo": "SolusVM 1 不提供稳定设备 ID，可读取的资源字段取决于提供商。填写内容仅保存本地，不会触发 SSH、TCP 或远端配置更改。",
+  "cloudV1ResourcesInfo": "SolusVM 1 不提供设备 ID，可读取的字段取决于提供商。填写内容仅存本机。",
   "@cloudV1ResourcesInfo": {
     "description": "Panel accounts: v1 resources info"
   },
-  "cloudRackNerdResourcesInfo": "RackNerd ctrl 不提供稳定设备 ID。导入前需补齐六项硬件信息，API 未返回的 CPU 核数不能猜测。已填资料只存本机，不会触发 SSH、TCP 或远端配置修改。",
+  "cloudRackNerdResourcesInfo": "RackNerd ctrl 不提供设备 ID。导入前请补齐六项硬件信息；API 未返回的值不要猜测。",
   "@cloudRackNerdResourcesInfo": {
     "description": "Panel accounts: RackNerd ctrl anonymous identity and required local resource completion"
   },
-  "cloudRebindWarning": "保存新授权将解除此适配器实例的全部旧设备关联。原有资料、财务与 SSH 设置保留；导入会创建新本地记录，不会覆盖或自动重新关联旧设备。",
+  "cloudRebindWarning": "保存新授权将解除此实例的全部旧设备关联。原有资料、财务与 SSH 设置保留；导入会创建新记录，不会覆盖或自动重新关联旧设备。",
   "@cloudRebindWarning": {
     "description": "Panel accounts: rebind warning"
   },
@@ -1634,7 +1635,7 @@
   "@cloudRefreshAccount": {
     "description": "Panel accounts: refresh account"
   },
-  "cloudReadingInfo": "正在读取完整列表与状态，有超时限制。取消或返回会停止本次读取，不改变台账、费用或 SSH。",
+  "cloudReadingInfo": "正在读取，有超时限制；取消或返回会停止，不改变台账。",
   "@cloudReadingInfo": {
     "description": "Panel accounts: reading info"
   },
@@ -1646,7 +1647,7 @@
   "@cloudReadAgain": {
     "description": "Panel accounts: read again"
   },
-  "cloudReadCompleteInfo": "仅更新本适配器实例的 API 观测信息，未覆盖本地资料、费用、付款或 SSH 设置。",
+  "cloudReadCompleteInfo": "仅更新读取结果，未覆盖本地资料。",
   "@cloudReadCompleteInfo": {
     "description": "Panel accounts: read complete info"
   },
@@ -1734,7 +1735,7 @@
   "@cloudSecureStorageInfo": {
     "description": "Panel accounts: secure storage info"
   },
-  "cloudScopeNotice": "API 凭据本身可能拥有更多权限，请在服务商面板核对。没有后台持续监控，读取结果只代表读取时刻。",
+  "cloudScopeNotice": "凭据本身可能有更多权限，请在服务商面板核对。结果只代表读取时刻。",
   "@cloudScopeNotice": {
     "description": "Panel accounts: scope notice"
   },
@@ -1758,7 +1759,7 @@
   "@cloudLinkPanelAccount": {
     "description": "Panel accounts: link panel account"
   },
-  "cloudLocalBindingInfo": "此页仅使用已保存的 API 观测信息，不连接面板。没有可选设备或上次读取失败时，请先在适配器实例中手动刷新，再返回重新载入本地列表。",
+  "cloudLocalBindingInfo": "仅使用已保存的读取结果，不连接面板。没有设备时请先在适配器实例中刷新。",
   "@cloudLocalBindingInfo": {
     "description": "Panel accounts: local binding info"
   },
@@ -2204,11 +2205,11 @@
   "@cloudAuthorizationUnsaved": {
     "description": "Panel accounts: authorization unsaved"
   },
-  "cloudV1Deduplication": "此授权已固定的设备不会再次创建；解除关联不会解除固定。独立授权之间不会自动合并。",
+  "cloudV1Deduplication": "已固定到此授权的设备不会重复创建；独立授权之间不自动合并。",
   "@cloudV1Deduplication": {
     "description": "Panel accounts: v1 deduplication"
   },
-  "cloudV2Deduplication": "以适配器类型、面板地址、远端账户、项目与设备 ID 确认重复。IP 或主机名相同仅作核对提示。",
+  "cloudV2Deduplication": "按适配器、面板地址、账户、项目和设备 ID 判断重复；IP 或主机名相同仅作提示。",
   "@cloudV2Deduplication": {
     "description": "Panel accounts: v2 deduplication"
   },
@@ -2489,10 +2490,10 @@
   "serverAdd": "添加服务器",
   "serverImportPanel": "从面板账户导入",
   "serverFirstTitle": "你的第一台 VPS，\n从这里开始",
-  "serverFirstDescription": "把机器、费用和连接放在一起。\n无需安装监控程序，也可直接手动记录。",
+  "serverFirstDescription": "到期、费用和连接，一处记录。",
   "serverAddFirst": "添加第一台服务器",
   "serverLoadDemoQuestion": "载入演示数据？",
-  "serverLoadDemoHelp": "将写入 4 条带“演示”标记的本地记录，地址均为保留地址。不会连接服务器。可在各服务器详情中归档这些记录。",
+  "serverLoadDemoHelp": "将写入 4 条“演示”记录，使用保留地址，不会连接服务器；可随时归档。",
   "serverLoadDemo": "载入演示",
   "serverViewDemo": "先看看演示数据",
   "serverManualStartHelp": "已经有机器？手动记录就能开始。",
@@ -2544,7 +2545,7 @@
   },
   "uiServersRowHint": "左滑或长按服务器查看快捷操作",
   "serverClearFilters": "清除筛选",
-  "serverListObservationHelp": "显示本地资料和最近一次面板查询结果，不持续监控。\n到期天数按设备日期计算；未来 30 天包含今天及后 29 天。",
+  "serverListObservationHelp": "不持续监控运行状态；到期天数按设备日期计算。",
   "serverCostsMissing": "费用待补充",
   "serverMeteredBilling": "按量计费",
   "serverDueUnknown": "到期日未知",
@@ -2607,7 +2608,7 @@
   "serverEditHardware": "编辑硬件",
   "serverPanelLink": "面板关联",
   "serverNoPanelLink": "未关联面板账户",
-  "serverPanelLinkHelp": "面板刷新只更新 API 观测，不会覆盖你手动填写的资料。",
+  "serverPanelLinkHelp": "面板刷新不会覆盖手动填写的资料。",
   "serverLinkPanel": "关联面板账户",
   "serverManageLink": "管理关联",
   "serverReloadPanelDetails": "重新读取面板账户资料",
@@ -2642,7 +2643,7 @@
   "serverConnectSsh": "连接 SSH",
   "serverTcpTest": "TCP 测试",
   "serverPower": "单机电源",
-  "serverConnectionSafety": "首次连接需核对主机指纹；关机或重启不会停止厂商计费。",
+  "serverConnectionSafety": "首次连接需核对主机指纹；关机或重启不会停止计费。",
   "serverNotes": "备注",
   "serverSavedMetadata": "本地保存于 {p0}\n服务器 ID：{p1}",
   "uiDetailCopy": "复制",
@@ -2761,7 +2762,7 @@
   "serverOptionalSpec": "规格补充（选填）",
   "serverSpecExample": "例如：CPU 型号、网络带宽",
   "serverCostDetails": "费用资料",
-  "serverPaymentLockHelp": "已有续费付款：计费方式、周期和日期不可改；续费价与币种仍可改。",
+  "serverPaymentLockHelp": "已有续费付款：计费方式、周期和日期已锁定。",
   "serverCostUnknownOption": "费用未知 · 稍后补充",
   "serverPrepaidOption": "预付费 · 按周期续费",
   "serverMeteredOption": "按量付费 · 月估算",
@@ -2770,7 +2771,7 @@
   "serverDatesHelp": "到期日默认按开始日加周期计算，可手动修改。",
   "serverAmountHelp": "0 表示免费；未知请选“未知”。不会记录付款。",
   "serverOptionalNotes": "备注（选填）",
-  "serverNotesSafety": "请勿在备注保存密码、私钥或令牌。",
+  "serverNotesSafety": "备注不加密，请勿存放密码、私钥或令牌。",
   "serverSave": "保存服务器",
   "uiFormProvider": "提供商",
   "uiFormPurpose": "用途",
@@ -2809,7 +2810,7 @@
   "tcpFailed": "连接失败（网络或地址不可用）",
   "tcpTimeoutPositive": "超时必须大于 0",
   "tcpSingleTarget": "单目标 TCP 测试",
-  "tcpTestExplanation": "从当前设备测试一个地址和端口，仅建立并关闭 TCP 连接，不发送应用数据。成功不代表 SSH 可登录、服务器开机状态或业务健康。",
+  "tcpTestExplanation": "仅测试能否建立 TCP 连接，不发送数据。成功不代表 SSH 可登录或服务正常。",
   "tcpAddress": "IP / 域名",
   "connectionPort": "端口",
   "tcpTestingTarget": "正在测试 {p0}",
@@ -2929,7 +2930,7 @@
   "connectionEditSavedSettings": "编辑并保存此服务器的 SSH 配置",
   "connectionTemporaryChangesHelp": "本页改动只用于本次连接。密码或私钥从已保存的凭据中读取，不在这里输入或另存。进入后台会断开连接；长任务建议在远端使用 tmux / screen。",
   "connectionSnippetDraftOnly": "片段将放入独立待发送区。连接、核验、认证都不会发送片段。",
-  "connectionPowerAfterConnect": "连接后才能选择重启 / 关机，并再次完成两次确认。没有 SSH 开机或 API 电源功能。",
+  "connectionPowerAfterConnect": "连接后选择重启 / 关机，需完成两次确认；不支持开机。",
   "connectionReviewConnect": "核对并连接",
   "uiConnTarget": "目标",
   "uiConnCredential": "凭据",
@@ -2962,7 +2963,7 @@
   "snippetDelete": "删除片段",
   "snippetChoose": "选择片段插入草稿",
   "snippetReadFailed": "片段读取失败，未修改本地数据",
-  "snippetSelectPreviewHelp": "选择后先预览完整内容，只插入待发送草稿。不会自动发送或回车。",
+  "snippetSelectPreviewHelp": "选择后先预览，只插入草稿，不会自动发送。",
   "snippetPlaintextHelp": "片段是本地普通文本，请勿保存密码、私钥或令牌。从终端“插入片段”可选入待发送草稿。",
   "snippetAdd": "新增片段",
   "snippetEmptyHelp": "还没有片段。新增自己的常用命令模板。",
@@ -2982,11 +2983,11 @@
   "connectionDiscardChanges": "放弃修改",
   "snippetEdit": "编辑片段",
   "snippetCancelEdit": "取消片段编辑",
-  "snippetSaveSafety": "本地普通文本，不加密保存。请勿填写密码、私钥或令牌。保存不会执行或发送内容。",
+  "snippetSaveSafety": "片段以明文保存，请勿填写密码、私钥或令牌。",
   "snippetName": "片段名称",
   "snippetFullContent": "完整内容（保留原始换行与控制字符）",
   "snippetContentRange": "内容不能为空，最多 16384 个字符",
-  "snippetExactContentHelp": "保存会原样保留内容，包括前后空白、多行、回车及控制字符。请使用完整预览核对。",
+  "snippetExactContentHelp": "内容原样保存，含空白和控制字符；请用完整预览核对。",
   "connectionSaving": "保存中…",
   "snippetSave": "保存片段",
   "terminalCopyFailed": "未能复制终端内容，请重试。",
@@ -3130,9 +3131,9 @@
       }
     }
   },
-  "terminalPassphraseHelp": "这是私钥解密口令，不是服务器登录密码。仅用于本次连接，不会保存；下次连接需重新输入。",
+  "terminalPassphraseHelp": "私钥解密口令，不是登录密码；仅用于本次连接，不保存。",
   "terminalKeyPassphrase": "本次私钥口令",
-  "terminalPassphraseCleared": "连接已取消或页面进入后台，口令已清空。请取消并重新连接。",
+  "terminalPassphraseCleared": "口令已清空，请取消后重新连接。",
   "terminalUnlockOnce": "仅解锁本次连接",
   "powerRestart": "重启",
   "powerShutdown": "关机",
@@ -3379,7 +3380,7 @@
   "@securityAddCredential": {
     "description": "Security: AddCredential. App-authored UI text; do not translate user data or protocol tokens."
   },
-  "securityCredentialStorageNotice": "凭据独立管理，连接只引用凭据。秘密仅保存在系统安全存储中。",
+  "securityCredentialStorageNotice": "秘密仅保存在系统安全存储中，服务器只引用凭据。",
   "@securityCredentialStorageNotice": {
     "description": "Security: CredentialStorageNotice. App-authored UI text; do not translate user data or protocol tokens."
   },
@@ -3437,7 +3438,7 @@
   "@securityCredentialProtectionDetail": {
     "description": "Security: CredentialProtectionDetail. App-authored UI text; do not translate user data or protocol tokens."
   },
-  "securityLocalCredentialNotice": "修改本地凭据不会修改远端密码或 authorized_keys。只有明确发起连接才会使用所选凭据。",
+  "securityLocalCredentialNotice": "只修改本机凭据，不会改动服务器端密码或 authorized_keys。",
   "@securityLocalCredentialNotice": {
     "description": "Security: LocalCredentialNotice. App-authored UI text; do not translate user data or protocol tokens."
   },
@@ -3545,7 +3546,7 @@
   "@securityPasteCompleteKey": {
     "description": "Security: PasteCompleteKey. App-authored UI text; do not translate user data or protocol tokens."
   },
-  "securityPrivateKeyImportNotice": "支持 OpenSSH / PEM 私钥。只读取所选文件，不保存文件路径。也可用“粘贴完整私钥”保留换行；内容始终隐藏。",
+  "securityPrivateKeyImportNotice": "支持 OpenSSH / PEM 私钥；不保存文件路径，内容始终隐藏。",
   "@securityPrivateKeyImportNotice": {
     "description": "Security: PrivateKeyImportNotice. App-authored UI text; do not translate user data or protocol tokens."
   },
@@ -3573,7 +3574,7 @@
   "@securityPrivateKeyPassphrase": {
     "description": "Security: PrivateKeyPassphrase. App-authored UI text; do not translate user data or protocol tokens."
   },
-  "securityPrivateKeyPassphraseHelp": "用于解密所选私钥，不是服务器登录密码。本页不会更改私钥的加密口令",
+  "securityPrivateKeyPassphraseHelp": "用于解密私钥，不是登录密码。",
   "@securityPrivateKeyPassphraseHelp": {
     "description": "Security: PrivateKeyPassphraseHelp. App-authored UI text; do not translate user data or protocol tokens."
   },
@@ -3585,7 +3586,7 @@
   "@securityStoreKeyPassphraseHelp": {
     "description": "Security: StoreKeyPassphraseHelp. App-authored UI text; do not translate user data or protocol tokens."
   },
-  "securityCredentialEditNotice": "用户名只作为新连接的候选值，不覆盖已有连接。更新凭据只影响以后登录，不修改服务器端密码或密钥。离开到后台会清空未保存秘密。",
+  "securityCredentialEditNotice": "用户名仅作新连接的候选值。更新凭据只影响以后登录，不修改服务器端；退到后台会清空未保存内容。",
   "@securityCredentialEditNotice": {
     "description": "Security: CredentialEditNotice. App-authored UI text; do not translate user data or protocol tokens."
   },
@@ -3633,7 +3634,7 @@
   "@securityPublicKeyFingerprint": {
     "description": "Security: PublicKeyFingerprint. App-authored UI text; do not translate user data or protocol tokens."
   },
-  "securityPublicKeyFingerprintNotice": "这里不展示或导出私钥。公钥指纹用于辨认登录密钥，与服务器主机指纹不同。",
+  "securityPublicKeyFingerprintNotice": "公钥指纹用于辨认登录密钥，不同于服务器主机指纹；这里不展示私钥。",
   "@securityPublicKeyFingerprintNotice": {
     "description": "Security: PublicKeyFingerprintNotice. App-authored UI text; do not translate user data or protocol tokens."
   },
@@ -3673,7 +3674,7 @@
   "@securityCancelVerifyHide": {
     "description": "Security: CancelVerifyHide. App-authored UI text; do not translate user data or protocol tokens."
   },
-  "securityCredentialReferenceCount": "{count} 台引用此凭据，包含已归档记录。连接用户名分别保存。",
+  "securityCredentialReferenceCount": "{count} 台服务器引用此凭据（含已归档）。",
   "@securityCredentialReferenceCount": {
     "description": "Security: CredentialReferenceCount. App-authored UI text; do not translate user data or protocol tokens.",
     "placeholders": {
@@ -3686,7 +3687,7 @@
   "@securityNoCredentialReferences": {
     "description": "Security: NoCredentialReferences. App-authored UI text; do not translate user data or protocol tokens."
   },
-  "securityCredentialDeleteImpact": "{count} 台服务器将受影响，包含归档记录。请核对下面的每一项。",
+  "securityCredentialDeleteImpact": "{count} 台服务器将受影响（含已归档）。",
   "@securityCredentialDeleteImpact": {
     "description": "Security: CredentialDeleteImpact. App-authored UI text; do not translate user data or protocol tokens.",
     "placeholders": {
@@ -3724,7 +3725,7 @@
   "@securityReplaceCredentialNotice": {
     "description": "Security: ReplaceCredentialNotice. App-authored UI text; do not translate user data or protocol tokens."
   },
-  "securityDeleteLocalCredentialNotice": "仅删除本机凭据，不能从本页面恢复。不修改远端密码或 authorized_keys，不取消云服务。",
+  "securityDeleteLocalCredentialNotice": "仅删除本机凭据，无法恢复；不影响服务器端或云服务。",
   "@securityDeleteLocalCredentialNotice": {
     "description": "Security: DeleteLocalCredentialNotice. App-authored UI text; do not translate user data or protocol tokens."
   },
@@ -3744,7 +3745,7 @@
   "@securityVerifyHostKey": {
     "description": "Security: VerifyHostKey. App-authored UI text; do not translate user data or protocol tokens."
   },
-  "securityHostTrustNotice": "信任绑定主机地址和端口，并记录算法及完整公钥。登录凭据与服务器主机公钥是两件事。",
+  "securityHostTrustNotice": "信任绑定主机地址、端口和完整公钥，与登录凭据无关。",
   "@securityHostTrustNotice": {
     "description": "Security: HostTrustNotice. App-authored UI text; do not translate user data or protocol tokens."
   },
@@ -3803,7 +3804,7 @@
   "@securityHostTrustReadFailed": {
     "description": "Security: HostTrustReadFailed. App-authored UI text; do not translate user data or protocol tokens."
   },
-  "securityHostTrustInputNotice": "输入从厂商控制台或管理员等独立可信渠道取得的主机公钥。此页面只校验输入内容并保存本机信任，不会连接服务器。",
+  "securityHostTrustInputNotice": "请输入从厂商控制台等独立可信渠道取得的主机公钥。本页只保存本机信任，不连接服务器。",
   "@securityHostTrustInputNotice": {
     "description": "Security: HostTrustInputNotice. App-authored UI text; do not translate user data or protocol tokens."
   },
@@ -3823,7 +3824,8 @@
   "@securityHostKeyHelp": {
     "description": "Security: HostKeyHelp. App-authored UI text; do not translate user data or protocol tokens."
   },
-  "securityRsaHostKeyNotice": "rsa-sha2-256 / rsa-sha2-512 是签名算法，其 RSA 公钥类型选择 ssh-rsa。只支持结构完整的受支持主机公钥。",
+  "securityRsaHostKeyNotice": "rsa-sha2-256 / 512 是签名算法，公钥类型请选 ssh-rsa。",
+  "r2CopyInfoRsaKey": "关于 RSA 主机公钥",
   "@securityRsaHostKeyNotice": {
     "description": "Security: RsaHostKeyNotice. App-authored UI text; do not translate user data or protocol tokens."
   },
@@ -3859,7 +3861,7 @@
   "@securityCandidateHostFingerprint": {
     "description": "Security: CandidateHostFingerprint. App-authored UI text; do not translate user data or protocol tokens."
   },
-  "securityHostVerificationWarning": "请通过独立渠道核对完整指纹和目标地址。变化可能来自重装，也可能是错误主机或中间人攻击。无法确认时应拒绝。",
+  "securityHostVerificationWarning": "请通过独立渠道核对指纹和地址。变化可能是重装，也可能是中间人攻击；无法确认请拒绝。",
   "@securityHostVerificationWarning": {
     "description": "Security: HostVerificationWarning. App-authored UI text; do not translate user data or protocol tokens."
   },
@@ -3903,7 +3905,7 @@
   "@securitySavingHostTrust": {
     "description": "Security: SavingHostTrust. App-authored UI text; do not translate user data or protocol tokens."
   },
-  "securityLocalHostTrustOnly": "只记录本机信任，当前不会连接服务器。拒绝、取消和返回均不保存，也不发送认证资料。",
+  "securityLocalHostTrustOnly": "只记录本机信任；拒绝、取消或返回均不保存。",
   "@securityLocalHostTrustOnly": {
     "description": "Security: LocalHostTrustOnly. App-authored UI text; do not translate user data or protocol tokens."
   },
@@ -4036,7 +4038,7 @@
   "@securityConnectionUsernameNotice": {
     "description": "Security: ConnectionUsernameNotice. App-authored UI text; do not translate user data or protocol tokens."
   },
-  "securityConfigurationOnlyNotice": "此页只保存连接配置。建立连接时先核验主机身份，再进行登录认证；主机公钥变化时会暂停认证，等待重新核实。",
+  "securityConfigurationOnlyNotice": "仅保存连接配置。连接时先核验主机公钥，公钥变化会暂停认证。",
   "@securityConfigurationOnlyNotice": {
     "description": "Security: ConfigurationOnlyNotice. App-authored UI text; do not translate user data or protocol tokens."
   },
@@ -4184,7 +4186,7 @@
   "@providerUiUnspecifiedHelp": {
     "description": "Provider navigation and ownership UI."
   },
-  "providerUiHierarchyHelp": "提供商是服务器的业务归属；适配器实例保存一份独立授权，只能读取该授权范围内的设备。",
+  "providerUiHierarchyHelp": "提供商是服务器的业务归属；适配器实例保存独立授权。",
   "@providerUiHierarchyHelp": {
     "description": "Provider navigation and ownership UI."
   },
@@ -4319,7 +4321,7 @@
   "@providerUiChooseInstance": {
     "description": "Provider navigation and ownership UI."
   },
-  "providerUiInstanceChoiceHelp": "只列出当前提供商的实例。授权范围由适配器类型与验证结果决定。",
+  "providerUiInstanceChoiceHelp": "只列出当前提供商的实例。",
   "@providerUiInstanceChoiceHelp": {
     "description": "Provider navigation and ownership UI."
   },
@@ -4466,11 +4468,11 @@
   "@cloudImportCompleteAndSelect": {
     "description": "Adapter instance import and local linking"
   },
-  "cloudImportCompletionInfo": "导入前需核对完整的六项资源。API 未提供的值保持未知；只有明确确认后才选择不限流量。补填或修改仅用于本地配置，不会改写 API 观测信息。",
+  "cloudImportCompletionInfo": "导入前请核对六项资源；API 未提供的保持未知，确认无限流量才选“不限”。修改仅存本机。",
   "@cloudImportCompletionInfo": {
     "description": "Adapter instance import and local linking"
   },
-  "cloudImportFinanceLater": "本次仅添加设备与资源配置。财务信息可稍后填写，不会自动创建费用或付款。",
+  "cloudImportFinanceLater": "本次仅添加设备与资源配置，不会创建费用或付款。",
   "@cloudImportFinanceLater": {
     "description": "Adapter instance import and local linking"
   },

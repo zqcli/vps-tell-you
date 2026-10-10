@@ -332,7 +332,9 @@ void main() {
     (tester) async {
       await mount(tester, 390, 1, create: true);
       // Only the name is required (asterisk); the help is a single short line.
-      expect(find.textContaining('仅保存在本机'), findsOneWidget);
+      // The "saved on this device" footnote was removed on purpose (copy
+      // pass): local storage is stated once in Settings.
+      expect(find.textContaining('仅保存在本机'), findsNothing);
       expect(find.textContaining('名称和厂商必填'), findsNothing);
       expect(find.text('未知可留空，之后可手动补充'), findsNothing);
       expect(find.text('容量单位按 1024 进制'), findsNothing);

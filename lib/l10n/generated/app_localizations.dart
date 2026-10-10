@@ -119,7 +119,7 @@ abstract class AppLocalizations {
   /// No description provided for @languageSystemDescription.
   ///
   /// In zh, this message translates to:
-  /// **'支持简体中文和 English；其他系统语言使用 English。'**
+  /// **'其他系统语言使用 English。'**
   String get languageSystemDescription;
 
   /// No description provided for @languageChinese.
@@ -665,7 +665,7 @@ abstract class AppLocalizations {
   /// No description provided for @uiTabsReminderSaveHelp.
   ///
   /// In zh, this message translates to:
-  /// **'修改后点右上角“保存”生效。若启用提醒并选择“到期不再使用”，仍会提醒核对厂商的续费设置。'**
+  /// **'点右上角“保存”后生效。'**
   String get uiTabsReminderSaveHelp;
 
   /// No description provided for @uiTabsReminderDue.
@@ -791,7 +791,7 @@ abstract class AppLocalizations {
   /// No description provided for @reminderDstHelp.
   ///
   /// In zh, this message translates to:
-  /// **'随设备当前时区。夏令时缺失时间向后顺延，重复时间仅提醒一次；整天被跳过的日期不排程。'**
+  /// **'按设备当前时区；夏令时缺失的时间顺延，重复的只提醒一次。'**
   String get reminderDstHelp;
 
   /// No description provided for @myUsagePlan.
@@ -803,7 +803,7 @@ abstract class AppLocalizations {
   /// No description provided for @usagePlanWarning.
   ///
   /// In zh, this message translates to:
-  /// **'使用计划只是本地记录。计划到期停用不会停止厂商扣费，请另行向厂商确认取消续费。'**
+  /// **'使用计划仅为本地记录，不会停止厂商扣费；请另行向厂商取消续费。'**
   String get usagePlanWarning;
 
   /// No description provided for @savedRuleSchedule.
@@ -1115,7 +1115,7 @@ abstract class AppLocalizations {
   /// No description provided for @restoreContentsHelp.
   ///
   /// In zh, this message translates to:
-  /// **'将导入上述台账记录与手动汇率。上方列出的安全资料、备注、提醒和应用偏好均不在备份内。'**
+  /// **'仅导入台账记录和手动汇率；上方所列内容不在备份内。'**
   String get restoreContentsHelp;
 
   /// No description provided for @restoreToEmptyLedger.
@@ -1259,7 +1259,7 @@ abstract class AppLocalizations {
   /// No description provided for @appLocalDataHelp.
   ///
   /// In zh, this message translates to:
-  /// **'数据保存在当前设备，无需应用账号。\n归档记录不会取消服务器服务或停止扣费。'**
+  /// **'数据仅保存在本机，无需账号。归档不会取消服务或停止扣费。'**
   String get appLocalDataHelp;
 
   /// No description provided for @groupSaveFailed.
@@ -1295,7 +1295,7 @@ abstract class AppLocalizations {
   /// No description provided for @groupsHelp.
   ///
   /// In zh, this message translates to:
-  /// **'按用途整理服务器。分组变更仅影响本地台账。'**
+  /// **'按用途整理服务器。'**
   String get groupsHelp;
 
   /// No description provided for @noGroupsHelp.
@@ -1349,7 +1349,7 @@ abstract class AppLocalizations {
   /// No description provided for @archiveHelp.
   ///
   /// In zh, this message translates to:
-  /// **'归档保留服务器资料和 ID。恢复不会连接云主机，也不会启动或续费服务。'**
+  /// **'归档保留资料；恢复不会启动或续费服务。'**
   String get archiveHelp;
 
   /// No description provided for @noArchivedRecords.
@@ -1547,13 +1547,13 @@ abstract class AppLocalizations {
   /// No description provided for @financeInferredPeriods.
   ///
   /// In zh, this message translates to:
-  /// **'部分服务起点由到期日与日历周期反推；不代表历史付款证明。'**
+  /// **'服务起点由到期日反推，不代表付款证明。'**
   String get financeInferredPeriods;
 
   /// No description provided for @financeValueDisclaimer.
   ///
   /// In zh, this message translates to:
-  /// **'仅表示服务时长的价格折算，不是退款承诺或成交价。'**
+  /// **'按剩余时长折算，不是退款承诺或成交价。'**
   String get financeValueDisclaimer;
 
   /// No description provided for @financeShownPeriod.
@@ -1589,7 +1589,7 @@ abstract class AppLocalizations {
   /// No description provided for @financeFxScope.
   ///
   /// In zh, this message translates to:
-  /// **'仅改变参考折算，原币续费价与历史实付保持不变。不会请求实时汇率。留空表示该汇率未知。'**
+  /// **'仅影响参考折算，不联网取汇率；留空表示未知。'**
   String get financeFxScope;
 
   /// No description provided for @financeDisplayCurrency.
@@ -1637,7 +1637,7 @@ abstract class AppLocalizations {
   /// No description provided for @financeFxBasis.
   ///
   /// In zh, this message translates to:
-  /// **'CNY 为基准，1 CNY = 1 CNY。同币种换算不需要汇率；跨币种缺汇率时只展示可转换部分及覆盖率。'**
+  /// **'以 CNY 为基准；缺少汇率的币种不计入合计。'**
   String get financeFxBasis;
 
   /// No description provided for @financeSaveFx.
@@ -1655,7 +1655,7 @@ abstract class AppLocalizations {
   /// No description provided for @financeReferenceNote.
   ///
   /// In zh, this message translates to:
-  /// **'只复制此刻的续费资料和已知期间。不会修改原服务器。'**
+  /// **'仅复制当前续费资料，不会修改原服务器。'**
   String get financeReferenceNote;
 
   /// No description provided for @financeNoPrepaid.
@@ -1691,13 +1691,13 @@ abstract class AppLocalizations {
   /// No description provided for @financeIndependentRebuilt.
   ///
   /// In zh, this message translates to:
-  /// **'已切换为独立试算：按当前到期日和周期重新推算服务期，假设到期日前服务连续有效。'**
+  /// **'已切换为独立试算，按到期日和周期重新推算服务期。'**
   String get financeIndependentRebuilt;
 
   /// No description provided for @financeIndependentNote.
   ///
   /// In zh, this message translates to:
-  /// **'独立试算，无需添加服务器。假设到期日前服务连续有效。'**
+  /// **'独立试算，无需添加服务器；假设到期日前服务连续。'**
   String get financeIndependentNote;
 
   /// No description provided for @financeRenewalAmount.
@@ -1769,7 +1769,7 @@ abstract class AppLocalizations {
   /// No description provided for @financeEstimateNoWrite.
   ///
   /// In zh, this message translates to:
-  /// **'试算与记账分离，修改输入不会更改任何服务器或付款。'**
+  /// **'试算不会改动任何服务器或付款。'**
   String get financeEstimateNoWrite;
 
   /// No description provided for @financeReferenceRateMissing.
@@ -1835,7 +1835,7 @@ abstract class AppLocalizations {
   /// No description provided for @financeQuoteNote.
   ///
   /// In zh, this message translates to:
-  /// **'仅按报价和下方填写的转移手续费试算，不执行交易。其他费用未计入；请自行确认厂商是否允许转让及相关条款。'**
+  /// **'仅按报价和手续费试算，不执行交易；请自行确认厂商是否允许转让。'**
   String get financeQuoteNote;
 
   /// No description provided for @financeQuoteAmountError.
@@ -1889,7 +1889,7 @@ abstract class AppLocalizations {
   /// No description provided for @financeSplitFeeNote.
   ///
   /// In zh, this message translates to:
-  /// **'手续费先折算到显示币种的分，再分摊；不足均分的 0.01 由买方承担。双方手续费之和等于总手续费。'**
+  /// **'手续费先折算到分再均摊，不能均分的 0.01 由买方承担。'**
   String get financeSplitFeeNote;
 
   /// No description provided for @financeCalculateQuote.
@@ -1985,7 +1985,7 @@ abstract class AppLocalizations {
   /// No description provided for @financeNoRenewalDate.
   ///
   /// In zh, this message translates to:
-  /// **'当前记录没有可用的续期日期。请核对预付类型、到期日与支持的日期范围。'**
+  /// **'没有可用的预付到期日，请先在服务器资料中核对。'**
   String get financeNoRenewalDate;
 
   /// No description provided for @financeRecordAccountBill.
@@ -2003,7 +2003,7 @@ abstract class AppLocalizations {
   /// No description provided for @financeAccountBillNote.
   ///
   /// In zh, this message translates to:
-  /// **'独立账单，仅计一次；不分摊到实例，不产生服务期。'**
+  /// **'独立账单，仅计一次；不分摊，不产生服务期。'**
   String get financeAccountBillNote;
 
   /// No description provided for @financeAccountName.
@@ -2363,7 +2363,7 @@ abstract class AppLocalizations {
   /// No description provided for @financeMonthlyNotPaid.
   ///
   /// In zh, this message translates to:
-  /// **'预付续费价摊月 + 按量月估算，不等于本月实付'**
+  /// **'续费价摊月 + 按量估算，不等于本月实付。'**
   String get financeMonthlyNotPaid;
 
   /// No description provided for @financeUpcomingRenewals.
@@ -2411,13 +2411,13 @@ abstract class AppLocalizations {
   /// No description provided for @financeDistributionNote.
   ///
   /// In zh, this message translates to:
-  /// **'点击分布查看同一口径的服务器明细。费用资料与续费记录均从服务器详情维护。'**
+  /// **'点击分类查看服务器明细。'**
   String get financeDistributionNote;
 
   /// No description provided for @financeGroupDistributionNote.
   ///
   /// In zh, this message translates to:
-  /// **'当前分组不分摊账户级实付。点击分布查看明细。'**
+  /// **'账户级实付不分摊到分组；点击分类查看明细。'**
   String get financeGroupDistributionNote;
 
   /// No description provided for @financeSixMonthTitle.
@@ -2429,7 +2429,7 @@ abstract class AppLocalizations {
   /// No description provided for @financeForecastNote.
   ///
   /// In zh, this message translates to:
-  /// **'按当前续费价和周期预测本月剩余日期及后五个自然月。假设继续续费，使用计划不改变预测；不包含按量账单或已过期项目。'**
+  /// **'按当前续费价预测，假设继续续费；不含按量账单和已过期项目。'**
   String get financeForecastNote;
 
   /// No description provided for @financeMonthlyDetail.
@@ -2483,7 +2483,7 @@ abstract class AppLocalizations {
   /// No description provided for @financeUnknownZeroNote.
   ///
   /// In zh, this message translates to:
-  /// **'“—”表示未知或不适用，不代表免费。已知金额为 0 时会显示 0.00。'**
+  /// **'“—”表示未知或不适用，不是免费。'**
   String get financeUnknownZeroNote;
 
   /// No description provided for @financeRenewals30Title.
@@ -2507,7 +2507,7 @@ abstract class AppLocalizations {
   /// No description provided for @financeMeteredRenewalNote.
   ///
   /// In zh, this message translates to:
-  /// **'按量费用在服务器资料中维护月估算，不产生预付续费事件。'**
+  /// **'按量计费不产生续费事件，月估算在服务器资料中维护。'**
   String get financeMeteredRenewalNote;
 
   /// No description provided for @financePngRenderFailed.
@@ -2567,7 +2567,7 @@ abstract class AppLocalizations {
   /// No description provided for @financePngPrivacy.
   ///
   /// In zh, this message translates to:
-  /// **'仅含金额、日期、周期和参考汇率。图片不含服务器名称、地址、账户、备注或转让报价试算。'**
+  /// **'图片仅含金额、日期、周期和参考汇率，不含服务器名称、地址或备注。'**
   String get financePngPrivacy;
 
   /// No description provided for @financePngSemantic.
@@ -2603,7 +2603,7 @@ abstract class AppLocalizations {
   /// No description provided for @financePngLocationNote.
   ///
   /// In zh, this message translates to:
-  /// **'保存位置可能是应用私有目录，不等于相册或公开下载目录。移动端可使用系统分享另存；取消分享不会关闭预览。'**
+  /// **'文件可能在应用私有目录；可用系统分享另存。'**
   String get financePngLocationNote;
 
   /// No description provided for @financeRulesBody.
@@ -2674,7 +2674,7 @@ abstract class AppLocalizations {
   /// No description provided for @financeFuturePeriodsNote.
   ///
   /// In zh, this message translates to:
-  /// **'剩余价值含 {count} 个尚未开始的周期；进度条仅显示上述周期。'**
+  /// **'含 {count} 个尚未开始的周期。'**
   String financeFuturePeriodsNote(int count);
 
   /// No description provided for @financeReferenceServerSubtitle.
@@ -2686,7 +2686,7 @@ abstract class AppLocalizations {
   /// No description provided for @financeReferenceBasis.
   ///
   /// In zh, this message translates to:
-  /// **'引用 {name} 的已知期间。修改估值日、金额或币种不会改变已知服务期，也不会修改原服务器。'**
+  /// **'引用 {name} 的已知服务期；修改输入不会改动原服务器。'**
   String financeReferenceBasis(String name);
 
   /// No description provided for @financeEveryMonths.
@@ -2716,7 +2716,7 @@ abstract class AppLocalizations {
   /// No description provided for @financeRoundingNote.
   ///
   /// In zh, this message translates to:
-  /// **'{rate}\n{source}。先精确计算，再四舍五入到分；折算结果仅供参考。'**
+  /// **'{rate}\n{source}。折算结果仅供参考。'**
   String financeRoundingNote(String rate, String source);
 
   /// No description provided for @financeCycleEndError.
@@ -2890,7 +2890,7 @@ abstract class AppLocalizations {
   /// No description provided for @uiFinanceFootnote.
   ///
   /// In zh, this message translates to:
-  /// **'金额按当前续费价和手动参考汇率折算，仅供参考，不代表厂商实际账单。'**
+  /// **'按续费价和手动汇率折算，仅供参考，非实际账单。'**
   String get uiFinanceFootnote;
 
   /// No description provided for @uiFinanceVoidedPill.
@@ -3620,7 +3620,7 @@ abstract class AppLocalizations {
   /// Panel accounts: template info
   ///
   /// In zh, this message translates to:
-  /// **'选择与面板匹配的适配器类型。适配器负责读取技术信息，提供商是供应服务器的商家。'**
+  /// **'选择与面板匹配的适配器类型；提供商是供应服务器的商家。'**
   String get cloudTemplateInfo;
 
   /// Panel accounts: v1 template info
@@ -3644,7 +3644,7 @@ abstract class AppLocalizations {
   /// Panel accounts: supported panels
   ///
   /// In zh, this message translates to:
-  /// **'支持 SolusVM 1、SolusVM 2 和 RackNerd ctrl 读取。不提供 API 电源控制，也不会修改远端资源或停止服务商计费。'**
+  /// **'支持读取 SolusVM 1 / 2 和 RackNerd ctrl；不控制电源，不修改远端，也不会停止计费。'**
   String get cloudSupportedPanels;
 
   /// Panel accounts: reauthorize
@@ -3698,7 +3698,7 @@ abstract class AppLocalizations {
   /// Panel accounts: endpoint info
   ///
   /// In zh, this message translates to:
-  /// **'使用面板首页 HTTPS 地址，可以保留服务商指定端口。不会忽略证书错误或跟随重定向。'**
+  /// **'使用面板首页 HTTPS 地址（可含指定端口）；不忽略证书错误，不跟随重定向。'**
   String get cloudEndpointInfo;
 
   /// Panel accounts: RackNerd ctrl-only endpoint validation
@@ -3710,7 +3710,7 @@ abstract class AppLocalizations {
   /// Panel accounts: narrow RackNerd ctrl API-path normalization explanation
   ///
   /// In zh, this message translates to:
-  /// **'使用面板首页 HTTPS 地址，可以保留服务商指定端口。仅 RackNerd ctrl 可移除精确的 /api/client/command.php 路径；请核对下方最终地址。不会忽略证书错误或跟随重定向。'**
+  /// **'使用面板首页 HTTPS 地址（可含指定端口），请核对下方最终地址；不忽略证书错误，不跟随重定向。'**
   String get cloudRackNerdEndpointInfo;
 
   /// Panel accounts: endpoint identity info
@@ -3722,19 +3722,19 @@ abstract class AppLocalizations {
   /// Panel accounts: v1 credentials info
   ///
   /// In zh, this message translates to:
-  /// **'填写该 VPS 的 Client API Key / Hash。不是管理员 API 凭据或登录密码；需服务商开放 Client API。每组凭据只读取单台 VPS 的状态。'**
+  /// **'填写该 VPS 的 Client API Key / Hash（非登录密码或管理员凭据）；需服务商开放 Client API。'**
   String get cloudV1CredentialsInfo;
 
   /// Panel accounts: RackNerd ctrl Key/Hash credential scope
   ///
   /// In zh, this message translates to:
-  /// **'填写 RackNerd ctrl 面板中该 VPS 的 Client API Key / Hash，不是登录密码或管理员凭据。此连接仅通过兼容客户端接口读取单台 VPS，不据此认定底层面板产品。'**
+  /// **'填写 RackNerd ctrl 中该 VPS 的 Client API Key / Hash（非登录密码或管理员凭据）。'**
   String get cloudRackNerdCredentialsInfo;
 
   /// Panel accounts: v2 credentials info
   ///
   /// In zh, this message translates to:
-  /// **'使用 SolusVM 2 用户区 Account → API Tokens 的 Token。不要使用管理员 Token；可读取范围取决于服务商设置。'**
+  /// **'使用 SolusVM 2 用户区 Account → API Tokens 的 Token，不要使用管理员 Token。'**
   String get cloudV2CredentialsInfo;
 
   /// Panel accounts: v1 reauthorization info
@@ -3752,13 +3752,13 @@ abstract class AppLocalizations {
   /// Panel accounts: verify scope info
   ///
   /// In zh, this message translates to:
-  /// **'本 App 仅使用读取能力，不代表凭据本身只有读取权限。验证会读取状态或项目与设备；只有下一步保存后，授权才进入设备安全存储。'**
+  /// **'本 App 仅读取数据，但凭据本身可能有更多权限。验证只读取状态；保存后凭据才进入设备安全存储。'**
   String get cloudVerifyScopeInfo;
 
   /// Panel accounts: verifying info
   ///
   /// In zh, this message translates to:
-  /// **'正在验证并读取完整列表。请求有超时限制；返回或取消会停止本次读取。'**
+  /// **'正在验证并读取，有超时限制；返回或取消会停止。'**
   String get cloudVerifyingInfo;
 
   /// Panel accounts: cancel verification
@@ -3778,6 +3778,12 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'凭据输入在验证后或离开时清空，不写入台账、日志或导出。Dart 不保证内存安全擦除。'**
   String get cloudCredentialMemoryInfo;
+
+  /// No description provided for @r2CopyInfoCredentialHandling.
+  ///
+  /// In zh, this message translates to:
+  /// **'凭据如何处理'**
+  String get r2CopyInfoCredentialHandling;
 
   /// Panel accounts: choose instances
   ///
@@ -3842,19 +3848,19 @@ abstract class AppLocalizations {
   /// Panel accounts: v1 resources info
   ///
   /// In zh, this message translates to:
-  /// **'SolusVM 1 不提供稳定设备 ID，可读取的资源字段取决于提供商。填写内容仅保存本地，不会触发 SSH、TCP 或远端配置更改。'**
+  /// **'SolusVM 1 不提供设备 ID，可读取的字段取决于提供商。填写内容仅存本机。'**
   String get cloudV1ResourcesInfo;
 
   /// Panel accounts: RackNerd ctrl anonymous identity and required local resource completion
   ///
   /// In zh, this message translates to:
-  /// **'RackNerd ctrl 不提供稳定设备 ID。导入前需补齐六项硬件信息，API 未返回的 CPU 核数不能猜测。已填资料只存本机，不会触发 SSH、TCP 或远端配置修改。'**
+  /// **'RackNerd ctrl 不提供设备 ID。导入前请补齐六项硬件信息；API 未返回的值不要猜测。'**
   String get cloudRackNerdResourcesInfo;
 
   /// Panel accounts: rebind warning
   ///
   /// In zh, this message translates to:
-  /// **'保存新授权将解除此适配器实例的全部旧设备关联。原有资料、财务与 SSH 设置保留；导入会创建新本地记录，不会覆盖或自动重新关联旧设备。'**
+  /// **'保存新授权将解除此实例的全部旧设备关联。原有资料、财务与 SSH 设置保留；导入会创建新记录，不会覆盖或自动重新关联旧设备。'**
   String get cloudRebindWarning;
 
   /// Panel accounts: confirm rebind
@@ -3926,7 +3932,7 @@ abstract class AppLocalizations {
   /// Panel accounts: reading info
   ///
   /// In zh, this message translates to:
-  /// **'正在读取完整列表与状态，有超时限制。取消或返回会停止本次读取，不改变台账、费用或 SSH。'**
+  /// **'正在读取，有超时限制；取消或返回会停止，不改变台账。'**
   String get cloudReadingInfo;
 
   /// Panel accounts: cancel read
@@ -3944,7 +3950,7 @@ abstract class AppLocalizations {
   /// Panel accounts: read complete info
   ///
   /// In zh, this message translates to:
-  /// **'仅更新本适配器实例的 API 观测信息，未覆盖本地资料、费用、付款或 SSH 设置。'**
+  /// **'仅更新读取结果，未覆盖本地资料。'**
   String get cloudReadCompleteInfo;
 
   /// Panel accounts: done
@@ -4076,7 +4082,7 @@ abstract class AppLocalizations {
   /// Panel accounts: scope notice
   ///
   /// In zh, this message translates to:
-  /// **'API 凭据本身可能拥有更多权限，请在服务商面板核对。没有后台持续监控，读取结果只代表读取时刻。'**
+  /// **'凭据本身可能有更多权限，请在服务商面板核对。结果只代表读取时刻。'**
   String get cloudScopeNotice;
 
   /// Panel accounts: no linked instances
@@ -4112,7 +4118,7 @@ abstract class AppLocalizations {
   /// Panel accounts: local binding info
   ///
   /// In zh, this message translates to:
-  /// **'此页仅使用已保存的 API 观测信息，不连接面板。没有可选设备或上次读取失败时，请先在适配器实例中手动刷新，再返回重新载入本地列表。'**
+  /// **'仅使用已保存的读取结果，不连接面板。没有设备时请先在适配器实例中刷新。'**
   String get cloudLocalBindingInfo;
 
   /// Panel accounts: binding committed
@@ -4652,13 +4658,13 @@ abstract class AppLocalizations {
   /// Panel accounts: v1 deduplication
   ///
   /// In zh, this message translates to:
-  /// **'此授权已固定的设备不会再次创建；解除关联不会解除固定。独立授权之间不会自动合并。'**
+  /// **'已固定到此授权的设备不会重复创建；独立授权之间不自动合并。'**
   String get cloudV1Deduplication;
 
   /// Panel accounts: v2 deduplication
   ///
   /// In zh, this message translates to:
-  /// **'以适配器类型、面板地址、远端账户、项目与设备 ID 确认重复。IP 或主机名相同仅作核对提示。'**
+  /// **'按适配器、面板地址、账户、项目和设备 ID 判断重复；IP 或主机名相同仅作提示。'**
   String get cloudV2Deduplication;
 
   /// Panel accounts: archived suffix
@@ -5245,7 +5251,7 @@ abstract class AppLocalizations {
   /// No description provided for @serverFirstDescription.
   ///
   /// In zh, this message translates to:
-  /// **'把机器、费用和连接放在一起。\n无需安装监控程序，也可直接手动记录。'**
+  /// **'到期、费用和连接，一处记录。'**
   String get serverFirstDescription;
 
   /// No description provided for @serverAddFirst.
@@ -5263,7 +5269,7 @@ abstract class AppLocalizations {
   /// No description provided for @serverLoadDemoHelp.
   ///
   /// In zh, this message translates to:
-  /// **'将写入 4 条带“演示”标记的本地记录，地址均为保留地址。不会连接服务器。可在各服务器详情中归档这些记录。'**
+  /// **'将写入 4 条“演示”记录，使用保留地址，不会连接服务器；可随时归档。'**
   String get serverLoadDemoHelp;
 
   /// No description provided for @serverLoadDemo.
@@ -5431,7 +5437,7 @@ abstract class AppLocalizations {
   /// No description provided for @serverListObservationHelp.
   ///
   /// In zh, this message translates to:
-  /// **'显示本地资料和最近一次面板查询结果，不持续监控。\n到期天数按设备日期计算；未来 30 天包含今天及后 29 天。'**
+  /// **'不持续监控运行状态；到期天数按设备日期计算。'**
   String get serverListObservationHelp;
 
   /// No description provided for @serverCostsMissing.
@@ -5683,7 +5689,7 @@ abstract class AppLocalizations {
   /// No description provided for @serverPanelLinkHelp.
   ///
   /// In zh, this message translates to:
-  /// **'面板刷新只更新 API 观测，不会覆盖你手动填写的资料。'**
+  /// **'面板刷新不会覆盖手动填写的资料。'**
   String get serverPanelLinkHelp;
 
   /// No description provided for @serverLinkPanel.
@@ -5851,7 +5857,7 @@ abstract class AppLocalizations {
   /// No description provided for @serverConnectionSafety.
   ///
   /// In zh, this message translates to:
-  /// **'首次连接需核对主机指纹；关机或重启不会停止厂商计费。'**
+  /// **'首次连接需核对主机指纹；关机或重启不会停止计费。'**
   String get serverConnectionSafety;
 
   /// No description provided for @serverNotes.
@@ -6253,7 +6259,7 @@ abstract class AppLocalizations {
   /// No description provided for @serverPaymentLockHelp.
   ///
   /// In zh, this message translates to:
-  /// **'已有续费付款：计费方式、周期和日期不可改；续费价与币种仍可改。'**
+  /// **'已有续费付款：计费方式、周期和日期已锁定。'**
   String get serverPaymentLockHelp;
 
   /// No description provided for @serverCostUnknownOption.
@@ -6307,7 +6313,7 @@ abstract class AppLocalizations {
   /// No description provided for @serverNotesSafety.
   ///
   /// In zh, this message translates to:
-  /// **'请勿在备注保存密码、私钥或令牌。'**
+  /// **'备注不加密，请勿存放密码、私钥或令牌。'**
   String get serverNotesSafety;
 
   /// No description provided for @serverSave.
@@ -6541,7 +6547,7 @@ abstract class AppLocalizations {
   /// No description provided for @tcpTestExplanation.
   ///
   /// In zh, this message translates to:
-  /// **'从当前设备测试一个地址和端口，仅建立并关闭 TCP 连接，不发送应用数据。成功不代表 SSH 可登录、服务器开机状态或业务健康。'**
+  /// **'仅测试能否建立 TCP 连接，不发送数据。成功不代表 SSH 可登录或服务正常。'**
   String get tcpTestExplanation;
 
   /// No description provided for @tcpAddress.
@@ -6925,7 +6931,7 @@ abstract class AppLocalizations {
   /// No description provided for @connectionPowerAfterConnect.
   ///
   /// In zh, this message translates to:
-  /// **'连接后才能选择重启 / 关机，并再次完成两次确认。没有 SSH 开机或 API 电源功能。'**
+  /// **'连接后选择重启 / 关机，需完成两次确认；不支持开机。'**
   String get connectionPowerAfterConnect;
 
   /// No description provided for @connectionReviewConnect.
@@ -7081,7 +7087,7 @@ abstract class AppLocalizations {
   /// No description provided for @snippetSelectPreviewHelp.
   ///
   /// In zh, this message translates to:
-  /// **'选择后先预览完整内容，只插入待发送草稿。不会自动发送或回车。'**
+  /// **'选择后先预览，只插入草稿，不会自动发送。'**
   String get snippetSelectPreviewHelp;
 
   /// No description provided for @snippetPlaintextHelp.
@@ -7159,7 +7165,7 @@ abstract class AppLocalizations {
   /// No description provided for @snippetSaveSafety.
   ///
   /// In zh, this message translates to:
-  /// **'本地普通文本，不加密保存。请勿填写密码、私钥或令牌。保存不会执行或发送内容。'**
+  /// **'片段以明文保存，请勿填写密码、私钥或令牌。'**
   String get snippetSaveSafety;
 
   /// No description provided for @snippetName.
@@ -7183,7 +7189,7 @@ abstract class AppLocalizations {
   /// No description provided for @snippetExactContentHelp.
   ///
   /// In zh, this message translates to:
-  /// **'保存会原样保留内容，包括前后空白、多行、回车及控制字符。请使用完整预览核对。'**
+  /// **'内容原样保存，含空白和控制字符；请用完整预览核对。'**
   String get snippetExactContentHelp;
 
   /// No description provided for @connectionSaving.
@@ -7687,7 +7693,7 @@ abstract class AppLocalizations {
   /// No description provided for @terminalPassphraseHelp.
   ///
   /// In zh, this message translates to:
-  /// **'这是私钥解密口令，不是服务器登录密码。仅用于本次连接，不会保存；下次连接需重新输入。'**
+  /// **'私钥解密口令，不是登录密码；仅用于本次连接，不保存。'**
   String get terminalPassphraseHelp;
 
   /// No description provided for @terminalKeyPassphrase.
@@ -7699,7 +7705,7 @@ abstract class AppLocalizations {
   /// No description provided for @terminalPassphraseCleared.
   ///
   /// In zh, this message translates to:
-  /// **'连接已取消或页面进入后台，口令已清空。请取消并重新连接。'**
+  /// **'口令已清空，请取消后重新连接。'**
   String get terminalPassphraseCleared;
 
   /// No description provided for @terminalUnlockOnce.
@@ -8185,7 +8191,7 @@ abstract class AppLocalizations {
   /// Security: CredentialStorageNotice. App-authored UI text; do not translate user data or protocol tokens.
   ///
   /// In zh, this message translates to:
-  /// **'凭据独立管理，连接只引用凭据。秘密仅保存在系统安全存储中。'**
+  /// **'秘密仅保存在系统安全存储中，服务器只引用凭据。'**
   String get securityCredentialStorageNotice;
 
   /// Security: SearchCredentials. App-authored UI text; do not translate user data or protocol tokens.
@@ -8257,7 +8263,7 @@ abstract class AppLocalizations {
   /// Security: LocalCredentialNotice. App-authored UI text; do not translate user data or protocol tokens.
   ///
   /// In zh, this message translates to:
-  /// **'修改本地凭据不会修改远端密码或 authorized_keys。只有明确发起连接才会使用所选凭据。'**
+  /// **'只修改本机凭据，不会改动服务器端密码或 authorized_keys。'**
   String get securityLocalCredentialNotice;
 
   /// Security: ViewDetails. App-authored UI text; do not translate user data or protocol tokens.
@@ -8419,7 +8425,7 @@ abstract class AppLocalizations {
   /// Security: PrivateKeyImportNotice. App-authored UI text; do not translate user data or protocol tokens.
   ///
   /// In zh, this message translates to:
-  /// **'支持 OpenSSH / PEM 私钥。只读取所选文件，不保存文件路径。也可用“粘贴完整私钥”保留换行；内容始终隐藏。'**
+  /// **'支持 OpenSSH / PEM 私钥；不保存文件路径，内容始终隐藏。'**
   String get securityPrivateKeyImportNotice;
 
   /// Security: LoginPassword. App-authored UI text; do not translate user data or protocol tokens.
@@ -8461,7 +8467,7 @@ abstract class AppLocalizations {
   /// Security: PrivateKeyPassphraseHelp. App-authored UI text; do not translate user data or protocol tokens.
   ///
   /// In zh, this message translates to:
-  /// **'用于解密所选私钥，不是服务器登录密码。本页不会更改私钥的加密口令'**
+  /// **'用于解密私钥，不是登录密码。'**
   String get securityPrivateKeyPassphraseHelp;
 
   /// Security: StoreKeyPassphrase. App-authored UI text; do not translate user data or protocol tokens.
@@ -8479,7 +8485,7 @@ abstract class AppLocalizations {
   /// Security: CredentialEditNotice. App-authored UI text; do not translate user data or protocol tokens.
   ///
   /// In zh, this message translates to:
-  /// **'用户名只作为新连接的候选值，不覆盖已有连接。更新凭据只影响以后登录，不修改服务器端密码或密钥。离开到后台会清空未保存秘密。'**
+  /// **'用户名仅作新连接的候选值。更新凭据只影响以后登录，不修改服务器端；退到后台会清空未保存内容。'**
   String get securityCredentialEditNotice;
 
   /// Security: CurrentLinkImpact. App-authored UI text; do not translate user data or protocol tokens.
@@ -8539,7 +8545,7 @@ abstract class AppLocalizations {
   /// Security: PublicKeyFingerprintNotice. App-authored UI text; do not translate user data or protocol tokens.
   ///
   /// In zh, this message translates to:
-  /// **'这里不展示或导出私钥。公钥指纹用于辨认登录密钥，与服务器主机指纹不同。'**
+  /// **'公钥指纹用于辨认登录密钥，不同于服务器主机指纹；这里不展示私钥。'**
   String get securityPublicKeyFingerprintNotice;
 
   /// Security: FingerprintCopied. App-authored UI text; do not translate user data or protocol tokens.
@@ -8599,7 +8605,7 @@ abstract class AppLocalizations {
   /// Security: CredentialReferenceCount. App-authored UI text; do not translate user data or protocol tokens.
   ///
   /// In zh, this message translates to:
-  /// **'{count} 台引用此凭据，包含已归档记录。连接用户名分别保存。'**
+  /// **'{count} 台服务器引用此凭据（含已归档）。'**
   String securityCredentialReferenceCount(int count);
 
   /// Security: NoCredentialReferences. App-authored UI text; do not translate user data or protocol tokens.
@@ -8611,7 +8617,7 @@ abstract class AppLocalizations {
   /// Security: CredentialDeleteImpact. App-authored UI text; do not translate user data or protocol tokens.
   ///
   /// In zh, this message translates to:
-  /// **'{count} 台服务器将受影响，包含归档记录。请核对下面的每一项。'**
+  /// **'{count} 台服务器将受影响（含已归档）。'**
   String securityCredentialDeleteImpact(int count);
 
   /// Security: ManageLinks. App-authored UI text; do not translate user data or protocol tokens.
@@ -8653,7 +8659,7 @@ abstract class AppLocalizations {
   /// Security: DeleteLocalCredentialNotice. App-authored UI text; do not translate user data or protocol tokens.
   ///
   /// In zh, this message translates to:
-  /// **'仅删除本机凭据，不能从本页面恢复。不修改远端密码或 authorized_keys，不取消云服务。'**
+  /// **'仅删除本机凭据，无法恢复；不影响服务器端或云服务。'**
   String get securityDeleteLocalCredentialNotice;
 
   /// Security: ConfirmCredentialImpact. App-authored UI text; do not translate user data or protocol tokens.
@@ -8683,7 +8689,7 @@ abstract class AppLocalizations {
   /// Security: HostTrustNotice. App-authored UI text; do not translate user data or protocol tokens.
   ///
   /// In zh, this message translates to:
-  /// **'信任绑定主机地址和端口，并记录算法及完整公钥。登录凭据与服务器主机公钥是两件事。'**
+  /// **'信任绑定主机地址、端口和完整公钥，与登录凭据无关。'**
   String get securityHostTrustNotice;
 
   /// Security: NoTrustedHosts. App-authored UI text; do not translate user data or protocol tokens.
@@ -8747,7 +8753,7 @@ abstract class AppLocalizations {
   /// Security: HostTrustInputNotice. App-authored UI text; do not translate user data or protocol tokens.
   ///
   /// In zh, this message translates to:
-  /// **'输入从厂商控制台或管理员等独立可信渠道取得的主机公钥。此页面只校验输入内容并保存本机信任，不会连接服务器。'**
+  /// **'请输入从厂商控制台等独立可信渠道取得的主机公钥。本页只保存本机信任，不连接服务器。'**
   String get securityHostTrustInputNotice;
 
   /// Security: HostAddress. App-authored UI text; do not translate user data or protocol tokens.
@@ -8777,8 +8783,14 @@ abstract class AppLocalizations {
   /// Security: RsaHostKeyNotice. App-authored UI text; do not translate user data or protocol tokens.
   ///
   /// In zh, this message translates to:
-  /// **'rsa-sha2-256 / rsa-sha2-512 是签名算法，其 RSA 公钥类型选择 ssh-rsa。只支持结构完整的受支持主机公钥。'**
+  /// **'rsa-sha2-256 / 512 是签名算法，公钥类型请选 ssh-rsa。'**
   String get securityRsaHostKeyNotice;
+
+  /// No description provided for @r2CopyInfoRsaKey.
+  ///
+  /// In zh, this message translates to:
+  /// **'关于 RSA 主机公钥'**
+  String get r2CopyInfoRsaKey;
 
   /// Security: Checking. App-authored UI text; do not translate user data or protocol tokens.
   ///
@@ -8831,7 +8843,7 @@ abstract class AppLocalizations {
   /// Security: HostVerificationWarning. App-authored UI text; do not translate user data or protocol tokens.
   ///
   /// In zh, this message translates to:
-  /// **'请通过独立渠道核对完整指纹和目标地址。变化可能来自重装，也可能是错误主机或中间人攻击。无法确认时应拒绝。'**
+  /// **'请通过独立渠道核对指纹和地址。变化可能是重装，也可能是中间人攻击；无法确认请拒绝。'**
   String get securityHostVerificationWarning;
 
   /// Security: BeginHostReverification. App-authored UI text; do not translate user data or protocol tokens.
@@ -8897,7 +8909,7 @@ abstract class AppLocalizations {
   /// Security: LocalHostTrustOnly. App-authored UI text; do not translate user data or protocol tokens.
   ///
   /// In zh, this message translates to:
-  /// **'只记录本机信任，当前不会连接服务器。拒绝、取消和返回均不保存，也不发送认证资料。'**
+  /// **'只记录本机信任；拒绝、取消或返回均不保存。'**
   String get securityLocalHostTrustOnly;
 
   /// Security: DiscardSshTitle. App-authored UI text; do not translate user data or protocol tokens.
@@ -9065,7 +9077,7 @@ abstract class AppLocalizations {
   /// Security: ConfigurationOnlyNotice. App-authored UI text; do not translate user data or protocol tokens.
   ///
   /// In zh, this message translates to:
-  /// **'此页只保存连接配置。建立连接时先核验主机身份，再进行登录认证；主机公钥变化时会暂停认证，等待重新核实。'**
+  /// **'仅保存连接配置。连接时先核验主机公钥，公钥变化会暂停认证。'**
   String get securityConfigurationOnlyNotice;
 
   /// Security: SaveSshConfiguration. App-authored UI text; do not translate user data or protocol tokens.
@@ -9299,7 +9311,7 @@ abstract class AppLocalizations {
   /// Provider navigation and ownership UI.
   ///
   /// In zh, this message translates to:
-  /// **'提供商是服务器的业务归属；适配器实例保存一份独立授权，只能读取该授权范围内的设备。'**
+  /// **'提供商是服务器的业务归属；适配器实例保存独立授权。'**
   String get providerUiHierarchyHelp;
 
   /// Provider navigation and ownership UI.
@@ -9467,7 +9479,7 @@ abstract class AppLocalizations {
   /// Provider navigation and ownership UI.
   ///
   /// In zh, this message translates to:
-  /// **'只列出当前提供商的实例。授权范围由适配器类型与验证结果决定。'**
+  /// **'只列出当前提供商的实例。'**
   String get providerUiInstanceChoiceHelp;
 
   /// Provider navigation and ownership UI.
@@ -9644,13 +9656,13 @@ abstract class AppLocalizations {
   /// Adapter instance import and local linking
   ///
   /// In zh, this message translates to:
-  /// **'导入前需核对完整的六项资源。API 未提供的值保持未知；只有明确确认后才选择不限流量。补填或修改仅用于本地配置，不会改写 API 观测信息。'**
+  /// **'导入前请核对六项资源；API 未提供的保持未知，确认无限流量才选“不限”。修改仅存本机。'**
   String get cloudImportCompletionInfo;
 
   /// Adapter instance import and local linking
   ///
   /// In zh, this message translates to:
-  /// **'本次仅添加设备与资源配置。财务信息可稍后填写，不会自动创建费用或付款。'**
+  /// **'本次仅添加设备与资源配置，不会创建费用或付款。'**
   String get cloudImportFinanceLater;
 
   /// Adapter instance import and local linking

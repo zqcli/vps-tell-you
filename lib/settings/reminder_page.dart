@@ -541,7 +541,6 @@ class _ReminderPageState extends State<ReminderPage> {
                   ),
                 ],
               ),
-              _Footnote(l10n.uiTabsReminderSaveHelp),
             ],
           ],
         ),

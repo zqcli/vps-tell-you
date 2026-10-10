@@ -429,7 +429,10 @@ class _CloudAuthorizationPageState extends State<CloudAuthorizationPage>
                   onPressed: kIsWeb ? null : verify,
                 ),
               CloudFootnote(context.l10n.cloudVerifyScopeInfo),
-              CloudFootnote(context.l10n.cloudCredentialMemoryInfo),
+              AppInfoLink(
+                label: context.l10n.r2CopyInfoCredentialHandling,
+                message: context.l10n.cloudCredentialMemoryInfo,
+              ),
             ],
           ),
         ),

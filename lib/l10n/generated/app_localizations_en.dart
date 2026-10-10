@@ -20,8 +20,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get languageSystem => 'Follow system';
 
   @override
-  String get languageSystemDescription =>
-      'Supports Simplified Chinese and English. Other system languages use English.';
+  String get languageSystemDescription => 'Other system languages use English.';
 
   @override
   String get languageChinese => '简体中文';
@@ -334,8 +333,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'Tap Save reminder rules to apply changes. If reminders are enabled and you choose Stop using at expiry, reminders will still prompt you to check provider renewal settings.';
 
   @override
-  String get uiTabsReminderSaveHelp =>
-      'Tap Save at the top right to apply changes. If reminders are enabled and you choose Stop using at expiry, reminders will still prompt you to check provider renewal settings.';
+  String get uiTabsReminderSaveHelp => 'Tap Save at the top right to apply.';
 
   @override
   String uiTabsReminderDue(String name, String date) {
@@ -416,14 +414,14 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get reminderDstHelp =>
-      'Uses the current device time zone. Times skipped by daylight saving move forward; repeated times trigger only once. Entirely skipped calendar dates are not scheduled.';
+      'Uses the device time zone. Times skipped by daylight saving move forward; repeated times fire once.';
 
   @override
   String get myUsagePlan => 'My usage plan';
 
   @override
   String get usagePlanWarning =>
-      'Usage plans are local records only. Planning to stop at expiry does not stop provider billing. Confirm renewal cancellation separately with the provider.';
+      'Usage plans are local records only and do not stop provider billing. Cancel renewal with the provider separately.';
 
   @override
   String get savedRuleSchedule => 'Schedule for saved rules';
@@ -619,7 +617,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get restoreContentsHelp =>
-      'The ledger records and manual exchange rates above will be imported. The security data, notes, reminders, and app preferences listed as excluded are not in the backup.';
+      'Only ledger records and manual rates are imported; items listed above are not in the backup.';
 
   @override
   String get restoreToEmptyLedger => 'Restore to empty ledger';
@@ -702,7 +700,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get appLocalDataHelp =>
-      'Data is stored on this device. No app account is needed.\nArchiving a record does not cancel the server service or stop billing.';
+      'Data stays on this device; no account needed. Archiving does not cancel the service or stop billing.';
 
   @override
   String get groupSaveFailed =>
@@ -724,8 +722,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get addGroup => 'Add group';
 
   @override
-  String get groupsHelp =>
-      'Organize servers by purpose. Group changes affect only the local ledger.';
+  String get groupsHelp => 'Organize servers by purpose.';
 
   @override
   String get noGroupsHelp =>
@@ -760,7 +757,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get archiveHelp =>
-      'Archiving keeps server details and IDs. Restoring does not connect to, start, or renew the service.';
+      'Archiving keeps the record. Restoring does not start or renew the service.';
 
   @override
   String get noArchivedRecords => 'No archived records';
@@ -864,11 +861,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get financeInferredPeriods =>
-      'Some service start dates are inferred from the expiry date and calendar cycle. They are not proof of past payment.';
+      'Start dates are inferred from the expiry date; not proof of payment.';
 
   @override
   String get financeValueDisclaimer =>
-      'This is a price-based estimate of unused service time, not a refund promise or sale price.';
+      'Based on remaining time; not a refund promise or sale price.';
 
   @override
   String get financeShownPeriod => 'Shown period';
@@ -887,7 +884,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get financeFxScope =>
-      'Only reference conversions change. Renewal prices and past payments stay in their original currencies. No live rates are requested. Leave a rate blank if it is unknown.';
+      'Affects reference conversions only; no live rates are fetched. Leave blank if unknown.';
 
   @override
   String get financeDisplayCurrency => 'Currency for totals';
@@ -914,7 +911,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get financeFxBasis =>
-      'CNY is the base currency: 1 CNY = 1 CNY. Same-currency amounts need no exchange rate. When cross-currency rates are missing, only convertible amounts and conversion coverage are shown.';
+      'CNY is the base. Currencies without a rate are left out of totals.';
 
   @override
   String get financeSaveFx => 'Save reference rates';
@@ -924,7 +921,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get financeReferenceNote =>
-      'Copies the current renewal details and known service periods only. The original server is not changed.';
+      'Copies current renewal details only; the server is not changed.';
 
   @override
   String get financeNoPrepaid =>
@@ -946,11 +943,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get financeIndependentRebuilt =>
-      'Switched to an independent estimate. Service periods are recalculated from the current expiry date and cycle, assuming continuous service before expiry.';
+      'Switched to an independent estimate; service periods are recalculated from the expiry date and cycle.';
 
   @override
   String get financeIndependentNote =>
-      'Calculate an independent estimate without adding a server. Assumes continuous service before expiry.';
+      'Independent estimate, no server needed. Assumes continuous service before expiry.';
 
   @override
   String get financeRenewalAmount => 'Renewal price per cycle';
@@ -989,7 +986,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get financeEstimateNoWrite =>
-      'Estimates are separate from the ledger. Changing inputs does not change any server or payment.';
+      'Estimates never change any server or payment.';
 
   @override
   String get financeReferenceRateMissing => 'Reference exchange rate missing';
@@ -1027,7 +1024,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get financeQuoteNote =>
-      'This estimates the quote and transfer fee entered below only. No transaction is made, and other charges are excluded. Check whether the provider allows transfers and review its terms.';
+      'Estimate only; no transaction is made. Check that the provider allows transfers.';
 
   @override
   String get financeQuoteAmountError =>
@@ -1056,7 +1053,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get financeSplitFeeNote =>
-      'The fee is converted to minor units of the display currency before splitting. Any indivisible 0.01 is paid by the buyer. Both shares add up to the total fee.';
+      'The fee is split in minor units; any odd 0.01 goes to the buyer.';
 
   @override
   String get financeCalculateQuote => 'Calculate quote and fees';
@@ -1113,7 +1110,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get financeNoRenewalDate =>
-      'This record has no usable renewal date. Check the prepaid billing type, expiry date, and supported date range.';
+      'No usable prepaid expiry date. Check the server details.';
 
   @override
   String get financeRecordAccountBill => 'Record an account bill';
@@ -1124,7 +1121,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get financeAccountBillNote =>
-      'Standalone bill, counted once. Not split across servers; creates no service period.';
+      'Standalone bill, counted once. Not split; creates no service period.';
 
   @override
   String get financeAccountName => 'Account display name';
@@ -1324,7 +1321,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get financeMonthlyNotPaid =>
-      'Monthly prepaid renewal equivalent + metered monthly estimate. This is not the amount paid this month.';
+      'Renewals spread monthly + metered estimate; not this month’s payments.';
 
   @override
   String get financeUpcomingRenewals => 'Expected renewals in the next 30 days';
@@ -1350,12 +1347,11 @@ class AppLocalizationsEn extends AppLocalizations {
       'Add cost details to see the breakdown.';
 
   @override
-  String get financeDistributionNote =>
-      'Tap a category to see server details using the same calculation basis. Maintain cost details and renewal records from each server’s details page.';
+  String get financeDistributionNote => 'Tap a category for server details.';
 
   @override
   String get financeGroupDistributionNote =>
-      'Account-level payments are not allocated to this group. Tap a category for details.';
+      'Account-level payments are not split across groups. Tap a category for details.';
 
   @override
   String get financeSixMonthTitle =>
@@ -1363,7 +1359,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get financeForecastNote =>
-      'Forecasts the rest of this month and the next five calendar months at the current renewal price and cycle. Assumes continued renewal; usage plans do not change the forecast. Metered bills and expired services are excluded.';
+      'Forecast at current renewal prices, assuming renewal continues. Excludes metered bills and expired services.';
 
   @override
   String get financeMonthlyDetail => 'Monthly cost details';
@@ -1394,7 +1390,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get financeUnknownZeroNote =>
-      '“—” means unknown or not applicable, not free. A known zero amount is shown as 0.00.';
+      '“—” means unknown or not applicable, not free.';
 
   @override
   String get financeRenewals30Title => 'Renewals in the next 30 days';
@@ -1408,7 +1404,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get financeMeteredRenewalNote =>
-      'Maintain the monthly estimate for metered costs in server details. Metered costs do not create prepaid renewal events.';
+      'Metered costs create no renewal events; edit the monthly estimate in server details.';
 
   @override
   String get financePngRenderFailed =>
@@ -1447,7 +1443,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get financePngPrivacy =>
-      'Contains only amounts, dates, periods, and reference exchange rates. The image excludes server names, addresses, accounts, notes, and transfer quote estimates.';
+      'The image has only amounts, dates, periods and reference rates; no server names, addresses or notes.';
 
   @override
   String get financePngSemantic => 'Remaining value calculation result PNG';
@@ -1466,7 +1462,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get financePngLocationNote =>
-      'The save location may be an app-private folder, rather than Photos or a public Downloads folder. On mobile, use system sharing to save elsewhere. Canceling sharing keeps the preview open.';
+      'The file may be in an app-private folder. Use system sharing to save it elsewhere.';
 
   @override
   String get financeRulesBody =>
@@ -1553,7 +1549,7 @@ class AppLocalizationsEn extends AppLocalizations {
       other: '$count future periods',
       one: '1 future period',
     );
-    return 'Remaining value includes $_temp0. The progress bar shows only the period above.';
+    return 'Includes $_temp0.';
   }
 
   @override
@@ -1563,7 +1559,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String financeReferenceBasis(String name) {
-    return 'Uses known periods from $name. Changing the valuation date, amount, or currency does not change the known service periods or the original server.';
+    return 'Uses known periods from $name. Changing the inputs does not change the original server.';
   }
 
   @override
@@ -1598,7 +1594,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String financeRoundingNote(String rate, String source) {
-    return '$rate\n$source. Calculated exactly before rounding to minor units. Conversions are for reference only.';
+    return '$rate\n$source. Conversions are for reference only.';
   }
 
   @override
@@ -1833,7 +1829,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get uiFinanceFootnote =>
-      'Amounts use current renewal prices and manual reference exchange rates. For reference only; they are not vendor bills.';
+      'Uses renewal prices and manual rates. For reference only; not actual bills.';
 
   @override
   String get uiFinanceVoidedPill => 'Deleted';
@@ -2366,7 +2362,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get cloudTemplateInfo =>
-      'Choose the adapter type that matches the panel. The adapter reads technical information; the provider is the business supplying the servers.';
+      'Choose the adapter type matching the panel. The provider is the business supplying the servers.';
 
   @override
   String get cloudV1TemplateInfo =>
@@ -2382,7 +2378,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get cloudSupportedPanels =>
-      'Supports reads from SolusVM 1, SolusVM 2, and RackNerd ctrl. There is no API power control, remote resource editing, or cancellation of provider billing.';
+      'Reads from SolusVM 1 / 2 and RackNerd ctrl. No power control, no remote changes, and billing is not stopped.';
 
   @override
   String get cloudReauthorize => 'Authorize again';
@@ -2412,7 +2408,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get cloudEndpointInfo =>
-      'Use the HTTPS panel home address, including a provider-specified port if needed. Certificate errors are not bypassed and redirects are not followed.';
+      'Use the HTTPS panel home address (a specific port is fine). Certificate errors are not bypassed and redirects are not followed.';
 
   @override
   String get cloudRackNerdEndpointValidation =>
@@ -2420,7 +2416,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get cloudRackNerdEndpointInfo =>
-      'Use the HTTPS panel home address, including a provider-specified port if needed. Only for RackNerd ctrl, the exact /api/client/command.php path may be removed; review the final address below. Certificate errors are not bypassed and redirects are not followed.';
+      'Use the HTTPS panel home address (a specific port is fine) and check the final address below. Certificate errors are not bypassed and redirects are not followed.';
 
   @override
   String get cloudEndpointIdentityInfo =>
@@ -2428,15 +2424,15 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get cloudV1CredentialsInfo =>
-      'Enter this VPS’s Client API Key / Hash, not administrator API credentials or a login password. The provider must enable Client API. Each pair reads the status of one VPS.';
+      'Enter this VPS’s Client API Key / Hash (not a login password or admin credentials). The provider must enable Client API.';
 
   @override
   String get cloudRackNerdCredentialsInfo =>
-      'Enter the Client API Key / Hash for this VPS from the RackNerd ctrl panel, not a login password or administrator credentials. This connection reads one VPS through the compatible client interface; the underlying panel product is not identified.';
+      'Enter the Client API Key / Hash of this VPS from RackNerd ctrl (not a login password or admin credentials).';
 
   @override
   String get cloudV2CredentialsInfo =>
-      'Use a token from Account → API Tokens in the SolusVM 2 user area. Do not use an administrator token. The readable scope depends on provider settings.';
+      'Use a token from Account → API Tokens in the SolusVM 2 user area, not an administrator token.';
 
   @override
   String get cloudV1ReauthorizationInfo =>
@@ -2448,11 +2444,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get cloudVerifyScopeInfo =>
-      'This app only reads data; the credentials themselves may have other permissions. Verification reads status or projects and devices. Credentials enter secure device storage only when you save in the next step.';
+      'This app only reads data, but the credentials may allow more. Verification only reads status; credentials enter secure device storage when you save.';
 
   @override
   String get cloudVerifyingInfo =>
-      'Verifying and reading the complete list. Requests have a timeout. Going back or cancelling stops this read.';
+      'Verifying and reading with a timeout. Going back or cancelling stops it.';
 
   @override
   String get cloudCancelVerification => 'Cancel verification';
@@ -2463,6 +2459,9 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get cloudCredentialMemoryInfo =>
       'Credential fields are cleared after verification or on leaving. They are not written to the ledger, logs, or exports. Dart does not guarantee secure memory erasure.';
+
+  @override
+  String get r2CopyInfoCredentialHandling => 'How credentials are handled';
 
   @override
   String get cloudChooseInstances => 'Choose devices to import';
@@ -2501,15 +2500,15 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get cloudV1ResourcesInfo =>
-      'SolusVM 1 does not provide a stable device ID. Available resource fields depend on the provider. Entered details stay local and do not trigger SSH, TCP, or remote configuration changes.';
+      'SolusVM 1 provides no device ID and the readable fields depend on the provider. What you enter stays on this device.';
 
   @override
   String get cloudRackNerdResourcesInfo =>
-      'RackNerd ctrl does not provide a stable device ID. Complete all six hardware details before import; do not guess a CPU count that the API does not return. Entered details stay on this device and do not trigger SSH, TCP, or remote configuration changes.';
+      'RackNerd ctrl provides no device ID. Complete the six hardware fields before import; do not guess values the API omits.';
 
   @override
   String get cloudRebindWarning =>
-      'Saving new authorization removes this adapter instance’s old device links. Existing records, finances, and SSH are kept. Importing creates new local records; it does not overwrite or automatically relink old devices.';
+      'Saving new authorization removes this instance’s old device links. Existing records, finances and SSH are kept; importing creates new records and never overwrites or relinks old devices.';
 
   @override
   String get cloudConfirmRebind =>
@@ -2549,7 +2548,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get cloudReadingInfo =>
-      'Reading the complete list and status with a timeout. Cancelling or going back stops this read without changing ledger records, costs, or SSH settings.';
+      'Reading with a timeout. Cancelling or going back stops it without changing the ledger.';
 
   @override
   String get cloudCancelRead => 'Cancel read';
@@ -2559,7 +2558,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get cloudReadCompleteInfo =>
-      'Only this adapter instance’s API observations were updated. Local details, costs, payments, and SSH settings were not overwritten.';
+      'Only read results were updated; local details were not overwritten.';
 
   @override
   String get cloudDone => 'Done';
@@ -2629,7 +2628,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get cloudScopeNotice =>
-      'The API credentials themselves may have more permissions; check in the provider’s panel. There is no continuous background monitoring. Results reflect only the time of the read.';
+      'The credentials may allow more; check in the provider’s panel. Results reflect only the time of the read.';
 
   @override
   String get cloudNoLinkedInstances =>
@@ -2649,7 +2648,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get cloudLocalBindingInfo =>
-      'This page uses saved API observations and does not connect to the panel. If no devices are available or the last read failed, refresh the adapter instance manually, then return and reload this local list.';
+      'Uses saved read results and does not connect to the panel. If no devices appear, refresh the adapter instance first.';
 
   @override
   String get cloudBindingCommitted =>
@@ -3020,11 +3019,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get cloudV1Deduplication =>
-      'A device already pinned to this authorization is not created again; unlinking keeps the pin. Separate authorizations are not merged automatically.';
+      'Devices already pinned to this authorization are not created again. Separate authorizations are not merged.';
 
   @override
   String get cloudV2Deduplication =>
-      'Duplicates use adapter type, panel endpoint, remote account, project, and device IDs. Matching IP or hostname is only a review hint.';
+      'Duplicates are judged by adapter, panel address, account, project and device ID. A matching IP or hostname is only a hint.';
 
   @override
   String get cloudArchivedSuffix => ' · Archived';
@@ -3389,7 +3388,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get serverFirstDescription =>
-      'Keep servers, costs, and connections together.\nStart with manual records. No monitoring agent is needed.';
+      'Expiry, costs and connections in one place.';
 
   @override
   String get serverAddFirst => 'Add your first server';
@@ -3399,7 +3398,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get serverLoadDemoHelp =>
-      'Adds 4 local records marked Demo, all using reserved addresses. No servers will be connected. You can archive these records in each server’s details.';
+      'Adds 4 demo records with reserved addresses. Nothing connects to a server; archive them anytime.';
 
   @override
   String get serverLoadDemo => 'Load demo';
@@ -3500,7 +3499,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get serverListObservationHelp =>
-      'Shows local details and the latest panel response, without continuous monitoring.\nDays to expiry use the device date. The next 30 days includes today and the following 29 days.';
+      'No continuous monitoring. Days to expiry use the device date.';
 
   @override
   String get serverCostsMissing => 'Add cost details';
@@ -3656,7 +3655,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get serverPanelLinkHelp =>
-      'Panel refreshes only update API observations; they never overwrite what you entered.';
+      'Panel refresh never overwrites what you entered.';
 
   @override
   String get serverLinkPanel => 'Link panel account';
@@ -3754,7 +3753,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get serverConnectionSafety =>
-      'Verify the host fingerprint on first connect. Shutdown or reboot does not stop provider billing.';
+      'Verify the host fingerprint on first connect. Shutdown or reboot does not stop billing.';
 
   @override
   String get serverNotes => 'Notes';
@@ -3986,7 +3985,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get serverPaymentLockHelp =>
-      'Renewal payments exist: billing type, cycle and dates are locked; price and currency can change.';
+      'Payments exist: billing type, cycle and dates are locked.';
 
   @override
   String get serverCostUnknownOption => 'Cost unknown · Add later';
@@ -4016,7 +4015,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get serverNotesSafety =>
-      'Do not store passwords, private keys or tokens in notes.';
+      'Notes are not encrypted. Do not store passwords, keys or tokens.';
 
   @override
   String get serverSave => 'Save server';
@@ -4141,7 +4140,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get tcpTestExplanation =>
-      'Tests one address and port from this device by opening and closing a TCP connection. No application data is sent. Success does not prove SSH sign-in is possible, the server’s power state, or application health.';
+      'Only checks whether a TCP connection opens; no data is sent. Success does not mean SSH login works or the service is healthy.';
 
   @override
   String get tcpAddress => 'IP / Domain';
@@ -4375,7 +4374,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get connectionPowerAfterConnect =>
-      'After connecting, choose restart or shutdown and complete both confirmations. SSH power-on and API power controls are not available.';
+      'After connecting, choose restart or shutdown and complete both confirmations. Power-on is not supported.';
 
   @override
   String get connectionReviewConnect => 'Review and connect';
@@ -4461,7 +4460,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get snippetSelectPreviewHelp =>
-      'Preview the full content after selecting it. It is inserted only into the draft. Nothing is sent and Enter is not pressed automatically.';
+      'Preview first. Only inserted into the draft; nothing is sent automatically.';
 
   @override
   String get snippetPlaintextHelp =>
@@ -4506,7 +4505,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get snippetSaveSafety =>
-      'Saved locally as unencrypted plain text. Do not enter passwords, private keys, or tokens. Saving does not execute or send content.';
+      'Snippets are stored as plain text. Do not enter passwords, keys or tokens.';
 
   @override
   String get snippetName => 'Snippet name';
@@ -4521,7 +4520,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get snippetExactContentHelp =>
-      'Saving preserves the exact content, including leading and trailing whitespace, multiple lines, carriage returns, and control characters. Check it in the full preview.';
+      'Content is saved exactly, including whitespace and control characters. Check the full preview.';
 
   @override
   String get connectionSaving => 'Saving…';
@@ -4812,7 +4811,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get terminalPassphraseHelp =>
-      'This passphrase decrypts the private key; it is not the server login password. It is used only for this connection and is not saved. Enter it again next time.';
+      'Decrypts the private key; not the login password. Used for this connection only and not saved.';
 
   @override
   String get terminalKeyPassphrase =>
@@ -4820,7 +4819,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get terminalPassphraseCleared =>
-      'The connection was cancelled or the app entered the background, so the passphrase was cleared. Cancel and reconnect.';
+      'The passphrase was cleared. Cancel and reconnect.';
 
   @override
   String get terminalUnlockOnce => 'Unlock for this connection only';
@@ -5119,7 +5118,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get securityCredentialStorageNotice =>
-      'Credentials are managed separately and referenced by connections. Secrets are stored only in system secure storage.';
+      'Secrets live only in system secure storage; servers just reference credentials.';
 
   @override
   String get securitySearchCredentials => 'Search name or default username';
@@ -5171,7 +5170,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get securityLocalCredentialNotice =>
-      'Changing a local credential does not change the remote password or authorized_keys. The selected credential is used only when you explicitly start a connection.';
+      'Only the local credential changes; the server’s password and authorized_keys are untouched.';
 
   @override
   String get securityViewDetails => 'View details';
@@ -5263,7 +5262,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get securityPrivateKeyImportNotice =>
-      'OpenSSH / PEM private keys are supported. Only the selected file is read; its path is not saved. Use “Paste complete private key” to preserve line breaks. The content stays hidden.';
+      'OpenSSH / PEM private keys. The file path is not saved and the content stays hidden.';
 
   @override
   String get securityLoginPassword => 'Login password';
@@ -5287,7 +5286,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get securityPrivateKeyPassphraseHelp =>
-      'Used to decrypt the selected private key, not to log in to the server. This page does not change the key’s encryption passphrase.';
+      'Decrypts the private key; not the login password.';
 
   @override
   String get securityStoreKeyPassphrase =>
@@ -5299,7 +5298,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get securityCredentialEditNotice =>
-      'The username is a suggestion for new connections and does not overwrite existing ones. Updating a credential affects future logins only; it does not change server passwords or keys. Moving the app to the background clears unsaved secrets.';
+      'The username is only a suggestion for new connections. Updating a credential affects future logins only and changes nothing on the server. Unsaved secrets are cleared in the background.';
 
   @override
   String get securityCurrentLinkImpact => 'Impact on current links';
@@ -5333,7 +5332,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get securityPublicKeyFingerprintNotice =>
-      'Private keys are not displayed or exported here. The public-key fingerprint identifies a login key and is different from the server’s host fingerprint.';
+      'The fingerprint identifies a login key and differs from the server’s host fingerprint. Private keys are never shown.';
 
   @override
   String get securityFingerprintCopied => 'Public-key fingerprint copied';
@@ -5372,7 +5371,7 @@ class AppLocalizationsEn extends AppLocalizations {
       other: '$count servers use this credential',
       one: '1 server uses this credential',
     );
-    return '$_temp0, including archived records. Connection usernames are stored separately.';
+    return '$_temp0 (including archived).';
   }
 
   @override
@@ -5387,7 +5386,7 @@ class AppLocalizationsEn extends AppLocalizations {
       other: '$count servers will be affected',
       one: '1 server will be affected',
     );
-    return '$_temp0, including archived records. Review each item below.';
+    return '$_temp0 (including archived).';
   }
 
   @override
@@ -5414,7 +5413,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get securityDeleteLocalCredentialNotice =>
-      'Only the local credential is deleted and it cannot be restored from this page. Remote passwords and authorized_keys are unchanged. Cloud services are not canceled.';
+      'Deletes only the local credential and cannot be undone. Servers and cloud services are unaffected.';
 
   @override
   String get securityConfirmCredentialImpact =>
@@ -5432,7 +5431,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get securityHostTrustNotice =>
-      'Trust is bound to the host address and port, with the algorithm and complete public key recorded. Login credentials and server host public keys are separate.';
+      'Trust is bound to the host address, port and full public key, separate from login credentials.';
 
   @override
   String get securityNoTrustedHosts =>
@@ -5474,7 +5473,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get securityHostTrustInputNotice =>
-      'Enter the host public key obtained through an independent trusted source, such as the provider’s console or an administrator. This page only validates your input and saves local trust. It does not connect to the server.';
+      'Enter the host public key from an independent trusted source such as the provider console. This page only saves local trust and does not connect.';
 
   @override
   String get securityHostAddress => 'Host address';
@@ -5491,7 +5490,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get securityRsaHostKeyNotice =>
-      'rsa-sha2-256 / rsa-sha2-512 are signature algorithms. Select ssh-rsa for their RSA public-key type. Only structurally complete keys of supported host-key types are accepted.';
+      'rsa-sha2-256 / 512 are signature algorithms; choose ssh-rsa as the key type.';
+
+  @override
+  String get r2CopyInfoRsaKey => 'About RSA host keys';
 
   @override
   String get securityChecking => 'Validating…';
@@ -5522,7 +5524,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get securityHostVerificationWarning =>
-      'Verify the complete fingerprint and target address through an independent source. A change may be due to a reinstall, a wrong host, or a man-in-the-middle attack. Reject it if you cannot verify it.';
+      'Verify the fingerprint and address through an independent source. A change may be a reinstall or a man-in-the-middle attack; reject if unsure.';
 
   @override
   String get securityBeginHostReverification =>
@@ -5560,7 +5562,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get securityLocalHostTrustOnly =>
-      'Only local trust is recorded; no server connection is made here. Rejecting, canceling, or going back does not save trust or send authentication details.';
+      'Only local trust is recorded. Rejecting, cancelling or going back saves nothing.';
 
   @override
   String get securityDiscardSshTitle => 'Discard connection configuration?';
@@ -5661,7 +5663,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get securityConfigurationOnlyNotice =>
-      'This page only saves connection configuration. When connecting, the host’s identity is verified before login authentication. If the host public key changes, authentication pauses until it is verified again.';
+      'Saves connection settings only. The host key is verified before login; a changed key pauses authentication.';
 
   @override
   String get securitySaveSshConfiguration => 'Save SSH configuration';
@@ -5793,7 +5795,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get providerUiHierarchyHelp =>
-      'A provider identifies the business that supplies your servers. Each adapter instance holds a separate authorization and reads only devices within its scope.';
+      'A provider is who sells your servers; each adapter instance holds a separate authorization.';
 
   @override
   String providerUiSummary(int instances, int devices) {
@@ -5893,7 +5895,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get providerUiInstanceChoiceHelp =>
-      'Only this provider’s instances are listed. Adapter type and verification determine authorization scope.';
+      'Only this provider’s instances are listed.';
 
   @override
   String get providerUiReviewHelp =>
@@ -6001,11 +6003,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get cloudImportCompletionInfo =>
-      'Check all six resource fields before importing. Values omitted by the API stay unknown; choose unlimited traffic only when confirmed. Your edits are local configuration and do not change API observations.';
+      'Check all six resource fields before importing. Values the API omits stay unknown; choose unlimited traffic only when confirmed. Edits stay local.';
 
   @override
   String get cloudImportFinanceLater =>
-      'This import adds devices and resource details. Financial information is optional and can be added later; no costs or payments are created.';
+      'Only devices and resource details are added; no costs or payments are created.';
 
   @override
   String cloudImportSummary(

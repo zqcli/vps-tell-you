@@ -3,7 +3,7 @@
   "language": "Language",
   "languageDescription": "Switch the interface immediately. Drafts and connections are kept.",
   "languageSystem": "Follow system",
-  "languageSystemDescription": "Supports Simplified Chinese and English. Other system languages use English.",
+  "languageSystemDescription": "Other system languages use English.",
   "languageChinese": "简体中文",
   "languageEnglish": "English",
   "languageSaveFailed": "Could not save the language setting. The current language is unchanged. Try again.",
@@ -128,7 +128,7 @@
   "recordMissingReload": "This record no longer exists. Go back and reload.",
   "dueDateNotEntered": "No expiry date entered",
   "reminderSaveHelp": "Tap Save reminder rules to apply changes. If reminders are enabled and you choose Stop using at expiry, reminders will still prompt you to check provider renewal settings.",
-  "uiTabsReminderSaveHelp": "Tap Save at the top right to apply changes. If reminders are enabled and you choose Stop using at expiry, reminders will still prompt you to check provider renewal settings.",
+  "uiTabsReminderSaveHelp": "Tap Save at the top right to apply.",
   "uiTabsReminderDue": "{name} expires on {date}.",
   "@uiTabsReminderDue": {
     "placeholders": {
@@ -169,9 +169,9 @@
   "hour": "Hour",
   "minute": "Minute",
   "invalidTime": "Enter a valid time",
-  "reminderDstHelp": "Uses the current device time zone. Times skipped by daylight saving move forward; repeated times trigger only once. Entirely skipped calendar dates are not scheduled.",
+  "reminderDstHelp": "Uses the device time zone. Times skipped by daylight saving move forward; repeated times fire once.",
   "myUsagePlan": "My usage plan",
-  "usagePlanWarning": "Usage plans are local records only. Planning to stop at expiry does not stop provider billing. Confirm renewal cancellation separately with the provider.",
+  "usagePlanWarning": "Usage plans are local records only and do not stop provider billing. Cancel renewal with the provider separately.",
   "savedRuleSchedule": "Schedule for saved rules",
   "serverScheduledCount": "Scheduled for this server: {p0}",
   "viewReminderCoverage": "View notification access and coverage",
@@ -223,7 +223,7 @@
   "chooseJsonPreviewRestore": "Choose JSON and preview restore",
   "restorePreview": "Restore preview",
   "backupTime": "Backup time: {p0}",
-  "restoreContentsHelp": "The ledger records and manual exchange rates above will be imported. The security data, notes, reminders, and app preferences listed as excluded are not in the backup.",
+  "restoreContentsHelp": "Only ledger records and manual rates are imported; items listed above are not in the backup.",
   "restoreToEmptyLedger": "Restore to empty ledger",
   "appearance": "Appearance",
   "followSystem": "Follow system",
@@ -247,13 +247,13 @@
   "backupExclusionsSummary": "Excludes credentials and host trust · Unencrypted JSON",
   "about": "About",
   "developmentVersion": "Development build · 0.1.0",
-  "appLocalDataHelp": "Data is stored on this device. No app account is needed.\nArchiving a record does not cancel the server service or stop billing.",
+  "appLocalDataHelp": "Data stays on this device; no account needed. Archiving does not cancel the service or stop billing.",
   "groupSaveFailed": "Could not save the group. Check for a duplicate name, then try again.",
   "deleteGroupQuestion": "Delete “{p0}”?",
   "deleteGroupHelp": "All servers in this group, including archived ones, will move to Ungrouped. Server details and payment history are kept. Remote servers are unchanged.",
   "deleteGroup": "Delete group",
   "addGroup": "Add group",
-  "groupsHelp": "Organize servers by purpose. Group changes affect only the local ledger.",
+  "groupsHelp": "Organize servers by purpose.",
   "noGroupsHelp": "No custom groups yet. Tap + at the top right to create one.",
   "unarchivedServerCount": "Unarchived servers: {p0}",
   "actionsForGroup": "Actions for {p0}",
@@ -262,7 +262,7 @@
   "moveDown": "Move down",
   "ungrouped": "Ungrouped",
   "ungroupedCountHelp": "Unarchived servers: {p0} · Default group, cannot be deleted",
-  "archiveHelp": "Archiving keeps server details and IDs. Restoring does not connect to, start, or renew the service.",
+  "archiveHelp": "Archiving keeps the record. Restoring does not start or renew the service.",
   "noArchivedRecords": "No archived records",
   "restoreRecord": "Restore record",
   "renameGroup": "Rename group",
@@ -295,14 +295,14 @@
   "financeDailyShown": "Daily average for the shown period",
   "r2CopyMetricDaysLeft": "Days left",
   "r2CopyMetricDaily": "Daily",
-  "financeInferredPeriods": "Some service start dates are inferred from the expiry date and calendar cycle. They are not proof of past payment.",
-  "financeValueDisclaimer": "This is a price-based estimate of unused service time, not a refund promise or sale price.",
+  "financeInferredPeriods": "Start dates are inferred from the expiry date; not proof of payment.",
+  "financeValueDisclaimer": "Based on remaining time; not a refund promise or sale price.",
   "financeShownPeriod": "Shown period",
   "financeFuturePeriod": "Future period",
   "financeEndedPeriod": "Ended period",
   "financeCurrentPeriod": "Current period",
   "financeFxTitle": "Currencies and reference exchange rates",
-  "financeFxScope": "Only reference conversions change. Renewal prices and past payments stay in their original currencies. No live rates are requested. Leave a rate blank if it is unknown.",
+  "financeFxScope": "Affects reference conversions only; no live rates are fetched. Leave blank if unknown.",
   "financeDisplayCurrency": "Currency for totals",
   "financeUsdRate": "1 USD = how many CNY",
   "financeEurRate": "1 EUR = how many CNY",
@@ -310,17 +310,17 @@
   "financeRateError": "Enter a rate greater than 0, with up to 8 decimal places",
   "financeRateDate": "Reference rate date",
   "financePastDateError": "Enter a valid date that is no later than today",
-  "financeFxBasis": "CNY is the base currency: 1 CNY = 1 CNY. Same-currency amounts need no exchange rate. When cross-currency rates are missing, only convertible amounts and conversion coverage are shown.",
+  "financeFxBasis": "CNY is the base. Currencies without a rate are left out of totals.",
   "financeSaveFx": "Save reference rates",
   "financeReferenceTitle": "Use server details",
-  "financeReferenceNote": "Copies the current renewal details and known service periods only. The original server is not changed.",
+  "financeReferenceNote": "Copies current renewal details only; the server is not changed.",
   "financeNoPrepaid": "No prepaid servers are available. You can calculate an independent estimate.",
   "financeDateRangeError": "Check the dates. Estimates are limited to a 100-year range.",
   "financeMissingPeriodsError": "The referenced details have no valid service period. Add the server dates first, or change the expiry date or cycle to calculate an independent estimate.",
   "financeCalculatorTitle": "Remaining value calculator",
   "financeReferenceServer": "Use a server",
-  "financeIndependentRebuilt": "Switched to an independent estimate. Service periods are recalculated from the current expiry date and cycle, assuming continuous service before expiry.",
-  "financeIndependentNote": "Calculate an independent estimate without adding a server. Assumes continuous service before expiry.",
+  "financeIndependentRebuilt": "Switched to an independent estimate; service periods are recalculated from the expiry date and cycle.",
+  "financeIndependentNote": "Independent estimate, no server needed. Assumes continuous service before expiry.",
   "financeRenewalAmount": "Renewal price per cycle",
   "financeAmountError": "Enter a valid amount. Use 0 only when the service is known to be free.",
   "financeOriginalCurrency": "Original currency",
@@ -332,7 +332,7 @@
   "financeAlgorithmTitle": "Periods and calculation method",
   "financeAlgorithmNote": "Remaining value = Σ (renewal price per cycle × fraction of unused days in that cycle).\nCalendar cycles use actual day counts, not fixed 30-day months. Month-end dates are calculated backward from the original expiry anchor, with leap years handled for yearly cycles. Valuing a period before its known start does not exceed its full price.\nIndependent mode works backward to cover the valuation date, up to 100 years. Value is 0 on the expiry date. Transferability and refund eligibility are not checked.",
   "financeCalculateValue": "Calculate remaining value",
-  "financeEstimateNoWrite": "Estimates are separate from the ledger. Changing inputs does not change any server or payment.",
+  "financeEstimateNoWrite": "Estimates never change any server or payment.",
   "financeReferenceRateMissing": "Reference exchange rate missing",
   "financeIndependentBasis": "Independent assumption: service is continuous before expiry, with periods calculated backward from the expiry date.",
   "financeQuoteFxError": "The required exchange rate is missing. Reference value and settlement amounts cannot be calculated.",
@@ -343,7 +343,7 @@
   "financeCopyResult": "Copy result",
   "financePreviewPng": "Preview / Save PNG",
   "financeQuoteTitle": "Transfer quote estimate · Optional",
-  "financeQuoteNote": "This estimates the quote and transfer fee entered below only. No transaction is made, and other charges are excluded. Check whether the provider allows transfers and review its terms.",
+  "financeQuoteNote": "Estimate only; no transaction is made. Check that the provider allows transfers.",
   "financeQuoteAmountError": "Enter a quote of 0 or a positive amount",
   "financeTransferFee": "Transfer fee (Push)",
   "financeQuoteFeeError": "Enter a fee of 0 or a positive amount",
@@ -352,7 +352,7 @@
   "financeBuyerPays": "Buyer",
   "financeSellerPays": "Seller",
   "financeSplitFee": "Split equally",
-  "financeSplitFeeNote": "The fee is converted to minor units of the display currency before splitting. Any indivisible 0.01 is paid by the buyer. Both shares add up to the total fee.",
+  "financeSplitFeeNote": "The fee is split in minor units; any odd 0.01 goes to the buyer.",
   "financeCalculateQuote": "Calculate quote and fees",
   "financePremiumLabel": "Quote minus reference value (premium / discount)",
   "financeBuyerSellerFee": "Buyer / Seller fee",
@@ -368,10 +368,10 @@
   "financeAccountPaymentSaved": "Account bill recorded once. Instance expiry dates are unchanged.",
   "financePaymentSaved": "Payment recorded. Service periods and totals are updated.",
   "financeRecordPayment": "Record a completed payment",
-  "financeNoRenewalDate": "This record has no usable renewal date. Check the prepaid billing type, expiry date, and supported date range.",
+  "financeNoRenewalDate": "No usable prepaid expiry date. Check the server details.",
   "financeRecordAccountBill": "Record an account bill",
   "financeLocalPaymentOnly": "Records a local ledger entry only. No payment is made to the provider.",
-  "financeAccountBillNote": "Standalone bill, counted once. Not split across servers; creates no service period.",
+  "financeAccountBillNote": "Standalone bill, counted once. Not split; creates no service period.",
   "financeAccountName": "Account display name",
   "financeAccountNameHint": "For example: Provider · Personal account",
   "financePaidAmount": "Amount paid",
@@ -431,7 +431,7 @@
   "financeScope": "Scope",
   "financeMonthlyReference": "Monthly cost reference",
   "financeTotalRemaining": "Total remaining value  ›",
-  "financeMonthlyNotPaid": "Monthly prepaid renewal equivalent + metered monthly estimate. This is not the amount paid this month.",
+  "financeMonthlyNotPaid": "Renewals spread monthly + metered estimate; not this month’s payments.",
   "financeUpcomingRenewals": "Expected renewals in the next 30 days",
   "financeRecentPayments": "Recorded payments in the last 30 days",
   "financeUnrecordedNotZero": "No payments recorded yet. This does not mean there has been no spending.",
@@ -439,10 +439,10 @@
   "financeByVendor": "By provider",
   "financeByGroup": "By group",
   "financeDistributionEmpty": "Add cost details to see the breakdown.",
-  "financeDistributionNote": "Tap a category to see server details using the same calculation basis. Maintain cost details and renewal records from each server’s details page.",
-  "financeGroupDistributionNote": "Account-level payments are not allocated to this group. Tap a category for details.",
+  "financeDistributionNote": "Tap a category for server details.",
+  "financeGroupDistributionNote": "Account-level payments are not split across groups. Tap a category for details.",
   "financeSixMonthTitle": "Six months from this month · Prepaid renewals",
-  "financeForecastNote": "Forecasts the rest of this month and the next five calendar months at the current renewal price and cycle. Assumes continued renewal; usage plans do not change the forecast. Metered bills and expired services are excluded.",
+  "financeForecastNote": "Forecast at current renewal prices, assuming renewal continues. Excludes metered bills and expired services.",
   "financeMonthlyDetail": "Monthly cost details",
   "financeValueDetail": "Remaining value details",
   "financeInventoryDetail": "Server breakdown",
@@ -451,11 +451,11 @@
   "financeExpiredMonthlyExcluded": "Expired, excluded from the monthly cost reference",
   "financeUnknownAmount": "Date or cost details are incomplete; amount unknown",
   "financeNoServersInRange": "No servers in this range.",
-  "financeUnknownZeroNote": "“—” means unknown or not applicable, not free. A known zero amount is shown as 0.00.",
+  "financeUnknownZeroNote": "“—” means unknown or not applicable, not free.",
   "financeRenewals30Title": "Renewals in the next 30 days",
   "financeNoKnownRenewals": "No known prepaid renewals in this range.",
   "financeExpiredCheck": "Expired · Verify first",
-  "financeMeteredRenewalNote": "Maintain the monthly estimate for metered costs in server details. Metered costs do not create prepaid renewal events.",
+  "financeMeteredRenewalNote": "Metered costs create no renewal events; edit the monthly estimate in server details.",
   "financePngRenderFailed": "Image generation failed. The original calculation result is preserved.",
   "financePngSaveFailed": "Saving did not finish. The preview is preserved. Check storage space and permissions, then try again.",
   "financePngShareSelected": "A system share action was selected. Check delivery in the destination app.",
@@ -465,13 +465,13 @@
   "financePngShareBusy": "Finish the current system share action first.",
   "financePngShareFailed": "Sharing did not finish. The preview is preserved. Please try again.",
   "financePngPreview": "Image preview",
-  "financePngPrivacy": "Contains only amounts, dates, periods, and reference exchange rates. The image excludes server names, addresses, accounts, notes, and transfer quote estimates.",
+  "financePngPrivacy": "The image has only amounts, dates, periods and reference rates; no server names, addresses or notes.",
   "financePngSemantic": "Remaining value calculation result PNG",
   "financeRegenerate": "Generate again",
   "financeSavePng": "Save PNG",
   "financeSharing": "Sharing…",
   "financeSharePng": "Share PNG",
-  "financePngLocationNote": "The save location may be an app-private folder, rather than Photos or a public Downloads folder. On mobile, use system sharing to save elsewhere. Canceling sharing keeps the preview open.",
+  "financePngLocationNote": "The file may be in an app-private folder. Use system sharing to save it elsewhere.",
   "financeRulesBody": "Monthly cost reference: unexpired prepaid renewal prices divided by the cycle length in months, plus metered monthly estimates. Prepaid services are excluded on and after their expiry date. Missing dates or costs are marked unknown.\n\nRemaining value: the current renewal price prorated by unused days in each known service period. The start date is included and the end date excluded. Future whole periods count at full price; ended periods count as 0. Not applicable to metered billing; unknown when details are insufficient. This is not a refundable amount or sale price.\n\nRenewal forecast: assumes continued renewal at the current price and cycle. The next 30 days includes today and the following 29 days. Six months means the rest of this month and the next five calendar months. Expired services are not projected forward. Metered bills are excluded. Local usage plans do not change the forecast.\n\nPayments in the last 30 days: recorded payments from today and the preceding 29 days. The all-groups scope retains payments for archived servers and counts each independent account bill once. Account bills are not allocated to groups.\n\nWhen cross-currency rates are missing, only convertible amounts are totaled, while original-currency subtotals are retained. Exact amounts are summed before rounding to minor units. Reference conversions are not actual charges.",
   "financeApproxAmount": "Approx. {amount} {currency}",
   "@financeApproxAmount": {
@@ -581,7 +581,7 @@
       }
     }
   },
-  "financeFuturePeriodsNote": "Remaining value includes {count, plural, one{1 future period} other{{count} future periods}}. The progress bar shows only the period above.",
+  "financeFuturePeriodsNote": "Includes {count, plural, one{1 future period} other{{count} future periods}}.",
   "@financeFuturePeriodsNote": {
     "placeholders": {
       "count": {
@@ -600,7 +600,7 @@
       }
     }
   },
-  "financeReferenceBasis": "Uses known periods from {name}. Changing the valuation date, amount, or currency does not change the known service periods or the original server.",
+  "financeReferenceBasis": "Uses known periods from {name}. Changing the inputs does not change the original server.",
   "@financeReferenceBasis": {
     "placeholders": {
       "name": {
@@ -640,7 +640,7 @@
       }
     }
   },
-  "financeRoundingNote": "{rate}\n{source}. Calculated exactly before rounding to minor units. Conversions are for reference only.",
+  "financeRoundingNote": "{rate}\n{source}. Conversions are for reference only.",
   "@financeRoundingNote": {
     "placeholders": {
       "rate": {
@@ -867,7 +867,7 @@
       }
     }
   },
-  "uiFinanceFootnote": "Amounts use current renewal prices and manual reference exchange rates. For reference only; they are not vendor bills.",
+  "uiFinanceFootnote": "Uses renewal prices and manual rates. For reference only; not actual bills.",
   "uiFinanceVoidedPill": "Deleted",
   "uiFinanceArchivedPill": "Archived",
   "uiFinanceAccountPill": "Account bill",
@@ -1230,7 +1230,7 @@
   "@cloudReadOnlyBoundary": {
     "description": "Panel accounts: read only boundary"
   },
-  "cloudTemplateInfo": "Choose the adapter type that matches the panel. The adapter reads technical information; the provider is the business supplying the servers.",
+  "cloudTemplateInfo": "Choose the adapter type matching the panel. The provider is the business supplying the servers.",
   "@cloudTemplateInfo": {
     "description": "Panel accounts: template info"
   },
@@ -1246,7 +1246,7 @@
   "@cloudRackNerdTemplateInfo": {
     "description": "Panel accounts: RackNerd ctrl single-instance protocol template, without identifying the underlying panel product"
   },
-  "cloudSupportedPanels": "Supports reads from SolusVM 1, SolusVM 2, and RackNerd ctrl. There is no API power control, remote resource editing, or cancellation of provider billing.",
+  "cloudSupportedPanels": "Reads from SolusVM 1 / 2 and RackNerd ctrl. No power control, no remote changes, and billing is not stopped.",
   "@cloudSupportedPanels": {
     "description": "Panel accounts: supported panels"
   },
@@ -1282,7 +1282,7 @@
   "@cloudEndpointValidation": {
     "description": "Panel accounts: endpoint validation"
   },
-  "cloudEndpointInfo": "Use the HTTPS panel home address, including a provider-specified port if needed. Certificate errors are not bypassed and redirects are not followed.",
+  "cloudEndpointInfo": "Use the HTTPS panel home address (a specific port is fine). Certificate errors are not bypassed and redirects are not followed.",
   "@cloudEndpointInfo": {
     "description": "Panel accounts: endpoint info"
   },
@@ -1290,7 +1290,7 @@
   "@cloudRackNerdEndpointValidation": {
     "description": "Panel accounts: RackNerd ctrl-only endpoint validation"
   },
-  "cloudRackNerdEndpointInfo": "Use the HTTPS panel home address, including a provider-specified port if needed. Only for RackNerd ctrl, the exact /api/client/command.php path may be removed; review the final address below. Certificate errors are not bypassed and redirects are not followed.",
+  "cloudRackNerdEndpointInfo": "Use the HTTPS panel home address (a specific port is fine) and check the final address below. Certificate errors are not bypassed and redirects are not followed.",
   "@cloudRackNerdEndpointInfo": {
     "description": "Panel accounts: narrow RackNerd ctrl API-path normalization explanation"
   },
@@ -1298,15 +1298,15 @@
   "@cloudEndpointIdentityInfo": {
     "description": "Panel accounts: endpoint identity info"
   },
-  "cloudV1CredentialsInfo": "Enter this VPS’s Client API Key / Hash, not administrator API credentials or a login password. The provider must enable Client API. Each pair reads the status of one VPS.",
+  "cloudV1CredentialsInfo": "Enter this VPS’s Client API Key / Hash (not a login password or admin credentials). The provider must enable Client API.",
   "@cloudV1CredentialsInfo": {
     "description": "Panel accounts: v1 credentials info"
   },
-  "cloudRackNerdCredentialsInfo": "Enter the Client API Key / Hash for this VPS from the RackNerd ctrl panel, not a login password or administrator credentials. This connection reads one VPS through the compatible client interface; the underlying panel product is not identified.",
+  "cloudRackNerdCredentialsInfo": "Enter the Client API Key / Hash of this VPS from RackNerd ctrl (not a login password or admin credentials).",
   "@cloudRackNerdCredentialsInfo": {
     "description": "Panel accounts: RackNerd ctrl Key/Hash credential scope"
   },
-  "cloudV2CredentialsInfo": "Use a token from Account → API Tokens in the SolusVM 2 user area. Do not use an administrator token. The readable scope depends on provider settings.",
+  "cloudV2CredentialsInfo": "Use a token from Account → API Tokens in the SolusVM 2 user area, not an administrator token.",
   "@cloudV2CredentialsInfo": {
     "description": "Panel accounts: v2 credentials info"
   },
@@ -1318,11 +1318,11 @@
   "@cloudV2ReauthorizationInfo": {
     "description": "Panel accounts: v2 reauthorization info"
   },
-  "cloudVerifyScopeInfo": "This app only reads data; the credentials themselves may have other permissions. Verification reads status or projects and devices. Credentials enter secure device storage only when you save in the next step.",
+  "cloudVerifyScopeInfo": "This app only reads data, but the credentials may allow more. Verification only reads status; credentials enter secure device storage when you save.",
   "@cloudVerifyScopeInfo": {
     "description": "Panel accounts: verify scope info"
   },
-  "cloudVerifyingInfo": "Verifying and reading the complete list. Requests have a timeout. Going back or cancelling stops this read.",
+  "cloudVerifyingInfo": "Verifying and reading with a timeout. Going back or cancelling stops it.",
   "@cloudVerifyingInfo": {
     "description": "Panel accounts: verifying info"
   },
@@ -1335,6 +1335,7 @@
     "description": "Panel accounts: verify read"
   },
   "cloudCredentialMemoryInfo": "Credential fields are cleared after verification or on leaving. They are not written to the ledger, logs, or exports. Dart does not guarantee secure memory erasure.",
+  "r2CopyInfoCredentialHandling": "How credentials are handled",
   "@cloudCredentialMemoryInfo": {
     "description": "Panel accounts: credential memory info"
   },
@@ -1378,15 +1379,15 @@
   "@cloudLocalNameInfo": {
     "description": "Panel accounts: local name info"
   },
-  "cloudV1ResourcesInfo": "SolusVM 1 does not provide a stable device ID. Available resource fields depend on the provider. Entered details stay local and do not trigger SSH, TCP, or remote configuration changes.",
+  "cloudV1ResourcesInfo": "SolusVM 1 provides no device ID and the readable fields depend on the provider. What you enter stays on this device.",
   "@cloudV1ResourcesInfo": {
     "description": "Panel accounts: v1 resources info"
   },
-  "cloudRackNerdResourcesInfo": "RackNerd ctrl does not provide a stable device ID. Complete all six hardware details before import; do not guess a CPU count that the API does not return. Entered details stay on this device and do not trigger SSH, TCP, or remote configuration changes.",
+  "cloudRackNerdResourcesInfo": "RackNerd ctrl provides no device ID. Complete the six hardware fields before import; do not guess values the API omits.",
   "@cloudRackNerdResourcesInfo": {
     "description": "Panel accounts: RackNerd ctrl anonymous identity and required local resource completion"
   },
-  "cloudRebindWarning": "Saving new authorization removes this adapter instance’s old device links. Existing records, finances, and SSH are kept. Importing creates new local records; it does not overwrite or automatically relink old devices.",
+  "cloudRebindWarning": "Saving new authorization removes this instance’s old device links. Existing records, finances and SSH are kept; importing creates new records and never overwrites or relinks old devices.",
   "@cloudRebindWarning": {
     "description": "Panel accounts: rebind warning"
   },
@@ -1434,7 +1435,7 @@
   "@cloudRefreshAccount": {
     "description": "Panel accounts: refresh account"
   },
-  "cloudReadingInfo": "Reading the complete list and status with a timeout. Cancelling or going back stops this read without changing ledger records, costs, or SSH settings.",
+  "cloudReadingInfo": "Reading with a timeout. Cancelling or going back stops it without changing the ledger.",
   "@cloudReadingInfo": {
     "description": "Panel accounts: reading info"
   },
@@ -1446,7 +1447,7 @@
   "@cloudReadAgain": {
     "description": "Panel accounts: read again"
   },
-  "cloudReadCompleteInfo": "Only this adapter instance’s API observations were updated. Local details, costs, payments, and SSH settings were not overwritten.",
+  "cloudReadCompleteInfo": "Only read results were updated; local details were not overwritten.",
   "@cloudReadCompleteInfo": {
     "description": "Panel accounts: read complete info"
   },
@@ -1534,7 +1535,7 @@
   "@cloudSecureStorageInfo": {
     "description": "Panel accounts: secure storage info"
   },
-  "cloudScopeNotice": "The API credentials themselves may have more permissions; check in the provider’s panel. There is no continuous background monitoring. Results reflect only the time of the read.",
+  "cloudScopeNotice": "The credentials may allow more; check in the provider’s panel. Results reflect only the time of the read.",
   "@cloudScopeNotice": {
     "description": "Panel accounts: scope notice"
   },
@@ -1558,7 +1559,7 @@
   "@cloudLinkPanelAccount": {
     "description": "Panel accounts: link panel account"
   },
-  "cloudLocalBindingInfo": "This page uses saved API observations and does not connect to the panel. If no devices are available or the last read failed, refresh the adapter instance manually, then return and reload this local list.",
+  "cloudLocalBindingInfo": "Uses saved read results and does not connect to the panel. If no devices appear, refresh the adapter instance first.",
   "@cloudLocalBindingInfo": {
     "description": "Panel accounts: local binding info"
   },
@@ -2004,11 +2005,11 @@
   "@cloudAuthorizationUnsaved": {
     "description": "Panel accounts: authorization unsaved"
   },
-  "cloudV1Deduplication": "A device already pinned to this authorization is not created again; unlinking keeps the pin. Separate authorizations are not merged automatically.",
+  "cloudV1Deduplication": "Devices already pinned to this authorization are not created again. Separate authorizations are not merged.",
   "@cloudV1Deduplication": {
     "description": "Panel accounts: v1 deduplication"
   },
-  "cloudV2Deduplication": "Duplicates use adapter type, panel endpoint, remote account, project, and device IDs. Matching IP or hostname is only a review hint.",
+  "cloudV2Deduplication": "Duplicates are judged by adapter, panel address, account, project and device ID. A matching IP or hostname is only a hint.",
   "@cloudV2Deduplication": {
     "description": "Panel accounts: v2 deduplication"
   },
@@ -2254,10 +2255,10 @@
   "serverAdd": "Add server",
   "serverImportPanel": "Import from panel account",
   "serverFirstTitle": "Your first VPS\nstarts here",
-  "serverFirstDescription": "Keep servers, costs, and connections together.\nStart with manual records. No monitoring agent is needed.",
+  "serverFirstDescription": "Expiry, costs and connections in one place.",
   "serverAddFirst": "Add your first server",
   "serverLoadDemoQuestion": "Load demo data?",
-  "serverLoadDemoHelp": "Adds 4 local records marked Demo, all using reserved addresses. No servers will be connected. You can archive these records in each server’s details.",
+  "serverLoadDemoHelp": "Adds 4 demo records with reserved addresses. Nothing connects to a server; archive them anytime.",
   "serverLoadDemo": "Load demo",
   "serverViewDemo": "View demo data first",
   "serverManualStartHelp": "Already have servers? Start by recording them manually.",
@@ -2292,7 +2293,7 @@
   },
   "uiServersRowHint": "Swipe left or long-press a server for quick actions",
   "serverClearFilters": "Clear filters",
-  "serverListObservationHelp": "Shows local details and the latest panel response, without continuous monitoring.\nDays to expiry use the device date. The next 30 days includes today and the following 29 days.",
+  "serverListObservationHelp": "No continuous monitoring. Days to expiry use the device date.",
   "serverCostsMissing": "Add cost details",
   "serverMeteredBilling": "Metered billing",
   "serverDueUnknown": "Expiry date unknown",
@@ -2334,7 +2335,7 @@
   "serverEditHardware": "Edit hardware",
   "serverPanelLink": "Panel link",
   "serverNoPanelLink": "No linked panel account",
-  "serverPanelLinkHelp": "Panel refreshes only update API observations; they never overwrite what you entered.",
+  "serverPanelLinkHelp": "Panel refresh never overwrites what you entered.",
   "serverLinkPanel": "Link panel account",
   "serverManageLink": "Manage link",
   "serverReloadPanelDetails": "Reload panel account details",
@@ -2362,7 +2363,7 @@
   "serverConnectSsh": "Connect with SSH",
   "serverTcpTest": "TCP test",
   "serverPower": "Server power",
-  "serverConnectionSafety": "Verify the host fingerprint on first connect. Shutdown or reboot does not stop provider billing.",
+  "serverConnectionSafety": "Verify the host fingerprint on first connect. Shutdown or reboot does not stop billing.",
   "serverNotes": "Notes",
   "serverSavedMetadata": "Saved locally: {p0}\nServer ID: {p1}",
   "uiDetailCopy": "Copy",
@@ -2450,7 +2451,7 @@
   "serverOptionalSpec": "Additional specifications (optional)",
   "serverSpecExample": "For example: CPU model, network bandwidth",
   "serverCostDetails": "Cost details",
-  "serverPaymentLockHelp": "Renewal payments exist: billing type, cycle and dates are locked; price and currency can change.",
+  "serverPaymentLockHelp": "Payments exist: billing type, cycle and dates are locked.",
   "serverCostUnknownOption": "Cost unknown · Add later",
   "serverPrepaidOption": "Prepaid · Renew by cycle",
   "serverMeteredOption": "Metered · Monthly estimate",
@@ -2459,7 +2460,7 @@
   "serverDatesHelp": "Due date defaults to start date plus cycle; you can change it.",
   "serverAmountHelp": "0 means free; choose Unknown if unsure. No payment is recorded.",
   "serverOptionalNotes": "Notes (optional)",
-  "serverNotesSafety": "Do not store passwords, private keys or tokens in notes.",
+  "serverNotesSafety": "Notes are not encrypted. Do not store passwords, keys or tokens.",
   "serverSave": "Save server",
   "uiFormProvider": "Provider",
   "uiFormPurpose": "Purpose",
@@ -2498,7 +2499,7 @@
   "tcpFailed": "Connection failed (network or address unavailable)",
   "tcpTimeoutPositive": "Timeout must be greater than 0",
   "tcpSingleTarget": "Single-target TCP test",
-  "tcpTestExplanation": "Tests one address and port from this device by opening and closing a TCP connection. No application data is sent. Success does not prove SSH sign-in is possible, the server’s power state, or application health.",
+  "tcpTestExplanation": "Only checks whether a TCP connection opens; no data is sent. Success does not mean SSH login works or the service is healthy.",
   "tcpAddress": "IP / Domain",
   "connectionPort": "Port",
   "tcpTestingTarget": "Testing {p0}",
@@ -2562,7 +2563,7 @@
   "connectionEditSavedSettings": "Edit and save SSH settings for this server",
   "connectionTemporaryChangesHelp": "Changes on this page apply only to this connection. Passwords or private keys come from saved credentials and are not entered or saved again here. The connection ends when the app enters the background. Use tmux / screen on the remote server for long-running tasks.",
   "connectionSnippetDraftOnly": "The snippet goes into a separate draft. Connecting, verification, and authentication do not send it.",
-  "connectionPowerAfterConnect": "After connecting, choose restart or shutdown and complete both confirmations. SSH power-on and API power controls are not available.",
+  "connectionPowerAfterConnect": "After connecting, choose restart or shutdown and complete both confirmations. Power-on is not supported.",
   "connectionReviewConnect": "Review and connect",
   "uiConnTarget": "Target",
   "uiConnCredential": "Credential",
@@ -2588,7 +2589,7 @@
   "snippetDelete": "Delete snippet",
   "snippetChoose": "Choose a snippet for the draft",
   "snippetReadFailed": "Could not read snippets. Local data is unchanged.",
-  "snippetSelectPreviewHelp": "Preview the full content after selecting it. It is inserted only into the draft. Nothing is sent and Enter is not pressed automatically.",
+  "snippetSelectPreviewHelp": "Preview first. Only inserted into the draft; nothing is sent automatically.",
   "snippetPlaintextHelp": "Snippets are local plain text. Do not save passwords, private keys, or tokens. Choose Insert snippet in the terminal to add one to a draft.",
   "snippetAdd": "Add snippet",
   "snippetEmptyHelp": "No snippets yet. Add templates for commands you use often.",
@@ -2601,11 +2602,11 @@
   "connectionDiscardChanges": "Discard changes",
   "snippetEdit": "Edit snippet",
   "snippetCancelEdit": "Cancel snippet editing",
-  "snippetSaveSafety": "Saved locally as unencrypted plain text. Do not enter passwords, private keys, or tokens. Saving does not execute or send content.",
+  "snippetSaveSafety": "Snippets are stored as plain text. Do not enter passwords, keys or tokens.",
   "snippetName": "Snippet name",
   "snippetFullContent": "Full content (preserves original newlines and control characters)",
   "snippetContentRange": "Content is required and can contain up to 16,384 characters",
-  "snippetExactContentHelp": "Saving preserves the exact content, including leading and trailing whitespace, multiple lines, carriage returns, and control characters. Check it in the full preview.",
+  "snippetExactContentHelp": "Content is saved exactly, including whitespace and control characters. Check the full preview.",
   "connectionSaving": "Saving…",
   "snippetSave": "Save snippet",
   "terminalCopyFailed": "Could not copy terminal content. Try again.",
@@ -2696,9 +2697,9 @@
   "terminalTrustAuthenticate": "Trust and authenticate",
   "terminalUnlockKey": "Unlock the SSH private key for this connection",
   "terminalCredentialName": "Credential: {p0}",
-  "terminalPassphraseHelp": "This passphrase decrypts the private key; it is not the server login password. It is used only for this connection and is not saved. Enter it again next time.",
+  "terminalPassphraseHelp": "Decrypts the private key; not the login password. Used for this connection only and not saved.",
   "terminalKeyPassphrase": "Private key passphrase for this connection",
-  "terminalPassphraseCleared": "The connection was cancelled or the app entered the background, so the passphrase was cleared. Cancel and reconnect.",
+  "terminalPassphraseCleared": "The passphrase was cleared. Cancel and reconnect.",
   "terminalUnlockOnce": "Unlock for this connection only",
   "powerRestart": "Restart",
   "powerShutdown": "Shut down",
@@ -2911,7 +2912,7 @@
   "@securityAddCredential": {
     "description": "Security: AddCredential. App-authored UI text; do not translate user data or protocol tokens."
   },
-  "securityCredentialStorageNotice": "Credentials are managed separately and referenced by connections. Secrets are stored only in system secure storage.",
+  "securityCredentialStorageNotice": "Secrets live only in system secure storage; servers just reference credentials.",
   "@securityCredentialStorageNotice": {
     "description": "Security: CredentialStorageNotice. App-authored UI text; do not translate user data or protocol tokens."
   },
@@ -2969,7 +2970,7 @@
   "@securityCredentialProtectionDetail": {
     "description": "Security: CredentialProtectionDetail. App-authored UI text; do not translate user data or protocol tokens."
   },
-  "securityLocalCredentialNotice": "Changing a local credential does not change the remote password or authorized_keys. The selected credential is used only when you explicitly start a connection.",
+  "securityLocalCredentialNotice": "Only the local credential changes; the server’s password and authorized_keys are untouched.",
   "@securityLocalCredentialNotice": {
     "description": "Security: LocalCredentialNotice. App-authored UI text; do not translate user data or protocol tokens."
   },
@@ -3077,7 +3078,7 @@
   "@securityPasteCompleteKey": {
     "description": "Security: PasteCompleteKey. App-authored UI text; do not translate user data or protocol tokens."
   },
-  "securityPrivateKeyImportNotice": "OpenSSH / PEM private keys are supported. Only the selected file is read; its path is not saved. Use “Paste complete private key” to preserve line breaks. The content stays hidden.",
+  "securityPrivateKeyImportNotice": "OpenSSH / PEM private keys. The file path is not saved and the content stays hidden.",
   "@securityPrivateKeyImportNotice": {
     "description": "Security: PrivateKeyImportNotice. App-authored UI text; do not translate user data or protocol tokens."
   },
@@ -3105,7 +3106,7 @@
   "@securityPrivateKeyPassphrase": {
     "description": "Security: PrivateKeyPassphrase. App-authored UI text; do not translate user data or protocol tokens."
   },
-  "securityPrivateKeyPassphraseHelp": "Used to decrypt the selected private key, not to log in to the server. This page does not change the key’s encryption passphrase.",
+  "securityPrivateKeyPassphraseHelp": "Decrypts the private key; not the login password.",
   "@securityPrivateKeyPassphraseHelp": {
     "description": "Security: PrivateKeyPassphraseHelp. App-authored UI text; do not translate user data or protocol tokens."
   },
@@ -3117,7 +3118,7 @@
   "@securityStoreKeyPassphraseHelp": {
     "description": "Security: StoreKeyPassphraseHelp. App-authored UI text; do not translate user data or protocol tokens."
   },
-  "securityCredentialEditNotice": "The username is a suggestion for new connections and does not overwrite existing ones. Updating a credential affects future logins only; it does not change server passwords or keys. Moving the app to the background clears unsaved secrets.",
+  "securityCredentialEditNotice": "The username is only a suggestion for new connections. Updating a credential affects future logins only and changes nothing on the server. Unsaved secrets are cleared in the background.",
   "@securityCredentialEditNotice": {
     "description": "Security: CredentialEditNotice. App-authored UI text; do not translate user data or protocol tokens."
   },
@@ -3165,7 +3166,7 @@
   "@securityPublicKeyFingerprint": {
     "description": "Security: PublicKeyFingerprint. App-authored UI text; do not translate user data or protocol tokens."
   },
-  "securityPublicKeyFingerprintNotice": "Private keys are not displayed or exported here. The public-key fingerprint identifies a login key and is different from the server’s host fingerprint.",
+  "securityPublicKeyFingerprintNotice": "The fingerprint identifies a login key and differs from the server’s host fingerprint. Private keys are never shown.",
   "@securityPublicKeyFingerprintNotice": {
     "description": "Security: PublicKeyFingerprintNotice. App-authored UI text; do not translate user data or protocol tokens."
   },
@@ -3205,7 +3206,7 @@
   "@securityCancelVerifyHide": {
     "description": "Security: CancelVerifyHide. App-authored UI text; do not translate user data or protocol tokens."
   },
-  "securityCredentialReferenceCount": "{count, plural, =1{1 server uses this credential} other{{count} servers use this credential}}, including archived records. Connection usernames are stored separately.",
+  "securityCredentialReferenceCount": "{count, plural, =1{1 server uses this credential} other{{count} servers use this credential}} (including archived).",
   "@securityCredentialReferenceCount": {
     "description": "Security: CredentialReferenceCount. App-authored UI text; do not translate user data or protocol tokens.",
     "placeholders": {
@@ -3218,7 +3219,7 @@
   "@securityNoCredentialReferences": {
     "description": "Security: NoCredentialReferences. App-authored UI text; do not translate user data or protocol tokens."
   },
-  "securityCredentialDeleteImpact": "{count, plural, =1{1 server will be affected} other{{count} servers will be affected}}, including archived records. Review each item below.",
+  "securityCredentialDeleteImpact": "{count, plural, =1{1 server will be affected} other{{count} servers will be affected}} (including archived).",
   "@securityCredentialDeleteImpact": {
     "description": "Security: CredentialDeleteImpact. App-authored UI text; do not translate user data or protocol tokens.",
     "placeholders": {
@@ -3256,7 +3257,7 @@
   "@securityReplaceCredentialNotice": {
     "description": "Security: ReplaceCredentialNotice. App-authored UI text; do not translate user data or protocol tokens."
   },
-  "securityDeleteLocalCredentialNotice": "Only the local credential is deleted and it cannot be restored from this page. Remote passwords and authorized_keys are unchanged. Cloud services are not canceled.",
+  "securityDeleteLocalCredentialNotice": "Deletes only the local credential and cannot be undone. Servers and cloud services are unaffected.",
   "@securityDeleteLocalCredentialNotice": {
     "description": "Security: DeleteLocalCredentialNotice. App-authored UI text; do not translate user data or protocol tokens."
   },
@@ -3276,7 +3277,7 @@
   "@securityVerifyHostKey": {
     "description": "Security: VerifyHostKey. App-authored UI text; do not translate user data or protocol tokens."
   },
-  "securityHostTrustNotice": "Trust is bound to the host address and port, with the algorithm and complete public key recorded. Login credentials and server host public keys are separate.",
+  "securityHostTrustNotice": "Trust is bound to the host address, port and full public key, separate from login credentials.",
   "@securityHostTrustNotice": {
     "description": "Security: HostTrustNotice. App-authored UI text; do not translate user data or protocol tokens."
   },
@@ -3335,7 +3336,7 @@
   "@securityHostTrustReadFailed": {
     "description": "Security: HostTrustReadFailed. App-authored UI text; do not translate user data or protocol tokens."
   },
-  "securityHostTrustInputNotice": "Enter the host public key obtained through an independent trusted source, such as the provider’s console or an administrator. This page only validates your input and saves local trust. It does not connect to the server.",
+  "securityHostTrustInputNotice": "Enter the host public key from an independent trusted source such as the provider console. This page only saves local trust and does not connect.",
   "@securityHostTrustInputNotice": {
     "description": "Security: HostTrustInputNotice. App-authored UI text; do not translate user data or protocol tokens."
   },
@@ -3355,7 +3356,8 @@
   "@securityHostKeyHelp": {
     "description": "Security: HostKeyHelp. App-authored UI text; do not translate user data or protocol tokens."
   },
-  "securityRsaHostKeyNotice": "rsa-sha2-256 / rsa-sha2-512 are signature algorithms. Select ssh-rsa for their RSA public-key type. Only structurally complete keys of supported host-key types are accepted.",
+  "securityRsaHostKeyNotice": "rsa-sha2-256 / 512 are signature algorithms; choose ssh-rsa as the key type.",
+  "r2CopyInfoRsaKey": "About RSA host keys",
   "@securityRsaHostKeyNotice": {
     "description": "Security: RsaHostKeyNotice. App-authored UI text; do not translate user data or protocol tokens."
   },
@@ -3391,7 +3393,7 @@
   "@securityCandidateHostFingerprint": {
     "description": "Security: CandidateHostFingerprint. App-authored UI text; do not translate user data or protocol tokens."
   },
-  "securityHostVerificationWarning": "Verify the complete fingerprint and target address through an independent source. A change may be due to a reinstall, a wrong host, or a man-in-the-middle attack. Reject it if you cannot verify it.",
+  "securityHostVerificationWarning": "Verify the fingerprint and address through an independent source. A change may be a reinstall or a man-in-the-middle attack; reject if unsure.",
   "@securityHostVerificationWarning": {
     "description": "Security: HostVerificationWarning. App-authored UI text; do not translate user data or protocol tokens."
   },
@@ -3435,7 +3437,7 @@
   "@securitySavingHostTrust": {
     "description": "Security: SavingHostTrust. App-authored UI text; do not translate user data or protocol tokens."
   },
-  "securityLocalHostTrustOnly": "Only local trust is recorded; no server connection is made here. Rejecting, canceling, or going back does not save trust or send authentication details.",
+  "securityLocalHostTrustOnly": "Only local trust is recorded. Rejecting, cancelling or going back saves nothing.",
   "@securityLocalHostTrustOnly": {
     "description": "Security: LocalHostTrustOnly. App-authored UI text; do not translate user data or protocol tokens."
   },
@@ -3568,7 +3570,7 @@
   "@securityConnectionUsernameNotice": {
     "description": "Security: ConnectionUsernameNotice. App-authored UI text; do not translate user data or protocol tokens."
   },
-  "securityConfigurationOnlyNotice": "This page only saves connection configuration. When connecting, the host’s identity is verified before login authentication. If the host public key changes, authentication pauses until it is verified again.",
+  "securityConfigurationOnlyNotice": "Saves connection settings only. The host key is verified before login; a changed key pauses authentication.",
   "@securityConfigurationOnlyNotice": {
     "description": "Security: ConfigurationOnlyNotice. App-authored UI text; do not translate user data or protocol tokens."
   },
@@ -3709,7 +3711,7 @@
   "@providerUiUnspecifiedHelp": {
     "description": "Provider navigation and ownership UI."
   },
-  "providerUiHierarchyHelp": "A provider identifies the business that supplies your servers. Each adapter instance holds a separate authorization and reads only devices within its scope.",
+  "providerUiHierarchyHelp": "A provider is who sells your servers; each adapter instance holds a separate authorization.",
   "@providerUiHierarchyHelp": {
     "description": "Provider navigation and ownership UI."
   },
@@ -3844,7 +3846,7 @@
   "@providerUiChooseInstance": {
     "description": "Provider navigation and ownership UI."
   },
-  "providerUiInstanceChoiceHelp": "Only this provider’s instances are listed. Adapter type and verification determine authorization scope.",
+  "providerUiInstanceChoiceHelp": "Only this provider’s instances are listed.",
   "@providerUiInstanceChoiceHelp": {
     "description": "Provider navigation and ownership UI."
   },
@@ -3991,11 +3993,11 @@
   "@cloudImportCompleteAndSelect": {
     "description": "Adapter instance import and local linking"
   },
-  "cloudImportCompletionInfo": "Check all six resource fields before importing. Values omitted by the API stay unknown; choose unlimited traffic only when confirmed. Your edits are local configuration and do not change API observations.",
+  "cloudImportCompletionInfo": "Check all six resource fields before importing. Values the API omits stay unknown; choose unlimited traffic only when confirmed. Edits stay local.",
   "@cloudImportCompletionInfo": {
     "description": "Adapter instance import and local linking"
   },
-  "cloudImportFinanceLater": "This import adds devices and resource details. Financial information is optional and can be added later; no costs or payments are created.",
+  "cloudImportFinanceLater": "Only devices and resource details are added; no costs or payments are created.",
   "@cloudImportFinanceLater": {
     "description": "Adapter instance import and local linking"
   },

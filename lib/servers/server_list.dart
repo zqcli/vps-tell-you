@@ -526,12 +526,6 @@ class _ServerListState extends State<ServerList> {
         child: Column(
           children: [
             Text(
-              l10n.serverListObservationHelp,
-              textAlign: TextAlign.center,
-              style: context.footnoteStyle,
-            ),
-            const SizedBox(height: 4),
-            Text(
               l10n.uiServersRowHint,
               textAlign: TextAlign.center,
               style: context.footnoteStyle,

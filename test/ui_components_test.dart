@@ -876,6 +876,20 @@ void main() {
     expect(ProviderAvatar.initialsFor(''), '?');
   });
 
+  testWidgets('AppInfoLink opens its explanation in a sheet', (tester) async {
+    await pumpApp(
+      tester,
+      const Scaffold(
+        body: AppInfoLink(label: 'About keys', message: 'Long explanation'),
+      ),
+      locale: const Locale('en'),
+    );
+    expect(find.text('Long explanation'), findsNothing);
+    await tester.tap(find.text('About keys'));
+    await tester.pumpAndSettle();
+    expect(find.text('Long explanation'), findsOneWidget);
+  });
+
   group('AppMetricStrip', () {
     // The test font (Ahem) is one em wide per glyph, so keep the strings short.
     const metrics = [
