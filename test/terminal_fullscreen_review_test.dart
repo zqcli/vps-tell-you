@@ -531,20 +531,24 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('review: disconnect banners fit keyboard-shrunken landscape', (
-    tester,
-  ) async {
-    await mount(tester, size: const Size(844, 390), scale: 2);
-    tester.view.viewInsets = const FakeViewPadding(bottom: 220);
-    await tester.pumpAndSettle();
-    expect(tester.takeException(), isNull);
-    ssh.error = '合成的连接结束说明；请在重连后核实远端任务状态。';
-    ssh.disconnect();
-    await tester.pumpAndSettle();
-    expect(tester.takeException(), isNull);
-    expect(tester.getSize(find.byType(TerminalView)).height, greaterThan(0));
-    expect(ssh.writes, isEmpty);
-  });
+  testWidgets(
+    'review: remote close in keyboard-shrunken landscape closes cleanly',
+    (tester) async {
+      await mount(tester, size: const Size(844, 390), scale: 2);
+      tester.view.viewInsets = const FakeViewPadding(bottom: 220);
+      await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull);
+      ssh.error = '合成的连接结束说明；请在重连后核实远端任务状态。';
+      ssh.disconnect();
+      await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull);
+      // No offline banner: the page closes and the previous page says why.
+      expect(find.byType(TerminalView), findsNothing);
+      expect(find.text('Open review terminal'), findsOneWidget);
+      expect(find.text('合成的连接结束说明；请在重连后核实远端任务状态。'), findsOneWidget);
+      expect(ssh.writes, isEmpty);
+    },
+  );
 
   testWidgets('review: private-key prompt fits short landscape with IME', (
     tester,
@@ -715,7 +719,7 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('review: reconnect drops unfinished IME composition', (
+  testWidgets('review: ending the session drops unfinished IME composition', (
     tester,
   ) async {
     await mount(tester);
@@ -732,17 +736,11 @@ void main() {
     expect(ssh.writes, isEmpty);
     ssh.disconnect();
     await tester.pumpAndSettle();
-    await tap(tester, keyed('terminal-connect'));
-    expect(
-      tester.state<TerminalViewState>(find.byType(TerminalView)),
-      isNot(same(original)),
-    );
+    expect(find.byType(TerminalView), findsNothing);
+    expect(find.text('Open review terminal'), findsOneWidget);
     expect(ssh.writes, isEmpty);
     expect(tester.testTextInput.hasAnyClients, isFalse);
-    await keyboard(tester);
-    insert(tester, 'n');
-    await tester.pump();
-    expect(ssh.writes, ['n']);
+    expect(original.mounted, isFalse);
     expect(tester.takeException(), isNull);
   });
 

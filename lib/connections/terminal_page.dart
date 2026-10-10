@@ -9,6 +9,7 @@ import 'package:flutter/services.dart';
 import 'package:xterm/xterm.dart';
 
 import '../core/app_theme.dart';
+import '../core/ui/ui.dart';
 import '../security/host_trust.dart';
 import '../security/security_controller.dart';
 import '../servers/ledger_controller.dart';
@@ -69,6 +70,10 @@ class _TerminalPageState extends State<TerminalPage>
       _closing = false,
       _targetInvalidated = false;
   int _targetEpoch = 0;
+  bool _endQueued = false;
+  // Why the local side ends the session (background, target change); shown as
+  // a toast on the previous page. Remote/network ends use the service error.
+  LocalizedMessage? _endReason;
   Object? _notice;
   int? _powerIssuedGeneration;
 
@@ -148,6 +153,52 @@ class _TerminalPageState extends State<TerminalPage>
       _closeKeyboard();
     }
     setState(() {});
+    _queueSessionEnd();
+  }
+
+  /// A session that ended (remote close, network drop, cancel, failure) closes
+  /// the page; there is no offline state to linger in. Never pops from inside
+  /// the notification: it may arrive while another route is building.
+  void _queueSessionEnd() {
+    if (_endQueued || _closing) {
+      return;
+    }
+    final status = _service.status;
+    if (status != SshStatus.disconnected && status != SshStatus.failed) {
+      return;
+    }
+    _endQueued = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _endQueued = false;
+      if (mounted) {
+        _sessionEnded();
+      }
+    });
+  }
+
+  void _sessionEnded() {
+    if (_closing || _connected || _connecting) {
+      return;
+    }
+    final l10n = context.l10n;
+    final error = _service.errorFor(l10n);
+    if (_hasConnected) {
+      // Established session ended: say so on the page we return to.
+      showAppToast(
+        context,
+        error ??
+            localizedText(
+              _endReason ?? LocalizedText((l) => l.terminalDisconnected),
+              l10n,
+            ),
+      );
+      _leave();
+    } else if (_service.status == SshStatus.failed || error != null) {
+      // Never established (auth, host key, timeout): the connect page shows it.
+      _leave(failure: error ?? l10n.terminalFailed);
+    } else {
+      _leave();
+    }
   }
 
   void _selectionChanged() {
@@ -643,53 +694,34 @@ class _TerminalPageState extends State<TerminalPage>
     );
   }
 
-  Future<void> _requestLeave({bool disconnectOnly = false}) async {
+  /// Close button / system back. Only a live session asks, once, because
+  /// leaving ends the remote shell; a draft is simply discarded.
+  Future<void> _requestLeave() async {
     if (_closing || _exitPromptOpen) {
       return;
     }
-    final active = _connected || _connecting;
-    if (active || (!disconnectOnly && _draft.text.isNotEmpty)) {
+    if (_connected) {
       setState(() => _exitPromptOpen = true);
       _closeKeyboard();
       final accepted = await confirmAction(
         _dialogContext,
-        title: LocalizedText(
-          (l10n) => active
-              ? l10n.terminalDisconnectQuestion
-              : l10n.terminalDiscardExitQuestion,
-        ),
+        title: LocalizedText((l10n) => l10n.terminalDisconnectQuestion),
         message: LocalizedText(
-          (l10n) => active
-              ? l10n.terminalDisconnectHelp(
-                  (escapedCommandPreview(widget.target.label)).toString(),
-                  (disconnectOnly
-                          ? l10n.terminalDraftKeptUntilReconnect
-                          : l10n.terminalDraftWillClear)
-                      .toString(),
-                )
-              : l10n.terminalUnsentDraftExit,
+          (l10n) => l10n.r2ConnDisconnectHelp(
+            escapedCommandPreview(widget.target.label),
+          ),
         ),
-        action: LocalizedText(
-          (l10n) => disconnectOnly
-              ? l10n.terminalDisconnect
-              : active
-              ? l10n.terminalDisconnectExit
-              : l10n.terminalDiscardExit,
-        ),
+        action: LocalizedText((l10n) => l10n.terminalDisconnectExit),
       );
       if (!mounted) {
         return;
       }
       setState(() => _exitPromptOpen = false);
-      if (!accepted) {
+      if (!accepted || _closing) {
         return;
       }
     }
-    if (disconnectOnly) {
-      _service.disconnect();
-    } else {
-      _leave();
-    }
+    _leave();
   }
 
   @override
@@ -697,15 +729,9 @@ class _TerminalPageState extends State<TerminalPage>
     if (state == AppLifecycleState.paused ||
         state == AppLifecycleState.hidden ||
         state == AppLifecycleState.detached) {
+      _endReason = LocalizedText((l10n) => l10n.terminalBackgroundDisconnected);
       _service.disconnect();
       _closeKeyboard();
-      if (mounted) {
-        setState(
-          () => _notice = LocalizedText(
-            (l10n) => l10n.terminalBackgroundDisconnected,
-          ),
-        );
-      }
     }
   }
 
@@ -726,21 +752,24 @@ class _TerminalPageState extends State<TerminalPage>
         if (!mounted || _closing || epoch != _targetEpoch) {
           return;
         }
+        _endReason = LocalizedText((l10n) => l10n.terminalTargetChanged);
         _service.disconnect();
         _draft.clear();
         _terminalController.clearSelection();
         _terminal.onOutput = null;
         _terminal.onResize = null;
         _createTerminal();
-        setState(() {
-          _targetInvalidated = false;
-          _notice = LocalizedText((l10n) => l10n.terminalTargetChanged);
-        });
+        setState(() => _targetInvalidated = false);
+        showAppToast(context, localizedText(_endReason!, context.l10n));
+        _leave();
       });
     }
   }
 
-  void _leave() {
+  /// Closes the page (and anything stacked above it, e.g. the command panel
+  /// or a confirmation) and discards the draft. [failure] is returned to the
+  /// connect page when the session was never established.
+  void _leave({String? failure}) {
     if (_closing) {
       return;
     }
@@ -749,7 +778,12 @@ class _TerminalPageState extends State<TerminalPage>
     _draft.clear();
     _terminalFocus.unfocus();
     setState(() {});
-    Navigator.pop(context);
+    final navigator = Navigator.of(context);
+    final route = ModalRoute.of(context);
+    if (route != null) {
+      navigator.popUntil((candidate) => candidate == route);
+    }
+    navigator.pop(failure);
   }
 
   @override
@@ -775,13 +809,7 @@ class _TerminalPageState extends State<TerminalPage>
       return;
     }
     if (_service.status != SshStatus.idle) {
-      _inputEpoch++;
-      _closeKeyboard();
-      _terminalController.clearSelection();
-      _draft.clear();
-      _terminal.onOutput = null;
-      _terminal.onResize = null;
-      _createTerminal();
+      return;
     }
     setState(() {
       _hasConnected = false;
@@ -795,6 +823,9 @@ class _TerminalPageState extends State<TerminalPage>
       requestKeyPassphrase: _requestKeyPassphrase,
     );
   }
+
+  bool get _showBanner =>
+      !_closing && (_connecting || _service.status == SshStatus.idle);
 
   bool get _connected => !_closing && !_targetInvalidated && _service.connected;
 
@@ -1180,12 +1211,8 @@ class _TerminalPageState extends State<TerminalPage>
                     switch (action) {
                       case 'details':
                         unawaited(_connectionDetails());
-                      case 'connect':
-                        unawaited(_connect());
                       case 'paste':
                         unawaited(_pasteToDraft().then((_) {}));
-                      case 'disconnect':
-                        unawaited(_requestLeave(disconnectOnly: true));
                       case 'reboot':
                         unawaited(_power(SshPowerAction.reboot));
                       case 'shutdown':
@@ -1207,29 +1234,6 @@ class _TerminalPageState extends State<TerminalPage>
                             Text(context.l10n.terminalPasteIntoDraft),
                       ),
                     ),
-                    if (!_connected && !_connecting)
-                      PopupMenuItem(
-                        value: 'connect',
-                        enabled: !kIsWeb,
-                        child: Builder(
-                          builder: (context) => Text(
-                            _service.status == SshStatus.idle
-                                ? context.l10n.serverConnectSsh
-                                : context.l10n.terminalReconnectClear,
-                          ),
-                        ),
-                      ),
-                    if (_connected || _connecting)
-                      PopupMenuItem(
-                        value: 'disconnect',
-                        child: Builder(
-                          builder: (context) => Text(
-                            _connecting
-                                ? context.l10n.terminalCancelConnection
-                                : context.l10n.terminalDisconnect,
-                          ),
-                        ),
-                      ),
                     const PopupMenuDivider(),
                     PopupMenuItem(
                       value: 'reboot',
@@ -1328,7 +1332,7 @@ class _TerminalPageState extends State<TerminalPage>
                                   ),
                                 ),
                               ),
-                            if (!_connected || _notice != null)
+                            if (_showBanner || _notice != null)
                               Positioned(
                                 top: 0,
                                 left: 0,
@@ -1341,7 +1345,7 @@ class _TerminalPageState extends State<TerminalPage>
                                     child: Column(
                                       mainAxisSize: MainAxisSize.min,
                                       children: [
-                                        if (!_connected)
+                                        if (_showBanner)
                                           _connectionBanner(context),
                                         if (_notice != null)
                                           _noticeBanner(context),
@@ -1430,6 +1434,8 @@ class _TerminalPageState extends State<TerminalPage>
     );
   }
 
+  /// Only before a session exists: connecting (with cancel) or the idle
+  /// "connect" prompt. Once a session has ended the page closes instead.
   Widget _connectionBanner(BuildContext context) => Container(
     key: const ValueKey('terminal-connection-banner'),
     width: double.infinity,
@@ -1464,28 +1470,11 @@ class _TerminalPageState extends State<TerminalPage>
                   TextButton(
                     key: const ValueKey('terminal-connect'),
                     onPressed: kIsWeb ? null : _connect,
-                    child: Text(
-                      _service.status == SshStatus.idle
-                          ? context.l10n.terminalConnect
-                          : context.l10n.terminalReconnectShort,
-                    ),
+                    child: Text(context.l10n.terminalConnect),
                   ),
               ],
             ),
-            if (_service.error != null)
-              Text(
-                _service.errorFor(context.l10n)!,
-                style: TextStyle(color: Theme.of(context).colorScheme.error),
-              ),
-            if (kIsWeb)
-              Text(context.l10n.terminalBrowserUnsupported)
-            else if (!_connecting)
-              Text(
-                _service.status == SshStatus.idle
-                    ? context.l10n.terminalConnectedInputHelp
-                    : context.l10n.terminalRetainedOutputHelp,
-                style: Theme.of(context).textTheme.bodySmall,
-              ),
+            if (kIsWeb) Text(context.l10n.terminalBrowserUnsupported),
           ],
         ),
       ),

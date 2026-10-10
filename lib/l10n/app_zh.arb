@@ -2935,7 +2935,15 @@
   },
   "terminalSelectionHelp": "点按终端输入；长按并拖动选择，使用“复制”复制。向上滚动查看历史，向下箭头回到最新输出。",
   "terminalInputHelp": "键盘和特殊键直接发送到 SSH。常用命令、片段和粘贴先进入独立草稿；“发送”不追加回车，“发送并执行”追加回车，由当前终端程序处理。正文原有换行仍可能执行。Ctrl 作用于下一个按键，再点可取消。",
-  "terminalBackgroundHelp": "离开或进入后台会断开会话；不会自动重连或重放输入。长任务建议在远端使用 tmux / screen。",
+  "terminalBackgroundHelp": "会话结束、离开或进入后台都会关闭此页，不会自动重连或重放输入。长任务建议在远端使用 tmux / screen。",
+  "r2ConnDisconnectHelp": "{p0}\n未放入 tmux / screen 的远端任务可能中断；未发送的草稿将丢弃。",
+  "@r2ConnDisconnectHelp": {
+    "placeholders": {
+      "p0": {
+        "type": "String"
+      }
+    }
+  },
   "terminalOfflineFont": "离线字体：DejaVu Sans Mono · 中文使用设备字体回退",
   "terminalLicenses": "开源许可",
   "terminalDisconnectQuestion": "断开 SSH 会话？",
@@ -2957,8 +2965,8 @@
   "terminalDisconnect": "断开连接",
   "terminalDisconnectExit": "断开并退出",
   "terminalDiscardExit": "丢弃并退出",
-  "terminalBackgroundDisconnected": "应用进入后台，连接已清理。需要手动重连，不会重放输入。",
-  "terminalTargetChanged": "目标已变化，连接和草稿已清空。请手动连接新目标。",
+  "terminalBackgroundDisconnected": "应用进入后台，连接已断开",
+  "terminalTargetChanged": "目标已变化，连接已断开",
   "terminalPowerMenuHelp": "连接后在“终端菜单”选择 SSH 重启或关机，并完成两次确认。",
   "terminalHostChanged": "主机密钥变化 · 已阻断认证",
   "terminalHostChangedHelp": "这可能是重装或中间人攻击。尚未发送登录凭据。请通过厂商控制台等独立渠道核实原因与新公钥。",

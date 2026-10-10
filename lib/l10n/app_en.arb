@@ -2541,7 +2541,15 @@
   "terminalDimensions": "{p0} · {p1} columns × {p2} rows",
   "terminalSelectionHelp": "Tap the terminal to type. Touch and hold, then drag to select, and use Copy. Scroll up for history; the down arrow returns to the latest output.",
   "terminalInputHelp": "Keyboard input and special keys go directly to SSH. Quick commands, snippets, and pasted text go into a separate draft first. Send does not append Enter; Send and execute does, for the current terminal program to handle. Newlines already in the content may still execute. Ctrl applies to the next key; tap it again to cancel.",
-  "terminalBackgroundHelp": "Leaving the terminal or putting the app in the background disconnects the session. It does not reconnect or replay input automatically. Use tmux / screen remotely for long-running tasks.",
+  "terminalBackgroundHelp": "Ending the session, leaving, or backgrounding the app closes this page. Nothing reconnects or replays input automatically. Use tmux / screen remotely for long-running tasks.",
+  "r2ConnDisconnectHelp": "{p0}\nRemote tasks outside tmux / screen may be interrupted; the unsent draft is discarded.",
+  "@r2ConnDisconnectHelp": {
+    "placeholders": {
+      "p0": {
+        "type": "String"
+      }
+    }
+  },
   "terminalOfflineFont": "Offline font: DejaVu Sans Mono · Chinese uses device font fallback",
   "terminalLicenses": "Open-source licenses",
   "terminalDisconnectQuestion": "Disconnect the SSH session?",
@@ -2553,8 +2561,8 @@
   "terminalDisconnect": "Disconnect",
   "terminalDisconnectExit": "Disconnect and exit",
   "terminalDiscardExit": "Discard and exit",
-  "terminalBackgroundDisconnected": "The app entered the background and the connection was closed. Reconnect manually. Input is not replayed.",
-  "terminalTargetChanged": "The target changed. The connection and draft were cleared. Connect to the new target manually.",
+  "terminalBackgroundDisconnected": "The app went to the background; disconnected",
+  "terminalTargetChanged": "The target changed; disconnected",
   "terminalPowerMenuHelp": "After connecting, choose SSH restart or shutdown in the Terminal menu and complete both confirmations.",
   "terminalHostChanged": "Host key changed · Authentication blocked",
   "terminalHostChangedHelp": "This may be a reinstall or a man-in-the-middle attack. Login credentials have not been sent. Verify the reason and new public key through an independent source such as the provider console.",

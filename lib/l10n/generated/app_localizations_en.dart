@@ -4425,7 +4425,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get terminalBackgroundHelp =>
-      'Leaving the terminal or putting the app in the background disconnects the session. It does not reconnect or replay input automatically. Use tmux / screen remotely for long-running tasks.';
+      'Ending the session, leaving, or backgrounding the app closes this page. Nothing reconnects or replays input automatically. Use tmux / screen remotely for long-running tasks.';
+
+  @override
+  String r2ConnDisconnectHelp(String p0) {
+    return '$p0\nRemote tasks outside tmux / screen may be interrupted; the unsent draft is discarded.';
+  }
 
   @override
   String get terminalOfflineFont =>
@@ -4467,11 +4472,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get terminalBackgroundDisconnected =>
-      'The app entered the background and the connection was closed. Reconnect manually. Input is not replayed.';
+      'The app went to the background; disconnected';
 
   @override
-  String get terminalTargetChanged =>
-      'The target changed. The connection and draft were cleared. Connect to the new target manually.';
+  String get terminalTargetChanged => 'The target changed; disconnected';
 
   @override
   String get terminalPowerMenuHelp =>

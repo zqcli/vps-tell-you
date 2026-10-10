@@ -7003,8 +7003,14 @@ abstract class AppLocalizations {
   /// No description provided for @terminalBackgroundHelp.
   ///
   /// In zh, this message translates to:
-  /// **'离开或进入后台会断开会话；不会自动重连或重放输入。长任务建议在远端使用 tmux / screen。'**
+  /// **'会话结束、离开或进入后台都会关闭此页，不会自动重连或重放输入。长任务建议在远端使用 tmux / screen。'**
   String get terminalBackgroundHelp;
+
+  /// No description provided for @r2ConnDisconnectHelp.
+  ///
+  /// In zh, this message translates to:
+  /// **'{p0}\n未放入 tmux / screen 的远端任务可能中断；未发送的草稿将丢弃。'**
+  String r2ConnDisconnectHelp(String p0);
 
   /// No description provided for @terminalOfflineFont.
   ///
@@ -7075,13 +7081,13 @@ abstract class AppLocalizations {
   /// No description provided for @terminalBackgroundDisconnected.
   ///
   /// In zh, this message translates to:
-  /// **'应用进入后台，连接已清理。需要手动重连，不会重放输入。'**
+  /// **'应用进入后台，连接已断开'**
   String get terminalBackgroundDisconnected;
 
   /// No description provided for @terminalTargetChanged.
   ///
   /// In zh, this message translates to:
-  /// **'目标已变化，连接和草稿已清空。请手动连接新目标。'**
+  /// **'目标已变化，连接已断开'**
   String get terminalTargetChanged;
 
   /// No description provided for @terminalPowerMenuHelp.

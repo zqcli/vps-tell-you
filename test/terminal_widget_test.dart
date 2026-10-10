@@ -39,6 +39,7 @@ class SpySshService extends SshService {
   int connections = 0, authentications = 0, disconnections = 0;
   bool disposed = false;
   bool holdConnecting = false, needsPassphrase = false;
+  String? failWith;
   final passphrases = <String>[];
   @override
   Stream<String> get output => events.stream;
@@ -66,6 +67,12 @@ class SpySshService extends SshService {
       passphrases.add(passphrase);
     }
     if (holdConnecting) return;
+    if (failWith != null) {
+      status = SshStatus.failed;
+      error = failWith;
+      notifyListeners();
+      return;
+    }
     if (request != null) {
       status = SshStatus.verifying;
       notifyListeners();
@@ -201,6 +208,23 @@ void main() {
     await tester.pumpAndSettle();
   }
 
+  // A new page needs a fresh service: the previous one was disposed with it.
+  Future<void> reopen(
+    WidgetTester tester, {
+    bool needsPassphrase = false,
+  }) async {
+    // Let the previous page's toast expire: it would cover the key bar.
+    await tester.pump(const Duration(seconds: 6));
+    ssh = SpySshService()..needsPassphrase = needsPassphrase;
+    await tester.tap(find.text('Open terminal fixture'));
+    await tester.pumpAndSettle();
+  }
+
+  void expectClosed(WidgetTester tester) {
+    expect(find.byType(TerminalPage), findsNothing);
+    expect(find.text('Open terminal fixture'), findsOneWidget);
+  }
+
   Future<void> openCommands(WidgetTester tester) async {
     if (find.byKey(const ValueKey('terminal-draft')).evaluate().isNotEmpty) {
       return;
@@ -226,17 +250,6 @@ void main() {
       await openCommands(tester);
     }
     if (description.contains('terminal-connect')) await closeCommands(tester);
-    if (finder.evaluate().isEmpty &&
-        description.contains('terminal-disconnect')) {
-      await closeCommands(tester);
-      await tester.tap(find.byTooltip('终端菜单'));
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('断开连接'));
-      await tester.pumpAndSettle();
-      await tester.tap(find.widgetWithText(FilledButton, '断开连接'));
-      await tester.pumpAndSettle();
-      return;
-    }
     await tester.ensureVisible(finder);
     await tester.tap(finder);
     await tester.pumpAndSettle();
@@ -321,7 +334,7 @@ void main() {
   });
 
   testWidgets(
-    'snippet preview and insert send zero bytes; reconnect clears without replay',
+    'snippet preview and insert send zero bytes; ending the session closes the page and drops the draft',
     (tester) async {
       const content = 'echo one\r\necho two\x1b[2J';
       await store.saveSnippet(
@@ -347,16 +360,23 @@ void main() {
       await textTap(tester, '仅插入待发送草稿');
       expect(await currentDraft(tester), content);
       expect(ssh.writes, isEmpty);
-      await tap(tester, find.byKey(const ValueKey('terminal-disconnect')));
-      await tap(tester, find.byKey(const ValueKey('terminal-connect')));
-      expect(ssh.connections, 2);
+      await closeCommands(tester);
+      ssh.disconnect();
+      await tester.pumpAndSettle();
+      expectClosed(tester);
+      expect(find.text('已断开'), findsOneWidget);
+      expect(ssh.connections, 1);
+      expect(ssh.writes, isEmpty);
+      // A new page starts with an empty draft: nothing is replayed.
+      await reopen(tester);
+      expect(ssh.connections, 1);
       expect(await currentDraft(tester), isEmpty);
       expect(ssh.writes, isEmpty);
     },
   );
 
   testWidgets(
-    'disconnect invalidates both inline send actions and captured callbacks',
+    'ending the session closes the panel and invalidates captured send callbacks',
     (tester) async {
       await mount(tester, draft: 'echo must-not-send\r');
       await openCommands(tester);
@@ -373,12 +393,14 @@ void main() {
           isNull,
         );
       }
+      await tester.pumpAndSettle();
+      // Page, panel and draft are gone without any confirmation.
+      expectClosed(tester);
+      expect(find.byKey(const ValueKey('terminal-send')), findsNothing);
+      expect(find.byType(AlertDialog), findsNothing);
       send();
       await tester.pumpAndSettle();
-      await closeCommands(tester);
-      await tap(tester, find.byKey(const ValueKey('terminal-connect')));
       expect(ssh.writes, isEmpty);
-      expect(await currentDraft(tester), isEmpty);
     },
   );
 
@@ -401,13 +423,16 @@ void main() {
         .terminal;
     terminal.textInput('pwd');
     expect(ssh.writes, ['\x03', '\x1b[A', 'pwd']);
-    await tap(tester, find.byKey(const ValueKey('terminal-disconnect')));
+    ssh.disconnect();
+    await tester.pump();
     expect(
       tester.widget<TerminalView>(find.byType(TerminalView)).readOnly,
       isTrue,
     );
     terminal.textInput('never');
     expect(ssh.writes, ['\x03', '\x1b[A', 'pwd']);
+    await tester.pumpAndSettle();
+    expectClosed(tester);
   });
 
   testWidgets(
@@ -497,29 +522,37 @@ void main() {
     },
   );
 
-  testWidgets('cancel connecting and background cleanup never send draft', (
-    tester,
-  ) async {
-    ssh.holdConnecting = true;
-    await mount(tester, draft: 'unsent\r');
-    expect(find.text('取消连接'), findsOneWidget);
-    await textTap(tester, '取消连接');
-    expect(ssh.authentications, 0);
-    ssh.holdConnecting = false;
-    await tap(tester, find.byKey(const ValueKey('terminal-connect')));
-    await draft(tester, 'still unsent\n');
-    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.inactive);
-    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.hidden);
-    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.paused);
-    await tester.pump();
-    expect(ssh.connected, isFalse);
-    expect(ssh.writes, isEmpty);
-    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.hidden);
-    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.inactive);
-    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
-    await tester.pump();
-    expect(ssh.connections, 2);
-  });
+  testWidgets(
+    'cancel connecting and background cleanup close the page and never send draft',
+    (tester) async {
+      ssh.holdConnecting = true;
+      await mount(tester, draft: 'unsent\r');
+      expect(find.text('取消连接'), findsOneWidget);
+      await textTap(tester, '取消连接');
+      expectClosed(tester);
+      expect(ssh.authentications, 0);
+      expect(ssh.writes, isEmpty);
+      // Cancelling is the user's own choice: no failure banner or toast.
+      expect(find.text('已断开'), findsNothing);
+      await reopen(tester);
+      expect(ssh.connected, isTrue);
+      await draft(tester, 'still unsent\n');
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.inactive);
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.hidden);
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.paused);
+      expect(ssh.connected, isFalse);
+      expect(ssh.writes, isEmpty);
+      // Frames are suspended in the background; the page closes on resume.
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.hidden);
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.inactive);
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+      await tester.pumpAndSettle();
+      expectClosed(tester);
+      expect(find.text('应用进入后台，连接已断开'), findsOneWidget);
+      // Nothing reconnects by itself.
+      expect(ssh.connections, 1);
+    },
+  );
 
   testWidgets(
     'power is spy-only, two-stage typed-target confirmation sends once',
@@ -552,7 +585,7 @@ void main() {
   );
 
   testWidgets(
-    'power cancellation and loss of connection invalidate confirmation',
+    'power cancellation and loss of connection invalidate confirmation and close the page',
     (tester) async {
       await mount(tester);
       await tap(tester, find.byTooltip('终端菜单'));
@@ -576,7 +609,10 @@ void main() {
             .onPressed,
         isNull,
       );
-      await textTap(tester, '取消');
+      // The lost session closes the page together with the confirmation.
+      await tester.pumpAndSettle();
+      expect(find.byKey(const ValueKey('power-confirm-submit')), findsNothing);
+      expectClosed(tester);
       expect(ssh.powers, isEmpty);
     },
   );
@@ -628,12 +664,16 @@ void main() {
       await openCommands(tester);
       expect(tester.takeException(), isNull);
       await closeCommands(tester);
-      await tap(tester, find.byKey(const ValueKey('terminal-disconnect')));
-      ssh.request = HostVerificationRequest(
-        identity: hostKey(host: target.host, port: target.port),
-        status: HostTrustStatus.firstUse,
-      );
-      await tap(tester, find.byKey(const ValueKey('terminal-connect')));
+      ssh.disconnect();
+      await tester.pumpAndSettle();
+      expectClosed(tester);
+      ssh = SpySshService()
+        ..request = HostVerificationRequest(
+          identity: hostKey(host: target.host, port: target.port),
+          status: HostTrustStatus.firstUse,
+        );
+      await tester.tap(find.text('Open terminal fixture'));
+      await tester.pumpAndSettle();
       expect(tester.takeException(), isNull);
       await tap(tester, find.byKey(const ValueKey('host-verified-check')));
       await textTap(tester, '拒绝连接');
@@ -642,7 +682,7 @@ void main() {
   );
 
   testWidgets(
-    'changing target invalidates pending Send and never replays a draft',
+    'changing target invalidates pending Send, closes the page and never replays a draft',
     (tester) async {
       final targets = ValueNotifier(target);
       addTearDown(targets.dispose);
@@ -673,7 +713,8 @@ void main() {
         credentialId: 'other-fixture',
       );
       targets.value = next;
-      await tester.pumpAndSettle();
+      await tester.pump();
+      await tester.pump();
       expect(
         tester
             .widget<ButtonStyleButton>(
@@ -684,14 +725,12 @@ void main() {
       );
       staleSend();
       await tester.pumpAndSettle();
+      // The old session is disconnected and the page closes; no reconnect.
       expect(ssh.writes, isEmpty);
-      await closeCommands(tester);
       expect(ssh.connected, isFalse);
-      expect(await currentDraft(tester), isEmpty);
+      expectClosed(tester);
+      expect(find.text('目标已变化，连接已断开'), findsOneWidget);
       expect(ssh.connections, 1);
-      await tap(tester, find.byKey(const ValueKey('terminal-connect')));
-      expect(ssh.target?.label, next.label);
-      expect(ssh.writes, isEmpty);
     },
   );
 
@@ -717,7 +756,10 @@ void main() {
             .onPressed,
         isNull,
       );
-      await textTap(tester, '拒绝连接');
+      // The failed attempt closes the page together with its dialog.
+      await tester.pumpAndSettle();
+      expect(find.byKey(const ValueKey('host-verified-confirm')), findsNothing);
+      expectClosed(tester);
       expect(ssh.authentications, 0);
       expect(ssh.writes, isEmpty);
     },
@@ -838,8 +880,11 @@ void main() {
       expect(ssh.authentications, 1);
       expect(ssh.writes, isEmpty);
       expect(ledger.security.credentials, isEmpty);
-      await tap(tester, find.byKey(const ValueKey('terminal-disconnect')));
-      await tap(tester, find.byKey(const ValueKey('terminal-connect')));
+      ssh.disconnect();
+      await tester.pumpAndSettle();
+      expectClosed(tester);
+      // The next connection asks again; nothing was kept.
+      await reopen(tester, needsPassphrase: true);
       expect(fieldFinder, findsOneWidget);
       await tester.enterText(fieldFinder, 'CANCELLED-SYNTHETIC');
       final cancelledController = tester
@@ -847,8 +892,9 @@ void main() {
           .controller!;
       await textTap(tester, '取消连接');
       expect(cancelledController.text, isEmpty);
-      expect(ssh.authentications, 1);
-      expect(ssh.passphrases, ['SYNTHETIC-KEY-UNLOCK']);
+      expect(ssh.authentications, 0);
+      expect(ssh.passphrases, isEmpty);
+      expectClosed(tester);
     },
   );
 
@@ -875,7 +921,9 @@ void main() {
       tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.hidden);
       tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.inactive);
       tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
-      await textTap(tester, '取消连接');
+      await tester.pumpAndSettle();
+      expect(finder, findsNothing);
+      expectClosed(tester);
       expect(ssh.authentications, 0);
       expect(ssh.passphrases, isEmpty);
     },
@@ -910,18 +958,11 @@ void main() {
       );
       await tester.pumpAndSettle();
       expect(controller.text, isEmpty);
-      expect(
-        tester
-            .widget<FilledButton>(
-              find.byKey(const ValueKey('ssh-key-passphrase-submit')),
-            )
-            .onPressed,
-        isNull,
-      );
-      await textTap(tester, '取消连接');
+      expect(finder, findsNothing);
+      expectClosed(tester);
       expect(ssh.authentications, 0);
       expect(ssh.passphrases, isEmpty);
-      await tap(tester, find.byKey(const ValueKey('terminal-connect')));
+      await reopen(tester, needsPassphrase: true);
       await tester.enterText(finder, 'SYNTHETIC-CANCELLED-BACK');
       final backController = tester.widget<TextField>(finder).controller!;
       await tester.binding.handlePopRoute();
@@ -929,6 +970,7 @@ void main() {
       expect(backController.text, isEmpty);
       expect(ssh.authentications, 0);
       expect(ssh.passphrases, isEmpty);
+      expectClosed(tester);
     },
   );
 
@@ -1192,6 +1234,106 @@ void main() {
       expect(find.text('断开 SSH 会话？'), findsOneWidget);
       await textTap(tester, '取消');
       expect(ssh.connected, isTrue);
+      expect(ssh.writes, isEmpty);
+    },
+  );
+
+  testWidgets(
+    'remote close ends the session: page closes, toast says so, draft is dropped silently',
+    (tester) async {
+      await mount(tester, draft: 'echo unsent');
+      expect(find.byType(TerminalPage), findsOneWidget);
+      ssh.disconnect();
+      await tester.pumpAndSettle();
+      expectClosed(tester);
+      expect(find.text('已断开'), findsOneWidget);
+      expect(find.byType(AlertDialog), findsNothing);
+      expect(ssh.writes, isEmpty);
+      expect(ssh.disposed, isTrue);
+    },
+  );
+
+  testWidgets(
+    'closing a live session asks once and discards the draft; connecting closes without asking',
+    (tester) async {
+      await mount(tester, draft: 'echo unsent');
+      await tester.tap(find.byTooltip('退出终端'));
+      await tester.pumpAndSettle();
+      expect(find.text('断开 SSH 会话？'), findsOneWidget);
+      expect(find.textContaining('未发送的草稿将丢弃'), findsOneWidget);
+      await tester.tap(find.widgetWithText(FilledButton, '断开并退出'));
+      await tester.pumpAndSettle();
+      expectClosed(tester);
+      expect(find.text('断开 SSH 会话？'), findsNothing);
+      expect(ssh.writes, isEmpty);
+      // Not yet connected: nothing to lose, so the close button leaves at once.
+      await tester.pump(const Duration(seconds: 6));
+      ssh = SpySshService()..holdConnecting = true;
+      await tester.tap(find.text('Open terminal fixture'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byTooltip('退出终端'));
+      await tester.pumpAndSettle();
+      expect(find.text('断开 SSH 会话？'), findsNothing);
+      expectClosed(tester);
+    },
+  );
+
+  testWidgets(
+    'a connection that never became a session reports its error on the connect page',
+    (tester) async {
+      final now = DateTime.utc(2026, 10, 6);
+      final server = ServerRecord(
+        id: 'fail-target',
+        name: 'Synthetic failing target',
+        vendor: 'fixture',
+        host: '127.0.0.1',
+        createdAt: now,
+        updatedAt: now,
+      );
+      await store.saveServer(server, isNew: true);
+      await ledger.refresh();
+      expect(
+        await ledger.security.saveCredential(
+          name: 'Fixture password',
+          kind: CredentialKind.password,
+          defaultUsername: 'root',
+          secret: 'SYNTHETIC-NOT-A-REAL-PASSWORD',
+        ),
+        isTrue,
+      );
+      final credential = ledger.security.credentials.single;
+      expect(
+        await ledger.security.saveSshConfiguration(
+          SshConfiguration(
+            serverId: server.id,
+            host: '127.0.0.1',
+            username: 'deploy',
+            credentialId: credential.id,
+          ),
+        ),
+        isTrue,
+      );
+      ssh.failWith = 'Synthetic authentication failure';
+      await mount(
+        tester,
+        child: SshConnectPage(
+          ledger: ledger,
+          initialServerId: server.id,
+          serviceFactory: (_) => ssh,
+        ),
+      );
+      await tap(tester, find.byKey(const ValueKey('connect-start')));
+      expect(ssh.connections, 1);
+      expect(find.byType(TerminalPage), findsNothing);
+      expect(find.byType(SshConnectPage), findsOneWidget);
+      expect(find.text('Synthetic authentication failure'), findsOneWidget);
+      expect(find.text('已断开'), findsNothing);
+      expect(
+        tester
+            .widget<AppButton>(find.byKey(const ValueKey('connect-start')))
+            .onPressed,
+        isNotNull,
+      );
       expect(ssh.writes, isEmpty);
     },
   );
