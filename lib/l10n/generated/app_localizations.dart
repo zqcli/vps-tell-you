@@ -5437,7 +5437,7 @@ abstract class AppLocalizations {
   /// No description provided for @serverPanelLinkHelp.
   ///
   /// In zh, this message translates to:
-  /// **'关联已保存的面板账户与实例。关联或刷新均不会更改本地硬件信息，请在上方手动编辑。'**
+  /// **'面板刷新只更新 API 观测，不会覆盖你手动填写的资料。'**
   String get serverPanelLinkHelp;
 
   /// No description provided for @serverLinkPanel.
@@ -5509,19 +5509,19 @@ abstract class AppLocalizations {
   /// No description provided for @serverUnknownCostHelp.
   ///
   /// In zh, this message translates to:
-  /// **'未知金额不会按 0 计算。可在“基本信息 / 编辑”中补充费用资料。'**
+  /// **'未填写的金额不会按 0 计算。'**
   String get serverUnknownCostHelp;
 
   /// No description provided for @serverMeteredValueHelp.
   ///
   /// In zh, this message translates to:
-  /// **'按量费用作为月估算，不产生剩余价值。可在编辑服务器时维护费用资料。'**
+  /// **'按量计费只作月估算，不计算剩余价值。'**
   String get serverMeteredValueHelp;
 
   /// No description provided for @serverRenewalValueHelp.
   ///
   /// In zh, this message translates to:
-  /// **'按当前续费价折算已知服务期；历史实付另计，不覆盖续费价。'**
+  /// **'剩余价值仅为按续费价折算的参考，不是退款或成交价。'**
   String get serverRenewalValueHelp;
 
   /// No description provided for @serverReminderPlan.
@@ -5605,7 +5605,7 @@ abstract class AppLocalizations {
   /// No description provided for @serverConnectionSafety.
   ///
   /// In zh, this message translates to:
-  /// **'首次连接需核对主机指纹；指纹变化会暂停登录。重启或关机需再次核对目标，且不会停止厂商计费。'**
+  /// **'首次连接需核对主机指纹；关机或重启不会停止厂商计费。'**
   String get serverConnectionSafety;
 
   /// No description provided for @serverNotes.
@@ -5769,6 +5769,24 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'电源'**
   String get uiDetailQuickPower;
+
+  /// No description provided for @r2DetailMetricValue.
+  ///
+  /// In zh, this message translates to:
+  /// **'剩余价值'**
+  String get r2DetailMetricValue;
+
+  /// No description provided for @r2DetailMetricDays.
+  ///
+  /// In zh, this message translates to:
+  /// **'剩余天数'**
+  String get r2DetailMetricDays;
+
+  /// No description provided for @r2DetailMetricDaily.
+  ///
+  /// In zh, this message translates to:
+  /// **'日均'**
+  String get r2DetailMetricDaily;
 
   /// No description provided for @serverRequiredField.
   ///

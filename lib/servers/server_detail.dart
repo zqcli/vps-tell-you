@@ -191,6 +191,7 @@ class ServerDetail extends StatelessWidget {
           ),
         if (canChangeProvider)
           AppMenuAction(
+            key: const ValueKey('server-change-provider'),
             label: context.l10n.providerUiChange,
             onPressed: () => changeServerProvider(context, controller, s),
           ),
@@ -224,39 +225,91 @@ class ServerDetail extends StatelessWidget {
   bool _isNarrow(BuildContext context, BoxConstraints box) =>
       box.maxWidth / MediaQuery.textScalerOf(context).scale(1) < 300;
 
-  Widget _statLabel(String text, AppPalette p) =>
-      Text(text, style: TextStyle(fontSize: 12.5, color: p.text2));
+  /// Why a payment cannot be recorded right now, or null when it can.
+  String? _paymentBlock(BuildContext context, ServerRecord s) {
+    final l10n = context.l10n;
+    if (s.archived) return l10n.uiDetailArchivedUnavailable;
+    if (s.billing != BillingKind.prepaid) return l10n.uiDetailNotPrepaid;
+    if (!controller.canMutate) return l10n.uiDetailReadOnly;
+    if (!canRenew(s)) return l10n.uiDetailCannotRenew;
+    return null;
+  }
 
-  Widget _statValue(String text, AppPalette p) => Text(
-    text,
-    maxLines: 1,
-    overflow: TextOverflow.ellipsis,
-    style: TextStyle(
-      fontSize: 16,
-      fontWeight: FontWeight.w600,
-      color: p.text,
-      fontFeatures: kTabularFigures,
-    ),
-  );
+  /// Payment records, remaining-value estimate and reminder rows that sit
+  /// directly under the cost card. Recording a payment is the "+" on the
+  /// payment-records row; when it is unavailable it looks dimmed and a tap
+  /// explains why.
+  Widget? _costRows(BuildContext context, ServerRecord s) {
+    final l10n = context.l10n;
+    final p = context.palette;
+    final rule = controller.reminderFor(s.id);
+    final block = _paymentBlock(context, s);
+    final rows = <Widget>[
+      if (s.billing == BillingKind.prepaid) ...[
+        AppRow(
+          key: const ValueKey('server-payments'),
+          icon: Icons.receipt_long_outlined,
+          iconColor: AppTints.green,
+          title: l10n.uiDetailPayments,
+          trailing: AppNavButton.icon(
+            Icons.add_circle_outline_rounded,
+            key: const ValueKey('server-quick-payment'),
+            tooltip: l10n.uiDetailQuickPayment,
+            color: block == null ? null : p.text3,
+            onPressed: () {
+              if (block != null) {
+                showAppToast(context, block);
+                return;
+              }
+              showAppModal<bool>(
+                context,
+                builder: (_) => PaymentForm(controller: controller, server: s),
+              );
+            },
+          ),
+          chevron: true,
+          onTap: () => _push(
+            context,
+            PaymentListPage(controller: controller, serverId: s.id),
+          ),
+        ),
+        AppRow(
+          key: const ValueKey('server-valuation'),
+          icon: Icons.calculate_outlined,
+          iconColor: AppTints.blue,
+          title: l10n.uiDetailValuation,
+          chevron: true,
+          enabled: !controller.refreshFailed,
+          onTap: () => _openCalculator(context, s),
+        ),
+      ],
+      if (rule != null)
+        AppRow(
+          key: const ValueKey('server-reminder'),
+          icon: Icons.notifications_none_rounded,
+          iconColor: AppTints.red,
+          title: l10n.serverReminderPlan,
+          subtitle:
+              '${usagePlanLabel(rule.usagePlan, l10n: l10n)} · ${rule.enabled ? '${reminderDaysLabel(rule.leadDays, l10n: l10n)} · ${reminderTime(rule.minuteOfDay)}' : l10n.serverRemindersOff}',
+          chevron: true,
+          onTap: () => _push(
+            context,
+            ReminderPage(controller: controller, serverId: s.id),
+          ),
+        ),
+    ];
+    return rows.isEmpty ? null : AppSection(topSpacing: 12, children: rows);
+  }
 
-  Widget _quickActions(BuildContext context, ServerRecord s) {
+  /// SSH / TCP / power rows at the end of the connection section. Unavailable
+  /// rows look dimmed but still react, to explain why (or to offer SSH setup).
+  List<Widget> _controlRows(BuildContext context, ServerRecord s) {
     final l10n = context.l10n;
     final blocked = s.archived || s.isDemo;
     final security = controller.security;
     final config = security.configFor(s.id);
     // While the security store is reloading, let the target page decide.
     final noSsh = config == null && !security.needsReload;
-    String? paymentBlock;
-    if (s.archived) {
-      paymentBlock = l10n.uiDetailArchivedUnavailable;
-    } else if (s.billing != BillingKind.prepaid) {
-      paymentBlock = l10n.uiDetailNotPrepaid;
-    } else if (!controller.canMutate) {
-      paymentBlock = l10n.uiDetailReadOnly;
-    } else if (!canRenew(s)) {
-      paymentBlock = l10n.uiDetailCannotRenew;
-    }
-
     void blockedNotice() => showAppToast(
       context,
       s.archived ? l10n.uiDetailArchivedUnavailable : l10n.serverDemoWarning,
@@ -277,20 +330,26 @@ class ServerDetail extends StatelessWidget {
       );
     }
 
-    return AppQuickActionRow(
-      children: [
-        AppQuickAction(
+    return [
+      _RowFrame(
+        dimmed: blocked || noSsh,
+        child: AppRow(
           key: const ValueKey('server-quick-ssh'),
           icon: Icons.terminal_rounded,
-          label: l10n.uiDetailQuickSsh,
-          dimmed: blocked || noSsh,
+          iconColor: AppTints.blue,
+          title: l10n.uiDetailQuickSsh,
+          chevron: true,
           onTap: () => connect(power: false),
         ),
-        AppQuickAction(
+      ),
+      _RowFrame(
+        dimmed: blocked,
+        child: AppRow(
           key: const ValueKey('server-quick-tcp'),
           icon: Icons.monitor_heart_outlined,
-          label: l10n.serverTcpTest,
-          dimmed: blocked,
+          iconColor: AppTints.teal,
+          title: l10n.serverTcpTest,
+          chevron: true,
           onTap: () {
             if (blocked) return blockedNotice();
             _push(
@@ -299,32 +358,20 @@ class ServerDetail extends StatelessWidget {
             );
           },
         ),
-        AppQuickAction(
-          key: const ValueKey('server-quick-payment'),
-          icon: Icons.credit_card_rounded,
-          label: l10n.uiDetailQuickPayment,
-          dimmed: paymentBlock != null,
-          onTap: () {
-            if (paymentBlock != null) {
-              showAppToast(context, paymentBlock);
-              return;
-            }
-            showAppModal<bool>(
-              context,
-              builder: (_) => PaymentForm(controller: controller, server: s),
-            );
-          },
-        ),
-        AppQuickAction(
+      ),
+      _RowFrame(
+        dimmed: blocked || noSsh,
+        child: AppRow(
           key: const ValueKey('server-quick-power'),
           icon: Icons.power_settings_new_rounded,
-          label: l10n.uiDetailQuickPower,
-          tone: AppTone.red,
-          dimmed: blocked || noSsh,
+          iconColor: AppTints.red,
+          title: l10n.uiDetailQuickPower,
+          destructive: true,
+          chevron: true,
           onTap: () => connect(power: true),
         ),
-      ],
-    );
+      ),
+    ];
   }
 
   Widget _costSection(BuildContext context, ServerRecord s) {
@@ -434,13 +481,18 @@ class ServerDetail extends StatelessWidget {
       case BillingKind.metered:
         footnotes.add(l10n.serverMeteredValueHelp);
         card = AppCard(
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(child: amountBlock(l10n.serverMonthlyEstimate)),
-              const SizedBox(width: 8),
-              Flexible(child: StatusPill(l10n.serverMeteredBilling)),
-            ],
+          child: LayoutBuilder(
+            builder: (context, box) => Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(child: amountBlock(l10n.serverMonthlyEstimate)),
+                const SizedBox(width: 8),
+                ConstrainedBox(
+                  constraints: BoxConstraints(maxWidth: box.maxWidth * .5),
+                  child: StatusPill(l10n.serverMeteredBilling),
+                ),
+              ],
+            ),
           ),
         );
       case BillingKind.prepaid:
@@ -459,48 +511,30 @@ class ServerDetail extends StatelessWidget {
             : AppTone.neutral;
         final start = s.startDate ?? valuation?.activePeriod.start;
         final elapsed = _elapsedShare(start, s.dueDate);
-        final fx = controller.fx;
-        final stats = <(String, String)>[];
+        final metrics = <AppMetric>[];
         if (valuation == null) {
           footnotes.add(l10n.serverUnknownValueHelp);
         } else {
           final amount = valuation.amount;
-          final converted =
-              amount.known && amount.currency != fx.displayCurrency
-              ? fx.convert(amount.minor!, amount.currency)
-              : null;
-          final missingFx =
-              amount.known &&
-              amount.currency != fx.displayCurrency &&
-              converted == null;
-          stats.addAll([
-            (l10n.serverRemainingValue, amount.formatted),
-            converted != null
-                ? (
-                    l10n.uiDetailConverted(fx.displayCurrency),
-                    formatMinor(
-                      converted.round(),
-                      currency: fx.displayCurrency,
-                    ),
-                  )
-                : (
-                    l10n.uiDetailRemainingDays,
-                    l10n.financeDaysValue(valuation.remainingDays),
-                  ),
-            (
-              l10n.uiDetailDaily,
-              '${currencySymbol(amount.currency)}'
+          metrics.addAll([
+            AppMetric(label: l10n.r2DetailMetricValue, value: amount.formatted),
+            AppMetric(
+              label: l10n.r2DetailMetricDays,
+              value: l10n.financeDaysValue(valuation.remainingDays),
+            ),
+            AppMetric(
+              label: l10n.r2DetailMetricDaily,
+              value:
+                  '${currencySymbol(amount.currency)}'
                   '${formatRational(valuation.dailyMinor, digits: 4)}',
             ),
           ]);
-          if (missingFx) footnotes.add(l10n.financeMissingFxPreserved);
           if (valuation.futurePeriods > 0) {
             footnotes.add(
               l10n.financeFuturePeriodsNote(valuation.futurePeriods),
             );
           }
           if (valuation.inferred) footnotes.add(l10n.financeInferredPeriods);
-          footnotes.add(l10n.financeValueDisclaimer);
         }
         footnotes.insert(0, l10n.serverRenewalValueHelp);
         final dateStyle = TextStyle(
@@ -524,29 +558,6 @@ class ServerDetail extends StatelessWidget {
           start?.toString() ?? l10n.serverUnknown,
           style: dateStyle,
         );
-        final payments = AppButton(
-          key: const ValueKey('server-payments'),
-          label: l10n.uiDetailPayments,
-          icon: Icons.receipt_long_outlined,
-          kind: AppButtonKind.tonal,
-          compact: true,
-          expand: true,
-          onPressed: () => _push(
-            context,
-            PaymentListPage(controller: controller, serverId: s.id),
-          ),
-        );
-        final estimate = AppButton(
-          key: const ValueKey('server-valuation'),
-          label: l10n.uiDetailValuation,
-          icon: Icons.calculate_outlined,
-          kind: AppButtonKind.tonal,
-          compact: true,
-          expand: true,
-          onPressed: controller.refreshFailed
-              ? null
-              : () => _openCalculator(context, s),
-        );
         card = AppCard(
           child: LayoutBuilder(
             builder: (context, box) {
@@ -567,7 +578,14 @@ class ServerDetail extends StatelessWidget {
                       children: [
                         Expanded(child: amount),
                         const SizedBox(width: 8),
-                        Flexible(child: duePill),
+                        // Not Flexible: a flex sibling would split the row
+                        // evenly and leave the pill floating mid-card.
+                        ConstrainedBox(
+                          constraints: BoxConstraints(
+                            maxWidth: box.maxWidth * .5,
+                          ),
+                          child: duePill,
+                        ),
                       ],
                     ),
                   const SizedBox(height: 14),
@@ -595,57 +613,12 @@ class ServerDetail extends StatelessWidget {
                         dueLabel,
                       ],
                     ),
-                  if (stats.isNotEmpty) ...[
+                  if (metrics.isNotEmpty) ...[
                     const SizedBox(height: 14),
                     Divider(height: 1, thickness: .5, color: p.separator),
                     const SizedBox(height: 12),
-                    if (narrow)
-                      for (final (label, value) in stats)
-                        Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 3),
-                          child: Row(
-                            crossAxisAlignment: CrossAxisAlignment.baseline,
-                            textBaseline: TextBaseline.alphabetic,
-                            children: [
-                              Expanded(child: _statLabel(label, p)),
-                              const SizedBox(width: 8),
-                              _statValue(value, p),
-                            ],
-                          ),
-                        )
-                    else
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          for (var i = 0; i < stats.length; i++) ...[
-                            if (i > 0) const SizedBox(width: 8),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  _statLabel(stats[i].$1, p),
-                                  const SizedBox(height: 2),
-                                  _statValue(stats[i].$2, p),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ],
-                      ),
+                    AppMetricStrip(metrics: metrics),
                   ],
-                  const SizedBox(height: 14),
-                  if (narrow) ...[
-                    payments,
-                    const SizedBox(height: 8),
-                    estimate,
-                  ] else
-                    Row(
-                      children: [
-                        Expanded(child: payments),
-                        const SizedBox(width: 8),
-                        Expanded(child: estimate),
-                      ],
-                    ),
                 ],
               );
             },
@@ -653,7 +626,7 @@ class ServerDetail extends StatelessWidget {
         );
     }
 
-    final rule = controller.reminderFor(s.id);
+    final rows = _costRows(context, s);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -661,25 +634,7 @@ class ServerDetail extends StatelessWidget {
         card,
         if (footnotes.isNotEmpty)
           _Footnote(footnotes.join('\n'), top: 7, padding: 32),
-        if (rule != null)
-          AppSection(
-            topSpacing: 12,
-            children: [
-              AppRow(
-                key: const ValueKey('server-reminder'),
-                icon: Icons.notifications_none_rounded,
-                iconColor: AppTints.red,
-                title: l10n.serverReminderPlan,
-                subtitle:
-                    '${usagePlanLabel(rule.usagePlan, l10n: l10n)} · ${rule.enabled ? '${reminderDaysLabel(rule.leadDays, l10n: l10n)} · ${reminderTime(rule.minuteOfDay)}' : l10n.serverRemindersOff}',
-                chevron: true,
-                onTap: () => _push(
-                  context,
-                  ReminderPage(controller: controller, serverId: s.id),
-                ),
-              ),
-            ],
-          ),
+        ?rows,
       ],
     );
   }
@@ -722,6 +677,7 @@ class ServerDetail extends StatelessWidget {
           chevron: true,
           onTap: () => _push(context, HostTrustPage(ledger: controller)),
         ),
+        ..._controlRows(context, s),
       ],
     );
   }
@@ -896,8 +852,6 @@ class ServerDetail extends StatelessWidget {
               },
             ),
           ),
-          _quickActions(context, s),
-          _costSection(context, s),
           _SectionHeader(
             l10n.resourceHardware,
             action: AppLinkButton(
@@ -908,9 +862,9 @@ class ServerDetail extends StatelessWidget {
             ),
           ),
           HardwareInformationCard(s.resources),
+          _costSection(context, s),
           AppSection(
             header: l10n.serverBasicInfo,
-            footer: l10n.serverLocalInfoHelp,
             children: [
               AppKeyValueRow(
                 label: l10n.serverOperatingSystem,
@@ -926,11 +880,6 @@ class ServerDetail extends StatelessWidget {
               AppKeyValueRow(
                 label: l10n.uiDetailRegion,
                 value: s.region,
-                placeholder: l10n.serverNotEntered,
-              ),
-              AppKeyValueRow(
-                label: l10n.serverSpecifications,
-                value: s.spec,
                 placeholder: l10n.serverNotEntered,
               ),
             ],
@@ -988,6 +937,28 @@ class _SectionHeader extends StatelessWidget {
   );
 }
 
+/// Wraps an [AppRow] to indent it under its parent row (adapter instance under
+/// provider) or dim it while keeping taps alive (unavailable action rows that
+/// explain themselves when tapped).
+class _RowFrame extends StatelessWidget implements AppSectionItem {
+  const _RowFrame({required this.child, this.indent = 0, this.dimmed = false});
+  final AppRow child;
+  final double indent;
+  final bool dimmed;
+
+  @override
+  double get separatorInset => child.separatorInset + indent;
+
+  @override
+  Widget build(BuildContext context) => Opacity(
+    opacity: dimmed ? .45 : 1,
+    child: Padding(
+      padding: EdgeInsetsDirectional.only(start: indent),
+      child: child,
+    ),
+  );
+}
+
 class _Footnote extends StatelessWidget {
   const _Footnote(this.text, {this.top = 7, this.padding = 16});
   final String text;
@@ -1038,7 +1009,6 @@ class _ServerProviderCardState extends State<_ServerProviderCard> {
         !server.archived &&
         !controller.cloud.busy &&
         !controller.cloud.needsReload;
-    final canChange = editable && !server.isDemo;
     return AppSection(
       header: l10n.providerUiProviderAndAdapter,
       footer: l10n.serverPanelLinkHelp,
@@ -1071,42 +1041,32 @@ class _ServerProviderCardState extends State<_ServerProviderCard> {
                   );
                 }),
         ),
-        AppRow(
-          key: const ValueKey('server-change-provider'),
-          icon: Icons.swap_horiz_rounded,
-          iconColor: AppTints.grey,
-          title: l10n.providerUiChange,
-          enabled: canChange,
-          chevron: true,
-          onTap: canChange
-              ? () => open(() async {
-                  await changeServerProvider(context, controller, server);
-                })
-              : null,
-        ),
         if (account != null)
-          AppRow(
-            key: const ValueKey('server-adapter-link'),
-            icon: Icons.cloud_outlined,
-            iconColor: AppTints.purple,
-            title: account.alias,
-            subtitle:
-                '${cloudProviderName(account.adapterType)} · '
-                '${l10n.providerUiOpenInstance}',
-            chevron: true,
-            onTap: opening
-                ? null
-                : () => open(() async {
-                    await Navigator.push<void>(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => CloudAccountDetailsPage(
-                          ledger: controller,
-                          accountId: account.id,
+          _RowFrame(
+            indent: 42,
+            child: AppRow(
+              key: const ValueKey('server-adapter-link'),
+              icon: Icons.cloud_outlined,
+              iconColor: AppTints.purple,
+              title: account.alias,
+              subtitle:
+                  '${cloudProviderName(account.adapterType)} · '
+                  '${l10n.providerUiOpenInstance}',
+              chevron: true,
+              onTap: opening
+                  ? null
+                  : () => open(() async {
+                      await Navigator.push<void>(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => CloudAccountDetailsPage(
+                            ledger: controller,
+                            accountId: account.id,
+                          ),
                         ),
-                      ),
-                    );
-                  }),
+                      );
+                    }),
+            ),
           ),
         AppRow(
           key: const ValueKey('server-cloud-binding'),

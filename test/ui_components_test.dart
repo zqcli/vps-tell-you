@@ -875,4 +875,66 @@ void main() {
     expect(ProviderAvatar.initialsFor('搬瓦工'), '搬');
     expect(ProviderAvatar.initialsFor(''), '?');
   });
+
+  group('AppMetricStrip', () {
+    // The test font (Ahem) is one em wide per glyph, so keep the strings short.
+    const metrics = [
+      AppMetric(label: 'Val', value: '12.4'),
+      AppMetric(label: 'Day', value: '7 d'),
+      AppMetric(label: 'Avg', value: '0.13'),
+    ];
+    Future<void> pump(WidgetTester tester, double width, double scale) async {
+      tester.view.physicalSize = Size(width, 800);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: appTheme(),
+          builder: (context, child) => MediaQuery(
+            data: MediaQuery.of(context)
+                .copyWith(textScaler: TextScaler.linear(scale)),
+            child: child!,
+          ),
+          home: const Scaffold(
+            body: Align(
+              alignment: Alignment.topLeft,
+              child: Padding(
+                padding: EdgeInsets.all(16),
+                child: AppMetricStrip(metrics: metrics),
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+
+    testWidgets('wide: one row, equal columns, shared baselines', (
+      tester,
+    ) async {
+      await pump(tester, 390, 1);
+      final tops = [
+        for (final m in metrics) tester.getTopLeft(find.text(m.label)).dy,
+      ];
+      expect(tops.toSet(), hasLength(1));
+      final valueTops = [
+        for (final m in metrics) tester.getTopLeft(find.text(m.value)).dy,
+      ];
+      expect(valueTops.toSet(), hasLength(1));
+      expect(tester.takeException(), isNull);
+    });
+
+    for (final width in [320.0, 390.0]) {
+      testWidgets('${width}px at 2x text never clips or overflows', (
+        tester,
+      ) async {
+        await pump(tester, width, 2);
+        for (final m in metrics) {
+          final box = tester.getRect(find.text(m.value));
+          expect(box.right, lessThanOrEqualTo(width));
+        }
+        expect(tester.takeException(), isNull);
+      });
+    }
+  });
 }

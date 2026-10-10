@@ -3518,7 +3518,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get serverPanelLinkHelp =>
-      'Link a saved panel account and instance. Linking or refreshing does not change local hardware details. Edit them manually above.';
+      'Panel refreshes only update API observations; they never overwrite what you entered.';
 
   @override
   String get serverLinkPanel => 'Link panel account';
@@ -3563,15 +3563,15 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get serverUnknownCostHelp =>
-      'Unknown amounts are not treated as 0. Add cost details under Basic details / Edit.';
+      'An amount left blank is never counted as 0.';
 
   @override
   String get serverMeteredValueHelp =>
-      'Metered costs are monthly estimates and have no remaining value calculation. Maintain cost details by editing the server.';
+      'Metered billing is a monthly estimate; no remaining value is calculated.';
 
   @override
   String get serverRenewalValueHelp =>
-      'Values known service periods at the current renewal price. Historical payments are tracked separately and do not replace that price.';
+      'Remaining value is a reference at the renewal price, not a refund or resale price.';
 
   @override
   String get serverReminderPlan => 'Expiry reminders and usage plan';
@@ -3616,7 +3616,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get serverConnectionSafety =>
-      'Verify the host fingerprint on first connection. A changed fingerprint pauses sign-in. Check the target again before restarting or shutting down. Neither action stops provider billing.';
+      'Verify the host fingerprint on first connect. Shutdown or reboot does not stop provider billing.';
 
   @override
   String get serverNotes => 'Notes';
@@ -3710,6 +3710,15 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get uiDetailQuickPower => 'Power';
+
+  @override
+  String get r2DetailMetricValue => 'Value left';
+
+  @override
+  String get r2DetailMetricDays => 'Days left';
+
+  @override
+  String get r2DetailMetricDaily => 'Daily';
 
   @override
   String serverRequiredField(String p0) {
