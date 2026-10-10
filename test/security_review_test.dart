@@ -7,6 +7,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:vps_tell_you/core/app_theme.dart';
+import 'package:vps_tell_you/core/ui/ui.dart';
 import 'package:vps_tell_you/data/ledger_store.dart';
 import 'package:vps_tell_you/security/host_trust.dart';
 import 'package:vps_tell_you/security/host_trust_pages.dart';
@@ -261,7 +262,7 @@ void main() {
       await tester.ensureVisible(find.text('选择私钥文件'));
       await tester.tap(find.text('选择私钥文件'));
       await tester.pump();
-      final field = tester.widget<TextFormField>(
+      final field = tester.widget<AppTextField>(
         find.byKey(const ValueKey('credential-secret')),
       );
       await tester.tap(find.byTooltip('取消编辑凭据'));
@@ -409,8 +410,8 @@ void main() {
         tester,
         HostVerificationPage(ledger: ledger, identity: reviewIdentity()),
       );
-      await tester.ensureVisible(find.byType(CheckboxListTile));
-      await tester.tap(find.byType(CheckboxListTile));
+      await tester.ensureVisible(find.byType(AppSwitchRow));
+      await tester.tap(find.byType(AppSwitchRow));
       await tester.pump();
       await tester.ensureVisible(find.text('保存已核验的主机信任'));
       await tester.tap(find.text('保存已核验的主机信任'));

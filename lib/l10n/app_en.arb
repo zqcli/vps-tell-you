@@ -3319,6 +3319,18 @@
   "@securityRejectBack": {
     "description": "Security: RejectBack. App-authored UI text; do not translate user data or protocol tokens."
   },
+  "uiSecurityVerified": "Verified",
+  "@uiSecurityVerified": {
+    "description": "Security: status pill text for host key state."
+  },
+  "uiSecurityUnverified": "Not verified",
+  "@uiSecurityUnverified": {
+    "description": "Security: status pill text for host key state."
+  },
+  "uiSecurityKeyChanged": "Key changed",
+  "@uiSecurityKeyChanged": {
+    "description": "Security: status pill text for host key state."
+  },
   "securitySavingHostTrust": "Saving confirmed trust. You cannot go back until this finishes.",
   "@securitySavingHostTrust": {
     "description": "Security: SavingHostTrust. App-authored UI text; do not translate user data or protocol tokens."

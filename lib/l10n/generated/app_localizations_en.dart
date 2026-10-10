@@ -5352,6 +5352,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get securityRejectBack => 'Reject and go back';
 
   @override
+  String get uiSecurityVerified => 'Verified';
+
+  @override
+  String get uiSecurityUnverified => 'Not verified';
+
+  @override
+  String get uiSecurityKeyChanged => 'Key changed';
+
+  @override
   String get securitySavingHostTrust =>
       'Saving confirmed trust. You cannot go back until this finishes.';
 
