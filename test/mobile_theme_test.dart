@@ -15,6 +15,7 @@ import 'package:vps_tell_you/connections/ssh_service.dart';
 import 'package:vps_tell_you/connections/terminal_page.dart';
 import 'package:vps_tell_you/connections/terminal_widgets.dart';
 import 'package:vps_tell_you/core/app_theme.dart';
+import 'package:vps_tell_you/core/ui/ui.dart';
 import 'package:vps_tell_you/data/ledger_store.dart';
 import 'package:vps_tell_you/finance/finance_page.dart';
 import 'package:vps_tell_you/finance/payment_pages.dart';
@@ -97,7 +98,10 @@ Future<void> _reveal(WidgetTester tester, Finder finder) async {
 
 Future<void> _scanPage(WidgetTester tester, String page) async {
   expect(tester.takeException(), isNull, reason: '$page at top');
-  final finder = find.byType(Scrollable).first;
+  // The vertical page scroller (a horizontal chip row may come first).
+  final finder = find
+      .byWidgetPredicate((w) => w is Scrollable && w.axis == Axis.vertical)
+      .first;
   final scrollable = tester.state<ScrollableState>(finder);
   // Build every lazy section, including lower forms and warning controls.
   while (scrollable.position.extentAfter > 0) {
@@ -106,6 +110,9 @@ Future<void> _scanPage(WidgetTester tester, String page) async {
     await tester.pumpAndSettle();
     expect(tester.takeException(), isNull, reason: '$page while scrolling');
     if (scrollable.position.pixels <= before) {
+      // A large title snaps back when only its own collapse distance (less
+      // than half of the bar) is left; there is no further content then.
+      if (scrollable.position.extentAfter <= 52) break;
       fail('$page could not reach its remaining content');
     }
   }
@@ -437,22 +444,17 @@ void main() {
                 expect(terminal.readOnly, isTrue);
               }
               if (page.key == 'server list') {
-                final colors = appTheme(brightness: brightness).colorScheme;
-                final chips = tester.widgetList<ChoiceChip>(
-                  find.byType(ChoiceChip),
-                );
+                final p = appTheme(brightness: brightness)
+                    .extension<AppPalette>()!;
+                final chips = tester.widgetList<AppChip>(find.byType(AppChip));
                 expect(chips, isNotEmpty);
                 for (final chip in chips) {
-                  expect(
-                    chip.labelStyle!.color,
-                    chip.selected
-                        ? colors.onPrimaryContainer
-                        : colors.onSurface,
-                  );
-                  expect(
-                    _contrast(chip.side!.color, chip.backgroundColor!),
-                    greaterThanOrEqualTo(3),
-                  );
+                  // Selected: inverted fill; others sit on the surface (the
+                  // outlined filter chip on the page background).
+                  final (fg, bg) = chip.selected
+                      ? (p.surface, p.text)
+                      : (chip.outlined ? (p.text2, p.bg) : (p.text, p.surface));
+                  expect(_contrast(fg, bg), greaterThanOrEqualTo(4.5));
                 }
               }
               await _scanPage(tester, page.key);

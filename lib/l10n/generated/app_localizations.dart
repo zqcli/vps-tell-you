@@ -4924,6 +4924,36 @@ abstract class AppLocalizations {
   /// **'试试调整筛选；已归档记录可在设置中恢复。'**
   String get serverNoMatchesHelp;
 
+  /// No description provided for @uiServersDueSoon.
+  ///
+  /// In zh, this message translates to:
+  /// **'30 天内到期'**
+  String get uiServersDueSoon;
+
+  /// No description provided for @uiServersArchive.
+  ///
+  /// In zh, this message translates to:
+  /// **'归档'**
+  String get uiServersArchive;
+
+  /// No description provided for @uiServersReset.
+  ///
+  /// In zh, this message translates to:
+  /// **'重置'**
+  String get uiServersReset;
+
+  /// No description provided for @uiServersShowCount.
+  ///
+  /// In zh, this message translates to:
+  /// **'显示 {count} 台'**
+  String uiServersShowCount(int count);
+
+  /// No description provided for @uiServersRowHint.
+  ///
+  /// In zh, this message translates to:
+  /// **'左滑或长按服务器查看快捷操作'**
+  String get uiServersRowHint;
+
   /// No description provided for @serverClearFilters.
   ///
   /// In zh, this message translates to:

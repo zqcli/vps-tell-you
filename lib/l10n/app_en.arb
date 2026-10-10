@@ -2105,6 +2105,18 @@
   "serverNoUnarchived": "No unarchived servers",
   "serverNoMatches": "No matching records",
   "serverNoMatchesHelp": "Try adjusting the filters. Restore archived records in Settings.",
+  "uiServersDueSoon": "Due in 30 days",
+  "uiServersArchive": "Archive",
+  "uiServersReset": "Reset",
+  "uiServersShowCount": "{count, plural, one{Show 1 server} other{Show {count} servers}}",
+  "@uiServersShowCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "uiServersRowHint": "Swipe left or long-press a server for quick actions",
   "serverClearFilters": "Clear filters",
   "serverListObservationHelp": "Shows local details and the latest panel response, without continuous monitoring.\nDays to expiry use the device date. The next 30 days includes today and the following 29 days.",
   "serverCostsMissing": "Add cost details",
