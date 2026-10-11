@@ -363,3 +363,93 @@ QuoteResult? calculateQuote({
     premiumMinor: premium,
   );
 }
+
+/// The trailing run of payment-linked service periods of a server: the part of
+/// the term that a rollback would remove.
+class TermTail {
+  TermTail(this.paymentId, List<ServicePeriod> periods)
+    : periods = List.unmodifiable(periods);
+  final String paymentId;
+
+  /// Oldest first; contiguous; they all belong to [paymentId].
+  final List<ServicePeriod> periods;
+  LedgerDate get start => periods.first.start;
+  LedgerDate get end => periods.last.end;
+}
+
+/// The tail of [server]'s term, or null when there is none that can be removed
+/// safely: the server must be an active prepaid one whose last period ends at
+/// its due date, belongs to a payment (never the initial / inferred period) and
+/// every period of the run follows the server's cycle from its renewal anchor,
+/// so `renewalDate()` keeps working for the restored due date.
+///
+/// Edits that do not touch the term (name, favourite, notes, hardware, group,
+/// provider …) do not matter here: only the periods and the due date do.
+TermTail? tailTerm(ServerRecord server, Iterable<ServicePeriod> periods) {
+  final due = server.dueDate;
+  if (server.archived ||
+      server.billing != BillingKind.prepaid ||
+      due == null ||
+      !due.isValid ||
+      !validCycle(server.cycleMonths)) {
+    return null;
+  }
+  final sorted = periods.where((p) => p.serverId == server.id).toList()
+    ..sort((a, b) {
+      final byStart = a.start.compareTo(b.start);
+      return byStart != 0 ? byStart : a.end.compareTo(b.end);
+    });
+  if (sorted.isEmpty || sorted.last.end != due) return null;
+  final id = sorted.last.paymentId;
+  if (id == null) return null;
+  final run = <ServicePeriod>[];
+  for (var i = sorted.length - 1; i >= 0; i--) {
+    final p = sorted[i];
+    if (p.paymentId != id) break;
+    if (run.isNotEmpty && p.end != run.first.start) return null;
+    run.insert(0, p);
+  }
+  final anchor = server.renewalAnchorDate ?? due;
+  if (!anchor.isValid) return null;
+  for (final p in run) {
+    final months =
+        (p.start.year - anchor.year) * 12 + p.start.month - anchor.month;
+    if (months < 0 ||
+        months % server.cycleMonths != 0 ||
+        anchor.addMonths(months) != p.start ||
+        anchor.addMonths(months + server.cycleMonths) != p.end) {
+      return null;
+    }
+  }
+  return TermTail(id, run);
+}
+
+/// A live server renewal can be rolled back when its periods are exactly the
+/// tail of the term (see [tailTerm]) and it is the payment that produced them.
+bool canRollbackPayment(
+  ServerRecord? server,
+  Iterable<ServicePeriod> periods,
+  PaymentRecord payment,
+) {
+  if (server == null || payment.voided || payment.isAccount) return false;
+  final tail = tailTerm(server, periods);
+  return tail != null &&
+      tail.paymentId == payment.id &&
+      tail.periods.length == payment.cycleCount &&
+      tail.start == payment.from &&
+      tail.end == payment.until &&
+      payment.previousDue == payment.from;
+}
+
+/// The tail of [server]'s term when it belongs to a deleted (voided) payment:
+/// a rollback of the term is offered to the user ("repair").
+TermTail? orphanTail(
+  ServerRecord server,
+  Iterable<ServicePeriod> periods,
+  Iterable<PaymentRecord> payments,
+) {
+  final tail = tailTerm(server, periods);
+  if (tail == null) return null;
+  final owner = payments.where((p) => p.id == tail.paymentId).firstOrNull;
+  return owner != null && owner.voided ? tail : null;
+}

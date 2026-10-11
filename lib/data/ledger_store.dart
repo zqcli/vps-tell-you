@@ -787,39 +787,24 @@ class LedgerStore {
   /// so neither an old undo nor a repeated request can revive it; every total
   /// already excludes voided rows).
   ///
-  /// With [rollbackRenewal] the server due date and the periods this payment
-  /// added are restored, guarded by the server revision it produced. Without
-  /// it the periods stay linked to the (voided) payment so the term history is
-  /// unchanged; the backup validator accepts that shape.
+  /// With [rollbackRenewal] the term is rolled back as well (see
+  /// [_rollbackTail]). Without it the periods stay linked to the (voided)
+  /// payment so the term history is unchanged; the backup validator accepts
+  /// that shape and [rollbackOrphanTerm] can still remove them later.
   Future<void> _voidPayment(
     Transaction txn,
     PaymentRecord payment, {
     required bool rollbackRenewal,
+    int? expectedServerRevision,
   }) async {
     final now = clock().toUtc().toIso8601String();
     if (rollbackRenewal && !payment.isAccount) {
-      final count = await txn.update(
-        'servers',
-        {
-          'due_date': payment.previousDue.toString(),
-          'revision': payment.appliedServerRevision! + 1,
-          'updated_at': now,
-        },
-        where:
-            'id = ? AND revision = ? AND due_date = ? AND archived_at IS NULL',
-        whereArgs: [
-          payment.serverId,
-          payment.appliedServerRevision,
-          payment.until.toString(),
-        ],
-      );
-      if (count != 1) {
-        throw const LedgerConflict();
-      }
-      await txn.delete(
-        'service_periods',
-        where: 'payment_id = ?',
-        whereArgs: [payment.id],
+      await _rollbackTail(
+        txn,
+        serverId: payment.serverId!,
+        expectedRevision: expectedServerRevision,
+        paymentId: payment.id,
+        now: now,
       );
     }
     await txn.update(
@@ -829,6 +814,121 @@ class LedgerStore {
       whereArgs: [payment.id],
     );
   }
+
+  /// Removes the tail of a server's term and restores the due date to the
+  /// start of the removed span, in the caller's transaction.
+  ///
+  /// The rule is about the **term**, not the whole record: the server must be
+  /// active and prepaid, its last period must end at the due date and belong to
+  /// [paymentId] (for a live payment: be exactly the periods that payment
+  /// created; for a deleted one: be periods still linked to the voided
+  /// payment), and the run must follow the cycle from the renewal anchor. Edits
+  /// unrelated to the term (name, favourite, notes, hardware …) bump the
+  /// revision but never block it. [expectedRevision] is the revision the caller
+  /// displayed; any difference is a [LedgerConflict], as is every failed term
+  /// condition. The renewal anchor is left alone: the restored due date is the
+  /// anchor plus whole cycles, so `renewalDate()` keeps working.
+  Future<LedgerDate> _rollbackTail(
+    Transaction txn, {
+    required String serverId,
+    required int? expectedRevision,
+    required String paymentId,
+    required String now,
+  }) async {
+    final rows = await txn.query(
+      'servers',
+      where: 'id = ?',
+      whereArgs: [serverId],
+    );
+    if (rows.isEmpty) throw const LedgerConflict();
+    final server = ServerRecord.fromMap(rows.single);
+    if (expectedRevision != null && server.revision != expectedRevision) {
+      throw const LedgerConflict();
+    }
+    final periods = (await txn.query(
+      'service_periods',
+      where: 'server_id = ?',
+      whereArgs: [serverId],
+    )).map(ServicePeriod.fromMap).toList();
+    final tail = tailTerm(server, periods);
+    if (tail == null || tail.paymentId != paymentId) {
+      throw const LedgerConflict();
+    }
+    // A live payment must own exactly the tail; the periods are the proof.
+    final paymentRows = await txn.query(
+      'payments',
+      where: 'id = ?',
+      whereArgs: [paymentId],
+    );
+    if (paymentRows.isEmpty) throw const LedgerConflict();
+    final payment = PaymentRecord.fromMap(paymentRows.single);
+    if (!payment.voided &&
+        (tail.periods.length != payment.cycleCount ||
+            tail.start != payment.from ||
+            tail.end != payment.until ||
+            payment.previousDue != payment.from)) {
+      throw const LedgerConflict();
+    }
+    final restored = tail.start;
+    final count = await txn.update(
+      'servers',
+      {
+        'due_date': restored.toString(),
+        'revision': server.revision + 1,
+        'updated_at': now,
+      },
+      where: 'id = ? AND revision = ? AND due_date = ? AND archived_at IS NULL',
+      whereArgs: [serverId, server.revision, server.dueDate.toString()],
+    );
+    if (count != 1) throw const LedgerConflict();
+    await txn.delete(
+      'service_periods',
+      where: 'payment_id = ? AND server_id = ?',
+      whereArgs: [paymentId, serverId],
+    );
+    return restored;
+  }
+
+  /// Repairs a term left behind by a deleted payment: when the tail of the
+  /// server's term still belongs to a voided payment (delete-record-only, or
+  /// data from before rollbacks followed the term rule), removes that payment's
+  /// periods and restores the due date to their start. One payment per call;
+  /// call again for older ones. Never touches periods of live payments or the
+  /// initial / inferred period. Returns the restored due date.
+  /// [expectedRevision] is the revision the user saw; any difference, or no
+  /// such tail, is a [LedgerConflict].
+  Future<LedgerDate> rollbackOrphanTerm({
+    required String serverId,
+    required int expectedRevision,
+  }) => _db.transaction((txn) async {
+    final rows = await txn.query(
+      'servers',
+      where: 'id = ?',
+      whereArgs: [serverId],
+    );
+    if (rows.isEmpty) throw const LedgerConflict();
+    final server = ServerRecord.fromMap(rows.single);
+    final periods = (await txn.query(
+      'service_periods',
+      where: 'server_id = ?',
+      whereArgs: [serverId],
+    )).map(ServicePeriod.fromMap).toList();
+    final tail = tailTerm(server, periods);
+    if (tail == null) throw const LedgerConflict();
+    final owner = await txn.query(
+      'payments',
+      where: 'id = ? AND voided_at IS NOT NULL',
+      whereArgs: [tail.paymentId],
+    );
+    if (owner.isEmpty) throw const LedgerConflict();
+    return _rollbackTail(
+      txn,
+      serverId: serverId,
+      expectedRevision: expectedRevision,
+      paymentId: tail.paymentId,
+      now: clock().toUtc().toIso8601String(),
+    );
+  });
 
   /// Loads the stored row of [original] and requires it to be unchanged.
   /// Payments have no revision column, so the whole row is the version token.
@@ -905,12 +1005,16 @@ class LedgerStore {
   /// Deletes a payment record (soft: a voided tombstone, see [_voidPayment]).
   ///
   /// [rollbackRenewal] additionally restores the server's previous due date and
-  /// removes the periods this payment added; it requires the server to still
-  /// be exactly as the payment left it, otherwise [LedgerConflict]. Without it
-  /// the term stays as it is. Deleting an already deleted payment is a no-op.
+  /// removes the periods this payment added. That requires the payment to be
+  /// the tail of the server's term (see [_rollbackTail]); unrelated server
+  /// edits do not matter. [expectedServerRevision] is the server revision shown
+  /// to the user; a different revision is a [LedgerConflict]. Without
+  /// [rollbackRenewal] the term stays as it is. Deleting an already deleted
+  /// payment is a no-op.
   Future<void> deletePayment({
     required PaymentRecord original,
     bool rollbackRenewal = false,
+    int? expectedServerRevision,
   }) async {
     await _db.transaction((txn) async {
       final rows = await txn.query(
@@ -925,7 +1029,12 @@ class LedgerStore {
         return;
       }
       final current = await _currentPayment(txn, original);
-      await _voidPayment(txn, current, rollbackRenewal: rollbackRenewal);
+      await _voidPayment(
+        txn,
+        current,
+        rollbackRenewal: rollbackRenewal,
+        expectedServerRevision: expectedServerRevision,
+      );
     });
   }
 

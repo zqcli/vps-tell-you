@@ -20,6 +20,7 @@ import 'package:vps_tell_you/finance/finance_models.dart';
 import 'package:vps_tell_you/finance/fx_page.dart';
 import 'package:vps_tell_you/finance/payment_pages.dart';
 import 'package:vps_tell_you/servers/ledger_controller.dart';
+import 'package:vps_tell_you/servers/server_detail.dart';
 import 'package:vps_tell_you/servers/server_record.dart';
 
 import 'support/reminder_platform.dart';
@@ -208,7 +209,8 @@ void main() {
         final payment = await record();
         await store.setFavorite(controller.byId(server.id)!, true);
         await controller.refresh();
-        expect(controller.canUndoPayment(payment), isFalse);
+        // An unrelated edit bumps the revision but not the term.
+        expect(controller.canUndoPayment(payment), isTrue);
         final dueBefore = controller.byId(server.id)!.dueDate;
         final periodsBefore = controller.periodsFor(server.id).length;
         await mount(
@@ -262,9 +264,10 @@ void main() {
         );
         await tester.tap(find.byKey(const ValueKey('payment-delete')));
         await tester.pumpAndSettle();
-        expect(find.text('删除并回退续费'), findsOneWidget);
+        expect(find.text('删除并回退到期日（→ 2027-01-01）'), findsOneWidget);
         expect(find.text('仅删除记录，保留服务期'), findsOneWidget);
-        await tester.tap(find.text('删除并回退续费'));
+        expect(find.textContaining('到期日仍为 2029-01-01'), findsOneWidget);
+        await tester.tap(find.text('删除并回退到期日（→ 2027-01-01）'));
         await tester.pumpAndSettle();
         expect(controller.payments.single.voided, isTrue);
         expect(controller.byId(server.id)!.dueDate, before.dueDate);
@@ -289,28 +292,146 @@ void main() {
     });
 
     testWidgets(
-      'after the server changed only the record can be deleted, with the full warning',
+      'a renewal that is not the tail only deletes its record and names the later renewals',
       (tester) async {
         final payment = await record();
-        await store.setFavorite(controller.byId(server.id)!, true);
-        await controller.refresh();
+        await record(id: 'p2');
         await mount(
           tester,
           PaymentDetailPage(controller: controller, id: payment.id),
         );
         await tester.tap(find.byKey(const ValueKey('payment-delete')));
         await tester.pumpAndSettle();
-        expect(find.text('删除并回退续费'), findsNothing);
-        expect(find.textContaining('服务期与到期日保持不变'), findsOneWidget);
+        expect(find.textContaining('删除并回退到期日'), findsNothing);
+        expect(find.textContaining('之后还有续费记录（2029-01-01）'), findsOneWidget);
         await tester.tap(find.text('取消'));
         await tester.pumpAndSettle();
-        expect(controller.payments.single.voided, isFalse);
+        expect(controller.payments.every((p) => !p.voided), isTrue);
         await tester.tap(find.byKey(const ValueKey('payment-delete')));
         await tester.pumpAndSettle();
         await tester.tap(find.text('删除记录').last);
         await tester.pumpAndSettle();
+        expect(controller.payments.where((p) => p.voided).single.id, 'p1');
+        expect(controller.periodsFor(server.id).length, 3);
+        expect(
+          controller.byId(server.id)!.dueDate,
+          const LedgerDate(2029, 1, 1),
+        );
+      },
+    );
+
+    Future<void> book(WidgetTester tester) async {
+      await tester.tap(find.text('Open'));
+      await tester.pumpAndSettle();
+      await reveal(tester, find.byKey(const ValueKey('pay-confirm')));
+      await tester.tap(find.byKey(const ValueKey('pay-confirm')));
+      await tester.pump();
+      await reveal(tester, find.byKey(const ValueKey('save-payment')));
+      await tester.tap(find.byKey(const ValueKey('save-payment')));
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets(
+      'bug: delete after an unrelated edit rolls the due date back and the next payment starts there',
+      (tester) async {
+        await mount(
+          tester,
+          opener(PaymentForm(controller: controller, server: server)),
+        );
+        await book(tester);
+        final payment = controller.payments.single;
+        expect(
+          controller.byId(server.id)!.dueDate,
+          const LedgerDate(2028, 1, 1),
+        );
+        await store.setFavorite(controller.byId(server.id)!, true);
+        await controller.refresh();
+
+        await tester.pumpWidget(const SizedBox());
+        await mount(
+          tester,
+          PaymentDetailPage(controller: controller, id: payment.id),
+        );
+        await tester.tap(find.byKey(const ValueKey('payment-delete')));
+        await tester.pumpAndSettle();
+        await tester.tap(find.byKey(const ValueKey('payment-delete-rollback')));
+        await tester.pumpAndSettle();
+        final back = controller.byId(server.id)!;
+        expect(back.dueDate, const LedgerDate(2027, 1, 1));
+        expect(back.favorite, isTrue);
+        expect(controller.periodsFor(server.id).length, 1);
         expect(controller.payments.single.voided, isTrue);
-        expect(controller.periodsFor(server.id).length, 2);
+        expect(controller.orphanTermFor(back), isNull);
+
+        await tester.pumpWidget(const SizedBox());
+        await mount(
+          tester,
+          opener(PaymentForm(controller: controller, server: back)),
+        );
+        await book(tester);
+        final again = controller.payments.firstWhere((p) => !p.voided);
+        expect(again.from, const LedgerDate(2027, 1, 1));
+        expect(again.until, const LedgerDate(2028, 1, 1));
+        expect(
+          controller.byId(server.id)!.dueDate,
+          const LedgerDate(2028, 1, 1),
+        );
+      },
+    );
+
+    testWidgets(
+      'legacy: keep-only delete leaves a banner on the list and the detail page; repairing restores the due date',
+      (tester) async {
+        final payment = await record();
+        await store.setFavorite(controller.byId(server.id)!, true);
+        await controller.refresh();
+        // The old behaviour: record removed, term kept.
+        await store.deletePayment(original: payment);
+        await controller.refresh();
+        const banner = '2027-01-01 → 2028-01-01 的付款已删除。回退到期日到 2027-01-01？';
+
+        await mount(
+          tester,
+          ServerDetail(controller: controller, id: server.id),
+        );
+        await reveal(tester, find.byKey(const ValueKey('orphan-term-banner')));
+        expect(find.text(banner), findsOneWidget);
+
+        await tester.pumpWidget(const SizedBox());
+        await mount(
+          tester,
+          PaymentListPage(controller: controller, serverId: server.id),
+        );
+        expect(find.text(banner), findsOneWidget);
+        await tester.tap(find.byKey(const ValueKey('orphan-term-banner')));
+        await tester.pumpAndSettle();
+        expect(find.text('回退到期日？'), findsOneWidget);
+        await tester.tap(find.text('回退').last);
+        await tester.pumpAndSettle();
+        expect(find.text(banner), findsNothing);
+        expect(
+          controller.byId(server.id)!.dueDate,
+          const LedgerDate(2027, 1, 1),
+        );
+        expect(controller.periodsFor(server.id).length, 1);
+        expect(find.text('到期日已回退到 2027-01-01'), findsOneWidget);
+
+        await tester.pumpWidget(const SizedBox());
+        await mount(
+          tester,
+          opener(
+            PaymentForm(
+              controller: controller,
+              server: controller.byId(server.id)!,
+            ),
+          ),
+        );
+        await book(tester);
+        expect(
+          controller.byId(server.id)!.dueDate,
+          const LedgerDate(2028, 1, 1),
+        );
+        expect(controller.payments.where((p) => !p.voided).length, 1);
       },
     );
   });

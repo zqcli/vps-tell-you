@@ -53,6 +53,8 @@ void main() {
 
   Future<Database> raw() => databaseFactoryFfiNoIsolate.openDatabase(path);
   Future<ServerRecord> only() async => (await store.servers()).single;
+  Future<ServerRecord> only2(String id) async =>
+      (await store.servers()).firstWhere((s) => s.id == id);
   Future<PaymentRecord> pay(
     ServerRecord s, {
     String id = 'payment',
@@ -238,7 +240,7 @@ void main() {
     expect((await only()).dueDate, before.dueDate);
   });
 
-  test('durable monthly anchor survives separate commits/reopen; undo is atomic, tombstoned and conflict-safe', () async {
+  test('durable monthly anchor survives separate commits/reopen; undo is atomic, tombstoned and conflict-safe; unrelated edits do not block it', () async {
     await store.saveServer(
       fixture(cycle: 1, start: '2023-12-31', due: '2024-01-31'),
       isNew: true,
@@ -273,10 +275,16 @@ void main() {
     ); // Harmless repeated undo, cannot revive the key.
     final third = await pay(await only(), id: 'third');
     expect(third.until, d('2024-03-31'));
+    // An unrelated edit (favourite) bumps the revision but must not block the
+    // rollback of the tail renewal; a stale expected revision still does.
     await store.setFavorite(await only(), true);
     final changed = await only();
     await expectLater(
-      store.undoPayment('third'),
+      store.deletePayment(
+        original: third,
+        rollbackRenewal: true,
+        expectedServerRevision: changed.revision - 1,
+      ),
       throwsA(isA<LedgerConflict>()),
     );
     expect((await only()).toMap(), changed.toMap());
@@ -285,6 +293,14 @@ void main() {
       isFalse,
     );
     expect((await store.servicePeriods()).length, 3);
+    await store.undoPayment('third');
+    expect((await only()).dueDate, d('2024-02-29'));
+    expect((await only()).favorite, isTrue);
+    expect((await store.servicePeriods()).length, 2);
+    expect(
+      (await store.payments()).singleWhere((p) => p.id == 'third').voided,
+      isTrue,
+    );
     c.dispose();
   });
 
@@ -801,6 +817,343 @@ void main() {
         isEmpty,
       );
     });
+  });
+  group('term-based rollback and orphan repair', () {
+    Future<PaymentRecord> stored(String id) async =>
+        (await store.payments()).singleWhere((p) => p.id == id);
+    Future<List<ServicePeriod>> periodsOf(String serverId) async =>
+        (await store.servicePeriods())
+            .where((p) => p.serverId == serverId)
+            .toList();
+    Future<PaymentRecord> renew(String id, {int cycles = 1}) async =>
+        pay(await only(), id: id, cycles: cycles);
+    Future<void> unrelatedEdits() async {
+      await store.setFavorite(await only(), true);
+      await store.saveServer(
+        edit(await only(), {
+          'name': 'Renamed',
+          'notes': 'note',
+          'os': 'Debian',
+        }),
+        isNew: false,
+      );
+    }
+
+    test('tail renewal rolls back despite unrelated edits; booking again offers the restored due', () async {
+      await store.saveServer(fixture(), isNew: true);
+      final before = await only();
+      final payment = await renew('p1');
+      await unrelatedEdits();
+      final shown = await only();
+      expect(shown.revision, greaterThan(payment.appliedServerRevision!));
+      expect(
+        canRollbackPayment(shown, await store.servicePeriods(), payment),
+        isTrue,
+      );
+      await store.deletePayment(
+        original: payment,
+        rollbackRenewal: true,
+        expectedServerRevision: shown.revision,
+      );
+      final restored = await only();
+      expect(restored.dueDate, before.dueDate);
+      expect(restored.revision, shown.revision + 1);
+      expect(restored.name, 'Renamed');
+      expect(restored.favorite, isTrue);
+      expect(restored.renewalAnchorDate, before.dueDate);
+      expect((await periodsOf('s')).length, 1);
+      expect((await stored('p1')).voided, isTrue);
+      expect(renewalDate(restored, 1), d('2028-01-01'));
+      final again = await pay(restored, id: 'p2');
+      expect(again.from, d('2027-01-01'));
+      expect(again.until, d('2028-01-01'));
+      expect((await only()).dueDate, d('2028-01-01'));
+    });
+
+    test(
+      'a stale expected revision is a conflict and changes nothing',
+      () async {
+        await store.saveServer(fixture(), isNew: true);
+        final payment = await renew('p1');
+        final shown = await only();
+        await store.setFavorite(shown, true); // happens after the UI looked
+        final dbBefore = (await only()).toMap();
+        await expectLater(
+          store.deletePayment(
+            original: payment,
+            rollbackRenewal: true,
+            expectedServerRevision: shown.revision,
+          ),
+          throwsA(isA<LedgerConflict>()),
+        );
+        expect((await only()).toMap(), dbBefore);
+        expect((await stored('p1')).voided, isFalse);
+        expect((await periodsOf('s')).length, 2);
+      },
+    );
+
+    test('a non-tail renewal, an archived server and a changed cycle refuse the rollback', () async {
+      await store.saveServer(fixture(), isNew: true);
+      final first = await renew('first');
+      final second = await renew('second');
+      await unrelatedEdits();
+      var c = await only();
+      expect(
+        canRollbackPayment(c, await store.servicePeriods(), first),
+        isFalse,
+      );
+      expect(
+        canRollbackPayment(c, await store.servicePeriods(), second),
+        isTrue,
+      );
+      await expectLater(
+        store.deletePayment(original: first, rollbackRenewal: true),
+        throwsA(isA<LedgerConflict>()),
+      );
+      // Cycle edited behind the term's back (legacy / tampered data).
+      final db = await raw();
+      await db.update('servers', {'cycle_months': 6});
+      c = await only();
+      expect(
+        canRollbackPayment(c, await store.servicePeriods(), second),
+        isFalse,
+      );
+      await expectLater(
+        store.deletePayment(original: second, rollbackRenewal: true),
+        throwsA(isA<LedgerConflict>()),
+      );
+      await expectLater(
+        store.undoPayment('second'),
+        throwsA(isA<LedgerConflict>()),
+      );
+      expect((await only()).toMap(), c.toMap());
+      expect((await stored('second')).voided, isFalse);
+      expect((await periodsOf('s')).length, 3);
+      // Restore the cycle, then archive: still refused.
+      await db.update('servers', {'cycle_months': 12});
+      await store.archive(await only());
+      await expectLater(
+        store.deletePayment(original: second, rollbackRenewal: true),
+        throwsA(isA<LedgerConflict>()),
+      );
+      expect((await stored('second')).voided, isFalse);
+    });
+
+    test('a period ending after the payment refuses the rollback', () async {
+      await store.saveServer(fixture(), isNew: true);
+      final payment = await renew('p1');
+      final db = await raw();
+      // A period beyond the payment (e.g. restored from a foreign backup).
+      await db.insert('service_periods', {
+        'id': 'extra',
+        'server_id': 's',
+        'start_date': '2028-01-01',
+        'end_date': '2029-01-01',
+        'inferred': 0,
+        'payment_id': null,
+      });
+      final server = await only();
+      expect(
+        canRollbackPayment(server, await store.servicePeriods(), payment),
+        isFalse,
+      );
+      await expectLater(
+        store.deletePayment(original: payment, rollbackRenewal: true),
+        throwsA(isA<LedgerConflict>()),
+      );
+      await db.close();
+    });
+
+    test('anchor: rolling back the first renewal keeps a usable anchor; month-end cycles re-book exactly', () async {
+      await store.saveServer(
+        fixture(cycle: 1, start: '2023-12-31', due: '2024-01-31'),
+        isNew: true,
+      );
+      final first = await renew('first');
+      expect((await only()).dueDate, d('2024-02-29'));
+      await store.deletePayment(original: first, rollbackRenewal: true);
+      var server = await only();
+      expect(server.dueDate, d('2024-01-31'));
+      expect(server.renewalAnchorDate, d('2024-01-31'));
+      // With no payment period left the terms are editable again.
+      expect(
+        (await store.servicePeriods()).where((p) => p.paymentId != null),
+        isEmpty,
+      );
+      await renew('again');
+      await renew('third');
+      await renew('fourth');
+      expect((await only()).dueDate, d('2024-04-30'));
+      await store.undoPayment('fourth');
+      server = await only();
+      expect(server.dueDate, d('2024-03-31'));
+      expect(renewalDate(server, 1), d('2024-04-30'));
+    });
+
+    test('keep-only delete leaves an orphan tail that can be repaired, group by group', () async {
+      await store.saveServer(fixture(), isNew: true);
+      final first = await renew('first');
+      final second = await renew('second', cycles: 2);
+      await store.deletePayment(original: second); // legacy: keep periods
+      await store.deletePayment(original: first);
+      await unrelatedEdits();
+      var server = await only();
+      var c = LedgerController(store, clock: () => now);
+      await c.refresh();
+      var orphan = c.orphanTermFor(server)!;
+      expect(orphan.start, d('2028-01-01'));
+      expect(orphan.end, d('2030-01-01'));
+      expect(orphan.paymentId, 'second');
+      // Stale revision → conflict, nothing changes.
+      await expectLater(
+        store.rollbackOrphanTerm(
+          serverId: 's',
+          expectedRevision: server.revision - 1,
+        ),
+        throwsA(isA<LedgerConflict>()),
+      );
+      expect((await only()).toMap(), server.toMap());
+      expect(
+        await store.rollbackOrphanTerm(
+          serverId: 's',
+          expectedRevision: server.revision,
+        ),
+        d('2028-01-01'),
+      );
+      server = await only();
+      expect(server.dueDate, d('2028-01-01'));
+      expect(server.revision, greaterThan(0));
+      expect((await periodsOf('s')).map((p) => p.paymentId), [null, 'first']);
+      await c.refresh();
+      orphan = c.orphanTermFor(server)!;
+      expect(orphan.paymentId, 'first');
+      expect(
+        await store.rollbackOrphanTerm(
+          serverId: 's',
+          expectedRevision: server.revision,
+        ),
+        d('2027-01-01'),
+      );
+      server = await only();
+      expect(server.dueDate, d('2027-01-01'));
+      expect((await periodsOf('s')).single.paymentId, isNull);
+      await c.refresh();
+      expect(c.orphanTermFor(server), isNull);
+      // Only the initial period is left: nothing more to repair.
+      await expectLater(
+        store.rollbackOrphanTerm(
+          serverId: 's',
+          expectedRevision: server.revision,
+        ),
+        throwsA(isA<LedgerConflict>()),
+      );
+      final booked = await pay(server, id: 'new');
+      expect(booked.until, d('2028-01-01'));
+      c.dispose();
+    });
+
+    test(
+      'repair never touches live payments, inferred periods or other servers',
+      () async {
+        await store.saveServer(fixture(), isNew: true);
+        await store.saveServer(fixture(id: 'o', start: null), isNew: true);
+        final live = await pay(
+          (await store.servers()).firstWhere((s) => s.id == 's'),
+        );
+        await expectLater(
+          store.rollbackOrphanTerm(
+            serverId: 's',
+            expectedRevision: (await only2('s')).revision,
+          ),
+          throwsA(isA<LedgerConflict>()),
+        );
+        await expectLater(
+          store.rollbackOrphanTerm(
+            serverId: 'o',
+            expectedRevision: (await only2('o')).revision,
+          ),
+          throwsA(isA<LedgerConflict>()),
+        );
+        await expectLater(
+          store.rollbackOrphanTerm(serverId: 'missing', expectedRevision: 0),
+          throwsA(isA<LedgerConflict>()),
+        );
+        expect((await stored(live.id)).voided, isFalse);
+        expect((await periodsOf('s')).length, 2);
+        expect((await periodsOf('o')).single.inferred, isTrue);
+      },
+    );
+
+    test('a failed repair rolls everything back', () async {
+      await store.saveServer(fixture(), isNew: true);
+      final payment = await renew('p1');
+      await store.deletePayment(original: payment);
+      final server = await only();
+      final periods = (await periodsOf('s')).map((p) => p.toMap()).toList();
+      final db = await raw();
+      await db.execute(
+        "CREATE TRIGGER abort_repair BEFORE DELETE ON service_periods BEGIN SELECT RAISE(ABORT, 'test repair'); END",
+      );
+      await expectLater(
+        store.rollbackOrphanTerm(
+          serverId: 's',
+          expectedRevision: server.revision,
+        ),
+        throwsA(isA<DatabaseException>()),
+      );
+      expect((await only()).toMap(), server.toMap());
+      expect((await periodsOf('s')).map((p) => p.toMap()).toList(), periods);
+      await db.execute('DROP TRIGGER abort_repair');
+      await db.close();
+    });
+
+    test(
+      'a failed rollback delete is atomic too (server update undone)',
+      () async {
+        await store.saveServer(fixture(), isNew: true);
+        final payment = await renew('p1');
+        await unrelatedEdits();
+        final server = await only();
+        final db = await raw();
+        await db.execute(
+          "CREATE TRIGGER abort_rb BEFORE DELETE ON service_periods BEGIN SELECT RAISE(ABORT, 'test rollback'); END",
+        );
+        await expectLater(
+          store.deletePayment(
+            original: payment,
+            rollbackRenewal: true,
+            expectedServerRevision: server.revision,
+          ),
+          throwsA(isA<DatabaseException>()),
+        );
+        expect((await only()).toMap(), server.toMap());
+        expect((await stored('p1')).voided, isFalse);
+        await db.close();
+      },
+    );
+
+    test(
+      'undo tokens stay no-ops after repair; voided payments are never revived',
+      () async {
+        await store.saveServer(fixture(), isNew: true);
+        final payment = await renew('p1');
+        await store.deletePayment(original: payment);
+        final server = await only();
+        await store.rollbackOrphanTerm(
+          serverId: 's',
+          expectedRevision: server.revision,
+        );
+        final repaired = (await only()).toMap();
+        await store.undoPayment('p1');
+        await store.deletePayment(
+          original: await stored('p1'),
+          rollbackRenewal: true,
+        );
+        expect((await only()).toMap(), repaired);
+        await expectLater(pay(await only(), id: 'p1'), throwsArgumentError);
+        expect((await stored('p1')).voided, isTrue);
+      },
+    );
   });
 }
 

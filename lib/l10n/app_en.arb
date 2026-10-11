@@ -418,10 +418,64 @@
   "r2FinanceDelete": "Delete record",
   "r2FinanceDeleteTitle": "Delete this payment record?",
   "r2FinanceDeleteAccountMsg": "Deletes this bill from the local ledger only. No server is affected and nothing is refunded by the provider. It no longer counts towards payment totals.",
-  "r2FinanceDeleteKeepMsg": "Deletes the payment record only. Service periods and the due date stay as they are (the server has changed since, so the renewal cannot be rolled back). Nothing is refunded by the provider.",
-  "r2FinanceDeleteChoiceMsg": "You can also roll back this renewal (restore the previous due date and remove its service periods), or delete only the record and keep the periods and due date. Neither option refunds anything at the provider.",
-  "r2FinanceDeleteRollback": "Delete and roll back renewal",
+  "r2FinanceDeleteKeepMsg": "Deletes the payment record only. Service periods and the due date stay as they are. Nothing is refunded by the provider.",
   "r2FinanceDeleteKeep": "Delete record only, keep periods",
+  "r4PayDeleteRollbackTo": "Delete and roll due date back to {date}",
+  "@r4PayDeleteRollbackTo": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "r4PayDeleteChoiceMsg": "Deleting only the record keeps the service periods; the due date stays {until}. Nothing is refunded by the provider.",
+  "@r4PayDeleteChoiceMsg": {
+    "placeholders": {
+      "until": {
+        "type": "String"
+      }
+    }
+  },
+  "r4PayDeleteLaterMsg": "Later renewals exist ({dates}); delete them first to roll the due date back. This only deletes the record: periods and due date stay, and nothing is refunded by the provider.",
+  "@r4PayDeleteLaterMsg": {
+    "placeholders": {
+      "dates": {
+        "type": "String"
+      }
+    }
+  },
+  "r4PayOrphanBanner": "The payment for {from} → {until} was deleted. Roll the due date back to {from}?",
+  "@r4PayOrphanBanner": {
+    "placeholders": {
+      "from": {
+        "type": "String"
+      },
+      "until": {
+        "type": "String"
+      }
+    }
+  },
+  "r4PayOrphanTitle": "Roll back the due date?",
+  "r4PayOrphanMsg": "Removes the service periods left by the deleted payment ({from} → {until}) and restores the due date to {from}. Other payment records are not affected.",
+  "@r4PayOrphanMsg": {
+    "placeholders": {
+      "from": {
+        "type": "String"
+      },
+      "until": {
+        "type": "String"
+      }
+    }
+  },
+  "r4PayOrphanAction": "Roll back",
+  "r4PayOrphanDone": "Due date rolled back to {date}",
+  "@r4PayOrphanDone": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
   "r2FinanceDeleted": "Payment record deleted",
   "r2FinanceUpdated": "Payment record updated",
   "financeVoidBlocked": "Details have changed. Please check them. After later edits, payments, or archiving, an old record cannot overwrite the current details.",

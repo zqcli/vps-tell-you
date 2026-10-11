@@ -671,6 +671,7 @@ class ServerDetail extends StatelessWidget {
         card,
         if (footnotes.isNotEmpty)
           _Footnote(footnotes.join('\n'), top: 7, padding: 32),
+        OrphanTermBanner(controller: controller, server: s),
         ?rows,
       ],
     );

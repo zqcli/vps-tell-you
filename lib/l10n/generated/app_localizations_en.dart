@@ -1278,17 +1278,46 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get r2FinanceDeleteKeepMsg =>
-      'Deletes the payment record only. Service periods and the due date stay as they are (the server has changed since, so the renewal cannot be rolled back). Nothing is refunded by the provider.';
-
-  @override
-  String get r2FinanceDeleteChoiceMsg =>
-      'You can also roll back this renewal (restore the previous due date and remove its service periods), or delete only the record and keep the periods and due date. Neither option refunds anything at the provider.';
-
-  @override
-  String get r2FinanceDeleteRollback => 'Delete and roll back renewal';
+      'Deletes the payment record only. Service periods and the due date stay as they are. Nothing is refunded by the provider.';
 
   @override
   String get r2FinanceDeleteKeep => 'Delete record only, keep periods';
+
+  @override
+  String r4PayDeleteRollbackTo(String date) {
+    return 'Delete and roll due date back to $date';
+  }
+
+  @override
+  String r4PayDeleteChoiceMsg(String until) {
+    return 'Deleting only the record keeps the service periods; the due date stays $until. Nothing is refunded by the provider.';
+  }
+
+  @override
+  String r4PayDeleteLaterMsg(String dates) {
+    return 'Later renewals exist ($dates); delete them first to roll the due date back. This only deletes the record: periods and due date stay, and nothing is refunded by the provider.';
+  }
+
+  @override
+  String r4PayOrphanBanner(String from, String until) {
+    return 'The payment for $from → $until was deleted. Roll the due date back to $from?';
+  }
+
+  @override
+  String get r4PayOrphanTitle => 'Roll back the due date?';
+
+  @override
+  String r4PayOrphanMsg(String from, String until) {
+    return 'Removes the service periods left by the deleted payment ($from → $until) and restores the due date to $from. Other payment records are not affected.';
+  }
+
+  @override
+  String get r4PayOrphanAction => 'Roll back';
+
+  @override
+  String r4PayOrphanDone(String date) {
+    return 'Due date rolled back to $date';
+  }
 
   @override
   String get r2FinanceDeleted => 'Payment record deleted';
