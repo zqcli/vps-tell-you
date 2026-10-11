@@ -2772,6 +2772,205 @@
   "sshCredentialChanged": "Credentials changed. Reconnect.",
   "sshAuthenticationTimeout": "SSH authentication timed out",
   "sshTerminalOpenTimeout": "Opening the SSH terminal timed out",
+  "r3SftpOpenTimeout": "Opening SFTP timed out",
+  "r3SftpUnavailable": "The server did not open SFTP. It may be disabled for this account.",
+  "r3SftpTitle": "SFTP files",
+  "r3SftpRowSubtitle": "Browse and transfer files",
+  "r3SftpUp": "Parent folder",
+  "r3SftpRoot": "Root",
+  "r3SftpNewFolder": "New folder",
+  "r3SftpNewFile": "New empty file",
+  "r3SftpUpload": "Upload from phone",
+  "r3SftpSort": "Sort by",
+  "r3SftpSortName": "Name",
+  "r3SftpSortSize": "Size",
+  "r3SftpSortTime": "Modified",
+  "r3SftpShowHidden": "Show hidden files",
+  "r3SftpSearch": "Search this folder",
+  "r3SftpEmpty": "This folder is empty",
+  "r3SftpNoMatch": "No matches",
+  "r3SftpShowMore": "Show more ({count})",
+  "@r3SftpShowMore": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "r3SftpMore": "More",
+  "r3SftpAdd": "New",
+  "r3SftpOpen": "Open",
+  "r3SftpView": "View / edit",
+  "r3SftpDownload": "Download",
+  "r3SftpRename": "Rename / move",
+  "r3SftpCopyPath": "Copy path",
+  "r3SftpDelete": "Delete",
+  "r3SftpPathCopied": "Path copied",
+  "r3SftpNameLabel": "Name",
+  "r3SftpFolderLabel": "Folder",
+  "r3SftpCreate": "Create",
+  "r3SftpRenameTitle": "Rename or move",
+  "r3SftpRenameHint": "Change the name to rename, or the folder to move.",
+  "r3SftpInvalidName": "Enter a name without “/”",
+  "r3SftpInvalidFolder": "Folder must be an absolute path starting with /",
+  "r3SftpDeleteTitle": "Delete “{name}”?",
+  "@r3SftpDeleteTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "r3SftpDeleteFileMessage": "The file is deleted permanently on the server.",
+  "r3SftpDeleteFolderMessage": "The empty folder is deleted permanently on the server.",
+  "r3SftpDeleteRecursiveTitle": "Delete folder and everything in it?",
+  "r3SftpDeleteRecursiveMessage": "“{name}” is not empty. Everything inside is deleted permanently (recursive delete, links are not followed). Folders with more than {max} items are refused and nothing is deleted.",
+  "@r3SftpDeleteRecursiveMessage": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "r3SftpDeleteRecursiveAction": "Delete everything",
+  "r3SftpDeleted": "Deleted",
+  "r3SftpDeletedCount": "Deleted {count} items",
+  "@r3SftpDeletedCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "r3SftpCreated": "Created",
+  "r3SftpRenamed": "Renamed",
+  "r3SftpErrPermission": "Permission denied",
+  "r3SftpErrNotFound": "Not found. It may have been moved or deleted.",
+  "r3SftpErrExists": "Already exists",
+  "r3SftpErrNotEmpty": "The folder is not empty",
+  "r3SftpErrWrongType": "Wrong item type for this action",
+  "r3SftpErrCancelled": "Cancelled",
+  "r3SftpErrTooLarge": "Too large to open as text (limit 512 KiB)",
+  "r3SftpErrNotText": "Not a UTF-8 text file",
+  "r3SftpErrTooMany": "Too many items (limit {max}); nothing was deleted",
+  "@r3SftpErrTooMany": {
+    "placeholders": {
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "r3SftpErrInvalidPath": "Invalid path",
+  "r3SftpErrTimeout": "The server took too long to respond",
+  "r3SftpErrConnectionLost": "The SFTP connection ended",
+  "r3SftpErrUnavailable": "SFTP is not available on this connection",
+  "r3SftpErrLocalFile": "Could not read or write the local file",
+  "r3SftpErrFailed": "The operation failed",
+  "r3SftpEditorSize": "{size} · UTF-8",
+  "@r3SftpEditorSize": {
+    "placeholders": {
+      "size": {
+        "type": "String"
+      }
+    }
+  },
+  "r3SftpSaved": "Saved",
+  "r3SftpUnsavedTitle": "Discard unsaved changes?",
+  "r3SftpUnsavedMessage": "Your edits have not been written to the server.",
+  "r3SftpDiscard": "Discard",
+  "r3SftpConflictTitle": "File changed on the server",
+  "r3SftpConflictMessage": "It was modified after you opened it. Overwrite the server version with yours?",
+  "r3SftpOverwrite": "Overwrite",
+  "r3SftpSkip": "Skip",
+  "r3SftpExistsTitle": "“{name}” already exists",
+  "@r3SftpExistsTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "r3SftpExistsMessage": "Overwrite the file on the server, or skip this upload?",
+  "r3SftpLargeTitle": "Large file",
+  "r3SftpLargeMessage": "“{name}” is {size}. It can take a long time and use a lot of data. Continue?",
+  "@r3SftpLargeMessage": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "size": {
+        "type": "String"
+      }
+    }
+  },
+  "r3SftpContinue": "Continue",
+  "r3SftpTransfers": "Transfers",
+  "r3SftpTransferUp": "Uploading {name}",
+  "@r3SftpTransferUp": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "r3SftpTransferDown": "Downloading {name}",
+  "@r3SftpTransferDown": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "r3SftpTransferCount": "{index} of {total}",
+  "@r3SftpTransferCount": {
+    "placeholders": {
+      "index": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "r3SftpStateQueued": "Waiting",
+  "r3SftpStateDone": "Done",
+  "r3SftpStateFailed": "Failed",
+  "r3SftpStateCancelled": "Cancelled",
+  "r3SftpStateSkipped": "Skipped",
+  "r3SftpCancelAll": "Cancel all",
+  "r3SftpClearFinished": "Clear finished",
+  "r3SftpShare": "Share",
+  "r3SftpSavedTo": "Saved to {path}",
+  "@r3SftpSavedTo": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
+  "r3SftpDownloadsWhere": "Downloads are saved in the app folder “SFTP Downloads”. Use Share to keep a copy elsewhere, for example in Files.",
+  "r3SftpCloseBusyTitle": "Transfers in progress",
+  "r3SftpCloseBusyMessage": "Closing cancels the running and waiting transfers.",
+  "r3SftpCloseBusyAction": "Cancel transfers and close",
+  "r3SftpBackgroundClosed": "SFTP was closed because the app went to the background",
+  "r3SftpConnecting": "Connecting SFTP…",
+  "r3SftpConnectFailed": "Could not open SFTP",
+  "r3SftpRetry": "Try again",
+  "r3SftpChooseCredential": "Choose a credential in the SSH settings first.",
+  "r3SftpSshSettings": "SSH settings",
+  "r3SftpLoadFailed": "Could not load this folder",
+  "r3SftpClose": "Close",
+  "r3SftpUploadsQueued": "{count} uploads queued",
+  "@r3SftpUploadsQueued": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "sshAuthenticationFailed": "SSH authentication failed. Check the username and credentials.",
   "sshHostNotTrusted": "The host was not trusted. Authentication did not start.",
   "sshConnectionIncomplete": "SSH connection did not complete. Check the address, network, and service.",

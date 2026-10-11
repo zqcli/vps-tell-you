@@ -33,6 +33,15 @@
 	<string>验证本人后，短时显示本机保存的登录密码。</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<!-- SFTP downloads are saved to Documents/SFTP Downloads. These two keys
+	     make the app's Documents folder visible in the Files app (On My
+	     iPhone > vps tell you) so downloaded files can be opened or moved
+	     without the share sheet. Documents holds only user exports; the ledger
+	     database lives in Application Support, which stays hidden. -->
+	<key>UIFileSharingEnabled</key>
+	<true/>
+	<key>LSSupportsOpeningDocumentsInPlace</key>
+	<true/>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

@@ -12,6 +12,7 @@ import '../security/host_trust.dart';
 import '../security/key_import.dart';
 import '../security/security_controller.dart';
 import '../security/security_models.dart';
+import 'sftp_session.dart';
 import 'ssh_host_key_capture.dart';
 import 'ssh_session_output.dart';
 import 'ssh_socket_connector.dart';
@@ -112,6 +113,22 @@ abstract class SshService extends ChangeNotifier {
     required HostVerifier verifyHost,
     KeyPassphraseRequester? requestKeyPassphrase,
   });
+
+  /// Opens the SFTP subsystem as another channel on this service's live SSH
+  /// connection (no re-authentication, nothing written to the shell). Closing
+  /// the returned session closes only that channel.
+  Future<SftpSession> openSftpOnClient() async =>
+      throw const SftpException(SftpErrorKind.unavailable);
+
+  /// Connects without a shell and returns an SFTP session. Host verification,
+  /// credential loading and authentication are exactly those of [connect].
+  /// Closing the session closes the connection. Failures throw the same
+  /// [SecurityFailure] messages as [connect] (also readable from [error]).
+  Future<SftpSession> connectSftp(
+    SshTarget requested, {
+    required HostVerifier verifyHost,
+    KeyPassphraseRequester? requestKeyPassphrase,
+  }) async => throw const SftpException(SftpErrorKind.unavailable);
   void write(String value);
   void resize(int columns, int rows);
   void disconnect();
@@ -122,7 +139,10 @@ abstract class SshService extends ChangeNotifier {
 }
 
 /// A page owns one service and one target. No retries, input replay, command
-/// queue, agent forwarding, SFTP, or persistent/background connection manager.
+/// queue, agent forwarding, or persistent/background connection manager. SFTP
+/// is either a channel on the live connection ([openSftpOnClient]) or a
+/// shell-less connection of its own ([connectSftp]); both reuse this class's
+/// single verification/authentication path.
 class NativeSshService extends SshService {
   NativeSshService({
     required this.security,
@@ -162,6 +182,7 @@ class NativeSshService extends SshService {
   Timer? _phaseTimer;
   SshSessionOutput? _sessionOutput;
   bool _draining = false;
+  final _sftpSessions = <SftpSession>{};
 
   bool _active(int epoch) => !_disposed && epoch == generation;
   void _guard(int epoch) {
@@ -193,9 +214,102 @@ class NativeSshService extends SshService {
     SshTarget requested, {
     required HostVerifier verifyHost,
     KeyPassphraseRequester? requestKeyPassphrase,
+  }) => _connect<void>(requested, verifyHost, requestKeyPassphrase, _openShell);
+
+  @override
+  Future<SftpSession> connectSftp(
+    SshTarget requested, {
+    required HostVerifier verifyHost,
+    KeyPassphraseRequester? requestKeyPassphrase,
   }) async {
+    final session = await _connect<SftpSession>(
+      requested,
+      verifyHost,
+      requestKeyPassphrase,
+      (epoch, client) async {
+        _deadline(
+          epoch,
+          sessionTimeout + const Duration(seconds: 2),
+          LocalizedText((l10n) => l10n.r3SftpOpenTimeout),
+        );
+        late final DartSshSftpSession opened;
+        try {
+          opened = await DartSshSftpSession.open(
+            client,
+            ownsClient: true,
+            openTimeout: sessionTimeout,
+            onClose: () {
+              _sftpSessions.remove(opened);
+              // User-initiated close of a standalone SFTP connection.
+              if (!_disposed && connected) {
+                disconnect();
+              }
+            },
+          );
+        } on SftpException catch (problem) {
+          throw SecurityFailure(
+            LocalizedText(
+              (l10n) => problem.kind == SftpErrorKind.timeout
+                  ? l10n.r3SftpOpenTimeout
+                  : problem.kind == SftpErrorKind.unavailable
+                  ? l10n.r3SftpUnavailable
+                  : l10n.sshConnectionIncomplete,
+            ),
+          );
+        }
+        if (!_active(epoch)) {
+          await opened.close();
+          return null;
+        }
+        _sftpSessions.add(opened);
+        _phaseTimer?.cancel();
+        _setStatus(SshStatus.connected);
+        return opened;
+      },
+    );
+    if (session == null) {
+      throw localizedError == null
+          ? SecurityFailure(
+              LocalizedText((l10n) => l10n.sshConnectionCancelled),
+            )
+          : SecurityFailure(localizedError);
+    }
+    return session;
+  }
+
+  @override
+  Future<SftpSession> openSftpOnClient() async {
+    final client = _client;
+    final epoch = generation;
+    if (!connected ||
+        _disposed ||
+        _draining ||
+        client == null ||
+        client.isClosed) {
+      throw const SftpException(SftpErrorKind.connectionLost);
+    }
+    late final DartSshSftpSession opened;
+    opened = await DartSshSftpSession.open(
+      client,
+      openTimeout: sessionTimeout,
+      onClose: () => _sftpSessions.remove(opened),
+    );
+    if (!_active(epoch) || client.isClosed) {
+      await opened.close();
+      throw const SftpException(SftpErrorKind.connectionLost);
+    }
+    _sftpSessions.add(opened);
+    return opened;
+  }
+
+  Future<T?> _connect<T>(
+    SshTarget requested,
+    HostVerifier verifyHost,
+    KeyPassphraseRequester? requestKeyPassphrase,
+    Future<T?> Function(int epoch, SSHClient client) openChannel,
+  ) async {
     if (_disposed) {
-      return;
+      return null;
     }
     _release();
     final epoch = ++generation;
@@ -267,7 +381,7 @@ class NativeSshService extends SshService {
       final native = await connection.socket;
       if (!_active(epoch)) {
         native.destroy();
-        return;
+        return null;
       }
       final socket = CapturedSshSocket(native);
       _deadline(
@@ -400,38 +514,7 @@ class NativeSshService extends SshService {
       );
       await client.authenticated;
       _guard(epoch);
-      _deadline(
-        epoch,
-        sessionTimeout,
-        LocalizedText((l10n) => l10n.sshTerminalOpenTimeout),
-      );
-      final session = await client.shell(
-        pty: SSHPtyConfig(width: _columns, height: _rows),
-      );
-      if (!_active(epoch)) {
-        session.close();
-        return;
-      }
-      _session = session;
-      _phaseTimer?.cancel();
-      _sessionOutput = SshSessionOutput(
-        session.stdout,
-        session.stderr,
-        onData: (text) {
-          if (_active(epoch)) {
-            _output.add(text);
-          }
-        },
-      );
-      unawaited(
-        session.done.then(
-          (_) => _finishRemoteClose(epoch),
-          onError: (Object _) => _finishRemoteClose(epoch),
-        ),
-      );
-      _setStatus(SshStatus.connected);
-      // A resize may have arrived while the PTY request was awaiting its reply.
-      session.resizeTerminal(_columns, _rows);
+      return await openChannel(epoch, client);
     } catch (problem) {
       if (_active(epoch)) {
         _fail(
@@ -445,6 +528,42 @@ class NativeSshService extends SshService {
         );
       }
     }
+    return null;
+  }
+
+  Future<void> _openShell(int epoch, SSHClient client) async {
+    _deadline(
+      epoch,
+      sessionTimeout,
+      LocalizedText((l10n) => l10n.sshTerminalOpenTimeout),
+    );
+    final session = await client.shell(
+      pty: SSHPtyConfig(width: _columns, height: _rows),
+    );
+    if (!_active(epoch)) {
+      session.close();
+      return;
+    }
+    _session = session;
+    _phaseTimer?.cancel();
+    _sessionOutput = SshSessionOutput(
+      session.stdout,
+      session.stderr,
+      onData: (text) {
+        if (_active(epoch)) {
+          _output.add(text);
+        }
+      },
+    );
+    unawaited(
+      session.done.then(
+        (_) => _finishRemoteClose(epoch),
+        onError: (Object _) => _finishRemoteClose(epoch),
+      ),
+    );
+    _setStatus(SshStatus.connected);
+    // A resize may have arrived while the PTY request was awaiting its reply.
+    session.resizeTerminal(_columns, _rows);
   }
 
   Future<void> _finishRemoteClose(int epoch) async {
@@ -561,6 +680,11 @@ class NativeSshService extends SshService {
     _draining = false;
     _session?.close();
     _session = null;
+    final sftpSessions = _sftpSessions.toList();
+    _sftpSessions.clear();
+    for (final sftp in sftpSessions) {
+      unawaited(sftp.close());
+    }
     final client = _client;
     _client = null;
     if (client != null) {

@@ -1,6 +1,8 @@
 import '../l10n/localized_message.dart';
 import '../l10n/locale_preference.dart';
 
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -12,6 +14,8 @@ import '../core/app_theme.dart';
 import '../core/ui/ui.dart';
 import '../core/value_types.dart';
 import '../connections/connection_pages.dart';
+import '../connections/sftp_connect_page.dart';
+import '../connections/terminal_page.dart' show SshServiceFactory;
 import '../connections/tcp_test_page.dart';
 import '../finance/calculator_page.dart';
 import '../finance/finance_math.dart';
@@ -27,9 +31,17 @@ import 'server_form.dart';
 import 'server_record.dart';
 
 class ServerDetail extends StatelessWidget {
-  const ServerDetail({super.key, required this.controller, required this.id});
+  const ServerDetail({
+    super.key,
+    required this.controller,
+    required this.id,
+    this.sshServiceFactory,
+  });
   final LedgerController controller;
   final String id;
+
+  /// Test seam for the SSH/SFTP connection service.
+  final SshServiceFactory? sshServiceFactory;
 
   Future<void> archive(BuildContext context, ServerRecord record) async {
     final confirmed = await showAppConfirm(
@@ -340,6 +352,31 @@ class ServerDetail extends StatelessWidget {
           title: l10n.uiDetailQuickSsh,
           chevron: true,
           onTap: () => connect(power: false),
+        ),
+      ),
+      _RowFrame(
+        dimmed: blocked || noSsh,
+        child: AppRow(
+          key: const ValueKey('server-sftp'),
+          icon: Icons.folder_open_rounded,
+          iconColor: AppTints.orange,
+          title: l10n.r3SftpTitle,
+          chevron: true,
+          onTap: () {
+            if (blocked) return blockedNotice();
+            if (noSsh) {
+              _offerSshSetup(context, s);
+              return;
+            }
+            unawaited(
+              openSftpForServer(
+                context,
+                ledger: controller,
+                serverId: s.id,
+                serviceFactory: sshServiceFactory,
+              ),
+            );
+          },
         ),
       ),
       _RowFrame(

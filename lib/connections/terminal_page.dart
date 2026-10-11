@@ -10,12 +10,15 @@ import 'package:xterm/xterm.dart';
 
 import '../core/app_theme.dart';
 import '../core/ui/ui.dart';
-import '../security/host_trust.dart';
 import '../security/security_controller.dart';
 import '../servers/ledger_controller.dart';
 import 'power_action.dart';
 import 'snippet.dart';
+import 'sftp_pages.dart';
+import 'sftp_session.dart';
+import 'sftp_support.dart';
 import 'snippet_pages.dart';
+import 'ssh_prompts.dart';
 import 'ssh_service.dart';
 import 'terminal_widgets.dart';
 import 'terminal_font.dart';
@@ -53,7 +56,7 @@ class _TerminalPageState extends State<TerminalPage>
   bool _commandsOpen = false, _exitPromptOpen = false;
   bool _ctrlArmed = false, _scrolledBack = false, _hasOutput = false;
   int _inputEpoch = 0, _commandsEpoch = 0;
-  bool _pasteBusy = false;
+  bool _pasteBusy = false, _sftpOpening = false;
   ModalRoute<dynamic>? _commandsRoute;
   Size? _lastViewportSize;
   double? _lastViewportTextSize;
@@ -657,6 +660,46 @@ class _TerminalPageState extends State<TerminalPage>
     }
   }
 
+  /// File manager as a page sheet on this live connection: a new SFTP channel
+  /// next to the shell. No bytes go to the shell, nothing reconnects, the draft
+  /// stays. Closing the sheet closes only that channel; if the session ends
+  /// meanwhile, [_leave] pops everything stacked above the terminal.
+  Future<void> _openSftp() async {
+    if (_sftpOpening || !_connected) {
+      return;
+    }
+    _closeKeyboard();
+    final generation = _service.generation;
+    setState(() => _sftpOpening = true);
+    SftpSession? session;
+    try {
+      session = await _service.openSftpOnClient();
+    } on SftpException catch (problem) {
+      if (mounted) {
+        showAppToast(
+          _dialogContext,
+          sftpErrorText(_dialogContext.l10n, problem),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _sftpOpening = false);
+      }
+    }
+    if (session == null) {
+      return;
+    }
+    if (!mounted || _closing || generation != _service.generation) {
+      await session.close();
+      return;
+    }
+    await showAppModal<void>(
+      _dialogContext,
+      builder: (_) => SftpBrowserPage(session: session!, sheet: true),
+    );
+    await session.close();
+  }
+
   Future<void> _connectionDetails() async {
     _closeKeyboard();
     await showDialog<void>(
@@ -850,98 +893,18 @@ class _TerminalPageState extends State<TerminalPage>
     _ => false,
   };
 
-  Future<String?> _requestKeyPassphrase(String credentialName) async {
-    if (!mounted || _closing || _targetInvalidated) {
-      return null;
-    }
-    final generation = _service.generation;
-    final value = await showDialog<String>(
-      context: _dialogContext,
-      barrierDismissible: false,
-      builder: (_) => _KeyPassphraseDialog(
-        service: _service,
-        generation: generation,
-        credentialName: credentialName,
-        target: widget.target.label,
-      ),
-    );
-    if (!mounted ||
-        _closing ||
-        _targetInvalidated ||
-        _service.generation != generation ||
-        _service.status != SshStatus.connecting) {
-      return null;
-    }
-    return value;
-  }
+  late final SshPrompts _prompts = SshPrompts(
+    service: _service,
+    dialogContext: () => _dialogContext,
+    targetLabel: widget.target.label,
+    isOpen: () => mounted && !_closing && !_targetInvalidated,
+  );
 
-  Future<bool> _verifyHost(HostVerificationRequest request) async {
-    if (!mounted) {
-      return false;
-    }
-    final generation = _service.generation;
-    bool current() =>
-        mounted &&
-        !_closing &&
-        !_targetInvalidated &&
-        _service.generation == generation &&
-        _service.status == SshStatus.verifying;
-    if (request.status == HostTrustStatus.changed) {
-      final start = await showDialog<bool>(
-        context: _dialogContext,
-        builder: (_) => AlertDialog(
-          scrollable: true,
-          title: Text(context.l10n.terminalHostChanged),
-          content: SingleChildScrollView(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                SelectableText(
-                  '${request.identity.host}:${request.identity.port}',
-                ),
-                InfoNote(context.l10n.terminalHostChangedHelp),
-                Text(context.l10n.terminalPreviousFingerprint),
-                SelectableText(
-                  request.previous?.fingerprint ??
-                      context.l10n.terminalNoRecord,
-                ),
-                const SizedBox(height: 12),
-                Text(context.l10n.terminalCurrentFingerprint),
-                SelectableText(request.identity.fingerprint),
-              ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context, false),
-              child: Text(context.l10n.terminalRejectConnection),
-            ),
-            OutlinedButton(
-              onPressed: () => Navigator.pop(context, true),
-              child: Text(context.l10n.terminalReverify),
-            ),
-          ],
-        ),
-      );
-      if (start != true || !current()) {
-        return false;
-      }
-    }
-    if (!mounted || !current()) {
-      return false;
-    }
-    final accepted = await showDialog<bool>(
-      context: _dialogContext,
-      barrierDismissible: false,
-      builder: (_) => _VerifyHostDialog(
-        service: _service,
-        generation: generation,
-        request: request,
-      ),
-    );
-    return accepted == true && current();
-  }
+  Future<String?> _requestKeyPassphrase(String credentialName) =>
+      _prompts.requestKeyPassphrase(credentialName);
+
+  Future<bool> _verifyHost(HostVerificationRequest request) =>
+      _prompts.verifyHost(request);
 
   Future<void> _insertSnippet() async {
     final generation = _service.generation;
@@ -1226,6 +1189,8 @@ class _TerminalPageState extends State<TerminalPage>
                         unawaited(_connectionDetails());
                       case 'paste':
                         unawaited(_pasteToDraft().then((_) {}));
+                      case 'sftp':
+                        unawaited(_openSftp());
                       case 'scheme':
                         unawaited(showTerminalSchemePicker(_dialogContext));
                       case 'reboot':
@@ -1247,6 +1212,13 @@ class _TerminalPageState extends State<TerminalPage>
                       child: Builder(
                         builder: (context) =>
                             Text(context.l10n.terminalPasteIntoDraft),
+                      ),
+                    ),
+                    PopupMenuItem(
+                      value: 'sftp',
+                      enabled: _connected && !_sftpOpening,
+                      child: Builder(
+                        builder: (context) => Text(context.l10n.r3SftpTitle),
                       ),
                     ),
                     PopupMenuItem(
@@ -1566,232 +1538,6 @@ class _MobileTerminalKeys implements TerminalInputHandler {
     }
     return const _CursorKeysHandler()(event) ?? defaultInputHandler(event);
   }
-}
-
-class _VerifyHostDialog extends StatefulWidget {
-  const _VerifyHostDialog({
-    required this.service,
-    required this.generation,
-    required this.request,
-  });
-  final SshService service;
-  final int generation;
-  final HostVerificationRequest request;
-  @override
-  State<_VerifyHostDialog> createState() => _VerifyHostDialogState();
-}
-
-class _VerifyHostDialogState extends State<_VerifyHostDialog> {
-  bool _checked = false, _submitted = false;
-  @override
-  Widget build(BuildContext context) => ListenableBuilder(
-    listenable: widget.service,
-    builder: (context, _) {
-      final identity = widget.request.identity;
-      final changed = widget.request.status == HostTrustStatus.changed;
-      final current =
-          widget.service.generation == widget.generation &&
-          widget.service.status == SshStatus.verifying;
-      return AlertDialog(
-        scrollable: true,
-        title: Text(
-          changed
-              ? context.l10n.terminalVerifyNewHost
-              : context.l10n.terminalFirstHostVerification,
-        ),
-        content: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              SelectableText(
-                context.l10n.terminalHostIdentity(
-                  (identity.host).toString(),
-                  (identity.port).toString(),
-                  (identity.algorithm).toString(),
-                ),
-              ),
-              const SizedBox(height: 12),
-              Text(context.l10n.terminalSha256Fingerprint),
-              SelectableText(identity.fingerprint),
-              const SizedBox(height: 12),
-              Text(context.l10n.terminalFullHostKey),
-              SelectableText('${identity.algorithm} ${identity.publicKey}'),
-              InfoNote(context.l10n.terminalIndependentVerificationHelp),
-              CheckboxListTile(
-                key: const ValueKey('host-verified-check'),
-                contentPadding: EdgeInsets.zero,
-                value: _checked,
-                onChanged: current
-                    ? (value) => setState(() => _checked = value == true)
-                    : null,
-                title: Text(
-                  changed
-                      ? context.l10n.terminalConfirmedChangedHost
-                      : context.l10n.terminalConfirmedHost,
-                ),
-              ),
-              if (!current) InfoNote(context.l10n.terminalVerificationExpired),
-            ],
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: Text(context.l10n.terminalRejectConnection),
-          ),
-          FilledButton(
-            key: const ValueKey('host-verified-confirm'),
-            onPressed: current && _checked && !_submitted
-                ? () {
-                    setState(() => _submitted = true);
-                    Navigator.pop(context, true);
-                  }
-                : null,
-            child: Text(
-              changed
-                  ? context.l10n.terminalUpdateTrustAuthenticate
-                  : context.l10n.terminalTrustAuthenticate,
-            ),
-          ),
-        ],
-      );
-    },
-  );
-}
-
-/// The passphrase exists only in this obscured prompt and the current connect
-/// call. It is never copied to metadata, draft, terminal output or a store.
-class _KeyPassphraseDialog extends StatefulWidget {
-  const _KeyPassphraseDialog({
-    required this.service,
-    required this.generation,
-    required this.credentialName,
-    required this.target,
-  });
-  final SshService service;
-  final int generation;
-  final String credentialName, target;
-  @override
-  State<_KeyPassphraseDialog> createState() => _KeyPassphraseDialogState();
-}
-
-class _KeyPassphraseDialogState extends State<_KeyPassphraseDialog>
-    with WidgetsBindingObserver {
-  final _input = TextEditingController();
-  bool _submitted = false, _invalidated = false;
-
-  bool get _current =>
-      !_invalidated &&
-      !_submitted &&
-      widget.service.generation == widget.generation &&
-      widget.service.status == SshStatus.connecting;
-
-  @override
-  void initState() {
-    super.initState();
-    widget.service.addListener(_serviceChanged);
-    WidgetsBinding.instance.addObserver(this);
-  }
-
-  void _serviceChanged() {
-    if (!mounted || _submitted) {
-      return;
-    }
-    if (widget.service.generation != widget.generation ||
-        widget.service.status != SshStatus.connecting) {
-      _input.clear();
-      setState(() => _invalidated = true);
-    }
-  }
-
-  @override
-  void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state != AppLifecycleState.resumed) {
-      _input.clear();
-      if (mounted) {
-        setState(() => _invalidated = true);
-      }
-    }
-  }
-
-  void _cancel() {
-    _input.clear();
-    Navigator.pop(context);
-  }
-
-  void _submit() {
-    if (!_current || _input.text.isEmpty) {
-      return;
-    }
-    final value = _input.text;
-    _submitted = true;
-    _input.clear();
-    Navigator.pop(context, value);
-  }
-
-  @override
-  void dispose() {
-    widget.service.removeListener(_serviceChanged);
-    WidgetsBinding.instance.removeObserver(this);
-    _input.clear();
-    _input.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) => AlertDialog(
-    scrollable: true,
-    title: Text(context.l10n.terminalUnlockKey),
-    content: SingleChildScrollView(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          SelectableText(
-            escapedCommandPreview(widget.target),
-            textDirection: TextDirection.ltr,
-          ),
-          Text(
-            context.l10n.terminalCredentialName(
-              (escapedCommandPreview(widget.credentialName)).toString(),
-            ),
-          ),
-          InfoNote(context.l10n.terminalPassphraseHelp),
-          TextField(
-            key: const ValueKey('ssh-key-passphrase'),
-            controller: _input,
-            enabled: _current,
-            obscureText: true,
-            enableIMEPersonalizedLearning: false,
-            autocorrect: false,
-            enableSuggestions: false,
-            enableInteractiveSelection: false,
-            autofillHints: const [],
-            maxLength: 4096,
-            textInputAction: TextInputAction.done,
-            onChanged: (_) => setState(() {}),
-            onSubmitted: (_) => _submit(),
-            decoration: InputDecoration(
-              labelText: context.l10n.terminalKeyPassphrase,
-            ),
-          ),
-          if (_invalidated) InfoNote(context.l10n.terminalPassphraseCleared),
-        ],
-      ),
-    ),
-    actions: [
-      TextButton(
-        onPressed: _cancel,
-        child: Text(context.l10n.terminalCancelConnection),
-      ),
-      FilledButton(
-        key: const ValueKey('ssh-key-passphrase-submit'),
-        onPressed: _current && _input.text.isNotEmpty ? _submit : null,
-        child: Text(context.l10n.terminalUnlockOnce),
-      ),
-    ],
-  );
 }
 
 /// xterm 4.0.0's public default keytab handler mistakenly consults keypad mode

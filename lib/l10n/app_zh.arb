@@ -3240,6 +3240,205 @@
   "sshCredentialChanged": "凭据已变化，请重新连接",
   "sshAuthenticationTimeout": "SSH 认证超时",
   "sshTerminalOpenTimeout": "SSH 终端开启超时",
+  "r3SftpOpenTimeout": "SFTP 开启超时",
+  "r3SftpUnavailable": "服务器未开启 SFTP，可能已对该账户禁用",
+  "r3SftpTitle": "SFTP 文件",
+  "r3SftpRowSubtitle": "浏览与传输文件",
+  "r3SftpUp": "上级目录",
+  "r3SftpRoot": "根目录",
+  "r3SftpNewFolder": "新建文件夹",
+  "r3SftpNewFile": "新建空文件",
+  "r3SftpUpload": "从手机上传",
+  "r3SftpSort": "排序方式",
+  "r3SftpSortName": "名称",
+  "r3SftpSortSize": "大小",
+  "r3SftpSortTime": "修改时间",
+  "r3SftpShowHidden": "显示隐藏文件",
+  "r3SftpSearch": "搜索当前文件夹",
+  "r3SftpEmpty": "此文件夹为空",
+  "r3SftpNoMatch": "没有匹配项",
+  "r3SftpShowMore": "显示更多（{count}）",
+  "@r3SftpShowMore": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "r3SftpMore": "更多",
+  "r3SftpAdd": "新建",
+  "r3SftpOpen": "打开",
+  "r3SftpView": "查看 / 编辑",
+  "r3SftpDownload": "下载",
+  "r3SftpRename": "重命名 / 移动",
+  "r3SftpCopyPath": "复制路径",
+  "r3SftpDelete": "删除",
+  "r3SftpPathCopied": "已复制路径",
+  "r3SftpNameLabel": "名称",
+  "r3SftpFolderLabel": "所在文件夹",
+  "r3SftpCreate": "创建",
+  "r3SftpRenameTitle": "重命名或移动",
+  "r3SftpRenameHint": "改名称即重命名，改文件夹即移动。",
+  "r3SftpInvalidName": "名称不能为空或包含“/”",
+  "r3SftpInvalidFolder": "文件夹须为以 / 开头的绝对路径",
+  "r3SftpDeleteTitle": "删除“{name}”？",
+  "@r3SftpDeleteTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "r3SftpDeleteFileMessage": "将在服务器上永久删除该文件。",
+  "r3SftpDeleteFolderMessage": "将在服务器上永久删除这个空文件夹。",
+  "r3SftpDeleteRecursiveTitle": "删除文件夹及其全部内容？",
+  "r3SftpDeleteRecursiveMessage": "“{name}”不为空，其中所有内容将被永久递归删除（不跟随链接）。超过 {max} 项的文件夹会被拒绝，且不会删除任何内容。",
+  "@r3SftpDeleteRecursiveMessage": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "r3SftpDeleteRecursiveAction": "全部删除",
+  "r3SftpDeleted": "已删除",
+  "r3SftpDeletedCount": "已删除 {count} 项",
+  "@r3SftpDeletedCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "r3SftpCreated": "已创建",
+  "r3SftpRenamed": "已重命名",
+  "r3SftpErrPermission": "没有权限",
+  "r3SftpErrNotFound": "未找到，可能已被移动或删除",
+  "r3SftpErrExists": "已存在同名项目",
+  "r3SftpErrNotEmpty": "文件夹不为空",
+  "r3SftpErrWrongType": "该项目类型不适用于此操作",
+  "r3SftpErrCancelled": "已取消",
+  "r3SftpErrTooLarge": "文件过大，无法作为文本打开（上限 512 KiB）",
+  "r3SftpErrNotText": "不是 UTF-8 文本文件",
+  "r3SftpErrTooMany": "项目过多（上限 {max}），未删除任何内容",
+  "@r3SftpErrTooMany": {
+    "placeholders": {
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "r3SftpErrInvalidPath": "路径无效",
+  "r3SftpErrTimeout": "服务器响应超时",
+  "r3SftpErrConnectionLost": "SFTP 连接已断开",
+  "r3SftpErrUnavailable": "此连接无法使用 SFTP",
+  "r3SftpErrLocalFile": "无法读写本地文件",
+  "r3SftpErrFailed": "操作失败",
+  "r3SftpEditorSize": "{size} · UTF-8",
+  "@r3SftpEditorSize": {
+    "placeholders": {
+      "size": {
+        "type": "String"
+      }
+    }
+  },
+  "r3SftpSaved": "已保存",
+  "r3SftpUnsavedTitle": "放弃未保存的修改？",
+  "r3SftpUnsavedMessage": "修改尚未写入服务器。",
+  "r3SftpDiscard": "放弃",
+  "r3SftpConflictTitle": "服务器上的文件已变化",
+  "r3SftpConflictMessage": "它在你打开后被修改过。要用你的版本覆盖服务器上的版本吗？",
+  "r3SftpOverwrite": "覆盖",
+  "r3SftpSkip": "跳过",
+  "r3SftpExistsTitle": "“{name}”已存在",
+  "@r3SftpExistsTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "r3SftpExistsMessage": "覆盖服务器上的文件，还是跳过这次上传？",
+  "r3SftpLargeTitle": "大文件",
+  "r3SftpLargeMessage": "“{name}”大小为 {size}，可能耗时较长并消耗大量流量。继续吗？",
+  "@r3SftpLargeMessage": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "size": {
+        "type": "String"
+      }
+    }
+  },
+  "r3SftpContinue": "继续",
+  "r3SftpTransfers": "传输",
+  "r3SftpTransferUp": "正在上传 {name}",
+  "@r3SftpTransferUp": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "r3SftpTransferDown": "正在下载 {name}",
+  "@r3SftpTransferDown": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "r3SftpTransferCount": "第 {index} / {total} 项",
+  "@r3SftpTransferCount": {
+    "placeholders": {
+      "index": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "r3SftpStateQueued": "等待中",
+  "r3SftpStateDone": "完成",
+  "r3SftpStateFailed": "失败",
+  "r3SftpStateCancelled": "已取消",
+  "r3SftpStateSkipped": "已跳过",
+  "r3SftpCancelAll": "全部取消",
+  "r3SftpClearFinished": "清除已完成",
+  "r3SftpShare": "分享",
+  "r3SftpSavedTo": "已保存到 {path}",
+  "@r3SftpSavedTo": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
+  "r3SftpDownloadsWhere": "下载的文件保存在应用文件夹“SFTP Downloads”中。可用“分享”另存到其他位置，例如“文件”。",
+  "r3SftpCloseBusyTitle": "传输进行中",
+  "r3SftpCloseBusyMessage": "关闭将取消进行中和等待中的传输。",
+  "r3SftpCloseBusyAction": "取消传输并关闭",
+  "r3SftpBackgroundClosed": "应用进入后台，SFTP 已关闭",
+  "r3SftpConnecting": "正在连接 SFTP…",
+  "r3SftpConnectFailed": "无法打开 SFTP",
+  "r3SftpRetry": "重试",
+  "r3SftpChooseCredential": "请先在 SSH 设置中选择凭据。",
+  "r3SftpSshSettings": "SSH 设置",
+  "r3SftpLoadFailed": "无法加载此文件夹",
+  "r3SftpClose": "关闭",
+  "r3SftpUploadsQueued": "已加入上传队列：{count} 个",
+  "@r3SftpUploadsQueued": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "sshAuthenticationFailed": "SSH 认证失败，请检查用户名和凭据",
   "sshHostNotTrusted": "主机未获信任，未进行认证",
   "sshConnectionIncomplete": "SSH 连接未完成，请检查地址、网络与服务",

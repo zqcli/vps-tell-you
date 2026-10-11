@@ -26,3 +26,14 @@ The fixture emits JSON events which contain only synthetic test usernames,
 public host keys, PTY sizes, accepted/rejected authentication outcomes and
 synthetic terminal bytes. It does not log passwords, passphrases or private
 keys. Exec channel requests are rejected unconditionally.
+
+## Optional SFTP subsystem
+
+`server.py --sftp-root DIR` (Dart: `SshFixture.start(sftpRoot: dir)`) enables
+an `sftp` subsystem on its own channel, next to the unchanged fake shell. It is
+AsyncSSH's `SFTPServer` chroot-confined to `DIR` (a per-test temporary
+directory), so `..` and absolute paths cannot leave it, and it is loopback
+only. It reads and writes real files under `DIR` only; there is still no
+shell or exec. Without the flag the `sftp` subsystem is refused. Events:
+`sftp_open` / `sftp_closed` (no paths or contents). Used by
+`test/sftp_session_test.dart`.

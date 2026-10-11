@@ -4407,6 +4407,330 @@ class AppLocalizationsZh extends AppLocalizations {
   String get sshTerminalOpenTimeout => 'SSH 终端开启超时';
 
   @override
+  String get r3SftpOpenTimeout => 'SFTP 开启超时';
+
+  @override
+  String get r3SftpUnavailable => '服务器未开启 SFTP，可能已对该账户禁用';
+
+  @override
+  String get r3SftpTitle => 'SFTP 文件';
+
+  @override
+  String get r3SftpRowSubtitle => '浏览与传输文件';
+
+  @override
+  String get r3SftpUp => '上级目录';
+
+  @override
+  String get r3SftpRoot => '根目录';
+
+  @override
+  String get r3SftpNewFolder => '新建文件夹';
+
+  @override
+  String get r3SftpNewFile => '新建空文件';
+
+  @override
+  String get r3SftpUpload => '从手机上传';
+
+  @override
+  String get r3SftpSort => '排序方式';
+
+  @override
+  String get r3SftpSortName => '名称';
+
+  @override
+  String get r3SftpSortSize => '大小';
+
+  @override
+  String get r3SftpSortTime => '修改时间';
+
+  @override
+  String get r3SftpShowHidden => '显示隐藏文件';
+
+  @override
+  String get r3SftpSearch => '搜索当前文件夹';
+
+  @override
+  String get r3SftpEmpty => '此文件夹为空';
+
+  @override
+  String get r3SftpNoMatch => '没有匹配项';
+
+  @override
+  String r3SftpShowMore(int count) {
+    return '显示更多（$count）';
+  }
+
+  @override
+  String get r3SftpMore => '更多';
+
+  @override
+  String get r3SftpAdd => '新建';
+
+  @override
+  String get r3SftpOpen => '打开';
+
+  @override
+  String get r3SftpView => '查看 / 编辑';
+
+  @override
+  String get r3SftpDownload => '下载';
+
+  @override
+  String get r3SftpRename => '重命名 / 移动';
+
+  @override
+  String get r3SftpCopyPath => '复制路径';
+
+  @override
+  String get r3SftpDelete => '删除';
+
+  @override
+  String get r3SftpPathCopied => '已复制路径';
+
+  @override
+  String get r3SftpNameLabel => '名称';
+
+  @override
+  String get r3SftpFolderLabel => '所在文件夹';
+
+  @override
+  String get r3SftpCreate => '创建';
+
+  @override
+  String get r3SftpRenameTitle => '重命名或移动';
+
+  @override
+  String get r3SftpRenameHint => '改名称即重命名，改文件夹即移动。';
+
+  @override
+  String get r3SftpInvalidName => '名称不能为空或包含“/”';
+
+  @override
+  String get r3SftpInvalidFolder => '文件夹须为以 / 开头的绝对路径';
+
+  @override
+  String r3SftpDeleteTitle(String name) {
+    return '删除“$name”？';
+  }
+
+  @override
+  String get r3SftpDeleteFileMessage => '将在服务器上永久删除该文件。';
+
+  @override
+  String get r3SftpDeleteFolderMessage => '将在服务器上永久删除这个空文件夹。';
+
+  @override
+  String get r3SftpDeleteRecursiveTitle => '删除文件夹及其全部内容？';
+
+  @override
+  String r3SftpDeleteRecursiveMessage(String name, int max) {
+    return '“$name”不为空，其中所有内容将被永久递归删除（不跟随链接）。超过 $max 项的文件夹会被拒绝，且不会删除任何内容。';
+  }
+
+  @override
+  String get r3SftpDeleteRecursiveAction => '全部删除';
+
+  @override
+  String get r3SftpDeleted => '已删除';
+
+  @override
+  String r3SftpDeletedCount(int count) {
+    return '已删除 $count 项';
+  }
+
+  @override
+  String get r3SftpCreated => '已创建';
+
+  @override
+  String get r3SftpRenamed => '已重命名';
+
+  @override
+  String get r3SftpErrPermission => '没有权限';
+
+  @override
+  String get r3SftpErrNotFound => '未找到，可能已被移动或删除';
+
+  @override
+  String get r3SftpErrExists => '已存在同名项目';
+
+  @override
+  String get r3SftpErrNotEmpty => '文件夹不为空';
+
+  @override
+  String get r3SftpErrWrongType => '该项目类型不适用于此操作';
+
+  @override
+  String get r3SftpErrCancelled => '已取消';
+
+  @override
+  String get r3SftpErrTooLarge => '文件过大，无法作为文本打开（上限 512 KiB）';
+
+  @override
+  String get r3SftpErrNotText => '不是 UTF-8 文本文件';
+
+  @override
+  String r3SftpErrTooMany(int max) {
+    return '项目过多（上限 $max），未删除任何内容';
+  }
+
+  @override
+  String get r3SftpErrInvalidPath => '路径无效';
+
+  @override
+  String get r3SftpErrTimeout => '服务器响应超时';
+
+  @override
+  String get r3SftpErrConnectionLost => 'SFTP 连接已断开';
+
+  @override
+  String get r3SftpErrUnavailable => '此连接无法使用 SFTP';
+
+  @override
+  String get r3SftpErrLocalFile => '无法读写本地文件';
+
+  @override
+  String get r3SftpErrFailed => '操作失败';
+
+  @override
+  String r3SftpEditorSize(String size) {
+    return '$size · UTF-8';
+  }
+
+  @override
+  String get r3SftpSaved => '已保存';
+
+  @override
+  String get r3SftpUnsavedTitle => '放弃未保存的修改？';
+
+  @override
+  String get r3SftpUnsavedMessage => '修改尚未写入服务器。';
+
+  @override
+  String get r3SftpDiscard => '放弃';
+
+  @override
+  String get r3SftpConflictTitle => '服务器上的文件已变化';
+
+  @override
+  String get r3SftpConflictMessage => '它在你打开后被修改过。要用你的版本覆盖服务器上的版本吗？';
+
+  @override
+  String get r3SftpOverwrite => '覆盖';
+
+  @override
+  String get r3SftpSkip => '跳过';
+
+  @override
+  String r3SftpExistsTitle(String name) {
+    return '“$name”已存在';
+  }
+
+  @override
+  String get r3SftpExistsMessage => '覆盖服务器上的文件，还是跳过这次上传？';
+
+  @override
+  String get r3SftpLargeTitle => '大文件';
+
+  @override
+  String r3SftpLargeMessage(String name, String size) {
+    return '“$name”大小为 $size，可能耗时较长并消耗大量流量。继续吗？';
+  }
+
+  @override
+  String get r3SftpContinue => '继续';
+
+  @override
+  String get r3SftpTransfers => '传输';
+
+  @override
+  String r3SftpTransferUp(String name) {
+    return '正在上传 $name';
+  }
+
+  @override
+  String r3SftpTransferDown(String name) {
+    return '正在下载 $name';
+  }
+
+  @override
+  String r3SftpTransferCount(int index, int total) {
+    return '第 $index / $total 项';
+  }
+
+  @override
+  String get r3SftpStateQueued => '等待中';
+
+  @override
+  String get r3SftpStateDone => '完成';
+
+  @override
+  String get r3SftpStateFailed => '失败';
+
+  @override
+  String get r3SftpStateCancelled => '已取消';
+
+  @override
+  String get r3SftpStateSkipped => '已跳过';
+
+  @override
+  String get r3SftpCancelAll => '全部取消';
+
+  @override
+  String get r3SftpClearFinished => '清除已完成';
+
+  @override
+  String get r3SftpShare => '分享';
+
+  @override
+  String r3SftpSavedTo(String path) {
+    return '已保存到 $path';
+  }
+
+  @override
+  String get r3SftpDownloadsWhere =>
+      '下载的文件保存在应用文件夹“SFTP Downloads”中。可用“分享”另存到其他位置，例如“文件”。';
+
+  @override
+  String get r3SftpCloseBusyTitle => '传输进行中';
+
+  @override
+  String get r3SftpCloseBusyMessage => '关闭将取消进行中和等待中的传输。';
+
+  @override
+  String get r3SftpCloseBusyAction => '取消传输并关闭';
+
+  @override
+  String get r3SftpBackgroundClosed => '应用进入后台，SFTP 已关闭';
+
+  @override
+  String get r3SftpConnecting => '正在连接 SFTP…';
+
+  @override
+  String get r3SftpConnectFailed => '无法打开 SFTP';
+
+  @override
+  String get r3SftpRetry => '重试';
+
+  @override
+  String get r3SftpChooseCredential => '请先在 SSH 设置中选择凭据。';
+
+  @override
+  String get r3SftpSshSettings => 'SSH 设置';
+
+  @override
+  String get r3SftpLoadFailed => '无法加载此文件夹';
+
+  @override
+  String get r3SftpClose => '关闭';
+
+  @override
+  String r3SftpUploadsQueued(int count) {
+    return '已加入上传队列：$count 个';
+  }
+
+  @override
   String get sshAuthenticationFailed => 'SSH 认证失败，请检查用户名和凭据';
 
   @override

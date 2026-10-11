@@ -29,6 +29,9 @@ class SshFixture {
   static Future<SshFixture> start({
     String hostKey = 'ed25519.fixture',
     Duration delayAuth = Duration.zero,
+
+    /// Enables the SFTP subsystem, confined to this existing directory.
+    String? sftpRoot,
   }) async {
     final python = Platform.environment['VPS_SSH_FIXTURE_PYTHON'] ?? 'python3';
     final process = await Process.start(python, [
@@ -38,6 +41,7 @@ class SshFixture {
       hostKey,
       '--delay-auth',
       '${delayAuth.inMilliseconds / 1000}',
+      if (sftpRoot != null) ...['--sftp-root', sftpRoot],
     ]);
     final fixture = SshFixture._(process);
     try {
