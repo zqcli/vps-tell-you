@@ -4796,6 +4796,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get terminalPasteIntoDraft => 'Paste into draft';
 
   @override
+  String get r3TermColorScheme => 'Color scheme';
+
+  @override
+  String get r3TermSchemeDark => 'Dark';
+
+  @override
+  String get r3TermSchemeLight => 'Light';
+
+  @override
+  String get r3TermSchemeFootnote =>
+      'Display only; nothing is sent to the server. Resets when the app restarts.';
+
+  @override
   String get terminalReconnectClear => 'Reconnect and clear draft';
 
   @override

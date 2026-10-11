@@ -81,6 +81,7 @@ class _TerminalPageState extends State<TerminalPage>
   void initState() {
     super.initState();
     registerTerminalFontLicense();
+    terminalSchemeChoice.addListener(_schemeChanged);
     WidgetsBinding.instance.addObserver(this);
     _draft = TextEditingController(text: widget.initialDraft);
     _terminalScroll.addListener(_scrollChanged);
@@ -102,6 +103,15 @@ class _TerminalPageState extends State<TerminalPage>
           _connect();
         }
       });
+    }
+  }
+
+  TerminalScheme get _scheme => terminalSchemeChoice.value;
+
+  // Colours only: no bytes are sent and the session is not touched.
+  void _schemeChanged() {
+    if (mounted) {
+      setState(() {});
     }
   }
 
@@ -600,7 +610,7 @@ class _TerminalPageState extends State<TerminalPage>
     });
     final sent = await showModalBottomSheet<bool>(
       context: _dialogContext,
-      backgroundColor: terminalChromeColor,
+      backgroundColor: _scheme.chrome,
       clipBehavior: Clip.antiAlias,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
@@ -609,16 +619,19 @@ class _TerminalPageState extends State<TerminalPage>
       useSafeArea: true,
       builder: (sheetContext) {
         _commandsRoute = ModalRoute.of(sheetContext);
-        return Theme(
-          data: appTheme(brightness: Brightness.dark),
-          child: TerminalCommandSheet(
-            draft: _draft,
-            service: _service,
-            insertSnippet: _insertSnippet,
-            replaceDraft: _replaceDraft,
-            sendDraft: _sendDraft,
-            pasteDraft: _pasteToDraft,
-            target: widget.target.label,
+        return TerminalSchemeScope(
+          scheme: _scheme,
+          child: Theme(
+            data: appTheme(brightness: _scheme.brightness),
+            child: TerminalCommandSheet(
+              draft: _draft,
+              service: _service,
+              insertSnippet: _insertSnippet,
+              replaceDraft: _replaceDraft,
+              sendDraft: _sendDraft,
+              pasteDraft: _pasteToDraft,
+              target: widget.target.label,
+            ),
           ),
         );
       },
@@ -788,6 +801,7 @@ class _TerminalPageState extends State<TerminalPage>
 
   @override
   void dispose() {
+    terminalSchemeChoice.removeListener(_schemeChanged);
     WidgetsBinding.instance.removeObserver(this);
     _service.removeListener(_changed);
     _terminal.onOutput = null;
@@ -1029,20 +1043,16 @@ class _TerminalPageState extends State<TerminalPage>
   Widget _statusPill(BuildContext context) {
     final (Color fg, Color bg) = switch (_service.status) {
       SshStatus.connected => (
-        mobileTerminalTheme.green,
-        mobileTerminalTheme.green.withValues(alpha: .15),
+        _scheme.theme.green,
+        _scheme.theme.green.withValues(alpha: .15),
       ),
-      SshStatus.connecting ||
-      SshStatus.verifying ||
-      SshStatus.authenticating => (
-        mobileTerminalTheme.yellow,
-        mobileTerminalTheme.yellow.withValues(alpha: .15),
-      ),
+      SshStatus.connecting || SshStatus.verifying || SshStatus.authenticating =>
+        (_scheme.theme.yellow, _scheme.theme.yellow.withValues(alpha: .15)),
       SshStatus.failed => (
-        mobileTerminalTheme.red,
-        mobileTerminalTheme.red.withValues(alpha: .15),
+        _scheme.theme.red,
+        _scheme.theme.red.withValues(alpha: .15),
       ),
-      _ => (terminalMutedColor, const Color(0x14FFFFFF)),
+      _ => (_scheme.muted, _scheme.muted.withValues(alpha: .12)),
     };
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 1),
@@ -1092,8 +1102,9 @@ class _TerminalPageState extends State<TerminalPage>
         keyboardVisible &&
         usableHeight <
             headerHeight + 49 + (scale.scale(14) * 1.3).ceilToDouble() + 8;
+    final scheme = _scheme;
     return Theme(
-      data: appTheme(brightness: Brightness.dark),
+      data: appTheme(brightness: scheme.brightness),
       child: Builder(
         builder: (context) => PopScope(
           canPop: _closing,
@@ -1108,24 +1119,25 @@ class _TerminalPageState extends State<TerminalPage>
           },
           child: Scaffold(
             key: const ValueKey('terminal-fullscreen'),
-            backgroundColor: mobileTerminalTheme.background,
+            backgroundColor: scheme.theme.background,
             resizeToAvoidBottomInset: true,
             appBar: AppBar(
               toolbarHeight: headerHeight,
-              backgroundColor: terminalChromeColor,
+              backgroundColor: scheme.chrome,
+              systemOverlayStyle: scheme.isDark
+                  ? SystemUiOverlayStyle.light
+                  : SystemUiOverlayStyle.dark,
               surfaceTintColor: Colors.transparent,
               elevation: 0,
               scrolledUnderElevation: 0,
-              shape: const Border(
-                bottom: BorderSide(color: terminalHairlineColor),
-              ),
-              actionsIconTheme: const IconThemeData(color: terminalLinkColor),
+              shape: Border(bottom: BorderSide(color: scheme.hairline)),
+              actionsIconTheme: IconThemeData(color: scheme.link),
               centerTitle: false,
               titleSpacing: 0,
               leading: IconButton(
                 tooltip: context.l10n.terminalExit,
                 onPressed: _requestLeave,
-                color: terminalLinkColor,
+                color: scheme.link,
                 icon: const Icon(Icons.close),
               ),
               title: Semantics(
@@ -1149,6 +1161,7 @@ class _TerminalPageState extends State<TerminalPage>
                         overflow: TextOverflow.ellipsis,
                         style: Theme.of(context).textTheme.titleMedium!
                             .copyWith(
+                              color: scheme.theme.foreground,
                               fontSize: compactChrome ? 14 : 17,
                               height: 1.15,
                               fontWeight: FontWeight.w600,
@@ -1166,11 +1179,11 @@ class _TerminalPageState extends State<TerminalPage>
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                                 textDirection: TextDirection.ltr,
-                                style: const TextStyle(
+                                style: TextStyle(
                                   fontFamily: terminalFontFamily,
                                   fontSize: 11,
                                   height: 1.15,
-                                  color: terminalMutedColor,
+                                  color: scheme.muted,
                                 ),
                               ),
                             ),
@@ -1202,7 +1215,7 @@ class _TerminalPageState extends State<TerminalPage>
                 ),
                 PopupMenuButton<String>(
                   tooltip: context.l10n.terminalMenu,
-                  color: terminalKeyColor,
+                  color: scheme.key,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
@@ -1213,6 +1226,8 @@ class _TerminalPageState extends State<TerminalPage>
                         unawaited(_connectionDetails());
                       case 'paste':
                         unawaited(_pasteToDraft().then((_) {}));
+                      case 'scheme':
+                        unawaited(showTerminalSchemePicker(_dialogContext));
                       case 'reboot':
                         unawaited(_power(SshPowerAction.reboot));
                       case 'shutdown':
@@ -1232,6 +1247,13 @@ class _TerminalPageState extends State<TerminalPage>
                       child: Builder(
                         builder: (context) =>
                             Text(context.l10n.terminalPasteIntoDraft),
+                      ),
+                    ),
+                    PopupMenuItem(
+                      value: 'scheme',
+                      child: Builder(
+                        builder: (context) =>
+                            Text(context.l10n.r3TermColorScheme),
                       ),
                     ),
                     const PopupMenuDivider(),
@@ -1293,7 +1315,7 @@ class _TerminalPageState extends State<TerminalPage>
                                         _sendBusy,
                                     deleteDetection: true,
                                     keyboardType: TextInputType.multiline,
-                                    keyboardAppearance: Brightness.dark,
+                                    keyboardAppearance: scheme.brightness,
                                     onKeyEvent: _terminalKeyEvent,
                                     shortcuts: const {
                                       SingleActivator(
@@ -1306,7 +1328,7 @@ class _TerminalPageState extends State<TerminalPage>
                                         meta: true,
                                       ): CopySelectionTextIntent.copy,
                                     },
-                                    theme: mobileTerminalTheme,
+                                    theme: scheme.theme,
                                     textStyle: const CodingTerminalStyle(),
                                     padding: EdgeInsets.symmetric(
                                       horizontal: 8,
@@ -1359,7 +1381,7 @@ class _TerminalPageState extends State<TerminalPage>
                                 top: 8,
                                 right: 8,
                                 child: Material(
-                                  color: terminalChromeColor,
+                                  color: scheme.chrome,
                                   elevation: 4,
                                   borderRadius: BorderRadius.circular(12),
                                   child: Row(
@@ -1393,9 +1415,8 @@ class _TerminalPageState extends State<TerminalPage>
                                 right: 12,
                                 child: FloatingActionButton.small(
                                   heroTag: null,
-                                  backgroundColor: terminalKeyColor,
-                                  foregroundColor:
-                                      mobileTerminalTheme.foreground,
+                                  backgroundColor: scheme.key,
+                                  foregroundColor: scheme.theme.foreground,
                                   elevation: 1,
                                   key: const ValueKey('terminal-scroll-bottom'),
                                   tooltip: context.l10n.terminalLatestOutput,
@@ -1411,19 +1432,22 @@ class _TerminalPageState extends State<TerminalPage>
                     ),
                   ),
                   if (!hideKeyBar)
-                    TerminalKeyBar(
-                      connected: _connected && !_commandsOpen,
-                      controlArmed: _ctrlArmed,
-                      onControl: () {
-                        setState(() => _ctrlArmed = !_ctrlArmed);
-                        _requestKeyboard();
-                      },
-                      onKey: _specialKey,
-                      onCommands: _openCommands,
-                      hasDraft: _draft.text.isNotEmpty,
-                      onPaste: _pasteBusy
-                          ? null
-                          : () => unawaited(_pasteToDraft().then((_) {})),
+                    TerminalSchemeScope(
+                      scheme: scheme,
+                      child: TerminalKeyBar(
+                        connected: _connected && !_commandsOpen,
+                        controlArmed: _ctrlArmed,
+                        onControl: () {
+                          setState(() => _ctrlArmed = !_ctrlArmed);
+                          _requestKeyboard();
+                        },
+                        onKey: _specialKey,
+                        onCommands: _openCommands,
+                        hasDraft: _draft.text.isNotEmpty,
+                        onPaste: _pasteBusy
+                            ? null
+                            : () => unawaited(_pasteToDraft().then((_) {})),
+                      ),
                     ),
                 ],
               ),
@@ -1439,7 +1463,7 @@ class _TerminalPageState extends State<TerminalPage>
   Widget _connectionBanner(BuildContext context) => Container(
     key: const ValueKey('terminal-connection-banner'),
     width: double.infinity,
-    color: terminalChromeColor,
+    color: _scheme.chrome,
     child: ConstrainedBox(
       constraints: BoxConstraints(
         maxHeight: MediaQuery.sizeOf(context).height * .25,
@@ -1482,7 +1506,7 @@ class _TerminalPageState extends State<TerminalPage>
   );
 
   Widget _noticeBanner(BuildContext context) => Container(
-    color: terminalChromeColor,
+    color: _scheme.chrome,
     padding: const EdgeInsets.only(left: 16, right: 4),
     child: Row(
       children: [
