@@ -564,6 +564,7 @@ class _ReminderOverviewBlockState extends State<ReminderOverviewBlock> {
                 padding: const EdgeInsets.all(16),
                 child: Text(
                   l10n.r2TabsNoUpcoming,
+                  textAlign: TextAlign.center,
                   style: TextStyle(color: context.palette.text2),
                 ),
               ),

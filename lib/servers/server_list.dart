@@ -455,18 +455,7 @@ class _ServerListState extends State<ServerList> {
         ),
       Padding(
         padding: const EdgeInsets.fromLTRB(32, 22, 20, 4),
-        child: big
-            ? Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [sectionTitle, sortButton],
-              )
-            : Row(
-                children: [
-                  Expanded(child: sectionTitle),
-                  const SizedBox(width: 8),
-                  Flexible(child: sortButton),
-                ],
-              ),
+        child: AppHeaderRow(title: sectionTitle, action: sortButton),
       ),
       if (visible.isEmpty)
         AppCard(

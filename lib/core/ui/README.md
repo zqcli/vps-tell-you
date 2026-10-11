@@ -63,7 +63,7 @@ import '../core/ui/ui.dart';      // everything below + AppPalette / context.pal
 | `AppChip` / `AppChipRow` | `AppChipRow(children: [AppChip(label: 'All', count: 6, selected: true, onTap: …), AppChip(label: 'Filter', icon: Icons.tune_rounded, outlined: true)])` – selected = dark filled. |
 | `AppStatTile` / `AppStatGrid` | `AppStatGrid(children: [AppStatTile(value: '1', label: 'Expired', tone: AppTone.red, onTap: …), …])`. |
 | `AppQuickAction` / `AppQuickActionRow` | `AppQuickActionRow(children: [AppQuickAction(icon: Icons.terminal, label: 'SSH', onTap: …, dimmed: !available), AppQuickAction(..., tone: AppTone.red)])` – `dimmed` looks disabled but still taps (to explain why). |
-| `AppMetricStrip` | **The rule for any "several small KPIs in a row"** (remaining value / days left / daily rate, counters …): `AppCard(child: AppMetricStrip(metrics: [AppMetric(label: 'Value left', value: r'$12.40'), AppMetric(label: 'Days left', value: '7 days'), AppMetric(label: 'Daily', value: r'$0.1370')]))`. 2–4 equal-width, start-aligned columns split by 0.5 px hairlines; caption 13 secondary above figure 17 semibold tabular. Keep captions to 1–2 short words and figures pre-formatted (unknown → `—`). It measures real text and falls back to rows of two columns, then to caption-left / figure-right lines, so nothing clips at 320 px / 2× text. Never build ad-hoc `Row`s of `Column`s for this. `AppMetric(onTap:)` makes a column tappable (filters / drill-down, e.g. the server list counters, reminder overview); `onGradient: true` is the white-on-gradient variant. Replaces `AppStatGrid`/`AppStatTile`, which stay only for legacy use. |
+| `AppMetricStrip` | **The rule for any "several small KPIs in a row"** (remaining value / days left / daily rate, counters …): `AppCard(child: AppMetricStrip(metrics: [AppMetric(label: 'Value left', value: r'$12.40'), AppMetric(label: 'Days left', value: '7 days'), AppMetric(label: 'Daily', value: r'$0.1370')]))`. 2–4 equal-width columns split by 0.5 px hairlines, **caption and figure both centered** (caption 13 secondary above figure 17 semibold tabular). Keep captions to 1–2 short words and figures pre-formatted (unknown → `—`). It measures real text and falls back to rows of two columns, then to caption-left / figure-right lines, so nothing clips at 320 px / 2× text. Never build ad-hoc `Row`s of `Column`s for this. `AppMetric(onTap:)` makes a column tappable (filters / drill-down, e.g. the server list counters, reminder overview); `onGradient: true` is the white-on-gradient variant. Replaces `AppStatGrid`/`AppStatTile`, which stay only for legacy use. |
 | `AppButton` | `AppButton(label: 'Add', icon: Icons.add, kind: AppButtonKind.tonal, compact: true, destructive: false, busy: saving, expand: true, onPressed: …)`. |
 | `AppProgressBar` | `AppProgressBar(value: .92, tone: AppTone.amber)`. |
 | `AppBanner` | `AppBanner(tone: AppTone.amber, icon: Icons.warning_amber_rounded, text: '…', onTap: …)`. |
@@ -123,3 +123,13 @@ finders keep working until a page switches to `showAppConfirm`
   with `busy: true` is on screen (its spinner never settles).
 * Do not use `Cupertino` icons (`CupertinoIcons`): the `cupertino_icons`
   package is not a dependency. Use Material icons.
+
+## Alignment rules
+
+* Section / list headers: use `AppSection(header:, headerAction:)` or, for custom
+  headers, `AppHeaderRow(title:, action:)` – the action is always flush right,
+  both sides shrink instead of overflowing at 320 px / 2×.
+* Centered: metric-strip columns, stat tiles, quick actions, buttons (icon +
+  label), empty states, "nothing here" placeholder rows inside a group, sheet
+  and dialog titles / messages. Left-aligned: row titles, form labels,
+  footnotes, banners.

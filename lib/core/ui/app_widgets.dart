@@ -670,12 +670,12 @@ class AppStatTile extends StatelessWidget {
         child: Padding(
           padding: const EdgeInsets.fromLTRB(12, 11, 12, 10),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.center,
             mainAxisSize: MainAxisSize.min,
             children: [
               FittedBox(
                 fit: BoxFit.scaleDown,
-                alignment: AlignmentDirectional.centerStart,
+                alignment: Alignment.center,
                 child: Text(
                   value,
                   maxLines: 1,
@@ -690,6 +690,7 @@ class AppStatTile extends StatelessWidget {
               ),
               const SizedBox(height: 3),
               Row(
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   if (dot != null) ...[
                     Container(
@@ -705,6 +706,7 @@ class AppStatTile extends StatelessWidget {
                   Flexible(
                     child: Text(
                       label,
+                      textAlign: TextAlign.center,
                       style: TextStyle(fontSize: 12, color: p.text2),
                     ),
                   ),
