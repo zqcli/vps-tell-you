@@ -4796,7 +4796,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get terminalPasteIntoDraft => 'Paste into draft';
 
   @override
-  String get r3TermColorScheme => 'Color scheme';
+  String get r3TermColorScheme => 'Colors & highlighting';
 
   @override
   String get r3TermSchemeDark => 'Dark';
@@ -4807,6 +4807,28 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get r3TermSchemeFootnote =>
       'Display only; nothing is sent to the server. Resets when the app restarts.';
+
+  @override
+  String get r4HlSmart => 'Smart highlighting';
+
+  @override
+  String get r4HlSmartNote =>
+      'Colors paths, IPs, numbers and keywords in uncolored output. Display only; nothing sent or changed.';
+
+  @override
+  String get r4HlLanguage => 'Syntax highlighting';
+
+  @override
+  String get r4HlAuto => 'Auto-detect';
+
+  @override
+  String get r4HlPlain => 'Off (plain text)';
+
+  @override
+  String get r4HlGeneric => 'Generic';
+
+  @override
+  String get r4HlTooLarge => 'Over 256 KiB: highlighting is off';
 
   @override
   String get terminalReconnectClear => 'Reconnect and clear draft';

@@ -20,6 +20,7 @@ import 'sftp_support.dart';
 import 'snippet_pages.dart';
 import 'ssh_prompts.dart';
 import 'ssh_service.dart';
+import 'terminal_highlighter.dart';
 import 'terminal_widgets.dart';
 import 'terminal_font.dart';
 
@@ -48,6 +49,7 @@ class _TerminalPageState extends State<TerminalPage>
     with WidgetsBindingObserver {
   late final SshService _service;
   late Terminal _terminal;
+  TerminalHighlighter? _highlighter;
   late final TextEditingController _draft;
   final _terminalFocus = FocusNode();
   var _terminalViewKey = GlobalKey<TerminalViewState>();
@@ -85,6 +87,7 @@ class _TerminalPageState extends State<TerminalPage>
     super.initState();
     registerTerminalFontLicense();
     terminalSchemeChoice.addListener(_schemeChanged);
+    terminalSmartHighlight.addListener(_highlightToggled);
     WidgetsBinding.instance.addObserver(this);
     _draft = TextEditingController(text: widget.initialDraft);
     _terminalScroll.addListener(_scrollChanged);
@@ -112,6 +115,29 @@ class _TerminalPageState extends State<TerminalPage>
   TerminalScheme get _scheme => terminalSchemeChoice.value;
 
   // Colours only: no bytes are sent and the session is not touched.
+  void _highlightToggled() {
+    _highlighter?.enabled = terminalSmartHighlight.value;
+  }
+
+  /// Buffer rows currently on screen, for the highlighter.
+  ({int first, int last})? _visibleRows() {
+    try {
+      final height =
+          _terminalViewKey.currentState?.renderTerminal.cellSize.height;
+      if (height == null || height <= 0 || !_terminalScroll.hasClients) {
+        return null;
+      }
+      final position = _terminalScroll.position;
+      return (
+        first: ((position.pixels - 8) / height).floor(),
+        last: ((position.pixels + position.viewportDimension + 8) / height)
+            .floor(),
+      );
+    } catch (_) {
+      return null;
+    }
+  }
+
   void _schemeChanged() {
     if (mounted) {
       setState(() {});
@@ -146,6 +172,12 @@ class _TerminalPageState extends State<TerminalPage>
         _service.resize(columns, rows);
       }
     };
+    _highlighter?.dispose();
+    _highlighter = TerminalHighlighter(
+      _terminal,
+      enabled: terminalSmartHighlight.value,
+      visibleLines: _visibleRows,
+    );
   }
 
   void _consumeControl() {
@@ -224,6 +256,7 @@ class _TerminalPageState extends State<TerminalPage>
     if (!_terminalScroll.hasClients) {
       return;
     }
+    _highlighter?.notifyScrolled();
     final back = _terminalScroll.position.extentAfter > 24;
     if (back != _scrolledBack && mounted) {
       setState(() => _scrolledBack = back);
@@ -845,6 +878,8 @@ class _TerminalPageState extends State<TerminalPage>
   @override
   void dispose() {
     terminalSchemeChoice.removeListener(_schemeChanged);
+    terminalSmartHighlight.removeListener(_highlightToggled);
+    _highlighter?.dispose();
     WidgetsBinding.instance.removeObserver(this);
     _service.removeListener(_changed);
     _terminal.onOutput = null;
