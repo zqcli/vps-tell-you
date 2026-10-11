@@ -40,9 +40,14 @@ class _CalculatorPageState extends State<CalculatorPage> {
   }
 
   final form = GlobalKey<FormState>();
-  late final TextEditingController price, asOf, due;
+  late final TextEditingController price, start, asOf, due;
   late String currency;
   late int cycle;
+
+  /// True while the due date is derived from start + cycle; a different due
+  /// date picked by the user turns it off until they pick the derived date
+  /// again or clear it.
+  late bool dueAuto;
   List<ServicePeriod>? referencedPeriods;
   String? sourceName;
   bool rebuilt = false;
@@ -50,20 +55,29 @@ class _CalculatorPageState extends State<CalculatorPage> {
   void initState() {
     super.initState();
     price = TextEditingController();
+    start = TextEditingController(text: widget.controller.today.toString());
     asOf = TextEditingController(text: widget.controller.today.toString());
     due = TextEditingController(
       text: widget.controller.today.addMonths(12).toString(),
     );
     currency = 'USD';
     cycle = 12;
+    dueAuto = true;
     if (widget.server != null) reference(widget.server!);
   }
 
   void reference(ServerRecord s) {
     price.text = s.money?.decimal ?? '';
+    start.text = s.startDate?.toString() ?? '';
     due.text = s.dueDate?.toString() ?? '';
     currency = s.currency;
     cycle = s.cycleMonths;
+    // A server renewed more than once has a due date beyond start + cycle;
+    // that one stays as it is unless the user clears it.
+    final from = s.startDate;
+    dueAuto =
+        s.dueDate == null ||
+        (from != null && from.addMonths(cycle) == s.dueDate);
     referencedPeriods = List.unmodifiable(widget.controller.periodsFor(s.id));
     sourceName = s.name;
     rebuilt = false;
@@ -72,6 +86,7 @@ class _CalculatorPageState extends State<CalculatorPage> {
   @override
   void dispose() {
     price.dispose();
+    start.dispose();
     asOf.dispose();
     due.dispose();
     super.dispose();
@@ -129,18 +144,78 @@ class _CalculatorPageState extends State<CalculatorPage> {
       ],
     );
     if (picked != null && picked != cycle && mounted) {
-      changePeriod();
-      setState(() => cycle = picked);
+      setState(() {
+        cycle = picked;
+        dropReference();
+        applyAutoDue();
+      });
     }
   }
 
-  void changePeriod() {
+  /// Known periods no longer match the inputs: switch to the independent
+  /// estimate. Call inside `setState`.
+  void dropReference() {
     if (referencedPeriods != null) {
-      setState(() {
-        referencedPeriods = null;
-        rebuilt = true;
+      referencedPeriods = null;
+      rebuilt = true;
+    }
+  }
+
+  /// Due = start + cycle with the renewal month-anchor rules (`addMonths`
+  /// clamps month ends and leap days from the original start day). Returns
+  /// whether the due date changed. Call inside `setState`.
+  bool applyAutoDue() {
+    final from = LedgerDate.tryParse(start.text.trim());
+    if (from == null || !dueAuto) return false;
+    final derived = from.addMonths(cycle).toString();
+    if (due.text == derived) return false;
+    due.text = derived;
+    dropReference();
+    return true;
+  }
+
+  Future<void> pickDate(
+    TextEditingController target,
+    String title,
+    LedgerDate fallback,
+    void Function(String result) apply, {
+    bool allowUnknown = true,
+  }) async {
+    final result = await showAppDateSheet(
+      context,
+      title: title,
+      initial: LedgerDate.tryParse(target.text.trim()) ?? fallback,
+      allowUnknown: allowUnknown,
+    );
+    if (result == null || !mounted) return;
+    setState(() => apply(result));
+    // Clear a shown error once the field has a valid date.
+    if (validationAttempted) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) form.currentState?.validate();
       });
     }
+  }
+
+  void pickStart(String title) =>
+      pickDate(start, title, widget.controller.today, (result) {
+        start.text = result;
+        // An emptied due date counts as "not set by the user".
+        if (due.text.isEmpty) dueAuto = true;
+        applyAutoDue();
+      });
+
+  void pickDue(String title) {
+    final from = LedgerDate.tryParse(start.text.trim());
+    pickDate(due, title, from?.addMonths(cycle) ?? widget.controller.today, (
+      result,
+    ) {
+      if (result != due.text) dropReference();
+      due.text = result;
+      dueAuto =
+          result.isEmpty ||
+          (from != null && from.addMonths(cycle).toString() == result);
+    });
   }
 
   void calculate() {
@@ -265,24 +340,40 @@ class _CalculatorPageState extends State<CalculatorPage> {
                     value: l10n.financeEveryMonths(cycle),
                     onTap: chooseCycle,
                   ),
-                  FinanceFieldRow(
+                ],
+              ),
+              AppSection(
+                footer: l10n.r6CalcDueAutoNote,
+                children: [
+                  FinanceDateRow(
+                    key: const ValueKey('calc-start'),
+                    controller: start,
+                    label: l10n.r6CalcServiceStart,
+                    onTap: () => pickStart(l10n.r6CalcServiceStart),
+                  ),
+                  FinanceDateRow(
                     key: const ValueKey('calc-asof'),
                     controller: asOf,
                     label: l10n.financeValuationDate,
-                    hint: 'YYYY-MM-DD',
                     check: (v) => LedgerDate.tryParse(v.trim()) == null
                         ? l10n.financeValuationDateError
                         : null,
+                    onTap: () => pickDate(
+                      asOf,
+                      l10n.financeValuationDate,
+                      widget.controller.today,
+                      (result) => asOf.text = result,
+                      allowUnknown: false,
+                    ),
                   ),
-                  FinanceFieldRow(
+                  FinanceDateRow(
                     key: const ValueKey('calc-due'),
                     controller: due,
                     label: l10n.financeServiceDue,
-                    hint: 'YYYY-MM-DD',
-                    onChanged: (_) => changePeriod(),
                     check: (v) => LedgerDate.tryParse(v.trim()) == null
                         ? l10n.financeDueError
                         : null,
+                    onTap: () => pickDue(l10n.financeServiceDue),
                   ),
                 ],
               ),

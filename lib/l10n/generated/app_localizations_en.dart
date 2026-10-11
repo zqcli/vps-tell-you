@@ -976,6 +976,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get financeDueError => 'Enter a valid due date';
 
   @override
+  String get r6CalcServiceStart => 'Service start date';
+
+  @override
+  String get r6CalcDueAutoNote =>
+      'The due date follows the start date and cycle until you pick a different one.';
+
+  @override
   String get financeAlgorithmTitle => 'Periods and calculation method';
 
   @override

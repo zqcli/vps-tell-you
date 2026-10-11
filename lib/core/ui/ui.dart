@@ -8,6 +8,7 @@
 library;
 
 export '../app_palette.dart';
+export 'app_date_sheet.dart';
 export 'app_list.dart';
 export 'app_metrics.dart';
 export 'app_overlays.dart';

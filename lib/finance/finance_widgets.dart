@@ -81,6 +81,64 @@ class FinanceFieldRow extends FormField<String> {
   final String label;
 }
 
+/// A validated date in a grouped form row, picked from the date sheet.
+///
+/// [controller] holds the ISO date (empty = unknown); the owner changes it
+/// from [onTap]. The row redraws whenever the controller changes.
+class FinanceDateRow extends FormField<String> {
+  FinanceDateRow({
+    super.key,
+    required this.controller,
+    required this.label,
+    String? Function(String text)? check,
+    required VoidCallback onTap,
+  }) : super(
+         validator: check == null ? null : (_) => check(controller.text),
+         builder: (state) => ValueListenableBuilder<TextEditingValue>(
+           valueListenable: controller,
+           builder: (context, value, _) {
+             final p = context.palette;
+             final text = value.text.trim();
+             return AppFormRow(
+               label: label,
+               errorText: state.errorText,
+               onTap: onTap,
+               child: Row(
+                 mainAxisSize: MainAxisSize.min,
+                 children: [
+                   Flexible(
+                     // Never wrap an ISO date: shrink it instead.
+                     child: FittedBox(
+                       fit: BoxFit.scaleDown,
+                       alignment: AlignmentDirectional.centerEnd,
+                       child: Text(
+                         text.isEmpty ? context.l10n.financeUnknown : text,
+                         maxLines: 1,
+                         softWrap: false,
+                         style: TextStyle(
+                           fontSize: 16,
+                           color: text.isEmpty ? p.text3 : p.text,
+                           fontFeatures: kTabularFigures,
+                         ),
+                       ),
+                     ),
+                   ),
+                   const SizedBox(width: 8),
+                   Icon(
+                     Icons.calendar_today_outlined,
+                     size: 18,
+                     color: p.text2,
+                   ),
+                 ],
+               ),
+             );
+           },
+         ),
+       );
+  final TextEditingController controller;
+  final String label;
+}
+
 /// Label above a value, for read-only facts inside a card.
 class FinanceLine extends StatelessWidget {
   const FinanceLine(this.label, this.value, {super.key});

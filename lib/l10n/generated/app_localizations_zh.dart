@@ -902,6 +902,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get financeDueError => '请输入有效到期日';
 
   @override
+  String get r6CalcServiceStart => '服务开始日期';
+
+  @override
+  String get r6CalcDueAutoNote => '到期日按开始日期和周期自动推算；手动选择其他日期后不再自动更新。';
+
+  @override
   String get financeAlgorithmTitle => '周期与算法说明';
 
   @override
