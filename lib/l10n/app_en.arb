@@ -2768,6 +2768,8 @@
   "sshCredentialChanged": "Credentials changed. Reconnect.",
   "sshAuthenticationTimeout": "SSH authentication timed out",
   "sshTerminalOpenTimeout": "Opening the SSH terminal timed out",
+  "r3SftpOpenTimeout": "Opening SFTP timed out",
+  "r3SftpUnavailable": "The server did not open SFTP. It may be disabled for this account.",
   "sshAuthenticationFailed": "SSH authentication failed. Check the username and credentials.",
   "sshHostNotTrusted": "The host was not trusted. Authentication did not start.",
   "sshConnectionIncomplete": "SSH connection did not complete. Check the address, network, and service.",

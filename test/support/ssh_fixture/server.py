@@ -3,6 +3,11 @@
 The only input interpretation is echoing bytes into an SSH channel. Even power
 command strings are inert data. Authentication is an in-memory test comparison;
 no OS users, authorized_keys, agents, keyrings or persistent access are touched.
+
+An SFTP subsystem exists only when the test passes ``--sftp-root DIR``: it is
+confined (AsyncSSH chroot) to that per-test temporary directory and runs on
+its own channel, next to the unchanged fake shell. Without the flag an ``sftp``
+subsystem request is refused like any other and still no shell/exec runs.
 """
 
 import argparse
@@ -15,6 +20,7 @@ import sys
 from pathlib import Path
 
 import asyncssh
+from asyncssh.stream import SSHServerStreamSession
 
 
 def event(kind, **fields):
@@ -25,6 +31,7 @@ class Session(asyncssh.SSHServerSession):
     def __init__(self, owner):
         self.owner = owner
         self.channel = None
+        self.sftp = None  # delegate for the optional sftp subsystem channel
 
     def connection_made(self, channel):
         self.channel = channel
@@ -38,6 +45,15 @@ class Session(asyncssh.SSHServerSession):
     def terminal_size_changed(self, width, height, pixwidth, pixheight):
         event("resize", connection=self.owner.number, columns=width, rows=height)
 
+    def subsystem_requested(self, subsystem):
+        factory = self.owner.state["sftp_factory"]
+        if subsystem != "sftp" or factory is None:
+            return False
+        # AsyncSSH's own stream session runs the SFTP protocol on this channel.
+        self.sftp = SSHServerStreamSession(None, factory, 3)
+        self.sftp.connection_made(self.channel)
+        return True
+
     def shell_requested(self):
         event("shell", connection=self.owner.number)
         return True
@@ -48,6 +64,11 @@ class Session(asyncssh.SSHServerSession):
         return False
 
     def session_started(self):
+        if self.sftp:
+            event("sftp_open", connection=self.owner.number)
+            self.sftp.session_started()
+            return
+
         async def greeting():
             if self.channel.is_closing():
                 return
@@ -63,12 +84,29 @@ class Session(asyncssh.SSHServerSession):
         asyncio.create_task(greeting())
 
     def data_received(self, data, datatype):
+        if self.sftp:
+            return self.sftp.data_received(data, datatype)
         event("input", connection=self.owner.number,
               data=base64.b64encode(data).decode("ascii"))
         self.channel.write(b"echo:" + data)
 
+    def eof_received(self):
+        return self.sftp.eof_received() if self.sftp else False
+
+    def pause_writing(self):
+        if self.sftp:
+            self.sftp.pause_writing()
+
+    def resume_writing(self):
+        if self.sftp:
+            self.sftp.resume_writing()
+
     def connection_lost(self, exc):
         self.owner.state["sessions"].discard(self)
+        if self.sftp:
+            self.sftp.connection_lost(exc)
+            event("sftp_closed", connection=self.owner.number)
+            return
         event("session_closed", connection=self.owner.number)
 
 
@@ -123,13 +161,21 @@ async def main():
     parser.add_argument("--host-key", default="ed25519.fixture")
     parser.add_argument("--delay-auth", type=float, default=0)
     parser.add_argument("--login-timeout", type=float, default=10)
+    parser.add_argument("--sftp-root", default=None)
     args = parser.parse_args()
     fixtures = Path(__file__).resolve().parents[2] / "fixtures" / "security"
     host_key = asyncssh.read_private_key(fixtures / args.host_key)
     state = {"next": 1, "connections": set(), "sessions": set(),
-             "delay_auth": args.delay_auth,
+             "delay_auth": args.delay_auth, "sftp_factory": None,
              "allowed_key": asyncssh.read_public_key(
                  fixtures / "ed25519_encrypted.fixture.pub")}
+    if args.sftp_root:
+        root = Path(args.sftp_root).resolve()
+        if not root.is_dir():
+            raise SystemExit("--sftp-root must be an existing directory")
+        chroot = str(root).encode("utf-8")
+        state["sftp_factory"] = lambda chan: asyncssh.SFTPServer(
+            chan, chroot=chroot)
     listener = await asyncssh.create_server(
         lambda: Server(state), "127.0.0.1", args.port,
         server_host_keys=[host_key], encoding=None, line_editor=False,

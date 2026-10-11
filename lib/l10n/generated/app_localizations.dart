@@ -8032,6 +8032,18 @@ abstract class AppLocalizations {
   /// **'SSH 终端开启超时'**
   String get sshTerminalOpenTimeout;
 
+  /// No description provided for @r3SftpOpenTimeout.
+  ///
+  /// In zh, this message translates to:
+  /// **'SFTP 开启超时'**
+  String get r3SftpOpenTimeout;
+
+  /// No description provided for @r3SftpUnavailable.
+  ///
+  /// In zh, this message translates to:
+  /// **'服务器未开启 SFTP，可能已对该账户禁用'**
+  String get r3SftpUnavailable;
+
   /// No description provided for @sshAuthenticationFailed.
   ///
   /// In zh, this message translates to:

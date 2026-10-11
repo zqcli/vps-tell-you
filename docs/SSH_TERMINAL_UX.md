@@ -47,6 +47,7 @@
 - `test/terminal_keyboard_send_loopback_review_test.dart`：两个按钮和剪贴板草稿通过真实 loopback SSH/PTY，以 UTF-8 字节核对原文和末尾单个 CR。
 - `test/terminal_linux_engine_test.dart`：Linux engine 的历史锚点、alternate-screen 合成 TUI、反复键盘 inset、不可写/异常恢复与短横屏大字。设置 `VPS_SSH_LINUX_QA_EVIDENCE` 可输出截图与测量；截图需提供真实 CJK 字体，普通回归不依赖宿主字体路径。
 - `test/terminal_font_test.dart`：离线字节/许可固定、渲染特性、真实常规/粗体固定格宽与中文终端格数。
+- `test/sftp_session_test.dart`：SFTP 会话层（`lib/connections/sftp_session.dart`）的 loopback 集成：列目录/增删改名/递归删除上限/文本读写限制/流式上传下载与取消/权限与路径越界，以及在已有 shell 连接上开 SFTP 不影响终端。
 - `test/ssh_service_test.dart`：仅 loopback、独立 AsyncSSH、不执行 shell/exec 的真实协议 fixture，覆盖认证、PTY、resize、UTF-8 和断线。
 
 本轮最终通过数量、截图、review 和构建证据以后续 STATUS/ACCEPTANCE 完成记录为准。本轮 Linux Flutter engine 和合成 viewInsets 验证不等于 GTK 原生键盘/系统剪贴板验证；隔离显示服务受本地 socket 限制未能启动。Android/iOS 真机、真实 VPS 兼容性及新 APK 不属于这里的已验证结论。

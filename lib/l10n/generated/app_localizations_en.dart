@@ -5014,6 +5014,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get sshTerminalOpenTimeout => 'Opening the SSH terminal timed out';
 
   @override
+  String get r3SftpOpenTimeout => 'Opening SFTP timed out';
+
+  @override
+  String get r3SftpUnavailable =>
+      'The server did not open SFTP. It may be disabled for this account.';
+
+  @override
   String get sshAuthenticationFailed =>
       'SSH authentication failed. Check the username and credentials.';
 

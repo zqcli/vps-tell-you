@@ -4395,6 +4395,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get sshTerminalOpenTimeout => 'SSH 终端开启超时';
 
   @override
+  String get r3SftpOpenTimeout => 'SFTP 开启超时';
+
+  @override
+  String get r3SftpUnavailable => '服务器未开启 SFTP，可能已对该账户禁用';
+
+  @override
   String get sshAuthenticationFailed => 'SSH 认证失败，请检查用户名和凭据';
 
   @override

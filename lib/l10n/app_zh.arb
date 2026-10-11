@@ -3236,6 +3236,8 @@
   "sshCredentialChanged": "凭据已变化，请重新连接",
   "sshAuthenticationTimeout": "SSH 认证超时",
   "sshTerminalOpenTimeout": "SSH 终端开启超时",
+  "r3SftpOpenTimeout": "SFTP 开启超时",
+  "r3SftpUnavailable": "服务器未开启 SFTP，可能已对该账户禁用",
   "sshAuthenticationFailed": "SSH 认证失败，请检查用户名和凭据",
   "sshHostNotTrusted": "主机未获信任，未进行认证",
   "sshConnectionIncomplete": "SSH 连接未完成，请检查地址、网络与服务",
