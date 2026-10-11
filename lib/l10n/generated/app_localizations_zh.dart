@@ -1219,7 +1219,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get financeUpcomingRenewals => '未来 30 天预计续费';
 
   @override
-  String get financeRecentPayments => '近 30 天已记录实付';
+  String get financeRecentPayments => '付款记录';
 
   @override
   String get financeUnrecordedNotZero => '尚无已记录付款，不代表没有支出';
@@ -1437,6 +1437,85 @@ class AppLocalizationsZh extends AppLocalizations {
   String financeSellerQuote(String currency) {
     return '卖家报价 · $currency';
   }
+
+  @override
+  String get r3FinancePeriodWeek => '近一周';
+
+  @override
+  String get r3FinancePeriodMonth => '近一个月';
+
+  @override
+  String get r3FinancePeriodQuarter => '近三个月';
+
+  @override
+  String get r3FinancePeriodHalfYear => '近六个月';
+
+  @override
+  String get r3FinancePeriodYear => '近一年';
+
+  @override
+  String get r3FinancePeriodAll => '全部';
+
+  @override
+  String r3FinanceRecentSub(int count) {
+    return '近 30 天 · $count 笔';
+  }
+
+  @override
+  String get r3FinanceTimelineStart => '周期开始';
+
+  @override
+  String get r3FinanceTimelineAsOf => '估值日';
+
+  @override
+  String get r3FinanceTimelineDue => '到期日';
+
+  @override
+  String get r3FinanceQuoteMode => '输入方式';
+
+  @override
+  String get r3FinanceQuoteModeOffer => '直接输入报价';
+
+  @override
+  String get r3FinanceQuoteModePremium => '输入溢价金额';
+
+  @override
+  String get r3FinanceQuoteModePercent => '输入溢价比例';
+
+  @override
+  String get r3FinanceQuoteDirection => '方向';
+
+  @override
+  String get r3FinanceQuotePremium => '溢价';
+
+  @override
+  String get r3FinanceQuoteDiscount => '折价';
+
+  @override
+  String r3FinanceQuotePremiumField(String currency) {
+    return '金额 · $currency';
+  }
+
+  @override
+  String get r3FinanceQuotePercentField => '占剩余价值 (%)';
+
+  @override
+  String get r3FinanceQuotePercentError => '请输入 0–1000 的比例，最多 2 位小数';
+
+  @override
+  String get r3FinanceQuoteRangeError => '折价不能超过剩余价值，成交价需在支持范围内';
+
+  @override
+  String get r3FinanceQuoteSettlement => '结算明细';
+
+  @override
+  String get r3FinanceQuoteRef => '剩余价值';
+
+  @override
+  String get r3FinanceQuoteDeal => '建议成交价';
+
+  @override
+  String get r3FinanceQuoteFeesRow => '手续费合计';
 
   @override
   String financeRoundingNote(String rate, String source) {

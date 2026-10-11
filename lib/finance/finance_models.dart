@@ -345,9 +345,15 @@ class ForecastMonth {
 
 enum FeePayer { buyer, seller, split }
 
+/// Settlement of a transfer trial, all in the display currency's minor units.
+///
+/// `referenceMinor + premiumMinor == offerMinor` always holds: the reference
+/// (remaining value) is rounded once, half away from zero, and the premium is
+/// the signed difference. A negative premium is a discount.
 class QuoteResult {
   const QuoteResult({
     required this.currency,
+    required this.referenceMinor,
     required this.offerMinor,
     required this.feeMinor,
     required this.buyerFeeMinor,
@@ -357,13 +363,15 @@ class QuoteResult {
     required this.premiumMinor,
   });
   final String currency;
-  final BigInt offerMinor,
+  final BigInt referenceMinor,
+      offerMinor,
       feeMinor,
       buyerFeeMinor,
       sellerFeeMinor,
       buyerTotalMinor,
       sellerNetMinor,
       premiumMinor;
+  String get reference => formatMinor(referenceMinor, currency: currency);
   String get offer => formatMinor(offerMinor, currency: currency);
   String get fee => formatMinor(feeMinor, currency: currency);
   String get buyerFee => formatMinor(buyerFeeMinor, currency: currency);
@@ -371,4 +379,13 @@ class QuoteResult {
   String get buyerTotal => formatMinor(buyerTotalMinor, currency: currency);
   String get sellerNet => formatMinor(sellerNetMinor, currency: currency);
   String get premium => formatMinor(premiumMinor, currency: currency);
+  bool get isDiscount => premiumMinor.isNegative;
+
+  /// Premium as a percentage of the remaining value with two decimals, or
+  /// null when the remaining value is zero.
+  String? get premiumPercent => referenceMinor == BigInt.zero
+      ? null
+      : formatRational(
+          Rational(premiumMinor * BigInt.from(10000), referenceMinor),
+        );
 }

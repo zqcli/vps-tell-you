@@ -602,7 +602,7 @@
   "financeTotalRemaining": "总体剩余价值  ›",
   "financeMonthlyNotPaid": "续费价摊月 + 按量估算，不等于本月实付。",
   "financeUpcomingRenewals": "未来 30 天预计续费",
-  "financeRecentPayments": "近 30 天已记录实付",
+  "financeRecentPayments": "付款记录",
   "financeUnrecordedNotZero": "尚无已记录付款，不代表没有支出",
   "financeMonthlyDistribution": "月费用分布",
   "financeByVendor": "按厂商",
@@ -809,6 +809,45 @@
       }
     }
   },
+  "r3FinancePeriodWeek": "近一周",
+  "r3FinancePeriodMonth": "近一个月",
+  "r3FinancePeriodQuarter": "近三个月",
+  "r3FinancePeriodHalfYear": "近六个月",
+  "r3FinancePeriodYear": "近一年",
+  "r3FinancePeriodAll": "全部",
+  "r3FinanceRecentSub": "近 30 天 · {count} 笔",
+  "@r3FinanceRecentSub": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "r3FinanceTimelineStart": "周期开始",
+  "r3FinanceTimelineAsOf": "估值日",
+  "r3FinanceTimelineDue": "到期日",
+  "r3FinanceQuoteMode": "输入方式",
+  "r3FinanceQuoteModeOffer": "直接输入报价",
+  "r3FinanceQuoteModePremium": "输入溢价金额",
+  "r3FinanceQuoteModePercent": "输入溢价比例",
+  "r3FinanceQuoteDirection": "方向",
+  "r3FinanceQuotePremium": "溢价",
+  "r3FinanceQuoteDiscount": "折价",
+  "r3FinanceQuotePremiumField": "金额 · {currency}",
+  "@r3FinanceQuotePremiumField": {
+    "placeholders": {
+      "currency": {
+        "type": "String"
+      }
+    }
+  },
+  "r3FinanceQuotePercentField": "占剩余价值 (%)",
+  "r3FinanceQuotePercentError": "请输入 0–1000 的比例，最多 2 位小数",
+  "r3FinanceQuoteRangeError": "折价不能超过剩余价值，成交价需在支持范围内",
+  "r3FinanceQuoteSettlement": "结算明细",
+  "r3FinanceQuoteRef": "剩余价值",
+  "r3FinanceQuoteDeal": "建议成交价",
+  "r3FinanceQuoteFeesRow": "手续费合计",
   "financeRoundingNote": "{rate}\n{source}。折算结果仅供参考。",
   "@financeRoundingNote": {
     "placeholders": {

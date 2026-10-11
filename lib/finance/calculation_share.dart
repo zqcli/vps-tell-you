@@ -79,128 +79,434 @@ class CalculationShareData {
 typedef CalculationRenderer = Future<Uint8List> Function(CalculationShareData);
 typedef CalculationSaver = Future<String> Function(Uint8List, LedgerDate);
 
+/// Test hook: font family of the share card (tests render with a real font
+/// to review the layout). Production keeps the platform default.
+@visibleForTesting
+String? calculationPngFontFamily;
+
+/// Share card: 540 × N logical px drawn at 2× (1080 px wide), light theme
+/// regardless of the app theme so the image looks the same everywhere.
+///
+/// A gradient header with the brand line and the big value, a ring for the
+/// unused part of the shown period, a start → valuation → due timeline, the key
+/// figures and the reference-only footer. It draws nothing but
+/// [CalculationShareData] (no server, account, note or quote information).
 /// TextPainter performs both layout and drawing, so Chinese and long values
 /// determine the real image height rather than being clipped by a fixed canvas.
+/// Everything is deterministic: no clock, no random, no platform widgets.
 Future<Uint8List> renderCalculationPng(CalculationShareData data) async {
   final l10n = data.l10n;
-  const width = 540.0;
-  const margin = 32.0;
-  final blocks = <({TextPainter painter, double y})>[];
-  var y = 30.0;
-  void line(String text, {double size = 14, bool bold = false, Color? color}) {
-    final painter = TextPainter(
-      text: TextSpan(
-        text: text,
-        style: TextStyle(
-          fontSize: size,
-          height: 1.5,
-          fontWeight: bold ? FontWeight.w700 : FontWeight.w400,
-          color: color ?? AppColors.ink,
-          fontFamilyFallback: const [
-            'Noto Sans CJK SC',
-            'PingFang SC',
-            'Microsoft YaHei',
-          ],
-        ),
+  const width = 540.0, cardX = 16.0, pad = 28.0;
+  const cardW = width - cardX * 2, contentX = cardX + pad;
+  const contentW = cardW - pad * 2;
+  const violet = Color(0xFF6A5AE8), indigo = Color(0xFF4C6FF0);
+  const fallback = ['Noto Sans CJK SC', 'PingFang SC', 'Microsoft YaHei'];
+  final ops = <void Function(Canvas)>[];
+
+  TextPainter painter(
+    String text, {
+    double size = 14,
+    bool bold = false,
+    Color color = AppColors.ink,
+    double maxWidth = contentW,
+    TextAlign align = TextAlign.start,
+    double height = 1.4,
+  }) => TextPainter(
+    text: TextSpan(
+      text: text,
+      style: TextStyle(
+        fontSize: size,
+        height: height,
+        fontWeight: bold ? FontWeight.w700 : FontWeight.w400,
+        color: color,
+        fontFamily: calculationPngFontFamily,
+        fontFeatures: const [FontFeature.tabularFigures()],
+        fontFamilyFallback: fallback,
       ),
-      textDirection: TextDirection.ltr,
-      locale: Locale(l10n.localeName),
-    )..layout(maxWidth: width - margin * 2);
-    blocks.add((painter: painter, y: y));
-    y += painter.height + 10;
+    ),
+    textAlign: align,
+    textWidthBasis: TextWidthBasis.longestLine,
+    textDirection: TextDirection.ltr,
+    locale: Locale(l10n.localeName),
+  )..layout(maxWidth: maxWidth);
+
+  // Draws [tp] at ([x], [y]) and returns its height.
+  double put(TextPainter tp, double x, double y) {
+    ops.add((canvas) {
+      tp.paint(canvas, Offset(x, y));
+      tp.dispose();
+    });
+    return tp.height;
   }
 
-  line(l10n.financeExportHeading, size: 16, bold: true);
-  y += 22;
-  line(l10n.financeValueTitle, size: 20, bold: true);
-  line('${data.amount} ${data.currency}', size: 36, bold: true);
-  line(data.converted, color: AppColors.muted);
-  y += 12;
-  line(
-    l10n.financePeriodProgress(
-      data.periodLabel,
-      (data.ratio.clamp(0, 1) * 100).toStringAsFixed(1),
-      data.activeRemaining,
-      data.days,
-    ),
+  // ---- gradient header ----
+  const headerTop = cardX;
+  var y = headerTop + 24;
+  ops.add((canvas) {
+    final icon = RRect.fromRectAndRadius(
+      Rect.fromLTWH(contentX, headerTop + 24, 24, 24),
+      const Radius.circular(7),
+    );
+    canvas.drawRRect(
+      icon,
+      Paint()..color = Colors.white.withValues(alpha: .22),
+    );
+    final bar = Paint()..color = Colors.white;
+    for (var i = 0; i < 3; i++) {
+      canvas.drawRRect(
+        RRect.fromRectAndRadius(
+          Rect.fromLTWH(contentX + 5, headerTop + 24 + 5.5 + i * 5.5, 14, 3),
+          const Radius.circular(1.5),
+        ),
+        bar,
+      );
+    }
+  });
+  final heading = painter(
+    l10n.financeExportHeading,
+    size: 14,
+    bold: true,
+    color: Colors.white,
+    maxWidth: contentW - 34,
   );
-  final progressY = y;
-  y += 22;
-  line(
+  put(heading, contentX + 34, y + (24 - heading.height) / 2);
+  y += 24 + 22;
+  y += put(
+    painter(
+      l10n.financeValueTitle,
+      size: 14,
+      color: Colors.white.withValues(alpha: .86),
+    ),
+    contentX,
+    y,
+  );
+  y += 4;
+  // Shrink the figure before wrapping so long amounts stay one line.
+  final amountText = '${data.amount} ${data.currency}';
+  var amountSize = 48.0;
+  var amount = painter(
+    amountText,
+    size: amountSize,
+    bold: true,
+    color: Colors.white,
+    maxWidth: 10000,
+    height: 1.2,
+  );
+  while (amount.width > contentW && amountSize > 24) {
+    amount.dispose();
+    amountSize -= 2;
+    amount = painter(
+      amountText,
+      size: amountSize,
+      bold: true,
+      color: Colors.white,
+      maxWidth: 10000,
+      height: 1.2,
+    );
+  }
+  if (amount.width > contentW) {
+    amount.dispose();
+    amount = painter(
+      amountText,
+      size: amountSize,
+      bold: true,
+      color: Colors.white,
+      height: 1.2,
+    );
+  }
+  y += put(amount, contentX, y);
+  y += 4;
+  y += put(
+    painter(
+      data.converted,
+      size: 14,
+      color: Colors.white.withValues(alpha: .9),
+    ),
+    contentX,
+    y,
+  );
+  final headerBottom = y + 26;
+  y = headerBottom + 26;
+
+  // ---- ring + period progress ----
+  const ringSize = 116.0, ringStroke = 12.0;
+  final ringTop = y;
+  final ratio = data.ratio.isFinite ? data.ratio.clamp(0, 1).toDouble() : 0.0;
+  ops.add((canvas) {
+    final rect = Rect.fromLTWH(
+      contentX,
+      ringTop,
+      ringSize,
+      ringSize,
+    ).deflate(ringStroke / 2);
+    final paint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = ringStroke
+      ..strokeCap = StrokeCap.round;
+    canvas.drawArc(
+      rect,
+      0,
+      6.283185307179586,
+      false,
+      paint..color = AppColors.line,
+    );
+    if (ratio > 0) {
+      paint.shader = ui.Gradient.linear(rect.topLeft, rect.bottomRight, [
+        AppColors.blue,
+        violet,
+      ]);
+      canvas.drawArc(
+        rect,
+        -1.5707963267948966,
+        6.283185307179586 * ratio,
+        false,
+        paint,
+      );
+    }
+  });
+  final pct = painter(
+    data.percent,
+    size: 24,
+    bold: true,
+    maxWidth: ringSize - ringStroke * 2 - 6,
+    align: TextAlign.center,
+    height: 1.1,
+  );
+  put(
+    pct,
+    contentX + (ringSize - pct.width) / 2,
+    ringTop + (ringSize - pct.height) / 2,
+  );
+  const textX = contentX + ringSize + 22;
+  const textW = contentW - ringSize - 22;
+  final dates = painter(
     l10n.financePeriodDates(
       data.start?.toString() ?? l10n.financeUnknown,
       data.end?.toString() ?? l10n.financeUnknown,
     ),
     size: 12,
     color: AppColors.muted,
+    maxWidth: textW,
   );
-  y += 12;
-  for (final row in [
-    l10n.financeExportValuationDate(data.asOf.toString()),
-    l10n.financeExportDue(data.due.toString()),
-    l10n.financeExportRemainingDays(data.remaining),
-    l10n.financeExportRenewal(data.renewal),
-    l10n.financeExportDaily(data.daily),
-  ]) {
-    line(row);
+  final progress = painter(
+    l10n.financePeriodProgress(
+      data.periodLabel,
+      (ratio * 100).toStringAsFixed(1),
+      data.activeRemaining,
+      data.days,
+    ),
+    size: 15,
+    bold: true,
+    maxWidth: textW,
+  );
+  // Centre the caption beside the ring when it is shorter than the ring.
+  final blockH = progress.height + 4 + dates.height;
+  var ty = ringTop + (blockH < ringSize ? (ringSize - blockH) / 2 : 0);
+  ty += put(progress, textX, ty) + 4;
+  ty += put(dates, textX, ty);
+  y = (ringTop + ringSize > ty ? ringTop + ringSize : ty) + 26;
+
+  // ---- timeline: period start -> valuation date -> due ----
+  final start = data.start;
+  final due = data.due;
+  if (start != null) {
+    final total = start.daysUntil(due);
+    final fraction = total <= 0
+        ? 0.0
+        : (start.daysUntil(data.asOf) / total).clamp(0, 1).toDouble();
+    final lineY = y + 10;
+    ops.add((canvas) {
+      final line = Paint()
+        ..strokeWidth = 5
+        ..strokeCap = StrokeCap.round;
+      final x0 = contentX + 8, x1 = contentX + contentW - 8;
+      final x = x0 + (x1 - x0) * fraction;
+      canvas.drawLine(
+        Offset(x0, lineY),
+        Offset(x1, lineY),
+        line..color = AppColors.line,
+      );
+      if (x > x0) {
+        canvas.drawLine(
+          Offset(x0, lineY),
+          Offset(x, lineY),
+          line..color = AppColors.blue,
+        );
+      }
+      canvas.drawCircle(Offset(x0, lineY), 6, Paint()..color = AppColors.blue);
+      canvas.drawCircle(Offset(x1, lineY), 6, Paint()..color = AppColors.muted);
+      canvas.drawCircle(Offset(x, lineY), 11, Paint()..color = AppColors.blue);
+      canvas.drawCircle(Offset(x, lineY), 5.5, Paint()..color = Colors.white);
+    });
+    y += 30;
+    const colW = contentW / 3;
+    var rowH = 0.0;
+    final labels = [
+      (l10n.r3FinanceTimelineStart, start, TextAlign.start),
+      (l10n.r3FinanceTimelineAsOf, data.asOf, TextAlign.center),
+      (l10n.r3FinanceTimelineDue, due, TextAlign.end),
+    ];
+    for (var i = 0; i < 3; i++) {
+      final caption = painter(
+        labels[i].$1,
+        size: 12,
+        color: AppColors.muted,
+        maxWidth: colW,
+        align: labels[i].$3,
+      );
+      final date = painter(
+        labels[i].$2.toString(),
+        size: 13,
+        bold: true,
+        maxWidth: colW,
+        align: labels[i].$3,
+      );
+      final cx = contentX + colW * i;
+      // TextPainter aligns inside its own width, so give every column the
+      // same box and let the alignment do the rest.
+      put(caption, cx + (colW - caption.width) * (i / 2), y);
+      put(date, cx + (colW - date.width) * (i / 2), y + caption.height);
+      final h = caption.height + date.height;
+      if (h > rowH) rowH = h;
+    }
+    y += rowH + 22;
   }
-  if (data.futurePeriods > 0) {
-    line(
-      l10n.financeExportFuturePeriods(data.futurePeriods),
+
+  // ---- key figures ----
+  double tile(String label, String value, double x, double w, double top) {
+    final cap = painter(
+      label,
       size: 12,
       color: AppColors.muted,
+      maxWidth: w - 24,
     );
+    final val = painter(
+      value,
+      size: 16,
+      bold: true,
+      maxWidth: w - 24,
+      height: 1.3,
+    );
+    final h = 12 + cap.height + 2 + val.height + 12;
+    ops.add((canvas) {
+      canvas.drawRRect(
+        RRect.fromRectAndRadius(
+          Rect.fromLTWH(x, top, w, h),
+          const Radius.circular(14),
+        ),
+        Paint()..color = AppColors.soft,
+      );
+    });
+    put(cap, x + 12, top + 12);
+    put(val, x + 12, top + 12 + cap.height + 2);
+    return h;
   }
-  line(data.periodBasis, size: 12, color: AppColors.muted);
-  y += 14;
-  line(data.fx, size: 12, color: AppColors.muted);
-  line(data.fxSource, size: 12, color: AppColors.muted);
-  y += 14;
-  line(
-    l10n.financeExportDisclaimer,
-    size: 14,
-    bold: true,
-    color: AppColors.blue,
+
+  const gap = 10.0;
+  const half = (contentW - gap) / 2;
+  final h1 = tile(
+    l10n.financeRemainingDays,
+    l10n.financeDaysValue(data.remaining),
+    contentX,
+    half,
+    y,
   );
-  line(l10n.financeExportFooter, size: 12, color: AppColors.muted);
-  final height = (y + 24).ceil();
+  final h2 = tile(
+    l10n.financeDailyShown,
+    data.daily,
+    contentX + half + gap,
+    half,
+    y,
+  );
+  y += (h1 > h2 ? h1 : h2) + gap;
+  y += tile(l10n.financeRenewalCycle, data.renewal, contentX, contentW, y) + 20;
+
+  // ---- notes ----
+  if (data.futurePeriods > 0) {
+    y +=
+        put(
+          painter(
+            l10n.financeExportFuturePeriods(data.futurePeriods),
+            size: 12,
+            color: AppColors.muted,
+          ),
+          contentX,
+          y,
+        ) +
+        4;
+  }
+  y +=
+      put(
+        painter(data.periodBasis, size: 12, color: AppColors.muted),
+        contentX,
+        y,
+      ) +
+      4;
+  y += put(painter(data.fx, size: 12, color: AppColors.muted), contentX, y);
+  y +=
+      put(
+        painter(data.fxSource, size: 12, color: AppColors.muted),
+        contentX,
+        y,
+      ) +
+      14;
+  final ruleY = y;
+  ops.add((canvas) {
+    canvas.drawLine(
+      Offset(contentX, ruleY),
+      Offset(contentX + contentW, ruleY),
+      Paint()
+        ..color = AppColors.line
+        ..strokeWidth = 1,
+    );
+  });
+  y += 14;
+  y +=
+      put(
+        painter(
+          l10n.financeExportDisclaimer,
+          size: 13,
+          bold: true,
+          color: AppColors.blue,
+        ),
+        contentX,
+        y,
+      ) +
+      4;
+  y += put(
+    painter(l10n.financeExportFooter, size: 12, color: AppColors.muted),
+    contentX,
+    y,
+  );
+  final cardBottom = y + 24;
+  final height = (cardBottom + cardX).ceil();
+
   final recorder = ui.PictureRecorder();
   final canvas = Canvas(recorder)..scale(2);
   canvas.drawRect(
     Rect.fromLTWH(0, 0, width, height.toDouble()),
     Paint()..color = AppColors.canvas,
   );
-  canvas.drawRRect(
-    RRect.fromRectAndRadius(
-      Rect.fromLTWH(16, 16, width - 32, height - 32),
-      const Radius.circular(18),
-    ),
-    Paint()..color = Colors.white,
+  final cardRect = RRect.fromRectAndRadius(
+    Rect.fromLTWH(cardX, cardX, cardW, cardBottom - cardX),
+    const Radius.circular(24),
   );
-  canvas.drawRRect(
-    RRect.fromRectAndRadius(
-      Rect.fromLTWH(margin, progressY, width - margin * 2, 7),
-      const Radius.circular(4),
-    ),
-    Paint()..color = AppColors.line,
-  );
-  if (data.ratio > 0) {
-    canvas.drawRRect(
-      RRect.fromRectAndRadius(
-        Rect.fromLTWH(
-          margin,
-          progressY,
-          (width - margin * 2) * data.ratio.clamp(0, 1),
-          7,
-        ),
-        const Radius.circular(4),
+  canvas.drawRRect(cardRect, Paint()..color = Colors.white);
+  canvas.save();
+  canvas.clipRRect(cardRect);
+  canvas.drawRect(
+    Rect.fromLTRB(cardX, headerTop, cardX + cardW, headerBottom),
+    Paint()
+      ..shader = ui.Gradient.linear(
+        Offset(cardX, headerTop),
+        Offset(cardX + cardW, headerBottom),
+        [AppColors.blue, indigo, violet],
+        const [0, .55, 1],
       ),
-      Paint()..color = AppColors.blue,
-    );
-  }
-  for (final block in blocks) {
-    block.painter.paint(canvas, Offset(margin, block.y));
-    block.painter.dispose();
+  );
+  canvas.restore();
+  for (final op in ops) {
+    op(canvas);
   }
   final picture = recorder.endRecording();
   final image = await picture.toImage((width * 2).round(), height * 2);

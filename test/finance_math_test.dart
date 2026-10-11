@@ -363,4 +363,128 @@ void main() {
       isNull,
     );
   });
+
+  group('transfer premium', () {
+    const usd = FxSettings(displayCurrency: 'USD');
+    QuoteResult? quote({
+      Money? offer,
+      BigInt? premium,
+      Rational? percent,
+      FinanceAmount? reference,
+      FxSettings fx = usd,
+      FeePayer payer = FeePayer.split,
+      int fee = 0,
+    }) => calculateQuote(
+      offer: offer,
+      premiumMinor: premium,
+      premiumPercent: percent,
+      fee: Money('USD', fee),
+      payer: payer,
+      reference: reference ?? FinanceAmount.money(const Money('USD', 10000)),
+      fx: fx,
+    );
+
+    test('reference + premium = price for every input form', () {
+      final byOffer = quote(offer: const Money('USD', 11250))!;
+      final byAmount = quote(premium: BigInt.from(1250))!;
+      final byPercent = quote(percent: Rational.of(25, 2))!;
+      for (final q in [byOffer, byAmount, byPercent]) {
+        expect(q.referenceMinor, BigInt.from(10000));
+        expect(q.premiumMinor, BigInt.from(1250));
+        expect(q.offerMinor, BigInt.from(11250));
+        expect(q.referenceMinor + q.premiumMinor, q.offerMinor);
+        expect(q.premiumPercent, '12.50');
+        expect(q.isDiscount, isFalse);
+      }
+    });
+
+    test('negative premium is a discount; price may reach zero, not below', () {
+      final discount = quote(premium: BigInt.from(-2500))!;
+      expect(discount.offerMinor, BigInt.from(7500));
+      expect(discount.isDiscount, isTrue);
+      expect(discount.premium, '\$-25.00');
+      expect(discount.premiumPercent, '-25.00');
+      expect(quote(percent: Rational.of(-100))!.offerMinor, BigInt.zero);
+      expect(quote(premium: BigInt.from(-10000))!.offerMinor, BigInt.zero);
+      expect(quote(premium: BigInt.from(-10001)), isNull);
+      expect(quote(percent: Rational.of(-101)), isNull);
+    });
+
+    test('percent of a rounded reference rounds half away from zero', () {
+      // 1 % of 1050 minor units = 10.5 -> 11; the discount mirrors it.
+      final ref = FinanceAmount.money(const Money('USD', 1050));
+      expect(
+        quote(reference: ref, percent: Rational.of(1))!.premiumMinor,
+        BigInt.from(11),
+      );
+      expect(
+        quote(reference: ref, percent: Rational.of(-1))!.premiumMinor,
+        BigInt.from(-11),
+      );
+      // The reference itself is rounded once, half away from zero.
+      final half = FinanceAmount(
+        'USD',
+        Rational(BigInt.from(20001), BigInt.two),
+      );
+      final q = quote(reference: half, premium: BigInt.from(50))!;
+      expect(q.referenceMinor, BigInt.from(10001));
+      expect(q.offerMinor, BigInt.from(10051));
+      expect(q.referenceMinor + q.premiumMinor, q.offerMinor);
+    });
+
+    test('foreign reference converts first; missing rate refuses', () {
+      const fx = FxSettings(
+        displayCurrency: 'CNY',
+        usdToCny: '7.12',
+        rateDate: LedgerDate(2026, 10, 1),
+      );
+      final q = quote(
+        fx: fx,
+        reference: FinanceAmount.money(const Money('USD', 1000)),
+        premium: BigInt.from(500),
+      )!;
+      expect(q.currency, 'CNY');
+      expect(q.referenceMinor, BigInt.from(7120));
+      expect(q.offerMinor, BigInt.from(7620));
+      expect(
+        quote(
+          fx: fx,
+          reference: FinanceAmount.money(const Money('EUR', 1000)),
+          premium: BigInt.one,
+        ),
+        isNull,
+      );
+    });
+
+    test('fee rules are unchanged: odd unit to buyer, totals conserve', () {
+      final q = quote(percent: Rational.of(10), fee: 5, payer: FeePayer.split)!;
+      expect(q.offerMinor, BigInt.from(11000));
+      expect(q.buyerFeeMinor, BigInt.from(3));
+      expect(q.sellerFeeMinor, BigInt.from(2));
+      expect(q.buyerTotalMinor, BigInt.from(11003));
+      expect(q.sellerNetMinor, BigInt.from(10998));
+      expect(q.buyerTotalMinor - q.sellerNetMinor, q.feeMinor + BigInt.zero);
+    });
+
+    test('bounds: maximum price, offer currency and exactly one input', () {
+      final max = BigInt.from(Money.maxMinor);
+      expect(quote(premium: max - BigInt.from(10000))!.offerMinor, max);
+      expect(quote(premium: max - BigInt.from(9999)), isNull);
+      expect(quote(offer: const Money('EUR', 1)), isNull);
+      expect(() => quote(), throwsArgumentError);
+      expect(
+        () => quote(offer: const Money('USD', 1), premium: BigInt.one),
+        throwsArgumentError,
+      );
+    });
+
+    test('percent parser accepts 0-1000 with two decimals only', () {
+      expect(parseQuotePercent('12.5'), Rational.of(25, 2));
+      expect(parseQuotePercent(' 0 '), Rational.zero);
+      expect(parseQuotePercent('1000'), Rational.of(1000));
+      for (final bad in ['1000.01', '-5', '1.234', '', 'abc', '10000', '1,5']) {
+        expect(parseQuotePercent(bad), isNull, reason: bad);
+      }
+    });
+  });
 }
