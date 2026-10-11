@@ -4,7 +4,6 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 
-import '../cloud/cloud_controller.dart';
 import '../core/net_address.dart';
 import '../core/value_types.dart';
 import '../data/ledger_store.dart';
@@ -12,6 +11,8 @@ import '../l10n/locale_preference.dart';
 import '../l10n/generated/app_localizations.dart';
 import '../finance/finance_math.dart';
 import '../finance/finance_models.dart';
+import '../providers/provider_catalog.dart';
+import '../providers/provider_record.dart';
 import '../security/security_controller.dart';
 import '../settings/reminder_rule.dart';
 import '../settings/reminder_scheduler.dart';
@@ -23,27 +24,67 @@ enum DueFilter { all, overdue, next30, unknown }
 
 enum ServerSort { favorites, due, name, updated }
 
+/// How a server's package snapshot relates to the current catalog.
+enum PackageCatalogState {
+  /// The catalog has not been loaded (yet, or it failed): say nothing.
+  unknown,
+  same,
+  changed,
+  removed,
+}
+
 class LedgerController extends ChangeNotifier {
   LedgerController(
     this.store, {
     DateTime Function()? clock,
     SecurityController? security,
-    CloudController? cloud,
     ReminderPlatform? reminderPlatform,
+    ProviderCatalog? catalog,
   }) : clock = clock ?? DateTime.now,
+       catalogSource = catalog ?? const BuiltinProviderCatalog(),
        security = security ?? SecurityController(store: store) {
-    this.cloud =
-        cloud ?? CloudController(store: store, secrets: this.security.secrets);
-    this.cloud.addListener(_cloudChanged);
     reminders = ReminderScheduler(
       store,
       platform: reminderPlatform,
       clock: this.clock,
     );
-    reminders.addListener(_cloudChanged);
+    reminders.addListener(notifyListeners);
   }
   final SecurityController security;
-  late final CloudController cloud;
+
+  /// Where providers and packages come from (bundled asset today).
+  final ProviderCatalog catalogSource;
+  CatalogSnapshot? _catalog;
+  Future<void>? _catalogLoading;
+
+  /// The last successfully loaded catalog, or an empty one. A catalog failure
+  /// never affects the ledger: the app then offers only local providers.
+  CatalogSnapshot get catalog => _catalog ?? CatalogSnapshot.empty;
+  bool catalogFailed = false;
+  bool get catalogLoaded => _catalog != null;
+
+  /// Loads the catalog once (concurrent callers share the load). Safe to call
+  /// from `initState`; a failed load can be retried by calling it again, and
+  /// [force] re-reads an already loaded catalog.
+  Future<void> loadCatalog({bool force = false}) {
+    if (_catalog != null && !force) return Future<void>.value();
+    return _catalogLoading ??= _readCatalog();
+  }
+
+  Future<void> _readCatalog() async {
+    try {
+      final loaded = await catalogSource.load();
+      if (_disposed) return;
+      _catalog = loaded;
+      catalogFailed = false;
+    } catch (_) {
+      catalogFailed = true;
+    } finally {
+      _catalogLoading = null;
+    }
+    if (!_disposed) notifyListeners();
+  }
+
   late final ReminderScheduler reminders;
   List<ReminderRule> reminderRules = const [];
   String themeMode = 'system';
@@ -67,7 +108,7 @@ class LedgerController extends ChangeNotifier {
       languagePreference = preference;
       reminders.languagePreference = preference;
       // Resubmit existing reminder content in the saved language. This does
-      // not reload ledger/cloud/SSH state, and native failures stay separate.
+      // not reload ledger/SSH state, and native failures stay separate.
       unawaited(reminders.reconcile());
     } finally {
       savingLanguage = false;
@@ -78,15 +119,11 @@ class LedgerController extends ChangeNotifier {
   ReminderRule? reminderFor(String id) =>
       reminderRules.where((r) => r.serverId == id).firstOrNull;
 
-  void _cloudChanged() => notifyListeners();
-
   @override
   void dispose() {
     _disposed = true;
-    cloud.removeListener(_cloudChanged);
-    reminders.removeListener(_cloudChanged);
+    reminders.removeListener(notifyListeners);
     reminders.dispose();
-    cloud.dispose();
     security.dispose();
     super.dispose();
   }
@@ -97,6 +134,7 @@ class LedgerController extends ChangeNotifier {
   List<ServerGroup> groups = [];
   List<ServicePeriod> periods = [];
   List<PaymentRecord> payments = [];
+  List<ProviderRecord> providers = const [];
   FxSettings fx = const FxSettings();
   List<ServicePeriod> periodsFor(String serverId) =>
       periods.where((p) => p.serverId == serverId).toList(growable: false);
@@ -182,16 +220,42 @@ class LedgerController extends ChangeNotifier {
       groups.where((g) => g.id == id).firstOrNull?.name ??
       (l10n ?? defaultLocalizations).ungrouped;
   ProviderRecord? providerFor(ServerRecord server) =>
-      cloud.providers.where((p) => p.id == server.providerId).firstOrNull;
+      providers.where((p) => p.id == server.providerId).firstOrNull;
+
+  ProviderRecord? localProviderForCatalog(String catalogId) =>
+      providers.where((p) => p.catalogId == catalogId).firstOrNull;
+
+  CatalogProvider? catalogProviderFor(ProviderRecord provider) =>
+      provider.catalogId == null ? null : catalog.provider(provider.catalogId!);
+
+  List<ServerRecord> serversForPackage(String packageId) =>
+      records.where((s) => s.packageId == packageId).toList(growable: false);
+
+  /// The package as it was when the server chose it (null without a package).
+  CatalogPackage? packageSnapshotFor(ServerRecord server) {
+    final source = server.packageSnapshot;
+    if (source == null) return null;
+    try {
+      return CatalogPackage.decodeSnapshot(source);
+    } on CatalogFormatException {
+      return null;
+    }
+  }
+
+  PackageCatalogState packageStateFor(ServerRecord server) {
+    final snapshot = packageSnapshotFor(server);
+    if (snapshot == null || !catalogLoaded) return PackageCatalogState.unknown;
+    final current = catalog.package(snapshot.id);
+    if (current == null) return PackageCatalogState.removed;
+    return current.sameSpecAs(snapshot)
+        ? PackageCatalogState.same
+        : PackageCatalogState.changed;
+  }
 
   String providerNameFor(ServerRecord server, {AppLocalizations? l10n}) {
     final strings = l10n ?? defaultLocalizations;
     final provider = providerFor(server);
-    if (provider != null) {
-      return provider.needsReview
-          ? strings.providerPendingName(provider.name)
-          : provider.name;
-    }
+    if (provider != null) return provider.name;
     return server.vendor.trim().isNotEmpty &&
             server.vendor.trim() != legacyUnknownVendor
         ? server.vendor
@@ -257,8 +321,9 @@ class LedgerController extends ChangeNotifier {
     final loadedRules = await store.reminderRules();
     final loadedTheme = await store.themeMode();
     final loadedLanguage = await store.languagePreference();
-    await cloud.reload();
+    final loadedProviders = await store.providers();
     refreshFailed = false;
+    providers = List.unmodifiable(loadedProviders);
     periods = List.unmodifiable(loadedPeriods);
     payments = List.unmodifiable(loadedPayments);
     fx = loadedFx;
@@ -281,17 +346,6 @@ class LedgerController extends ChangeNotifier {
     // Native permission/scheduling errors must never turn a committed ledger
     // mutation into a failed save or block access to local data.
     unawaited(reminders.reconcile());
-  }
-
-  /// A cloud write is already committed. Surface a reload failure without
-  /// inviting duplicate imports or losing the successful write result.
-  Future<void> refreshAfterCloudCommit() async {
-    try {
-      await refresh();
-    } catch (_) {
-      refreshFailed = true;
-      notifyListeners();
-    }
   }
 
   Future<T> mutate<T>(Future<T> Function() action) async {

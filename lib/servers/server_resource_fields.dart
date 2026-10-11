@@ -90,9 +90,7 @@ class ServerResourceFields extends StatefulWidget {
   const ServerResourceFields({
     super.key,
     this.initial,
-    this.observed = const {},
     this.enabled = true,
-    this.importing = true,
     this.defaultTrafficPeriodMonths,
     this.collapsible = false,
     this.initiallyExpanded = true,
@@ -101,8 +99,7 @@ class ServerResourceFields extends StatefulWidget {
     this.margin = const EdgeInsets.symmetric(horizontal: 16),
   });
   final ServerResources? initial;
-  final Map<String, Object?> observed;
-  final bool enabled, importing;
+  final bool enabled;
 
   /// Only used for new configurations; existing unknown periods stay unknown.
   final int? defaultTrafficPeriodMonths;
@@ -164,7 +161,7 @@ class ServerResourceFieldsState extends State<ServerResourceFields> {
     super.initState();
     final initial = widget.initial;
     final data = initial == null
-        ? widget.observed
+        ? const <String, Object?>{}
         : <String, Object?>{
             'ip': initial.ip,
             'ipv6': initial.ipv6,
@@ -177,9 +174,7 @@ class ServerResourceFieldsState extends State<ServerResourceFields> {
     _trafficPeriodMonths = initial == null
         ? widget.defaultTrafficPeriodMonths
         : initial.trafficPeriodMonths;
-    _unlimited =
-        initial?.trafficUnlimited ??
-        widget.observed['trafficUnlimited'] == true;
+    _unlimited = initial?.trafficUnlimited ?? false;
     for (final key in ['ip', 'ipv6', 'hostname', 'vcpu']) {
       _fields[key] = TextEditingController(text: data[key]?.toString() ?? '');
     }
@@ -225,6 +220,39 @@ class ServerResourceFieldsState extends State<ServerResourceFields> {
       (key == 'ip' && widget.mirroredIp != null) ||
       (key == 'ipv6' && widget.mirroredIpv6 != null);
 
+  /// Replaces the hardware fields with [resources] (a package pre-fill). The
+  /// IP and hostname rows are left alone: packages never carry addresses.
+  void applyResources(ServerResources resources) {
+    setState(() {
+      _fields['vcpu']!.text = resources.vcpu?.toString() ?? '';
+      for (final entry in {
+        'ramBytes': resources.ramBytes,
+        'diskBytes': resources.diskBytes,
+        'trafficBytes': resources.trafficBytes,
+      }.entries) {
+        final bytes = entry.value;
+        _exact.remove(entry.key);
+        if (bytes == null) {
+          _fields[entry.key]!.text = '';
+          _units[entry.key] = entry.key == 'ramBytes'
+              ? units['MiB']!
+              : units['GiB']!;
+        } else {
+          final shown = ServerResources.editableAmount(bytes);
+          _units[entry.key] = shown.factor;
+          _fields[entry.key]!.text = shown.text;
+          _exact[entry.key] = (
+            bytes: bytes,
+            text: shown.text,
+            factor: shown.factor,
+          );
+        }
+      }
+      _unlimited = resources.trafficUnlimited;
+      _trafficPeriodMonths = resources.trafficPeriodMonths;
+    });
+  }
+
   int? _bytes(String key) {
     final text = _fields[key]!.text.trim();
     final exact = _exact[key];
@@ -265,57 +293,6 @@ class ServerResourceFieldsState extends State<ServerResourceFields> {
     _ => _text(key),
   };
 
-  bool _apiSource(String key) {
-    if (widget.initial != null) {
-      final initial = widget.initial!;
-      final old = switch (key) {
-        'ip' => initial.ip,
-        'ipv6' => initial.ipv6,
-        'hostname' => initial.hostname,
-        'vcpu' => initial.vcpu,
-        'ramBytes' => initial.ramBytes,
-        'diskBytes' => initial.diskBytes,
-        _ => initial.trafficBytes,
-      };
-      return initial.apiFields.contains(key) &&
-          old == _value(key) &&
-          (key != 'trafficBytes' || initial.trafficUnlimited == _unlimited);
-    }
-    if (key == 'trafficBytes' && _unlimited) {
-      return widget.observed['trafficUnlimited'] == true;
-    }
-    final observed = widget.observed[key];
-    return observed != null && observed == _value(key);
-  }
-
-  String? _source(String key) {
-    // Optional / alternative addresses are not "missing" when left empty.
-    if (_text(key).isEmpty &&
-        (key == 'ipv6' || (key == 'ip' && _text('ipv6').isNotEmpty))) {
-      return null;
-    }
-    if (!widget.importing && !_apiSource(key)) {
-      return _text(key).isEmpty && !(key == 'trafficBytes' && _unlimited)
-          ? null
-          : context.l10n.resourceSourceManual;
-    }
-    if (_apiSource(key)) {
-      return context.l10n.resourceSourceApi;
-    }
-    if (widget.initial != null) {
-      return context.l10n.resourceSourceManual;
-    }
-    if (key == 'trafficBytes' && _unlimited) {
-      return context.l10n.resourceSourceUnlimited;
-    }
-    if (_text(key).isEmpty) {
-      return context.l10n.resourceSourceMissing;
-    }
-    return widget.observed[key] == null
-        ? context.l10n.resourceSourceCompleted
-        : context.l10n.resourceSourceEditedApi;
-  }
-
   ServerResources? validateAndRead({
     Set<FormFieldState<Object?>>? invalidFields,
   }) {
@@ -337,14 +314,8 @@ class ServerResourceFieldsState extends State<ServerResourceFields> {
       trafficBytes: _unlimited ? null : _bytes('trafficBytes'),
       trafficUnlimited: _unlimited,
       trafficPeriodMonths: _trafficPeriodMonths,
-      apiFields: {
-        for (final key in _fields.keys)
-          if (_apiSource(key)) key,
-      },
     );
-    return result.validate(requireComplete: widget.importing) == null
-        ? result
-        : null;
+    return result.validate() == null ? result : null;
   }
 
   String? _validate(String key) {
@@ -352,15 +323,9 @@ class ServerResourceFieldsState extends State<ServerResourceFields> {
     if (key == 'trafficBytes' && _unlimited) {
       return null;
     }
-    // IPv6 is always optional; a complete import needs one address of either
-    // family, so an empty IPv4 is fine next to an IPv6.
-    if (key == 'ipv6' && _text(key).isEmpty) {
-      return null;
-    }
-    if (key == 'ip' && _text(key).isEmpty && _text('ipv6').isNotEmpty) {
-      return null;
-    }
-    if (!widget.importing && _text(key).isEmpty) {
+    // IPv6 is always optional; a complete configuration needs no address at
+    // all, and an empty IPv4 is fine next to an IPv6.
+    if (_text(key).isEmpty) {
       return null;
     }
     if (key == 'ip') {
@@ -400,19 +365,10 @@ class ServerResourceFieldsState extends State<ServerResourceFields> {
     child: child,
   );
 
-  /// Row plus the small provenance line under it.
+  /// Row plus, for a mirrored address, the small "same as the host address"
+  /// caption under it.
   Widget _block(Widget row, String key) {
-    final source = _mirrored(key)
-        ? context.l10n.r6IpSameAsAddress
-        : _source(key);
-    // Plain manual entry is the default of this form and needs no caption;
-    // API provenance (and every state of the import flow) stays visible.
-    if (source == null ||
-        (!_mirrored(key) &&
-            !widget.importing &&
-            source == context.l10n.resourceSourceManual)) {
-      return row;
-    }
+    if (!_mirrored(key)) return row;
     final p = context.palette;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -421,7 +377,7 @@ class ServerResourceFieldsState extends State<ServerResourceFields> {
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
           child: Text(
-            source,
+            context.l10n.r6IpSameAsAddress,
             style: TextStyle(fontSize: 12.5, height: 1.3, color: p.text3),
           ),
         ),
@@ -513,33 +469,30 @@ class ServerResourceFieldsState extends State<ServerResourceFields> {
           0,
           ServerResources.maxVcpu,
         );
-        return _block(
-          AppFormRow(
-            label: l10n.resourceVcpuCount,
-            errorText: field.errorText,
-            child: Opacity(
-              opacity: widget.enabled ? 1 : .45,
-              // Tapping the number (the gap between the two buttons) opens an
-              // exact entry sheet, so large counts do not need many taps.
-              child: GestureDetector(
-                onTap: widget.enabled ? _enterVcpu : null,
-                child: AppStepper(
-                  key: const ValueKey('resource-vcpu'),
-                  value: count,
-                  min: 0,
-                  max: ServerResources.maxVcpu,
-                  // 0 is the explicit "unknown" state, never stored as 0.
-                  format: (v) => v == 0 ? '—' : '$v',
-                  onChanged: widget.enabled ? _setVcpu : null,
-                  decrementLabel: l10n.uiFormVcpuDecrease,
-                  incrementLabel: l10n.uiFormVcpuIncrease,
-                  decrementKey: const ValueKey('resource-vcpu-decrease'),
-                  incrementKey: const ValueKey('resource-vcpu-increase'),
-                ),
+        return AppFormRow(
+          label: l10n.resourceVcpuCount,
+          errorText: field.errorText,
+          child: Opacity(
+            opacity: widget.enabled ? 1 : .45,
+            // Tapping the number (the gap between the two buttons) opens an
+            // exact entry sheet, so large counts do not need many taps.
+            child: GestureDetector(
+              onTap: widget.enabled ? _enterVcpu : null,
+              child: AppStepper(
+                key: const ValueKey('resource-vcpu'),
+                value: count,
+                min: 0,
+                max: ServerResources.maxVcpu,
+                // 0 is the explicit "unknown" state, never stored as 0.
+                format: (v) => v == 0 ? '—' : '$v',
+                onChanged: widget.enabled ? _setVcpu : null,
+                decrementLabel: l10n.uiFormVcpuDecrease,
+                incrementLabel: l10n.uiFormVcpuIncrease,
+                decrementKey: const ValueKey('resource-vcpu-decrease'),
+                incrementKey: const ValueKey('resource-vcpu-increase'),
               ),
             ),
           ),
-          'vcpu',
         );
       },
     );
@@ -583,54 +536,51 @@ class ServerResourceFieldsState extends State<ServerResourceFields> {
             ),
           ),
         );
-        return _block(
-          LayoutBuilder(
-            builder: (context, box) {
-              // AppFormRow pads 16 px per side and gives its label at most 45%.
-              final inner = box.maxWidth - 32;
-              final labelWidth = math.min(
-                _textWidth(label, 16).ceilToDouble() + 1,
-                inner * .45,
+        return LayoutBuilder(
+          builder: (context, box) {
+            // AppFormRow pads 16 px per side and gives its label at most 45%.
+            final inner = box.maxWidth - 32;
+            final labelWidth = math.min(
+              _textWidth(label, 16).ceilToDouble() + 1,
+              inner * .45,
+            );
+            final segment = compactSegmentWidth(context, units.keys);
+            final inline = inner - labelWidth - 12 >= 64 + 8 + segment;
+            if (inline) {
+              return AppFormRow(
+                key: ValueKey('resource-row-$key'),
+                label: label,
+                errorText: field.errorText,
+                child: Row(
+                  children: [
+                    Expanded(child: input),
+                    const SizedBox(width: 8),
+                    unit,
+                  ],
+                ),
               );
-              final segment = compactSegmentWidth(context, units.keys);
-              final inline = inner - labelWidth - 12 >= 64 + 8 + segment;
-              if (inline) {
-                return AppFormRow(
-                  key: ValueKey('resource-row-$key'),
+            }
+            // Four unit choices do not fit beside the value on a phone, so
+            // the selector sits right-aligned on its own line below it.
+            return Column(
+              key: ValueKey('resource-row-$key'),
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                AppFormRow(
                   label: label,
                   errorText: field.errorText,
-                  child: Row(
-                    children: [
-                      Expanded(child: input),
-                      const SizedBox(width: 8),
-                      unit,
-                    ],
+                  child: input,
+                ),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
+                  child: Align(
+                    alignment: AlignmentDirectional.centerEnd,
+                    child: FittedBox(fit: BoxFit.scaleDown, child: unit),
                   ),
-                );
-              }
-              // Four unit choices do not fit beside the value on a phone, so
-              // the selector sits right-aligned on its own line below it.
-              return Column(
-                key: ValueKey('resource-row-$key'),
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  AppFormRow(
-                    label: label,
-                    errorText: field.errorText,
-                    child: input,
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
-                    child: Align(
-                      alignment: AlignmentDirectional.centerEnd,
-                      child: FittedBox(fit: BoxFit.scaleDown, child: unit),
-                    ),
-                  ),
-                ],
-              );
-            },
-          ),
-          key,
+                ),
+              ],
+            );
+          },
         );
       },
     );
@@ -667,7 +617,7 @@ class ServerResourceFieldsState extends State<ServerResourceFields> {
     final p = context.palette;
     final l10n = context.l10n;
     final title = Text(
-      widget.importing ? l10n.resourceSixRequired : l10n.resourceHardware,
+      l10n.resourceHardware,
       style: TextStyle(fontSize: 13, color: p.text2),
     );
     final inset = widget.margin.horizontal / 2 + 16;
@@ -713,9 +663,7 @@ class ServerResourceFieldsState extends State<ServerResourceFields> {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    final footnote = widget.importing
-        ? l10n.resourceImportHelp
-        : l10n.resourceLocalHelp;
+    final footnote = l10n.resourceLocalHelp;
     return Form(
       key: _form,
       child: Column(

@@ -12,7 +12,6 @@ import 'support/form_test_helpers.dart';
 void main() {
   Future<GlobalKey<ServerResourceFieldsState>> mount(
     WidgetTester tester, {
-    bool importing = false,
     ServerResources? initial,
     ValueNotifier<double>? scale,
   }) async {
@@ -26,11 +25,7 @@ void main() {
     final content = Scaffold(
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
-        child: ServerResourceFields(
-          key: key,
-          importing: importing,
-          initial: initial,
-        ),
+        child: ServerResourceFields(key: key, initial: initial),
       ),
     );
     await tester.pumpWidget(
@@ -58,13 +53,6 @@ void main() {
     await tester.pumpAndSettle();
   }
 
-  Future<void> toggleUnlimited(WidgetTester tester) async {
-    final field = find.byKey(const ValueKey('resource-traffic-unlimited'));
-    await tester.ensureVisible(field);
-    await tester.tap(field);
-    await tester.pumpAndSettle();
-  }
-
   testWidgets('row validation recovers after clearing or changing units', (
     tester,
   ) async {
@@ -87,48 +75,6 @@ void main() {
     expect(find.text('请填写大于 0 的容量，精确到整字节'), findsOneWidget);
     await chooseUnit(tester, 'ramBytes', 'GiB');
     expect(key.currentState!.validateAndRead()!.ramBytes, 1610612736);
-    await tester.pumpAndSettle();
-    expect(find.text('请填写大于 0 的容量，精确到整字节'), findsNothing);
-    expect(tester.takeException(), isNull);
-  });
-
-  testWidgets('required traffic error clears for unlimited and returns after', (
-    tester,
-  ) async {
-    final key = await mount(
-      tester,
-      importing: true,
-      initial: ServerResources(
-        ip: '192.0.2.1',
-        hostname: 'review.example',
-        vcpu: 1,
-        ramBytes: 1048576,
-        diskBytes: 1073741824,
-      ),
-    );
-    expect(key.currentState!.validateAndRead(), isNull);
-    await tester.pumpAndSettle();
-    expect(find.text('请填写大于 0 的容量，精确到整字节'), findsOneWidget);
-    await toggleUnlimited(tester);
-    var result = key.currentState!.validateAndRead()!;
-    expect(result.trafficUnlimited, isTrue);
-    expect(result.trafficBytes, isNull);
-    await tester.pumpAndSettle();
-    expect(find.text('请填写大于 0 的容量，精确到整字节'), findsNothing);
-    await chooseOption(
-      tester,
-      find.byKey(const ValueKey('resource-traffic-period')),
-      '每年',
-    );
-    expect(key.currentState!.validateAndRead()!.trafficPeriodMonths, 12);
-    await toggleUnlimited(tester);
-    expect(key.currentState!.validateAndRead(), isNull);
-    await chooseUnit(tester, 'trafficBytes', 'B');
-    await fill(tester, 'trafficBytes', '9007199254740991');
-    result = key.currentState!.validateAndRead()!;
-    expect(result.trafficBytes, ServerResources.maxBytes);
-    expect(result.trafficPeriodMonths, 12);
-    expect(result.trafficUnlimited, isFalse);
     await tester.pumpAndSettle();
     expect(find.text('请填写大于 0 的容量，精确到整字节'), findsNothing);
     expect(tester.takeException(), isNull);

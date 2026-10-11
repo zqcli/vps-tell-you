@@ -12,7 +12,7 @@ import 'package:vps_tell_you/servers/server_form.dart';
 import 'package:vps_tell_you/servers/server_record.dart';
 import 'package:vps_tell_you/security/security_controller.dart';
 
-import 'cloud_store_test.dart' show completedResources;
+import 'support/legacy_ledger_fixture.dart' show completedResources;
 import 'security_store_test.dart' show FakeSecretStore, FakeDeviceAuth;
 
 void main() {
@@ -124,8 +124,6 @@ void main() {
     await tester.pumpAndSettle();
     final saved = (await store.servers()).single;
     expect(saved.resources!.hostname, 'Changed-Hostname');
-    expect(saved.resources!.apiFields, isNot(contains('hostname')));
-    expect(saved.resources!.apiFields, contains('ramBytes'));
   });
   testWidgets('invalid resource edits cannot be hidden by scrolling away', (
     tester,

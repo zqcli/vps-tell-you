@@ -81,8 +81,6 @@ void main() {
       );
       await tester.tap(find.byKey(const ValueKey('provider-save')));
       await tester.pumpAndSettle();
-      await tester.tap(find.byKey(const ValueKey('add-manual')));
-      await tester.pumpAndSettle();
       await fill(tester, 'name', 'My VPS');
       await fill(tester, 'host', '192.0.2.42');
       await tester.tap(find.text('保存'));
@@ -109,8 +107,6 @@ void main() {
       await tester.pumpAndSettle();
       final provider = (await store.providers()).single;
       await tester.tap(find.byKey(ValueKey('choose-provider-${provider.id}')));
-      await tester.pumpAndSettle();
-      await tester.tap(find.byKey(const ValueKey('add-manual')));
       await tester.pumpAndSettle();
       await fill(tester, 'name', 'Cancelled new');
       await tester.binding.handlePopRoute();

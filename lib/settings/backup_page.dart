@@ -327,12 +327,18 @@ class _BackupPageState extends State<BackupPage> {
     (DateTime.parse(value).toLocal().toString().substring(0, 19)).toString(),
   );
 
-  String _counts(Map<String, int> counts) => context.l10n.backupCounts(
-    (counts['servers']).toString(),
-    (counts['groups']).toString(),
-    (counts['payments']).toString(),
-    (counts['service_periods']).toString(),
-  );
+  String _counts(Map<String, int> counts) {
+    final base = context.l10n.backupCounts(
+      (counts['servers']).toString(),
+      (counts['groups']).toString(),
+      (counts['payments']).toString(),
+      (counts['service_periods']).toString(),
+    );
+    final providers = counts['providers'] ?? 0;
+    return providers == 0
+        ? base
+        : '$base\n${context.l10n.r6CatBackupProviderCount(providers)}';
+  }
 
   @override
   Widget build(BuildContext context) => ListenableBuilder(

@@ -135,13 +135,6 @@ void main() {
       });
       final trustBefore = await raw.query('host_trust');
       await removeProviderSchema(raw);
-      for (final table in [
-        'cloud_bindings',
-        'cloud_observations',
-        'cloud_accounts',
-      ]) {
-        await raw.execute('DROP TABLE $table');
-      }
       await raw.execute('DROP TABLE snippets');
       await raw.execute('DROP TRIGGER server_reminder');
       await raw.execute('DROP TABLE reminder_rules');

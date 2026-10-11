@@ -7,16 +7,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:xterm/xterm.dart';
-import 'package:vps_tell_you/cloud/cloud_controller.dart';
-import 'package:vps_tell_you/cloud/cloud_models.dart';
-import 'package:vps_tell_you/cloud/cloud_pages.dart';
-import 'package:vps_tell_you/cloud/cloud_widgets.dart';
 import 'package:vps_tell_you/connections/ssh_service.dart';
 import 'package:vps_tell_you/connections/terminal_page.dart';
 import 'package:vps_tell_you/connections/terminal_widgets.dart';
 import 'package:vps_tell_you/core/app_theme.dart';
 import 'package:vps_tell_you/core/ui/ui.dart';
 import 'package:vps_tell_you/data/ledger_store.dart';
+import 'package:vps_tell_you/providers/provider_pages.dart';
 import 'package:vps_tell_you/finance/finance_page.dart';
 import 'package:vps_tell_you/finance/payment_pages.dart';
 import 'package:vps_tell_you/security/host_trust_pages.dart';
@@ -118,33 +115,6 @@ Future<void> _scanPage(WidgetTester tester, String page) async {
   }
 }
 
-class _SyntheticAdapter implements CloudAdapter {
-  @override
-  Future<CloudSnapshot> read({required CloudCancellation cancellation}) async {
-    final at = DateTime.utc(2026, 10, 6, 8);
-    return CloudSnapshot(
-      provider: CloudProvider.solusVm2,
-      completedAt: at,
-      remoteAccountId: 7,
-      instances: [
-        CloudInstance(
-          observedAt: at,
-          projectId: 11,
-          serverId: 101,
-          name: 'Synthetic cloud server',
-          ipv4: '192.0.2.101',
-          hostname: 'fixture-101.example',
-          vcpu: 2,
-          ramBytes: 2147483648,
-          diskBytes: 32212254720,
-          trafficBytes: 1099511627776,
-          power: CloudPower.unknown,
-        ),
-      ],
-    );
-  }
-}
-
 // Tiny deterministic reference: no dates, real names, network, platform fonts,
 // animations or private data. Tests retain Flutter's bundled test font.
 class _ThemeSample extends StatelessWidget {
@@ -177,8 +147,6 @@ class _ThemeSample extends StatelessWidget {
                     LedgerBadge('Overdue', danger: true),
                   ],
                 ),
-                const CloudNotice('Synthetic observation'),
-                const CloudNotice('Synthetic warning', error: true),
                 const TextField(
                   decoration: InputDecoration(
                     labelText: 'Alias',
@@ -282,14 +250,6 @@ void main() {
       final colors = appTheme(brightness: brightness).colorScheme;
       expect(tester.widget<Material>(card).color, colors.surface);
       expect(
-        tester.widget<Text>(find.text('Synthetic observation')).style!.color,
-        colors.onPrimaryContainer,
-      );
-      expect(
-        tester.widget<Text>(find.text('Synthetic warning')).style!.color,
-        colors.onTertiaryContainer,
-      );
-      expect(
         tester.widget<Text>(find.text('Overdue')).style!.color,
         colors.onErrorContainer,
       );
@@ -324,11 +284,6 @@ void main() {
           secrets: secrets,
           authenticator: FakeDeviceAuth(),
         ),
-        cloud: CloudController(
-          store: store,
-          secrets: secrets,
-          adapterFactory: (_, _, _) => _SyntheticAdapter(),
-        ),
       );
       await store.loadDemo();
       await ledger.refresh();
@@ -339,22 +294,6 @@ void main() {
           kind: CredentialKind.password,
           defaultUsername: 'fixture',
           secret: 'SYNTHETIC_TEST_ONLY',
-        ),
-        isTrue,
-      );
-      final verified = (await ledger.cloud.verifyConnection(
-        businessProvider: testProvider,
-        provider: CloudProvider.solusVm2,
-        endpoint: 'https://panel.example',
-        credentials: SolusVm2Credentials('SYNTHETIC_TEST_ONLY'),
-      ))!;
-      expect(
-        await ledger.cloud.saveAccount(
-          verified,
-          alias: 'Synthetic cloud account',
-          selectedInstanceKeys: {
-            verified.keyFor(verified.snapshot.instances.single),
-          },
         ),
         isTrue,
       );
@@ -398,24 +337,10 @@ void main() {
                   CredentialForm(ledger: ledger, kind: CredentialKind.password),
               'host trust': () => HostTrustPage(ledger: ledger),
               'host trust form': () => HostTrustForm(ledger: ledger),
-              'cloud accounts': () => CloudAccountsPage(ledger: ledger),
-              'cloud templates': () => CloudTemplatesPage(
-                businessProvider: testProvider,
+              'providers': () => ProvidersPage(ledger: ledger),
+              'provider details': () => ProviderDetailsPage(
                 ledger: ledger,
-              ),
-              'SolusVM 1 authorization': () => CloudAuthorizationPage(
-                businessProvider: testProvider,
-                ledger: ledger,
-                provider: CloudProvider.solusVm1,
-              ),
-              'SolusVM 2 authorization': () => CloudAuthorizationPage(
-                businessProvider: testProvider,
-                ledger: ledger,
-                provider: CloudProvider.solusVm2,
-              ),
-              'cloud account details': () => CloudAccountDetailsPage(
-                ledger: ledger,
-                accountId: ledger.cloud.accounts.single.id,
+                providerId: testProvider.id,
               ),
             };
             for (final page in pages.entries) {
@@ -463,63 +388,6 @@ void main() {
           },
         );
       }
-
-      testWidgets(
-        '${brightness.name} cloud Back clears keyboard and unsaved authorization on repeat',
-        (tester) async {
-          final accountCount = ledger.cloud.accounts.length;
-          final writes = secrets.writes;
-          await _mount(
-            tester,
-            _opener(
-              () => CloudAuthorizationPage(
-                businessProvider: testProvider,
-                ledger: ledger,
-                provider: CloudProvider.solusVm2,
-              ),
-            ),
-            brightness: brightness,
-            scale: 2,
-          );
-          for (var attempt = 0; attempt < 2; attempt++) {
-            await tester.tap(find.text('Open synthetic page'));
-            await tester.pumpAndSettle();
-            final field = find.byKey(const ValueKey('cloud-token'));
-            await _reveal(tester, field);
-            expect(
-              tester
-                  .widget<EditableText>(
-                    find.descendant(
-                      of: field,
-                      matching: find.byType(EditableText),
-                    ),
-                  )
-                  .controller
-                  .text,
-              isEmpty,
-            );
-            await tester.enterText(field, 'UNSAVED_SYNTHETIC_TOKEN');
-            expect(tester.testTextInput.isVisible, isTrue);
-            tester.view.viewInsets = const FakeViewPadding(bottom: 300);
-            await tester.pumpAndSettle();
-            expect(tester.takeException(), isNull);
-            await tester.pageBack();
-            await tester.pumpAndSettle();
-            tester.view.resetViewInsets();
-            await tester.pumpAndSettle();
-            expect(find.byType(CloudAuthorizationPage), findsNothing);
-            expect(tester.testTextInput.isVisible, isFalse);
-            expect(
-              FocusManager.instance.primaryFocus?.context?.widget,
-              isNot(isA<EditableText>()),
-            );
-            expect(ledger.cloud.accounts.length, accountCount);
-            expect(secrets.writes, writes);
-            expect(tester.takeException(), isNull);
-          }
-          await tester.pumpWidget(const SizedBox());
-        },
-      );
 
       testWidgets(
         '${brightness.name} payment Cancel dismisses keyboard and never writes',

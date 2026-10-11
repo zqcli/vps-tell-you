@@ -160,26 +160,6 @@ void main() {
       });
       await addTestProvider(source);
       await db.update('servers', {'provider_id': testProvider.id});
-      await db.insert('cloud_accounts', {
-        'id': 'excluded-cloud',
-        'business_provider_id': testProvider.id,
-        'auth_scope': 'singleDevice',
-        'provider': 'solusVm1',
-        'alias': 'excluded-alias',
-        'endpoint': 'https://excluded-cloud.invalid',
-        'secret_ref': 'excluded-cloud-secret',
-        'created_at': now,
-      });
-      await db.insert('cloud_observations', {
-        'account_id': 'excluded-cloud',
-        'instance_key': 'single',
-        'observation': 'excluded-observation',
-      });
-      await db.insert('cloud_bindings', {
-        'server_id': 'server',
-        'account_id': 'excluded-cloud',
-        'instance_key': 'single',
-      });
       await source.saveThemeMode('dark');
       final snapshot = await source.exportLedgerBackup();
       expect(snapshot.encode(), isNot(contains('excluded-')));
@@ -192,6 +172,7 @@ void main() {
         'Debian 12',
       );
       expect(snapshot.counts, {
+        'providers': 1,
         'groups': 1,
         'servers': 2,
         'payments': 3,
@@ -232,7 +213,6 @@ void main() {
     expect(await target.themeMode(), 'dark');
     expect(await target.credentials(), isEmpty);
     expect(await target.sshConfigurations(), isEmpty);
-    expect(await target.cloudAccounts(), isEmpty);
     final server = (await target.servers()).firstWhere((s) => s.id == 'server');
     final same = await target.recordPayment(
       id: 'active-payment',
@@ -281,7 +261,6 @@ void main() {
       ramBytes: 4294967296,
       diskBytes: 64424509440,
       trafficUnlimited: true,
-      apiFields: {'ip', 'ipv6', 'hostname', 'diskBytes', 'trafficBytes'},
     );
     await source.saveServer(backupServer(resources: resources), isNew: true);
     final encoded = (await source.exportLedgerBackup()).encode();
@@ -292,8 +271,6 @@ void main() {
     expect(restored.resources!.toJson(), resources.toJson());
     expect(restored.amountMinor, 0);
     expect(restored.dueDate, const LedgerDate(2026, 2, 28));
-    expect(await target.cloudAccounts(), isEmpty);
-    expect(await target.cloudBindings(), isEmpty);
   });
 
   test('partial hardware and independent traffic period survive backup and reopening', () async {
@@ -474,10 +451,7 @@ void main() {
         '{not json',
         jsonEncode({...resources.toJson(), 'password': 'synthetic-secret'}),
         jsonEncode({...resources.toJson(), 'vcpu': 0}),
-        jsonEncode({
-          ...resources.toJson(),
-          'apiFields': ['secret_ref'],
-        }),
+        jsonEncode({...resources.toJson(), 'apiFields': 'secret_ref'}),
         jsonEncode({...resources.toJson(), 'trafficUnlimited': true}),
       ]) {
         final modified = jsonDecode(original) as Map<String, dynamic>;
@@ -570,8 +544,10 @@ void main() {
     await populateBackupFixture(source);
     final text = (await source.exportLedgerBackup()).encode();
     final mutations = <void Function(Map<String, dynamic>)>[
-      (m) => m['version'] = 2,
-      (m) => m['version'] = 1.0,
+      (m) => m['version'] = 3,
+      (m) => m['version'] = 2.0,
+      (m) => m.remove('providers'),
+      (m) => m['servers'].first.remove('provider_id'),
       (m) => m['credentials'] = [],
       (m) => m.remove('fx'),
       (m) => m['servers'] = {},

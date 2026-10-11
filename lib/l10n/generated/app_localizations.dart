@@ -989,7 +989,7 @@ abstract class AppLocalizations {
   /// No description provided for @backupReadInvalid.
   ///
   /// In zh, this message translates to:
-  /// **'读取或校验失败。请选择格式 v1、10 MiB 以内的完整 JSON 台账备份；现有数据未改动。'**
+  /// **'读取或校验失败。请选择格式 v1 或 v2、10 MiB 以内的完整 JSON 台账备份；现有数据未改动。'**
   String get backupReadInvalid;
 
   /// No description provided for @restoreEmptyLedgerQuestion.
@@ -1043,7 +1043,7 @@ abstract class AppLocalizations {
   /// No description provided for @plainJsonVersion.
   ///
   /// In zh, this message translates to:
-  /// **'明文 JSON · 格式 v1'**
+  /// **'明文 JSON · 格式 v2'**
   String get plainJsonVersion;
 
   /// No description provided for @backupContentsWarning.
@@ -1189,18 +1189,6 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'账户与偏好'**
   String get accountsPreferences;
-
-  /// No description provided for @panelAccounts.
-  ///
-  /// In zh, this message translates to:
-  /// **'面板账户'**
-  String get panelAccounts;
-
-  /// No description provided for @panelConnectionCount.
-  ///
-  /// In zh, this message translates to:
-  /// **'已保存 {p0} 个面板连接'**
-  String panelConnectionCount(String p0);
 
   /// No description provided for @keysSecurity.
   ///
@@ -3350,7 +3338,7 @@ abstract class AppLocalizations {
   /// No description provided for @backupExcludedConnections.
   ///
   /// In zh, this message translates to:
-  /// **'SSH 配置、主机信任、面板账户、实例关联与 API 返回信息'**
+  /// **'SSH 配置与主机信任'**
   String get backupExcludedConnections;
 
   /// No description provided for @backupExcludedNotes.
@@ -3362,7 +3350,7 @@ abstract class AppLocalizations {
   /// No description provided for @backupExcludedPreferences.
   ///
   /// In zh, this message translates to:
-  /// **'提醒规则、通知排程及应用偏好（格式 v1）'**
+  /// **'提醒规则、通知排程及应用偏好'**
   String get backupExcludedPreferences;
 
   /// No description provided for @backupInvalidJson.
@@ -3719,12 +3707,6 @@ abstract class AppLocalizations {
   /// **'核验已取消'**
   String get verificationCancelled;
 
-  /// No description provided for @invalidServerName.
-  ///
-  /// In zh, this message translates to:
-  /// **'服务器名称需为 1–80 个字符'**
-  String get invalidServerName;
-
   /// No description provided for @completeLocalResources.
   ///
   /// In zh, this message translates to:
@@ -3736,1289 +3718,6 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'安全操作未完成，请重试'**
   String get securityOperationIncomplete;
-
-  /// Panel accounts: accounts
-  ///
-  /// In zh, this message translates to:
-  /// **'适配器实例'**
-  String get cloudAccounts;
-
-  /// Panel accounts: add account
-  ///
-  /// In zh, this message translates to:
-  /// **'添加适配器实例'**
-  String get cloudAddAccount;
-
-  /// Panel accounts: panel read badge
-  ///
-  /// In zh, this message translates to:
-  /// **'面板只读接入'**
-  String get cloudPanelReadBadge;
-
-  /// Panel accounts: manage connections
-  ///
-  /// In zh, this message translates to:
-  /// **'管理适配器实例与设备关联'**
-  String get cloudManageConnections;
-
-  /// Panel accounts: connections info
-  ///
-  /// In zh, this message translates to:
-  /// **'每个适配器实例拥有独立授权与读取范围。\n同一提供商下可添加多个单设备或账户级适配器实例。'**
-  String get cloudConnectionsInfo;
-
-  /// Panel accounts: metadata incomplete
-  ///
-  /// In zh, this message translates to:
-  /// **'适配器实例资料未能完整载入，请重新载入后继续。'**
-  String get cloudMetadataIncomplete;
-
-  /// Panel accounts: reload metadata
-  ///
-  /// In zh, this message translates to:
-  /// **'重新载入适配器实例资料'**
-  String get cloudReloadMetadata;
-
-  /// Panel accounts: cleanup notice
-  ///
-  /// In zh, this message translates to:
-  /// **'待清理的旧授权仍可能留在设备安全存储中。请重试清理；远端授权需到面板撤销。'**
-  String get cloudCleanupNotice;
-
-  /// Panel accounts: retry cleanup
-  ///
-  /// In zh, this message translates to:
-  /// **'重试清理旧授权'**
-  String get cloudRetryCleanup;
-
-  /// Panel accounts: first account
-  ///
-  /// In zh, this message translates to:
-  /// **'添加首个适配器实例'**
-  String get cloudFirstAccount;
-
-  /// Panel accounts: first account info
-  ///
-  /// In zh, this message translates to:
-  /// **'选择适配器类型并验证授权，再核对设备与资源，添加到台账。'**
-  String get cloudFirstAccountInfo;
-
-  /// Panel accounts: choose template
-  ///
-  /// In zh, this message translates to:
-  /// **'选择适配器类型'**
-  String get cloudChooseTemplate;
-
-  /// Panel accounts: read only boundary
-  ///
-  /// In zh, this message translates to:
-  /// **'本 App 仅使用读取能力，不代表 API 凭据本身只有读取权限。\n适配器实例授权与 SSH 凭据分开管理。解除关联保留台账、费用、付款与 SSH。'**
-  String get cloudReadOnlyBoundary;
-
-  /// Panel accounts: template info
-  ///
-  /// In zh, this message translates to:
-  /// **'选择与面板匹配的适配器类型；提供商是供应服务器的商家。'**
-  String get cloudTemplateInfo;
-
-  /// Panel accounts: v1 template info
-  ///
-  /// In zh, this message translates to:
-  /// **'Client API Key + Hash\n每组凭据只对应单台 VPS'**
-  String get cloudV1TemplateInfo;
-
-  /// Panel accounts: v2 template info
-  ///
-  /// In zh, this message translates to:
-  /// **'用户 API Token\n读取当前用户的项目与设备'**
-  String get cloudV2TemplateInfo;
-
-  /// Panel accounts: RackNerd ctrl single-instance protocol template, without identifying the underlying panel product
-  ///
-  /// In zh, this message translates to:
-  /// **'ctrl 面板 Client API Key + Hash\n通过兼容客户端接口读取单台 VPS'**
-  String get cloudRackNerdTemplateInfo;
-
-  /// Panel accounts: supported panels
-  ///
-  /// In zh, this message translates to:
-  /// **'支持读取 SolusVM 1 / 2 和 RackNerd ctrl；不控制电源，不修改远端，也不会停止计费。'**
-  String get cloudSupportedPanels;
-
-  /// Panel accounts: reauthorize
-  ///
-  /// In zh, this message translates to:
-  /// **'重新授权'**
-  String get cloudReauthorize;
-
-  /// Panel accounts: single vps api
-  ///
-  /// In zh, this message translates to:
-  /// **'单台 VPS / Client API'**
-  String get cloudSingleVpsApi;
-
-  /// Panel accounts: user account api
-  ///
-  /// In zh, this message translates to:
-  /// **'用户账户 / API Token'**
-  String get cloudUserAccountApi;
-
-  /// Panel accounts: web preview notice
-  ///
-  /// In zh, this message translates to:
-  /// **'Web 预览不接受真实 API 凭据，请在原生应用中连接。'**
-  String get cloudWebPreviewNotice;
-
-  /// Panel accounts: alias label
-  ///
-  /// In zh, this message translates to:
-  /// **'适配器实例名称'**
-  String get cloudAliasLabel;
-
-  /// Panel accounts: alias required
-  ///
-  /// In zh, this message translates to:
-  /// **'请输入适配器实例名称'**
-  String get cloudAliasRequired;
-
-  /// Panel accounts: endpoint label
-  ///
-  /// In zh, this message translates to:
-  /// **'HTTPS 面板地址'**
-  String get cloudEndpointLabel;
-
-  /// Panel accounts: endpoint validation
-  ///
-  /// In zh, this message translates to:
-  /// **'请输入 HTTPS 面板首页地址，不含凭据、参数或 API 路径'**
-  String get cloudEndpointValidation;
-
-  /// Panel accounts: endpoint info
-  ///
-  /// In zh, this message translates to:
-  /// **'使用面板首页 HTTPS 地址（可含指定端口）；不忽略证书错误，不跟随重定向。'**
-  String get cloudEndpointInfo;
-
-  /// Panel accounts: RackNerd ctrl-only endpoint validation
-  ///
-  /// In zh, this message translates to:
-  /// **'请输入 HTTPS 面板首页地址，或精确的 /api/client/command.php 地址，不含凭据、参数或其他路径'**
-  String get cloudRackNerdEndpointValidation;
-
-  /// Panel accounts: narrow RackNerd ctrl API-path normalization explanation
-  ///
-  /// In zh, this message translates to:
-  /// **'使用面板首页 HTTPS 地址（可含指定端口），请核对下方最终地址；不忽略证书错误，不跟随重定向。'**
-  String get cloudRackNerdEndpointInfo;
-
-  /// Panel accounts: endpoint identity info
-  ///
-  /// In zh, this message translates to:
-  /// **'面板地址与连接身份绑定。不同面板请另建连接，旧授权不会显示在此处。'**
-  String get cloudEndpointIdentityInfo;
-
-  /// Panel accounts: v1 credentials info
-  ///
-  /// In zh, this message translates to:
-  /// **'填写该 VPS 的 Client API Key / Hash（非登录密码或管理员凭据）；需服务商开放 Client API。'**
-  String get cloudV1CredentialsInfo;
-
-  /// Panel accounts: RackNerd ctrl Key/Hash credential scope
-  ///
-  /// In zh, this message translates to:
-  /// **'填写 RackNerd ctrl 中该 VPS 的 Client API Key / Hash（非登录密码或管理员凭据）。'**
-  String get cloudRackNerdCredentialsInfo;
-
-  /// Panel accounts: v2 credentials info
-  ///
-  /// In zh, this message translates to:
-  /// **'使用 SolusVM 2 用户区 Account → API Tokens 的 Token，不要使用管理员 Token。'**
-  String get cloudV2CredentialsInfo;
-
-  /// Panel accounts: v1 reauthorization info
-  ///
-  /// In zh, this message translates to:
-  /// **'此 API 无法证明新凭据仍属于原 VPS。验证后，必须明确确认解除旧关联，再决定是否导入新记录。旧台账、费用和 SSH 会保留。'**
-  String get cloudV1ReauthorizationInfo;
-
-  /// Panel accounts: v2 reauthorization info
-  ///
-  /// In zh, this message translates to:
-  /// **'重新授权必须验证为同一远端用户账户，否则保留原授权与关联。'**
-  String get cloudV2ReauthorizationInfo;
-
-  /// Panel accounts: verify scope info
-  ///
-  /// In zh, this message translates to:
-  /// **'本 App 仅读取数据，但凭据本身可能有更多权限。验证只读取状态；保存后凭据才进入设备安全存储。'**
-  String get cloudVerifyScopeInfo;
-
-  /// Panel accounts: verifying info
-  ///
-  /// In zh, this message translates to:
-  /// **'正在验证并读取，有超时限制；返回或取消会停止。'**
-  String get cloudVerifyingInfo;
-
-  /// Panel accounts: cancel verification
-  ///
-  /// In zh, this message translates to:
-  /// **'取消验证'**
-  String get cloudCancelVerification;
-
-  /// Panel accounts: verify read
-  ///
-  /// In zh, this message translates to:
-  /// **'验证并读取'**
-  String get cloudVerifyRead;
-
-  /// Panel accounts: credential memory info
-  ///
-  /// In zh, this message translates to:
-  /// **'凭据输入在验证后或离开时清空，不写入台账、日志或导出。Dart 不保证内存安全擦除。'**
-  String get cloudCredentialMemoryInfo;
-
-  /// No description provided for @r2CopyInfoCredentialHandling.
-  ///
-  /// In zh, this message translates to:
-  /// **'凭据如何处理'**
-  String get r2CopyInfoCredentialHandling;
-
-  /// Panel accounts: choose instances
-  ///
-  /// In zh, this message translates to:
-  /// **'选择导入的设备'**
-  String get cloudChooseInstances;
-
-  /// Panel accounts: empty verification
-  ///
-  /// In zh, this message translates to:
-  /// **'本次授权未返回可导入的设备。可以仅保存适配器实例，稍后再读取。'**
-  String get cloudEmptyVerification;
-
-  /// Panel accounts: empty inventory
-  ///
-  /// In zh, this message translates to:
-  /// **'本次完整读取未返回可导入的设备。适配器实例已保存，可稍后重新读取。'**
-  String get cloudEmptyInventory;
-
-  /// Panel accounts: v1 instance
-  ///
-  /// In zh, this message translates to:
-  /// **'该凭据对应的单台 VPS'**
-  String get cloudV1Instance;
-
-  /// Panel accounts: already linked
-  ///
-  /// In zh, this message translates to:
-  /// **'已关联 · 不重复导入'**
-  String get cloudAlreadyLinked;
-
-  /// Panel accounts: v1 identity
-  ///
-  /// In zh, this message translates to:
-  /// **'无稳定设备 ID · 按此独立授权识别'**
-  String get cloudV1Identity;
-
-  /// Panel accounts: ip not provided
-  ///
-  /// In zh, this message translates to:
-  /// **'IP 未提供'**
-  String get cloudIpNotProvided;
-
-  /// Panel accounts: select before complete
-  ///
-  /// In zh, this message translates to:
-  /// **'请先勾选上方设备，再补全下方资料。仅填写资料不会导入设备。'**
-  String get cloudSelectBeforeComplete;
-
-  /// Panel accounts: local display name
-  ///
-  /// In zh, this message translates to:
-  /// **'本地显示名称（可选）'**
-  String get cloudLocalDisplayName;
-
-  /// Panel accounts: local name info
-  ///
-  /// In zh, this message translates to:
-  /// **'仅用于新建本地记录，不作为远端设备标识'**
-  String get cloudLocalNameInfo;
-
-  /// Panel accounts: v1 resources info
-  ///
-  /// In zh, this message translates to:
-  /// **'SolusVM 1 不提供设备 ID，可读取的字段取决于提供商。填写内容仅存本机。'**
-  String get cloudV1ResourcesInfo;
-
-  /// Panel accounts: RackNerd ctrl anonymous identity and required local resource completion
-  ///
-  /// In zh, this message translates to:
-  /// **'RackNerd ctrl 不提供设备 ID。导入前请补齐六项硬件信息；API 未返回的值不要猜测。'**
-  String get cloudRackNerdResourcesInfo;
-
-  /// Panel accounts: rebind warning
-  ///
-  /// In zh, this message translates to:
-  /// **'保存新授权将解除此实例的全部旧设备关联。原有资料、财务与 SSH 设置保留；导入会创建新记录，不会覆盖或自动重新关联旧设备。'**
-  String get cloudRebindWarning;
-
-  /// Panel accounts: confirm rebind
-  ///
-  /// In zh, this message translates to:
-  /// **'我确认保存新授权将解除旧设备关联'**
-  String get cloudConfirmRebind;
-
-  /// Panel accounts: return select
-  ///
-  /// In zh, this message translates to:
-  /// **'返回勾选设备'**
-  String get cloudReturnSelect;
-
-  /// Panel accounts: saving
-  ///
-  /// In zh, this message translates to:
-  /// **'正在保存…'**
-  String get cloudSaving;
-
-  /// Panel accounts: none selected
-  ///
-  /// In zh, this message translates to:
-  /// **'尚未勾选新设备'**
-  String get cloudNoneSelected;
-
-  /// Panel accounts: save only
-  ///
-  /// In zh, this message translates to:
-  /// **'仅保存适配器实例'**
-  String get cloudSaveOnly;
-
-  /// Panel accounts: update unlink
-  ///
-  /// In zh, this message translates to:
-  /// **'更新授权并解除旧设备关联'**
-  String get cloudUpdateUnlink;
-
-  /// Panel accounts: update only
-  ///
-  /// In zh, this message translates to:
-  /// **'仅更新授权'**
-  String get cloudUpdateOnly;
-
-  /// Panel accounts: return verify
-  ///
-  /// In zh, this message translates to:
-  /// **'返回重新验证'**
-  String get cloudReturnVerify;
-
-  /// Panel accounts: saving info
-  ///
-  /// In zh, this message translates to:
-  /// **'正在提交到本机，请等待完成后再返回。'**
-  String get cloudSavingInfo;
-
-  /// Panel accounts: read importable
-  ///
-  /// In zh, this message translates to:
-  /// **'读取可导入的设备'**
-  String get cloudReadImportable;
-
-  /// Panel accounts: refresh account
-  ///
-  /// In zh, this message translates to:
-  /// **'刷新适配器实例状态'**
-  String get cloudRefreshAccount;
-
-  /// Panel accounts: reading info
-  ///
-  /// In zh, this message translates to:
-  /// **'正在读取，有超时限制；取消或返回会停止，不改变台账。'**
-  String get cloudReadingInfo;
-
-  /// Panel accounts: cancel read
-  ///
-  /// In zh, this message translates to:
-  /// **'取消读取'**
-  String get cloudCancelRead;
-
-  /// Panel accounts: read again
-  ///
-  /// In zh, this message translates to:
-  /// **'重新读取'**
-  String get cloudReadAgain;
-
-  /// Panel accounts: read complete info
-  ///
-  /// In zh, this message translates to:
-  /// **'仅更新读取结果，未覆盖本地资料。'**
-  String get cloudReadCompleteInfo;
-
-  /// Panel accounts: done
-  ///
-  /// In zh, this message translates to:
-  /// **'完成'**
-  String get cloudDone;
-
-  /// Panel accounts: view details
-  ///
-  /// In zh, this message translates to:
-  /// **'查看适配器实例详情'**
-  String get cloudViewDetails;
-
-  /// Panel accounts: rename account
-  ///
-  /// In zh, this message translates to:
-  /// **'编辑适配器实例名称'**
-  String get cloudRenameAccount;
-
-  /// Panel accounts: continue import
-  ///
-  /// In zh, this message translates to:
-  /// **'继续导入设备'**
-  String get cloudContinueImport;
-
-  /// Panel accounts: linked servers
-  ///
-  /// In zh, this message translates to:
-  /// **'关联服务器'**
-  String get cloudLinkedServers;
-
-  /// Panel accounts: unlink account
-  ///
-  /// In zh, this message translates to:
-  /// **'删除适配器实例'**
-  String get cloudUnlinkAccount;
-
-  /// Panel accounts: unlink account title
-  ///
-  /// In zh, this message translates to:
-  /// **'删除此适配器实例？'**
-  String get cloudUnlinkAccountTitle;
-
-  /// Panel accounts: unlink local
-  ///
-  /// In zh, this message translates to:
-  /// **'仅删除本地适配器实例'**
-  String get cloudUnlinkLocal;
-
-  /// Panel accounts: account details
-  ///
-  /// In zh, this message translates to:
-  /// **'适配器实例详情'**
-  String get cloudAccountDetails;
-
-  /// Panel accounts: account removed notice
-  ///
-  /// In zh, this message translates to:
-  /// **'适配器实例已删除，全部本地设备记录保留。'**
-  String get cloudAccountRemovedNotice;
-
-  /// Panel accounts: template label
-  ///
-  /// In zh, this message translates to:
-  /// **'适配器类型'**
-  String get cloudTemplateLabel;
-
-  /// Panel accounts: panel address
-  ///
-  /// In zh, this message translates to:
-  /// **'面板地址'**
-  String get cloudPanelAddress;
-
-  /// Panel accounts: read status
-  ///
-  /// In zh, this message translates to:
-  /// **'读取状态'**
-  String get cloudReadStatus;
-
-  /// Panel accounts: last attempt
-  ///
-  /// In zh, this message translates to:
-  /// **'最近读取尝试'**
-  String get cloudLastAttempt;
-
-  /// Panel accounts: no attempts
-  ///
-  /// In zh, this message translates to:
-  /// **'尚无记录'**
-  String get cloudNoAttempts;
-
-  /// Panel accounts: verified scope
-  ///
-  /// In zh, this message translates to:
-  /// **'已验证的读取范围'**
-  String get cloudVerifiedScope;
-
-  /// Panel accounts: v1 scope
-  ///
-  /// In zh, this message translates to:
-  /// **'单设备 · Client API，无稳定设备标识'**
-  String get cloudV1Scope;
-
-  /// Panel accounts: app capabilities
-  ///
-  /// In zh, this message translates to:
-  /// **'App 能力'**
-  String get cloudAppCapabilities;
-
-  /// Panel accounts: read capabilities
-  ///
-  /// In zh, this message translates to:
-  /// **'仅使用读取能力；无 API 电源控制'**
-  String get cloudReadCapabilities;
-
-  /// Panel accounts: authorization storage
-  ///
-  /// In zh, this message translates to:
-  /// **'授权存储'**
-  String get cloudAuthorizationStorage;
-
-  /// Panel accounts: secure storage info
-  ///
-  /// In zh, this message translates to:
-  /// **'设备安全存储；不显示或导出 API 凭据'**
-  String get cloudSecureStorageInfo;
-
-  /// Panel accounts: scope notice
-  ///
-  /// In zh, this message translates to:
-  /// **'凭据本身可能有更多权限，请在服务商面板核对。结果只代表读取时刻。'**
-  String get cloudScopeNotice;
-
-  /// Panel accounts: no linked instances
-  ///
-  /// In zh, this message translates to:
-  /// **'暂无关联设备，可从适配器实例菜单继续导入。'**
-  String get cloudNoLinkedInstances;
-
-  /// Panel accounts: local record
-  ///
-  /// In zh, this message translates to:
-  /// **'本地记录'**
-  String get cloudLocalRecord;
-
-  /// Panel accounts: cancel
-  ///
-  /// In zh, this message translates to:
-  /// **'取消'**
-  String get cloudCancel;
-
-  /// Panel accounts: save name
-  ///
-  /// In zh, this message translates to:
-  /// **'保存名称'**
-  String get cloudSaveName;
-
-  /// Panel accounts: link panel account
-  ///
-  /// In zh, this message translates to:
-  /// **'关联适配器实例'**
-  String get cloudLinkPanelAccount;
-
-  /// Panel accounts: local binding info
-  ///
-  /// In zh, this message translates to:
-  /// **'仅使用已保存的读取结果，不连接面板。没有设备时请先在适配器实例中刷新。'**
-  String get cloudLocalBindingInfo;
-
-  /// Panel accounts: binding committed
-  ///
-  /// In zh, this message translates to:
-  /// **'关联改动已保存，请先重新读取资料；不要重复提交。'**
-  String get cloudBindingCommitted;
-
-  /// Panel accounts: ledger not updated
-  ///
-  /// In zh, this message translates to:
-  /// **'台账显示内容尚未更新，请先重新读取。'**
-  String get cloudLedgerNotUpdated;
-
-  /// Panel accounts: reload local
-  ///
-  /// In zh, this message translates to:
-  /// **'重新读取本地列表'**
-  String get cloudReloadLocal;
-
-  /// Panel accounts: binding read only
-  ///
-  /// In zh, this message translates to:
-  /// **'已归档或演示记录不能修改面板关联。'**
-  String get cloudBindingReadOnly;
-
-  /// Panel accounts: current link
-  ///
-  /// In zh, this message translates to:
-  /// **'当前关联'**
-  String get cloudCurrentLink;
-
-  /// Panel accounts: unlink this
-  ///
-  /// In zh, this message translates to:
-  /// **'解除这台关联'**
-  String get cloudUnlinkThis;
-
-  /// Panel accounts: select account
-  ///
-  /// In zh, this message translates to:
-  /// **'选择适配器实例'**
-  String get cloudSelectAccount;
-
-  /// Panel accounts: no saved accounts
-  ///
-  /// In zh, this message translates to:
-  /// **'此提供商下暂无已确认归属的适配器实例，请先添加并验证。'**
-  String get cloudNoSavedAccounts;
-
-  /// Panel accounts: select read instance
-  ///
-  /// In zh, this message translates to:
-  /// **'选择已读取的设备'**
-  String get cloudSelectReadInstance;
-
-  /// Panel accounts: no saved instances
-  ///
-  /// In zh, this message translates to:
-  /// **'此适配器实例暂无已保存的设备信息，请先手动刷新。'**
-  String get cloudNoSavedInstances;
-
-  /// Panel accounts: other server
-  ///
-  /// In zh, this message translates to:
-  /// **'其他服务器'**
-  String get cloudOtherServer;
-
-  /// Panel accounts: missing refresh
-  ///
-  /// In zh, this message translates to:
-  /// **'本次未返回 · 请在适配器实例中手动刷新'**
-  String get cloudMissingRefresh;
-
-  /// Panel accounts: failed refresh
-  ///
-  /// In zh, this message translates to:
-  /// **'上次读取失败 · 请在适配器实例中手动刷新'**
-  String get cloudFailedRefresh;
-
-  /// Panel accounts: save link
-  ///
-  /// In zh, this message translates to:
-  /// **'保存关联'**
-  String get cloudSaveLink;
-
-  /// Panel accounts: change link
-  ///
-  /// In zh, this message translates to:
-  /// **'更换关联'**
-  String get cloudChangeLink;
-
-  /// Panel accounts: local link boundary
-  ///
-  /// In zh, this message translates to:
-  /// **'只修改本地关联；服务器资料、硬件、账务及 SSH 保持原样。'**
-  String get cloudLocalLinkBoundary;
-
-  /// Panel accounts: single account instance
-  ///
-  /// In zh, this message translates to:
-  /// **'此授权对应的单台设备'**
-  String get cloudSingleAccountInstance;
-
-  /// Panel accounts: unlink server title
-  ///
-  /// In zh, this message translates to:
-  /// **'解除这台服务器的面板关联？'**
-  String get cloudUnlinkServerTitle;
-
-  /// Panel accounts: change server title
-  ///
-  /// In zh, this message translates to:
-  /// **'更换这台服务器的面板关联？'**
-  String get cloudChangeServerTitle;
-
-  /// Panel accounts: only unlink this
-  ///
-  /// In zh, this message translates to:
-  /// **'仅解除这台关联'**
-  String get cloudOnlyUnlinkThis;
-
-  /// Panel accounts: confirm change link
-  ///
-  /// In zh, this message translates to:
-  /// **'确认更换关联'**
-  String get cloudConfirmChangeLink;
-
-  /// Panel accounts: metadata read failed
-  ///
-  /// In zh, this message translates to:
-  /// **'无法读取适配器实例资料，请重试。'**
-  String get cloudMetadataReadFailed;
-
-  /// Panel accounts: saved reload failed
-  ///
-  /// In zh, this message translates to:
-  /// **'已保存，但资料重读失败；请重读后再修改'**
-  String get cloudSavedReloadFailed;
-
-  /// Panel accounts: account conflict
-  ///
-  /// In zh, this message translates to:
-  /// **'适配器实例资料已改变，请重新载入后重试。'**
-  String get cloudAccountConflict;
-
-  /// Panel accounts: operation failed
-  ///
-  /// In zh, this message translates to:
-  /// **'适配器实例操作未完成，请重试。'**
-  String get cloudOperationFailed;
-
-  /// Panel accounts: complete resources
-  ///
-  /// In zh, this message translates to:
-  /// **'请补齐六项硬件信息后导入；未知项目请先向厂商确认'**
-  String get cloudCompleteResources;
-
-  /// Panel accounts: cleanup incomplete
-  ///
-  /// In zh, this message translates to:
-  /// **'秘密清理尚未完成，可稍后重试'**
-  String get cloudCleanupIncomplete;
-
-  /// Panel accounts: cleanup status failed
-  ///
-  /// In zh, this message translates to:
-  /// **'无法读取清理状态，请重试'**
-  String get cloudCleanupStatusFailed;
-
-  /// Panel accounts: verify cancelled
-  ///
-  /// In zh, this message translates to:
-  /// **'验证已取消，未保存授权'**
-  String get cloudVerifyCancelled;
-
-  /// Panel accounts: alias invalid
-  ///
-  /// In zh, this message translates to:
-  /// **'适配器实例名称须为 1–80 字。'**
-  String get cloudAliasInvalid;
-
-  /// Panel accounts: verify failed
-  ///
-  /// In zh, this message translates to:
-  /// **'验证未完成，请检查面板地址、凭据和网络后重试'**
-  String get cloudVerifyFailed;
-
-  /// Panel accounts: verify not saved
-  ///
-  /// In zh, this message translates to:
-  /// **'验证未完成，未保存授权'**
-  String get cloudVerifyNotSaved;
-
-  /// Panel accounts: verify again required
-  ///
-  /// In zh, this message translates to:
-  /// **'未保存授权。需要重新验证后再导入。'**
-  String get cloudVerifyAgainRequired;
-
-  /// Panel accounts: authorization expired
-  ///
-  /// In zh, this message translates to:
-  /// **'离开应用后已清除本次授权，请返回重新验证。尚未提交的保存已取消。'**
-  String get cloudAuthorizationExpired;
-
-  /// Panel accounts: resources incomplete
-  ///
-  /// In zh, this message translates to:
-  /// **'请核对并补齐六项硬件信息；未知项目请先向厂商确认，补齐后再导入。'**
-  String get cloudResourcesIncomplete;
-
-  /// Panel accounts: save failed
-  ///
-  /// In zh, this message translates to:
-  /// **'保存未完成，请重试'**
-  String get cloudSaveFailed;
-
-  /// Panel accounts: account saved only
-  ///
-  /// In zh, this message translates to:
-  /// **'适配器实例已保存，未导入新设备。'**
-  String get cloudAccountSavedOnly;
-
-  /// Panel accounts: instances saved
-  ///
-  /// In zh, this message translates to:
-  /// **'已保存，所选设备已添加到本地台账。'**
-  String get cloudInstancesSaved;
-
-  /// Panel accounts: read cancelled
-  ///
-  /// In zh, this message translates to:
-  /// **'读取已取消，保留上次读取的信息'**
-  String get cloudReadCancelled;
-
-  /// Panel accounts: account unlinked return
-  ///
-  /// In zh, this message translates to:
-  /// **'适配器实例已删除，请返回后继续。'**
-  String get cloudAccountUnlinkedReturn;
-
-  /// Panel accounts: read incomplete
-  ///
-  /// In zh, this message translates to:
-  /// **'读取未完成，保留上次读取的信息'**
-  String get cloudReadIncomplete;
-
-  /// Panel accounts: alias saved
-  ///
-  /// In zh, this message translates to:
-  /// **'适配器实例名称已保存。'**
-  String get cloudAliasSaved;
-
-  /// Panel accounts: name save failed
-  ///
-  /// In zh, this message translates to:
-  /// **'名称未保存，请重试'**
-  String get cloudNameSaveFailed;
-
-  /// Panel accounts: account unlinked
-  ///
-  /// In zh, this message translates to:
-  /// **'适配器实例已删除。本地资料、财务与 SSH 设置保留。'**
-  String get cloudAccountUnlinked;
-
-  /// Panel accounts: unlink failed
-  ///
-  /// In zh, this message translates to:
-  /// **'删除适配器实例未完成，请重试。'**
-  String get cloudUnlinkFailed;
-
-  /// Panel accounts: alias range
-  ///
-  /// In zh, this message translates to:
-  /// **'请输入 1–80 字的适配器实例名称。'**
-  String get cloudAliasRange;
-
-  /// Panel accounts: binding read failed
-  ///
-  /// In zh, this message translates to:
-  /// **'无法读取本地关联资料，请重试'**
-  String get cloudBindingReadFailed;
-
-  /// Panel accounts: server unlinked
-  ///
-  /// In zh, this message translates to:
-  /// **'已解除这台服务器的面板关联'**
-  String get cloudServerUnlinked;
-
-  /// Panel accounts: binding saved
-  ///
-  /// In zh, this message translates to:
-  /// **'适配器实例关联已保存。'**
-  String get cloudBindingSaved;
-
-  /// Panel accounts: failure invalid endpoint
-  ///
-  /// In zh, this message translates to:
-  /// **'请输入 HTTPS 面板首页地址，不含登录信息、查询参数或 API 路径'**
-  String get cloudFailureInvalidEndpoint;
-
-  /// Panel accounts: failure invalid credentials
-  ///
-  /// In zh, this message translates to:
-  /// **'请填写该模板对应的有效 API 凭据'**
-  String get cloudFailureInvalidCredentials;
-
-  /// Panel accounts: failure unauthorized
-  ///
-  /// In zh, this message translates to:
-  /// **'API 凭据未通过验证，请检查凭据或重新授权'**
-  String get cloudFailureUnauthorized;
-
-  /// Panel accounts: failure api rejected
-  ///
-  /// In zh, this message translates to:
-  /// **'面板拒绝 API 读取，请检查凭据、API 开放情况与服务状态'**
-  String get cloudFailureApiRejected;
-
-  /// Panel accounts: failure forbidden
-  ///
-  /// In zh, this message translates to:
-  /// **'面板拒绝读取，请检查 API 权限与服务商设置'**
-  String get cloudFailureForbidden;
-
-  /// Panel accounts: failure rate limited
-  ///
-  /// In zh, this message translates to:
-  /// **'面板请求过于频繁，请稍后手动重试'**
-  String get cloudFailureRateLimited;
-
-  /// Panel accounts: failure unavailable
-  ///
-  /// In zh, this message translates to:
-  /// **'面板暂时无法提供 API 读取服务'**
-  String get cloudFailureUnavailable;
-
-  /// Panel accounts: failure connection
-  ///
-  /// In zh, this message translates to:
-  /// **'连接失败，请检查网络、面板地址与 HTTPS 证书'**
-  String get cloudFailureConnection;
-
-  /// Panel accounts: failure timeout
-  ///
-  /// In zh, this message translates to:
-  /// **'读取超时，保留上次读取的信息；请稍后重试'**
-  String get cloudFailureTimeout;
-
-  /// Panel accounts: failure cancelled
-  ///
-  /// In zh, this message translates to:
-  /// **'读取已取消'**
-  String get cloudFailureCancelled;
-
-  /// Panel accounts: failure redirect
-  ///
-  /// In zh, this message translates to:
-  /// **'面板返回重定向，已停止以保护凭据；请核对面板地址'**
-  String get cloudFailureRedirect;
-
-  /// Panel accounts: failure invalid response
-  ///
-  /// In zh, this message translates to:
-  /// **'面板响应不符合读取协议，未更新本地资料'**
-  String get cloudFailureInvalidResponse;
-
-  /// Panel accounts: failure response too large
-  ///
-  /// In zh, this message translates to:
-  /// **'面板响应超过安全大小限制'**
-  String get cloudFailureResponseTooLarge;
-
-  /// Panel accounts: failure inventory too large
-  ///
-  /// In zh, this message translates to:
-  /// **'设备或分页数量超过本次读取限制，未导入不完整列表'**
-  String get cloudFailureInventoryTooLarge;
-
-  /// Panel accounts: failure unsupported platform
-  ///
-  /// In zh, this message translates to:
-  /// **'此预览平台不接受真实 API 凭据，请使用原生应用'**
-  String get cloudFailureUnsupportedPlatform;
-
-  /// Panel accounts: account failure identity
-  ///
-  /// In zh, this message translates to:
-  /// **'远端账户或设备标识发生变化，原有关联未改动。请建立独立的适配器实例。'**
-  String get cloudAccountFailureIdentity;
-
-  /// Panel accounts: account failure v1 rebind
-  ///
-  /// In zh, this message translates to:
-  /// **'此客户端 API 无法证明新凭据仍对应原设备。请明确确认解除旧关联，再选择导入的设备。原有本地记录保留。'**
-  String get cloudAccountFailureV1Rebind;
-
-  /// Panel accounts: account failure selection
-  ///
-  /// In zh, this message translates to:
-  /// **'导入列表已变化或选择无效，请重新读取'**
-  String get cloudAccountFailureSelection;
-
-  /// Panel accounts: account failure alias
-  ///
-  /// In zh, this message translates to:
-  /// **'适配器实例名称须为 1–80 字。'**
-  String get cloudAccountFailureAlias;
-
-  /// Panel accounts: account failure secret
-  ///
-  /// In zh, this message translates to:
-  /// **'API 凭据未能保存到设备安全存储，原授权保持不变；请解锁设备后重试'**
-  String get cloudAccountFailureSecret;
-
-  /// Panel accounts: account failure secret read
-  ///
-  /// In zh, this message translates to:
-  /// **'无法读取此适配器实例保存的 API 凭据。请解锁设备后重试；仍失败时可从菜单重新授权。'**
-  String get cloudAccountFailureSecretRead;
-
-  /// Panel accounts: account failure binding taken
-  ///
-  /// In zh, this message translates to:
-  /// **'此设备已关联其他本地服务器，不能覆盖。请重新载入本地列表。'**
-  String get cloudAccountFailureBindingTaken;
-
-  /// Panel accounts: account failure binding unavailable
-  ///
-  /// In zh, this message translates to:
-  /// **'设备信息暂不可用于关联，请先手动刷新适配器实例后重新选择。'**
-  String get cloudAccountFailureBindingUnavailable;
-
-  /// Panel accounts: read limit positive
-  ///
-  /// In zh, this message translates to:
-  /// **'读取限制必须大于 0'**
-  String get cloudReadLimitPositive;
-
-  /// Panel accounts: provider links
-  ///
-  /// In zh, this message translates to:
-  /// **'{provider} · {count} 台关联'**
-  String cloudProviderLinks(String provider, int count);
-
-  /// Panel accounts: required field
-  ///
-  /// In zh, this message translates to:
-  /// **'请填写 {label}'**
-  String cloudRequiredField(String label);
-
-  /// Panel accounts: connect provider
-  ///
-  /// In zh, this message translates to:
-  /// **'连接 {provider}'**
-  String cloudConnectProvider(String provider);
-
-  /// Panel accounts: verify target
-  ///
-  /// In zh, this message translates to:
-  /// **'{normalization}验证将连接：{origin}'**
-  String cloudVerifyTarget(String normalization, String origin);
-
-  /// Panel accounts: inventory complete
-  ///
-  /// In zh, this message translates to:
-  /// **'完整读取完成 · {count} 台设备\n读取时间：{time}{authorization}'**
-  String cloudInventoryComplete(int count, String time, String authorization);
-
-  /// Panel accounts: instance fallback
-  ///
-  /// In zh, this message translates to:
-  /// **'设备 {id}'**
-  String cloudInstanceFallback(String id);
-
-  /// Panel accounts: project instance
-  ///
-  /// In zh, this message translates to:
-  /// **'项目 {project} · 设备 ID {id}'**
-  String cloudProjectInstance(String project, String id);
-
-  /// Panel accounts: power last read
-  ///
-  /// In zh, this message translates to:
-  /// **'电源{power} · 上次读取'**
-  String cloudPowerLastRead(String power);
-
-  /// Panel accounts: import boundary
-  ///
-  /// In zh, this message translates to:
-  /// **'导入不会覆盖已有本地名称、费用、付款、备注或 SSH 配置。{deduplication}已归档的关联也不会重复导入。'**
-  String cloudImportBoundary(String deduplication);
-
-  /// Panel accounts: v2 scope
-  ///
-  /// In zh, this message translates to:
-  /// **'已验证用户账户 {id} · 项目与设备'**
-  String cloudV2Scope(String id);
-
-  /// Panel accounts: linked count
-  ///
-  /// In zh, this message translates to:
-  /// **'已关联 {count} 台'**
-  String cloudLinkedCount(int count);
-
-  /// Panel accounts: record with state
-  ///
-  /// In zh, this message translates to:
-  /// **'{name}{state}'**
-  String cloudRecordWithState(String name, String state);
-
-  /// Panel accounts: binding with time
-  ///
-  /// In zh, this message translates to:
-  /// **'{summary}\n读取时间：{time}'**
-  String cloudBindingWithTime(String summary, String time);
-
-  /// Panel accounts: console path removed
-  ///
-  /// In zh, this message translates to:
-  /// **'已移除 /home.php。\n'**
-  String get cloudConsolePathRemoved;
-
-  /// Panel accounts: explicit RackNerd ctrl-only API-path normalization notice
-  ///
-  /// In zh, this message translates to:
-  /// **'已为 RackNerd ctrl 移除 /api/client/command.php。\n'**
-  String get cloudRackNerdApiPathRemoved;
-
-  /// Panel accounts: authorization unsaved
-  ///
-  /// In zh, this message translates to:
-  /// **'\n尚未保存这次授权'**
-  String get cloudAuthorizationUnsaved;
-
-  /// Panel accounts: v1 deduplication
-  ///
-  /// In zh, this message translates to:
-  /// **'已固定到此授权的设备不会重复创建；独立授权之间不自动合并。'**
-  String get cloudV1Deduplication;
-
-  /// Panel accounts: v2 deduplication
-  ///
-  /// In zh, this message translates to:
-  /// **'按适配器、面板地址、账户、项目和设备 ID 判断重复；IP 或主机名相同仅作提示。'**
-  String get cloudV2Deduplication;
-
-  /// Panel accounts: archived suffix
-  ///
-  /// In zh, this message translates to:
-  /// **' · 已归档'**
-  String get cloudArchivedSuffix;
-
-  /// Panel accounts: import count
-  ///
-  /// In zh, this message translates to:
-  /// **'导入 {count} 台设备'**
-  String cloudImportCount(int count);
-
-  /// Panel accounts: save import count
-  ///
-  /// In zh, this message translates to:
-  /// **'保存适配器实例并导入 {count} 台设备'**
-  String cloudSaveImportCount(int count);
-
-  /// Panel accounts: unlink account message
-  ///
-  /// In zh, this message translates to:
-  /// **'{alias}\n\n删除此本地适配器实例及其设备关联。重新添加需要再次输入 API 凭据。不会删除远端设备或停止计费。\n\n{remoteAction}'**
-  String cloudUnlinkAccountMessage(String alias, String remoteAction);
-
-  /// Panel accounts: revoke v1
-  ///
-  /// In zh, this message translates to:
-  /// **'还需到面板禁用该 VPS 的 Client API 或重置 Key / Hash。'**
-  String get cloudRevokeV1;
-
-  /// Panel accounts: revoke v2
-  ///
-  /// In zh, this message translates to:
-  /// **'还需到面板撤销已签发的 Token。'**
-  String get cloudRevokeV2;
-
-  /// Panel accounts: suggested alias
-  ///
-  /// In zh, this message translates to:
-  /// **'我的 {provider} 适配器'**
-  String cloudSuggestedAlias(String provider);
-
-  /// Panel accounts: read at
-  ///
-  /// In zh, this message translates to:
-  /// **'读取时间：{time}'**
-  String cloudReadAt(String time);
-
-  /// Panel accounts: already linked to
-  ///
-  /// In zh, this message translates to:
-  /// **'已关联：{name} · 不可覆盖'**
-  String cloudAlreadyLinkedTo(String name);
-
-  /// Panel accounts: change link message
-  ///
-  /// In zh, this message translates to:
-  /// **'{server}\n当前：{account} · {instance}{replacement}\n\n仅修改本地关联，保留服务器资料、硬件、费用、付款、SSH、适配器实例及授权。不会操作远端设备或停止扣费。'**
-  String cloudChangeLinkMessage(
-    String server,
-    String account,
-    String instance,
-    String replacement,
-  );
-
-  /// Panel accounts: replacement link
-  ///
-  /// In zh, this message translates to:
-  /// **'\n更换为：{account} · {instance}'**
-  String cloudReplacementLink(String account, String instance);
-
-  /// Panel accounts: power running
-  ///
-  /// In zh, this message translates to:
-  /// **'运行中'**
-  String get cloudPowerRunning;
-
-  /// Panel accounts: power stopped
-  ///
-  /// In zh, this message translates to:
-  /// **'已停止'**
-  String get cloudPowerStopped;
-
-  /// Panel accounts: power unknown
-  ///
-  /// In zh, this message translates to:
-  /// **'未知'**
-  String get cloudPowerUnknown;
-
-  /// Panel accounts: missing kept
-  ///
-  /// In zh, this message translates to:
-  /// **'本次未返回 · 保留上次信息'**
-  String get cloudMissingKept;
-
-  /// Panel accounts: failed kept
-  ///
-  /// In zh, this message translates to:
-  /// **'读取失败 · 保留上次信息'**
-  String get cloudFailedKept;
-
-  /// Panel accounts: last read
-  ///
-  /// In zh, this message translates to:
-  /// **'上次读取'**
-  String get cloudLastRead;
-
-  /// Panel accounts: authorization failed kept
-  ///
-  /// In zh, this message translates to:
-  /// **'授权验证失败 · 原台账保留'**
-  String get cloudAuthorizationFailedKept;
-
-  /// Panel accounts: verified manual
-  ///
-  /// In zh, this message translates to:
-  /// **'已验证 · 手动读取'**
-  String get cloudVerifiedManual;
-
-  /// Panel accounts: step template
-  ///
-  /// In zh, this message translates to:
-  /// **'适配器类型'**
-  String get cloudStepTemplate;
-
-  /// Panel accounts: step credentials
-  ///
-  /// In zh, this message translates to:
-  /// **'填授权'**
-  String get cloudStepCredentials;
-
-  /// Panel accounts: step instances
-  ///
-  /// In zh, this message translates to:
-  /// **'设备'**
-  String get cloudStepInstances;
-
-  /// Panel accounts: api unknown
-  ///
-  /// In zh, this message translates to:
-  /// **'未知（API 未提供）'**
-  String get cloudApiUnknown;
-
-  /// Panel accounts: binding summary
-  ///
-  /// In zh, this message translates to:
-  /// **'{freshness} · 电源{power}'**
-  String cloudBindingSummary(String freshness, String power);
-
-  /// Panel accounts: step label
-  ///
-  /// In zh, this message translates to:
-  /// **'0{number} {label}'**
-  String cloudStepLabel(int number, String label);
 
   /// No description provided for @serverNameRange.
   ///
@@ -5128,18 +3827,6 @@ abstract class AppLocalizations {
   /// **'流量周期需选择月、季、年或未设置'**
   String get resourceValidPeriod;
 
-  /// No description provided for @resourceInvalidSources.
-  ///
-  /// In zh, this message translates to:
-  /// **'资源来源字段无效'**
-  String get resourceInvalidSources;
-
-  /// No description provided for @resourceUnknownApiSource.
-  ///
-  /// In zh, this message translates to:
-  /// **'未知资源不能标记为 API 来源'**
-  String get resourceUnknownApiSource;
-
   /// No description provided for @resourceTooLarge.
   ///
   /// In zh, this message translates to:
@@ -5151,12 +3838,6 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'本地资源配置字段无效'**
   String get resourceInvalidFields;
-
-  /// No description provided for @resourceInvalidSourceFields.
-  ///
-  /// In zh, this message translates to:
-  /// **'本地资源来源字段无效'**
-  String get resourceInvalidSourceFields;
 
   /// No description provided for @resourceUnlimitedTraffic.
   ///
@@ -5193,42 +3874,6 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'{p0} 硬盘'**
   String resourceDiskQuota(String p0);
-
-  /// No description provided for @resourceSourceManual.
-  ///
-  /// In zh, this message translates to:
-  /// **'来源：手动填写'**
-  String get resourceSourceManual;
-
-  /// No description provided for @resourceSourceApi.
-  ///
-  /// In zh, this message translates to:
-  /// **'来源：API'**
-  String get resourceSourceApi;
-
-  /// No description provided for @resourceSourceUnlimited.
-  ///
-  /// In zh, this message translates to:
-  /// **'来源：手动确认不限量'**
-  String get resourceSourceUnlimited;
-
-  /// No description provided for @resourceSourceMissing.
-  ///
-  /// In zh, this message translates to:
-  /// **'待补填：API 未提供有效值'**
-  String get resourceSourceMissing;
-
-  /// No description provided for @resourceSourceCompleted.
-  ///
-  /// In zh, this message translates to:
-  /// **'来源：手动补填'**
-  String get resourceSourceCompleted;
-
-  /// No description provided for @resourceSourceEditedApi.
-  ///
-  /// In zh, this message translates to:
-  /// **'来源：手动修改 API 预填值'**
-  String get resourceSourceEditedApi;
 
   /// No description provided for @resourceFieldValidIp.
   ///
@@ -5302,28 +3947,16 @@ abstract class AppLocalizations {
   /// **'周期独立于容量单位；未知选“未设置”。'**
   String get resourcePeriodHelp;
 
-  /// No description provided for @resourceSixRequired.
-  ///
-  /// In zh, this message translates to:
-  /// **'硬件信息 · 六项必填'**
-  String get resourceSixRequired;
-
   /// No description provided for @resourceHardware.
   ///
   /// In zh, this message translates to:
   /// **'硬件信息'**
   String get resourceHardware;
 
-  /// No description provided for @resourceImportHelp.
-  ///
-  /// In zh, this message translates to:
-  /// **'核对并补齐六项后导入；容量按 1024 进制，0 不代表不限量。资料不全时可暂不选择此实例，待补齐后再导入。'**
-  String get resourceImportHelp;
-
   /// No description provided for @resourceLocalHelp.
   ///
   /// In zh, this message translates to:
-  /// **'容量按 1024 进制；面板刷新不会覆盖手动资料。'**
+  /// **'容量按 1024 进制。选择套餐会预填这些项，之后仍可修改。'**
   String get resourceLocalHelp;
 
   /// No description provided for @resourceIpAddress.
@@ -5463,12 +4096,6 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'添加服务器'**
   String get serverAdd;
-
-  /// No description provided for @serverImportPanel.
-  ///
-  /// In zh, this message translates to:
-  /// **'从面板账户导入'**
-  String get serverImportPanel;
 
   /// No description provided for @serverFirstTitle.
   ///
@@ -5731,7 +4358,7 @@ abstract class AppLocalizations {
   /// No description provided for @resourceCardHelp.
   ///
   /// In zh, this message translates to:
-  /// **'仅本地资料，面板刷新不会覆盖。'**
+  /// **'仅本地资料；套餐只用于预填。'**
   String get resourceCardHelp;
 
   /// No description provided for @serverSavedDisplayStale.
@@ -5890,53 +4517,11 @@ abstract class AppLocalizations {
   /// **'规格'**
   String get serverSpecifications;
 
-  /// No description provided for @serverLocalInfoHelp.
-  ///
-  /// In zh, this message translates to:
-  /// **'以上是本地资料，面板刷新不会覆盖。连接测试结果不代表服务持续可用。'**
-  String get serverLocalInfoHelp;
-
   /// No description provided for @serverEditHardware.
   ///
   /// In zh, this message translates to:
   /// **'编辑硬件'**
   String get serverEditHardware;
-
-  /// No description provided for @serverPanelLink.
-  ///
-  /// In zh, this message translates to:
-  /// **'面板关联'**
-  String get serverPanelLink;
-
-  /// No description provided for @serverNoPanelLink.
-  ///
-  /// In zh, this message translates to:
-  /// **'未关联面板账户'**
-  String get serverNoPanelLink;
-
-  /// No description provided for @serverPanelLinkHelp.
-  ///
-  /// In zh, this message translates to:
-  /// **'面板刷新不会覆盖手动填写的资料。'**
-  String get serverPanelLinkHelp;
-
-  /// No description provided for @serverLinkPanel.
-  ///
-  /// In zh, this message translates to:
-  /// **'关联面板账户'**
-  String get serverLinkPanel;
-
-  /// No description provided for @serverManageLink.
-  ///
-  /// In zh, this message translates to:
-  /// **'管理关联'**
-  String get serverManageLink;
-
-  /// No description provided for @serverReloadPanelDetails.
-  ///
-  /// In zh, this message translates to:
-  /// **'重新读取面板账户资料'**
-  String get serverReloadPanelDetails;
 
   /// No description provided for @serverCostExpiry.
   ///
@@ -6669,12 +5254,6 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'地址留空时取硬件 IP 或主机名；SSH 地址另设。'**
   String get r2FormAddressHelp;
-
-  /// No description provided for @r2FormProviderLocked.
-  ///
-  /// In zh, this message translates to:
-  /// **'提供商请在详情页更改。'**
-  String get r2FormProviderLocked;
 
   /// No description provided for @serverWaitForOperation.
   ///
@@ -10085,12 +8664,6 @@ abstract class AppLocalizations {
   /// Provider and adapter relationship validation.
   ///
   /// In zh, this message translates to:
-  /// **'请先确认此实例的提供商归属，再添加授权、导入或关联服务器。'**
-  String get providerReviewRequired;
-
-  /// Provider and adapter relationship validation.
-  ///
-  /// In zh, this message translates to:
   /// **'提供商名称需为 1–80 个字符。'**
   String get providerNameRange;
 
@@ -10099,30 +8672,6 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'这个提供商已存在，请直接选择。'**
   String get providerAlreadyExists;
-
-  /// Provider and adapter relationship validation.
-  ///
-  /// In zh, this message translates to:
-  /// **'更改提供商前，请确认解除原适配器关联。'**
-  String get providerChangeNeedsUnlink;
-
-  /// Provider and adapter relationship validation.
-  ///
-  /// In zh, this message translates to:
-  /// **'服务器与适配器实例必须属于同一提供商。'**
-  String get adapterProviderMismatch;
-
-  /// Provider and adapter relationship validation.
-  ///
-  /// In zh, this message translates to:
-  /// **'此实例的授权范围尚未确认，不能新增关联。'**
-  String get adapterScopeUnavailable;
-
-  /// Provider and adapter relationship validation.
-  ///
-  /// In zh, this message translates to:
-  /// **'这组单机凭据已确认用于另一条服务器记录；解绑不会释放其授权范围。请回到原记录，或单独重新授权。'**
-  String get adapterSingletonPinned;
 
   /// Provider navigation and ownership UI.
   ///
@@ -10135,30 +8684,6 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'提供商'**
   String get uiCloudProvidersTitle;
-
-  /// Cloud / provider UI.
-  ///
-  /// In zh, this message translates to:
-  /// **'归属待确认'**
-  String get uiCloudNeedsReviewPill;
-
-  /// Cloud / provider UI.
-  ///
-  /// In zh, this message translates to:
-  /// **'归属提供商'**
-  String get uiCloudOwnerSection;
-
-  /// Cloud / provider UI.
-  ///
-  /// In zh, this message translates to:
-  /// **'添加方式'**
-  String get uiCloudMethodSection;
-
-  /// Cloud / provider UI.
-  ///
-  /// In zh, this message translates to:
-  /// **'面板密钥只存入设备安全存储，读取不会修改远端。'**
-  String get uiCloudAddFooter;
 
   /// Provider navigation and ownership UI.
   ///
@@ -10193,20 +8718,296 @@ abstract class AppLocalizations {
   /// Provider navigation and ownership UI.
   ///
   /// In zh, this message translates to:
-  /// **'仅手动添加，可稍后在服务器详情中指定归属。'**
+  /// **'之后可在编辑服务器时指定提供商。'**
   String get providerUiUnspecifiedHelp;
 
   /// Provider navigation and ownership UI.
   ///
   /// In zh, this message translates to:
-  /// **'提供商是服务器的业务归属；适配器实例保存独立授权。'**
+  /// **'提供商是服务器的业务归属；目录提供商还会列出自己的套餐。'**
   String get providerUiHierarchyHelp;
 
-  /// Provider navigation and ownership UI.
+  /// Provider catalog and packages.
   ///
   /// In zh, this message translates to:
-  /// **'{instances} 个适配器实例 · {devices} 台服务器'**
-  String providerUiSummary(int instances, int devices);
+  /// **'{count} 台服务器'**
+  String r6CatProviderSummary(int count);
+
+  /// Provider catalog and packages.
+  ///
+  /// In zh, this message translates to:
+  /// **'目录提供商'**
+  String get r6CatCatalogSection;
+
+  /// Provider catalog and packages.
+  ///
+  /// In zh, this message translates to:
+  /// **'我的提供商'**
+  String get r6CatMineSection;
+
+  /// Provider catalog and packages.
+  ///
+  /// In zh, this message translates to:
+  /// **'目录提供商附带现成的套餐。没有找到时可以新增提供商。'**
+  String get r6CatCatalogFooter;
+
+  /// Provider catalog and packages.
+  ///
+  /// In zh, this message translates to:
+  /// **'{count} 个套餐'**
+  String r6CatPackageCount(int count);
+
+  /// Provider catalog and packages.
+  ///
+  /// In zh, this message translates to:
+  /// **'无套餐列表'**
+  String get r6CatNoPackageList;
+
+  /// Provider catalog and packages.
+  ///
+  /// In zh, this message translates to:
+  /// **'已添加'**
+  String get r6CatAdded;
+
+  /// Provider catalog and packages.
+  ///
+  /// In zh, this message translates to:
+  /// **'选择套餐'**
+  String get r6CatChoosePackage;
+
+  /// Provider catalog and packages.
+  ///
+  /// In zh, this message translates to:
+  /// **'套餐会预填硬件与费用，下一步仍可全部修改。'**
+  String get r6CatPackageFooter;
+
+  /// Provider catalog and packages.
+  ///
+  /// In zh, this message translates to:
+  /// **'不选套餐'**
+  String get r6CatNoPackage;
+
+  /// Provider catalog and packages.
+  ///
+  /// In zh, this message translates to:
+  /// **'自行填写硬件与费用。'**
+  String get r6CatNoPackageHelp;
+
+  /// Provider catalog and packages.
+  ///
+  /// In zh, this message translates to:
+  /// **'默认'**
+  String get r6CatDefaultPill;
+
+  /// Provider catalog and packages.
+  ///
+  /// In zh, this message translates to:
+  /// **'继续'**
+  String get r6CatContinue;
+
+  /// Provider catalog and packages.
+  ///
+  /// In zh, this message translates to:
+  /// **'套餐'**
+  String get r6CatPackageDetails;
+
+  /// Provider catalog and packages.
+  ///
+  /// In zh, this message translates to:
+  /// **'规格'**
+  String get r6CatSpecs;
+
+  /// Provider catalog and packages.
+  ///
+  /// In zh, this message translates to:
+  /// **'价格'**
+  String get r6CatPrice;
+
+  /// Provider catalog and packages.
+  ///
+  /// In zh, this message translates to:
+  /// **'{amount} {currency} · {cycle}'**
+  String r6CatPriceValue(String amount, String currency, String cycle);
+
+  /// Provider catalog and packages.
+  ///
+  /// In zh, this message translates to:
+  /// **'未列出价格'**
+  String get r6CatUnknownPrice;
+
+  /// Provider catalog and packages.
+  ///
+  /// In zh, this message translates to:
+  /// **'使用此套餐的服务器'**
+  String get r6CatLinkedServers;
+
+  /// Provider catalog and packages.
+  ///
+  /// In zh, this message translates to:
+  /// **'还没有服务器使用此套餐。'**
+  String get r6CatNoLinkedServers;
+
+  /// Provider catalog and packages.
+  ///
+  /// In zh, this message translates to:
+  /// **'服务器保留自己的硬件与费用；套餐只记录你选过什么。'**
+  String get r6CatLinkedFooter;
+
+  /// Provider catalog and packages.
+  ///
+  /// In zh, this message translates to:
+  /// **'用此套餐添加服务器'**
+  String get r6CatAddServerWithPackage;
+
+  /// Provider catalog and packages.
+  ///
+  /// In zh, this message translates to:
+  /// **'自选择以来，目录已更新此套餐。服务器保留各自保存的值。'**
+  String get r6CatChangedNotice;
+
+  /// Provider catalog and packages.
+  ///
+  /// In zh, this message translates to:
+  /// **'目录已更新'**
+  String get r6CatChangedPill;
+
+  /// Provider catalog and packages.
+  ///
+  /// In zh, this message translates to:
+  /// **'目录已不再列出此套餐。服务器保留各自保存的值。'**
+  String get r6CatRemovedNotice;
+
+  /// Provider catalog and packages.
+  ///
+  /// In zh, this message translates to:
+  /// **'已不在目录'**
+  String get r6CatRemovedPill;
+
+  /// Provider catalog and packages.
+  ///
+  /// In zh, this message translates to:
+  /// **'此服务器保存的内容'**
+  String get r6CatSavedValues;
+
+  /// Provider catalog and packages.
+  ///
+  /// In zh, this message translates to:
+  /// **'当前目录'**
+  String get r6CatCurrentValues;
+
+  /// Provider catalog and packages.
+  ///
+  /// In zh, this message translates to:
+  /// **'提供商与套餐'**
+  String get r6CatServerSection;
+
+  /// Provider catalog and packages.
+  ///
+  /// In zh, this message translates to:
+  /// **'服务器保留自己的硬件与费用。如需更换提供商或套餐，请编辑服务器。'**
+  String get r6CatServerFooter;
+
+  /// Provider catalog and packages.
+  ///
+  /// In zh, this message translates to:
+  /// **'无套餐'**
+  String get r6CatNoPackageRow;
+
+  /// Provider catalog and packages.
+  ///
+  /// In zh, this message translates to:
+  /// **'查看套餐'**
+  String get r6CatOpenPackage;
+
+  /// Provider catalog and packages.
+  ///
+  /// In zh, this message translates to:
+  /// **'套餐'**
+  String get r6CatFormPackage;
+
+  /// Provider catalog and packages.
+  ///
+  /// In zh, this message translates to:
+  /// **'选择套餐会预填硬件与费用，之后仍可修改。'**
+  String get r6CatFormPackageFooter;
+
+  /// Provider catalog and packages.
+  ///
+  /// In zh, this message translates to:
+  /// **'替换硬件与费用？'**
+  String get r6CatReplaceTitle;
+
+  /// Provider catalog and packages.
+  ///
+  /// In zh, this message translates to:
+  /// **'套餐的值会替换表单中的硬件与费用，保存后才会生效。'**
+  String get r6CatReplaceMessage;
+
+  /// Provider catalog and packages.
+  ///
+  /// In zh, this message translates to:
+  /// **'替换'**
+  String get r6CatReplaceAction;
+
+  /// Provider catalog and packages.
+  ///
+  /// In zh, this message translates to:
+  /// **'套餐'**
+  String get r6CatPackagesHeader;
+
+  /// Provider catalog and packages.
+  ///
+  /// In zh, this message translates to:
+  /// **'套餐来自目录，仅用于预填新服务器。'**
+  String get r6CatPackagesFooter;
+
+  /// Provider catalog and packages.
+  ///
+  /// In zh, this message translates to:
+  /// **'这个提供商没有套餐列表。'**
+  String get r6CatNoPackagesYet;
+
+  /// Provider catalog and packages.
+  ///
+  /// In zh, this message translates to:
+  /// **'套餐目录未能加载。仍可使用自己的提供商。'**
+  String get r6CatCatalogFailed;
+
+  /// Provider catalog and packages.
+  ///
+  /// In zh, this message translates to:
+  /// **'重试'**
+  String get r6CatRetry;
+
+  /// Provider catalog and packages.
+  ///
+  /// In zh, this message translates to:
+  /// **'尚未添加。添加后，新增服务器时即可使用它的套餐。'**
+  String get r6CatCatalogProviderHelp;
+
+  /// Provider catalog and packages.
+  ///
+  /// In zh, this message translates to:
+  /// **'套餐与此服务器的提供商不匹配。'**
+  String get r6CatPackageInvalid;
+
+  /// Provider catalog and packages.
+  ///
+  /// In zh, this message translates to:
+  /// **'提供商'**
+  String get r6CatBackupProviders;
+
+  /// Provider catalog and packages.
+  ///
+  /// In zh, this message translates to:
+  /// **'提供商：{count}'**
+  String r6CatBackupProviderCount(int count);
+
+  /// Provider catalog and packages.
+  ///
+  /// In zh, this message translates to:
+  /// **'示例目录数据，仅用于测试。'**
+  String get r6CatSampleNote;
 
   /// Provider navigation and ownership UI.
   ///
@@ -10217,14 +9018,8 @@ abstract class AppLocalizations {
   /// Provider navigation and ownership UI.
   ///
   /// In zh, this message translates to:
-  /// **'先记录提供商名称，再手动添加服务器或配置只读适配器。'**
+  /// **'记录提供商名称，或在添加服务器时从目录中选择。'**
   String get providerUiEmptyHelp;
-
-  /// Provider navigation and ownership UI.
-  ///
-  /// In zh, this message translates to:
-  /// **'归属待确认，暂不能新增授权或关联'**
-  String get providerUiNeedsReview;
 
   /// Provider navigation and ownership UI.
   ///
@@ -10241,68 +9036,8 @@ abstract class AppLocalizations {
   /// Provider navigation and ownership UI.
   ///
   /// In zh, this message translates to:
-  /// **'选择业务提供商。面板类型与授权将在后续步骤选择。'**
+  /// **'选择购买服务器的提供商。'**
   String get providerUiChooseHelp;
-
-  /// Provider navigation and ownership UI.
-  ///
-  /// In zh, this message translates to:
-  /// **'服务器归属'**
-  String get providerUiSelected;
-
-  /// Provider navigation and ownership UI.
-  ///
-  /// In zh, this message translates to:
-  /// **'重新选择提供商'**
-  String get providerUiChooseAnother;
-
-  /// Provider navigation and ownership UI.
-  ///
-  /// In zh, this message translates to:
-  /// **'选择添加方式'**
-  String get providerUiChooseMethod;
-
-  /// Provider navigation and ownership UI.
-  ///
-  /// In zh, this message translates to:
-  /// **'手动填写资料。六项硬件和费用未知时可以留空。'**
-  String get providerUiManualHelp;
-
-  /// Provider navigation and ownership UI.
-  ///
-  /// In zh, this message translates to:
-  /// **'通过适配器读取'**
-  String get providerUiAutomatic;
-
-  /// Provider navigation and ownership UI.
-  ///
-  /// In zh, this message translates to:
-  /// **'选择现有授权或新增适配器，读取后确认导入。'**
-  String get providerUiAutomaticHelp;
-
-  /// Provider navigation and ownership UI.
-  ///
-  /// In zh, this message translates to:
-  /// **'自动读取前，需要选择已确认的提供商。'**
-  String get providerUiAutoNeedsProvider;
-
-  /// Provider navigation and ownership UI.
-  ///
-  /// In zh, this message translates to:
-  /// **'适配器实例'**
-  String get providerUiInstances;
-
-  /// Provider navigation and ownership UI.
-  ///
-  /// In zh, this message translates to:
-  /// **'尚未配置适配器；仍可手动添加服务器。'**
-  String get providerUiNoInstances;
-
-  /// Provider navigation and ownership UI.
-  ///
-  /// In zh, this message translates to:
-  /// **'新增适配器实例'**
-  String get providerUiAddInstance;
 
   /// Provider navigation and ownership UI.
   ///
@@ -10319,304 +9054,14 @@ abstract class AppLocalizations {
   /// Provider navigation and ownership UI.
   ///
   /// In zh, this message translates to:
-  /// **'无适配器关联'**
-  String get providerUiManualDevice;
-
-  /// Provider navigation and ownership UI.
-  ///
-  /// In zh, this message translates to:
-  /// **'已关联适配器'**
-  String get providerUiLinkedDevice;
-
-  /// Provider navigation and ownership UI.
-  ///
-  /// In zh, this message translates to:
-  /// **'已关联 {count} 台服务器'**
-  String providerUiLinkedCount(int count);
-
-  /// Provider navigation and ownership UI.
-  ///
-  /// In zh, this message translates to:
-  /// **'单台设备授权'**
-  String get providerUiSingleScope;
-
-  /// Provider navigation and ownership UI.
-  ///
-  /// In zh, this message translates to:
-  /// **'账户范围授权'**
-  String get providerUiAccountScope;
-
-  /// Provider navigation and ownership UI.
-  ///
-  /// In zh, this message translates to:
-  /// **'授权范围未确认'**
-  String get providerUiUnknownScope;
-
-  /// Provider navigation and ownership UI.
-  ///
-  /// In zh, this message translates to:
-  /// **'这份单台授权已固定到「{name}」。即使解除关联，也不能给另一台设备使用；请回到原记录或明确重新授权。'**
-  String providerUiPinnedHelp(String name);
-
-  /// Provider navigation and ownership UI.
-  ///
-  /// In zh, this message translates to:
-  /// **'选择适配器实例'**
-  String get providerUiChooseInstance;
-
-  /// Provider navigation and ownership UI.
-  ///
-  /// In zh, this message translates to:
-  /// **'只列出当前提供商的实例。'**
-  String get providerUiInstanceChoiceHelp;
-
-  /// Provider navigation and ownership UI.
-  ///
-  /// In zh, this message translates to:
-  /// **'旧资料无法确定业务归属。请为每个实例确认提供商及所有受影响的服务器。确认前只允许刷新已有关联。'**
-  String get providerUiReviewHelp;
-
-  /// Provider navigation and ownership UI.
-  ///
-  /// In zh, this message translates to:
-  /// **'重命名不会确认归属；仍须在实例上执行归属确认。'**
-  String get providerUiRenameReviewHelp;
-
-  /// Provider navigation and ownership UI.
-  ///
-  /// In zh, this message translates to:
-  /// **'确认实例归属'**
-  String get providerUiConfirmOwnership;
-
-  /// Provider navigation and ownership UI.
-  ///
-  /// In zh, this message translates to:
-  /// **'将「{alias}」归属到「{provider}」。下列已关联服务器会一起调整归属：\n{devices}\n\n保留原授权、服务器资料、费用和 SSH。此操作不会扩大授权范围。'**
-  String providerUiConfirmOwnershipMessage(
-    String alias,
-    String provider,
-    String devices,
-  );
-
-  /// Provider navigation and ownership UI.
-  ///
-  /// In zh, this message translates to:
-  /// **'没有已关联服务器。'**
-  String get providerUiNoAffectedDevices;
-
-  /// Provider navigation and ownership UI.
-  ///
-  /// In zh, this message translates to:
   /// **'此提供商已变更或不可用，请返回重新选择。'**
   String get providerUiUnavailable;
 
   /// Provider navigation and ownership UI.
   ///
   /// In zh, this message translates to:
-  /// **'更改提供商'**
-  String get providerUiChange;
-
-  /// Provider navigation and ownership UI.
-  ///
-  /// In zh, this message translates to:
-  /// **'将「{server}」从「{oldProvider}」改为「{newProvider}」。\n\n{linkEffect}\n\n保留服务器 ID、手动资料、费用和 SSH。更改归属不会自动添加新授权或关联。'**
-  String providerUiChangeMessage(
-    String server,
-    String oldProvider,
-    String newProvider,
-    String linkEffect,
-  );
-
-  /// Provider navigation and ownership UI.
-  ///
-  /// In zh, this message translates to:
-  /// **'这台服务器没有适配器关联。'**
-  String get providerUiChangeNoLink;
-
-  /// Provider navigation and ownership UI.
-  ///
-  /// In zh, this message translates to:
-  /// **'必须先解除与「{alias}」的本地关联；旧适配器授权仍保留，单台授权的固定目标不会被清除。'**
-  String providerUiChangeUnlink(String alias);
-
-  /// Provider navigation and ownership UI.
-  ///
-  /// In zh, this message translates to:
-  /// **'解除关联并更改归属'**
-  String get providerUiUnlinkAndChange;
-
-  /// Provider navigation and ownership UI.
-  ///
-  /// In zh, this message translates to:
-  /// **'更改已有服务器归属，请返回详情选择“更改提供商”；有关联时须先确认解除。'**
-  String get providerUiChangeFromDetails;
-
-  /// Provider navigation and ownership UI.
-  ///
-  /// In zh, this message translates to:
-  /// **'提供商与适配器'**
-  String get providerUiProviderAndAdapter;
-
-  /// Provider navigation and ownership UI.
-  ///
-  /// In zh, this message translates to:
   /// **'查看提供商'**
   String get providerUiOpenProvider;
-
-  /// Provider navigation and ownership UI.
-  ///
-  /// In zh, this message translates to:
-  /// **'查看适配器实例'**
-  String get providerUiOpenInstance;
-
-  /// Label for an ambiguous migrated provider.
-  ///
-  /// In zh, this message translates to:
-  /// **'{name} · 归属待确认'**
-  String providerPendingName(String name);
-
-  /// Adapter instance import and local linking
-  ///
-  /// In zh, this message translates to:
-  /// **'请先在服务器详情中指定提供商，再选择适配器实例关联。'**
-  String get providerBindingAssignFirst;
-
-  /// Adapter instance import and local linking
-  ///
-  /// In zh, this message translates to:
-  /// **'适配器实例已保存。授权与本次设备导入结果分别保留。'**
-  String get cloudImportSaved;
-
-  /// Adapter instance import and local linking
-  ///
-  /// In zh, this message translates to:
-  /// **'资源完整'**
-  String get cloudImportReady;
-
-  /// Adapter instance import and local linking
-  ///
-  /// In zh, this message translates to:
-  /// **'待补填资源'**
-  String get cloudImportNeedsCompletion;
-
-  /// Adapter instance import and local linking
-  ///
-  /// In zh, this message translates to:
-  /// **'导入成功'**
-  String get cloudImportImported;
-
-  /// Adapter instance import and local linking
-  ///
-  /// In zh, this message translates to:
-  /// **'已存在'**
-  String get cloudImportExisting;
-
-  /// Adapter instance import and local linking
-  ///
-  /// In zh, this message translates to:
-  /// **'导入失败'**
-  String get cloudImportFailed;
-
-  /// Adapter instance import and local linking
-  ///
-  /// In zh, this message translates to:
-  /// **'未处理'**
-  String get cloudImportUnprocessed;
-
-  /// Adapter instance import and local linking
-  ///
-  /// In zh, this message translates to:
-  /// **'补填资源'**
-  String get cloudImportCompleteResources;
-
-  /// Adapter instance import and local linking
-  ///
-  /// In zh, this message translates to:
-  /// **'核对资源'**
-  String get cloudImportReviewResources;
-
-  /// Adapter instance import and local linking
-  ///
-  /// In zh, this message translates to:
-  /// **'保存草稿并勾选'**
-  String get cloudImportCompleteAndSelect;
-
-  /// Adapter instance import and local linking
-  ///
-  /// In zh, this message translates to:
-  /// **'导入前请核对六项资源；API 未提供的保持未知，确认无限流量才选“不限”。修改仅存本机。'**
-  String get cloudImportCompletionInfo;
-
-  /// Adapter instance import and local linking
-  ///
-  /// In zh, this message translates to:
-  /// **'本次仅添加设备与资源配置，不会创建费用或付款。'**
-  String get cloudImportFinanceLater;
-
-  /// Adapter instance import and local linking
-  ///
-  /// In zh, this message translates to:
-  /// **'成功 {imported} · 已存在 {existing} · 失败 {failed} · 未处理 {unprocessed}'**
-  String cloudImportSummary(
-    int imported,
-    int existing,
-    int failed,
-    int unprocessed,
-  );
-
-  /// Adapter instance import and local linking
-  ///
-  /// In zh, this message translates to:
-  /// **'仅重试未完成的 {count} 台设备'**
-  String cloudImportRetryCount(int count);
-
-  /// Adapter instance import and local linking
-  ///
-  /// In zh, this message translates to:
-  /// **'停止后续导入'**
-  String get cloudImportCancel;
-
-  /// Adapter instance import and local linking
-  ///
-  /// In zh, this message translates to:
-  /// **'正在停止…'**
-  String get cloudImportCancelling;
-
-  /// Adapter instance import and local linking
-  ///
-  /// In zh, this message translates to:
-  /// **'已停止后续导入。已提交的设备保留，可核对结果后重试未完成项。'**
-  String get cloudImportCancelled;
-
-  /// Adapter instance import and local linking
-  ///
-  /// In zh, this message translates to:
-  /// **'本次导入结果'**
-  String get cloudImportResultsTitle;
-
-  /// Adapter instance import and local linking
-  ///
-  /// In zh, this message translates to:
-  /// **'发现 {count} 条相同远端标识的本地记录，请逐条核对；不会自动选择或合并。'**
-  String cloudImportExistingConflict(int count);
-
-  /// Adapter instance import and local linking
-  ///
-  /// In zh, this message translates to:
-  /// **'IP 或主机名与这些本地设备相同：{names}。这只是核对提示，不能据此确认是同一设备。'**
-  String cloudImportAddressHint(String names);
-
-  /// Adapter instance import and local linking
-  ///
-  /// In zh, this message translates to:
-  /// **'将解除 {count} 台本地服务器的关联：\n{names}\n\n全部本地资料、资源配置、财务与 SSH 设置保留。'**
-  String cloudInstanceDeleteImpact(int count, String names);
-
-  /// Read remote UUID conflicts with locked local device identity
-  ///
-  /// In zh, this message translates to:
-  /// **'设备标识冲突'**
-  String get cloudImportIdentityConflict;
 }
 
 class _AppLocalizationsDelegate

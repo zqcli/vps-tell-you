@@ -62,6 +62,9 @@ class _LedgerAppState extends State<LedgerApp> with WidgetsBindingObserver {
             NativeReminderPlatform(onOpen: openReminder),
       );
       await ready.refresh();
+      // The catalog is independent of the ledger: a slow or failed load never
+      // delays or blocks opening it.
+      unawaited(ready.loadCatalog());
       if (!mounted) {
         ready.dispose();
         await store.close();

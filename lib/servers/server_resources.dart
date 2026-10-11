@@ -5,9 +5,9 @@ import '../l10n/generated/app_localizations.dart';
 
 import 'dart:convert';
 
-/// Local resource configuration, including explicitly unknown values. Provider
-/// observations remain in cloud inventory; refreshes must never overwrite these
-/// user-reviewed values.
+/// Local resource configuration, including explicitly unknown values. A
+/// catalog package only pre-fills these fields; the values stored here are the
+/// user's own and never change when the catalog does.
 class ServerResources {
   ServerResources({
     this.ip = '',
@@ -19,8 +19,7 @@ class ServerResources {
     this.trafficBytes,
     this.trafficUnlimited = false,
     this.trafficPeriodMonths,
-    Set<String> apiFields = const {},
-  }) : apiFields = Set.unmodifiable(apiFields);
+  });
 
   /// [ip] is the IPv4 address (the JSON key predates IPv6); [ipv6] is the
   /// optional IPv6 address. Both are hardware addresses, independent of the
@@ -40,10 +39,6 @@ class ServerResources {
     12: l10n.resourceYear,
   };
 
-  /// The six allowed keys mark reviewed values originally supplied by the API.
-  /// A manually completed or overridden value must not retain its API marker.
-  final Set<String> apiFields;
-
   static const maxVcpu = 65536;
   // JSON stays exact even when a backup is handled by a JavaScript consumer.
   static const maxBytes = 9007199254740991;
@@ -55,15 +50,8 @@ class ServerResources {
     'diskBytes',
     'trafficBytes',
   };
-  static const _legacyJsonKeys = {
-    ...fieldKeys,
-    'trafficUnlimited',
-    'apiFields',
-  };
+  static const _legacyJsonKeys = {...fieldKeys, 'trafficUnlimited'};
   static const _jsonKeys = {..._legacyJsonKeys, 'trafficPeriodMonths'};
-
-  /// `apiFields` may also mark the optional IPv6 address.
-  static const _sourceKeys = {...fieldKeys, 'ipv6'};
 
   static bool _validAddress(String value, NetHostKind kind) {
     final address = NetAddress.tryParse(value, allowBrackets: false);
@@ -126,21 +114,6 @@ class ServerResources {
         !trafficPeriods.containsKey(trafficPeriodMonths)) {
       return l10n.resourceValidPeriod;
     }
-    if (!_sourceKeys.containsAll(apiFields)) {
-      return l10n.resourceInvalidSources;
-    }
-    final values = {
-      'ip': ip.isEmpty ? null : ip,
-      'ipv6': ipv6.isEmpty ? null : ipv6,
-      'hostname': hostname.isEmpty ? null : hostname,
-      'vcpu': vcpu,
-      'ramBytes': ramBytes,
-      'diskBytes': diskBytes,
-      'trafficBytes': trafficUnlimited ? true : trafficBytes,
-    };
-    if (apiFields.any((key) => values[key] == null)) {
-      return l10n.resourceUnknownApiSource;
-    }
     return null;
   }
 
@@ -156,7 +129,6 @@ class ServerResources {
     'trafficBytes': trafficBytes,
     'trafficUnlimited': trafficUnlimited,
     'trafficPeriodMonths': trafficPeriodMonths,
-    'apiFields': apiFields.toList()..sort(),
   };
 
   String encode() => jsonEncode(toJson());
@@ -174,8 +146,11 @@ class ServerResources {
     }
     final legacy = !value.containsKey('trafficPeriodMonths');
     final keys = legacy ? _legacyJsonKeys : _jsonKeys;
+    // Rows written before v12 may carry the retired `apiFields` marker. It is
+    // tolerated (and ignored) when reading; the writer never emits it.
+    final extra = value.containsKey('apiFields') ? 1 : 0;
     final hasIpv6 = value.containsKey('ipv6');
-    if (value.length != keys.length + (hasIpv6 ? 1 : 0) ||
+    if (value.length != keys.length + extra + (hasIpv6 ? 1 : 0) ||
         !keys.every(value.containsKey) ||
         value['ip'] is! String ||
         (hasIpv6 && value['ipv6'] is! String) ||
@@ -187,25 +162,16 @@ class ServerResources {
         (value['trafficPeriodMonths'] != null &&
             value['trafficPeriodMonths'] is! int) ||
         value['trafficUnlimited'] is! bool ||
-        value['apiFields'] is! List) {
+        (extra == 1 && value['apiFields'] is! List)) {
       throw LocalizedFormatException((l10n) => l10n.resourceInvalidFields);
-    }
-    final sources = value['apiFields'] as List;
-    if (sources.any((field) => field is! String) ||
-        sources.toSet().length != sources.length) {
-      throw LocalizedFormatException(
-        (l10n) => l10n.resourceInvalidSourceFields,
-      );
     }
     var ip = value['ip'] as String;
     var ipv6 = hasIpv6 ? value['ipv6'] as String : '';
-    var markers = sources.cast<String>().toSet();
     // Before IPv6 had its own field `ip` could hold either family. Move an
-    // IPv6 found there (and its API marker) so old data and backups stay valid.
+    // IPv6 found there so old data and backups stay valid.
     if (ipv6.isEmpty && validIpv6(ip)) {
       ipv6 = ip;
       ip = '';
-      if (markers.remove('ip')) markers.add('ipv6');
     }
     final result = ServerResources(
       ip: ip,
@@ -217,7 +183,6 @@ class ServerResources {
       trafficBytes: value['trafficBytes'] as int?,
       trafficUnlimited: value['trafficUnlimited'] as bool,
       trafficPeriodMonths: value['trafficPeriodMonths'] as int?,
-      apiFields: markers,
     );
     final error = result.validate(requireComplete: legacy);
     if (error != null) {

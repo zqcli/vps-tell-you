@@ -12,7 +12,6 @@ ServerResources resourceFixture({
   int diskBytes = 32212254720,
   int? trafficBytes = 1099511627776,
   bool trafficUnlimited = false,
-  Set<String> apiFields = const {'ip', 'hostname', 'ramBytes'},
 }) => ServerResources(
   ip: ip,
   ipv6: ipv6,
@@ -22,7 +21,6 @@ ServerResources resourceFixture({
   diskBytes: diskBytes,
   trafficBytes: trafficBytes,
   trafficUnlimited: trafficUnlimited,
-  apiFields: apiFields,
 );
 
 void main() {
@@ -96,17 +94,10 @@ void main() {
       resourceFixture(
         ip: '',
         ipv6: '2001:db8::1',
-        apiFields: {'ipv6', 'hostname'},
       ).validate(requireComplete: true),
       isNull,
     );
-    expect(
-      resourceFixture(
-        ip: '',
-        apiFields: {'hostname'},
-      ).validate(requireComplete: true),
-      isNotNull,
-    );
+    expect(resourceFixture(ip: '').validate(requireComplete: true), isNotNull);
   });
 
   test('ipv6 is an optional JSON key and only written when set', () {
@@ -142,26 +133,14 @@ void main() {
     );
   });
 
-  test('legacy IPv6 stored in ip moves to ipv6 together with its marker', () {
-    final legacy = resourceFixture(
-      ip: '2001:db8::7',
-      apiFields: {'ip', 'ramBytes'},
-    );
+  test('legacy IPv6 stored in ip moves to ipv6', () {
+    final legacy = resourceFixture(ip: '2001:db8::7');
     final decoded = ServerResources.decode(legacy.encode());
     expect(decoded.ip, '');
     expect(decoded.ipv6, '2001:db8::7');
-    expect(decoded.apiFields, {'ipv6', 'ramBytes'});
     expect(decoded.validate(requireComplete: true), isNull);
     // Re-encoding is stable and no longer needs the migration.
     expect(ServerResources.decode(decoded.encode()).toJson(), decoded.toJson());
-  });
-
-  test('API markers may name ipv6 only with a value', () {
-    expect(
-      resourceFixture(ipv6: '2001:db8::1', apiFields: {'ipv6'}).validate(),
-      isNull,
-    );
-    expect(resourceFixture(apiFields: {'ipv6'}).validate(), isNotNull);
   });
 
   test(
@@ -242,25 +221,21 @@ void main() {
     },
   );
 
-  test('provenance is whitelisted and defensively immutable', () {
-    final fields = {'ip'};
-    final resources = resourceFixture(apiFields: fields);
-    fields.add('password');
-    expect(resources.apiFields, {'ip'});
-    expect(() => resources.apiFields.add('hostname'), throwsUnsupportedError);
+  test('the retired apiFields marker is tolerated on read, never written', () {
+    final resources = resourceFixture();
+    expect(resources.toJson().containsKey('apiFields'), isFalse);
+    final legacy = {
+      ...resources.toJson(),
+      'apiFields': ['ip', 'ramBytes'],
+    };
+    final decoded = ServerResources.decode(jsonEncode(legacy));
+    expect(decoded.toJson(), resources.toJson());
+    expect(decoded.encode(), resources.encode());
     expect(
-      resourceFixture(apiFields: {'trafficUnlimited'})
-          .validate(requireComplete: true),
-      isNotNull,
-    );
-    expect(
-      resourceFixture(apiFields: {'password'}).validate(requireComplete: true),
-      isNotNull,
-    );
-    expect(
-      resourceFixture(apiFields: {'trafficBytes'})
-          .validate(requireComplete: true),
-      isNull,
+      () => ServerResources.decode(
+        jsonEncode({...resources.toJson(), 'apiFields': 'ip'}),
+      ),
+      throwsFormatException,
     );
   });
 
@@ -276,18 +251,6 @@ void main() {
         {...map, 'ramBytes': '2147483648'},
         {...map, 'vcpu': 2.5},
         {...map, 'trafficUnlimited': 1},
-        {
-          ...map,
-          'apiFields': ['ip', 'ip'],
-        },
-        {
-          ...map,
-          'apiFields': ['secretRef'],
-        },
-        {
-          ...map,
-          'apiFields': [1],
-        },
         {...map, 'ip': '0.0.0.0'},
         {...map, 'trafficBytes': 0},
         {...map, 'trafficUnlimited': true},
