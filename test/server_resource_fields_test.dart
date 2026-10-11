@@ -132,11 +132,19 @@ void main() {
       await fill(tester, 'diskBytes', '20');
       await fill(tester, 'ip', '0.0.0.0');
       expect(key.currentState!.validateAndRead(), isNull);
+      // The IPv4 row no longer takes IPv6; the IPv6 row validates on its own.
       await fill(tester, 'ip', '2001:db8::123');
+      expect(key.currentState!.validateAndRead(), isNull);
+      await fill(tester, 'ip', '192.0.2.123');
+      await fill(tester, 'ipv6', 'https://[2001:db8::1]');
+      expect(key.currentState!.validateAndRead(), isNull);
+      await fill(tester, 'ipv6', '2001:DB8:0:0:0:0:0:123');
       await fill(tester, 'hostname', 'https://server.test');
       expect(key.currentState!.validateAndRead(), isNull);
       await fill(tester, 'hostname', 'Valid-Name');
-      expect(key.currentState!.validateAndRead()!.ip, '2001:db8::123');
+      final read = key.currentState!.validateAndRead()!;
+      expect(read.ip, '192.0.2.123');
+      expect(read.ipv6, '2001:db8::123', reason: 'stored in RFC 5952 form');
     },
   );
 
@@ -144,13 +152,14 @@ void main() {
     'editing persisted values preserves exact bytes and prior manual provenance',
     (tester) async {
       final initial = ServerResources(
-        ip: '2001:db8::2',
+        ip: '192.0.2.2',
+        ipv6: '2001:db8::2',
         hostname: 'Saved-VM',
         vcpu: 3,
         ramBytes: 1048577,
         diskBytes: 1073741825,
         trafficBytes: 1099511627777,
-        apiFields: {'ip', 'hostname', 'diskBytes'},
+        apiFields: {'ip', 'ipv6', 'hostname', 'diskBytes'},
       );
       final key = await mount(tester, initial: initial);
       expect(key.currentState!.validateAndRead()!.toJson(), initial.toJson());
@@ -163,7 +172,7 @@ void main() {
       await fill(tester, 'diskBytes', '1073741826');
       final updated = key.currentState!.validateAndRead()!;
       expect(updated.diskBytes, 1073741826);
-      expect(updated.apiFields, {'ip', 'hostname'});
+      expect(updated.apiFields, {'ip', 'ipv6', 'hostname'});
       expect(updated.ramBytes, 1048577);
       expect(updated.trafficBytes, 1099511627777);
     },

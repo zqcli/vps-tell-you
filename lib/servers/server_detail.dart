@@ -11,6 +11,7 @@ import '../cloud/provider_pages.dart';
 import '../cloud/cloud_widgets.dart';
 import '../cloud/server_cloud_binding_page.dart';
 import '../core/app_theme.dart';
+import '../core/net_address.dart';
 import '../core/ui/ui.dart';
 import '../core/value_types.dart';
 import '../connections/connection_pages.dart';
@@ -21,6 +22,7 @@ import '../finance/calculator_page.dart';
 import '../finance/finance_math.dart';
 import '../finance/finance_models.dart';
 import '../finance/payment_pages.dart';
+import '../security/host_trust.dart' show normalizedHost;
 import '../security/host_trust_pages.dart';
 import '../security/ssh_configuration_page.dart';
 import '../settings/reminder_page.dart';
@@ -677,15 +679,22 @@ class ServerDetail extends StatelessWidget {
     );
   }
 
+  /// Host-trust key of a stored address (any spelling of one IPv6 matches).
+  static String _trustKey(String host) {
+    try {
+      return normalizedHost(host);
+    } catch (_) {
+      return host.toLowerCase();
+    }
+  }
+
   Widget _connectionSection(BuildContext context, ServerRecord s) {
     final l10n = context.l10n;
     final config = controller.security.configFor(s.id);
     final trusted =
         config != null &&
         controller.security.hostTrusts.any(
-          (t) =>
-              t.port == config.port &&
-              t.host.toLowerCase() == config.host.toLowerCase(),
+          (t) => t.port == config.port && t.host == _trustKey(config.host),
         );
     return AppSection(
       header: l10n.serverConnectionsControl,
@@ -698,7 +707,7 @@ class ServerDetail extends StatelessWidget {
           title: l10n.serverSshSettings,
           subtitle: config == null
               ? l10n.serverSshSettingsDescription
-              : '${config.username}@${config.host}:${config.port}',
+              : formatUserHostPort(config.username, config.host, config.port),
           value: config == null ? l10n.uiDetailNotConfigured : null,
           chevron: true,
           onTap: s.archived ? null : () => _openSshConfiguration(context, s),
@@ -840,7 +849,7 @@ class ServerDetail extends StatelessWidget {
                 );
                 final host = Text(
                   s.host.isEmpty ? l10n.serverNotEntered : s.host,
-                  maxLines: 2,
+                  maxLines: 3,
                   overflow: TextOverflow.ellipsis,
                   style: kMonoTextStyle.copyWith(
                     fontSize: 15,

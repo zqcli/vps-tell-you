@@ -310,12 +310,12 @@ void main() {
     'small viewport reveals invalid IP and keeps the save action reachable',
     (tester) async {
       await mount(tester, 320, 2, height: 560);
-      // The IP row only exists next to a domain address.
+      // The IPv4 row is editable next to a domain address.
       await fill(tester, 'field-host', 'gateway.example');
       await fill(tester, 'resource-ip', '0.0.0.0');
       await fill(tester, 'field-notes', 'A draft survives validation');
       await tapSave(tester);
-      final error = find.text('请填写有效 IPv4 或 IPv6，不能为全零地址');
+      final error = find.text('请填写有效的 IPv4 地址，如 192.0.2.1，不能为全零地址');
       expect(error.hitTestable(), findsOneWidget);
       expect(
         tester.renderObject<RenderParagraph>(error).didExceedMaxLines,

@@ -15,7 +15,8 @@ import 'support/form_test_helpers.dart';
 void main() {
   final evidence = Platform.environment['VPS_COMPACT_ROWS_EVIDENCE_DIR'];
   final initial = ServerResources(
-    ip: '2001:db8::123',
+    ip: '192.0.2.123',
+    ipv6: '2001:db8::123',
     hostname: 'long-synthetic-server-name.example',
     vcpu: 2,
     ramBytes: 1610612736,
