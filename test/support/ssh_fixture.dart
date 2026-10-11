@@ -25,6 +25,10 @@ class SshFixture {
   var _closed = false;
   late int port;
   late String publicKey;
+  String _bind = '127.0.0.1';
+
+  /// Bare loopback address the fixture listens on.
+  String get host => _bind;
 
   static Future<SshFixture> start({
     String hostKey = 'ed25519.fixture',
@@ -32,6 +36,9 @@ class SshFixture {
 
     /// Enables the SFTP subsystem, confined to this existing directory.
     String? sftpRoot,
+
+    /// `127.0.0.1` or `::1` (the fixture refuses any other address).
+    String bindAddress = '127.0.0.1',
   }) async {
     final python = Platform.environment['VPS_SSH_FIXTURE_PYTHON'] ?? 'python3';
     final process = await Process.start(python, [
@@ -42,8 +49,10 @@ class SshFixture {
       '--delay-auth',
       '${delayAuth.inMilliseconds / 1000}',
       if (sftpRoot != null) ...['--sftp-root', sftpRoot],
+      '--bind',
+      bindAddress,
     ]);
-    final fixture = SshFixture._(process);
+    final fixture = SshFixture._(process).._bind = bindAddress;
     try {
       final ready = await Future.any([
         fixture.waitFor('ready'),
@@ -67,7 +76,7 @@ class SshFixture {
   }
 
   HostKeyIdentity get identity => HostKeyIdentity.validated(
-    host: '127.0.0.1',
+    host: _bind,
     port: port,
     algorithm: publicKey.split(' ').first,
     publicKey: publicKey,

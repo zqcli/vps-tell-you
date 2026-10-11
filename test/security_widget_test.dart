@@ -418,6 +418,40 @@ void main() {
   );
 
   testWidgets(
+    'SSH settings accept IPv6 in any spelling and show it bracketed',
+    (tester) async {
+      final id = await server();
+      await mount(tester, SshConfigurationPage(ledger: ledger, serverId: id));
+      Future<void> host(String text) async {
+        await tester.enterText(find.byKey(const ValueKey('ssh-host')), text);
+        await tester.pump();
+      }
+
+      await tester.enterText(
+        find.byKey(const ValueKey('ssh-username')),
+        'root',
+      );
+      for (final bad in [
+        '2001:db8::1::2',
+        '[2001:db8::1]:22',
+        '127.1',
+        'a b',
+      ]) {
+        await host(bad);
+        await tap(tester, '保存 SSH 配置');
+        expect(find.text('请输入有效主机，不含协议、用户名或端口'), findsOneWidget, reason: bad);
+        expect(security.configFor(id), isNull, reason: bad);
+      }
+      await host(' [2001:DB8:0:0:0:0:0:1] ');
+      await tester.enterText(find.byKey(const ValueKey('ssh-port')), '2222');
+      await tap(tester, '保存 SSH 配置');
+      final saved = security.configFor(id)!;
+      expect(saved.host, '2001:db8::1', reason: 'canonical, no brackets');
+      expect(saved.port, 2222);
+    },
+  );
+
+  testWidgets(
     'delete impact defaults unchecked and detach retains server and username',
     (tester) async {
       final c = await credential();

@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:vps_tell_you/connections/tcp_test.dart';
+import 'package:vps_tell_you/core/net_address.dart';
 
 class _SocketSpy implements Socket {
   bool destroyed = false;
@@ -40,6 +41,85 @@ void main() {
     }
   });
 
+  test('IPv6 targets: canonical host, brackets only in the label', () {
+    final target = TcpTarget(host: ' [2001:DB8:0:0:0:0:0:1] ', port: 2222);
+    expect(target.host, '2001:db8::1', reason: 'Socket.connect gets bare text');
+    expect(target.label, '[2001:db8::1]:2222');
+    expect(target.kind, NetHostKind.ipv6);
+    expect(TcpTarget(host: '192.0.2.1', port: 1).kind, NetHostKind.ipv4);
+    expect(TcpTarget(host: 'a.example', port: 1).kind, NetHostKind.domain);
+    expect(TcpTarget(host: 'fe80::1%en0', port: 22).label, '[fe80::1%en0]:22');
+    for (final bad in [
+      '2001:db8::1%en0',
+      '[192.0.2.1]',
+      '[2001:db8::1]:22',
+      '2001:db8::1::2',
+      '127.1',
+    ]) {
+      expect(
+        () => TcpTarget(host: bad, port: 22),
+        throwsArgumentError,
+        reason: bad,
+      );
+    }
+  });
+
+  test('host:port input, including bracketed IPv6', () {
+    ({String host, int port}) parse(String input) {
+      final t = TcpTarget.parse(input, defaultPort: 22);
+      return (host: t.host, port: t.port);
+    }
+
+    expect(parse('example.com'), (host: 'example.com', port: 22));
+    expect(parse('Example.com:2222'), (host: 'example.com', port: 2222));
+    expect(parse('192.0.2.1:8080'), (host: '192.0.2.1', port: 8080));
+    expect(parse('[2001:db8::1]'), (host: '2001:db8::1', port: 22));
+    expect(parse('[2001:DB8::1]:443'), (host: '2001:db8::1', port: 443));
+    expect(parse('[fe80::1%en0]:22'), (host: 'fe80::1%en0', port: 22));
+    // A bare IPv6 is never split into host + port.
+    expect(parse('2001:db8::1'), (host: '2001:db8::1', port: 22));
+    expect(parse('2001:db8::1:22'), (host: '2001:db8::1:22', port: 22));
+    for (final bad in [
+      '[2001:db8::1',
+      '[2001:db8::1]x',
+      'example.com:',
+      'example.com:http',
+      'https://example.com',
+      'example.com:0',
+      'example.com:65536',
+      '[::1]:99999',
+      '',
+    ]) {
+      expect(
+        () => TcpTarget.parse(bad, defaultPort: 22),
+        throwsArgumentError,
+        reason: bad,
+      );
+    }
+  });
+
+  test('link-local zone connects via the interface scope', () async {
+    // macOS/BSD give loopback fe80::1%lo0; most Linux hosts have no
+    // link-local loopback address and a zone cannot be faked.
+    const scoped = 'fe80::1%lo0';
+    ServerSocket server;
+    try {
+      server = await ServerSocket.bind(InternetAddress(scoped), 0);
+    } on Exception {
+      markTestSkipped('No link-local loopback address (fe80::1%lo0) here');
+      return;
+    }
+    final controller = TcpTestController();
+    addTearDown(() async {
+      controller.dispose();
+      await server.close();
+    });
+    server.listen((socket) => socket.destroy());
+    await controller.test(TcpTarget(host: scoped, port: server.port));
+    expect(controller.result!.outcome, TcpOutcome.connected);
+    expect(controller.result!.remoteFamily, NetHostKind.ipv6);
+  });
+
   for (final address in [
     InternetAddress.loopbackIPv4,
     InternetAddress.loopbackIPv6,
@@ -68,6 +148,12 @@ void main() {
           await closed.future.timeout(const Duration(seconds: 2));
           expect(controller.result!.outcome, TcpOutcome.connected);
           expect(controller.result!.remoteAddress, address.address);
+          expect(
+            controller.result!.remoteFamily,
+            address.type == InternetAddressType.IPv6
+                ? NetHostKind.ipv6
+                : NetHostKind.ipv4,
+          );
           expect(controller.result!.source, '本机 TCP 连接测试');
           expect(controller.result!.finishedAt, now);
           expect(controller.running, isFalse);
