@@ -2199,7 +2199,7 @@ class LedgerStore {
       name: _cloudImportName(displayName?.trim() ?? suggested),
       vendor: businessProvider.name,
       providerId: businessProvider.id,
-      host: reviewed.ip,
+      host: reviewed.ip.isNotEmpty ? reviewed.ip : reviewed.ipv6,
       resources: reviewed,
       spec: reviewed.specSummary,
       createdAt: now,

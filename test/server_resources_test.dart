@@ -5,6 +5,7 @@ import 'package:vps_tell_you/servers/server_resources.dart';
 
 ServerResources resourceFixture({
   String ip = '192.0.2.9',
+  String ipv6 = '',
   String hostname = 'VPS.Example',
   int vcpu = 2,
   int ramBytes = 2147483648,
@@ -14,6 +15,7 @@ ServerResources resourceFixture({
   Set<String> apiFields = const {'ip', 'hostname', 'ramBytes'},
 }) => ServerResources(
   ip: ip,
+  ipv6: ipv6,
   hostname: hostname,
   vcpu: vcpu,
   ramBytes: ramBytes,
@@ -28,7 +30,8 @@ void main() {
     for (final resources in [
       resourceFixture(),
       resourceFixture(
-        ip: '2001:db8::2',
+        ip: '192.0.2.10',
+        ipv6: '2001:db8::2',
         hostname: 'VPS',
         trafficBytes: null,
         trafficUnlimited: true,
@@ -42,21 +45,22 @@ void main() {
     }
   });
 
-  test('IP requires a literal, assigned IPv4 or IPv6 address', () {
+  test('IPv4 field requires an assigned dotted-quad address', () {
     for (final ip in [
       '',
       '0',
       '0.0.0.0',
-      '::',
-      '::0',
-      '::ffff:0.0.0.0',
       'example.com',
       'https://192.0.2.9',
       '192.0.2.9:22',
       '999.0.0.1',
+      '01.2.3.4',
+      '127.1',
       ' 192.0.2.9',
-      'fe80::1%eth0',
-      '2001:db8::1/64',
+      // The IPv4 field no longer takes IPv6 in any form.
+      '2001:db8::1',
+      '::ffff:192.0.2.9',
+      '::',
     ]) {
       expect(
         resourceFixture(ip: ip).validate(requireComplete: true),
@@ -64,13 +68,100 @@ void main() {
         reason: ip,
       );
     }
-    for (final ip in ['192.0.2.9', '2001:DB8::1', '::ffff:192.0.2.9']) {
-      expect(
-        resourceFixture(ip: ip).validate(requireComplete: true),
-        isNull,
-        reason: ip,
-      );
+    expect(resourceFixture(ip: '192.0.2.9').validate(), isNull);
+  });
+
+  test('IPv6 field requires an assigned bare address, any spelling', () {
+    for (final ipv6 in [
+      '::',
+      '::0',
+      '::ffff:0.0.0.0',
+      '192.0.2.9',
+      'example.com',
+      'fe80::1%eth0', // a zone is a connection detail, not hardware data
+      '[2001:db8::1]',
+      '2001:db8::1/64',
+      '2001:db8::1:2:3:4:5:6',
+      ' 2001:db8::1',
+    ]) {
+      expect(resourceFixture(ipv6: ipv6).validate(), isNotNull, reason: ipv6);
     }
+    for (final ipv6 in ['2001:db8::1', '2001:DB8:0:0::1', '::ffff:192.0.2.9']) {
+      expect(resourceFixture(ipv6: ipv6).validate(), isNull, reason: ipv6);
+    }
+  });
+
+  test('a complete record needs one address, either family', () {
+    expect(
+      resourceFixture(
+        ip: '',
+        ipv6: '2001:db8::1',
+        apiFields: {'ipv6', 'hostname'},
+      ).validate(requireComplete: true),
+      isNull,
+    );
+    expect(
+      resourceFixture(
+        ip: '',
+        apiFields: {'hostname'},
+      ).validate(requireComplete: true),
+      isNotNull,
+    );
+  });
+
+  test('ipv6 is an optional JSON key and only written when set', () {
+    final v4 = resourceFixture();
+    expect(v4.toJson().containsKey('ipv6'), isFalse);
+    expect(jsonDecode(v4.encode()), isNot(contains('ipv6')));
+    final dual = resourceFixture(ipv6: '2001:db8::1');
+    expect(dual.toJson()['ip'], '192.0.2.9');
+    expect(dual.toJson()['ipv6'], '2001:db8::1');
+    expect(ServerResources.decode(dual.encode()).ipv6, '2001:db8::1');
+    expect(ServerResources.decode(dual.encode()).ip, '192.0.2.9');
+    expect(ServerResources.decode(v4.encode()).ipv6, '');
+    // An explicit empty value is accepted too (but never written).
+    final withEmpty = {...v4.toJson(), 'ipv6': ''};
+    expect(ServerResources.fromJson(withEmpty).ipv6, '');
+    // Still strict: unknown keys and wrong types fail.
+    expect(
+      () => ServerResources.fromJson({...dual.toJson(), 'ipv7': 'x'}),
+      throwsFormatException,
+    );
+    expect(
+      () => ServerResources.fromJson({...dual.toJson(), 'ipv6': 5}),
+      throwsFormatException,
+    );
+    expect(
+      () => ServerResources.fromJson({...dual.toJson(), 'ipv6': 'nope'}),
+      throwsFormatException,
+    );
+    expect(
+      () => ServerResources.fromJson({...dual.toJson(), 'ip': '2001:db8::1'}),
+      throwsFormatException,
+      reason: 'IPv6 in ip is only migrated when ipv6 is empty',
+    );
+  });
+
+  test('legacy IPv6 stored in ip moves to ipv6 together with its marker', () {
+    final legacy = resourceFixture(
+      ip: '2001:db8::7',
+      apiFields: {'ip', 'ramBytes'},
+    );
+    final decoded = ServerResources.decode(legacy.encode());
+    expect(decoded.ip, '');
+    expect(decoded.ipv6, '2001:db8::7');
+    expect(decoded.apiFields, {'ipv6', 'ramBytes'});
+    expect(decoded.validate(requireComplete: true), isNull);
+    // Re-encoding is stable and no longer needs the migration.
+    expect(ServerResources.decode(decoded.encode()).toJson(), decoded.toJson());
+  });
+
+  test('API markers may name ipv6 only with a value', () {
+    expect(
+      resourceFixture(ipv6: '2001:db8::1', apiFields: {'ipv6'}).validate(),
+      isNull,
+    );
+    expect(resourceFixture(apiFields: {'ipv6'}).validate(), isNotNull);
   });
 
   test(

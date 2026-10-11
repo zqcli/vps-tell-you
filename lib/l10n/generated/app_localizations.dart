@@ -5224,6 +5224,18 @@ abstract class AppLocalizations {
   /// **'请填写有效 IPv4 或 IPv6，不能为全零地址'**
   String get resourceFieldValidIp;
 
+  /// No description provided for @r6IpValidIpv4.
+  ///
+  /// In zh, this message translates to:
+  /// **'请填写有效的 IPv4 地址，如 192.0.2.1，不能为全零地址'**
+  String get r6IpValidIpv4;
+
+  /// No description provided for @r6IpValidIpv6.
+  ///
+  /// In zh, this message translates to:
+  /// **'请填写有效的 IPv6 地址，如 2001:db8::1，不含方括号或区域标识'**
+  String get r6IpValidIpv6;
+
   /// No description provided for @resourceFieldValidVcpu.
   ///
   /// In zh, this message translates to:
@@ -5307,6 +5319,24 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'IP 地址'**
   String get resourceIpAddress;
+
+  /// No description provided for @r6IpIpv4.
+  ///
+  /// In zh, this message translates to:
+  /// **'IPv4'**
+  String get r6IpIpv4;
+
+  /// No description provided for @r6IpIpv6.
+  ///
+  /// In zh, this message translates to:
+  /// **'IPv6'**
+  String get r6IpIpv6;
+
+  /// No description provided for @r6IpSameAsAddress.
+  ///
+  /// In zh, this message translates to:
+  /// **'与主机地址相同'**
+  String get r6IpSameAsAddress;
 
   /// No description provided for @resourceHostname.
   ///

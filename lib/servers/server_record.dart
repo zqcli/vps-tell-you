@@ -1,6 +1,6 @@
 import 'dart:math';
-import 'dart:io';
 
+import '../core/net_address.dart';
 import '../core/value_types.dart';
 import '../l10n/generated/app_localizations.dart';
 import '../l10n/locale_preference.dart';
@@ -97,13 +97,13 @@ class ServerRecord {
     };
   }
 
+  /// Stored connection address: bare IPv4, IPv6 (zone only on link-local) or
+  /// a DNS name. Numeric-looking names stay readable for legacy records; every
+  /// connection path re-checks them strictly.
   static bool validHost(String host) =>
       host.isEmpty ||
-      InternetAddress.tryParse(host) != null ||
-      (host.length <= 253 &&
-          RegExp(
-            r'^(?:[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?)(?:\.[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?)*\.?$',
-          ).hasMatch(host));
+      NetAddress.tryParse(host, allowBrackets: false, lenientNames: true) !=
+          null;
   String? validate({AppLocalizations? l10n}) {
     l10n ??= defaultLocalizations;
     if (name.trim().isEmpty || name.length > 80) {
