@@ -7669,7 +7669,7 @@ abstract class AppLocalizations {
   /// No description provided for @r3TermColorScheme.
   ///
   /// In zh, this message translates to:
-  /// **'配色方案'**
+  /// **'配色与高亮'**
   String get r3TermColorScheme;
 
   /// No description provided for @r3TermSchemeDark.
@@ -7689,6 +7689,48 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'仅改变显示，不向服务器发送任何内容。重启应用后恢复默认。'**
   String get r3TermSchemeFootnote;
+
+  /// No description provided for @r4HlSmart.
+  ///
+  /// In zh, this message translates to:
+  /// **'智能高亮'**
+  String get r4HlSmart;
+
+  /// No description provided for @r4HlSmartNote.
+  ///
+  /// In zh, this message translates to:
+  /// **'给默认颜色的输出着色（路径、IP、数字、错误等）。仅本地显示，不改变收发内容。'**
+  String get r4HlSmartNote;
+
+  /// No description provided for @r4HlLanguage.
+  ///
+  /// In zh, this message translates to:
+  /// **'语法高亮'**
+  String get r4HlLanguage;
+
+  /// No description provided for @r4HlAuto.
+  ///
+  /// In zh, this message translates to:
+  /// **'自动识别'**
+  String get r4HlAuto;
+
+  /// No description provided for @r4HlPlain.
+  ///
+  /// In zh, this message translates to:
+  /// **'关闭（纯文本）'**
+  String get r4HlPlain;
+
+  /// No description provided for @r4HlGeneric.
+  ///
+  /// In zh, this message translates to:
+  /// **'通用'**
+  String get r4HlGeneric;
+
+  /// No description provided for @r4HlTooLarge.
+  ///
+  /// In zh, this message translates to:
+  /// **'文件超过 256 KiB，未做语法高亮'**
+  String get r4HlTooLarge;
 
   /// No description provided for @terminalReconnectClear.
   ///

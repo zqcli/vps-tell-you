@@ -77,6 +77,10 @@ class TerminalScheme {
 final ValueNotifier<TerminalScheme> terminalSchemeChoice =
     ValueNotifier<TerminalScheme>(TerminalScheme.defaultScheme);
 
+/// Smart highlighting of uncoloured output (see `terminal_highlighter.dart`).
+/// Session-wide like [terminalSchemeChoice]; on by default.
+final ValueNotifier<bool> terminalSmartHighlight = ValueNotifier<bool>(true);
+
 /// Exposes the active scheme to the key bar and command drawer, which are
 /// built in a separate route and therefore need to be re-wrapped there.
 class TerminalSchemeScope extends InheritedWidget {
@@ -314,23 +318,42 @@ Future<TerminalScheme?> showTerminalSchemePicker(BuildContext context) async {
     builder: (sheetContext) {
       final l10n = sheetContext.l10n;
       final p = sheetContext.palette;
-      return AppSection(
-        topSpacing: 4,
-        footer: l10n.r3TermSchemeFootnote,
+      return Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          for (final scheme in TerminalScheme.all)
-            AppRow(
-              key: ValueKey('terminal-scheme-${scheme.id}'),
-              leading: TerminalSchemePreview(scheme),
-              title: scheme.name,
-              subtitle: scheme.isDark
-                  ? l10n.r3TermSchemeDark
-                  : l10n.r3TermSchemeLight,
-              trailing: scheme == terminalSchemeChoice.value
-                  ? Icon(Icons.check_rounded, size: 22, color: p.primary)
-                  : null,
-              onTap: () => Navigator.pop(sheetContext, scheme),
+          AppSection(
+            topSpacing: 4,
+            footer: l10n.r3TermSchemeFootnote,
+            children: [
+              for (final scheme in TerminalScheme.all)
+                AppRow(
+                  key: ValueKey('terminal-scheme-${scheme.id}'),
+                  leading: TerminalSchemePreview(scheme),
+                  title: scheme.name,
+                  subtitle: scheme.isDark
+                      ? l10n.r3TermSchemeDark
+                      : l10n.r3TermSchemeLight,
+                  trailing: scheme == terminalSchemeChoice.value
+                      ? Icon(Icons.check_rounded, size: 22, color: p.primary)
+                      : null,
+                  onTap: () => Navigator.pop(sheetContext, scheme),
+                ),
+            ],
+          ),
+          ValueListenableBuilder<bool>(
+            valueListenable: terminalSmartHighlight,
+            builder: (context, on, _) => AppSection(
+              footer: l10n.r4HlSmartNote,
+              children: [
+                AppSwitchRow(
+                  key: const ValueKey('terminal-smart-highlight'),
+                  title: l10n.r4HlSmart,
+                  value: on,
+                  onChanged: (value) => terminalSmartHighlight.value = value,
+                ),
+              ],
             ),
+          ),
         ],
       );
     },

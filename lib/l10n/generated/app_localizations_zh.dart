@@ -4199,7 +4199,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get terminalPasteIntoDraft => '粘贴到草稿';
 
   @override
-  String get r3TermColorScheme => '配色方案';
+  String get r3TermColorScheme => '配色与高亮';
 
   @override
   String get r3TermSchemeDark => '深色';
@@ -4209,6 +4209,27 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get r3TermSchemeFootnote => '仅改变显示，不向服务器发送任何内容。重启应用后恢复默认。';
+
+  @override
+  String get r4HlSmart => '智能高亮';
+
+  @override
+  String get r4HlSmartNote => '给默认颜色的输出着色（路径、IP、数字、错误等）。仅本地显示，不改变收发内容。';
+
+  @override
+  String get r4HlLanguage => '语法高亮';
+
+  @override
+  String get r4HlAuto => '自动识别';
+
+  @override
+  String get r4HlPlain => '关闭（纯文本）';
+
+  @override
+  String get r4HlGeneric => '通用';
+
+  @override
+  String get r4HlTooLarge => '文件超过 256 KiB，未做语法高亮';
 
   @override
   String get terminalReconnectClear => '重新连接并清空草稿';
