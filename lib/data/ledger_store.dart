@@ -6,6 +6,7 @@ import '../core/value_types.dart';
 import '../l10n/locale_preference.dart';
 import '../l10n/generated/app_localizations.dart';
 import '../l10n/localized_message.dart';
+import '../providers/provider_catalog.dart';
 import '../providers/provider_record.dart';
 import '../connections/snippet.dart';
 import '../servers/server_record.dart';
@@ -145,13 +146,29 @@ class LedgerStore {
     orderBy: 'position, name',
   )).map(ServerGroup.fromMap).toList(growable: false);
 
-  Future<void> saveServer(ServerRecord record, {required bool isNew}) async {
+  /// [catalogProvider] makes the server belong to that catalog provider's local
+  /// provider, created in the same transaction when it does not exist yet (so
+  /// cancelling the form leaves nothing behind). It overrides `providerId`.
+  Future<void> saveServer(
+    ServerRecord record, {
+    required bool isNew,
+    CatalogProviderRef? catalogProvider,
+  }) async {
     final error = record.validate();
     if (error != null) {
       throw LocalizedArgumentError((l10n) => record.validate(l10n: l10n)!);
     }
     await _db.transaction((txn) async {
       final map = record.toMap();
+      var providerId = record.providerId;
+      if (catalogProvider != null) {
+        providerId = (await _ensureCatalogProvider(
+          txn,
+          catalogProvider,
+          clock(),
+        )).id;
+        map['provider_id'] = providerId;
+      }
       if (record.groupId != null &&
           (await txn.query(
             'server_groups',
@@ -175,9 +192,10 @@ class LedgerStore {
           throw const LedgerConflict();
         }
       }
-      if (record.providerId != null) {
-        await _providerRow(txn, record.providerId!);
+      if (providerId != null) {
+        await _providerRow(txn, providerId);
       }
+      await _checkPackageLink(txn, record, providerId);
       final termsChanged =
           previous == null ||
           previous.billing != record.billing ||

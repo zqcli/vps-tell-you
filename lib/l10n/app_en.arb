@@ -202,7 +202,7 @@
   "backupSavedPath": "Backup saved:\n{p0}",
   "backupSaveFailed": "Couldn’t save the backup. Check storage and permissions, then try again.",
   "backupSelectionCancelled": "Backup selection canceled.",
-  "backupReadInvalid": "Couldn’t read or validate the file. Choose a complete version 1 JSON ledger backup no larger than 10 MiB. Existing data is unchanged.",
+  "backupReadInvalid": "Couldn’t read or validate the file. Choose a complete version 1 or 2 JSON ledger backup no larger than 10 MiB. Existing data is unchanged.",
   "restoreEmptyLedgerQuestion": "Restore to this empty ledger?",
   "restoreConfirmation": "{p0}\nOriginal IDs, amounts, and voided payments are kept. Manual reference exchange rates are replaced. Notes, connections, security data, and reminder rules aren’t restored, and reminders for imported servers stay off. Restoring never connects to or renews servers.",
   "confirmRestore": "Restore",
@@ -211,7 +211,7 @@
   "deviceTime": "{p0} (device time)",
   "backupCounts": "Servers: {p0} · Groups: {p1}\nPayments (including voided): {p2} · Service periods: {p3}",
   "ledgerBackupRestore": "Ledger Backup & Restore",
-  "plainJsonVersion": "Unencrypted JSON · Format v1",
+  "plainJsonVersion": "Unencrypted JSON · Format v2",
   "backupContentsWarning": "Includes server names, providers, addresses, regions, purposes, operating systems, specifications, hardware details, groups, amounts, dates, payments, and manual exchange rates. The file is unencrypted: store it safely and share it only with trusted destinations. Anything sensitive you typed into these fields is exported too.",
   "notIncluded": "Not included:",
   "generateBackupPreview": "Preview Export",
@@ -2968,6 +2968,211 @@
         "type": "int"
       }
     }
+  },
+  "r6CatCatalogSection": "Catalog providers",
+  "@r6CatCatalogSection": {
+    "description": "Provider catalog and packages."
+  },
+  "r6CatMineSection": "My providers",
+  "@r6CatMineSection": {
+    "description": "Provider catalog and packages."
+  },
+  "r6CatCatalogFooter": "Catalog providers come with ready-made packages. Choose Add Provider if yours isn’t listed.",
+  "@r6CatCatalogFooter": {
+    "description": "Provider catalog and packages."
+  },
+  "r6CatPackageCount": "{count, plural, =1{1 package} other{{count} packages}}",
+  "@r6CatPackageCount": {
+    "description": "Provider catalog and packages.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "r6CatNoPackageList": "No package list",
+  "@r6CatNoPackageList": {
+    "description": "Provider catalog and packages."
+  },
+  "r6CatAdded": "Added",
+  "@r6CatAdded": {
+    "description": "Provider catalog and packages."
+  },
+  "r6CatChoosePackage": "Choose a Package",
+  "@r6CatChoosePackage": {
+    "description": "Provider catalog and packages."
+  },
+  "r6CatPackageFooter": "A package fills in hardware and price. You can still edit everything in the next step.",
+  "@r6CatPackageFooter": {
+    "description": "Provider catalog and packages."
+  },
+  "r6CatNoPackage": "No Package",
+  "@r6CatNoPackage": {
+    "description": "Provider catalog and packages."
+  },
+  "r6CatNoPackageHelp": "Fill in the hardware and price yourself.",
+  "@r6CatNoPackageHelp": {
+    "description": "Provider catalog and packages."
+  },
+  "r6CatDefaultPill": "Default",
+  "@r6CatDefaultPill": {
+    "description": "Provider catalog and packages."
+  },
+  "r6CatContinue": "Continue",
+  "@r6CatContinue": {
+    "description": "Provider catalog and packages."
+  },
+  "r6CatPackageDetails": "Package",
+  "@r6CatPackageDetails": {
+    "description": "Provider catalog and packages."
+  },
+  "r6CatSpecs": "Specifications",
+  "@r6CatSpecs": {
+    "description": "Provider catalog and packages."
+  },
+  "r6CatPrice": "Price",
+  "@r6CatPrice": {
+    "description": "Provider catalog and packages."
+  },
+  "r6CatPriceValue": "{amount} {currency} · {cycle}",
+  "@r6CatPriceValue": {
+    "description": "Provider catalog and packages.",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      },
+      "currency": {
+        "type": "String"
+      },
+      "cycle": {
+        "type": "String"
+      }
+    }
+  },
+  "r6CatUnknownPrice": "No price listed",
+  "@r6CatUnknownPrice": {
+    "description": "Provider catalog and packages."
+  },
+  "r6CatLinkedServers": "Servers with this package",
+  "@r6CatLinkedServers": {
+    "description": "Provider catalog and packages."
+  },
+  "r6CatNoLinkedServers": "No server uses this package yet.",
+  "@r6CatNoLinkedServers": {
+    "description": "Provider catalog and packages."
+  },
+  "r6CatLinkedFooter": "Servers keep their own hardware and price; the package is only a record of what you picked.",
+  "@r6CatLinkedFooter": {
+    "description": "Provider catalog and packages."
+  },
+  "r6CatAddServerWithPackage": "Add Server with This Package",
+  "@r6CatAddServerWithPackage": {
+    "description": "Provider catalog and packages."
+  },
+  "r6CatChangedNotice": "The catalog has updated this package since it was chosen. Servers keep the values they saved.",
+  "@r6CatChangedNotice": {
+    "description": "Provider catalog and packages."
+  },
+  "r6CatChangedPill": "Catalog updated",
+  "@r6CatChangedPill": {
+    "description": "Provider catalog and packages."
+  },
+  "r6CatRemovedNotice": "The catalog no longer lists this package. Servers keep the values they saved.",
+  "@r6CatRemovedNotice": {
+    "description": "Provider catalog and packages."
+  },
+  "r6CatRemovedPill": "No longer listed",
+  "@r6CatRemovedPill": {
+    "description": "Provider catalog and packages."
+  },
+  "r6CatSavedValues": "As saved on this server",
+  "@r6CatSavedValues": {
+    "description": "Provider catalog and packages."
+  },
+  "r6CatCurrentValues": "Current catalog",
+  "@r6CatCurrentValues": {
+    "description": "Provider catalog and packages."
+  },
+  "r6CatServerSection": "Provider and package",
+  "@r6CatServerSection": {
+    "description": "Provider catalog and packages."
+  },
+  "r6CatServerFooter": "The server keeps its own hardware and price. Edit the server to change its provider or package.",
+  "@r6CatServerFooter": {
+    "description": "Provider catalog and packages."
+  },
+  "r6CatNoPackageRow": "No package",
+  "@r6CatNoPackageRow": {
+    "description": "Provider catalog and packages."
+  },
+  "r6CatOpenPackage": "View package",
+  "@r6CatOpenPackage": {
+    "description": "Provider catalog and packages."
+  },
+  "r6CatFormPackage": "Package",
+  "@r6CatFormPackage": {
+    "description": "Provider catalog and packages."
+  },
+  "r6CatFormPackageFooter": "Choosing a package fills in hardware and price. You can still edit them.",
+  "@r6CatFormPackageFooter": {
+    "description": "Provider catalog and packages."
+  },
+  "r6CatReplaceTitle": "Replace hardware and price?",
+  "@r6CatReplaceTitle": {
+    "description": "Provider catalog and packages."
+  },
+  "r6CatReplaceMessage": "The package’s values will replace this server’s hardware and price in the form. Nothing is saved until you save.",
+  "@r6CatReplaceMessage": {
+    "description": "Provider catalog and packages."
+  },
+  "r6CatReplaceAction": "Replace Values",
+  "@r6CatReplaceAction": {
+    "description": "Provider catalog and packages."
+  },
+  "r6CatPackagesHeader": "Packages",
+  "@r6CatPackagesHeader": {
+    "description": "Provider catalog and packages."
+  },
+  "r6CatPackagesFooter": "Packages come from the catalog and only pre-fill a new server.",
+  "@r6CatPackagesFooter": {
+    "description": "Provider catalog and packages."
+  },
+  "r6CatNoPackagesYet": "This provider has no package list.",
+  "@r6CatNoPackagesYet": {
+    "description": "Provider catalog and packages."
+  },
+  "r6CatCatalogFailed": "The package catalog couldn’t be loaded. You can still use your own providers.",
+  "@r6CatCatalogFailed": {
+    "description": "Provider catalog and packages."
+  },
+  "r6CatRetry": "Retry",
+  "@r6CatRetry": {
+    "description": "Provider catalog and packages."
+  },
+  "r6CatCatalogProviderHelp": "Not added yet. Add it to use its packages when you add servers.",
+  "@r6CatCatalogProviderHelp": {
+    "description": "Provider catalog and packages."
+  },
+  "r6CatPackageInvalid": "The package doesn’t match this server’s provider.",
+  "@r6CatPackageInvalid": {
+    "description": "Provider catalog and packages."
+  },
+  "r6CatBackupProviders": "providers",
+  "@r6CatBackupProviders": {
+    "description": "Provider catalog and packages."
+  },
+  "r6CatBackupProviderCount": "Providers: {count}",
+  "@r6CatBackupProviderCount": {
+    "description": "Provider catalog and packages.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "r6CatSampleNote": "Sample catalog data for testing.",
+  "@r6CatSampleNote": {
+    "description": "Provider catalog and packages."
   },
   "providerUiEmpty": "No providers yet",
   "@providerUiEmpty": {

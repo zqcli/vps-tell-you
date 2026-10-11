@@ -1,10 +1,13 @@
 part of 'ledger_store.dart';
 
-/// Version 1 is deliberately a ledger-only, plaintext interchange format.
-/// It cannot reconnect SSH/cloud accounts and never reads the SecretStore.
+/// A deliberately ledger-only, plaintext interchange format. It never carries
+/// SSH configuration or credentials and never reads the SecretStore. The writer
+/// emits version 2 (adds providers and each server's provider / package link);
+/// the reader also accepts version 1, which has neither.
 class LedgerBackupSnapshot {
   LedgerBackupSnapshot._({
     required this.exportedAt,
+    required this.providers,
     required this.groups,
     required this.servers,
     required this.payments,
@@ -13,7 +16,8 @@ class LedgerBackupSnapshot {
   });
 
   static const format = 'vps-tell-you-ledger';
-  static const version = 1;
+  static const version = 2;
+  static const _supportedVersions = [1, 2];
   static const maxBytes = 10 * 1024 * 1024;
   static const maxRows = 20000;
   static List<String> get exclusions => exclusionsFor(defaultLocalizations);
@@ -24,10 +28,15 @@ class LedgerBackupSnapshot {
     l10n.backupExcludedPreferences,
   ];
   final String exportedAt;
-  final List<Map<String, Object?>> groups, servers, payments, servicePeriods;
+  final List<Map<String, Object?>> providers,
+      groups,
+      servers,
+      payments,
+      servicePeriods;
   final Map<String, Object?> fx;
 
   Map<String, int> get counts => Map.unmodifiable({
+    'providers': providers.length,
     'groups': groups.length,
     'servers': servers.length,
     'payments': payments.length,
@@ -38,6 +47,7 @@ class LedgerBackupSnapshot {
     'format': format,
     'version': version,
     'exported_at': exportedAt,
+    'providers': providers,
     'groups': groups,
     'servers': servers,
     'payments': payments,
@@ -59,24 +69,28 @@ class LedgerBackupSnapshot {
   }
 
   factory LedgerBackupSnapshot._validated(Object? decoded) {
-    final root = _backupObject(decoded, const [
+    final declared = decoded is Map ? decoded['version'] : null;
+    if (decoded is Map &&
+        (decoded['format'] != format ||
+            declared is! int ||
+            !_supportedVersions.contains(declared))) {
+      throw LocalizedFormatException((l10n) => l10n.backupUnsupportedFormat);
+    }
+    final v1 = declared == 1;
+    final root = _backupObject(decoded, [
       'format',
       'version',
       'exported_at',
+      if (!v1) 'providers',
       'groups',
       'servers',
       'payments',
       'service_periods',
       'fx',
     ]);
-    if (root['format'] != format ||
-        root['version'] is! int ||
-        root['version'] != version) {
-      throw LocalizedFormatException((l10n) => l10n.backupUnsupportedFormat);
-    }
     _backupInstant(root, 'exported_at');
     List<Map<String, Object?>> rows(String key, List<String> columns) {
-      final value = root[key];
+      final value = root[key] ?? const [];
       if (value is! List || value.length > maxRows) {
         throw LocalizedFormatException((l10n) => l10n.backupInvalidCollections);
       }
@@ -97,11 +111,44 @@ class LedgerBackupSnapshot {
       );
     }
 
+    final providers = rows('providers', _backupProviderColumns);
     final groups = rows('groups', _backupGroupColumns);
-    final servers = rows('servers', _backupServerColumns);
+    // Version 1 rows have no provider / package keys; they become explicit
+    // nulls so everything downstream (and the re-encoded file) is version 2.
+    final servers = List<Map<String, Object?>>.unmodifiable([
+      for (final row in rows(
+        'servers',
+        v1 ? _backupServerColumns : _backupServerColumnsV2,
+      ))
+        Map<String, Object?>.unmodifiable({
+          'provider_id': null,
+          'package_id': null,
+          'package_snapshot': null,
+          ...row,
+        }),
+    ]);
     final payments = rows('payments', _backupPaymentColumns);
     final periods = rows('service_periods', _backupPeriodColumns);
     final fx = _backupObject(root['fx'], _backupFxColumns);
+    String fold(String name) =>
+        name.replaceAllMapped(RegExp('[A-Z]'), (m) => m[0]!.toLowerCase());
+    final providerNames = <String>{}, catalogIds = <String>{};
+    final providerById = <String, Map<String, Object?>>{};
+    for (final row in providers) {
+      _backupText(row, 'name', max: 80, nonempty: true);
+      _backupText(row, 'catalog_id', max: 40, nullable: true, nonempty: true);
+      _backupInstant(row, 'created_at');
+      final name = row['name'] as String;
+      final catalogId = row['catalog_id'] as String?;
+      if (name != name.trim() ||
+          !providerNames.add(fold(name)) ||
+          (catalogId != null &&
+              (!RegExp(r'^[a-z0-9][a-z0-9-]{0,39}$').hasMatch(catalogId) ||
+                  !catalogIds.add(catalogId)))) {
+        throw LocalizedFormatException((l10n) => l10n.backupInvalidFields);
+      }
+      providerById[row['id'] as String] = row;
+    }
     final names = <String>{};
     for (final row in groups) {
       _backupText(row, 'name', max: 40, nonempty: true);
@@ -147,6 +194,30 @@ class LedgerBackupSnapshot {
         throw LocalizedFormatException((l10n) => l10n.backupMissingGroup);
       }
       _backupText(row, 'resources_json', max: 4096, nullable: true);
+      _backupText(row, 'provider_id', max: 160, nullable: true, nonempty: true);
+      _backupText(row, 'package_id', max: 64, nullable: true, nonempty: true);
+      _backupText(row, 'package_snapshot', max: 4096, nullable: true);
+      final linkedProvider = providerById[row['provider_id']];
+      if (row['provider_id'] != null && linkedProvider == null) {
+        throw LocalizedFormatException((l10n) => l10n.backupInvalidServer);
+      }
+      if ((row['package_id'] == null) != (row['package_snapshot'] == null)) {
+        throw LocalizedFormatException((l10n) => l10n.backupInvalidServer);
+      }
+      if (row['package_id'] != null) {
+        try {
+          final snapshot = CatalogPackage.decodeSnapshot(
+            row['package_snapshot'] as String,
+          );
+          if (snapshot.id != row['package_id'] ||
+              linkedProvider == null ||
+              linkedProvider['catalog_id'] != snapshot.providerId) {
+            throw const CatalogFormatException('package link');
+          }
+        } on CatalogFormatException {
+          throw LocalizedFormatException((l10n) => l10n.backupInvalidServer);
+        }
+      }
       // Strict decoding also prevents private/unknown fields from hitchhiking
       // inside an otherwise whitelisted local resources blob.
       final server = ServerRecord.fromMap({...row, 'notes': ''});
@@ -381,6 +452,7 @@ class LedgerBackupSnapshot {
     }
     return LedgerBackupSnapshot._(
       exportedAt: root['exported_at'] as String,
+      providers: providers,
       groups: groups,
       servers: servers,
       payments: payments,
@@ -416,7 +488,7 @@ extension LedgerBackupStore on LedgerStore {
       columns: columns,
       orderBy: 'id',
     )).map((r) => Map<String, Object?>.from(r)).toList();
-    final serverRows = await rows('servers', _backupServerColumns);
+    final serverRows = await rows('servers', _backupServerColumnsV2);
     // Preserve the existing v1 nonempty-label contract without writing a
     // business provider or fabricating any restored authorization. The local
     // unspecified/blank field itself is never changed by export.
@@ -429,6 +501,7 @@ extension LedgerBackupStore on LedgerStore {
       'format': LedgerBackupSnapshot.format,
       'version': LedgerBackupSnapshot.version,
       'exported_at': clock().toUtc().toIso8601String(),
+      'providers': await rows('providers', _backupProviderColumns),
       'groups': await rows('server_groups', _backupGroupColumns),
       'servers': serverRows,
       'payments': await rows('payments', _backupPaymentColumns),
@@ -447,7 +520,10 @@ extension LedgerBackupStore on LedgerStore {
 
   Future<LedgerRestorePreview> previewLedgerRestore(
     LedgerBackupSnapshot snapshot,
-  ) async => LedgerRestorePreview(snapshot, await _backupConflicts(_db));
+  ) async => LedgerRestorePreview(
+    snapshot,
+    await _backupConflicts(_db, withProviders: snapshot.providers.isNotEmpty),
+  );
 
   Future<void> restoreLedgerBackup(
     LedgerBackupSnapshot snapshot, {
@@ -457,7 +533,10 @@ extension LedgerBackupStore on LedgerStore {
     // callers from changing the checked data while the transaction is awaited.
     final checked = LedgerBackupSnapshot.decode(snapshot.encode());
     await _db.transaction((txn) async {
-      if ((await _backupConflicts(txn)).isNotEmpty) {
+      if ((await _backupConflicts(
+        txn,
+        withProviders: checked.providers.isNotEmpty,
+      )).isNotEmpty) {
         throw LocalizedStateError((l10n) => l10n.restoreRequiresEmptyLedger);
       }
       var inserted = 0;
@@ -470,6 +549,9 @@ extension LedgerBackupStore on LedgerStore {
         await afterInsert?.call(++inserted);
       }
 
+      for (final row in checked.providers) {
+        await insert('providers', {...row, 'revision': 0});
+      }
       for (final row in checked.groups) {
         await insert('server_groups', row);
       }
@@ -508,9 +590,14 @@ extension LedgerBackupStore on LedgerStore {
   }
 }
 
-Future<List<LocalizedText>> _backupConflicts(DatabaseExecutor db) async {
+Future<List<LocalizedText>> _backupConflicts(
+  DatabaseExecutor db, {
+  required bool withProviders,
+}) async {
   final conflicts = <LocalizedText>[];
   for (final entry in {
+    if (withProviders)
+      'providers': (AppLocalizations l10n) => l10n.r6CatBackupProviders,
     'server_groups': (AppLocalizations l10n) => l10n.backupGroups,
     'servers': (AppLocalizations l10n) => l10n.backupServersIncludingArchived,
     'payments': (AppLocalizations l10n) => l10n.backupPaymentsIncludingVoided,
@@ -549,6 +636,7 @@ String _backupPaymentFingerprint(Map<String, Object?> row) => jsonEncode(
         ],
 );
 
+const _backupProviderColumns = ['id', 'name', 'catalog_id', 'created_at'];
 const _backupGroupColumns = ['id', 'name', 'position'];
 const _backupServerColumns = [
   'id',
@@ -574,6 +662,12 @@ const _backupServerColumns = [
   'updated_at',
   'revision',
   'is_demo',
+];
+const _backupServerColumnsV2 = [
+  ..._backupServerColumns,
+  'provider_id',
+  'package_id',
+  'package_snapshot',
 ];
 const _backupPaymentColumns = [
   'id',

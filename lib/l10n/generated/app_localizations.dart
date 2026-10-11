@@ -989,7 +989,7 @@ abstract class AppLocalizations {
   /// No description provided for @backupReadInvalid.
   ///
   /// In zh, this message translates to:
-  /// **'读取或校验失败。请选择格式 v1、10 MiB 以内的完整 JSON 台账备份；现有数据未改动。'**
+  /// **'读取或校验失败。请选择格式 v1 或 v2、10 MiB 以内的完整 JSON 台账备份；现有数据未改动。'**
   String get backupReadInvalid;
 
   /// No description provided for @restoreEmptyLedgerQuestion.
@@ -1043,7 +1043,7 @@ abstract class AppLocalizations {
   /// No description provided for @plainJsonVersion.
   ///
   /// In zh, this message translates to:
-  /// **'明文 JSON · 格式 v1'**
+  /// **'明文 JSON · 格式 v2'**
   String get plainJsonVersion;
 
   /// No description provided for @backupContentsWarning.
@@ -8732,6 +8732,282 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'{count} 台服务器'**
   String r6CatProviderSummary(int count);
+
+  /// Provider catalog and packages.
+  ///
+  /// In zh, this message translates to:
+  /// **'目录提供商'**
+  String get r6CatCatalogSection;
+
+  /// Provider catalog and packages.
+  ///
+  /// In zh, this message translates to:
+  /// **'我的提供商'**
+  String get r6CatMineSection;
+
+  /// Provider catalog and packages.
+  ///
+  /// In zh, this message translates to:
+  /// **'目录提供商附带现成的套餐。没有找到时可以新增提供商。'**
+  String get r6CatCatalogFooter;
+
+  /// Provider catalog and packages.
+  ///
+  /// In zh, this message translates to:
+  /// **'{count} 个套餐'**
+  String r6CatPackageCount(int count);
+
+  /// Provider catalog and packages.
+  ///
+  /// In zh, this message translates to:
+  /// **'无套餐列表'**
+  String get r6CatNoPackageList;
+
+  /// Provider catalog and packages.
+  ///
+  /// In zh, this message translates to:
+  /// **'已添加'**
+  String get r6CatAdded;
+
+  /// Provider catalog and packages.
+  ///
+  /// In zh, this message translates to:
+  /// **'选择套餐'**
+  String get r6CatChoosePackage;
+
+  /// Provider catalog and packages.
+  ///
+  /// In zh, this message translates to:
+  /// **'套餐会预填硬件与费用，下一步仍可全部修改。'**
+  String get r6CatPackageFooter;
+
+  /// Provider catalog and packages.
+  ///
+  /// In zh, this message translates to:
+  /// **'不选套餐'**
+  String get r6CatNoPackage;
+
+  /// Provider catalog and packages.
+  ///
+  /// In zh, this message translates to:
+  /// **'自行填写硬件与费用。'**
+  String get r6CatNoPackageHelp;
+
+  /// Provider catalog and packages.
+  ///
+  /// In zh, this message translates to:
+  /// **'默认'**
+  String get r6CatDefaultPill;
+
+  /// Provider catalog and packages.
+  ///
+  /// In zh, this message translates to:
+  /// **'继续'**
+  String get r6CatContinue;
+
+  /// Provider catalog and packages.
+  ///
+  /// In zh, this message translates to:
+  /// **'套餐'**
+  String get r6CatPackageDetails;
+
+  /// Provider catalog and packages.
+  ///
+  /// In zh, this message translates to:
+  /// **'规格'**
+  String get r6CatSpecs;
+
+  /// Provider catalog and packages.
+  ///
+  /// In zh, this message translates to:
+  /// **'价格'**
+  String get r6CatPrice;
+
+  /// Provider catalog and packages.
+  ///
+  /// In zh, this message translates to:
+  /// **'{amount} {currency} · {cycle}'**
+  String r6CatPriceValue(String amount, String currency, String cycle);
+
+  /// Provider catalog and packages.
+  ///
+  /// In zh, this message translates to:
+  /// **'未列出价格'**
+  String get r6CatUnknownPrice;
+
+  /// Provider catalog and packages.
+  ///
+  /// In zh, this message translates to:
+  /// **'使用此套餐的服务器'**
+  String get r6CatLinkedServers;
+
+  /// Provider catalog and packages.
+  ///
+  /// In zh, this message translates to:
+  /// **'还没有服务器使用此套餐。'**
+  String get r6CatNoLinkedServers;
+
+  /// Provider catalog and packages.
+  ///
+  /// In zh, this message translates to:
+  /// **'服务器保留自己的硬件与费用；套餐只记录你选过什么。'**
+  String get r6CatLinkedFooter;
+
+  /// Provider catalog and packages.
+  ///
+  /// In zh, this message translates to:
+  /// **'用此套餐添加服务器'**
+  String get r6CatAddServerWithPackage;
+
+  /// Provider catalog and packages.
+  ///
+  /// In zh, this message translates to:
+  /// **'自选择以来，目录已更新此套餐。服务器保留各自保存的值。'**
+  String get r6CatChangedNotice;
+
+  /// Provider catalog and packages.
+  ///
+  /// In zh, this message translates to:
+  /// **'目录已更新'**
+  String get r6CatChangedPill;
+
+  /// Provider catalog and packages.
+  ///
+  /// In zh, this message translates to:
+  /// **'目录已不再列出此套餐。服务器保留各自保存的值。'**
+  String get r6CatRemovedNotice;
+
+  /// Provider catalog and packages.
+  ///
+  /// In zh, this message translates to:
+  /// **'已不在目录'**
+  String get r6CatRemovedPill;
+
+  /// Provider catalog and packages.
+  ///
+  /// In zh, this message translates to:
+  /// **'此服务器保存的内容'**
+  String get r6CatSavedValues;
+
+  /// Provider catalog and packages.
+  ///
+  /// In zh, this message translates to:
+  /// **'当前目录'**
+  String get r6CatCurrentValues;
+
+  /// Provider catalog and packages.
+  ///
+  /// In zh, this message translates to:
+  /// **'提供商与套餐'**
+  String get r6CatServerSection;
+
+  /// Provider catalog and packages.
+  ///
+  /// In zh, this message translates to:
+  /// **'服务器保留自己的硬件与费用。如需更换提供商或套餐，请编辑服务器。'**
+  String get r6CatServerFooter;
+
+  /// Provider catalog and packages.
+  ///
+  /// In zh, this message translates to:
+  /// **'无套餐'**
+  String get r6CatNoPackageRow;
+
+  /// Provider catalog and packages.
+  ///
+  /// In zh, this message translates to:
+  /// **'查看套餐'**
+  String get r6CatOpenPackage;
+
+  /// Provider catalog and packages.
+  ///
+  /// In zh, this message translates to:
+  /// **'套餐'**
+  String get r6CatFormPackage;
+
+  /// Provider catalog and packages.
+  ///
+  /// In zh, this message translates to:
+  /// **'选择套餐会预填硬件与费用，之后仍可修改。'**
+  String get r6CatFormPackageFooter;
+
+  /// Provider catalog and packages.
+  ///
+  /// In zh, this message translates to:
+  /// **'替换硬件与费用？'**
+  String get r6CatReplaceTitle;
+
+  /// Provider catalog and packages.
+  ///
+  /// In zh, this message translates to:
+  /// **'套餐的值会替换表单中的硬件与费用，保存后才会生效。'**
+  String get r6CatReplaceMessage;
+
+  /// Provider catalog and packages.
+  ///
+  /// In zh, this message translates to:
+  /// **'替换'**
+  String get r6CatReplaceAction;
+
+  /// Provider catalog and packages.
+  ///
+  /// In zh, this message translates to:
+  /// **'套餐'**
+  String get r6CatPackagesHeader;
+
+  /// Provider catalog and packages.
+  ///
+  /// In zh, this message translates to:
+  /// **'套餐来自目录，仅用于预填新服务器。'**
+  String get r6CatPackagesFooter;
+
+  /// Provider catalog and packages.
+  ///
+  /// In zh, this message translates to:
+  /// **'这个提供商没有套餐列表。'**
+  String get r6CatNoPackagesYet;
+
+  /// Provider catalog and packages.
+  ///
+  /// In zh, this message translates to:
+  /// **'套餐目录未能加载。仍可使用自己的提供商。'**
+  String get r6CatCatalogFailed;
+
+  /// Provider catalog and packages.
+  ///
+  /// In zh, this message translates to:
+  /// **'重试'**
+  String get r6CatRetry;
+
+  /// Provider catalog and packages.
+  ///
+  /// In zh, this message translates to:
+  /// **'尚未添加。添加后，新增服务器时即可使用它的套餐。'**
+  String get r6CatCatalogProviderHelp;
+
+  /// Provider catalog and packages.
+  ///
+  /// In zh, this message translates to:
+  /// **'套餐与此服务器的提供商不匹配。'**
+  String get r6CatPackageInvalid;
+
+  /// Provider catalog and packages.
+  ///
+  /// In zh, this message translates to:
+  /// **'提供商'**
+  String get r6CatBackupProviders;
+
+  /// Provider catalog and packages.
+  ///
+  /// In zh, this message translates to:
+  /// **'提供商：{count}'**
+  String r6CatBackupProviderCount(int count);
+
+  /// Provider catalog and packages.
+  ///
+  /// In zh, this message translates to:
+  /// **'示例目录数据，仅用于测试。'**
+  String get r6CatSampleNote;
 
   /// Provider navigation and ownership UI.
   ///

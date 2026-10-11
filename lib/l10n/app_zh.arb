@@ -268,7 +268,7 @@
   },
   "backupSaveFailed": "备份保存未完成，请检查空间与权限后重试。",
   "backupSelectionCancelled": "已取消选择备份。",
-  "backupReadInvalid": "读取或校验失败。请选择格式 v1、10 MiB 以内的完整 JSON 台账备份；现有数据未改动。",
+  "backupReadInvalid": "读取或校验失败。请选择格式 v1 或 v2、10 MiB 以内的完整 JSON 台账备份；现有数据未改动。",
   "restoreEmptyLedgerQuestion": "恢复到当前空台账？",
   "restoreConfirmation": "{p0}\n保留原始 ID、金额和付款撤销状态；替换手动参考汇率。备注、连接、安全资料和提醒规则不恢复，导入服务器的提醒保持关闭。恢复不会连接或续费服务器。",
   "@restoreConfirmation": {
@@ -307,7 +307,7 @@
     }
   },
   "ledgerBackupRestore": "台账备份与恢复",
-  "plainJsonVersion": "明文 JSON · 格式 v1",
+  "plainJsonVersion": "明文 JSON · 格式 v2",
   "backupContentsWarning": "包含服务器名称、厂商、地址、地区、用途、系统、规格、硬件信息、分组、金额、日期、付款和手动汇率。文件未加密，请妥善保管，只分享到可信位置。上述字段若填写了敏感内容，也会随文件导出。",
   "notIncluded": "不包含：",
   "generateBackupPreview": "生成导出预览",
@@ -3436,6 +3436,211 @@
         "type": "int"
       }
     }
+  },
+  "r6CatCatalogSection": "目录提供商",
+  "@r6CatCatalogSection": {
+    "description": "Provider catalog and packages."
+  },
+  "r6CatMineSection": "我的提供商",
+  "@r6CatMineSection": {
+    "description": "Provider catalog and packages."
+  },
+  "r6CatCatalogFooter": "目录提供商附带现成的套餐。没有找到时可以新增提供商。",
+  "@r6CatCatalogFooter": {
+    "description": "Provider catalog and packages."
+  },
+  "r6CatPackageCount": "{count} 个套餐",
+  "@r6CatPackageCount": {
+    "description": "Provider catalog and packages.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "r6CatNoPackageList": "无套餐列表",
+  "@r6CatNoPackageList": {
+    "description": "Provider catalog and packages."
+  },
+  "r6CatAdded": "已添加",
+  "@r6CatAdded": {
+    "description": "Provider catalog and packages."
+  },
+  "r6CatChoosePackage": "选择套餐",
+  "@r6CatChoosePackage": {
+    "description": "Provider catalog and packages."
+  },
+  "r6CatPackageFooter": "套餐会预填硬件与费用，下一步仍可全部修改。",
+  "@r6CatPackageFooter": {
+    "description": "Provider catalog and packages."
+  },
+  "r6CatNoPackage": "不选套餐",
+  "@r6CatNoPackage": {
+    "description": "Provider catalog and packages."
+  },
+  "r6CatNoPackageHelp": "自行填写硬件与费用。",
+  "@r6CatNoPackageHelp": {
+    "description": "Provider catalog and packages."
+  },
+  "r6CatDefaultPill": "默认",
+  "@r6CatDefaultPill": {
+    "description": "Provider catalog and packages."
+  },
+  "r6CatContinue": "继续",
+  "@r6CatContinue": {
+    "description": "Provider catalog and packages."
+  },
+  "r6CatPackageDetails": "套餐",
+  "@r6CatPackageDetails": {
+    "description": "Provider catalog and packages."
+  },
+  "r6CatSpecs": "规格",
+  "@r6CatSpecs": {
+    "description": "Provider catalog and packages."
+  },
+  "r6CatPrice": "价格",
+  "@r6CatPrice": {
+    "description": "Provider catalog and packages."
+  },
+  "r6CatPriceValue": "{amount} {currency} · {cycle}",
+  "@r6CatPriceValue": {
+    "description": "Provider catalog and packages.",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      },
+      "currency": {
+        "type": "String"
+      },
+      "cycle": {
+        "type": "String"
+      }
+    }
+  },
+  "r6CatUnknownPrice": "未列出价格",
+  "@r6CatUnknownPrice": {
+    "description": "Provider catalog and packages."
+  },
+  "r6CatLinkedServers": "使用此套餐的服务器",
+  "@r6CatLinkedServers": {
+    "description": "Provider catalog and packages."
+  },
+  "r6CatNoLinkedServers": "还没有服务器使用此套餐。",
+  "@r6CatNoLinkedServers": {
+    "description": "Provider catalog and packages."
+  },
+  "r6CatLinkedFooter": "服务器保留自己的硬件与费用；套餐只记录你选过什么。",
+  "@r6CatLinkedFooter": {
+    "description": "Provider catalog and packages."
+  },
+  "r6CatAddServerWithPackage": "用此套餐添加服务器",
+  "@r6CatAddServerWithPackage": {
+    "description": "Provider catalog and packages."
+  },
+  "r6CatChangedNotice": "自选择以来，目录已更新此套餐。服务器保留各自保存的值。",
+  "@r6CatChangedNotice": {
+    "description": "Provider catalog and packages."
+  },
+  "r6CatChangedPill": "目录已更新",
+  "@r6CatChangedPill": {
+    "description": "Provider catalog and packages."
+  },
+  "r6CatRemovedNotice": "目录已不再列出此套餐。服务器保留各自保存的值。",
+  "@r6CatRemovedNotice": {
+    "description": "Provider catalog and packages."
+  },
+  "r6CatRemovedPill": "已不在目录",
+  "@r6CatRemovedPill": {
+    "description": "Provider catalog and packages."
+  },
+  "r6CatSavedValues": "此服务器保存的内容",
+  "@r6CatSavedValues": {
+    "description": "Provider catalog and packages."
+  },
+  "r6CatCurrentValues": "当前目录",
+  "@r6CatCurrentValues": {
+    "description": "Provider catalog and packages."
+  },
+  "r6CatServerSection": "提供商与套餐",
+  "@r6CatServerSection": {
+    "description": "Provider catalog and packages."
+  },
+  "r6CatServerFooter": "服务器保留自己的硬件与费用。如需更换提供商或套餐，请编辑服务器。",
+  "@r6CatServerFooter": {
+    "description": "Provider catalog and packages."
+  },
+  "r6CatNoPackageRow": "无套餐",
+  "@r6CatNoPackageRow": {
+    "description": "Provider catalog and packages."
+  },
+  "r6CatOpenPackage": "查看套餐",
+  "@r6CatOpenPackage": {
+    "description": "Provider catalog and packages."
+  },
+  "r6CatFormPackage": "套餐",
+  "@r6CatFormPackage": {
+    "description": "Provider catalog and packages."
+  },
+  "r6CatFormPackageFooter": "选择套餐会预填硬件与费用，之后仍可修改。",
+  "@r6CatFormPackageFooter": {
+    "description": "Provider catalog and packages."
+  },
+  "r6CatReplaceTitle": "替换硬件与费用？",
+  "@r6CatReplaceTitle": {
+    "description": "Provider catalog and packages."
+  },
+  "r6CatReplaceMessage": "套餐的值会替换表单中的硬件与费用，保存后才会生效。",
+  "@r6CatReplaceMessage": {
+    "description": "Provider catalog and packages."
+  },
+  "r6CatReplaceAction": "替换",
+  "@r6CatReplaceAction": {
+    "description": "Provider catalog and packages."
+  },
+  "r6CatPackagesHeader": "套餐",
+  "@r6CatPackagesHeader": {
+    "description": "Provider catalog and packages."
+  },
+  "r6CatPackagesFooter": "套餐来自目录，仅用于预填新服务器。",
+  "@r6CatPackagesFooter": {
+    "description": "Provider catalog and packages."
+  },
+  "r6CatNoPackagesYet": "这个提供商没有套餐列表。",
+  "@r6CatNoPackagesYet": {
+    "description": "Provider catalog and packages."
+  },
+  "r6CatCatalogFailed": "套餐目录未能加载。仍可使用自己的提供商。",
+  "@r6CatCatalogFailed": {
+    "description": "Provider catalog and packages."
+  },
+  "r6CatRetry": "重试",
+  "@r6CatRetry": {
+    "description": "Provider catalog and packages."
+  },
+  "r6CatCatalogProviderHelp": "尚未添加。添加后，新增服务器时即可使用它的套餐。",
+  "@r6CatCatalogProviderHelp": {
+    "description": "Provider catalog and packages."
+  },
+  "r6CatPackageInvalid": "套餐与此服务器的提供商不匹配。",
+  "@r6CatPackageInvalid": {
+    "description": "Provider catalog and packages."
+  },
+  "r6CatBackupProviders": "提供商",
+  "@r6CatBackupProviders": {
+    "description": "Provider catalog and packages."
+  },
+  "r6CatBackupProviderCount": "提供商：{count}",
+  "@r6CatBackupProviderCount": {
+    "description": "Provider catalog and packages.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "r6CatSampleNote": "示例目录数据，仅用于测试。",
+  "@r6CatSampleNote": {
+    "description": "Provider catalog and packages."
   },
   "providerUiEmpty": "还没有提供商",
   "@providerUiEmpty": {

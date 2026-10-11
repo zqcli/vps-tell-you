@@ -11,6 +11,7 @@ import '../l10n/locale_preference.dart';
 import '../l10n/generated/app_localizations.dart';
 import '../finance/finance_math.dart';
 import '../finance/finance_models.dart';
+import '../providers/provider_catalog.dart';
 import '../providers/provider_record.dart';
 import '../security/security_controller.dart';
 import '../settings/reminder_rule.dart';
@@ -23,13 +24,24 @@ enum DueFilter { all, overdue, next30, unknown }
 
 enum ServerSort { favorites, due, name, updated }
 
+/// How a server's package snapshot relates to the current catalog.
+enum PackageCatalogState {
+  /// The catalog has not been loaded (yet, or it failed): say nothing.
+  unknown,
+  same,
+  changed,
+  removed,
+}
+
 class LedgerController extends ChangeNotifier {
   LedgerController(
     this.store, {
     DateTime Function()? clock,
     SecurityController? security,
     ReminderPlatform? reminderPlatform,
+    ProviderCatalog? catalog,
   }) : clock = clock ?? DateTime.now,
+       catalogSource = catalog ?? const BuiltinProviderCatalog(),
        security = security ?? SecurityController(store: store) {
     reminders = ReminderScheduler(
       store,
@@ -39,6 +51,35 @@ class LedgerController extends ChangeNotifier {
     reminders.addListener(notifyListeners);
   }
   final SecurityController security;
+
+  /// Where providers and packages come from (bundled asset today).
+  final ProviderCatalog catalogSource;
+  CatalogSnapshot? _catalog;
+  Future<void>? _catalogLoading;
+
+  /// The last successfully loaded catalog, or an empty one. A catalog failure
+  /// never affects the ledger: the app then offers only local providers.
+  CatalogSnapshot get catalog => _catalog ?? CatalogSnapshot.empty;
+  bool catalogFailed = false;
+  bool get catalogLoaded => _catalog != null;
+
+  /// Loads the catalog once (concurrent callers share the load). Safe to call
+  /// from `initState`; a failed load can be retried by calling it again.
+  Future<void> loadCatalog() => _catalogLoading ??= _readCatalog();
+  Future<void> _readCatalog() async {
+    try {
+      final loaded = await catalogSource.load();
+      if (_disposed) return;
+      _catalog = loaded;
+      catalogFailed = false;
+    } catch (_) {
+      catalogFailed = true;
+    } finally {
+      _catalogLoading = null;
+    }
+    if (!_disposed) notifyListeners();
+  }
+
   late final ReminderScheduler reminders;
   List<ReminderRule> reminderRules = const [];
   String themeMode = 'system';
@@ -175,6 +216,36 @@ class LedgerController extends ChangeNotifier {
       (l10n ?? defaultLocalizations).ungrouped;
   ProviderRecord? providerFor(ServerRecord server) =>
       providers.where((p) => p.id == server.providerId).firstOrNull;
+
+  ProviderRecord? localProviderForCatalog(String catalogId) =>
+      providers.where((p) => p.catalogId == catalogId).firstOrNull;
+
+  CatalogProvider? catalogProviderFor(ProviderRecord provider) =>
+      provider.catalogId == null ? null : catalog.provider(provider.catalogId!);
+
+  List<ServerRecord> serversForPackage(String packageId) =>
+      records.where((s) => s.packageId == packageId).toList(growable: false);
+
+  /// The package as it was when the server chose it (null without a package).
+  CatalogPackage? packageSnapshotFor(ServerRecord server) {
+    final source = server.packageSnapshot;
+    if (source == null) return null;
+    try {
+      return CatalogPackage.decodeSnapshot(source);
+    } on CatalogFormatException {
+      return null;
+    }
+  }
+
+  PackageCatalogState packageStateFor(ServerRecord server) {
+    final snapshot = packageSnapshotFor(server);
+    if (snapshot == null || !catalogLoaded) return PackageCatalogState.unknown;
+    final current = catalog.package(snapshot.id);
+    if (current == null) return PackageCatalogState.removed;
+    return current.sameSpecAs(snapshot)
+        ? PackageCatalogState.same
+        : PackageCatalogState.changed;
+  }
 
   String providerNameFor(ServerRecord server, {AppLocalizations? l10n}) {
     final strings = l10n ?? defaultLocalizations;

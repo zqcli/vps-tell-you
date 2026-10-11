@@ -31,3 +31,9 @@ class ProviderRecord {
     catalogId: row['catalog_id'] as String?,
   );
 }
+
+/// Identifies the catalog provider a local provider is created from.
+class CatalogProviderRef {
+  const CatalogProviderRef({required this.catalogId, required this.name});
+  final String catalogId, name;
+}

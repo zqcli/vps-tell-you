@@ -21,6 +21,8 @@ import '../core/form_feedback.dart';
 import '../core/net_address.dart';
 import '../core/ui/ui.dart';
 import '../core/value_types.dart';
+import '../providers/package_widgets.dart';
+import '../providers/provider_catalog.dart';
 import '../providers/provider_pages.dart';
 import '../providers/provider_record.dart';
 import 'ledger_controller.dart';
@@ -34,11 +36,21 @@ class ServerForm extends StatefulWidget {
     required this.controller,
     this.record,
     this.businessProvider,
+    this.catalogProvider,
+    this.initialPackage,
     this.focusHardware = false,
   });
   final LedgerController controller;
   final ServerRecord? record;
+
+  /// Preselected provider for a new server (an existing local provider)...
   final ProviderRecord? businessProvider;
+
+  /// ...or a catalog provider whose local provider is created on save.
+  final CatalogProvider? catalogProvider;
+
+  /// Package chosen in the add flow: pre-fills hardware and price.
+  final CatalogPackage? initialPackage;
   final bool focusHardware;
   @override
   State<ServerForm> createState() => _ServerFormState();
@@ -71,6 +83,13 @@ class _ServerFormState extends State<ServerForm> {
   late int cycle;
   String? groupId;
   ProviderRecord? selectedProvider;
+
+  /// Catalog provider without a local provider yet (created on save).
+  CatalogProvider? pendingCatalog;
+
+  /// The chosen package (as it will be saved) and, for an existing server,
+  /// the one it had when the form opened.
+  CatalogPackage? package;
   bool choosingProvider = false;
   bool saving = false;
 
@@ -84,24 +103,34 @@ class _ServerFormState extends State<ServerForm> {
   @override
   void initState() {
     super.initState();
+    widget.controller.loadCatalog();
     final s = widget.record;
     selectedProvider =
         widget.businessProvider ??
         (s == null ? null : widget.controller.providerFor(s));
+    if (selectedProvider == null) pendingCatalog = widget.catalogProvider;
+    package = s == null
+        ? widget.initialPackage
+        : widget.controller.packageSnapshotFor(s);
+    final prefill = s == null ? widget.initialPackage : null;
     fields = {
       'name': TextEditingController(text: s?.name),
       'host': TextEditingController(text: s?.host),
-      'region': TextEditingController(text: s?.region),
+      'region': TextEditingController(text: s?.region ?? prefill?.region),
       'purpose': TextEditingController(text: s?.purpose),
       'os': TextEditingController(text: s?.os),
       'notes': TextEditingController(text: s?.notes),
-      'amount': TextEditingController(text: s?.money?.decimal),
+      'amount': TextEditingController(
+        text: s?.money?.decimal ?? prefill?.price?.money.decimal,
+      ),
       'start': TextEditingController(text: s?.startDate?.toString()),
       'due': TextEditingController(text: s?.dueDate?.toString()),
     };
-    billing = s?.billing ?? BillingKind.unknown;
-    currency = s?.currency ?? 'USD';
-    cycle = s?.cycleMonths ?? 12;
+    billing =
+        s?.billing ??
+        (prefill?.price != null ? BillingKind.prepaid : BillingKind.unknown);
+    currency = s?.currency ?? prefill?.price?.currency ?? 'USD';
+    cycle = s?.cycleMonths ?? prefill?.price?.cycleMonths ?? 12;
     groupId = s?.groupId;
     final start = s?.startDate, due = s?.dueDate;
     _dueAuto = due == null || (start != null && start.addMonths(cycle) == due);
@@ -635,11 +664,86 @@ class _ServerFormState extends State<ServerForm> {
         ),
       );
       if (mounted && selected != null) {
-        setState(() => selectedProvider = selected.provider);
+        setState(() {
+          selectedProvider = selected.provider;
+          pendingCatalog = selected.isPending ? selected.catalog : null;
+          // A package belongs to its own catalog provider.
+          if (package != null &&
+              (selectedProvider?.catalogId ?? pendingCatalog?.id) !=
+                  package!.providerId) {
+            package = null;
+          }
+        });
       }
     } finally {
       if (mounted) setState(() => choosingProvider = false);
     }
+  }
+
+  /// The catalog provider of the current selection, if any.
+  CatalogProvider? get _catalogOfSelection {
+    final id = selectedProvider?.catalogId ?? pendingCatalog?.id;
+    return id == null ? null : widget.controller.catalog.provider(id);
+  }
+
+  /// Fills hardware and price from [chosen]; addresses and dates stay.
+  void _applyPackage(CatalogPackage chosen) {
+    _resources.currentState?.applyResources(chosen.resources);
+    final price = chosen.price;
+    if (price != null) {
+      billing = BillingKind.prepaid;
+      currency = price.currency;
+      cycle = price.cycleMonths;
+      fields['amount']!.text = price.money.decimal;
+      _autoDue();
+    }
+    if (fields['region']!.text.trim().isEmpty && chosen.region.isNotEmpty) {
+      fields['region']!.text = chosen.region;
+    }
+  }
+
+  Future<void> _pickPackage() async {
+    final catalog = _catalogOfSelection;
+    if (catalog == null || saving) return;
+    const none = '';
+    final result = await showFormPicker<String>(
+      context,
+      title: context.l10n.r6CatFormPackage,
+      selected: package?.id ?? none,
+      options: (l10n) => [
+        AppPickerOption(
+          key: const ValueKey('form-package-none'),
+          value: none,
+          title: l10n.r6CatNoPackage,
+        ),
+        for (final option in catalog.packages)
+          AppPickerOption(
+            key: ValueKey('form-package-${option.id}'),
+            value: option.id,
+            title: option.name,
+            subtitle: packageSummaryLine(l10n, option),
+          ),
+      ],
+    );
+    if (result == null || !mounted || result == (package?.id ?? none)) return;
+    final chosen = catalog.package(result);
+    if (chosen == null) {
+      setState(() => package = null);
+      return;
+    }
+    if (widget.record != null) {
+      final replace = await showAppConfirm(
+        context,
+        title: LocalizedText((l10n) => l10n.r6CatReplaceTitle),
+        message: LocalizedText((l10n) => l10n.r6CatReplaceMessage),
+        action: LocalizedText((l10n) => l10n.r6CatReplaceAction),
+      );
+      if (!replace || !mounted) return;
+    }
+    setState(() {
+      package = chosen;
+      _applyPackage(chosen);
+    });
   }
 
   /// Whether [spec] is something this app generated for the record's stored
@@ -717,8 +821,11 @@ class _ServerFormState extends State<ServerForm> {
       id: old?.id ?? newLocalId(),
       name: text('name'),
       // Legacy vendor text stays historical; providerId is current ownership.
-      vendor: old?.vendor ?? selectedProvider?.name ?? '',
+      vendor:
+          old?.vendor ?? selectedProvider?.name ?? pendingCatalog?.name ?? '',
       providerId: selectedProvider?.id,
+      packageId: package?.id,
+      packageSnapshot: package?.encodeSnapshot(),
       host: _storedHost(text('host'), resources),
       region: text('region'),
       purpose: text('purpose'),
@@ -757,7 +864,16 @@ class _ServerFormState extends State<ServerForm> {
     setState(() => saving = true);
     try {
       await widget.controller.mutate(
-        () => widget.controller.store.saveServer(s, isNew: old == null),
+        () => widget.controller.store.saveServer(
+          s,
+          isNew: old == null,
+          catalogProvider: selectedProvider == null && pendingCatalog != null
+              ? CatalogProviderRef(
+                  catalogId: pendingCatalog!.id,
+                  name: pendingCatalog!.name,
+                )
+              : null,
+        ),
       );
       if (mounted) {
         Navigator.pop(context, s.id);
@@ -782,7 +898,10 @@ class _ServerFormState extends State<ServerForm> {
             .where((p) => p.id == selectedProvider?.id)
             .firstOrNull
             ?.name ??
-        selectedProvider?.name;
+        selectedProvider?.name ??
+        pendingCatalog?.name;
+    final packageList = _catalogOfSelection?.packages ?? const [];
+    final canPickPackage = !saving && packageList.isNotEmpty;
     final canChooseProvider =
         !saving && !choosingProvider && widget.controller.canMutate;
     final groupName =
@@ -814,7 +933,22 @@ class _ServerFormState extends State<ServerForm> {
                     AppSection(
                       header: l10n.serverBasicData,
                       topSpacing: 8,
-                      footer: l10n.r2FormAddressHelp,
+                      footerWidget: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          Text(
+                            l10n.r2FormAddressHelp,
+                            style: context.footnoteStyle,
+                          ),
+                          if (packageList.isNotEmpty) ...[
+                            const SizedBox(height: 6),
+                            Text(
+                              l10n.r6CatFormPackageFooter,
+                              style: context.footnoteStyle,
+                            ),
+                          ],
+                        ],
+                      ),
                       children: [
                         _textRow(
                           'name',
@@ -829,6 +963,15 @@ class _ServerFormState extends State<ServerForm> {
                           value: providerName,
                           placeholder: l10n.providerUiUnspecified,
                           onTap: canChooseProvider ? chooseProvider : null,
+                        ),
+                        AppFormRow.pick(
+                          key: const ValueKey('form-package'),
+                          label: l10n.r6CatFormPackage,
+                          value: package?.name,
+                          placeholder: packageList.isEmpty
+                              ? l10n.r6CatNoPackageList
+                              : l10n.r6CatNoPackage,
+                          onTap: canPickPackage ? _pickPackage : null,
                         ),
                         _textRow(
                           'host',
@@ -864,7 +1007,9 @@ class _ServerFormState extends State<ServerForm> {
                     ),
                     ServerResourceFields(
                       key: _resources,
-                      initial: widget.record?.resources,
+                      initial:
+                          widget.record?.resources ??
+                          widget.initialPackage?.resources,
                       enabled: !saving,
                       collapsible: true,
                       mirroredIp: _mirrorIpv4,

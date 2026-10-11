@@ -172,6 +172,7 @@ void main() {
         'Debian 12',
       );
       expect(snapshot.counts, {
+        'providers': 1,
         'groups': 1,
         'servers': 2,
         'payments': 3,
@@ -543,8 +544,10 @@ void main() {
     await populateBackupFixture(source);
     final text = (await source.exportLedgerBackup()).encode();
     final mutations = <void Function(Map<String, dynamic>)>[
-      (m) => m['version'] = 2,
-      (m) => m['version'] = 1.0,
+      (m) => m['version'] = 3,
+      (m) => m['version'] = 2.0,
+      (m) => m.remove('providers'),
+      (m) => m['servers'].first.remove('provider_id'),
       (m) => m['credentials'] = [],
       (m) => m.remove('fx'),
       (m) => m['servers'] = {},

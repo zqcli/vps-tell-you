@@ -205,11 +205,85 @@ Future<ProviderRecord> _providerRow(DatabaseExecutor db, String id) async {
   return ProviderRecord.fromMap(rows.single);
 }
 
+/// The local provider for a catalog provider: the linked one, else an
+/// unlinked one with the same name (the user already created "the same"
+/// provider; it only gains the link), else a new one.
+Future<ProviderRecord> _ensureCatalogProvider(
+  DatabaseExecutor txn,
+  CatalogProviderRef ref,
+  DateTime now,
+) async {
+  final name = ref.name.trim();
+  if (name.isEmpty || name.length > 80) {
+    throw LocalizedArgumentError((l10n) => l10n.providerNameRange);
+  }
+  final linked = await txn.query(
+    'providers',
+    where: 'catalog_id = ?',
+    whereArgs: [ref.catalogId],
+  );
+  if (linked.isNotEmpty) return ProviderRecord.fromMap(linked.single);
+  final sameName = await txn.query(
+    'providers',
+    where: 'name = ? COLLATE NOCASE',
+    whereArgs: [name],
+  );
+  if (sameName.isNotEmpty) {
+    final existing = ProviderRecord.fromMap(sameName.single);
+    if (existing.catalogId != null) {
+      throw LocalizedArgumentError((l10n) => l10n.providerAlreadyExists);
+    }
+    await txn.update(
+      'providers',
+      {'catalog_id': ref.catalogId, 'revision': existing.revision + 1},
+      where: 'id = ?',
+      whereArgs: [existing.id],
+    );
+    return (await _providerRow(txn, existing.id));
+  }
+  final created = ProviderRecord(
+    id: newLocalId(),
+    name: name,
+    createdAt: now,
+    catalogId: ref.catalogId,
+  );
+  await txn.insert('providers', created.toMap());
+  return created;
+}
+
+/// A server's package must come with its snapshot and belong to the server's
+/// (catalog) provider. Ledger values themselves are never checked against it.
+Future<void> _checkPackageLink(
+  DatabaseExecutor txn,
+  ServerRecord record,
+  String? providerId,
+) async {
+  if (record.packageId == null && record.packageSnapshot == null) return;
+  final CatalogPackage snapshot;
+  try {
+    snapshot = CatalogPackage.decodeSnapshot(record.packageSnapshot ?? '');
+  } on CatalogFormatException {
+    throw LocalizedArgumentError((l10n) => l10n.r6CatPackageInvalid);
+  }
+  if (snapshot.id != record.packageId || providerId == null) {
+    throw LocalizedArgumentError((l10n) => l10n.r6CatPackageInvalid);
+  }
+  final provider = await _providerRow(txn, providerId);
+  if (provider.catalogId != snapshot.providerId) {
+    throw LocalizedArgumentError((l10n) => l10n.r6CatPackageInvalid);
+  }
+}
+
 extension LedgerProviders on LedgerStore {
   Future<List<ProviderRecord>> providers() async => (await _db.query(
     'providers',
     orderBy: 'name COLLATE NOCASE, id',
   )).map(ProviderRecord.fromMap).toList(growable: false);
+
+  /// Creates (or links, see [_ensureCatalogProvider]) the local provider of a
+  /// catalog provider. Idempotent.
+  Future<ProviderRecord> addCatalogProvider(CatalogProviderRef ref) =>
+      _db.transaction((txn) => _ensureCatalogProvider(txn, ref, clock()));
 
   Future<void> saveProvider(
     ProviderRecord record, {

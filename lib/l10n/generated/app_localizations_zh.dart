@@ -492,7 +492,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get backupReadInvalid =>
-      '读取或校验失败。请选择格式 v1、10 MiB 以内的完整 JSON 台账备份；现有数据未改动。';
+      '读取或校验失败。请选择格式 v1 或 v2、10 MiB 以内的完整 JSON 台账备份；现有数据未改动。';
 
   @override
   String get restoreEmptyLedgerQuestion => '恢复到当前空台账？';
@@ -525,7 +525,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get ledgerBackupRestore => '台账备份与恢复';
 
   @override
-  String get plainJsonVersion => '明文 JSON · 格式 v1';
+  String get plainJsonVersion => '明文 JSON · 格式 v2';
 
   @override
   String get backupContentsWarning =>
@@ -4751,6 +4751,150 @@ class AppLocalizationsZh extends AppLocalizations {
   String r6CatProviderSummary(int count) {
     return '$count 台服务器';
   }
+
+  @override
+  String get r6CatCatalogSection => '目录提供商';
+
+  @override
+  String get r6CatMineSection => '我的提供商';
+
+  @override
+  String get r6CatCatalogFooter => '目录提供商附带现成的套餐。没有找到时可以新增提供商。';
+
+  @override
+  String r6CatPackageCount(int count) {
+    return '$count 个套餐';
+  }
+
+  @override
+  String get r6CatNoPackageList => '无套餐列表';
+
+  @override
+  String get r6CatAdded => '已添加';
+
+  @override
+  String get r6CatChoosePackage => '选择套餐';
+
+  @override
+  String get r6CatPackageFooter => '套餐会预填硬件与费用，下一步仍可全部修改。';
+
+  @override
+  String get r6CatNoPackage => '不选套餐';
+
+  @override
+  String get r6CatNoPackageHelp => '自行填写硬件与费用。';
+
+  @override
+  String get r6CatDefaultPill => '默认';
+
+  @override
+  String get r6CatContinue => '继续';
+
+  @override
+  String get r6CatPackageDetails => '套餐';
+
+  @override
+  String get r6CatSpecs => '规格';
+
+  @override
+  String get r6CatPrice => '价格';
+
+  @override
+  String r6CatPriceValue(String amount, String currency, String cycle) {
+    return '$amount $currency · $cycle';
+  }
+
+  @override
+  String get r6CatUnknownPrice => '未列出价格';
+
+  @override
+  String get r6CatLinkedServers => '使用此套餐的服务器';
+
+  @override
+  String get r6CatNoLinkedServers => '还没有服务器使用此套餐。';
+
+  @override
+  String get r6CatLinkedFooter => '服务器保留自己的硬件与费用；套餐只记录你选过什么。';
+
+  @override
+  String get r6CatAddServerWithPackage => '用此套餐添加服务器';
+
+  @override
+  String get r6CatChangedNotice => '自选择以来，目录已更新此套餐。服务器保留各自保存的值。';
+
+  @override
+  String get r6CatChangedPill => '目录已更新';
+
+  @override
+  String get r6CatRemovedNotice => '目录已不再列出此套餐。服务器保留各自保存的值。';
+
+  @override
+  String get r6CatRemovedPill => '已不在目录';
+
+  @override
+  String get r6CatSavedValues => '此服务器保存的内容';
+
+  @override
+  String get r6CatCurrentValues => '当前目录';
+
+  @override
+  String get r6CatServerSection => '提供商与套餐';
+
+  @override
+  String get r6CatServerFooter => '服务器保留自己的硬件与费用。如需更换提供商或套餐，请编辑服务器。';
+
+  @override
+  String get r6CatNoPackageRow => '无套餐';
+
+  @override
+  String get r6CatOpenPackage => '查看套餐';
+
+  @override
+  String get r6CatFormPackage => '套餐';
+
+  @override
+  String get r6CatFormPackageFooter => '选择套餐会预填硬件与费用，之后仍可修改。';
+
+  @override
+  String get r6CatReplaceTitle => '替换硬件与费用？';
+
+  @override
+  String get r6CatReplaceMessage => '套餐的值会替换表单中的硬件与费用，保存后才会生效。';
+
+  @override
+  String get r6CatReplaceAction => '替换';
+
+  @override
+  String get r6CatPackagesHeader => '套餐';
+
+  @override
+  String get r6CatPackagesFooter => '套餐来自目录，仅用于预填新服务器。';
+
+  @override
+  String get r6CatNoPackagesYet => '这个提供商没有套餐列表。';
+
+  @override
+  String get r6CatCatalogFailed => '套餐目录未能加载。仍可使用自己的提供商。';
+
+  @override
+  String get r6CatRetry => '重试';
+
+  @override
+  String get r6CatCatalogProviderHelp => '尚未添加。添加后，新增服务器时即可使用它的套餐。';
+
+  @override
+  String get r6CatPackageInvalid => '套餐与此服务器的提供商不匹配。';
+
+  @override
+  String get r6CatBackupProviders => '提供商';
+
+  @override
+  String r6CatBackupProviderCount(int count) {
+    return '提供商：$count';
+  }
+
+  @override
+  String get r6CatSampleNote => '示例目录数据，仅用于测试。';
 
   @override
   String get providerUiEmpty => '还没有提供商';
