@@ -9,6 +9,7 @@ import '../core/value_types.dart';
 import '../data/ledger_store.dart';
 import '../l10n/locale_preference.dart';
 import '../l10n/generated/app_localizations.dart';
+import '../finance/finance_math.dart';
 import '../finance/finance_models.dart';
 import '../security/security_controller.dart';
 import '../settings/reminder_rule.dart';
@@ -103,6 +104,11 @@ class LedgerController extends ChangeNotifier {
       .toList(growable: false);
   bool hasPaymentPeriods(String serverId) =>
       periods.any((p) => p.serverId == serverId && p.paymentId != null);
+
+  /// Whether deleting [payment] may also roll back its renewal: an account
+  /// bill always can (nothing to roll back); a server renewal only while its
+  /// periods are the tail of the server's term. Unrelated server edits do not
+  /// matter (see [canRollbackPayment]).
   bool canUndoPayment(PaymentRecord payment) {
     if (payment.voided) {
       return false;
@@ -110,12 +116,49 @@ class LedgerController extends ChangeNotifier {
     if (payment.isAccount) {
       return true;
     }
-    final server = byId(payment.serverId!);
-    return server != null &&
-        !server.archived &&
-        server.revision == payment.appliedServerRevision &&
-        server.dueDate == payment.until;
+    return canRollbackPayment(byId(payment.serverId!), periods, payment);
   }
+
+  /// The tail of [server]'s term when its payment was deleted (offered for
+  /// repair), else null.
+  TermTail? orphanTermFor(ServerRecord server) =>
+      orphanTail(server, periods, payments);
+
+  /// Live renewals of [payment]'s server that end after it, oldest first.
+  List<PaymentRecord> laterRenewals(PaymentRecord payment) =>
+      payments
+          .where(
+            (p) =>
+                !p.voided &&
+                !p.isAccount &&
+                p.serverId == payment.serverId &&
+                p.until!.compareTo(payment.until!) > 0,
+          )
+          .toList()
+        ..sort((a, b) => a.until!.compareTo(b.until!));
+
+  /// Deletes [payment]. With [rollbackRenewal] the renewal is rolled back too;
+  /// [expectedServerRevision] is the server revision the user was looking at.
+  Future<void> deletePayment(
+    PaymentRecord payment, {
+    bool rollbackRenewal = false,
+    int? expectedServerRevision,
+  }) => mutate(
+    () => store.deletePayment(
+      original: payment,
+      rollbackRenewal: rollbackRenewal,
+      expectedServerRevision: expectedServerRevision,
+    ),
+  );
+
+  /// Repairs the term left behind by a deleted payment (see
+  /// [LedgerStore.rollbackOrphanTerm]); returns the restored due date.
+  Future<LedgerDate> rollbackOrphanTerm(ServerRecord server) => mutate(
+    () => store.rollbackOrphanTerm(
+      serverId: server.id,
+      expectedRevision: server.revision,
+    ),
+  );
 
   String search = '';
   ServerFilter filter = ServerFilter.all;

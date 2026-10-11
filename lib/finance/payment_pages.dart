@@ -537,6 +537,7 @@ class _PaymentListPageState extends State<PaymentListPage> {
               ),
             ],
           ),
+          if (target != null) OrphanTermBanner(controller: c, server: target),
           AppChipRow(
             children: [
               for (final option in PaymentPeriod.values)
@@ -674,6 +675,60 @@ class _PaymentListPageState extends State<PaymentListPage> {
   );
 }
 
+/// Amber notice for a server whose latest service periods belong to a deleted
+/// payment (the old "delete record, keep periods" choice, or data from before
+/// rollbacks followed the term). Tapping offers to roll the due date back to the
+/// start of that span; repeatable when several deleted payments are stacked.
+class OrphanTermBanner extends StatelessWidget {
+  const OrphanTermBanner({
+    super.key,
+    required this.controller,
+    required this.server,
+  });
+  final LedgerController controller;
+  final ServerRecord server;
+
+  Future<void> _repair(BuildContext context, TermTail tail) async {
+    final l10n = context.l10n;
+    final messenger = ScaffoldMessenger.of(context);
+    final from = tail.start.toString(), until = tail.end.toString();
+    if (!await showAppConfirm(
+      context,
+      title: l10n.r4PayOrphanTitle,
+      message: l10n.r4PayOrphanMsg(from, until),
+      action: l10n.r4PayOrphanAction,
+    )) {
+      return;
+    }
+    try {
+      final restored = await controller.rollbackOrphanTerm(server);
+      messenger.showSnackBar(
+        SnackBar(content: Text(l10n.r4PayOrphanDone(restored.toString()))),
+      );
+    } catch (error) {
+      if (context.mounted) showFailure(context, error);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final tail = controller.orphanTermFor(server);
+    if (tail == null || controller.refreshFailed) {
+      return const SizedBox.shrink();
+    }
+    return AppBanner(
+      key: const ValueKey('orphan-term-banner'),
+      tone: AppTone.amber,
+      icon: Icons.history_rounded,
+      text: context.l10n.r4PayOrphanBanner(
+        tail.start.toString(),
+        tail.end.toString(),
+      ),
+      onTap: () => _repair(context, tail),
+    );
+  }
+}
+
 class PaymentDetailPage extends StatelessWidget {
   const PaymentDetailPage({
     super.key,
@@ -684,50 +739,65 @@ class PaymentDetailPage extends StatelessWidget {
   final String id;
 
   /// Delete = a voided tombstone (totals exclude it, the idempotency key stays
-  /// used). A server renewal can also be rolled back, but only while the server
-  /// is still exactly as the payment left it; otherwise only the record goes
-  /// and the service periods / due date stay.
+  /// used). A server renewal can also be rolled back (the default choice) while
+  /// it is the tail of the server's term; unrelated server edits do not matter.
+  /// Otherwise only the record goes and the service periods / due date stay.
   Future<void> delete(BuildContext context, PaymentRecord payment) async {
     final l10n = context.l10n;
     final messenger = ScaffoldMessenger.of(context);
     final navigator = Navigator.of(context);
+    // The revision on display; the store refuses when the server moved on.
+    final revision = payment.isAccount
+        ? null
+        : controller.byId(payment.serverId!)?.revision;
     bool? rollback;
     if (!payment.isAccount && controller.canUndoPayment(payment)) {
       await showAppActionMenu<void>(
         context,
         title: l10n.r2FinanceDeleteTitle,
-        message: l10n.r2FinanceDeleteChoiceMsg,
+        message: l10n.r4PayDeleteChoiceMsg(payment.until.toString()),
         actions: [
           AppMenuAction(
-            label: l10n.r2FinanceDeleteRollback,
+            key: const ValueKey('payment-delete-rollback'),
+            label: l10n.r4PayDeleteRollbackTo(payment.previousDue.toString()),
             destructive: true,
+            isDefault: true,
             onPressed: () => rollback = true,
           ),
           AppMenuAction(
+            key: const ValueKey('payment-delete-keep'),
             label: l10n.r2FinanceDeleteKeep,
             destructive: true,
             onPressed: () => rollback = false,
           ),
         ],
       );
-    } else if (await showAppConfirm(
-      context,
-      title: l10n.r2FinanceDeleteTitle,
-      message: payment.isAccount
-          ? l10n.r2FinanceDeleteAccountMsg
-          : l10n.r2FinanceDeleteKeepMsg,
-      action: l10n.r2FinanceDelete,
-      dangerous: true,
-    )) {
-      rollback = false;
+    } else {
+      final later = payment.isAccount
+          ? const <PaymentRecord>[]
+          : controller.laterRenewals(payment);
+      if (await showAppConfirm(
+        context,
+        title: l10n.r2FinanceDeleteTitle,
+        message: payment.isAccount
+            ? l10n.r2FinanceDeleteAccountMsg
+            : later.isEmpty
+            ? l10n.r2FinanceDeleteKeepMsg
+            : l10n.r4PayDeleteLaterMsg(
+                later.map((p) => p.until.toString()).join(' · '),
+              ),
+        action: l10n.r2FinanceDelete,
+        dangerous: true,
+      )) {
+        rollback = false;
+      }
     }
     if (rollback == null || !context.mounted) return;
     try {
-      await controller.mutate(
-        () => controller.store.deletePayment(
-          original: payment,
-          rollbackRenewal: rollback!,
-        ),
+      await controller.deletePayment(
+        payment,
+        rollbackRenewal: rollback!,
+        expectedServerRevision: revision,
       );
       if (navigator.mounted) navigator.pop();
       messenger.showSnackBar(SnackBar(content: Text(l10n.r2FinanceDeleted)));

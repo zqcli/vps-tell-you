@@ -97,6 +97,66 @@ void main() {
     },
   );
 
+  test('rollbacks and repaired orphan terms (incl. after unrelated edits) round trip through the v1 validator', () async {
+    await source.saveServer(backupServer(), isNew: true);
+    Future<PaymentRecord> renew(String id) async {
+      final server = (await source.servers()).single;
+      return source.recordPayment(
+        id: id,
+        server: server,
+        amount: const Money('USD', 123),
+        paidDate: const LedgerDate(2026, 1, 1),
+        cycleCount: 1,
+        until: renewalDate(server, 1),
+        confirmed: true,
+      );
+    }
+
+    var copies = 0;
+    Future<void> roundTrip() async {
+      final snapshot = await source.exportLedgerBackup();
+      final copy = await LedgerStore.open(
+        factory: databaseFactoryFfiNoIsolate,
+        path: '${directory.path}/copy-${copies++}.sqlite',
+        clock: () => backupNow,
+      );
+      await copy.restoreLedgerBackup(snapshot);
+      expect((await copy.exportLedgerBackup()).encode(), snapshot.encode());
+      await copy.close();
+    }
+
+    final rolled = await renew('rolled');
+    await source.setFavorite((await source.servers()).single, true);
+    await source.deletePayment(
+      original: rolled,
+      rollbackRenewal: true,
+      expectedServerRevision: (await source.servers()).single.revision,
+    );
+    await roundTrip();
+
+    final kept = await renew('kept');
+    final stacked = await renew('stacked');
+    await source.deletePayment(original: stacked);
+    await source.deletePayment(original: kept);
+    await roundTrip(); // legacy shape: voided payments keep their periods
+    for (var i = 0; i < 2; i++) {
+      final server = (await source.servers()).single;
+      await source.rollbackOrphanTerm(
+        serverId: server.id,
+        expectedRevision: server.revision,
+      );
+      await roundTrip();
+    }
+    final server = (await source.servers()).single;
+    expect(
+      (await source.servicePeriods()).where((p) => p.paymentId != null),
+      isEmpty,
+    );
+    expect(server.dueDate, backupServer().dueDate);
+    await renew('after-repair');
+    await roundTrip();
+  });
+
   test(
     'date lower-bound history can renew and round trip without initial period',
     () async {

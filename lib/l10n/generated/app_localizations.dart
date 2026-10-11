@@ -2285,26 +2285,62 @@ abstract class AppLocalizations {
   /// No description provided for @r2FinanceDeleteKeepMsg.
   ///
   /// In zh, this message translates to:
-  /// **'仅删除付款记录。服务期与到期日保持不变（服务器资料已变更，无法回退续期），也不会向厂商退款。'**
+  /// **'仅删除付款记录。服务期与到期日保持不变，也不会向厂商退款。'**
   String get r2FinanceDeleteKeepMsg;
-
-  /// No description provided for @r2FinanceDeleteChoiceMsg.
-  ///
-  /// In zh, this message translates to:
-  /// **'可同时回退本次续费（还原到期日并移除本次服务期），或仅删除记录并保留服务期与到期日。两种方式都不会向厂商退款。'**
-  String get r2FinanceDeleteChoiceMsg;
-
-  /// No description provided for @r2FinanceDeleteRollback.
-  ///
-  /// In zh, this message translates to:
-  /// **'删除并回退续费'**
-  String get r2FinanceDeleteRollback;
 
   /// No description provided for @r2FinanceDeleteKeep.
   ///
   /// In zh, this message translates to:
   /// **'仅删除记录，保留服务期'**
   String get r2FinanceDeleteKeep;
+
+  /// No description provided for @r4PayDeleteRollbackTo.
+  ///
+  /// In zh, this message translates to:
+  /// **'删除并回退到期日（→ {date}）'**
+  String r4PayDeleteRollbackTo(String date);
+
+  /// No description provided for @r4PayDeleteChoiceMsg.
+  ///
+  /// In zh, this message translates to:
+  /// **'仅删除记录会保留服务期，到期日仍为 {until}。不会向厂商退款。'**
+  String r4PayDeleteChoiceMsg(String until);
+
+  /// No description provided for @r4PayDeleteLaterMsg.
+  ///
+  /// In zh, this message translates to:
+  /// **'之后还有续费记录（{dates}），需先删除它们才能回退到期日。此处仅删除记录，服务期与到期日不变，也不会向厂商退款。'**
+  String r4PayDeleteLaterMsg(String dates);
+
+  /// No description provided for @r4PayOrphanBanner.
+  ///
+  /// In zh, this message translates to:
+  /// **'{from} → {until} 的付款已删除。回退到期日到 {from}？'**
+  String r4PayOrphanBanner(String from, String until);
+
+  /// No description provided for @r4PayOrphanTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'回退到期日？'**
+  String get r4PayOrphanTitle;
+
+  /// No description provided for @r4PayOrphanMsg.
+  ///
+  /// In zh, this message translates to:
+  /// **'移除已删除付款留下的服务期（{from} → {until}），到期日恢复为 {from}。不影响其他付款记录。'**
+  String r4PayOrphanMsg(String from, String until);
+
+  /// No description provided for @r4PayOrphanAction.
+  ///
+  /// In zh, this message translates to:
+  /// **'回退'**
+  String get r4PayOrphanAction;
+
+  /// No description provided for @r4PayOrphanDone.
+  ///
+  /// In zh, this message translates to:
+  /// **'到期日已回退到 {date}'**
+  String r4PayOrphanDone(String date);
 
   /// No description provided for @r2FinanceDeleted.
   ///
