@@ -5034,6 +5034,336 @@ class AppLocalizationsEn extends AppLocalizations {
       'The server did not open SFTP. It may be disabled for this account.';
 
   @override
+  String get r3SftpTitle => 'SFTP files';
+
+  @override
+  String get r3SftpRowSubtitle => 'Browse and transfer files';
+
+  @override
+  String get r3SftpUp => 'Parent folder';
+
+  @override
+  String get r3SftpRoot => 'Root';
+
+  @override
+  String get r3SftpNewFolder => 'New folder';
+
+  @override
+  String get r3SftpNewFile => 'New empty file';
+
+  @override
+  String get r3SftpUpload => 'Upload from phone';
+
+  @override
+  String get r3SftpSort => 'Sort by';
+
+  @override
+  String get r3SftpSortName => 'Name';
+
+  @override
+  String get r3SftpSortSize => 'Size';
+
+  @override
+  String get r3SftpSortTime => 'Modified';
+
+  @override
+  String get r3SftpShowHidden => 'Show hidden files';
+
+  @override
+  String get r3SftpSearch => 'Search this folder';
+
+  @override
+  String get r3SftpEmpty => 'This folder is empty';
+
+  @override
+  String get r3SftpNoMatch => 'No matches';
+
+  @override
+  String r3SftpShowMore(int count) {
+    return 'Show more ($count)';
+  }
+
+  @override
+  String get r3SftpMore => 'More';
+
+  @override
+  String get r3SftpAdd => 'New';
+
+  @override
+  String get r3SftpOpen => 'Open';
+
+  @override
+  String get r3SftpView => 'View / edit';
+
+  @override
+  String get r3SftpDownload => 'Download';
+
+  @override
+  String get r3SftpRename => 'Rename / move';
+
+  @override
+  String get r3SftpCopyPath => 'Copy path';
+
+  @override
+  String get r3SftpDelete => 'Delete';
+
+  @override
+  String get r3SftpPathCopied => 'Path copied';
+
+  @override
+  String get r3SftpNameLabel => 'Name';
+
+  @override
+  String get r3SftpFolderLabel => 'Folder';
+
+  @override
+  String get r3SftpCreate => 'Create';
+
+  @override
+  String get r3SftpRenameTitle => 'Rename or move';
+
+  @override
+  String get r3SftpRenameHint =>
+      'Change the name to rename, or the folder to move.';
+
+  @override
+  String get r3SftpInvalidName => 'Enter a name without “/”';
+
+  @override
+  String get r3SftpInvalidFolder =>
+      'Folder must be an absolute path starting with /';
+
+  @override
+  String r3SftpDeleteTitle(String name) {
+    return 'Delete “$name”?';
+  }
+
+  @override
+  String get r3SftpDeleteFileMessage =>
+      'The file is deleted permanently on the server.';
+
+  @override
+  String get r3SftpDeleteFolderMessage =>
+      'The empty folder is deleted permanently on the server.';
+
+  @override
+  String get r3SftpDeleteRecursiveTitle =>
+      'Delete folder and everything in it?';
+
+  @override
+  String r3SftpDeleteRecursiveMessage(String name, int max) {
+    return '“$name” is not empty. Everything inside is deleted permanently (recursive delete, links are not followed). Folders with more than $max items are refused and nothing is deleted.';
+  }
+
+  @override
+  String get r3SftpDeleteRecursiveAction => 'Delete everything';
+
+  @override
+  String get r3SftpDeleted => 'Deleted';
+
+  @override
+  String r3SftpDeletedCount(int count) {
+    return 'Deleted $count items';
+  }
+
+  @override
+  String get r3SftpCreated => 'Created';
+
+  @override
+  String get r3SftpRenamed => 'Renamed';
+
+  @override
+  String get r3SftpErrPermission => 'Permission denied';
+
+  @override
+  String get r3SftpErrNotFound =>
+      'Not found. It may have been moved or deleted.';
+
+  @override
+  String get r3SftpErrExists => 'Already exists';
+
+  @override
+  String get r3SftpErrNotEmpty => 'The folder is not empty';
+
+  @override
+  String get r3SftpErrWrongType => 'Wrong item type for this action';
+
+  @override
+  String get r3SftpErrCancelled => 'Cancelled';
+
+  @override
+  String get r3SftpErrTooLarge => 'Too large to open as text (limit 512 KiB)';
+
+  @override
+  String get r3SftpErrNotText => 'Not a UTF-8 text file';
+
+  @override
+  String r3SftpErrTooMany(int max) {
+    return 'Too many items (limit $max); nothing was deleted';
+  }
+
+  @override
+  String get r3SftpErrInvalidPath => 'Invalid path';
+
+  @override
+  String get r3SftpErrTimeout => 'The server took too long to respond';
+
+  @override
+  String get r3SftpErrConnectionLost => 'The SFTP connection ended';
+
+  @override
+  String get r3SftpErrUnavailable => 'SFTP is not available on this connection';
+
+  @override
+  String get r3SftpErrLocalFile => 'Could not read or write the local file';
+
+  @override
+  String get r3SftpErrFailed => 'The operation failed';
+
+  @override
+  String r3SftpEditorSize(String size) {
+    return '$size · UTF-8';
+  }
+
+  @override
+  String get r3SftpSaved => 'Saved';
+
+  @override
+  String get r3SftpUnsavedTitle => 'Discard unsaved changes?';
+
+  @override
+  String get r3SftpUnsavedMessage =>
+      'Your edits have not been written to the server.';
+
+  @override
+  String get r3SftpDiscard => 'Discard';
+
+  @override
+  String get r3SftpConflictTitle => 'File changed on the server';
+
+  @override
+  String get r3SftpConflictMessage =>
+      'It was modified after you opened it. Overwrite the server version with yours?';
+
+  @override
+  String get r3SftpOverwrite => 'Overwrite';
+
+  @override
+  String get r3SftpSkip => 'Skip';
+
+  @override
+  String r3SftpExistsTitle(String name) {
+    return '“$name” already exists';
+  }
+
+  @override
+  String get r3SftpExistsMessage =>
+      'Overwrite the file on the server, or skip this upload?';
+
+  @override
+  String get r3SftpLargeTitle => 'Large file';
+
+  @override
+  String r3SftpLargeMessage(String name, String size) {
+    return '“$name” is $size. It can take a long time and use a lot of data. Continue?';
+  }
+
+  @override
+  String get r3SftpContinue => 'Continue';
+
+  @override
+  String get r3SftpTransfers => 'Transfers';
+
+  @override
+  String r3SftpTransferUp(String name) {
+    return 'Uploading $name';
+  }
+
+  @override
+  String r3SftpTransferDown(String name) {
+    return 'Downloading $name';
+  }
+
+  @override
+  String r3SftpTransferCount(int index, int total) {
+    return '$index of $total';
+  }
+
+  @override
+  String get r3SftpStateQueued => 'Waiting';
+
+  @override
+  String get r3SftpStateDone => 'Done';
+
+  @override
+  String get r3SftpStateFailed => 'Failed';
+
+  @override
+  String get r3SftpStateCancelled => 'Cancelled';
+
+  @override
+  String get r3SftpStateSkipped => 'Skipped';
+
+  @override
+  String get r3SftpCancelAll => 'Cancel all';
+
+  @override
+  String get r3SftpClearFinished => 'Clear finished';
+
+  @override
+  String get r3SftpShare => 'Share';
+
+  @override
+  String r3SftpSavedTo(String path) {
+    return 'Saved to $path';
+  }
+
+  @override
+  String get r3SftpDownloadsWhere =>
+      'Downloads are saved in the app folder “SFTP Downloads”. Use Share to keep a copy elsewhere, for example in Files.';
+
+  @override
+  String get r3SftpCloseBusyTitle => 'Transfers in progress';
+
+  @override
+  String get r3SftpCloseBusyMessage =>
+      'Closing cancels the running and waiting transfers.';
+
+  @override
+  String get r3SftpCloseBusyAction => 'Cancel transfers and close';
+
+  @override
+  String get r3SftpBackgroundClosed =>
+      'SFTP was closed because the app went to the background';
+
+  @override
+  String get r3SftpConnecting => 'Connecting SFTP…';
+
+  @override
+  String get r3SftpConnectFailed => 'Could not open SFTP';
+
+  @override
+  String get r3SftpRetry => 'Try again';
+
+  @override
+  String get r3SftpChooseCredential =>
+      'Choose a credential in the SSH settings first.';
+
+  @override
+  String get r3SftpSshSettings => 'SSH settings';
+
+  @override
+  String get r3SftpLoadFailed => 'Could not load this folder';
+
+  @override
+  String get r3SftpClose => 'Close';
+
+  @override
+  String r3SftpUploadsQueued(int count) {
+    return '$count uploads queued';
+  }
+
+  @override
   String get sshAuthenticationFailed =>
       'SSH authentication failed. Check the username and credentials.';
 

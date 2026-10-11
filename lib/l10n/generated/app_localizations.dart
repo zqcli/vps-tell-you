@@ -8068,6 +8068,588 @@ abstract class AppLocalizations {
   /// **'服务器未开启 SFTP，可能已对该账户禁用'**
   String get r3SftpUnavailable;
 
+  /// No description provided for @r3SftpTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'SFTP 文件'**
+  String get r3SftpTitle;
+
+  /// No description provided for @r3SftpRowSubtitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'浏览与传输文件'**
+  String get r3SftpRowSubtitle;
+
+  /// No description provided for @r3SftpUp.
+  ///
+  /// In zh, this message translates to:
+  /// **'上级目录'**
+  String get r3SftpUp;
+
+  /// No description provided for @r3SftpRoot.
+  ///
+  /// In zh, this message translates to:
+  /// **'根目录'**
+  String get r3SftpRoot;
+
+  /// No description provided for @r3SftpNewFolder.
+  ///
+  /// In zh, this message translates to:
+  /// **'新建文件夹'**
+  String get r3SftpNewFolder;
+
+  /// No description provided for @r3SftpNewFile.
+  ///
+  /// In zh, this message translates to:
+  /// **'新建空文件'**
+  String get r3SftpNewFile;
+
+  /// No description provided for @r3SftpUpload.
+  ///
+  /// In zh, this message translates to:
+  /// **'从手机上传'**
+  String get r3SftpUpload;
+
+  /// No description provided for @r3SftpSort.
+  ///
+  /// In zh, this message translates to:
+  /// **'排序方式'**
+  String get r3SftpSort;
+
+  /// No description provided for @r3SftpSortName.
+  ///
+  /// In zh, this message translates to:
+  /// **'名称'**
+  String get r3SftpSortName;
+
+  /// No description provided for @r3SftpSortSize.
+  ///
+  /// In zh, this message translates to:
+  /// **'大小'**
+  String get r3SftpSortSize;
+
+  /// No description provided for @r3SftpSortTime.
+  ///
+  /// In zh, this message translates to:
+  /// **'修改时间'**
+  String get r3SftpSortTime;
+
+  /// No description provided for @r3SftpShowHidden.
+  ///
+  /// In zh, this message translates to:
+  /// **'显示隐藏文件'**
+  String get r3SftpShowHidden;
+
+  /// No description provided for @r3SftpSearch.
+  ///
+  /// In zh, this message translates to:
+  /// **'搜索当前文件夹'**
+  String get r3SftpSearch;
+
+  /// No description provided for @r3SftpEmpty.
+  ///
+  /// In zh, this message translates to:
+  /// **'此文件夹为空'**
+  String get r3SftpEmpty;
+
+  /// No description provided for @r3SftpNoMatch.
+  ///
+  /// In zh, this message translates to:
+  /// **'没有匹配项'**
+  String get r3SftpNoMatch;
+
+  /// No description provided for @r3SftpShowMore.
+  ///
+  /// In zh, this message translates to:
+  /// **'显示更多（{count}）'**
+  String r3SftpShowMore(int count);
+
+  /// No description provided for @r3SftpMore.
+  ///
+  /// In zh, this message translates to:
+  /// **'更多'**
+  String get r3SftpMore;
+
+  /// No description provided for @r3SftpAdd.
+  ///
+  /// In zh, this message translates to:
+  /// **'新建'**
+  String get r3SftpAdd;
+
+  /// No description provided for @r3SftpOpen.
+  ///
+  /// In zh, this message translates to:
+  /// **'打开'**
+  String get r3SftpOpen;
+
+  /// No description provided for @r3SftpView.
+  ///
+  /// In zh, this message translates to:
+  /// **'查看 / 编辑'**
+  String get r3SftpView;
+
+  /// No description provided for @r3SftpDownload.
+  ///
+  /// In zh, this message translates to:
+  /// **'下载'**
+  String get r3SftpDownload;
+
+  /// No description provided for @r3SftpRename.
+  ///
+  /// In zh, this message translates to:
+  /// **'重命名 / 移动'**
+  String get r3SftpRename;
+
+  /// No description provided for @r3SftpCopyPath.
+  ///
+  /// In zh, this message translates to:
+  /// **'复制路径'**
+  String get r3SftpCopyPath;
+
+  /// No description provided for @r3SftpDelete.
+  ///
+  /// In zh, this message translates to:
+  /// **'删除'**
+  String get r3SftpDelete;
+
+  /// No description provided for @r3SftpPathCopied.
+  ///
+  /// In zh, this message translates to:
+  /// **'已复制路径'**
+  String get r3SftpPathCopied;
+
+  /// No description provided for @r3SftpNameLabel.
+  ///
+  /// In zh, this message translates to:
+  /// **'名称'**
+  String get r3SftpNameLabel;
+
+  /// No description provided for @r3SftpFolderLabel.
+  ///
+  /// In zh, this message translates to:
+  /// **'所在文件夹'**
+  String get r3SftpFolderLabel;
+
+  /// No description provided for @r3SftpCreate.
+  ///
+  /// In zh, this message translates to:
+  /// **'创建'**
+  String get r3SftpCreate;
+
+  /// No description provided for @r3SftpRenameTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'重命名或移动'**
+  String get r3SftpRenameTitle;
+
+  /// No description provided for @r3SftpRenameHint.
+  ///
+  /// In zh, this message translates to:
+  /// **'改名称即重命名，改文件夹即移动。'**
+  String get r3SftpRenameHint;
+
+  /// No description provided for @r3SftpInvalidName.
+  ///
+  /// In zh, this message translates to:
+  /// **'名称不能为空或包含“/”'**
+  String get r3SftpInvalidName;
+
+  /// No description provided for @r3SftpInvalidFolder.
+  ///
+  /// In zh, this message translates to:
+  /// **'文件夹须为以 / 开头的绝对路径'**
+  String get r3SftpInvalidFolder;
+
+  /// No description provided for @r3SftpDeleteTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'删除“{name}”？'**
+  String r3SftpDeleteTitle(String name);
+
+  /// No description provided for @r3SftpDeleteFileMessage.
+  ///
+  /// In zh, this message translates to:
+  /// **'将在服务器上永久删除该文件。'**
+  String get r3SftpDeleteFileMessage;
+
+  /// No description provided for @r3SftpDeleteFolderMessage.
+  ///
+  /// In zh, this message translates to:
+  /// **'将在服务器上永久删除这个空文件夹。'**
+  String get r3SftpDeleteFolderMessage;
+
+  /// No description provided for @r3SftpDeleteRecursiveTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'删除文件夹及其全部内容？'**
+  String get r3SftpDeleteRecursiveTitle;
+
+  /// No description provided for @r3SftpDeleteRecursiveMessage.
+  ///
+  /// In zh, this message translates to:
+  /// **'“{name}”不为空，其中所有内容将被永久递归删除（不跟随链接）。超过 {max} 项的文件夹会被拒绝，且不会删除任何内容。'**
+  String r3SftpDeleteRecursiveMessage(String name, int max);
+
+  /// No description provided for @r3SftpDeleteRecursiveAction.
+  ///
+  /// In zh, this message translates to:
+  /// **'全部删除'**
+  String get r3SftpDeleteRecursiveAction;
+
+  /// No description provided for @r3SftpDeleted.
+  ///
+  /// In zh, this message translates to:
+  /// **'已删除'**
+  String get r3SftpDeleted;
+
+  /// No description provided for @r3SftpDeletedCount.
+  ///
+  /// In zh, this message translates to:
+  /// **'已删除 {count} 项'**
+  String r3SftpDeletedCount(int count);
+
+  /// No description provided for @r3SftpCreated.
+  ///
+  /// In zh, this message translates to:
+  /// **'已创建'**
+  String get r3SftpCreated;
+
+  /// No description provided for @r3SftpRenamed.
+  ///
+  /// In zh, this message translates to:
+  /// **'已重命名'**
+  String get r3SftpRenamed;
+
+  /// No description provided for @r3SftpErrPermission.
+  ///
+  /// In zh, this message translates to:
+  /// **'没有权限'**
+  String get r3SftpErrPermission;
+
+  /// No description provided for @r3SftpErrNotFound.
+  ///
+  /// In zh, this message translates to:
+  /// **'未找到，可能已被移动或删除'**
+  String get r3SftpErrNotFound;
+
+  /// No description provided for @r3SftpErrExists.
+  ///
+  /// In zh, this message translates to:
+  /// **'已存在同名项目'**
+  String get r3SftpErrExists;
+
+  /// No description provided for @r3SftpErrNotEmpty.
+  ///
+  /// In zh, this message translates to:
+  /// **'文件夹不为空'**
+  String get r3SftpErrNotEmpty;
+
+  /// No description provided for @r3SftpErrWrongType.
+  ///
+  /// In zh, this message translates to:
+  /// **'该项目类型不适用于此操作'**
+  String get r3SftpErrWrongType;
+
+  /// No description provided for @r3SftpErrCancelled.
+  ///
+  /// In zh, this message translates to:
+  /// **'已取消'**
+  String get r3SftpErrCancelled;
+
+  /// No description provided for @r3SftpErrTooLarge.
+  ///
+  /// In zh, this message translates to:
+  /// **'文件过大，无法作为文本打开（上限 512 KiB）'**
+  String get r3SftpErrTooLarge;
+
+  /// No description provided for @r3SftpErrNotText.
+  ///
+  /// In zh, this message translates to:
+  /// **'不是 UTF-8 文本文件'**
+  String get r3SftpErrNotText;
+
+  /// No description provided for @r3SftpErrTooMany.
+  ///
+  /// In zh, this message translates to:
+  /// **'项目过多（上限 {max}），未删除任何内容'**
+  String r3SftpErrTooMany(int max);
+
+  /// No description provided for @r3SftpErrInvalidPath.
+  ///
+  /// In zh, this message translates to:
+  /// **'路径无效'**
+  String get r3SftpErrInvalidPath;
+
+  /// No description provided for @r3SftpErrTimeout.
+  ///
+  /// In zh, this message translates to:
+  /// **'服务器响应超时'**
+  String get r3SftpErrTimeout;
+
+  /// No description provided for @r3SftpErrConnectionLost.
+  ///
+  /// In zh, this message translates to:
+  /// **'SFTP 连接已断开'**
+  String get r3SftpErrConnectionLost;
+
+  /// No description provided for @r3SftpErrUnavailable.
+  ///
+  /// In zh, this message translates to:
+  /// **'此连接无法使用 SFTP'**
+  String get r3SftpErrUnavailable;
+
+  /// No description provided for @r3SftpErrLocalFile.
+  ///
+  /// In zh, this message translates to:
+  /// **'无法读写本地文件'**
+  String get r3SftpErrLocalFile;
+
+  /// No description provided for @r3SftpErrFailed.
+  ///
+  /// In zh, this message translates to:
+  /// **'操作失败'**
+  String get r3SftpErrFailed;
+
+  /// No description provided for @r3SftpEditorSize.
+  ///
+  /// In zh, this message translates to:
+  /// **'{size} · UTF-8'**
+  String r3SftpEditorSize(String size);
+
+  /// No description provided for @r3SftpSaved.
+  ///
+  /// In zh, this message translates to:
+  /// **'已保存'**
+  String get r3SftpSaved;
+
+  /// No description provided for @r3SftpUnsavedTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'放弃未保存的修改？'**
+  String get r3SftpUnsavedTitle;
+
+  /// No description provided for @r3SftpUnsavedMessage.
+  ///
+  /// In zh, this message translates to:
+  /// **'修改尚未写入服务器。'**
+  String get r3SftpUnsavedMessage;
+
+  /// No description provided for @r3SftpDiscard.
+  ///
+  /// In zh, this message translates to:
+  /// **'放弃'**
+  String get r3SftpDiscard;
+
+  /// No description provided for @r3SftpConflictTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'服务器上的文件已变化'**
+  String get r3SftpConflictTitle;
+
+  /// No description provided for @r3SftpConflictMessage.
+  ///
+  /// In zh, this message translates to:
+  /// **'它在你打开后被修改过。要用你的版本覆盖服务器上的版本吗？'**
+  String get r3SftpConflictMessage;
+
+  /// No description provided for @r3SftpOverwrite.
+  ///
+  /// In zh, this message translates to:
+  /// **'覆盖'**
+  String get r3SftpOverwrite;
+
+  /// No description provided for @r3SftpSkip.
+  ///
+  /// In zh, this message translates to:
+  /// **'跳过'**
+  String get r3SftpSkip;
+
+  /// No description provided for @r3SftpExistsTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'“{name}”已存在'**
+  String r3SftpExistsTitle(String name);
+
+  /// No description provided for @r3SftpExistsMessage.
+  ///
+  /// In zh, this message translates to:
+  /// **'覆盖服务器上的文件，还是跳过这次上传？'**
+  String get r3SftpExistsMessage;
+
+  /// No description provided for @r3SftpLargeTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'大文件'**
+  String get r3SftpLargeTitle;
+
+  /// No description provided for @r3SftpLargeMessage.
+  ///
+  /// In zh, this message translates to:
+  /// **'“{name}”大小为 {size}，可能耗时较长并消耗大量流量。继续吗？'**
+  String r3SftpLargeMessage(String name, String size);
+
+  /// No description provided for @r3SftpContinue.
+  ///
+  /// In zh, this message translates to:
+  /// **'继续'**
+  String get r3SftpContinue;
+
+  /// No description provided for @r3SftpTransfers.
+  ///
+  /// In zh, this message translates to:
+  /// **'传输'**
+  String get r3SftpTransfers;
+
+  /// No description provided for @r3SftpTransferUp.
+  ///
+  /// In zh, this message translates to:
+  /// **'正在上传 {name}'**
+  String r3SftpTransferUp(String name);
+
+  /// No description provided for @r3SftpTransferDown.
+  ///
+  /// In zh, this message translates to:
+  /// **'正在下载 {name}'**
+  String r3SftpTransferDown(String name);
+
+  /// No description provided for @r3SftpTransferCount.
+  ///
+  /// In zh, this message translates to:
+  /// **'第 {index} / {total} 项'**
+  String r3SftpTransferCount(int index, int total);
+
+  /// No description provided for @r3SftpStateQueued.
+  ///
+  /// In zh, this message translates to:
+  /// **'等待中'**
+  String get r3SftpStateQueued;
+
+  /// No description provided for @r3SftpStateDone.
+  ///
+  /// In zh, this message translates to:
+  /// **'完成'**
+  String get r3SftpStateDone;
+
+  /// No description provided for @r3SftpStateFailed.
+  ///
+  /// In zh, this message translates to:
+  /// **'失败'**
+  String get r3SftpStateFailed;
+
+  /// No description provided for @r3SftpStateCancelled.
+  ///
+  /// In zh, this message translates to:
+  /// **'已取消'**
+  String get r3SftpStateCancelled;
+
+  /// No description provided for @r3SftpStateSkipped.
+  ///
+  /// In zh, this message translates to:
+  /// **'已跳过'**
+  String get r3SftpStateSkipped;
+
+  /// No description provided for @r3SftpCancelAll.
+  ///
+  /// In zh, this message translates to:
+  /// **'全部取消'**
+  String get r3SftpCancelAll;
+
+  /// No description provided for @r3SftpClearFinished.
+  ///
+  /// In zh, this message translates to:
+  /// **'清除已完成'**
+  String get r3SftpClearFinished;
+
+  /// No description provided for @r3SftpShare.
+  ///
+  /// In zh, this message translates to:
+  /// **'分享'**
+  String get r3SftpShare;
+
+  /// No description provided for @r3SftpSavedTo.
+  ///
+  /// In zh, this message translates to:
+  /// **'已保存到 {path}'**
+  String r3SftpSavedTo(String path);
+
+  /// No description provided for @r3SftpDownloadsWhere.
+  ///
+  /// In zh, this message translates to:
+  /// **'下载的文件保存在应用文件夹“SFTP Downloads”中。可用“分享”另存到其他位置，例如“文件”。'**
+  String get r3SftpDownloadsWhere;
+
+  /// No description provided for @r3SftpCloseBusyTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'传输进行中'**
+  String get r3SftpCloseBusyTitle;
+
+  /// No description provided for @r3SftpCloseBusyMessage.
+  ///
+  /// In zh, this message translates to:
+  /// **'关闭将取消进行中和等待中的传输。'**
+  String get r3SftpCloseBusyMessage;
+
+  /// No description provided for @r3SftpCloseBusyAction.
+  ///
+  /// In zh, this message translates to:
+  /// **'取消传输并关闭'**
+  String get r3SftpCloseBusyAction;
+
+  /// No description provided for @r3SftpBackgroundClosed.
+  ///
+  /// In zh, this message translates to:
+  /// **'应用进入后台，SFTP 已关闭'**
+  String get r3SftpBackgroundClosed;
+
+  /// No description provided for @r3SftpConnecting.
+  ///
+  /// In zh, this message translates to:
+  /// **'正在连接 SFTP…'**
+  String get r3SftpConnecting;
+
+  /// No description provided for @r3SftpConnectFailed.
+  ///
+  /// In zh, this message translates to:
+  /// **'无法打开 SFTP'**
+  String get r3SftpConnectFailed;
+
+  /// No description provided for @r3SftpRetry.
+  ///
+  /// In zh, this message translates to:
+  /// **'重试'**
+  String get r3SftpRetry;
+
+  /// No description provided for @r3SftpChooseCredential.
+  ///
+  /// In zh, this message translates to:
+  /// **'请先在 SSH 设置中选择凭据。'**
+  String get r3SftpChooseCredential;
+
+  /// No description provided for @r3SftpSshSettings.
+  ///
+  /// In zh, this message translates to:
+  /// **'SSH 设置'**
+  String get r3SftpSshSettings;
+
+  /// No description provided for @r3SftpLoadFailed.
+  ///
+  /// In zh, this message translates to:
+  /// **'无法加载此文件夹'**
+  String get r3SftpLoadFailed;
+
+  /// No description provided for @r3SftpClose.
+  ///
+  /// In zh, this message translates to:
+  /// **'关闭'**
+  String get r3SftpClose;
+
+  /// No description provided for @r3SftpUploadsQueued.
+  ///
+  /// In zh, this message translates to:
+  /// **'已加入上传队列：{count} 个'**
+  String r3SftpUploadsQueued(int count);
+
   /// No description provided for @sshAuthenticationFailed.
   ///
   /// In zh, this message translates to:
