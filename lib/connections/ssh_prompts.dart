@@ -1,5 +1,7 @@
 import '../l10n/locale_preference.dart';
 
+import '../core/net_address.dart';
+
 import 'package:flutter/material.dart';
 
 import '../core/app_theme.dart' show InfoNote;
@@ -72,7 +74,7 @@ class SshPrompts {
               mainAxisSize: MainAxisSize.min,
               children: [
                 SelectableText(
-                  '${request.identity.host}:${request.identity.port}',
+                  formatHostPort(request.identity.host, request.identity.port),
                 ),
                 InfoNote(context.l10n.terminalHostChangedHelp),
                 Text(context.l10n.terminalPreviousFingerprint),

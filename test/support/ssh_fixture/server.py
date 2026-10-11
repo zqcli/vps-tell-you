@@ -158,6 +158,9 @@ class Server(asyncssh.SSHServer):
 async def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--port", type=int, default=0)
+    # Loopback only, by construction: no wildcard or routable bind exists.
+    parser.add_argument("--bind", choices=["127.0.0.1", "::1"],
+                        default="127.0.0.1")
     parser.add_argument("--host-key", default="ed25519.fixture")
     parser.add_argument("--delay-auth", type=float, default=0)
     parser.add_argument("--login-timeout", type=float, default=10)
@@ -177,7 +180,7 @@ async def main():
         state["sftp_factory"] = lambda chan: asyncssh.SFTPServer(
             chan, chroot=chroot)
     listener = await asyncssh.create_server(
-        lambda: Server(state), "127.0.0.1", args.port,
+        lambda: Server(state), args.bind, args.port,
         server_host_keys=[host_key], encoding=None, line_editor=False,
         login_timeout=args.login_timeout)
     event("ready", port=listener.get_port(),

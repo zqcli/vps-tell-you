@@ -265,11 +265,35 @@ void main() {
         '1:0:0:2:0:0:3:4': '1::2:0:0:3:4',
         '2001:db8:0:1:2:3:4:5': '2001:db8:0:1:2:3:4:5',
         '::ffff:192.0.2.1': '::ffff:c000:201',
+        // Link-local zones are kept (case-sensitive): another link, another host.
+        'FE80:0:0:0:0:0:0:1%eth0': 'fe80::1%eth0',
+        '[fe80::1%Wlan0]': 'fe80::1%Wlan0',
       };
       for (final entry in examples.entries) {
         expect(normalizedHost(entry.key), entry.value);
         expect(normalizedHost(entry.value), entry.value);
       }
+    });
+
+    test('every spelling of one IPv6 address is one host-trust key', () {
+      const spellings = [
+        '2001:db8::1',
+        '2001:DB8::1',
+        '2001:0db8:0000:0000:0000:0000:0000:0001',
+        '[2001:db8:0:0:0:0:0:1]',
+        ' [2001:DB8::0:1] ',
+        '2001:db8::0.0.0.1',
+      ];
+      expect(spellings.map(normalizedHost).toSet(), {'2001:db8::1'});
+      expect(
+        normalizedHost('fe80::1%en0'),
+        isNot(normalizedHost('fe80::1%en1')),
+      );
+      // The mapped form is deliberately its own identity (fail closed).
+      expect(
+        normalizedHost('::ffff:192.0.2.1'),
+        isNot(normalizedHost('192.0.2.1')),
+      );
     });
 
     test('rejects ambiguous aliases and non-host inputs', () {
@@ -296,7 +320,9 @@ void main() {
         '[::1]:22',
         '2001:::1',
         '[::1',
-        'fe80::1%eth0',
+        '2001:db8::1%eth0', // a zone only belongs to link-local addresses
+        'fe80::1%',
+        'fe80::1%a b',
         'bücher.example',
         'example\n.com',
         '${'a' * 64}.example',

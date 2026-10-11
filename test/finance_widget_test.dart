@@ -11,6 +11,7 @@ import 'package:vps_tell_you/core/app_theme.dart';
 import 'package:vps_tell_you/core/ui/ui.dart';
 import 'package:vps_tell_you/core/value_types.dart';
 import 'package:vps_tell_you/data/ledger_store.dart';
+import 'package:vps_tell_you/l10n/generated/app_localizations_zh.dart';
 import 'package:vps_tell_you/finance/calculation_share.dart';
 import 'package:vps_tell_you/finance/calculator_page.dart';
 import 'package:vps_tell_you/finance/finance_page.dart';
@@ -23,6 +24,7 @@ import 'package:vps_tell_you/servers/ledger_controller.dart';
 import 'package:vps_tell_you/servers/server_detail.dart';
 import 'package:vps_tell_you/servers/server_record.dart';
 
+import 'support/form_test_helpers.dart' show pickDate;
 import 'support/reminder_platform.dart';
 
 const today = LedgerDate(2026, 9, 23);
@@ -673,7 +675,11 @@ void main() {
         CalculatorPage(controller: controller, server: server),
       );
       await fill(tester, 'calc-price', '73.00');
-      await fill(tester, 'calc-asof', '2025-01-01');
+      await pickDate(
+        tester,
+        find.byKey(const ValueKey('calc-asof')),
+        DateTime(2025, 1, 1),
+      );
       await reveal(tester, find.byKey(const ValueKey('calculate-value')));
       await tester.tap(find.byKey(const ValueKey('calculate-value')));
       await tester.pumpAndSettle();
@@ -751,6 +757,179 @@ void main() {
       expect((await store.payments()).single.id, 'legacy-account-payment');
     },
   );
+
+  group('calculator dates', () {
+    final zh = AppLocalizationsZh();
+    String dateOf(WidgetTester tester, String key) => tester
+        .widget<FinanceDateRow>(find.byKey(ValueKey(key)))
+        .controller
+        .text;
+    Future<void> pick(WidgetTester tester, String key, DateTime? date) =>
+        pickDate(tester, find.byKey(ValueKey(key)), date);
+    Future<void> chooseCycle(WidgetTester tester, int from, int to) async {
+      final row = find.byKey(ValueKey('calc-cycle-$from'));
+      await reveal(tester, row);
+      await tester.tap(row);
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(ValueKey('calc-cycle-option-$to')));
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('dates are picked, never typed', (tester) async {
+      await mount(tester, CalculatorPage(controller: controller));
+      for (final key in ['calc-start', 'calc-asof', 'calc-due']) {
+        await reveal(tester, find.byKey(ValueKey(key)));
+        expect(
+          find.descendant(
+            of: find.byKey(ValueKey(key)),
+            matching: find.byType(TextField),
+          ),
+          findsNothing,
+        );
+      }
+      expect(dateOf(tester, 'calc-start'), '2026-09-23');
+      expect(dateOf(tester, 'calc-asof'), '2026-09-23');
+      expect(dateOf(tester, 'calc-due'), '2027-09-23');
+      // The valuation date is required: no "Set Unknown" there.
+      await tester.tap(find.byKey(const ValueKey('calc-asof')));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const ValueKey('date-sheet-unknown')), findsNothing);
+      await tester.tap(find.byKey(const ValueKey('date-sheet-done')));
+      await tester.pumpAndSettle();
+      expect(dateOf(tester, 'calc-asof'), '2026-09-23');
+    });
+
+    testWidgets('start + cycle generate the due date, clamped at month ends', (
+      tester,
+    ) async {
+      await mount(tester, CalculatorPage(controller: controller));
+      await pick(tester, 'calc-start', DateTime(2026, 3, 15));
+      expect(dateOf(tester, 'calc-due'), '2027-03-15');
+      await chooseCycle(tester, 12, 6);
+      expect(dateOf(tester, 'calc-due'), '2026-09-15');
+      await pick(tester, 'calc-start', DateTime(2026, 8, 31));
+      expect(dateOf(tester, 'calc-due'), '2027-02-28');
+      await chooseCycle(tester, 6, 12);
+      expect(dateOf(tester, 'calc-due'), '2027-08-31');
+      await pick(tester, 'calc-start', DateTime(2024, 2, 29));
+      expect(dateOf(tester, 'calc-due'), '2025-02-28');
+      await chooseCycle(tester, 12, 1);
+      expect(dateOf(tester, 'calc-due'), '2024-03-29');
+      // The valuation date never moves the due date.
+      await pick(tester, 'calc-asof', DateTime(2024, 3, 1));
+      expect(dateOf(tester, 'calc-due'), '2024-03-29');
+    });
+
+    testWidgets('a manually picked due date is kept until re-derived', (
+      tester,
+    ) async {
+      await mount(tester, CalculatorPage(controller: controller));
+      await pick(tester, 'calc-start', DateTime(2026, 3, 15));
+      await pick(tester, 'calc-due', DateTime(2030, 1, 1));
+      await pick(tester, 'calc-start', DateTime(2026, 5, 5));
+      expect(dateOf(tester, 'calc-due'), '2030-01-01');
+      await chooseCycle(tester, 12, 3);
+      expect(dateOf(tester, 'calc-due'), '2030-01-01');
+      // Picking exactly the derived date turns auto back on.
+      await pick(tester, 'calc-due', DateTime(2026, 8, 5));
+      await pick(tester, 'calc-start', DateTime(2026, 6, 6));
+      expect(dateOf(tester, 'calc-due'), '2026-09-06');
+      // So does clearing it (the derived date comes back on the next change).
+      await pick(tester, 'calc-due', DateTime(2031, 1, 1));
+      await pick(tester, 'calc-due', null);
+      expect(dateOf(tester, 'calc-due'), isEmpty);
+      await chooseCycle(tester, 3, 6);
+      expect(dateOf(tester, 'calc-due'), '2026-12-06');
+      // An unknown start leaves the due date alone.
+      await pick(tester, 'calc-start', null);
+      expect(dateOf(tester, 'calc-start'), isEmpty);
+      await chooseCycle(tester, 6, 12);
+      expect(dateOf(tester, 'calc-due'), '2026-12-06');
+    });
+
+    testWidgets('the generated due date calculates like a typed one', (
+      tester,
+    ) async {
+      await mount(tester, CalculatorPage(controller: controller));
+      await fill(tester, 'calc-price', '120');
+      await pick(tester, 'calc-start', DateTime(2026, 9, 1));
+      await pick(tester, 'calc-asof', DateTime(2026, 9, 23));
+      await chooseCycle(tester, 12, 1);
+      expect(dateOf(tester, 'calc-due'), '2026-10-01');
+      await reveal(tester, find.byKey(const ValueKey('calculate-value')));
+      await tester.tap(find.byKey(const ValueKey('calculate-value')));
+      await tester.pumpAndSettle();
+      final result = tester.widget<CalculationResultPage>(
+        find.byType(CalculationResultPage),
+      );
+      expect(result.due, const LedgerDate(2026, 10, 1));
+      expect(result.cycleMonths, 1);
+      expect(result.usesKnownPeriods, isFalse);
+    });
+
+    testWidgets('a missing due date is reported after Calculate', (
+      tester,
+    ) async {
+      await mount(tester, CalculatorPage(controller: controller));
+      await fill(tester, 'calc-price', '120');
+      await pick(tester, 'calc-due', null);
+      await reveal(tester, find.byKey(const ValueKey('calculate-value')));
+      await tester.tap(find.byKey(const ValueKey('calculate-value')));
+      await tester.pumpAndSettle();
+      expect(find.byType(CalculationResultPage), findsNothing);
+      expect(find.text(zh.financeDueError), findsOneWidget);
+      // Picking a date clears the message.
+      await pick(tester, 'calc-due', DateTime(2027, 1, 1));
+      expect(find.text(zh.financeDueError), findsNothing);
+    });
+
+    testWidgets('referenced server: auto only while start + cycle = due', (
+      tester,
+    ) async {
+      // start 2026-01-01 + 12 months = due 2027-01-01: derived.
+      await mount(
+        tester,
+        CalculatorPage(controller: controller, server: server),
+      );
+      expect(dateOf(tester, 'calc-start'), '2026-01-01');
+      expect(dateOf(tester, 'calc-due'), '2027-01-01');
+      expect(find.text(zh.financeIndependentRebuilt), findsNothing);
+      // Valuation date and price edits keep the known periods.
+      await pick(tester, 'calc-asof', DateTime(2026, 5, 1));
+      expect(find.text(zh.financeIndependentRebuilt), findsNothing);
+      // Changing the cycle moves the derived due date and rebuilds periods.
+      await chooseCycle(tester, 12, 6);
+      expect(dateOf(tester, 'calc-due'), '2026-07-01');
+      await reveal(tester, find.text(zh.financeIndependentRebuilt));
+      expect(find.text(zh.financeIndependentRebuilt), findsOneWidget);
+    });
+
+    testWidgets('referenced renewed server keeps its due date', (tester) async {
+      final renewed = ServerRecord(
+        id: 'renewed',
+        name: 'Renewed',
+        vendor: 'Vendor One',
+        host: '192.0.2.8',
+        createdAt: DateTime(2026, 9, 23),
+        updatedAt: DateTime(2026, 9, 23),
+        billing: BillingKind.prepaid,
+        amountMinor: 1200,
+        startDate: const LedgerDate(2024, 1, 1),
+        dueDate: const LedgerDate(2027, 1, 1),
+      );
+      await mount(
+        tester,
+        CalculatorPage(controller: controller, server: renewed),
+      );
+      await pick(tester, 'calc-start', DateTime(2025, 1, 1));
+      expect(dateOf(tester, 'calc-due'), '2027-01-01');
+      expect(find.text(zh.financeIndependentRebuilt), findsNothing);
+      await chooseCycle(tester, 12, 6);
+      expect(dateOf(tester, 'calc-due'), '2027-01-01');
+      await reveal(tester, find.text(zh.financeIndependentRebuilt));
+      expect(find.text(zh.financeIndependentRebuilt), findsOneWidget);
+    });
+  });
 
   testWidgets(
     '390px large text finance, payment and calculator remain scrollable',

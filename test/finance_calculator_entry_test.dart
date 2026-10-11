@@ -21,6 +21,7 @@ import 'package:vps_tell_you/l10n/generated/app_localizations_zh.dart';
 import 'package:vps_tell_you/servers/ledger_controller.dart';
 import 'package:vps_tell_you/servers/server_record.dart';
 
+import 'support/form_test_helpers.dart' show pickDate;
 import 'support/reminder_platform.dart';
 
 void main() {
@@ -155,7 +156,10 @@ void main() {
   Future<String> input(WidgetTester tester, String key) async {
     final field = find.byKey(ValueKey(key));
     await reveal(tester, field);
-    return tester.widget<FinanceFieldRow>(field).controller.text;
+    final widget = tester.widget(field);
+    return widget is FinanceDateRow
+        ? widget.controller.text
+        : (widget as FinanceFieldRow).controller.text;
   }
 
   Future<void> back(WidgetTester tester) async {
@@ -249,8 +253,16 @@ void main() {
         Navigator.of(tester.element(find.text(l10n.financeNoPrepaid))).pop();
         await tester.pumpAndSettle();
         await fill(tester, 'calc-price', '36.50');
-        await fill(tester, 'calc-asof', '2026-10-07');
-        await fill(tester, 'calc-due', '2027-01-01');
+        await pickDate(
+          tester,
+          find.byKey(const ValueKey('calc-asof')),
+          DateTime(2026, 10, 7),
+        );
+        await pickDate(
+          tester,
+          find.byKey(const ValueKey('calc-due')),
+          DateTime(2027, 1, 1),
+        );
         await tap(tester, find.byKey(const ValueKey('calculate-value')));
         final result = tester.widget<CalculationResultPage>(
           find.byType(CalculationResultPage),

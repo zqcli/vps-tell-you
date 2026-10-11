@@ -18,6 +18,7 @@ import 'package:flutter/material.dart';
 
 import '../core/app_theme.dart';
 import '../core/form_feedback.dart';
+import '../core/net_address.dart';
 import '../core/ui/ui.dart';
 import '../core/value_types.dart';
 import '../providers/provider_pages.dart';
@@ -104,8 +105,8 @@ class _ServerFormState extends State<ServerForm> {
     groupId = s?.groupId;
     final start = s?.startDate, due = s?.dueDate;
     _dueAuto = due == null || (start != null && start.addMonths(cycle) == due);
-    // The IP row appears only while the address is not itself an IP.
-    _hostIsIp = _addressIsIp;
+    _mirrorIpv4 = _addressMirror(NetHostKind.ipv4);
+    _mirrorIpv6 = _addressMirror(NetHostKind.ipv6);
     fields['host']!.addListener(_refreshAddress);
     if (widget.focusHardware) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -120,15 +121,29 @@ class _ServerFormState extends State<ServerForm> {
     }
   }
 
-  bool _hostIsIp = true;
-  bool get _addressIsIp {
-    final host = fields['host']!.text.trim();
-    return host.isEmpty || ServerResources.validIp(host);
+  /// When the connection address is itself an IP literal, the hardware row
+  /// of that family mirrors it (see `docs/IPV6.md`). A link-local address with
+  /// a zone is not a public hardware address and mirrors nothing.
+  String? _mirrorIpv4, _mirrorIpv6;
+  String? _addressMirror(NetHostKind family) {
+    final address = NetAddress.tryParse(fields['host']!.text.trim());
+    return address != null &&
+            address.kind == family &&
+            address.zone == null &&
+            !address.isUnspecified
+        ? address.address
+        : null;
   }
 
   void _refreshAddress() {
-    final next = _addressIsIp;
-    if (next != _hostIsIp) setState(() => _hostIsIp = next);
+    final v4 = _addressMirror(NetHostKind.ipv4);
+    final v6 = _addressMirror(NetHostKind.ipv6);
+    if (v4 != _mirrorIpv4 || v6 != _mirrorIpv6) {
+      setState(() {
+        _mirrorIpv4 = v4;
+        _mirrorIpv6 = v6;
+      });
+    }
   }
 
   @override
@@ -167,7 +182,7 @@ class _ServerFormState extends State<ServerForm> {
         return context.l10n.serverDueAfterStart;
       }
     }
-    if (id == 'host' && !ServerRecord.validHost(text)) {
+    if (id == 'host' && text.isNotEmpty && NetAddress.tryParse(text) == null) {
       return context.l10n.serverPlainHost;
     }
     return null;
@@ -192,30 +207,50 @@ class _ServerFormState extends State<ServerForm> {
     bool required = false,
     int max = 80,
     TextStyle? style,
-  }) => FormField<void>(
-    validator: (_) =>
-        _validateField(id, label, fields[id]!.text, required: required),
-    builder: (state) => AppFormRow(
-      label: label,
-      required: required,
-      errorText: state.errorText,
-      child: _semantic(
-        semanticLabel,
-        state.errorText,
-        AppTextField(
-          key: ValueKey('field-$id'),
-          controller: fields[id],
-          enabled: !saving,
-          maxLength: max,
-          hint: hint ?? context.l10n.uiFormOptional,
-          label: semanticLabel,
-          style: style,
-          textInputAction: TextInputAction.next,
-          autocorrect: id != 'host',
-          enableSuggestions: id != 'host',
+
+    /// Longest value (characters, in [style]) that must fit beside the label;
+    /// when it cannot, the field goes below the label. Decided from the widest
+    /// *possible* value, never from the typed text, so focus survives typing.
+    int? stackBeyond,
+  }) => LayoutBuilder(
+    builder: (context, box) {
+      final stacked =
+          stackBeyond != null &&
+          measureFormText(context, label, 16) +
+                  44 +
+                  MediaQuery.textScalerOf(context)
+                          .scale(style?.fontSize ?? 16) *
+                      .62 *
+                      stackBeyond >
+              box.maxWidth;
+      return FormField<void>(
+        validator: (_) =>
+            _validateField(id, label, fields[id]!.text, required: required),
+        builder: (state) => AppFormRow(
+          label: label,
+          required: required,
+          errorText: state.errorText,
+          stacked: stacked,
+          child: _semantic(
+            semanticLabel,
+            state.errorText,
+            AppTextField(
+              key: ValueKey('field-$id'),
+              controller: fields[id],
+              enabled: !saving,
+              maxLength: max,
+              hint: hint ?? context.l10n.uiFormOptional,
+              label: semanticLabel,
+              style: style,
+              textAlign: stacked ? TextAlign.start : TextAlign.end,
+              textInputAction: TextInputAction.next,
+              autocorrect: id != 'host',
+              enableSuggestions: id != 'host',
+            ),
+          ),
         ),
-      ),
-    ),
+      );
+    },
   );
 
   void _explainLock() => showAppToast(
@@ -634,15 +669,23 @@ class _ServerFormState extends State<ServerForm> {
     return false;
   }
 
+  /// IP literals are stored in canonical form (no brackets, RFC 5952 IPv6);
+  /// domains as typed. An empty address falls back to the hardware data.
+  String _storedHost(String typed, ServerResources resources) {
+    if (typed.isEmpty) {
+      return resources.ip.isNotEmpty
+          ? resources.ip
+          : resources.ipv6.isNotEmpty
+          ? resources.ipv6
+          : resources.hostname;
+    }
+    final address = NetAddress.tryParse(typed);
+    return address != null && address.isIp ? address.host : typed;
+  }
+
   Future<void> save() async {
     if (saving || !widget.controller.canMutate) return;
     _hasValidated = true;
-    // One address concept: an IP typed as the address is also the hardware IP
-    // (the IP row is hidden then). A domain leaves the stored IP untouched.
-    final typedHost = fields['host']!.text.trim();
-    if (typedHost.isNotEmpty && ServerResources.validIp(typedHost)) {
-      _resources.currentState?.ip = typedHost;
-    }
     final invalid = _form.currentState!.validateGranularly();
     final resources = _resources.currentState?.validateAndRead(
       invalidFields: invalid,
@@ -676,9 +719,7 @@ class _ServerFormState extends State<ServerForm> {
       // Legacy vendor text stays historical; providerId is current ownership.
       vendor: old?.vendor ?? selectedProvider?.name ?? '',
       providerId: selectedProvider?.id,
-      host: text('host').isEmpty
-          ? (resources.ip.isNotEmpty ? resources.ip : resources.hostname)
-          : text('host'),
+      host: _storedHost(text('host'), resources),
       region: text('region'),
       purpose: text('purpose'),
       os: text('os'),
@@ -796,6 +837,7 @@ class _ServerFormState extends State<ServerForm> {
                           hint: l10n.serverHostExample,
                           max: 253,
                           style: kMonoTextStyle.copyWith(fontSize: 15),
+                          stackBeyond: 39,
                         ),
                         AppFormRow.pick(
                           key: const ValueKey('field-group'),
@@ -825,7 +867,8 @@ class _ServerFormState extends State<ServerForm> {
                       initial: widget.record?.resources,
                       enabled: !saving,
                       collapsible: true,
-                      hideIp: _hostIsIp,
+                      mirroredIp: _mirrorIpv4,
+                      mirroredIpv6: _mirrorIpv6,
                       defaultTrafficPeriodMonths: widget.record == null
                           ? 1
                           : null,

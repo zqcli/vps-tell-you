@@ -4,6 +4,7 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 
+import '../core/net_address.dart';
 import '../core/value_types.dart';
 import '../data/ledger_store.dart';
 import '../l10n/locale_preference.dart';
@@ -194,12 +195,19 @@ class LedgerController extends ChangeNotifier {
   ServerRecord? byId(String id) => records.where((s) => s.id == id).firstOrNull;
   List<ServerRecord> get visible {
     final query = search.trim().toLowerCase();
+    // A pasted IPv6 in any spelling also finds its canonical stored form.
+    final canonicalQuery = NetAddress.tryParse(query)?.isIpv6 == true
+        ? NetAddress.tryParse(query)!.host
+        : null;
     final result = active.where((s) {
       final days = dueIn(s);
+      final text =
+          '${s.name} ${s.host} ${s.resources?.ip ?? ''} ${s.resources?.ipv6 ?? ''} '
+                  '${s.vendor} ${providerNameFor(s)} ${s.purpose} ${s.region}'
+              .toLowerCase();
       return (query.isEmpty ||
-              '${s.name} ${s.host} ${s.vendor} ${providerNameFor(s)} ${s.purpose} ${s.region}'
-                  .toLowerCase()
-                  .contains(query)) &&
+              text.contains(query) ||
+              (canonicalQuery != null && text.contains(canonicalQuery))) &&
           (filter != ServerFilter.favorites || s.favorite) &&
           (filter != ServerFilter.pending || isPending(s)) &&
           (groupFilter == null || (s.groupId ?? '') == groupFilter) &&

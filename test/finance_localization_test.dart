@@ -23,6 +23,7 @@ import 'package:vps_tell_you/l10n/localized_message.dart';
 import 'package:vps_tell_you/servers/ledger_controller.dart';
 import 'package:vps_tell_you/servers/server_record.dart';
 
+import 'support/form_test_helpers.dart' show pickDate;
 import 'support/reminder_platform.dart';
 
 final en = AppLocalizationsEn();
@@ -323,7 +324,7 @@ void main() {
         await tester.enterText(price, '52.34');
         final due = find.byKey(const ValueKey('calc-due'));
         await reveal(tester, due);
-        await tester.enterText(due, 'invalid-draft');
+        await pickDate(tester, due, null);
         final calculate = find.byKey(const ValueKey('calculate-value'));
         await reveal(tester, calculate);
         await tester.tap(calculate);
@@ -336,10 +337,7 @@ void main() {
           tester.state<FormFieldState<String>>(due).errorText,
           'Enter a valid due date',
         );
-        expect(
-          tester.widget<FinanceFieldRow>(due).controller.text,
-          'invalid-draft',
-        );
+        expect(tester.widget<FinanceDateRow>(due).controller.text, isEmpty);
         await reveal(tester, price);
         expect(
           tester.widget<FinanceFieldRow>(price).controller,

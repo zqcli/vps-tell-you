@@ -53,7 +53,7 @@ class HardwareInformationCard extends StatelessWidget {
       ),
       _HardwareTile(
         icon: Icons.public_rounded,
-        title: context.l10n.resourceIpAddress,
+        title: context.l10n.r6IpIpv4,
         value: data?.ip,
         mono: true,
       ),
@@ -63,6 +63,15 @@ class HardwareInformationCard extends StatelessWidget {
         value: data?.hostname,
       ),
     ];
+    // IPv6 can be 39 characters: it gets a full-width tile below the grid.
+    final ipv6 = _HardwareTile(
+      key: const ValueKey('hardware-ipv6'),
+      icon: Icons.public_rounded,
+      title: context.l10n.r6IpIpv6,
+      value: data?.ipv6,
+      mono: true,
+      maxLines: 3,
+    );
     // Three columns need ~100 px per tile; large text or narrow screens fall
     // back to two (then one) columns instead of clipping values.
     final scale = MediaQuery.textScalerOf(context).scale(16) / 16;
@@ -104,6 +113,7 @@ class HardwareInformationCard extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               ...rows,
+              Padding(padding: const EdgeInsets.only(top: 8), child: ipv6),
               Padding(
                 padding: const EdgeInsets.fromLTRB(16, 7, 16, 0),
                 child: Text(
@@ -121,11 +131,13 @@ class HardwareInformationCard extends StatelessWidget {
 
 class _HardwareTile extends StatelessWidget {
   const _HardwareTile({
+    super.key,
     required this.icon,
     required this.title,
     required this.value,
     this.known = true,
     this.mono = false,
+    this.maxLines = 2,
   });
   final IconData icon;
   final String title;
@@ -136,6 +148,7 @@ class _HardwareTile extends StatelessWidget {
   /// `false` greys a composite value (traffic) whose quota is unknown.
   final bool known;
   final bool mono;
+  final int maxLines;
 
   @override
   Widget build(BuildContext context) {
@@ -168,7 +181,7 @@ class _HardwareTile extends StatelessWidget {
             const SizedBox(height: 4),
             Text(
               text,
-              maxLines: 2,
+              maxLines: maxLines,
               overflow: TextOverflow.ellipsis,
               style: (mono ? kMonoTextStyle : const TextStyle()).copyWith(
                 fontSize: mono ? 14 : 16,

@@ -19,6 +19,7 @@ const _retiredTriggers = [
 
 String _resources({bool api = true}) => jsonEncode({
   'ip': '192.0.2.40',
+  'ipv6': '2001:db8::40',
   'hostname': 'vps.synthetic.example',
   'vcpu': 2,
   'ramBytes': 2147483648,
@@ -328,6 +329,7 @@ void main() {
       ) as Map<String, dynamic>;
       expect(oldResources.remove('apiFields'), isNotNull);
       expect(newResources, oldResources, reason: 'values are kept');
+      expect(newResources['ipv6'], '2001:db8::40');
       // provider_id may only change through the neutralised providers below.
       expect(now, old);
     }

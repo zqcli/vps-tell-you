@@ -3,37 +3,23 @@ import 'dart:typed_data';
 
 import 'package:crypto/crypto.dart';
 
+import '../core/net_address.dart';
 import 'security_models.dart';
 import '../l10n/localized_message.dart';
 
 enum HostTrustStatus { firstUse, trusted, changed }
 
-/// Host identity excludes schemes, paths, usernames, ports, and scope IDs.
-/// DNS is ASCII (IDNs must already be punycode); numeric IP aliases fail closed.
+/// Host identity excludes schemes, paths, usernames and ports. Every spelling
+/// of one IPv6 address (case, zeros, brackets, mixed notation) maps to its
+/// RFC 5952 form; a link-local zone id is part of the identity because the
+/// same fe80:: address on another link can be another machine. DNS is ASCII
+/// (IDNs must already be punycode); numeric IP aliases fail closed.
 String normalizedHost(String value) {
-  try {
-    var host = value.trim().toLowerCase();
-    if (host.isEmpty || host.length > 255) throw const FormatException();
-    if (host.startsWith('[') && host.endsWith(']')) {
-      host = host.substring(1, host.length - 1);
-      if (!host.contains(':')) throw const FormatException();
-    }
-    if (host.contains(':')) return _ipv6Text(Uri.parseIPv6Address(host));
-    if (host.endsWith('.')) host = host.substring(0, host.length - 1);
-    if (host
-        .split('.')
-        .every((part) => RegExp(r'^(?:[0-9]+|0x[0-9a-f]+)$').hasMatch(part))) {
-      return Uri.parseIPv4Address(host).join('.');
-    }
-    if (host.isEmpty || host.length > 253) throw const FormatException();
-    final label = RegExp(r'^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$');
-    if (host.split('.').any((part) => !label.hasMatch(part))) {
-      throw const FormatException();
-    }
-    return host;
-  } catch (_) {
+  final address = NetAddress.tryParse(value.trim());
+  if (address == null) {
     throw SecurityFailure(LocalizedText((l10n) => l10n.securityInvalidHost));
   }
+  return address.host;
 }
 
 class HostKeyIdentity {
@@ -177,32 +163,4 @@ class _PublicKeyReader {
     }
     return result;
   }
-}
-
-String _ipv6Text(List<int> bytes) {
-  final groups = List<int>.generate(
-    8,
-    (index) => (bytes[index * 2] << 8) | bytes[index * 2 + 1],
-  );
-  var longestStart = -1;
-  var longestLength = 1;
-  for (var index = 0; index < groups.length;) {
-    if (groups[index] != 0) {
-      index++;
-      continue;
-    }
-    final start = index;
-    while (index < groups.length && groups[index] == 0) {
-      index++;
-    }
-    if (index - start > longestLength) {
-      longestStart = start;
-      longestLength = index - start;
-    }
-  }
-  String join(Iterable<int> values) =>
-      values.map((part) => part.toRadixString(16)).join(':');
-  if (longestStart < 0) return join(groups);
-  return '${join(groups.take(longestStart))}::'
-      '${join(groups.skip(longestStart + longestLength))}';
 }

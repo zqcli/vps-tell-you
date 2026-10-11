@@ -237,6 +237,9 @@ final _number = RegExp(r'^[+-]?\d[\d,]*(\.\d+)?([A-Za-z%]{1,4}(/s)?)?$');
 final _version = RegExp(r'^v?\d+(\.\d+){2,}([-+][\w.]+)?$');
 final _hexRun = RegExp(r'^[0-9a-fA-F]{7,64}$');
 final _ip6 = RegExp(r'^[0-9a-fA-F:.]+(%\w+)?(/\d{1,3})?$');
+final _bracketedIp6 = RegExp(
+  r'^([0-9a-fA-F:.]+(?:%[A-Za-z0-9._-]+)?)\](?::\d{1,5})?$',
+);
 final _perms = RegExp(r'^[-dlcbps][-rwxsStT]{9}[.+@]?$');
 final _httpStatus = RegExp(r'^[1-5]\d\d$');
 final _tz = RegExp(r'^[+-]\d{4}$');
@@ -525,7 +528,17 @@ void _scanWords(String s, int from, int n, List<HlSpan> out) {
       lsActive = true;
       // Permission column itself stays plain; only the name is coloured.
     } else {
-      kind = _classify(core, lower, prev, pendingKey);
+      // `[2001:db8::1]:22`: the bracket was stripped as leading punctuation,
+      // so the rest reads `2001:db8::1]:22`. Colour it whole, bracket included.
+      final bracketed = a > i && s.codeUnitAt(a - 1) == 0x5b
+          ? _bracketedIp6.firstMatch(core)
+          : null;
+      if (bracketed != null && _looksIp6(bracketed.group(1)!)) {
+        kind = HlKind.ip;
+        spanStart = a - 1;
+      } else {
+        kind = _classify(core, lower, prev, pendingKey);
+      }
       if (kind == HlKind.error && lower == 'found' && prev == 'not') {
         // "not found": colour the "not" before it too.
         spanStart = prevStart;

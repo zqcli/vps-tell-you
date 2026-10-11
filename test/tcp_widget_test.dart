@@ -6,6 +6,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:vps_tell_you/connections/tcp_test.dart';
 import 'package:vps_tell_you/connections/tcp_test_page.dart';
 import 'package:vps_tell_you/core/app_theme.dart';
+import 'package:vps_tell_you/core/ui/ui.dart';
 
 class _SocketSpy implements Socket {
   bool destroyed = false;
@@ -150,4 +151,47 @@ void main() {
       expect(tester.takeException(), isNull);
     },
   );
+
+  testWidgets('host:port and bracketed IPv6 are split into the two fields', (
+    tester,
+  ) async {
+    final targets = <String>[];
+    final controller = TcpTestController(
+      connector: (host, port) async {
+        targets.add('$host|$port');
+        return ConnectionTask.fromSocket(
+          Future<Socket>.value(_SocketSpy()),
+          () {},
+        );
+      },
+    );
+    addTearDown(controller.dispose);
+    await mount(tester, controller);
+    Future<void> run(String input) async {
+      await tester.enterText(find.byKey(const Key('tcp-host')), input);
+      await tap(tester, '开始测试');
+      await tester.pumpAndSettle();
+    }
+
+    String text(String key) =>
+        tester.widget<AppTextField>(find.byKey(Key(key))).controller!.text;
+
+    await run('[2001:DB8::1]:2222');
+    expect(targets.last, '2001:db8::1|2222', reason: 'bare host to connect');
+    expect(text('tcp-host'), '2001:DB8::1');
+    expect(text('tcp-port'), '2222');
+    expect(find.text('[2001:db8::1]:2222'), findsWidgets);
+
+    await run('Example.com:8080');
+    expect(targets.last, 'example.com|8080');
+
+    // Bare IPv6 keeps the port field's value (22 → 8080 from before).
+    await run('2001:db8::1:22');
+    expect(targets.last, '2001:db8::1:22|8080');
+
+    final before = targets.length;
+    await run('[2001:db8::1');
+    expect(targets.length, before, reason: 'invalid input never connects');
+    expect(find.text('请输入 IP 或域名，不含协议、端口或路径'), findsOneWidget);
+  });
 }

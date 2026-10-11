@@ -279,18 +279,25 @@ void main() {
         tester,
       ) async {
         await mount(tester);
-        // The IP is the address itself: no separate hardware IP row while the
-        // address is empty or an IP.
-        for (final field in ServerResources.fieldKeys.difference({'ip'})) {
+        // IPv4 and IPv6 rows are always there, whatever the address is.
+        for (final field in [...ServerResources.fieldKeys, 'ipv6']) {
           expect(find.byKey(ValueKey('resource-$field')), findsOneWidget);
         }
-        expect(find.byKey(const ValueKey('resource-ip')), findsNothing);
         await fill(tester, 'field-name', 'Manual server');
         await fill(
           tester,
           target.$1 == 'ip' ? 'field-host' : 'resource-${target.$1}',
           target.$2,
         );
+        if (target.$1 == 'ip') {
+          // The address is the IPv4: its row mirrors it, IPv6 stays editable.
+          expect(find.byKey(const ValueKey('resource-ip')), findsNothing);
+          expect(
+            find.byKey(const ValueKey('resource-ip-mirrored')),
+            findsOneWidget,
+          );
+          expect(find.byKey(const ValueKey('resource-ipv6')), findsOneWidget);
+        }
         await fill(tester, 'resource-vcpu', '4');
         await tapSave(tester);
         final saved = (await store.servers()).single;
@@ -424,6 +431,10 @@ void main() {
       final record = await seed(host: '192.0.2.45', resources: _complete());
       await mount(tester, record: record);
       expect(find.byKey(const ValueKey('resource-ip')), findsNothing);
+      expect(
+        find.byKey(const ValueKey('resource-ip-mirrored')),
+        findsOneWidget,
+      );
       await fill(tester, 'field-host', '192.0.2.99');
       await fill(tester, 'resource-hostname', 'changed.example');
       await tapSave(tester);
@@ -461,6 +472,94 @@ void main() {
       final saved = (await store.servers()).single;
       expect(saved.host, '192.0.2.45');
       expect(saved.resources!.ip, '192.0.2.45');
+    });
+
+    testWidgets('an IPv6 address mirrors the IPv6 row, in canonical form', (
+      tester,
+    ) async {
+      await mount(tester);
+      await fill(tester, 'field-name', 'v6 server');
+      await fill(tester, 'resource-ip', '192.0.2.7');
+      // Brackets, upper case and zeros are accepted input spellings.
+      await fill(tester, 'field-host', '[2001:DB8:0:0:0:0:0:1]');
+      expect(find.byKey(const ValueKey('resource-ipv6')), findsNothing);
+      expect(
+        tester
+            .widget<Text>(find.byKey(const ValueKey('resource-ipv6-mirrored')))
+            .data,
+        '2001:db8::1',
+      );
+      expect(find.byKey(const ValueKey('resource-ip')), findsOneWidget);
+      expect(find.text('与主机地址相同'), findsOneWidget);
+      await tapSave(tester);
+      final saved = (await store.servers()).single;
+      expect(saved.host, '2001:db8::1', reason: 'stored canonical, no []');
+      expect(saved.resources!.ipv6, '2001:db8::1');
+      expect(saved.resources!.ip, '192.0.2.7', reason: 'IPv4 row untouched');
+    });
+
+    testWidgets('a domain address keeps both hardware families editable', (
+      tester,
+    ) async {
+      await mount(tester);
+      await fill(tester, 'field-name', 'dual stack');
+      await fill(tester, 'field-host', 'Gateway.Example');
+      await fill(tester, 'resource-ip', '192.0.2.8');
+      await fill(tester, 'resource-ipv6', '2001:0DB8::0008');
+      await tapSave(tester);
+      final saved = (await store.servers()).single;
+      expect(saved.host, 'Gateway.Example');
+      expect(saved.resources!.ip, '192.0.2.8');
+      expect(saved.resources!.ipv6, '2001:db8::8');
+    });
+
+    testWidgets('a mirrored draft returns when the address stops being an IP', (
+      tester,
+    ) async {
+      await mount(tester);
+      await fill(tester, 'field-name', 'draft');
+      await fill(tester, 'resource-ipv6', '2001:db8::5');
+      await fill(tester, 'field-host', '2001:db8::6');
+      expect(find.byKey(const ValueKey('resource-ipv6')), findsNothing);
+      await fill(tester, 'field-host', 'example.org');
+      expect(fieldController(tester, 'resource-ipv6').text, '2001:db8::5');
+      await tapSave(tester);
+      expect((await store.servers()).single.resources!.ipv6, '2001:db8::5');
+    });
+
+    testWidgets(
+      'a link-local address with a zone connects but mirrors nothing',
+      (tester) async {
+        await mount(tester);
+        await fill(tester, 'field-name', 'lan box');
+        await fill(tester, 'field-host', 'FE80::1%en0');
+        expect(find.byKey(const ValueKey('resource-ipv6')), findsOneWidget);
+        expect(find.byKey(const ValueKey('resource-ip')), findsOneWidget);
+        await tapSave(tester);
+        final saved = (await store.servers()).single;
+        expect(saved.host, 'fe80::1%en0');
+        expect(saved.resources!.ipv6, isEmpty);
+      },
+    );
+
+    testWidgets('address validation: IPv6 forms, ports and junk', (
+      tester,
+    ) async {
+      await mount(tester);
+      await fill(tester, 'field-name', 'validation');
+      for (final bad in [
+        '2001:db8::1::2',
+        '[2001:db8::1]:22',
+        'a b',
+        '1.2.3',
+      ]) {
+        await fill(tester, 'field-host', bad);
+        await tapSave(tester);
+        expect(await store.servers(), isEmpty, reason: bad);
+      }
+      await fill(tester, 'field-host', '2001:db8::2');
+      await tapSave(tester);
+      expect((await store.servers()).single.host, '2001:db8::2');
     });
   });
 }
