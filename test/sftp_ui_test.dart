@@ -762,14 +762,14 @@ void main() {
       tester.view.viewInsets = const FakeViewPadding(bottom: 300);
       await tester.pumpAndSettle();
       expect(find.byIcon(Icons.keyboard_hide_outlined), findsOneWidget);
-      expect(find.byTooltip('Hide keyboard'), findsOneWidget);
+      expect(find.byTooltip('Hide Keyboard'), findsOneWidget);
       await tapKey(tester, 'sftp-editor-keyboard');
       expect(focus.hasFocus, isFalse);
       expect(tester.testTextInput.isVisible, isFalse);
       tester.view.resetViewInsets();
       await tester.pumpAndSettle();
       expect(find.byIcon(Icons.keyboard_outlined), findsOneWidget);
-      expect(find.byTooltip('Open keyboard'), findsOneWidget);
+      expect(find.byTooltip('Open Keyboard'), findsOneWidget);
       // Swiped away by the user while focus stayed: the button brings it back.
       await tapKey(tester, 'sftp-editor-keyboard');
       expect(focus.hasFocus, isTrue);
