@@ -77,10 +77,13 @@ Map<String, Object?> observedCloudResources(CloudInstance instance) {
               scaledDisk == scaledDisk.roundToDouble()
           ? scaledDisk.toInt()
           : null);
-  final ip = [
-    instance.ipv4,
-    instance.ipv6,
-  ].whereType<String>().where(ServerResources.validIp).firstOrNull;
+  final ip = instance.ipv4 != null && ServerResources.validIpv4(instance.ipv4!)
+      ? instance.ipv4
+      : null;
+  final ipv6 =
+      instance.ipv6 != null && ServerResources.validIpv6(instance.ipv6!)
+      ? instance.ipv6
+      : null;
   final hostname =
       instance.hostname != null &&
           ServerResources.validHostname(instance.hostname!)
@@ -88,6 +91,7 @@ Map<String, Object?> observedCloudResources(CloudInstance instance) {
       : null;
   return {
     'ip': ip,
+    'ipv6': ipv6,
     'hostname': hostname,
     'vcpu': instance.vcpu != null && instance.vcpu! <= ServerResources.maxVcpu
         ? positive(instance.vcpu)
@@ -105,6 +109,7 @@ ServerResources resourcesFromCloud(CloudInstance instance) {
   final values = observedCloudResources(instance);
   return ServerResources(
     ip: values['ip'] as String? ?? '',
+    ipv6: values['ipv6'] as String? ?? '',
     hostname: values['hostname'] as String? ?? '',
     vcpu: values['vcpu'] as int?,
     ramBytes: values['ramBytes'] as int?,
@@ -112,7 +117,7 @@ ServerResources resourcesFromCloud(CloudInstance instance) {
     trafficBytes: values['trafficBytes'] as int?,
     trafficUnlimited: instance.trafficUnlimited,
     apiFields: {
-      for (final key in ServerResources.fieldKeys)
+      for (final key in [...ServerResources.fieldKeys, 'ipv6'])
         if (values[key] != null ||
             key == 'trafficBytes' && instance.trafficUnlimited)
           key,
@@ -128,6 +133,7 @@ ServerResources verifiedResourceSources(
   final local = resources.toJson();
   return ServerResources(
     ip: resources.ip,
+    ipv6: resources.ipv6,
     hostname: resources.hostname,
     vcpu: resources.vcpu,
     ramBytes: resources.ramBytes,

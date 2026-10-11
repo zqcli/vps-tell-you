@@ -17,12 +17,13 @@ ServerRecord backupServer({
   String id = 'server',
   String? group,
   ServerResources? resources,
+  String host = '192.0.2.12',
 }) => ServerRecord(
   id: id,
   name: 'Fixture server',
   vendor: 'Fixture vendor',
   groupId: group,
-  host: '192.0.2.12',
+  host: host,
   region: 'Fixture region',
   os: 'Debian 12',
   spec: '2 vCPU',
@@ -273,13 +274,14 @@ void main() {
 
   test('v1 backup round-trips local resource values and provenance', () async {
     final resources = ServerResources(
-      ip: '2001:db8::4',
+      ip: '192.0.2.4',
+      ipv6: '2001:db8::4',
       hostname: 'BACKUP-Fixture',
       vcpu: 4,
       ramBytes: 4294967296,
       diskBytes: 64424509440,
       trafficUnlimited: true,
-      apiFields: {'ip', 'hostname', 'diskBytes', 'trafficBytes'},
+      apiFields: {'ip', 'ipv6', 'hostname', 'diskBytes', 'trafficBytes'},
     );
     await source.saveServer(backupServer(resources: resources), isNew: true);
     final encoded = (await source.exportLedgerBackup()).encode();
@@ -390,6 +392,69 @@ void main() {
       expect((await target.servicePeriods()), hasLength(3));
     },
   );
+
+  test('IPv6 hosts and the optional ipv6 key survive backup', () async {
+    final resources = ServerResources(
+      ip: '192.0.2.4',
+      ipv6: '2001:db8::4',
+      hostname: 'v6-fixture',
+    );
+    await source.saveServer(
+      backupServer(resources: resources, host: '2001:db8::4'),
+      isNew: true,
+    );
+    final snapshot = LedgerBackupSnapshot.decode(
+      (await source.exportLedgerBackup()).encode(),
+    );
+    expect(snapshot.servers.single['host'], '2001:db8::4');
+    final blob = jsonDecode(
+      snapshot.servers.single['resources_json'] as String,
+    );
+    expect(blob['ip'], '192.0.2.4');
+    expect(blob['ipv6'], '2001:db8::4');
+    await target.restoreLedgerBackup(snapshot);
+    final restored = (await target.servers()).single;
+    expect(restored.host, '2001:db8::4');
+    expect(restored.resources!.ipv6, '2001:db8::4');
+    expect(restored.resources!.toJson(), resources.toJson());
+    // A resources blob without ipv6 is the unchanged old format.
+    final plain = ServerResources(ip: '192.0.2.5', hostname: 'plain');
+    expect(plain.encode(), isNot(contains('ipv6')));
+  });
+
+  test('old backups with IPv6 in ip and unknown keys', () async {
+    final resources = ServerResources(ip: '192.0.2.3', hostname: 'fixture');
+    await source.saveServer(backupServer(resources: resources), isNew: true);
+    final original = (await source.exportLedgerBackup()).encode();
+    Map<String, dynamic> withBlob(Map<String, Object?> blob) {
+      final modified = jsonDecode(original) as Map<String, dynamic>;
+      (modified['servers'] as List).single['resources_json'] = jsonEncode(blob);
+      return modified;
+    }
+
+    // Written by an older app: the single `ip` slot held an IPv6.
+    final migrated = LedgerBackupSnapshot.decode(
+      jsonEncode(withBlob({...resources.toJson(), 'ip': '2001:db8::9'})),
+    );
+    await target.restoreLedgerBackup(migrated);
+    final restored = (await target.servers()).single.resources!;
+    expect(restored.ip, '');
+    expect(restored.ipv6, '2001:db8::9');
+    // New unknown keys and malformed ipv6 values are still rejected.
+    for (final blob in [
+      {...resources.toJson(), 'ipv6': 'not-an-ip'},
+      {...resources.toJson(), 'ipv6': 7},
+      {...resources.toJson(), 'ipv6': '[2001:db8::1]'},
+      {...resources.toJson(), 'ipv6': '2001:db8::1', 'ipv7': 'x'},
+      {...resources.toJson(), 'ip': '2001:db8::9', 'ipv6': '2001:db8::1'},
+    ]) {
+      expect(
+        () => LedgerBackupSnapshot.decode(jsonEncode(withBlob(blob))),
+        throwsFormatException,
+        reason: '$blob',
+      );
+    }
+  });
 
   test(
     'backup rejects invalid resource blobs and nested private fields',

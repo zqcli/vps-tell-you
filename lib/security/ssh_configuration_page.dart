@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
+import '../core/net_address.dart';
 import '../core/ui/ui.dart';
 import '../servers/ledger_controller.dart';
 import 'security_models.dart';
@@ -134,10 +135,14 @@ class _SshConfigurationPageState extends State<SshConfigurationPage> {
     if (mounted && adopt) username.text = credential.defaultUsername;
   }
 
-  String? hostError(AppLocalizations l10n) =>
-      validationAttempted && host.text.trim().isEmpty
-      ? l10n.securityHostRequired
-      : null;
+  String? hostError(AppLocalizations l10n) {
+    if (!validationAttempted) return null;
+    final text = host.text.trim();
+    if (text.isEmpty) return l10n.securityHostRequired;
+    // Same rules as the connection itself: IPv4, IPv6 (brackets and a
+    // link-local zone allowed) or a DNS name, nothing numeric-ambiguous.
+    return NetAddress.tryParse(text) == null ? l10n.connectionValidHost : null;
+  }
 
   String? portError(AppLocalizations l10n) {
     if (!validationAttempted) return null;

@@ -7,6 +7,7 @@ import 'dart:ui' show SemanticsValidationResult;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../core/net_address.dart';
 import '../core/ui/ui.dart';
 import 'server_resources.dart';
 
@@ -95,7 +96,8 @@ class ServerResourceFields extends StatefulWidget {
     this.defaultTrafficPeriodMonths,
     this.collapsible = false,
     this.initiallyExpanded = true,
-    this.hideIp = false,
+    this.mirroredIp,
+    this.mirroredIpv6,
     this.margin = const EdgeInsets.symmetric(horizontal: 16),
   });
   final ServerResources? initial;
@@ -112,10 +114,11 @@ class ServerResourceFields extends StatefulWidget {
   /// Outer margin of the grouped section.
   final EdgeInsets margin;
 
-  /// Leave the IP row out (the surrounding form already asks for an address
-  /// that is the IP). The stored value is kept and can be set through
-  /// [ServerResourceFieldsState.ip].
-  final bool hideIp;
+  /// The surrounding form's connection address when it is itself an IPv4 /
+  /// IPv6 literal. The matching row then shows it read-only ("same as the host
+  /// address") and the result uses it; the row's own draft is kept untouched
+  /// and comes back if the address stops being that literal.
+  final String? mirroredIp, mirroredIpv6;
   @override
   State<ServerResourceFields> createState() => ServerResourceFieldsState();
 }
@@ -164,6 +167,7 @@ class ServerResourceFieldsState extends State<ServerResourceFields> {
         ? widget.observed
         : <String, Object?>{
             'ip': initial.ip,
+            'ipv6': initial.ipv6,
             'hostname': initial.hostname,
             'vcpu': initial.vcpu,
             'ramBytes': initial.ramBytes,
@@ -176,7 +180,7 @@ class ServerResourceFieldsState extends State<ServerResourceFields> {
     _unlimited =
         initial?.trafficUnlimited ??
         widget.observed['trafficUnlimited'] == true;
-    for (final key in ['ip', 'hostname', 'vcpu']) {
+    for (final key in ['ip', 'ipv6', 'hostname', 'vcpu']) {
       _fields[key] = TextEditingController(text: data[key]?.toString() ?? '');
     }
     for (final key in ['ramBytes', 'diskBytes', 'trafficBytes']) {
@@ -203,9 +207,23 @@ class ServerResourceFieldsState extends State<ServerResourceFields> {
     super.dispose();
   }
 
-  /// Current IP text, including while its row is hidden.
-  String get ip => _fields['ip']!.text.trim();
-  set ip(String value) => _fields['ip']!.text = value.trim();
+  /// The text a field currently stands for: the form's address while that row
+  /// mirrors it, otherwise what the user typed.
+  String _text(String key) =>
+      (key == 'ip' ? widget.mirroredIp : null) ??
+      (key == 'ipv6' ? widget.mirroredIpv6 : null) ??
+      _fields[key]!.text.trim();
+
+  static String _canonicalIpv6(String text) {
+    final address = NetAddress.tryParse(text, allowBrackets: false);
+    return address != null && address.isIpv6 && address.zone == null
+        ? address.address
+        : text;
+  }
+
+  bool _mirrored(String key) =>
+      (key == 'ip' && widget.mirroredIp != null) ||
+      (key == 'ipv6' && widget.mirroredIpv6 != null);
 
   int? _bytes(String key) {
     final text = _fields[key]!.text.trim();
@@ -241,7 +259,10 @@ class ServerResourceFieldsState extends State<ServerResourceFields> {
       RegExp(r'^[1-9][0-9]*$').hasMatch(_fields[key]!.text.trim())
           ? int.tryParse(_fields[key]!.text.trim())
           : null,
-    _ => _fields[key]!.text.trim(),
+    // Stored IPv6 is always the RFC 5952 spelling; any valid input form maps
+    // to it so that comparisons and API-source checks are form independent.
+    'ipv6' => _canonicalIpv6(_text(key)),
+    _ => _text(key),
   };
 
   bool _apiSource(String key) {
@@ -249,6 +270,7 @@ class ServerResourceFieldsState extends State<ServerResourceFields> {
       final initial = widget.initial!;
       final old = switch (key) {
         'ip' => initial.ip,
+        'ipv6' => initial.ipv6,
         'hostname' => initial.hostname,
         'vcpu' => initial.vcpu,
         'ramBytes' => initial.ramBytes,
@@ -267,9 +289,13 @@ class ServerResourceFieldsState extends State<ServerResourceFields> {
   }
 
   String? _source(String key) {
+    // Optional / alternative addresses are not "missing" when left empty.
+    if (_text(key).isEmpty &&
+        (key == 'ipv6' || (key == 'ip' && _text('ipv6').isNotEmpty))) {
+      return null;
+    }
     if (!widget.importing && !_apiSource(key)) {
-      return _fields[key]!.text.trim().isEmpty &&
-              !(key == 'trafficBytes' && _unlimited)
+      return _text(key).isEmpty && !(key == 'trafficBytes' && _unlimited)
           ? null
           : context.l10n.resourceSourceManual;
     }
@@ -282,7 +308,7 @@ class ServerResourceFieldsState extends State<ServerResourceFields> {
     if (key == 'trafficBytes' && _unlimited) {
       return context.l10n.resourceSourceUnlimited;
     }
-    if (_fields[key]!.text.trim().isEmpty) {
+    if (_text(key).isEmpty) {
       return context.l10n.resourceSourceMissing;
     }
     return widget.observed[key] == null
@@ -302,8 +328,9 @@ class ServerResourceFieldsState extends State<ServerResourceFields> {
       return null;
     }
     final result = ServerResources(
-      ip: _fields['ip']!.text.trim(),
-      hostname: _fields['hostname']!.text.trim(),
+      ip: _value('ip') as String,
+      ipv6: _value('ipv6') as String,
+      hostname: _value('hostname') as String,
       vcpu: _value('vcpu') as int?,
       ramBytes: _bytes('ramBytes'),
       diskBytes: _bytes('diskBytes'),
@@ -325,13 +352,27 @@ class ServerResourceFieldsState extends State<ServerResourceFields> {
     if (key == 'trafficBytes' && _unlimited) {
       return null;
     }
-    if (!widget.importing && _fields[key]!.text.trim().isEmpty) {
+    // IPv6 is always optional; a complete import needs one address of either
+    // family, so an empty IPv4 is fine next to an IPv6.
+    if (key == 'ipv6' && _text(key).isEmpty) {
+      return null;
+    }
+    if (key == 'ip' && _text(key).isEmpty && _text('ipv6').isNotEmpty) {
+      return null;
+    }
+    if (!widget.importing && _text(key).isEmpty) {
       return null;
     }
     if (key == 'ip') {
-      return ServerResources.validIp(value as String)
+      return ServerResources.validIpv4(value as String)
           ? null
-          : context.l10n.resourceFieldValidIp;
+          : context.l10n.r6IpValidIpv4;
+    }
+    if (key == 'ipv6') {
+      // Validate what the user typed, not its canonical form.
+      return ServerResources.validIpv6(_text(key))
+          ? null
+          : context.l10n.r6IpValidIpv6;
     }
     if (key == 'hostname') {
       return ServerResources.validHostname(value as String)
@@ -361,11 +402,15 @@ class ServerResourceFieldsState extends State<ServerResourceFields> {
 
   /// Row plus the small provenance line under it.
   Widget _block(Widget row, String key) {
-    final source = _source(key);
+    final source = _mirrored(key)
+        ? context.l10n.r6IpSameAsAddress
+        : _source(key);
     // Plain manual entry is the default of this form and needs no caption;
     // API provenance (and every state of the import flow) stays visible.
     if (source == null ||
-        (!widget.importing && source == context.l10n.resourceSourceManual)) {
+        (!_mirrored(key) &&
+            !widget.importing &&
+            source == context.l10n.resourceSourceManual)) {
       return row;
     }
     final p = context.palette;
@@ -384,32 +429,67 @@ class ServerResourceFieldsState extends State<ServerResourceFields> {
     );
   }
 
-  Widget _textRow(String key, String label) => FormField<void>(
-    validator: (_) => _validate(key),
-    builder: (field) => _block(
-      AppFormRow(
-        label: label,
-        errorText: field.errorText,
-        child: _semantic(
-          label,
-          field.errorText,
-          AppTextField(
-            key: ValueKey('resource-$key'),
-            controller: _fields[key],
-            enabled: widget.enabled,
-            maxLength: key == 'hostname' ? 253 : 45,
-            hint: context.l10n.serverUnknown,
-            label: label,
-            textInputAction: TextInputAction.next,
-            autocorrect: false,
-            enableSuggestions: false,
-            onChanged: (_) => setState(() {}),
+  Widget _textRow(String key, String label) {
+    final isAddress = key == 'ip' || key == 'ipv6';
+    // Addresses are monospace; 14 px keeps a typical IPv6 on the row.
+    final style = isAddress ? kMonoTextStyle.copyWith(fontSize: 14) : null;
+    final longest = key == 'ipv6' ? 39 : 15; // characters of the longest value
+    return LayoutBuilder(
+      builder: (context, box) {
+        // Decided from the widest *possible* value, never from what is typed,
+        // so the field keeps focus while the text grows. When label and a full
+        // address cannot share a line the field goes below the label.
+        final stacked =
+            isAddress &&
+            _textWidth(label, 16) +
+                    44 +
+                    MediaQuery.textScalerOf(context).scale(14) * .62 * longest >
+                box.maxWidth;
+        final align = stacked ? TextAlign.start : TextAlign.end;
+        return FormField<void>(
+          validator: (_) => _validate(key),
+          builder: (field) => _block(
+            AppFormRow(
+              label: label,
+              errorText: field.errorText,
+              stacked: stacked,
+              child: _mirrored(key)
+                  ? Semantics(
+                      label: label,
+                      value: _text(key),
+                      child: Text(
+                        _text(key),
+                        key: ValueKey('resource-$key-mirrored'),
+                        textAlign: align,
+                        style: style!.copyWith(color: context.palette.text2),
+                      ),
+                    )
+                  : _semantic(
+                      label,
+                      field.errorText,
+                      AppTextField(
+                        key: ValueKey('resource-$key'),
+                        controller: _fields[key],
+                        enabled: widget.enabled,
+                        maxLength: key == 'hostname' ? 253 : 45,
+                        hint: context.l10n.serverUnknown,
+                        label: label,
+                        style: style,
+                        textAlign: align,
+                        textInputAction: TextInputAction.next,
+                        autocorrect: false,
+                        enableSuggestions: false,
+                        keyboardType: isAddress ? TextInputType.url : null,
+                        onChanged: (_) => setState(() {}),
+                      ),
+                    ),
+            ),
+            key,
           ),
-        ),
-      ),
-      key,
-    ),
-  );
+        );
+      },
+    );
+  }
 
   void _setVcpu(int value) {
     setState(() => _fields['vcpu']!.text = value == 0 ? '' : '$value');
@@ -696,7 +776,8 @@ class ServerResourceFieldsState extends State<ServerResourceFields> {
                         : null,
                   ),
                 ),
-                if (!widget.hideIp) _textRow('ip', l10n.resourceIpAddress),
+                _textRow('ip', l10n.r6IpIpv4),
+                _textRow('ipv6', l10n.r6IpIpv6),
                 _textRow('hostname', l10n.resourceHostname),
               ],
             ),

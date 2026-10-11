@@ -5,6 +5,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../core/net_address.dart';
 import '../core/ui/ui.dart';
 import '../servers/ledger_controller.dart';
 import '../servers/server_detail.dart';
@@ -812,7 +813,7 @@ class _CredentialFormState extends State<CredentialForm>
                           widget.ledger.byId(config.serverId)?.name ??
                           l10n.securityServerFallback,
                       subtitle:
-                          '${config.username} @ ${config.host}:${config.port}',
+                          '${config.username} @ ${formatHostPort(config.host, config.port)}',
                     ),
                 ],
               ),
@@ -1086,7 +1087,7 @@ class CredentialReferencesPage extends StatelessWidget {
                       ledger.byId(config.serverId)?.name ??
                       l10n.securityServerFallback,
                   subtitle:
-                      '${config.username} @ ${config.host}:${config.port}',
+                      '${config.username} @ ${formatHostPort(config.host, config.port)}',
                   chevron: true,
                   onTap: () => Navigator.push<void>(
                     context,
@@ -1188,7 +1189,8 @@ class _CredentialDeletePageState extends State<CredentialDeletePage> {
                     title:
                         widget.ledger.byId(s.serverId)?.name ??
                         l10n.securityServerFallback,
-                    subtitle: '${s.username} @ ${s.host}:${s.port}',
+                    subtitle:
+                        '${s.username} @ ${formatHostPort(s.host, s.port)}',
                   ),
               ],
             ),

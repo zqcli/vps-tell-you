@@ -2922,6 +2922,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get resourceFieldValidIp => '请填写有效 IPv4 或 IPv6，不能为全零地址';
 
   @override
+  String get r6IpValidIpv4 => '请填写有效的 IPv4 地址，如 192.0.2.1，不能为全零地址';
+
+  @override
+  String get r6IpValidIpv6 => '请填写有效的 IPv6 地址，如 2001:db8::1，不含方括号或区域标识';
+
+  @override
   String get resourceFieldValidVcpu => '请填写 1–65536 的整数核数';
 
   @override
@@ -2965,6 +2971,15 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get resourceIpAddress => 'IP 地址';
+
+  @override
+  String get r6IpIpv4 => 'IPv4';
+
+  @override
+  String get r6IpIpv6 => 'IPv6';
+
+  @override
+  String get r6IpSameAsAddress => '与主机地址相同';
 
   @override
   String get resourceHostname => '主机名';

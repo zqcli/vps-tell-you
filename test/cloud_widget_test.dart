@@ -244,7 +244,7 @@ void main() {
   }
 
   Future<void> fillResources(WidgetTester tester) async {
-    await fill(tester, 'resource-ip', '2001:db8::20');
+    await fill(tester, 'resource-ipv6', '2001:db8::20');
     await fill(tester, 'resource-hostname', 'Fixture-VM');
     await fill(tester, 'resource-diskBytes', '20');
     await fill(tester, 'resource-trafficBytes', '1536');
@@ -1315,7 +1315,7 @@ void main() {
       findsOneWidget,
     );
     expect(find.text('请填写大于 0 的容量，精确到整字节').hitTestable(), findsWidgets);
-    expect(find.text('请填写有效 IPv4 或 IPv6，不能为全零地址'), findsOneWidget);
+    expect(find.text('请填写有效的 IPv4 地址，如 192.0.2.1，不能为全零地址'), findsOneWidget);
     expect(vcpuText(tester), '2');
     expect(cloud.accounts, isEmpty);
     expect(calls, 1);

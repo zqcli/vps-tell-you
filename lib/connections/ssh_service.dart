@@ -8,6 +8,7 @@ import 'dart:convert';
 import 'package:dartssh2/dartssh2.dart';
 import 'package:flutter/foundation.dart';
 
+import '../core/net_address.dart';
 import '../security/host_trust.dart';
 import '../security/key_import.dart';
 import '../security/security_controller.dart';
@@ -54,8 +55,7 @@ class SshTarget {
       isTemporary ? l10n.connectionTemporary : name;
   final int port;
   final String? serverId;
-  String get label =>
-      '$username@${host.contains(':') ? '[$host]' : host}:$port';
+  String get label => formatUserHostPort(username, host, port);
 
   SshTarget normalized() {
     if (port < 1 ||

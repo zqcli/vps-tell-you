@@ -3384,6 +3384,14 @@ class AppLocalizationsEn extends AppLocalizations {
       'Enter a valid IPv4 or IPv6 address, not an all-zero address';
 
   @override
+  String get r6IpValidIpv4 =>
+      'Enter a valid IPv4 address such as 192.0.2.1. All-zero addresses aren’t allowed.';
+
+  @override
+  String get r6IpValidIpv6 =>
+      'Enter a valid IPv6 address such as 2001:db8::1, without brackets or a zone.';
+
+  @override
   String get resourceFieldValidVcpu =>
       'Enter a whole-number core count from 1 to 65,536';
 
@@ -3433,6 +3441,15 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get resourceIpAddress => 'IP address';
+
+  @override
+  String get r6IpIpv4 => 'IPv4';
+
+  @override
+  String get r6IpIpv6 => 'IPv6';
+
+  @override
+  String get r6IpSameAsAddress => 'Same as the host address';
 
   @override
   String get resourceHostname => 'Hostname';

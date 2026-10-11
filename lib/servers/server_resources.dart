@@ -1,9 +1,9 @@
+import '../core/net_address.dart';
 import '../l10n/locale_preference.dart';
 import '../l10n/localized_message.dart';
 import '../l10n/generated/app_localizations.dart';
 
 import 'dart:convert';
-import 'dart:io';
 
 /// Local resource configuration, including explicitly unknown values. Provider
 /// observations remain in cloud inventory; refreshes must never overwrite these
@@ -11,6 +11,7 @@ import 'dart:io';
 class ServerResources {
   ServerResources({
     this.ip = '',
+    this.ipv6 = '',
     this.hostname = '',
     this.vcpu,
     this.ramBytes,
@@ -21,7 +22,10 @@ class ServerResources {
     Set<String> apiFields = const {},
   }) : apiFields = Set.unmodifiable(apiFields);
 
-  final String ip, hostname;
+  /// [ip] is the IPv4 address (the JSON key predates IPv6); [ipv6] is the
+  /// optional IPv6 address. Both are hardware addresses, independent of the
+  /// connection address in `ServerRecord.host`.
+  final String ip, ipv6, hostname;
   final int? vcpu, ramBytes, diskBytes;
   final int? trafficBytes;
   final bool trafficUnlimited;
@@ -58,25 +62,25 @@ class ServerResources {
   };
   static const _jsonKeys = {..._legacyJsonKeys, 'trafficPeriodMonths'};
 
-  static bool validIp(String value) {
-    if (value.isEmpty || value != value.trim() || value.contains('%')) {
-      return false;
-    }
-    final address = InternetAddress.tryParse(value);
-    if (address == null || address.rawAddress.every((byte) => byte == 0)) {
-      return false;
-    }
-    // An IPv4-mapped unspecified address is still an unspecified destination.
-    final bytes = address.rawAddress;
-    if (bytes.length == 16 &&
-        bytes.take(10).every((byte) => byte == 0) &&
-        bytes[10] == 255 &&
-        bytes[11] == 255 &&
-        bytes.skip(12).every((byte) => byte == 0)) {
-      return false;
-    }
-    return true;
+  /// `apiFields` may also mark the optional IPv6 address.
+  static const _sourceKeys = {...fieldKeys, 'ipv6'};
+
+  static bool _validAddress(String value, NetHostKind kind) {
+    final address = NetAddress.tryParse(value, allowBrackets: false);
+    return address != null &&
+        address.kind == kind &&
+        address.zone == null &&
+        !address.isUnspecified;
   }
+
+  /// Dotted-quad IPv4, not `0.0.0.0`.
+  static bool validIpv4(String value) => _validAddress(value, NetHostKind.ipv4);
+
+  /// Bare IPv6 (any spelling, no brackets or zone), not `::` or its mapped form.
+  static bool validIpv6(String value) => _validAddress(value, NetHostKind.ipv6);
+
+  /// Either family.
+  static bool validIp(String value) => validIpv4(value) || validIpv6(value);
 
   static bool validHostname(String value) {
     final name = value.endsWith('.')
@@ -85,7 +89,7 @@ class ServerResources {
     return name.isNotEmpty &&
         name != '0' &&
         value.length <= 253 &&
-        InternetAddress.tryParse(name) == null &&
+        NetAddress.tryParse(name, allowBrackets: false)?.isIp != true &&
         RegExp(
           r'^(?:[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?)(?:\.[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?)*\.?$',
         ).hasMatch(value);
@@ -94,8 +98,12 @@ class ServerResources {
   /// Local editing permits unknown values; import must require all six fields.
   String? validate({bool requireComplete = false, AppLocalizations? l10n}) {
     l10n ??= defaultLocalizations;
-    if ((requireComplete || ip.isNotEmpty) && !validIp(ip)) {
-      return l10n.resourceValidIp;
+    // A complete record needs at least one address; IPv6-only machines exist.
+    if (ip.isNotEmpty ? !validIpv4(ip) : requireComplete && ipv6.isEmpty) {
+      return l10n.r6IpValidIpv4;
+    }
+    if (ipv6.isNotEmpty && !validIpv6(ipv6)) {
+      return l10n.r6IpValidIpv6;
     }
     if ((requireComplete || hostname.isNotEmpty) && !validHostname(hostname)) {
       return l10n.resourceValidHostname;
@@ -118,11 +126,12 @@ class ServerResources {
         !trafficPeriods.containsKey(trafficPeriodMonths)) {
       return l10n.resourceValidPeriod;
     }
-    if (!fieldKeys.containsAll(apiFields)) {
+    if (!_sourceKeys.containsAll(apiFields)) {
       return l10n.resourceInvalidSources;
     }
     final values = {
       'ip': ip.isEmpty ? null : ip,
+      'ipv6': ipv6.isEmpty ? null : ipv6,
       'hostname': hostname.isEmpty ? null : hostname,
       'vcpu': vcpu,
       'ramBytes': ramBytes,
@@ -137,6 +146,9 @@ class ServerResources {
 
   Map<String, Object?> toJson() => {
     'ip': ip,
+    // Optional key: absent when unset, so older records and exports are
+    // byte-for-byte unchanged and older readers keep working on them.
+    if (ipv6.isNotEmpty) 'ipv6': ipv6,
     'hostname': hostname,
     'vcpu': vcpu,
     'ramBytes': ramBytes,
@@ -162,9 +174,11 @@ class ServerResources {
     }
     final legacy = !value.containsKey('trafficPeriodMonths');
     final keys = legacy ? _legacyJsonKeys : _jsonKeys;
-    if (value.length != keys.length ||
+    final hasIpv6 = value.containsKey('ipv6');
+    if (value.length != keys.length + (hasIpv6 ? 1 : 0) ||
         !keys.every(value.containsKey) ||
         value['ip'] is! String ||
+        (hasIpv6 && value['ipv6'] is! String) ||
         value['hostname'] is! String ||
         (value['vcpu'] != null && value['vcpu'] is! int) ||
         (value['ramBytes'] != null && value['ramBytes'] is! int) ||
@@ -183,8 +197,19 @@ class ServerResources {
         (l10n) => l10n.resourceInvalidSourceFields,
       );
     }
+    var ip = value['ip'] as String;
+    var ipv6 = hasIpv6 ? value['ipv6'] as String : '';
+    var markers = sources.cast<String>().toSet();
+    // Before IPv6 had its own field `ip` could hold either family. Move an
+    // IPv6 found there (and its API marker) so old data and backups stay valid.
+    if (ipv6.isEmpty && validIpv6(ip)) {
+      ipv6 = ip;
+      ip = '';
+      if (markers.remove('ip')) markers.add('ipv6');
+    }
     final result = ServerResources(
-      ip: value['ip'] as String,
+      ip: ip,
+      ipv6: ipv6,
       hostname: value['hostname'] as String,
       vcpu: value['vcpu'] as int?,
       ramBytes: value['ramBytes'] as int?,
@@ -192,7 +217,7 @@ class ServerResources {
       trafficBytes: value['trafficBytes'] as int?,
       trafficUnlimited: value['trafficUnlimited'] as bool,
       trafficPeriodMonths: value['trafficPeriodMonths'] as int?,
-      apiFields: sources.cast<String>().toSet(),
+      apiFields: markers,
     );
     final error = result.validate(requireComplete: legacy);
     if (error != null) {
@@ -205,6 +230,7 @@ class ServerResources {
 
   bool get isEmpty =>
       ip.isEmpty &&
+      ipv6.isEmpty &&
       hostname.isEmpty &&
       vcpu == null &&
       ramBytes == null &&

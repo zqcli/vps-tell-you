@@ -44,6 +44,12 @@ void main() {
         'fe80::1:ip',
         'aa:bb:cc:dd:ee:ff:ip',
       ]);
+      expect(tokens('inet6 2001:db8::1/64 fe80::1%eth0 ::1 [2001:db8::1]:22'), [
+        '2001:db8::1/64:ip',
+        'fe80::1%eth0:ip',
+        '::1:ip',
+        '[2001:db8::1]:22:ip',
+      ]);
       expect(tokens('see https://example.com/a?b=c, now'), [
         'https://example.com/a?b=c:url',
       ]);

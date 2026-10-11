@@ -189,8 +189,60 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(home: Scaffold(body: HardwareInformationCard(null))),
       );
-      expect(find.text('未填写'), findsNWidgets(5));
+      expect(find.text('未填写'), findsNWidgets(6)); // incl. IPv4 and IPv6
       expect(find.text('未填写 / 周期未设置'), findsOneWidget);
+    },
+  );
+
+  testWidgets(
+    'IPv4 and IPv6 tiles: IPv6 is full width and wraps, never clips',
+    (tester) async {
+      // The longest possible canonical IPv6 (39 characters).
+      const canonical = 'fedc:ba98:7654:3210:fedc:ba98:7654:3210';
+      for (final (width, scale) in [(390.0, 1.0), (320.0, 2.0), (844.0, 1.0)]) {
+        tester.view.physicalSize = Size(width, 900);
+        tester.view.devicePixelRatio = 1;
+        addTearDown(tester.view.resetPhysicalSize);
+        addTearDown(tester.view.resetDevicePixelRatio);
+        await tester.pumpWidget(
+          MaterialApp(
+            theme: appTheme(),
+            builder: (context, child) => MediaQuery(
+              data: MediaQuery.of(context)
+                  .copyWith(textScaler: TextScaler.linear(scale)),
+              child: child!,
+            ),
+            home: Scaffold(
+              body: ListView(
+                children: [
+                  HardwareInformationCard(
+                    ServerResources(
+                      ip: '192.0.2.45',
+                      ipv6: canonical,
+                      hostname: 'synthetic.example',
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+        expect(find.text('IPv4'), findsOneWidget);
+        expect(find.text('IPv6'), findsOneWidget);
+        expect(find.text('192.0.2.45'), findsOneWidget);
+        expect(find.text(canonical), findsOneWidget);
+        final v4 = tester.getRect(find.text('192.0.2.45'));
+        final v6 = tester.getRect(find.byKey(const ValueKey('hardware-ipv6')));
+        expect(
+          v6.top,
+          greaterThan(v4.bottom),
+          reason: 'IPv6 sits below the grid',
+        );
+        expect(v6.width, greaterThan(width - 40), reason: 'full width $width');
+        expect(tester.takeException(), isNull, reason: '$width x$scale');
+      }
+      expect(canonical.length, 39);
     },
   );
 }
