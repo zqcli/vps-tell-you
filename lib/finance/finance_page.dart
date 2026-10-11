@@ -585,14 +585,23 @@ class _FinancePageState extends State<FinancePage> {
           title: l10n.financeRecentPayments,
           subtitle: paymentCount == 0
               ? l10n.financeUnrecordedNotZero
-              : paidPartial
-              ? l10n.financeCoverage(paid.covered, paid.total, paid.missingFx)
-              : null,
+              : [
+                  l10n.r3FinanceRecentSub(paymentCount),
+                  if (paidPartial)
+                    l10n.financeCoverage(
+                      paid.covered,
+                      paid.total,
+                      paid.missingFx,
+                    ),
+                ].join('\n'),
           value: paymentCount == 0 ? '—' : paid.formatted,
           chevron: true,
           onTap: () => open(
-            (_) =>
-                PaymentListPage(controller: c, groupId: groupId, recent: true),
+            (_) => PaymentListPage(
+              controller: c,
+              groupId: groupId,
+              period: PaymentPeriod.month,
+            ),
           ),
         ),
         _CalculatorEntry(onTap: openCalculator),
@@ -644,16 +653,7 @@ class _SummaryCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final p = context.palette;
-    // Light: brand blue to violet. Dark: the same hues pulled towards the page
-    // background.
-    final stops = [
-      AppTints.blue,
-      Color.lerp(AppTints.blue, AppTints.indigo, .5)!,
-      Color.lerp(AppTints.blue, AppTints.purple, .55)!,
-    ];
-    final colors = p.isDark
-        ? [for (final c in stops) Color.lerp(c, p.bg, .5)!]
-        : stops;
+    final colors = financeHeroColors(p);
     const label = TextStyle(color: Colors.white, fontSize: 13);
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
@@ -1004,10 +1004,26 @@ class _ForecastChart extends StatelessWidget {
 
   static bool _gaps(FinanceTotal t) => t.missingFx > 0 || t.unknown > 0;
 
-  /// Whole major units for the bar caption, or '—' without a convertible part.
-  static String _caption(FinanceTotal t) => t.covered == 0 && t.total > 0
-      ? '—'
-      : (t.convertedMinor / Rational.of(100)).round().toString();
+  /// Compact bar caption with the display-currency symbol: `¥676`, `¥1.2k`,
+  /// `¥3.4M`; '—' when nothing in the month could be converted.
+  static String _caption(FinanceTotal t) {
+    if (t.covered == 0 && t.total > 0) return '—';
+    final symbol = currencySymbol(t.currency);
+    final whole = (t.convertedMinor / Rational.of(100)).round();
+    String scaled(int divisor, String unit) {
+      final tenths =
+          (whole * BigInt.from(10) + BigInt.from(divisor ~/ 2)) ~/
+          BigInt.from(divisor);
+      final text = tenths % BigInt.from(10) == BigInt.zero
+          ? '${tenths ~/ BigInt.from(10)}'
+          : '${tenths ~/ BigInt.from(10)}.${tenths % BigInt.from(10)}';
+      return '$symbol$text$unit';
+    }
+
+    if (whole.abs() >= BigInt.from(999500)) return scaled(1000000, 'M');
+    if (whole.abs() >= BigInt.from(1000)) return scaled(1000, 'k');
+    return '$symbol$whole';
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -1058,7 +1074,12 @@ class _ForecastChart extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 8),
-              Flexible(
+              // A fixed share of the row keeps the title column roomy and the
+              // pill flush with the right edge, whatever its width.
+              ConstrainedBox(
+                constraints: BoxConstraints(
+                  maxWidth: MediaQuery.sizeOf(context).width * .45,
+                ),
                 child: StatusPill(
                   gapParts.isEmpty
                       ? l10n.uiFinanceForecastBasis
@@ -1132,19 +1153,16 @@ class _ForecastBar extends StatelessWidget {
         onTap: onTap,
         child: Column(
           children: [
-            Opacity(
-              opacity: selected ? 1 : 0,
-              child: FittedBox(
-                fit: BoxFit.scaleDown,
-                child: Text(
-                  caption,
-                  maxLines: 1,
-                  style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w600,
-                    color: p.text,
-                    fontFeatures: kTabularFigures,
-                  ),
+            FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Text(
+                caption,
+                maxLines: 1,
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: selected ? FontWeight.w700 : FontWeight.w400,
+                  color: selected ? p.text : p.text2,
+                  fontFeatures: kTabularFigures,
                 ),
               ),
             ),

@@ -1327,7 +1327,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get financeUpcomingRenewals => 'Expected renewals in the next 30 days';
 
   @override
-  String get financeRecentPayments => 'Recorded payments in the last 30 days';
+  String get financeRecentPayments => 'Payment records';
 
   @override
   String get financeUnrecordedNotZero =>
@@ -1591,6 +1591,93 @@ class AppLocalizationsEn extends AppLocalizations {
   String financeSellerQuote(String currency) {
     return 'Seller quote · $currency';
   }
+
+  @override
+  String get r3FinancePeriodWeek => 'Last week';
+
+  @override
+  String get r3FinancePeriodMonth => 'Last month';
+
+  @override
+  String get r3FinancePeriodQuarter => 'Last 3 months';
+
+  @override
+  String get r3FinancePeriodHalfYear => 'Last 6 months';
+
+  @override
+  String get r3FinancePeriodYear => 'Last year';
+
+  @override
+  String get r3FinancePeriodAll => 'All';
+
+  @override
+  String r3FinanceRecentSub(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count payments',
+      one: '1 payment',
+    );
+    return 'Last 30 days · $_temp0';
+  }
+
+  @override
+  String get r3FinanceTimelineStart => 'Period start';
+
+  @override
+  String get r3FinanceTimelineAsOf => 'Valuation';
+
+  @override
+  String get r3FinanceTimelineDue => 'Due';
+
+  @override
+  String get r3FinanceQuoteMode => 'Input';
+
+  @override
+  String get r3FinanceQuoteModeOffer => 'Enter the quote';
+
+  @override
+  String get r3FinanceQuoteModePremium => 'Enter a premium amount';
+
+  @override
+  String get r3FinanceQuoteModePercent => 'Enter a premium percentage';
+
+  @override
+  String get r3FinanceQuoteDirection => 'Direction';
+
+  @override
+  String get r3FinanceQuotePremium => 'Premium';
+
+  @override
+  String get r3FinanceQuoteDiscount => 'Discount';
+
+  @override
+  String r3FinanceQuotePremiumField(String currency) {
+    return 'Amount · $currency';
+  }
+
+  @override
+  String get r3FinanceQuotePercentField => '% of remaining value';
+
+  @override
+  String get r3FinanceQuotePercentError =>
+      'Enter a percentage from 0 to 1000 with up to 2 decimals';
+
+  @override
+  String get r3FinanceQuoteRangeError =>
+      'A discount cannot exceed the remaining value, and the price must stay in range';
+
+  @override
+  String get r3FinanceQuoteSettlement => 'Settlement';
+
+  @override
+  String get r3FinanceQuoteRef => 'Remaining value';
+
+  @override
+  String get r3FinanceQuoteDeal => 'Suggested price';
+
+  @override
+  String get r3FinanceQuoteFeesRow => 'Total fee';
 
   @override
   String financeRoundingNote(String rate, String source) {

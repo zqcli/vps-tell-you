@@ -8,6 +8,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:path_provider_platform_interface/path_provider_platform_interface.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:vps_tell_you/core/app_theme.dart';
+import 'package:vps_tell_you/core/ui/ui.dart';
 import 'package:vps_tell_you/core/value_types.dart';
 import 'package:vps_tell_you/data/ledger_store.dart';
 import 'package:vps_tell_you/finance/calculation_share.dart';
@@ -314,6 +315,165 @@ void main() {
     );
   });
 
+  group('payment period filter', () {
+    Future<void> seedAges() async {
+      for (final age in [3, 20, 60, 200, 400]) {
+        await store.recordAccountPayment(
+          id: 'age$age',
+          accountLabel: 'Bill $age',
+          amount: Money('CNY', age * 100),
+          paidDate: today.addDays(-age),
+        );
+      }
+      await controller.refresh();
+    }
+
+    Finder row(int age) => find.byKey(ValueKey('payment-age$age'));
+    String total(WidgetTester tester) => tester
+        .widget<FinanceTotalView>(find.byType(FinanceTotalView))
+        .total
+        .formatted;
+
+    testWidgets('opens on the period it came from and switches windows', (
+      tester,
+    ) async {
+      await seedAges();
+      await mount(
+        tester,
+        PaymentListPage(controller: controller, period: PaymentPeriod.month),
+      );
+      expect(row(3), findsOneWidget);
+      expect(row(20), findsOneWidget);
+      expect(row(60), findsNothing);
+      expect(total(tester), '¥23.00');
+      for (final step in [
+        (PaymentPeriod.week, [3], '¥3.00'),
+        (PaymentPeriod.quarter, [3, 20, 60], '¥83.00'),
+        (PaymentPeriod.halfYear, [3, 20, 60], '¥83.00'),
+        (PaymentPeriod.year, [3, 20, 60, 200], '¥283.00'),
+        (PaymentPeriod.all, [3, 20, 60, 200, 400], '¥683.00'),
+      ]) {
+        final chip = find.byKey(ValueKey('payment-period-${step.$1.name}'));
+        await tester.ensureVisible(chip);
+        await tester.pumpAndSettle();
+        await tester.tap(chip);
+        await tester.pumpAndSettle();
+        for (final age in [3, 20, 60, 200, 400]) {
+          expect(
+            row(age),
+            step.$2.contains(age) ? findsOneWidget : findsNothing,
+            reason: '${step.$1.name} age $age',
+          );
+        }
+        expect(total(tester), step.$3, reason: step.$1.name);
+      }
+    });
+
+    testWidgets('default is everything; the deleted filter still applies', (
+      tester,
+    ) async {
+      await seedAges();
+      await store.deletePayment(
+        original: controller.payments.firstWhere((p) => p.id == 'age3'),
+      );
+      await controller.refresh();
+      await mount(tester, PaymentListPage(controller: controller));
+      expect(row(400), findsOneWidget);
+      expect(row(3), findsNothing);
+      expect(total(tester), '¥680.00');
+      await tester.tap(find.byKey(const ValueKey('payment-voided')));
+      await tester.pumpAndSettle();
+      expect(row(3), findsOneWidget);
+      // Deleted records are listed but never counted.
+      expect(total(tester), '¥680.00');
+      await tester.tap(find.byKey(const ValueKey('payment-period-week')));
+      await tester.pumpAndSettle();
+      expect(row(3), findsOneWidget);
+      expect(row(20), findsNothing);
+    });
+
+    testWidgets('legacy recent flag means the 30-day window', (tester) async {
+      await seedAges();
+      await mount(
+        tester,
+        PaymentListPage(controller: controller, recent: true),
+      );
+      expect(row(20), findsOneWidget);
+      expect(row(60), findsNothing);
+    });
+  });
+
+  group('costs page', () {
+    testWidgets('payments entry is named 付款记录 and opens the 30-day window', (
+      tester,
+    ) async {
+      await store.recordAccountPayment(
+        id: 'recent',
+        accountLabel: 'Bill',
+        amount: const Money('CNY', 500),
+        paidDate: today.addDays(-2),
+      );
+      await controller.refresh();
+      await mount(tester, FinancePage(controller: controller));
+      final entry = find.byKey(const ValueKey('finance-recent-payments'));
+      await reveal(tester, entry);
+      expect(
+        find.descendant(of: entry, matching: find.text('付款记录')),
+        findsOneWidget,
+      );
+      expect(find.text('近 30 天已记录实付'), findsNothing);
+      expect(
+        find.descendant(of: entry, matching: find.text('近 30 天 · 1 笔')),
+        findsOneWidget,
+      );
+      await tester.tap(entry);
+      await tester.pumpAndSettle();
+      final selected = tester.widget<AppChip>(
+        find.byKey(const ValueKey('payment-period-month')),
+      );
+      expect(selected.selected, isTrue);
+    });
+
+    testWidgets(
+      'forecast pill is flush right and bar captions carry the symbol',
+      (tester) async {
+        await controller.refresh();
+        await mount(tester, FinancePage(controller: controller));
+        final chart = find.byKey(const ValueKey('forecast-open'));
+        await reveal(tester, chart);
+        final pill = find
+            .byType(StatusPill)
+            .evaluate()
+            .map((e) => e.widget)
+            .length;
+        expect(pill, greaterThan(0));
+        final forecastPill = find.text('按当前续费价');
+        await reveal(tester, forecastPill);
+        final pillRight = tester
+            .getTopRight(
+              find.ancestor(
+                of: forecastPill,
+                matching: find.byType(StatusPill),
+              ),
+            )
+            .dx;
+        // The card content ends 16 px (page margin) + 16 px (padding) from the edge.
+        expect(pillRight, closeTo(390 - 32, 0.5));
+        final captions = tester
+            .widgetList<Text>(
+              find.descendant(
+                of: find.byKey(
+                  ValueKey('forecast-${const LedgerDate(2026, 9, 1)}'),
+                ),
+                matching: find.byType(Text),
+              ),
+            )
+            .map((t) => t.data!);
+        expect(captions.any((t) => t.startsWith('¥')), isTrue);
+      },
+    );
+  });
+
   testWidgets(
     'FX cancel preserves missing rates, save updates only display; finance drilldowns share scope',
     (tester) async {
@@ -549,6 +709,163 @@ void main() {
       expect(tester.takeException(), isNull);
     },
   );
+
+  group('transfer premium on the result page', () {
+    const fx = FxSettings(displayCurrency: 'USD');
+    late CalculationResultPage page;
+    late QuoteResult Function({
+      Money? offer,
+      BigInt? premium,
+      Rational? percent,
+    })
+    expected;
+
+    setUp(() {
+      const due = LedgerDate(2027, 1, 1);
+      const money = Money('USD', 3650);
+      final value = valueOfPeriods(
+        renewal: money,
+        periods: calculatorPeriods(today, due, 12),
+        asOf: today,
+      )!;
+      page = CalculationResultPage(
+        renewal: money,
+        cycleMonths: 12,
+        asOf: today,
+        due: due,
+        value: value,
+        fx: fx,
+        usesKnownPeriods: false,
+      );
+      expected = ({Money? offer, BigInt? premium, Rational? percent}) =>
+          calculateQuote(
+            offer: offer,
+            premiumMinor: premium,
+            premiumPercent: percent,
+            fee: const Money('USD', 101),
+            payer: FeePayer.split,
+            reference: value.amount,
+            fx: fx,
+          )!;
+    });
+
+    Future<void> open(WidgetTester tester) async {
+      await mount(tester, page);
+      await reveal(tester, find.text('转让报价试算 · 可选'));
+      await tester.tap(find.text('转让报价试算 · 可选'));
+      await tester.pumpAndSettle();
+    }
+
+    Future<void> pickMode(WidgetTester tester, QuoteMode mode) async {
+      await reveal(tester, find.byKey(const ValueKey('quote-mode')));
+      await tester.tap(find.byKey(const ValueKey('quote-mode')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(ValueKey('quote-mode-${mode.name}')));
+      await tester.pumpAndSettle();
+    }
+
+    Future<void> settle(WidgetTester tester) async {
+      await fill(tester, 'quote-fee', '1.01');
+      await reveal(tester, find.byKey(const ValueKey('quote-payer')));
+      await tester.tap(find.byKey(const ValueKey('quote-payer')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('quote-payer-split')));
+      await tester.pumpAndSettle();
+      await reveal(tester, find.byKey(const ValueKey('calculate-quote')));
+      await tester.tap(find.byKey(const ValueKey('calculate-quote')));
+      await tester.pumpAndSettle();
+    }
+
+    void expectSettlement(WidgetTester tester, QuoteResult q) {
+      final section = find.byKey(const ValueKey('quote-settlement'));
+      expect(section, findsOneWidget);
+      for (final text in [q.reference, q.offer, q.buyerTotal, q.sellerNet]) {
+        expect(find.textContaining(text), findsWidgets, reason: text);
+      }
+      expect(q.referenceMinor + q.premiumMinor, q.offerMinor);
+    }
+
+    testWidgets('quote mode: premium shown as price minus remaining value', (
+      tester,
+    ) async {
+      await open(tester);
+      await fill(tester, 'quote-offer', '30.00');
+      await settle(tester);
+      final q = expected(offer: const Money('USD', 3000));
+      expectSettlement(tester, q);
+      expect(find.textContaining(q.premium), findsWidgets);
+    });
+
+    testWidgets('premium amount adds to the remaining value', (tester) async {
+      await open(tester);
+      await pickMode(tester, QuoteMode.premium);
+      expect(find.byKey(const ValueKey('quote-offer')), findsNothing);
+      await fill(tester, 'quote-premium', '2.50');
+      await settle(tester);
+      final q = expected(premium: BigInt.from(250));
+      expectSettlement(tester, q);
+      expect(find.text('溢价'), findsWidgets);
+    });
+
+    testWidgets('discount percent subtracts and is labelled 折价', (
+      tester,
+    ) async {
+      await open(tester);
+      await pickMode(tester, QuoteMode.percent);
+      await reveal(tester, find.byKey(const ValueKey('quote-direction')));
+      await tester.tap(find.text('折价'));
+      await tester.pumpAndSettle();
+      await fill(tester, 'quote-percent', '10');
+      await settle(tester);
+      final q = expected(percent: Rational.of(-10));
+      expect(q.isDiscount, isTrue);
+      expectSettlement(tester, q);
+      expect(find.textContaining('-10.00%'), findsOneWidget);
+    });
+
+    testWidgets('invalid percent and an oversized discount are refused', (
+      tester,
+    ) async {
+      await open(tester);
+      await pickMode(tester, QuoteMode.percent);
+      await fill(tester, 'quote-percent', '1500');
+      await settle(tester);
+      expect(find.text('请输入 0–1000 的比例，最多 2 位小数'), findsOneWidget);
+      expect(find.byKey(const ValueKey('quote-settlement')), findsNothing);
+      await pickMode(tester, QuoteMode.premium);
+      await reveal(tester, find.byKey(const ValueKey('quote-direction')));
+      await tester.tap(find.text('折价'));
+      await tester.pumpAndSettle();
+      await fill(tester, 'quote-premium', '9999.00');
+      await settle(tester);
+      expect(find.text('折价不能超过剩余价值，成交价需在支持范围内'), findsOneWidget);
+      expect(find.byKey(const ValueKey('quote-settlement')), findsNothing);
+    });
+  });
+
+  testWidgets('share card is deterministic and only draws the whitelist', (
+    tester,
+  ) async {
+    await tester.runAsync(() async {
+      final first = await renderCalculationPng(shareFixture());
+      final second = await renderCalculationPng(shareFixture());
+      expect(second, first);
+      final other = await renderCalculationPng(shareFixture(amount: r'$1.00'));
+      expect(other, isNot(first));
+      final codec = await ui.instantiateImageCodec(first);
+      final frame = await codec.getNextFrame();
+      expect(frame.image.width, 1080);
+      expect(frame.image.height, greaterThan(1200));
+      frame.image.dispose();
+      codec.dispose();
+    });
+    // The renderer's only input is the whitelist; its plain-text twin carries
+    // no quote, server or account information either.
+    final text = shareFixture().plainText;
+    for (final secret in ['PRIVATE', '192.0.2', 'premium', '溢价', '手续费']) {
+      expect(text, isNot(contains(secret)));
+    }
+  });
 
   testWidgets(
     'PNG selects Downloads then Documents then support exports, without hiding write failures',

@@ -322,6 +322,9 @@ class _CalculatorPageState extends State<CalculatorPage> {
   }
 }
 
+/// How the transfer trial's price is entered.
+enum QuoteMode { offer, premium, percent }
+
 class CalculationResultPage extends StatefulWidget {
   const CalculationResultPage({
     super.key,
@@ -363,7 +366,11 @@ class _CalculationResultPageState extends State<CalculationResultPage> {
 
   final quoteForm = GlobalKey<FormState>();
   final offer = TextEditingController();
+  final premiumAmount = TextEditingController();
+  final premiumPercent = TextEditingController();
   final fee = TextEditingController(text: '0');
+  QuoteMode quoteMode = QuoteMode.offer;
+  bool discount = false;
   late String feeCurrency = widget.fx.displayCurrency;
   FeePayer payer = FeePayer.buyer;
   QuoteResult? quote;
@@ -371,6 +378,8 @@ class _CalculationResultPageState extends State<CalculationResultPage> {
   @override
   void dispose() {
     offer.dispose();
+    premiumAmount.dispose();
+    premiumPercent.dispose();
     fee.dispose();
     super.dispose();
   }
@@ -418,18 +427,50 @@ class _CalculationResultPageState extends State<CalculationResultPage> {
   void settle() {
     validationAttempted = true;
     if (!quoteForm.currentState!.validate()) return;
-    final result = calculateQuote(
-      offer: Money(widget.fx.displayCurrency, Money.parseMinor(offer.text)!),
-      fee: Money(feeCurrency, Money.parseMinor(fee.text)!),
-      payer: payer,
-      reference: widget.value.amount,
-      fx: widget.fx,
-    );
+    final fx = widget.fx;
+    final feeMoney = Money(feeCurrency, Money.parseMinor(fee.text)!);
+    QuoteResult? result;
+    switch (quoteMode) {
+      case QuoteMode.offer:
+        result = calculateQuote(
+          offer: Money(fx.displayCurrency, Money.parseMinor(offer.text)!),
+          fee: feeMoney,
+          payer: payer,
+          reference: widget.value.amount,
+          fx: fx,
+        );
+      case QuoteMode.premium:
+        final minor = BigInt.from(Money.parseMinor(premiumAmount.text)!);
+        result = calculateQuote(
+          premiumMinor: discount ? -minor : minor,
+          fee: feeMoney,
+          payer: payer,
+          reference: widget.value.amount,
+          fx: fx,
+        );
+      case QuoteMode.percent:
+        final percent = parseQuotePercent(premiumPercent.text)!;
+        result = calculateQuote(
+          premiumPercent: discount ? Rational.zero - percent : percent,
+          fee: feeMoney,
+          payer: payer,
+          reference: widget.value.amount,
+          fx: fx,
+        );
+    }
+    // A missing rate (reference or fee currency) and an out-of-range price
+    // both come back as null; tell them apart for the message.
+    final ratesKnown =
+        fx.convert(widget.value.amount.minor!, widget.value.amount.currency) !=
+            null &&
+        fx.convert(Rational.of(feeMoney.minor), feeMoney.currency) != null;
     setState(() {
       quote = result;
-      quoteError = result == null
-          ? LocalizedText((l10n) => l10n.financeQuoteFxError)
-          : null;
+      quoteError = result != null
+          ? null
+          : ratesKnown
+          ? LocalizedText((l10n) => l10n.r3FinanceQuoteRangeError)
+          : LocalizedText((l10n) => l10n.financeQuoteFxError);
     });
   }
 
@@ -489,11 +530,79 @@ class _CalculationResultPageState extends State<CalculationResultPage> {
     }
   }
 
+  String _modeLabel(QuoteMode value) => switch (value) {
+    QuoteMode.offer => context.l10n.r3FinanceQuoteModeOffer,
+    QuoteMode.premium => context.l10n.r3FinanceQuoteModePremium,
+    QuoteMode.percent => context.l10n.r3FinanceQuoteModePercent,
+  };
+
+  Future<void> chooseMode() async {
+    final picked = await showAppPicker<QuoteMode>(
+      context,
+      title: context.l10n.r3FinanceQuoteMode,
+      selected: quoteMode,
+      options: [
+        for (final mode in QuoteMode.values)
+          AppPickerOption(
+            key: ValueKey('quote-mode-${mode.name}'),
+            value: mode,
+            title: _modeLabel(mode),
+          ),
+      ],
+    );
+    if (picked != null && mounted) {
+      clearQuote();
+      setState(() => quoteMode = picked);
+    }
+  }
+
   String _payerLabel(FeePayer value) => switch (value) {
     FeePayer.buyer => context.l10n.financeBuyerPays,
     FeePayer.seller => context.l10n.financeSellerPays,
     FeePayer.split => context.l10n.financeSplitFee,
   };
+
+  /// Remaining value + premium = price, then fees, then what each side pays
+  /// or receives.
+  List<Widget> _settlement(QuoteResult q) {
+    final l10n = context.l10n;
+    final percent = q.premiumPercent;
+    final signed = q.isDiscount || q.premiumMinor == BigInt.zero
+        ? q.premium
+        : '+${q.premium}';
+    final signedPercent = percent == null
+        ? ''
+        : ' · ${q.isDiscount || q.premiumMinor == BigInt.zero ? '' : '+'}$percent%';
+    return [
+      AppSection(
+        key: const ValueKey('quote-settlement'),
+        header: '${l10n.r3FinanceQuoteSettlement} · ${q.currency}',
+        children: [
+          AppKeyValueRow(label: l10n.r3FinanceQuoteRef, value: q.reference),
+          AppKeyValueRow(
+            label: q.isDiscount
+                ? l10n.r3FinanceQuoteDiscount
+                : l10n.r3FinanceQuotePremium,
+            value: '$signed$signedPercent',
+          ),
+          AppKeyValueRow(label: l10n.r3FinanceQuoteDeal, value: q.offer),
+          AppKeyValueRow(
+            label: l10n.financeBuyerSellerFee,
+            value: '${q.buyerFee} / ${q.sellerFee}',
+          ),
+        ],
+      ),
+      const SizedBox(height: 12),
+      AppCard(
+        child: AppMetricStrip(
+          metrics: [
+            AppMetric(label: l10n.financeBuyerEstimate, value: q.buyerTotal),
+            AppMetric(label: l10n.financeSellerEstimate, value: q.sellerNet),
+          ],
+        ),
+      ),
+    ];
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -504,20 +613,15 @@ class _CalculationResultPageState extends State<CalculationResultPage> {
       largeTitle: false,
       title: l10n.financeResultTitle,
       children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 14, 16, 12),
-          child: Align(
-            alignment: AlignmentDirectional.centerStart,
-            child: StatusPill(l10n.financeEstimatedOnly),
-          ),
-        ),
-        ValuationCard(
+        const SizedBox(height: 14),
+        CalculationHero(value: widget.value, fx: widget.fx, asOf: widget.asOf),
+        const SizedBox(height: 12),
+        CalculationDetails(
           value: widget.value,
           renewal: widget.renewal,
           cycleMonths: widget.cycleMonths,
           due: widget.due,
           asOf: widget.asOf,
-          fx: widget.fx,
         ),
         FinanceNote(share.periodBasis),
         Padding(
@@ -581,20 +685,78 @@ class _CalculationResultPageState extends State<CalculationResultPage> {
               children: [
                 FinanceNote(l10n.financeQuoteNote),
                 AppSection(
+                  children: [
+                    AppFormRow.pick(
+                      key: const ValueKey('quote-mode'),
+                      label: l10n.r3FinanceQuoteMode,
+                      value: _modeLabel(quoteMode),
+                      onTap: chooseMode,
+                    ),
+                    if (quoteMode != QuoteMode.offer)
+                      AppFormRow(
+                        label: l10n.r3FinanceQuoteDirection,
+                        child: AppSegmented<bool>(
+                          key: const ValueKey('quote-direction'),
+                          compact: true,
+                          options: {
+                            false: l10n.r3FinanceQuotePremium,
+                            true: l10n.r3FinanceQuoteDiscount,
+                          },
+                          value: discount,
+                          onChanged: (v) {
+                            clearQuote();
+                            setState(() => discount = v);
+                          },
+                        ),
+                      ),
+                    if (quoteMode == QuoteMode.offer)
+                      FinanceFieldRow(
+                        key: const ValueKey('quote-offer'),
+                        controller: offer,
+                        label: l10n.financeSellerQuote(
+                          widget.fx.displayCurrency,
+                        ),
+                        onChanged: (_) => clearQuote(),
+                        keyboardType: const TextInputType.numberWithOptions(
+                          decimal: true,
+                        ),
+                        check: (v) => Money.parseMinor(v) == null
+                            ? l10n.financeQuoteAmountError
+                            : null,
+                      )
+                    else if (quoteMode == QuoteMode.premium)
+                      FinanceFieldRow(
+                        key: const ValueKey('quote-premium'),
+                        controller: premiumAmount,
+                        label: l10n.r3FinanceQuotePremiumField(
+                          widget.fx.displayCurrency,
+                        ),
+                        onChanged: (_) => clearQuote(),
+                        keyboardType: const TextInputType.numberWithOptions(
+                          decimal: true,
+                        ),
+                        check: (v) => Money.parseMinor(v) == null
+                            ? l10n.financeQuoteAmountError
+                            : null,
+                      )
+                    else
+                      FinanceFieldRow(
+                        key: const ValueKey('quote-percent'),
+                        controller: premiumPercent,
+                        label: l10n.r3FinanceQuotePercentField,
+                        onChanged: (_) => clearQuote(),
+                        keyboardType: const TextInputType.numberWithOptions(
+                          decimal: true,
+                        ),
+                        check: (v) => parseQuotePercent(v) == null
+                            ? l10n.r3FinanceQuotePercentError
+                            : null,
+                      ),
+                  ],
+                ),
+                AppSection(
                   footer: l10n.financeSplitFeeNote,
                   children: [
-                    FinanceFieldRow(
-                      key: const ValueKey('quote-offer'),
-                      controller: offer,
-                      label: l10n.financeSellerQuote(widget.fx.displayCurrency),
-                      onChanged: (_) => clearQuote(),
-                      keyboardType: const TextInputType.numberWithOptions(
-                        decimal: true,
-                      ),
-                      check: (v) => Money.parseMinor(v) == null
-                          ? l10n.financeQuoteAmountError
-                          : null,
-                    ),
                     FinanceFieldRow(
                       key: const ValueKey('quote-fee'),
                       controller: fee,
@@ -645,33 +807,7 @@ class _CalculationResultPageState extends State<CalculationResultPage> {
                     text: quoteError!.messageFor(l10n),
                     margin: const EdgeInsets.fromLTRB(16, 12, 16, 0),
                   ),
-                if (quote != null)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 12),
-                    child: AppCard(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          FinanceLine(
-                            l10n.financePremiumLabel,
-                            '${quote!.premium} ${quote!.currency}',
-                          ),
-                          FinanceLine(
-                            l10n.financeBuyerSellerFee,
-                            '${quote!.buyerFee} / ${quote!.sellerFee} ${quote!.currency}',
-                          ),
-                          FinanceLine(
-                            l10n.financeBuyerEstimate,
-                            '${quote!.buyerTotal} ${quote!.currency}',
-                          ),
-                          FinanceLine(
-                            l10n.financeSellerEstimate,
-                            '${quote!.sellerNet} ${quote!.currency}',
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
+                if (quote != null) ..._settlement(quote!),
               ],
             ),
           ),

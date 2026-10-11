@@ -2375,7 +2375,7 @@ abstract class AppLocalizations {
   /// No description provided for @financeRecentPayments.
   ///
   /// In zh, this message translates to:
-  /// **'近 30 天已记录实付'**
+  /// **'付款记录'**
   String get financeRecentPayments;
 
   /// No description provided for @financeUnrecordedNotZero.
@@ -2712,6 +2712,156 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'卖家报价 · {currency}'**
   String financeSellerQuote(String currency);
+
+  /// No description provided for @r3FinancePeriodWeek.
+  ///
+  /// In zh, this message translates to:
+  /// **'近一周'**
+  String get r3FinancePeriodWeek;
+
+  /// No description provided for @r3FinancePeriodMonth.
+  ///
+  /// In zh, this message translates to:
+  /// **'近一个月'**
+  String get r3FinancePeriodMonth;
+
+  /// No description provided for @r3FinancePeriodQuarter.
+  ///
+  /// In zh, this message translates to:
+  /// **'近三个月'**
+  String get r3FinancePeriodQuarter;
+
+  /// No description provided for @r3FinancePeriodHalfYear.
+  ///
+  /// In zh, this message translates to:
+  /// **'近六个月'**
+  String get r3FinancePeriodHalfYear;
+
+  /// No description provided for @r3FinancePeriodYear.
+  ///
+  /// In zh, this message translates to:
+  /// **'近一年'**
+  String get r3FinancePeriodYear;
+
+  /// No description provided for @r3FinancePeriodAll.
+  ///
+  /// In zh, this message translates to:
+  /// **'全部'**
+  String get r3FinancePeriodAll;
+
+  /// No description provided for @r3FinanceRecentSub.
+  ///
+  /// In zh, this message translates to:
+  /// **'近 30 天 · {count} 笔'**
+  String r3FinanceRecentSub(int count);
+
+  /// No description provided for @r3FinanceTimelineStart.
+  ///
+  /// In zh, this message translates to:
+  /// **'周期开始'**
+  String get r3FinanceTimelineStart;
+
+  /// No description provided for @r3FinanceTimelineAsOf.
+  ///
+  /// In zh, this message translates to:
+  /// **'估值日'**
+  String get r3FinanceTimelineAsOf;
+
+  /// No description provided for @r3FinanceTimelineDue.
+  ///
+  /// In zh, this message translates to:
+  /// **'到期日'**
+  String get r3FinanceTimelineDue;
+
+  /// No description provided for @r3FinanceQuoteMode.
+  ///
+  /// In zh, this message translates to:
+  /// **'输入方式'**
+  String get r3FinanceQuoteMode;
+
+  /// No description provided for @r3FinanceQuoteModeOffer.
+  ///
+  /// In zh, this message translates to:
+  /// **'直接输入报价'**
+  String get r3FinanceQuoteModeOffer;
+
+  /// No description provided for @r3FinanceQuoteModePremium.
+  ///
+  /// In zh, this message translates to:
+  /// **'输入溢价金额'**
+  String get r3FinanceQuoteModePremium;
+
+  /// No description provided for @r3FinanceQuoteModePercent.
+  ///
+  /// In zh, this message translates to:
+  /// **'输入溢价比例'**
+  String get r3FinanceQuoteModePercent;
+
+  /// No description provided for @r3FinanceQuoteDirection.
+  ///
+  /// In zh, this message translates to:
+  /// **'方向'**
+  String get r3FinanceQuoteDirection;
+
+  /// No description provided for @r3FinanceQuotePremium.
+  ///
+  /// In zh, this message translates to:
+  /// **'溢价'**
+  String get r3FinanceQuotePremium;
+
+  /// No description provided for @r3FinanceQuoteDiscount.
+  ///
+  /// In zh, this message translates to:
+  /// **'折价'**
+  String get r3FinanceQuoteDiscount;
+
+  /// No description provided for @r3FinanceQuotePremiumField.
+  ///
+  /// In zh, this message translates to:
+  /// **'金额 · {currency}'**
+  String r3FinanceQuotePremiumField(String currency);
+
+  /// No description provided for @r3FinanceQuotePercentField.
+  ///
+  /// In zh, this message translates to:
+  /// **'占剩余价值 (%)'**
+  String get r3FinanceQuotePercentField;
+
+  /// No description provided for @r3FinanceQuotePercentError.
+  ///
+  /// In zh, this message translates to:
+  /// **'请输入 0–1000 的比例，最多 2 位小数'**
+  String get r3FinanceQuotePercentError;
+
+  /// No description provided for @r3FinanceQuoteRangeError.
+  ///
+  /// In zh, this message translates to:
+  /// **'折价不能超过剩余价值，成交价需在支持范围内'**
+  String get r3FinanceQuoteRangeError;
+
+  /// No description provided for @r3FinanceQuoteSettlement.
+  ///
+  /// In zh, this message translates to:
+  /// **'结算明细'**
+  String get r3FinanceQuoteSettlement;
+
+  /// No description provided for @r3FinanceQuoteRef.
+  ///
+  /// In zh, this message translates to:
+  /// **'剩余价值'**
+  String get r3FinanceQuoteRef;
+
+  /// No description provided for @r3FinanceQuoteDeal.
+  ///
+  /// In zh, this message translates to:
+  /// **'建议成交价'**
+  String get r3FinanceQuoteDeal;
+
+  /// No description provided for @r3FinanceQuoteFeesRow.
+  ///
+  /// In zh, this message translates to:
+  /// **'手续费合计'**
+  String get r3FinanceQuoteFeesRow;
 
   /// No description provided for @financeRoundingNote.
   ///

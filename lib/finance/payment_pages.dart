@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../l10n/generated/app_localizations.dart';
 import '../l10n/locale_preference.dart';
 import '../l10n/localized_message.dart';
 import '../core/app_theme.dart' show showFailure;
@@ -407,23 +408,53 @@ class _PaymentFormState extends State<PaymentForm> {
   }
 }
 
+/// Look-back window of the payment list, counted in days including today
+/// (a "month" is the same 30-day window as the Costs entry).
+enum PaymentPeriod {
+  week(7),
+  month(30),
+  quarter(90),
+  halfYear(180),
+  year(365),
+  all(null);
+
+  const PaymentPeriod(this.days);
+  final int? days;
+
+  String label(AppLocalizations l10n) => switch (this) {
+    week => l10n.r3FinancePeriodWeek,
+    month => l10n.r3FinancePeriodMonth,
+    quarter => l10n.r3FinancePeriodQuarter,
+    halfYear => l10n.r3FinancePeriodHalfYear,
+    year => l10n.r3FinancePeriodYear,
+    all => l10n.r3FinancePeriodAll,
+  };
+}
+
 class PaymentListPage extends StatefulWidget {
+  /// [period] is the window the user came from (the Costs entry passes
+  /// [PaymentPeriod.month]); the default shows everything. [recent] is the old
+  /// shorthand for [PaymentPeriod.month].
   const PaymentListPage({
     super.key,
     required this.controller,
     this.serverId,
     this.groupId,
     this.recent = false,
+    this.period,
   });
   final LedgerController controller;
   final String? serverId, groupId;
   final bool recent;
+  final PaymentPeriod? period;
   @override
   State<PaymentListPage> createState() => _PaymentListPageState();
 }
 
 class _PaymentListPageState extends State<PaymentListPage> {
-  late bool recent = widget.recent;
+  late PaymentPeriod period =
+      widget.period ??
+      (widget.recent ? PaymentPeriod.month : PaymentPeriod.all);
   bool showVoided = false;
   late String? serverId = widget.serverId;
 
@@ -470,8 +501,10 @@ class _PaymentListPageState extends State<PaymentListPage> {
                 (c.byId(p.serverId!)?.groupId ?? '') != widget.groupId)) {
           return false;
         }
+        final days = period.days;
+        if (days == null) return true;
         final age = p.paidDate.daysUntil(c.today);
-        return !recent || (age >= 0 && age < 30);
+        return age >= 0 && age < days;
       }).toList()..sort((a, b) => b.paidDate.compareTo(a.paidDate));
       final counted = rows.where((p) => !p.voided).toList();
       final total = aggregateAmounts(
@@ -506,12 +539,18 @@ class _PaymentListPageState extends State<PaymentListPage> {
           ),
           AppChipRow(
             children: [
-              AppChip(
-                key: const ValueKey('payment-recent'),
-                label: l10n.financeRecent30,
-                selected: recent,
-                onTap: () => setState(() => recent = !recent),
-              ),
+              for (final option in PaymentPeriod.values)
+                AppChip(
+                  key: ValueKey('payment-period-${option.name}'),
+                  label: option.label(l10n),
+                  selected: period == option,
+                  onTap: () => setState(() => period = option),
+                ),
+            ],
+          ),
+          AppChipRow(
+            padding: const EdgeInsets.fromLTRB(16, 4, 16, 4),
+            children: [
               AppChip(
                 key: const ValueKey('payment-voided'),
                 label: l10n.financeShowVoided,
@@ -523,6 +562,11 @@ class _PaymentListPageState extends State<PaymentListPage> {
           AppSection(
             header: l10n.financeRecordedPaidTotal,
             footer: [
+              if (period.days != null)
+                l10n.financePaymentPeriodRange(
+                  c.today.addDays(1 - period.days!).toString(),
+                  c.today.toString(),
+                ),
               l10n.financeValidPaymentsNote(counted.length),
               if (widget.groupId != null)
                 l10n.financePaymentGroupNote(

@@ -280,25 +280,71 @@ List<ServicePeriod> calculatorPeriods(
   throw LocalizedArgumentError((l10n) => l10n.financeTrialRangeError);
 }
 
+/// Parses a premium percentage such as `12.5` (0 – 1000, up to two decimals).
+/// The sign is chosen separately (premium or discount).
+Rational? parseQuotePercent(String text) {
+  final value = text.trim();
+  if (!RegExp(r'^\d{1,4}(\.\d{1,2})?$').hasMatch(value)) return null;
+  final parts = value.split('.');
+  final decimals = parts.length == 2 ? parts[1] : '';
+  final numerator = BigInt.parse('${parts[0]}$decimals');
+  final result = Rational(numerator, BigInt.from(10).pow(decimals.length));
+  return result.compareTo(Rational.of(1000)) > 0 ? null : result;
+}
+
+/// Transfer-trial settlement in the display currency.
+///
+/// Exactly one price input is given:
+/// * [offer] – the seller's price; premium = offer − remaining value.
+/// * [premiumMinor] – signed premium amount; price = remaining value + premium.
+/// * [premiumPercent] – signed percent of the (rounded) remaining value, e.g.
+///   `Rational.of(-5)` is a 5 % discount; the premium is rounded half away
+///   from zero.
+///
+/// The remaining value is converted and rounded once (half away from zero) so
+/// the displayed `remaining value + premium = price` always adds up. A
+/// negative premium is a discount. Returns null when a rate is missing or the
+/// price would be negative or above [Money.maxMinor]. Fees: the total is
+/// converted and rounded; "split" gives the odd minor unit to the buyer.
 QuoteResult? calculateQuote({
-  required Money offer,
+  Money? offer,
+  BigInt? premiumMinor,
+  Rational? premiumPercent,
   required Money fee,
   required FeePayer payer,
   required FinanceAmount reference,
   required FxSettings fx,
 }) {
-  if (offer.minor < 0 ||
-      fee.minor < 0 ||
-      offer.minor > Money.maxMinor ||
+  final inputs = [offer, premiumMinor, premiumPercent].nonNulls.length;
+  if (inputs != 1) {
+    throw ArgumentError('Exactly one of offer, premium or percent is needed');
+  }
+  if (fee.minor < 0 ||
       fee.minor > Money.maxMinor ||
-      offer.currency != fx.displayCurrency ||
+      (offer != null &&
+          (offer.minor < 0 ||
+              offer.minor > Money.maxMinor ||
+              offer.currency != fx.displayCurrency)) ||
       !reference.known) {
     return null;
   }
-  final referenceMinor = fx.convert(reference.minor!, reference.currency);
+  final referenceExact = fx.convert(reference.minor!, reference.currency);
   final convertedFee = fx.convert(Rational.of(fee.minor), fee.currency);
-  if (referenceMinor == null || convertedFee == null) return null;
-  final totalFee = convertedFee.round(), offerMinor = BigInt.from(offer.minor);
+  if (referenceExact == null || convertedFee == null) return null;
+  final referenceMinor = referenceExact.round();
+  final BigInt premium;
+  if (offer != null) {
+    premium = BigInt.from(offer.minor) - referenceMinor;
+  } else if (premiumMinor != null) {
+    premium = premiumMinor;
+  } else {
+    premium = (Rational(referenceMinor) * premiumPercent! / Rational.of(100))
+        .round();
+  }
+  final offerMinor = referenceMinor + premium;
+  final max = BigInt.from(Money.maxMinor);
+  if (offerMinor.isNegative || offerMinor > max) return null;
+  final totalFee = convertedFee.round();
   final buyerFee = switch (payer) {
     FeePayer.buyer => totalFee,
     FeePayer.seller => BigInt.zero,
@@ -307,12 +353,13 @@ QuoteResult? calculateQuote({
   final sellerFee = totalFee - buyerFee;
   return QuoteResult(
     currency: fx.displayCurrency,
+    referenceMinor: referenceMinor,
     offerMinor: offerMinor,
     feeMinor: totalFee,
     buyerFeeMinor: buyerFee,
     sellerFeeMinor: sellerFee,
     buyerTotalMinor: offerMinor + buyerFee,
     sellerNetMinor: offerMinor - sellerFee,
-    premiumMinor: (Rational(offerMinor) - referenceMinor).round(),
+    premiumMinor: premium,
   );
 }

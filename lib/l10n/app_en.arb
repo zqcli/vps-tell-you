@@ -433,7 +433,7 @@
   "financeTotalRemaining": "Total remaining value  ›",
   "financeMonthlyNotPaid": "Renewals spread monthly + metered estimate; not this month’s payments.",
   "financeUpcomingRenewals": "Expected renewals in the next 30 days",
-  "financeRecentPayments": "Recorded payments in the last 30 days",
+  "financeRecentPayments": "Payment records",
   "financeUnrecordedNotZero": "No payments recorded yet. This does not mean there has been no spending.",
   "financeMonthlyDistribution": "Monthly cost breakdown",
   "financeByVendor": "By provider",
@@ -640,6 +640,45 @@
       }
     }
   },
+  "r3FinancePeriodWeek": "Last week",
+  "r3FinancePeriodMonth": "Last month",
+  "r3FinancePeriodQuarter": "Last 3 months",
+  "r3FinancePeriodHalfYear": "Last 6 months",
+  "r3FinancePeriodYear": "Last year",
+  "r3FinancePeriodAll": "All",
+  "r3FinanceRecentSub": "Last 30 days · {count, plural, one{1 payment} other{{count} payments}}",
+  "@r3FinanceRecentSub": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "r3FinanceTimelineStart": "Period start",
+  "r3FinanceTimelineAsOf": "Valuation",
+  "r3FinanceTimelineDue": "Due",
+  "r3FinanceQuoteMode": "Input",
+  "r3FinanceQuoteModeOffer": "Enter the quote",
+  "r3FinanceQuoteModePremium": "Enter a premium amount",
+  "r3FinanceQuoteModePercent": "Enter a premium percentage",
+  "r3FinanceQuoteDirection": "Direction",
+  "r3FinanceQuotePremium": "Premium",
+  "r3FinanceQuoteDiscount": "Discount",
+  "r3FinanceQuotePremiumField": "Amount · {currency}",
+  "@r3FinanceQuotePremiumField": {
+    "placeholders": {
+      "currency": {
+        "type": "String"
+      }
+    }
+  },
+  "r3FinanceQuotePercentField": "% of remaining value",
+  "r3FinanceQuotePercentError": "Enter a percentage from 0 to 1000 with up to 2 decimals",
+  "r3FinanceQuoteRangeError": "A discount cannot exceed the remaining value, and the price must stay in range",
+  "r3FinanceQuoteSettlement": "Settlement",
+  "r3FinanceQuoteRef": "Remaining value",
+  "r3FinanceQuoteDeal": "Suggested price",
+  "r3FinanceQuoteFeesRow": "Total fee",
   "financeRoundingNote": "{rate}\n{source}. Conversions are for reference only.",
   "@financeRoundingNote": {
     "placeholders": {
