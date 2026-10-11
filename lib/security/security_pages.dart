@@ -255,6 +255,7 @@ class _SecurityPageState extends State<SecurityPage> {
                           padding: const EdgeInsets.symmetric(vertical: 12),
                           child: Text(
                             l10n.securityNoMatchingCredentials,
+                            textAlign: TextAlign.center,
                             style: context.footnoteStyle.copyWith(fontSize: 14),
                           ),
                         ),
@@ -798,6 +799,7 @@ class _CredentialFormState extends State<CredentialForm>
                         padding: const EdgeInsets.symmetric(vertical: 12),
                         child: Text(
                           l10n.securityNoCredentialReferences,
+                          textAlign: TextAlign.center,
                           style: context.footnoteStyle.copyWith(fontSize: 14),
                         ),
                       ),
@@ -1071,6 +1073,7 @@ class CredentialReferencesPage extends StatelessWidget {
                     padding: const EdgeInsets.symmetric(vertical: 12),
                     child: Text(
                       l10n.securityNoCredentialReferences,
+                      textAlign: TextAlign.center,
                       style: context.footnoteStyle.copyWith(fontSize: 14),
                     ),
                   ),

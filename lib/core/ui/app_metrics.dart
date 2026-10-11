@@ -31,7 +31,7 @@ class AppMetric {
 /// situation – do not hand-roll `Row`s of `Column`s.
 ///
 /// * Equal-width columns separated by 0.5 px hairlines.
-/// * Every column is start-aligned: caption (13, secondary) above the figure
+/// * Every column is **centered**: caption (13, secondary) above the figure
 ///   (17, semibold, tabular digits), so captions and figures share baselines
 ///   across columns.
 /// * Text-scale / narrow-screen fallback, measured with the real text metrics:
@@ -62,6 +62,8 @@ class AppMetricStrip extends StatelessWidget {
   final bool onGradient;
 
   static const _gutter = 12.0;
+  // Symmetric so centred text sits in the middle of every column.
+  static const _cellPad = 8.0;
   static const _labelSize = 13.0;
   static const _valueSize = 17.0;
 
@@ -118,10 +120,7 @@ class AppMetricStrip extends StatelessWidget {
             final cell = (box.maxWidth - (columns - 1) * .5) / columns;
             for (var i = 0; i < cells; i++) {
               final index = row * columns + i;
-              final inner =
-                  cell -
-                  (i > 0 ? _gutter : 0) -
-                  (i < columns - 1 ? _gutter : 0);
+              final inner = cell - 2 * _cellPad;
               if (labels[index] > inner || values[index] > inner) return false;
             }
           }
@@ -207,16 +206,14 @@ class AppMetricStrip extends StatelessWidget {
           child: semantic(
             metrics[index],
             Padding(
-              padding: EdgeInsetsDirectional.only(
-                start: column > 0 ? _gutter : 0,
-                end: column < columns - 1 ? _gutter : 0,
-              ),
+              padding: const EdgeInsets.symmetric(horizontal: _cellPad),
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
                     metrics[index].label,
+                    textAlign: TextAlign.center,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: _labelStyle(p),
@@ -224,6 +221,7 @@ class AppMetricStrip extends StatelessWidget {
                   const SizedBox(height: 2),
                   Text(
                     metrics[index].value,
+                    textAlign: TextAlign.center,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: _valueStyle(p, metrics[index].valueColor),

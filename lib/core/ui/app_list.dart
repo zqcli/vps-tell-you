@@ -100,6 +100,50 @@ class AppLinkButton extends StatelessWidget {
   }
 }
 
+/// Header line: [title] at the start and [action] always flush at the end.
+///
+/// Both children are flexible, so a long title or action shrinks (ellipsises)
+/// instead of pushing the action away or overflowing; above 1.5× text scale
+/// the action moves to its own line, still flush right. Used
+/// by [AppSection] headers and by custom list headers (e.g. "All servers ·
+/// Sort"). Put the text style on the children.
+class AppHeaderRow extends StatelessWidget {
+  const AppHeaderRow({super.key, required this.title, this.action});
+
+  final Widget title;
+
+  /// Right-hand widget (link button, sort button …).
+  final Widget? action;
+
+  @override
+  Widget build(BuildContext context) {
+    final action = this.action;
+    if (action == null) {
+      return Align(alignment: AlignmentDirectional.centerStart, child: title);
+    }
+    // Very large text: the action gets its own line (still flush right)
+    // rather than truncating its label.
+    if (MediaQuery.textScalerOf(context).scale(1) > 1.5) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          title,
+          Align(alignment: AlignmentDirectional.centerEnd, child: action),
+        ],
+      );
+    }
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        Flexible(child: title),
+        const SizedBox(width: 12),
+        Flexible(child: action),
+      ],
+    );
+  }
+}
+
 /// iOS inset-grouped list section: optional small grey header, a rounded
 /// group (radius 14, no border) with inset hairline separators, and an
 /// optional footnote underneath.
@@ -186,17 +230,12 @@ class AppSection extends StatelessWidget {
           if (hasHeader)
             Padding(
               padding: EdgeInsets.fromLTRB(16, topSpacing ?? 22, 16, 7),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  Expanded(
-                    child: Text(
-                      header ?? '',
-                      style: TextStyle(fontSize: 13, color: p.text2),
-                    ),
-                  ),
-                  ?headerAction,
-                ],
+              child: AppHeaderRow(
+                title: Text(
+                  header ?? '',
+                  style: TextStyle(fontSize: 13, color: p.text2),
+                ),
+                action: headerAction,
               ),
             )
           else

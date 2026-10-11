@@ -890,6 +890,37 @@ void main() {
     expect(find.text('Long explanation'), findsOneWidget);
   });
 
+  testWidgets('section header action is flush right, even when long', (
+    tester,
+  ) async {
+    for (final scale in [1.0, 2.0]) {
+      await pumpApp(
+        tester,
+        Scaffold(
+          body: Column(
+            children: [
+              AppSection(
+                header: 'All servers',
+                headerAction: AppLinkButton(
+                  label: 'Sort by due date',
+                  onPressed: () {},
+                ),
+                children: const [AppRow(title: 'Row')],
+              ),
+            ],
+          ),
+        ),
+        locale: const Locale('en'),
+        scale: scale,
+        size: const Size(320, 800),
+      );
+      final action = tester.getRect(find.text('Sort by due date'));
+      // 16 margin + 16 header padding + 4 link padding from the right edge.
+      expect(action.right, closeTo(320 - 36, 1.5));
+      expect(tester.takeException(), isNull);
+    }
+  });
+
   group('AppMetricStrip', () {
     // The test font (Ahem) is one em wide per glyph, so keep the strings short.
     const metrics = [
@@ -922,6 +953,25 @@ void main() {
         ),
       );
     }
+
+    testWidgets('metric columns are centered on the column axis', (
+      tester,
+    ) async {
+      await pump(tester, 390, 1);
+      // Card-less strip: 16 padding, three equal columns.
+      final column = (390 - 32) / 3;
+      for (var i = 0; i < metrics.length; i++) {
+        final centre = 16 + column * i + column / 2;
+        expect(
+          tester.getCenter(find.text(metrics[i].label)).dx,
+          closeTo(centre, 1.5),
+        );
+        expect(
+          tester.getCenter(find.text(metrics[i].value)).dx,
+          closeTo(centre, 1.5),
+        );
+      }
+    });
 
     testWidgets('wide: one row, equal columns, shared baselines', (
       tester,

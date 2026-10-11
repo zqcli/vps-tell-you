@@ -346,7 +346,11 @@ class _TextRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Padding(
     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-    child: Text(text, style: TextStyle(color: context.palette.text2)),
+    child: Text(
+      text,
+      textAlign: TextAlign.center,
+      style: TextStyle(color: context.palette.text2),
+    ),
   );
 }
 
