@@ -7666,6 +7666,30 @@ abstract class AppLocalizations {
   /// **'粘贴到草稿'**
   String get terminalPasteIntoDraft;
 
+  /// No description provided for @r3TermColorScheme.
+  ///
+  /// In zh, this message translates to:
+  /// **'配色方案'**
+  String get r3TermColorScheme;
+
+  /// No description provided for @r3TermSchemeDark.
+  ///
+  /// In zh, this message translates to:
+  /// **'深色'**
+  String get r3TermSchemeDark;
+
+  /// No description provided for @r3TermSchemeLight.
+  ///
+  /// In zh, this message translates to:
+  /// **'浅色'**
+  String get r3TermSchemeLight;
+
+  /// No description provided for @r3TermSchemeFootnote.
+  ///
+  /// In zh, this message translates to:
+  /// **'仅改变显示，不向服务器发送任何内容。重启应用后恢复默认。'**
+  String get r3TermSchemeFootnote;
+
   /// No description provided for @terminalReconnectClear.
   ///
   /// In zh, this message translates to:
