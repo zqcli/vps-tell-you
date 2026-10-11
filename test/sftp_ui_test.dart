@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:vps_tell_you/connections/sftp_editor_page.dart';
 import 'package:vps_tell_you/connections/sftp_pages.dart';
 import 'package:vps_tell_you/connections/sftp_session.dart';
 import 'package:vps_tell_you/core/app_theme.dart';
@@ -591,6 +592,242 @@ void main() {
       expect(fake.text('/home/user/notes.txt'), 'hello\nworld');
     });
 
+    /// Pumps the editor page on its own with [text] as the file content.
+    Future<void> openEditor(
+      WidgetTester tester,
+      String text, {
+      String locale = 'zh',
+      double scale = 1,
+      Size size = const Size(390, 844),
+      String name = 'a.txt',
+    }) async {
+      tester.view.physicalSize = size;
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      addTearDown(tester.view.resetViewInsets);
+      fake.file('/home/user/$name', text);
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: appTheme(),
+          locale: Locale(locale),
+          supportedLocales: AppLocalizations.supportedLocales,
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          builder: (context, child) => MediaQuery(
+            data: MediaQuery.of(context)
+                .copyWith(textScaler: TextScaler.linear(scale)),
+            child: child!,
+          ),
+          home: SftpTextEditorPage(
+            session: fake,
+            path: '/home/user/$name',
+            name: name,
+            file: SftpTextFile(text: text, size: text.length),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+    }
+
+    final fieldFinder = find.byKey(const ValueKey('sftp-editor-field'));
+    TextField fieldWidget(WidgetTester tester) =>
+        tester.widget<TextField>(fieldFinder);
+    ScrollPosition position(WidgetTester tester) =>
+        fieldWidget(tester).scrollController!.position;
+    SftpGutterPainter gutter(WidgetTester tester) =>
+        tester
+                .widget<CustomPaint>(
+                  find.descendant(
+                    of: find.byKey(const ValueKey('sftp-editor-gutter')),
+                    matching: find.byType(CustomPaint),
+                  ),
+                )
+                .painter!
+            as SftpGutterPainter;
+
+    /// Global top of the text field's line [line] / gutter row [line].
+    double textTop(WidgetTester tester, String text, int line) {
+      final render = tester
+          .state<EditableTextState>(find.byType(EditableText))
+          .renderEditable;
+      var offset = 0;
+      for (var i = 0; i < line; i++) {
+        offset = text.indexOf('\n', offset) + 1;
+      }
+      final rect = render.getLocalRectForCaret(TextPosition(offset: offset));
+      return render.localToGlobal(Offset(0, rect.top)).dy;
+    }
+
+    double gutterTop(WidgetTester tester, int line) {
+      final box = tester.renderObject<RenderBox>(
+        find.descendant(
+          of: find.byKey(const ValueKey('sftp-editor-gutter')),
+          matching: find.byType(CustomPaint),
+        ),
+      );
+      return box.localToGlobal(Offset(0, gutter(tester).paintedRows[line]!)).dy;
+    }
+
+    String lines(int n) => List.generate(n, (i) => 'line ${i + 1}').join('\n');
+
+    testWidgets('the gutter numbers every line and follows the scroll', (
+      tester,
+    ) async {
+      final text = lines(120);
+      await openEditor(tester, text);
+      expect(gutter(tester).lines, 120);
+      expect(gutter(tester).paintedRows.keys.first, 0);
+      expect(gutter(tester).paintedRows.keys, isNot(contains(119)));
+      for (final line in gutter(tester).paintedRows.keys) {
+        expect(
+          gutterTop(tester, line),
+          closeTo(textTop(tester, text, line), .5),
+          reason: 'line ${line + 1} at rest',
+        );
+      }
+      await tester.dragFrom(const Offset(250, 600), const Offset(0, -900));
+      await tester.pumpAndSettle();
+      final rows = gutter(tester).paintedRows;
+      expect(position(tester).pixels, greaterThan(500));
+      expect(rows.keys.first, greaterThan(20));
+      for (final line in rows.keys) {
+        expect(
+          gutterTop(tester, line),
+          closeTo(textTop(tester, text, line), .5),
+          reason: 'line ${line + 1} after scrolling',
+        );
+      }
+      // Dragging the numbers scrolls the text too.
+      final before = position(tester).pixels;
+      await tester.dragFrom(const Offset(15, 500), const Offset(0, -200));
+      await tester.pumpAndSettle();
+      expect(position(tester).pixels, greaterThan(before));
+    });
+
+    testWidgets('the gutter stays aligned at large text scale', (tester) async {
+      final text = lines(60);
+      await openEditor(tester, text, scale: 2, size: const Size(320, 700));
+      await tester.dragFrom(const Offset(250, 500), const Offset(0, -700));
+      await tester.pumpAndSettle();
+      for (final line in gutter(tester).paintedRows.keys) {
+        expect(
+          gutterTop(tester, line),
+          closeTo(textTop(tester, text, line), .5),
+        );
+      }
+    });
+
+    testWidgets('a 3000 line file scrolls to its last line', (tester) async {
+      final text = lines(3000);
+      await openEditor(tester, text);
+      final pos = position(tester);
+      expect(pos.maxScrollExtent, greaterThan(50000));
+      for (var i = 0; i < 80 && pos.pixels < pos.maxScrollExtent - 1; i++) {
+        await tester.fling(fieldFinder, const Offset(0, -2500), 6000);
+        await tester.pumpAndSettle();
+      }
+      expect(pos.pixels, closeTo(pos.maxScrollExtent, 1));
+      final rows = gutter(tester).paintedRows;
+      expect(rows.keys.last, 2999);
+      final bottom = textTop(tester, text, 2999);
+      final area = tester.getRect(fieldFinder);
+      expect(bottom, greaterThan(area.top));
+      expect(
+        bottom + gutter(tester).lineHeight,
+        lessThanOrEqualTo(area.bottom),
+      );
+      expect(gutterTop(tester, 2999), closeTo(bottom, .5));
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('opening a file does not open the keyboard', (tester) async {
+      await openEditor(tester, lines(10));
+      expect(fieldWidget(tester).focusNode!.hasFocus, isFalse);
+      expect(tester.testTextInput.isVisible, isFalse);
+      expect(find.byIcon(Icons.keyboard_outlined), findsOneWidget);
+      // Tapping into the text is what opens it.
+      await tester.tapAt(const Offset(200, 300));
+      await tester.pump();
+      expect(fieldWidget(tester).focusNode!.hasFocus, isTrue);
+      expect(tester.testTextInput.isVisible, isTrue);
+    });
+
+    testWidgets('the nav button shows and hides the keyboard', (tester) async {
+      await openEditor(tester, lines(10), locale: 'en');
+      final focus = fieldWidget(tester).focusNode!;
+      await tapKey(tester, 'sftp-editor-keyboard');
+      expect(focus.hasFocus, isTrue);
+      expect(tester.testTextInput.isVisible, isTrue);
+      // The platform reports the keyboard once it is up.
+      tester.view.viewInsets = const FakeViewPadding(bottom: 300);
+      await tester.pumpAndSettle();
+      expect(find.byIcon(Icons.keyboard_hide_outlined), findsOneWidget);
+      expect(find.byTooltip('Hide keyboard'), findsOneWidget);
+      await tapKey(tester, 'sftp-editor-keyboard');
+      expect(focus.hasFocus, isFalse);
+      expect(tester.testTextInput.isVisible, isFalse);
+      tester.view.resetViewInsets();
+      await tester.pumpAndSettle();
+      expect(find.byIcon(Icons.keyboard_outlined), findsOneWidget);
+      expect(find.byTooltip('Open keyboard'), findsOneWidget);
+      // Swiped away by the user while focus stayed: the button brings it back.
+      await tapKey(tester, 'sftp-editor-keyboard');
+      expect(focus.hasFocus, isTrue);
+      tester.testTextInput.hide();
+      await tester.pump();
+      await tapKey(tester, 'sftp-editor-keyboard');
+      expect(focus.hasFocus, isTrue);
+      expect(tester.testTextInput.isVisible, isTrue);
+    });
+
+    testWidgets('typing at the end keeps the caret above the keyboard', (
+      tester,
+    ) async {
+      final text = lines(500);
+      await openEditor(tester, text);
+      await tapKey(tester, 'sftp-editor-keyboard');
+      tester.view.viewInsets = const FakeViewPadding(bottom: 300);
+      await tester.pumpAndSettle();
+      await tester.enterText(fieldFinder, '$text\nnew last line');
+      await tester.pumpAndSettle();
+      final render = tester
+          .state<EditableTextState>(find.byType(EditableText))
+          .renderEditable;
+      final caret = render.getLocalRectForCaret(
+        TextPosition(offset: text.length + '\nnew last line'.length),
+      );
+      final y = render.localToGlobal(caret.bottomLeft).dy;
+      expect(y, lessThanOrEqualTo(844 - 300));
+      expect(y, greaterThan(300));
+      expect(
+        position(tester).pixels,
+        closeTo(position(tester).maxScrollExtent, 1),
+      );
+    });
+
+    testWidgets('long lines scroll sideways instead of wrapping', (
+      tester,
+    ) async {
+      final text = 'short\n${'x' * 300}\nshort';
+      await openEditor(tester, text);
+      // Still three visual lines: the gutter would drift if this wrapped.
+      final area = tester.getRect(fieldFinder);
+      expect(area.width, greaterThan(300 * 8));
+      expect(
+        gutterTop(tester, 2) - gutterTop(tester, 0),
+        closeTo(2 * gutter(tester).lineHeight, .5),
+      );
+      expect(
+        textTop(tester, text, 2) - textTop(tester, text, 0),
+        closeTo(2 * gutter(tester).lineHeight, .5),
+      );
+      final sideways = tester.state<ScrollableState>(
+        find.byType(Scrollable).first,
+      );
+      expect(sideways.position.axis, Axis.horizontal);
+      expect(sideways.position.maxScrollExtent, greaterThan(1500));
+    });
+
     testWidgets('binary and oversized files are not opened as text', (
       tester,
     ) async {
@@ -835,6 +1072,48 @@ void main() {
   });
 
   group('layout', () {
+    for (final locale in ['zh', 'en']) {
+      testWidgets('editor at 320px and 2x text has no overflow ($locale)', (
+        tester,
+      ) async {
+        tester.view.physicalSize = const Size(320, 700);
+        tester.view.devicePixelRatio = 1;
+        addTearDown(tester.view.resetPhysicalSize);
+        addTearDown(tester.view.resetDevicePixelRatio);
+        addTearDown(tester.view.resetViewInsets);
+        final text =
+            '${List.generate(1200, (i) => 'row $i ${'ab' * 40}').join('\n')}\n中文行很长很长很长';
+        await tester.pumpWidget(
+          MaterialApp(
+            theme: appTheme(),
+            locale: Locale(locale),
+            supportedLocales: AppLocalizations.supportedLocales,
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            builder: (context, child) => MediaQuery(
+              data: MediaQuery.of(context)
+                  .copyWith(textScaler: const TextScaler.linear(2)),
+              child: child!,
+            ),
+            home: SftpTextEditorPage(
+              session: fake,
+              path: '/home/user/notes.txt',
+              name: 'an-extremely-long-file-name-for-the-editor.sh',
+              file: SftpTextFile(text: text, size: text.length),
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+        expect(tester.takeException(), isNull);
+        await tester.tap(find.byKey(const ValueKey('sftp-editor-keyboard')));
+        tester.view.viewInsets = const FakeViewPadding(bottom: 560);
+        await tester.pumpAndSettle();
+        expect(tester.takeException(), isNull);
+        await tester.tap(find.byKey(const ValueKey('sftp-editor-more')));
+        await tester.pumpAndSettle();
+        expect(tester.takeException(), isNull);
+      });
+    }
+
     for (final locale in ['zh', 'en']) {
       testWidgets('320px at 2x text has no overflow ($locale)', (tester) async {
         fake
