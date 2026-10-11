@@ -287,7 +287,7 @@ void main() {
           'echo second',
         );
         await change(tester, 'en');
-        expect(find.text('Send and execute'), findsOneWidget);
+        expect(find.text('Send and Execute'), findsOneWidget);
         expect(ssh.writes, ['printf "raw 用户 text"']);
         expect(ssh.powers, isEmpty);
         await tester.tap(find.byKey(const ValueKey('terminal-send-execute')));
@@ -326,7 +326,7 @@ void main() {
         );
         await tester.tap(find.text('Open power'));
         await tester.pumpAndSettle();
-        expect(find.text('Shut down (1/2)'), findsOneWidget);
+        expect(find.text('Shut Down (1/2)'), findsOneWidget);
         await change(tester, 'zh');
         expect(find.text('关机影响确认（1/2）'), findsOneWidget);
         expect(ssh.powers, isEmpty);
@@ -337,7 +337,7 @@ void main() {
           target.label.substring(0, 5),
         );
         await change(tester, 'en');
-        expect(find.text('Shut down (2/2)'), findsOneWidget);
+        expect(find.text('Shut Down (2/2)'), findsOneWidget);
         expect(
           tester
               .widget<TextField>(
@@ -375,7 +375,7 @@ void main() {
         find.byKey(const Key('tcp-host')),
         'https://invalid.example',
       );
-      await tester.tap(find.text('Start test'));
+      await tester.tap(find.text('Start Test'));
       await tester.pumpAndSettle();
       expect(find.text(en.tcpValidHost), findsOneWidget);
       await change(tester, 'zh');

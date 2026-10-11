@@ -87,7 +87,7 @@ void main() {
     expect(en.billingMonthlyAmount('10.00 USD', 1), '10.00 USD/1 month');
     expect(en.billingMonthlyAmount('10.00 USD', 3), '10.00 USD/3 months');
     expect(en.terminalSend, 'Send');
-    expect(en.terminalSendExecute, 'Send and execute');
+    expect(en.terminalSendExecute, 'Send and Execute');
     expect(zh.terminalSend, '发送');
     expect(zh.terminalSendExecute, '发送并执行');
     expect(en.snippetEscapeLegend, contains(r'\u{…}'));

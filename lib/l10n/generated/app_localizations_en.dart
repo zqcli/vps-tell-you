@@ -14,13 +14,14 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get languageDescription =>
-      'Switch the interface immediately. Drafts and connections are kept.';
+      'Changes apply right away. Drafts and open connections stay as they are.';
 
   @override
   String get languageSystem => 'Follow system';
 
   @override
-  String get languageSystemDescription => 'Other system languages use English.';
+  String get languageSystemDescription =>
+      'If your device language isn’t Chinese or English, the app uses English.';
 
   @override
   String get languageChinese => '简体中文';
@@ -30,21 +31,21 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get languageSaveFailed =>
-      'Could not save the language setting. The current language is unchanged. Try again.';
+      'Couldn’t save the language setting. The current language is unchanged. Try again.';
 
   @override
-  String get ledgerOpenFailed => 'Could not open the local ledger';
+  String get ledgerOpenFailed => 'Couldn’t open the local ledger';
 
   @override
   String get ledgerOpenHelp =>
-      'Your existing data is kept. Check device storage and file permissions. If you previously used a newer version, try that version or a later one.';
+      'Your existing data is still there. Check device storage and file permissions. If you used a newer version before, open the app with that version or later.';
 
   @override
-  String get retryOpen => 'Try opening again';
+  String get retryOpen => 'Try Again';
 
   @override
   String get ledgerDoNotErase =>
-      'Do not clear app data or uninstall the app to try to fix this.';
+      'Don’t clear app data or reinstall the app to try to fix this.';
 
   @override
   String get servers => 'Servers';
@@ -63,65 +64,65 @@ class AppLocalizationsEn extends AppLocalizations {
       'Calculate costs, connect to servers, or manage saved commands.';
 
   @override
-  String get remainingValueCalculator => 'Remaining value calculator';
+  String get remainingValueCalculator => 'Remaining Value Calculator';
 
   @override
   String get calculatorDescription =>
-      'Calculate from scratch or use server details. Export an image.';
+      'Start from scratch or use a server’s details. Export as an image.';
 
   @override
   String get connectionsTroubleshooting => 'Connections and troubleshooting';
 
   @override
-  String get sshQuickConnect => 'SSH quick connect';
+  String get sshQuickConnect => 'SSH Quick Connect';
 
   @override
   String get sshQuickConnectDescription =>
-      'Choose a saved server or a one-time target. Verify the host before signing in.';
+      'Pick a saved server or a one-off target. Verify the host before signing in.';
 
   @override
-  String get tcpConnectionTest => 'TCP connection test';
+  String get tcpConnectionTest => 'TCP Connection Test';
 
   @override
   String get tcpConnectionDescription =>
-      'Test one address and port from this device.';
+      'Check one address and port from this device.';
 
   @override
-  String get commandSnippets => 'Command snippets';
+  String get commandSnippets => 'Command Snippets';
 
   @override
   String get commandSnippetsDescription =>
-      'Save commands and insert them into a terminal draft before sending.';
+      'Save commands and add them to the terminal draft before sending.';
 
   @override
   String get singleServerMaintenance => 'Server maintenance';
 
   @override
-  String get powerControl => 'Power control';
+  String get powerControl => 'Power Control';
 
   @override
   String get powerControlDescription =>
-      'Restart or shut down over SSH. Check the target before proceeding.';
+      'Restart or shut down over SSH. Double-check the target first.';
 
   @override
   String get powerControlWarning =>
-      'After shutdown, use the provider panel to power on. SSH cannot power on a stopped server. Restarting or shutting down does not stop provider billing.';
+      'SSH can’t power a stopped server back on, so use the provider’s panel after a shutdown. Restarting or shutting down doesn’t stop provider billing.';
 
   @override
   String get uiTabsCalculatorTile =>
-      'Standalone estimate or from a server; export a privacy-safe image';
+      'Estimate on its own or from a server; export a privacy-safe image';
 
   @override
-  String get uiTabsSshTile => 'Pick a configured server';
+  String get uiTabsSshTile => 'Choose a saved server';
 
   @override
-  String get uiTabsTcpTile => 'Probe one host and port';
+  String get uiTabsTcpTile => 'Check one host and port';
 
   @override
-  String get uiTabsSnippetsTile => 'Saved commands, sent as a draft';
+  String get uiTabsSnippetsTile => 'Saved commands, inserted as a draft';
 
   @override
-  String get uiTabsPowerTile => 'Reboot or power off over SSH';
+  String get uiTabsPowerTile => 'Restart or shut down over SSH';
 
   @override
   String get uiTabsLedgerSection => 'Ledger';
@@ -166,7 +167,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get reminderNoDays => 'No reminder days selected';
 
   @override
-  String get reminderOnDueDate => 'On the expiry date';
+  String get reminderOnDueDate => 'On the due date';
 
   @override
   String reminderDaysBefore(int p0) {
@@ -180,7 +181,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get notificationStatus => 'Notification access and reminder status';
+  String get notificationStatus => 'Notification Access & Reminder Status';
 
   @override
   String reminderLastTimezone(String p0) {
@@ -189,20 +190,20 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get reminderEnableHelp =>
-      'Enable both system notifications and reminders for each server. Edit reminder days, time, and usage plans in server details. Rules can be saved even without notification permission.';
+      'Turn on system notifications and each server’s reminders. Set reminder days, time, and usage plan in server details. You can save rules even without notification permission.';
 
   @override
   String get requestingPermission => 'Requesting…';
 
   @override
-  String get requestNotificationPermission => 'Request notification permission';
+  String get requestNotificationPermission => 'Allow Notifications';
 
   @override
   String get notificationPermissionHelp =>
-      'If permission was denied or the notification channel is off, change it in device settings. Then return to the app and check reminder status again.';
+      'If you denied permission or turned notifications off, change it in device settings. Then come back and check reminder status again.';
 
   @override
-  String get checkReminderStatus => 'Check reminder status again';
+  String get checkReminderStatus => 'Check Again';
 
   @override
   String get reminderCoverage => 'Reminder coverage';
@@ -221,7 +222,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String r2TabsShowAll(String n) {
-    return 'Show all ($n)';
+    return 'Show All ($n)';
   }
 
   @override
@@ -248,7 +249,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get r2TabsCoverageNote =>
-      'Reminders over the OS limit (iOS 64 / Android 256) or more than 366 days away are not scheduled.';
+      'Reminders beyond the system limit (iOS 64 / Android 256) or more than 366 days out aren’t scheduled.';
 
   @override
   String get r2TabsNoReminderServers => 'Servers without reminders';
@@ -272,13 +273,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get r2TabsReasonNoUpcoming => 'Nothing upcoming';
 
   @override
-  String get r2TabsAllReminders => 'All reminders';
+  String get r2TabsAllReminders => 'All Reminders';
 
   @override
   String get r2TabsFilterAll => 'All';
 
   @override
-  String get r2TabsSearchHint => 'Search server name';
+  String get r2TabsSearchHint => 'Search by server name';
 
   @override
   String get r2TabsEmpty => 'Nothing to show';
@@ -288,11 +289,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get r2TabsEnableHelp =>
-      'Needs both system notifications and per-server reminders.';
+      'Requires system notifications and per-server reminders to be on.';
 
   @override
   String get r2TabsPermissionHelp =>
-      'If denied, enable notifications in system settings.';
+      'If you denied permission, turn notifications on in system settings.';
 
   @override
   String r2TabsNotifyScheduled(String n) {
@@ -301,22 +302,22 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get reminderHorizonHelp =>
-      'Only known expiry reminders within the next 366 days are submitted. Past reminder times are not retried. Up to 64 upcoming reminders on iOS or 256 on Android can be scheduled; the rest are shown as not scheduled. Open the app regularly to update them.';
+      'Only reminders for known due dates within the next 366 days are scheduled, and reminder times that have already passed aren’t retried. iOS allows up to 64 pending reminders and Android 256; the rest show as not scheduled. Open the app regularly to refresh them.';
 
   @override
   String get reminderDeliveryHelp =>
-      'The app checks permission and the device time zone when reopened. Open it after travel; otherwise, existing reminders may still use the previous time zone. Power saving, focus modes, and device restrictions may delay or block reminders. Scheduled does not mean delivered.';
+      'The app rechecks permission and your time zone each time it opens. After traveling, open the app, or existing reminders may still use the old time zone. Battery saver, Focus modes, and device restrictions can delay or block reminders. Scheduled doesn’t mean delivered.';
 
   @override
   String get reminderPrivacyHelp =>
-      'Reminders contain only the expiry date and a prompt to check it. They omit server names, addresses, accounts, and amounts. They do not make payments or change provider renewal settings.';
+      'Reminders contain only the due date and a prompt to check it. They never include server names, addresses, accounts, or amounts, and they don’t make payments or change renewal settings with your provider.';
 
   @override
   String get reminderRulesSaved =>
-      'Reminder rules saved. Check system reminder status under Settings / Notification access.';
+      'Reminder rules saved. Check the system status in Settings > Notification Access.';
 
   @override
-  String get localExpiryReminders => 'Expiry reminders on this device';
+  String get localExpiryReminders => 'Expiry Reminders';
 
   @override
   String get back => 'Back';
@@ -326,11 +327,11 @@ class AppLocalizationsEn extends AppLocalizations {
       'This record no longer exists. Go back and reload.';
 
   @override
-  String get dueDateNotEntered => 'No expiry date entered';
+  String get dueDateNotEntered => 'No due date entered';
 
   @override
   String get reminderSaveHelp =>
-      'Tap Save reminder rules to apply changes. If reminders are enabled and you choose Stop using at expiry, reminders will still prompt you to check provider renewal settings.';
+      'Tap Save Reminder Rules to apply changes. If reminders are on and you choose Stop using at expiry, you’ll still be reminded to check renewal settings with your provider.';
 
   @override
   String get uiTabsReminderSaveHelp => 'Tap Save at the top right to apply.';
@@ -342,12 +343,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String uiTabsReminderPreview(String dates, String time) {
-    return 'You will be reminded on $dates at $time (device time zone). Notifications never include names, IPs or amounts.';
+    return 'You’ll be reminded on $dates at $time (device time zone). Notifications never include names, IPs, or amounts.';
   }
 
   @override
   String get uiTabsReminderPreviewNone =>
-      'No upcoming reminder time with these settings. Notifications never include names, IPs or amounts.';
+      'These settings produce no upcoming reminders. Notifications never include names, IPs, or amounts.';
 
   @override
   String get uiTabsUsageContinueHint => 'Reminds you to renew before expiry';
@@ -357,25 +358,25 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get uiTabsUsageStopHint =>
-      'Still reminds you to verify and cancel auto-renewal';
+      'Still reminds you to check and cancel auto-renewal';
 
   @override
   String get demoNoNotifications =>
-      'Demo records do not schedule real system notifications.';
+      'Demo records don’t schedule real system notifications.';
 
   @override
   String get archivedNoReminders =>
-      'Archived records do not schedule reminders.';
+      'Archived records don’t schedule reminders.';
 
   @override
-  String get enableServerReminders => 'Enable reminders for this server';
+  String get enableServerReminders => 'Reminders for this server';
 
   @override
   String get reminderOnlyHelp =>
       'Reminders only. No automatic renewal or cancellation.';
 
   @override
-  String get daysBefore => 'Days before expiry';
+  String get daysBefore => 'Days before due date';
 
   @override
   String get sameDay => 'Same day';
@@ -395,7 +396,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get reminderTime => 'Reminder time';
 
   @override
-  String get selectReminderTime => 'Select reminder time';
+  String get selectReminderTime => 'Set Reminder Time';
 
   @override
   String get cancel => 'Cancel';
@@ -414,14 +415,14 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get reminderDstHelp =>
-      'Uses the device time zone. Times skipped by daylight saving move forward; repeated times fire once.';
+      'Uses the device time zone. Times skipped by daylight saving time move forward, and repeated times fire once.';
 
   @override
   String get myUsagePlan => 'My usage plan';
 
   @override
   String get usagePlanWarning =>
-      'Usage plans are local records only and do not stop provider billing. Cancel renewal with the provider separately.';
+      'A usage plan is only a local note and doesn’t stop provider billing. Cancel renewal with the provider separately.';
 
   @override
   String get savedRuleSchedule => 'Schedule for saved rules';
@@ -450,12 +451,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String notificationStopBody(String p0) {
-    return 'A service $p0. Check that renewal has been cancelled with the provider. A local plan does not stop billing.';
+    return 'A service $p0. Make sure you’ve canceled renewal with your provider. A local plan doesn’t stop billing.';
   }
 
   @override
   String notificationContinueBody(String p0) {
-    return 'A service $p0. Check the provider bill and your usage plan. This reminder does not make payments.';
+    return 'A service $p0. Check the provider’s bill and your usage plan. This reminder doesn’t make payments.';
   }
 
   @override
@@ -466,7 +467,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'Local expiry reminders. No automatic renewal or payment.';
 
   @override
-  String get reminderNotChecked => 'System notifications have not been checked';
+  String get reminderNotChecked => 'System notifications haven’t been checked';
 
   @override
   String get reminderChecking => 'Checking system reminders…';
@@ -478,21 +479,21 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get reminderPermissionDenied =>
-      'Notifications are not allowed or the channel is off. Saved rules are kept.';
+      'Notifications aren’t allowed or the channel is off. Saved rules are kept.';
 
   @override
   String get reminderUnsupported =>
-      'This platform does not support scheduled notifications. Saved rules will not trigger reminders on this device.';
+      'This platform doesn’t support scheduled notifications, so saved rules won’t trigger reminders on this device.';
 
   @override
   String get reminderCheckFailed =>
-      'Could not check reminder status. Older reminders may remain. Try again or check device settings.';
+      'Couldn’t check reminder status. Older reminders may remain. Try again or check device settings.';
 
   @override
   String get jsonLedgerBackup => 'JSON ledger backup';
 
   @override
-  String get backupTooLarge => 'The backup exceeds the 10 MiB limit';
+  String get backupTooLarge => 'The backup is over the 10 MiB limit';
 
   @override
   String get backupExportInvalid =>
@@ -500,11 +501,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get backupShareSelected =>
-      'A system sharing action was selected. Check the destination app to confirm the file was saved or delivered.';
+      'You picked a sharing option. Check the destination app to confirm the file was saved or delivered.';
 
   @override
   String get backupShareCancelled =>
-      'Sharing cancelled. The backup preview is kept.';
+      'Sharing canceled. The backup preview is kept.';
 
   @override
   String get backupShareUnknown =>
@@ -512,18 +513,18 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get systemShareUnsupported =>
-      'System sharing is not supported on this platform.';
+      'System sharing isn’t supported on this platform.';
 
   @override
   String get completeCurrentShare => 'Finish the current sharing action first.';
 
   @override
   String get backupShareFailed =>
-      'Sharing did not complete. The backup preview is kept.';
+      'Sharing didn’t complete. The backup preview is kept.';
 
   @override
   String get backupSaveCancelled =>
-      'Saving cancelled. The backup preview is kept.';
+      'Saving canceled. The backup preview is kept.';
 
   @override
   String backupSavedPath(String p0) {
@@ -532,25 +533,25 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get backupSaveFailed =>
-      'The backup could not be saved. Check storage and permissions, then try again.';
+      'Couldn’t save the backup. Check storage and permissions, then try again.';
 
   @override
-  String get backupSelectionCancelled => 'Backup selection cancelled.';
+  String get backupSelectionCancelled => 'Backup selection canceled.';
 
   @override
   String get backupReadInvalid =>
-      'Reading or validation failed. Choose a complete version 1 JSON ledger backup no larger than 10 MiB. Existing data is unchanged.';
+      'Couldn’t read or validate the file. Choose a complete version 1 JSON ledger backup no larger than 10 MiB. Existing data is unchanged.';
 
   @override
   String get restoreEmptyLedgerQuestion => 'Restore to this empty ledger?';
 
   @override
   String restoreConfirmation(String p0) {
-    return '$p0\nOriginal IDs, amounts, and payment void status are kept. Manual reference exchange rates are replaced. Notes, connections, security data, and reminder rules are not restored. Reminders for imported servers stay off. Restoring does not connect to or renew servers.';
+    return '$p0\nOriginal IDs, amounts, and voided payments are kept. Manual reference exchange rates are replaced. Notes, connections, security data, and reminder rules aren’t restored, and reminders for imported servers stay off. Restoring never connects to or renews servers.';
   }
 
   @override
-  String get confirmRestore => 'Confirm restore';
+  String get confirmRestore => 'Restore';
 
   @override
   String get ledgerRestored =>
@@ -558,7 +559,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get restoreFailed =>
-      'Restore did not complete. Existing data is unchanged. Only empty ledgers can be restored. Select and check the backup again.';
+      'Couldn’t restore. Existing data is unchanged. Only empty ledgers can be restored. Choose the backup and check it again.';
 
   @override
   String deviceTime(String p0) {
@@ -571,20 +572,20 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get ledgerBackupRestore => 'Ledger backup and restore';
+  String get ledgerBackupRestore => 'Ledger Backup & Restore';
 
   @override
   String get plainJsonVersion => 'Unencrypted JSON · Format v1';
 
   @override
   String get backupContentsWarning =>
-      'Includes server names, providers, addresses, regions, purposes, operating systems, specifications, hardware details, groups, amounts, dates, payments, and manual exchange rates. The file is unencrypted. Store it safely and share it only with trusted destinations. Sensitive content entered in these fields is also exported.';
+      'Includes server names, providers, addresses, regions, purposes, operating systems, specifications, hardware details, groups, amounts, dates, payments, and manual exchange rates. The file is unencrypted: store it safely and share it only with trusted destinations. Anything sensitive you typed into these fields is exported too.';
 
   @override
   String get notIncluded => 'Not included:';
 
   @override
-  String get generateBackupPreview => 'Generate export preview';
+  String get generateBackupPreview => 'Preview Export';
 
   @override
   String get exportPreview => 'Export preview';
@@ -595,17 +596,17 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get shareUnencryptedBackup => 'Share unencrypted backup';
+  String get shareUnencryptedBackup => 'Share Unencrypted Backup';
 
   @override
-  String get saveJsonBackup => 'Save JSON backup';
+  String get saveJsonBackup => 'Save JSON Backup';
 
   @override
   String get restoreEmptyOnlyHelp =>
-      'Restore is supported only when the ledger has no servers, groups, payments, or service periods. Existing data is never overwritten or merged. Imported server reminders default to off. App preferences stay unchanged.';
+      'You can restore only into a ledger with no servers, groups, payments, or service periods. Existing data is never overwritten or merged. Reminders for imported servers start off. App preferences stay as they are.';
 
   @override
-  String get chooseJsonPreviewRestore => 'Choose JSON and preview restore';
+  String get chooseJsonPreviewRestore => 'Choose Backup File';
 
   @override
   String get restorePreview => 'Restore preview';
@@ -617,10 +618,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get restoreContentsHelp =>
-      'Only ledger records and manual rates are imported; items listed above are not in the backup.';
+      'Only ledger records and manual rates are restored. The items listed above aren’t in the backup.';
 
   @override
-  String get restoreToEmptyLedger => 'Restore to empty ledger';
+  String get restoreToEmptyLedger => 'Restore to Empty Ledger';
 
   @override
   String get appearance => 'Appearance';
@@ -641,7 +642,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get organizationData => 'Organization and data';
 
   @override
-  String get manageGroups => 'Manage groups';
+  String get manageGroups => 'Manage Groups';
 
   @override
   String groupCountHelp(String p0) {
@@ -649,7 +650,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get archivedRecords => 'Archived records';
+  String get archivedRecords => 'Archived Records';
 
   @override
   String archiveCountHelp(String p0) {
@@ -660,7 +661,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get accountsPreferences => 'Accounts and preferences';
 
   @override
-  String get panelAccounts => 'Panel accounts';
+  String get panelAccounts => 'Panel connections';
 
   @override
   String panelConnectionCount(String p0) {
@@ -668,14 +669,14 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get keysSecurity => 'Keys and security';
+  String get keysSecurity => 'Keys & Security';
 
   @override
   String get keysSecurityDescription =>
       'Credentials, SSH settings, and host trust';
 
   @override
-  String get currenciesReferenceRates => 'Currencies and reference rates';
+  String get currenciesReferenceRates => 'Currencies & Reference Rates';
 
   @override
   String currencyRateSummary(String p0, String p1) {
@@ -686,7 +687,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get notSet => 'Not set';
 
   @override
-  String get notificationAccess => 'Notification access';
+  String get notificationAccess => 'Notification Access';
 
   @override
   String get backupExclusionsSummary =>
@@ -700,11 +701,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get appLocalDataHelp =>
-      'Data stays on this device; no account needed. Archiving does not cancel the service or stop billing.';
+      'Your data stays on this device, and no account is needed. Archiving doesn’t cancel the service or stop billing.';
 
   @override
   String get groupSaveFailed =>
-      'Could not save the group. Check for a duplicate name, then try again.';
+      'Couldn’t save the group. Check for a duplicate name, then try again.';
 
   @override
   String deleteGroupQuestion(String p0) {
@@ -713,13 +714,13 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get deleteGroupHelp =>
-      'All servers in this group, including archived ones, will move to Ungrouped. Server details and payment history are kept. Remote servers are unchanged.';
+      'All servers in this group, including archived ones, move to Ungrouped. Server details and payment history are kept, and remote servers aren’t touched.';
 
   @override
-  String get deleteGroup => 'Delete group';
+  String get deleteGroup => 'Delete Group';
 
   @override
-  String get addGroup => 'Add group';
+  String get addGroup => 'Add Group';
 
   @override
   String get groupsHelp => 'Organize servers by purpose.';
@@ -742,31 +743,31 @@ class AppLocalizationsEn extends AppLocalizations {
   String get rename => 'Rename';
 
   @override
-  String get moveUp => 'Move up';
+  String get moveUp => 'Move Up';
 
   @override
-  String get moveDown => 'Move down';
+  String get moveDown => 'Move Down';
 
   @override
   String get ungrouped => 'Ungrouped';
 
   @override
   String ungroupedCountHelp(String p0) {
-    return 'Unarchived servers: $p0 · Default group, cannot be deleted';
+    return 'Unarchived servers: $p0 · Default group; can’t be deleted';
   }
 
   @override
   String get archiveHelp =>
-      'Archiving keeps the record. Restoring does not start or renew the service.';
+      'Archiving keeps the record. Restoring doesn’t start or renew the service.';
 
   @override
   String get noArchivedRecords => 'No archived records';
 
   @override
-  String get restoreRecord => 'Restore record';
+  String get restoreRecord => 'Restore Record';
 
   @override
-  String get renameGroup => 'Rename group';
+  String get renameGroup => 'Rename Group';
 
   @override
   String get groupName => 'Group name';
@@ -776,13 +777,13 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get operationFailed =>
-      'The operation did not complete. Try again. Saved details are kept.';
+      'Couldn’t complete that. Try again. Saved details are kept.';
 
   @override
   String get recordChanged => 'This record has changed. Go back and try again.';
 
   @override
-  String get gotIt => 'Got it';
+  String get gotIt => 'Got It';
 
   @override
   String get financeCancel => 'Cancel';
@@ -800,10 +801,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get financeDateNotSet => 'Date not set';
 
   @override
-  String get financePayments => 'Payment records';
+  String get financePayments => 'Payment Records';
 
   @override
-  String get financeCalculationRules => 'Calculation basis';
+  String get financeCalculationRules => 'Calculation Basis';
 
   @override
   String get financeAllGroups => 'All groups';
@@ -828,7 +829,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'Remaining value · At the current renewal price';
 
   @override
-  String get financeNotApplicable => 'Not applicable / Excluded';
+  String get financeNotApplicable => 'Not applicable / excluded';
 
   @override
   String get financeDataUnknown => 'Information unknown';
@@ -839,16 +840,16 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get financeMissingFxExcluded =>
-      'Only amounts with an exchange rate are totaled. Missing amounts are not treated as zero.';
+      'Only amounts with an exchange rate are totaled. Missing amounts aren’t counted as zero.';
 
   @override
-  String get financeValuationAndDue => 'Valuation date / Service expiry date';
+  String get financeValuationAndDue => 'Valuation date / service due date';
 
   @override
   String get financeRemainingDays => 'Remaining service days';
 
   @override
-  String get financeRenewalCycle => 'Renewal price / Cycle';
+  String get financeRenewalCycle => 'Renewal price / cycle';
 
   @override
   String get financeDailyShown => 'Daily average for the shown period';
@@ -861,7 +862,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get financeInferredPeriods =>
-      'Start dates are inferred from the expiry date; not proof of payment.';
+      'Start dates are inferred from the due date; not proof of payment.';
 
   @override
   String get financeValueDisclaimer =>
@@ -880,7 +881,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get financeCurrentPeriod => 'Current period';
 
   @override
-  String get financeFxTitle => 'Currencies and reference exchange rates';
+  String get financeFxTitle => 'Currencies & Reference Rates';
 
   @override
   String get financeFxScope =>
@@ -914,14 +915,14 @@ class AppLocalizationsEn extends AppLocalizations {
       'CNY is the base. Currencies without a rate are left out of totals.';
 
   @override
-  String get financeSaveFx => 'Save reference rates';
+  String get financeSaveFx => 'Save Reference Rates';
 
   @override
-  String get financeReferenceTitle => 'Use server details';
+  String get financeReferenceTitle => 'Use Server Details';
 
   @override
   String get financeReferenceNote =>
-      'Copies current renewal details only; the server is not changed.';
+      'Copies the current renewal details only. The server isn’t changed.';
 
   @override
   String get financeNoPrepaid =>
@@ -933,28 +934,28 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get financeMissingPeriodsError =>
-      'The referenced details have no valid service period. Add the server dates first, or change the expiry date or cycle to calculate an independent estimate.';
+      'The referenced details have no valid service period. Add the server’s dates first, or change the due date or cycle to calculate an independent estimate.';
 
   @override
-  String get financeCalculatorTitle => 'Remaining value calculator';
+  String get financeCalculatorTitle => 'Remaining Value Calculator';
 
   @override
   String get financeReferenceServer => 'Use a server';
 
   @override
   String get financeIndependentRebuilt =>
-      'Switched to an independent estimate; service periods are recalculated from the expiry date and cycle.';
+      'Switched to an independent estimate. Service periods are recalculated from the due date and cycle.';
 
   @override
   String get financeIndependentNote =>
-      'Independent estimate, no server needed. Assumes continuous service before expiry.';
+      'Independent estimate; no server needed. Assumes continuous service before the due date.';
 
   @override
   String get financeRenewalAmount => 'Renewal price per cycle';
 
   @override
   String get financeAmountError =>
-      'Enter a valid amount. Use 0 only when the service is known to be free.';
+      'Enter a valid amount. Use 0 only if the service is known to be free.';
 
   @override
   String get financeOriginalCurrency => 'Original currency';
@@ -969,20 +970,20 @@ class AppLocalizationsEn extends AppLocalizations {
   String get financeValuationDateError => 'Enter a valid valuation date';
 
   @override
-  String get financeServiceDue => 'Service expiry date';
+  String get financeServiceDue => 'Service due date';
 
   @override
-  String get financeDueError => 'Enter a valid expiry date';
+  String get financeDueError => 'Enter a valid due date';
 
   @override
   String get financeAlgorithmTitle => 'Periods and calculation method';
 
   @override
   String get financeAlgorithmNote =>
-      'Remaining value = Σ (renewal price per cycle × fraction of unused days in that cycle).\nCalendar cycles use actual day counts, not fixed 30-day months. Month-end dates are calculated backward from the original expiry anchor, with leap years handled for yearly cycles. Valuing a period before its known start does not exceed its full price.\nIndependent mode works backward to cover the valuation date, up to 100 years. Value is 0 on the expiry date. Transferability and refund eligibility are not checked.';
+      'Remaining value = Σ (renewal price per cycle × fraction of unused days in that cycle).\nCalendar cycles use actual day counts, not fixed 30-day months. Month-end dates are calculated backward from the original due-date anchor, with leap years handled for yearly cycles. Valuing a period before its known start never exceeds its full price.\nIndependent mode works backward to cover the valuation date, up to 100 years. Value is 0 on the due date. Transferability and refund eligibility aren’t checked.';
 
   @override
-  String get financeCalculateValue => 'Calculate remaining value';
+  String get financeCalculateValue => 'Calculate Remaining Value';
 
   @override
   String get financeEstimateNoWrite =>
@@ -993,22 +994,21 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get financeIndependentBasis =>
-      'Independent assumption: service is continuous before expiry, with periods calculated backward from the expiry date.';
+      'Independent assumption: service is continuous before the due date, with periods calculated backward from it.';
 
   @override
   String get financeQuoteFxError =>
-      'The required exchange rate is missing. Reference value and settlement amounts cannot be calculated.';
+      'The required exchange rate is missing, so the reference value and settlement amounts can’t be calculated.';
 
   @override
   String get financeCopied =>
-      'Result copied. It contains calculation information only.';
+      'Result copied. It contains calculation details only.';
 
   @override
-  String get financeCopyError =>
-      'Could not write to the clipboard. Please try again.';
+  String get financeCopyError => 'Couldn’t write to the clipboard. Try again.';
 
   @override
-  String get financeResultTitle => 'Calculation result';
+  String get financeResultTitle => 'Calculation Result';
 
   @override
   String get financeEditInputs => 'Edit inputs';
@@ -1056,14 +1056,14 @@ class AppLocalizationsEn extends AppLocalizations {
       'The fee is split in minor units; any odd 0.01 goes to the buyer.';
 
   @override
-  String get financeCalculateQuote => 'Calculate quote and fees';
+  String get financeCalculateQuote => 'Calculate Quote and Fees';
 
   @override
   String get financePremiumLabel =>
       'Quote minus reference value (premium / discount)';
 
   @override
-  String get financeBuyerSellerFee => 'Buyer / Seller fee';
+  String get financeBuyerSellerFee => 'Buyer / seller fee';
 
   @override
   String get financeBuyerEstimate => 'Estimated buyer outlay';
@@ -1083,7 +1083,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get financePaymentFutureError =>
-      'The payment date cannot be later than today';
+      'The payment date can’t be later than today';
 
   @override
   String get financePaymentConfirmError =>
@@ -1095,33 +1095,33 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get financePaymentSavedRefresh =>
-      'Payment saved, but the display has not updated. Please reload.';
+      'Payment saved, but the screen hasn’t updated. Reload.';
 
   @override
   String get financeAccountPaymentSaved =>
-      'Account bill recorded once. Instance expiry dates are unchanged.';
+      'Account bill recorded once. Instance due dates are unchanged.';
 
   @override
   String get financePaymentSaved =>
       'Payment recorded. Service periods and totals are updated.';
 
   @override
-  String get financeRecordPayment => 'Record a completed payment';
+  String get financeRecordPayment => 'Record a Completed Payment';
 
   @override
   String get financeNoRenewalDate =>
-      'No usable prepaid expiry date. Check the server details.';
+      'No usable prepaid due date. Check the server details.';
 
   @override
-  String get financeRecordAccountBill => 'Record an account bill';
+  String get financeRecordAccountBill => 'Record an Account Bill';
 
   @override
   String get financeLocalPaymentOnly =>
-      'Records a local ledger entry only. No payment is made to the provider.';
+      'Saves a local ledger entry only. No payment is made to the provider.';
 
   @override
   String get financeAccountBillNote =>
-      'Standalone bill, counted once. Not split; creates no service period.';
+      'A standalone bill, counted once. It isn’t split across periods and creates no service period.';
 
   @override
   String get financeAccountName => 'Account display name';
@@ -1143,7 +1143,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get financeRenewalCount => 'Number of renewal cycles';
 
   @override
-  String get financeNewDue => 'New expiry date';
+  String get financeNewDue => 'New due date';
 
   @override
   String get financeNewDueHint =>
@@ -1151,7 +1151,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get financePaymentRenewalNote =>
-      'The amount paid is stored separately and does not change the renewal price. Whole cycles only.';
+      'The amount paid is saved separately and doesn’t change the renewal price. Whole cycles only.';
 
   @override
   String get financeBillStart => 'Billing period start (optional)';
@@ -1164,18 +1164,18 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get financeConfirmAccountPaid =>
-      'I have paid the provider and checked the bill amount and dates.';
+      'I’ve paid the provider and checked the bill amount and dates.';
 
   @override
   String get financeConfirmServerPaid =>
-      'I have paid the provider and checked the amount paid and new expiry date.';
+      'I’ve paid the provider and checked the amount paid and new due date.';
 
   @override
-  String get financeSavePayment => 'Save payment record';
+  String get financeSavePayment => 'Save Payment';
 
   @override
   String get financeNotReceipt =>
-      'This is not a provider payment receipt and does not change auto-renewal settings.';
+      'This isn’t a payment receipt from the provider, and it doesn’t change auto-renewal settings.';
 
   @override
   String get financePaymentTarget => 'Payment target';
@@ -1199,33 +1199,31 @@ class AppLocalizationsEn extends AppLocalizations {
   String get financePaymentDetails => 'Payment breakdown';
 
   @override
-  String get financeArchivedPayment =>
-      'Server archived · Past payments retained';
+  String get financeArchivedPayment => 'Server archived · Past payments kept';
 
   @override
   String get financeNoPaymentsInRange =>
-      'No payments in this range. Record completed renewal payments from the server details page.';
+      'No payments in this range. Record completed renewal payments from a server’s details.';
 
   @override
   String get financeVoidTitle => 'Void this local record?';
 
   @override
   String get financeVoidAccountNote =>
-      'Marks this bill as voided. No refund is requested from the provider.';
+      'Marks this bill as voided. It doesn’t request a refund from the provider.';
 
   @override
   String get financeVoidServerNote =>
-      'Reverts only the service periods and expiry date added by this record and marks the payment as voided. It does not request a provider refund or cancel service.';
+      'Undoes only the service periods and due date this record added, and marks the payment as voided. It doesn’t request a provider refund or cancel service.';
 
   @override
-  String get financeVoidRecord => 'Void record';
+  String get financeVoidRecord => 'Void Record';
 
   @override
-  String get financePaymentVoided =>
-      'This local payment record has been voided';
+  String get financePaymentVoided => 'This local payment record was voided';
 
   @override
-  String get financePaymentDetail => 'Payment details';
+  String get financePaymentDetail => 'Payment Details';
 
   @override
   String get financePaymentUnavailable =>
@@ -1241,7 +1239,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get financeAccountBill => 'Account bill';
 
   @override
-  String get financeBillServicePeriod => 'Billing / Service period';
+  String get financeBillServicePeriod => 'Billing / service period';
 
   @override
   String get financeVoidedStatus => 'Deleted, excluded from payment totals';
@@ -1251,51 +1249,51 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get financePaymentHistoryNote =>
-      'Original-currency history; it does not follow renewal prices or exchange rates.';
+      'Original-currency history. It doesn’t follow renewal prices or exchange rates.';
 
   @override
-  String get financeVoidThisRecord => 'Void this record';
+  String get financeVoidThisRecord => 'Void This Record';
 
   @override
   String get r2FinanceEdit => 'Edit';
 
   @override
-  String get r2FinanceEditTitle => 'Edit payment';
+  String get r2FinanceEditTitle => 'Edit Payment';
 
   @override
   String get r2FinanceEditHint =>
-      'Only edits the bookkeeping. Service periods, due date and cycles stay as they are.';
+      'Edits bookkeeping details only. Service periods, due date, and cycles stay as they are.';
 
   @override
-  String get r2FinanceDelete => 'Delete record';
+  String get r2FinanceDelete => 'Delete Record';
 
   @override
   String get r2FinanceDeleteTitle => 'Delete this payment record?';
 
   @override
   String get r2FinanceDeleteAccountMsg =>
-      'Deletes this bill from the local ledger only. No server is affected and nothing is refunded by the provider. It no longer counts towards payment totals.';
+      'This removes the bill from your local ledger only. No server is affected, and the provider doesn’t refund anything. It no longer counts toward payment totals.';
 
   @override
   String get r2FinanceDeleteKeepMsg =>
-      'Deletes the payment record only. Service periods and the due date stay as they are. Nothing is refunded by the provider.';
+      'Only the payment record is deleted. Service periods and the due date stay as they are, and the provider doesn’t refund anything.';
 
   @override
-  String get r2FinanceDeleteKeep => 'Delete record only, keep periods';
+  String get r2FinanceDeleteKeep => 'Delete Record Only, Keep Periods';
 
   @override
   String r4PayDeleteRollbackTo(String date) {
-    return 'Delete and roll due date back to $date';
+    return 'Delete and Roll Due Date Back to $date';
   }
 
   @override
   String r4PayDeleteChoiceMsg(String until) {
-    return 'Deleting only the record keeps the service periods; the due date stays $until. Nothing is refunded by the provider.';
+    return 'If you delete only the record, the service periods stay and the due date remains $until. The provider doesn’t refund anything.';
   }
 
   @override
   String r4PayDeleteLaterMsg(String dates) {
-    return 'Later renewals exist ($dates); delete them first to roll the due date back. This only deletes the record: periods and due date stay, and nothing is refunded by the provider.';
+    return 'There are later renewals ($dates). Delete those first to roll the due date back. This option only deletes the record: periods and due date stay, and the provider doesn’t refund anything.';
   }
 
   @override
@@ -1308,11 +1306,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String r4PayOrphanMsg(String from, String until) {
-    return 'Removes the service periods left by the deleted payment ($from → $until) and restores the due date to $from. Other payment records are not affected.';
+    return 'Removes the service periods left by the deleted payment ($from → $until) and restores the due date to $from. Other payment records aren’t affected.';
   }
 
   @override
-  String get r4PayOrphanAction => 'Roll back';
+  String get r4PayOrphanAction => 'Roll Back';
 
   @override
   String r4PayOrphanDone(String date) {
@@ -1327,7 +1325,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get financeVoidBlocked =>
-      'Details have changed. Please check them. After later edits, payments, or archiving, an old record cannot overwrite the current details.';
+      'Details have changed. Review them first. After later edits, payments, or archiving, an old record can’t overwrite the current details.';
 
   @override
   String get financeRulesTitle => 'How these figures are calculated';
@@ -1350,17 +1348,17 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get financeMonthlyNotPaid =>
-      'Renewals spread monthly + metered estimate; not this month’s payments.';
+      'Renewal prices spread monthly, plus metered estimates. Not what you paid this month.';
 
   @override
   String get financeUpcomingRenewals => 'Expected renewals in the next 30 days';
 
   @override
-  String get financeRecentPayments => 'Payment records';
+  String get financeRecentPayments => 'Payment Records';
 
   @override
   String get financeUnrecordedNotZero =>
-      'No payments recorded yet. This does not mean there has been no spending.';
+      'No payments recorded yet. That doesn’t mean you haven’t spent anything.';
 
   @override
   String get financeMonthlyDistribution => 'Monthly cost breakdown';
@@ -1380,7 +1378,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get financeGroupDistributionNote =>
-      'Account-level payments are not split across groups. Tap a category for details.';
+      'Account-level payments aren’t split across groups. Tap a category for details.';
 
   @override
   String get financeSixMonthTitle =>
@@ -1391,24 +1389,24 @@ class AppLocalizationsEn extends AppLocalizations {
       'Forecast at current renewal prices, assuming renewal continues. Excludes metered bills and expired services.';
 
   @override
-  String get financeMonthlyDetail => 'Monthly cost details';
+  String get financeMonthlyDetail => 'Monthly Cost Details';
 
   @override
-  String get financeValueDetail => 'Remaining value details';
+  String get financeValueDetail => 'Remaining Value Details';
 
   @override
   String get financeInventoryDetail => 'Server breakdown';
 
   @override
-  String get financeIncompleteDetail => 'Check costs and expiry dates';
+  String get financeIncompleteDetail => 'Check Costs & Due Dates';
 
   @override
   String get financeMeteredValueNa =>
-      'Metered billing · Remaining value is not applicable';
+      'Metered billing · Remaining value doesn’t apply';
 
   @override
   String get financeExpiredMonthlyExcluded =>
-      'Expired, excluded from the monthly cost reference';
+      'Expired · Not in the monthly cost reference';
 
   @override
   String get financeUnknownAmount =>
@@ -1422,7 +1420,7 @@ class AppLocalizationsEn extends AppLocalizations {
       '“—” means unknown or not applicable, not free.';
 
   @override
-  String get financeRenewals30Title => 'Renewals in the next 30 days';
+  String get financeRenewals30Title => 'Renewals in the Next 30 Days';
 
   @override
   String get financeNoKnownRenewals =>
@@ -1437,48 +1435,47 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get financePngRenderFailed =>
-      'Image generation failed. The original calculation result is preserved.';
+      'Couldn’t create the image. Your calculation result is kept.';
 
   @override
   String get financePngSaveFailed =>
-      'Saving did not finish. The preview is preserved. Check storage space and permissions, then try again.';
+      'Saving didn’t finish. The preview is kept. Check storage space and permissions, then try again.';
 
   @override
   String get financePngShareSelected =>
-      'A system share action was selected. Check delivery in the destination app.';
+      'You picked a share option. Check the destination app to confirm delivery.';
 
   @override
   String get financePngShareDismissed =>
-      'Sharing canceled. The preview is preserved.';
+      'Sharing canceled. The preview is kept.';
 
   @override
   String get financePngShareUnknown =>
-      'No system share result was received. The preview is preserved.';
+      'No share result was received. The preview is kept.';
 
   @override
   String get financePngShareUnsupported =>
-      'System sharing of PNG files is not supported on this platform. You can save the file locally.';
+      'Sharing PNG files isn’t supported on this platform. You can save the file locally.';
 
   @override
-  String get financePngShareBusy =>
-      'Finish the current system share action first.';
+  String get financePngShareBusy => 'Finish the current share action first.';
 
   @override
   String get financePngShareFailed =>
-      'Sharing did not finish. The preview is preserved. Please try again.';
+      'Sharing didn’t finish. The preview is kept. Try again.';
 
   @override
   String get financePngPreview => 'Image preview';
 
   @override
   String get financePngPrivacy =>
-      'The image has only amounts, dates, periods and reference rates; no server names, addresses or notes.';
+      'The image contains only amounts, dates, periods, and reference rates, never server names, addresses, or notes.';
 
   @override
   String get financePngSemantic => 'Remaining value calculation result PNG';
 
   @override
-  String get financeRegenerate => 'Generate again';
+  String get financeRegenerate => 'Generate Again';
 
   @override
   String get financeSavePng => 'Save PNG';
@@ -1491,11 +1488,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get financePngLocationNote =>
-      'The file may be in an app-private folder. Use system sharing to save it elsewhere.';
+      'The file may be in the app’s private folder. Use Share to save it elsewhere.';
 
   @override
   String get financeRulesBody =>
-      'Monthly cost reference: unexpired prepaid renewal prices divided by the cycle length in months, plus metered monthly estimates. Prepaid services are excluded on and after their expiry date. Missing dates or costs are marked unknown.\n\nRemaining value: the current renewal price prorated by unused days in each known service period. The start date is included and the end date excluded. Future whole periods count at full price; ended periods count as 0. Not applicable to metered billing; unknown when details are insufficient. This is not a refundable amount or sale price.\n\nRenewal forecast: assumes continued renewal at the current price and cycle. The next 30 days includes today and the following 29 days. Six months means the rest of this month and the next five calendar months. Expired services are not projected forward. Metered bills are excluded. Local usage plans do not change the forecast.\n\nPayments in the last 30 days: recorded payments from today and the preceding 29 days. The all-groups scope retains payments for archived servers and counts each independent account bill once. Account bills are not allocated to groups.\n\nWhen cross-currency rates are missing, only convertible amounts are totaled, while original-currency subtotals are retained. Exact amounts are summed before rounding to minor units. Reference conversions are not actual charges.';
+      'Monthly cost reference: unexpired prepaid renewal prices divided by the cycle length in months, plus metered monthly estimates. Prepaid services are excluded on and after their due date. Missing dates or costs are marked unknown.\n\nRemaining value: the current renewal price prorated by unused days in each known service period. The start date is included and the end date excluded. Future whole periods count at full price; ended periods count as 0. Not applicable to metered billing; unknown when details are insufficient. This isn’t a refundable amount or sale price.\n\nRenewal forecast: assumes continued renewal at the current price and cycle. The next 30 days includes today and the following 29 days. Six months means the rest of this month and the next five calendar months. Expired services aren’t projected forward. Metered bills are excluded. Local usage plans don’t change the forecast.\n\nPayments in the last 30 days: recorded payments from today and the preceding 29 days. The all-groups scope retains payments for archived servers and counts each independent account bill once. Account bills aren’t allocated to groups.\n\nWhen cross-currency rates are missing, only convertible amounts are totaled, while original-currency subtotals are retained. Exact amounts are summed before rounding to minor units. Reference conversions aren’t actual charges.';
 
   @override
   String financeApproxAmount(String amount, String currency) {
@@ -1588,7 +1585,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String financeReferenceBasis(String name) {
-    return 'Uses known periods from $name. Changing the inputs does not change the original server.';
+    return 'Uses known periods from $name. Changing the inputs doesn’t change the original server.';
   }
 
   @override
@@ -1694,7 +1691,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get r3FinanceQuoteRangeError =>
-      'A discount cannot exceed the remaining value, and the price must stay in range';
+      'A discount can’t exceed the remaining value, and the price must stay within the supported range';
 
   @override
   String get r3FinanceQuoteSettlement => 'Settlement';
@@ -1767,7 +1764,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String financePaymentGroupNote(String group) {
-    return 'Group: $group. Account bills are not included.';
+    return 'Group: $group. Account bills aren’t included.';
   }
 
   @override
@@ -1783,7 +1780,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String financePaymentSummary(String date, String account, String due) {
     String _temp0 = intl.Intl.selectLogic(account, {
       'yes': '$date · Past account bill, counted once',
-      'other': '$date · Expiry date: $due',
+      'other': '$date · Due date: $due',
     });
     return '$_temp0';
   }
@@ -2013,7 +2010,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String financeDueDateValue(String date) {
-    return 'Expiry date: $date';
+    return 'Due date: $date';
   }
 
   @override
@@ -2045,7 +2042,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String financeExpiredDate(String date) {
-    return 'Expired on $date. This does not imply downtime.';
+    return 'Expired on $date. This doesn’t imply downtime.';
   }
 
   @override
@@ -2055,15 +2052,15 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get financeRenewalDateError =>
-      'Renewal requires a valid cycle and original expiry date.';
+      'Renewal requires a valid cycle and original due date.';
 
   @override
   String get financeAnchorMismatch =>
-      'The service-period anchor does not match the expiry date. Check the details.';
+      'The service period anchor doesn’t match the due date. Check the details.';
 
   @override
   String get financeDueRangeError =>
-      'The expiry date is outside the supported range.';
+      'The due date is outside the supported range.';
 
   @override
   String get financeTrialInputError =>
@@ -2079,7 +2076,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get financeUnsupportedCurrency =>
-      'The display currency is not supported.';
+      'The display currency isn’t supported.';
 
   @override
   String get financeInvalidRate =>
@@ -2090,7 +2087,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get financeExportDisclaimer =>
-      'This is a price-based estimate of unused service time, not a refund promise or sale price.';
+      'A price-based estimate of unused service time, not a refund promise or sale price.';
 
   @override
   String get financeExportHeading =>
@@ -2127,12 +2124,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String financeExportServiceRemaining(String due, int days) {
-    return 'Service expiry date: $due; remaining service days: $days';
+    return 'Service due date: $due; remaining service days: $days';
   }
 
   @override
   String financeExportRenewalDaily(String renewal, String daily) {
-    return 'Renewal price / Cycle: $renewal; daily average for the shown period: $daily';
+    return 'Renewal price / cycle: $renewal; daily average for the shown period: $daily';
   }
 
   @override
@@ -2148,7 +2145,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String financeExportDue(String date) {
-    return 'Service expiry date: $date';
+    return 'Service due date: $date';
   }
 
   @override
@@ -2158,7 +2155,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String financeExportRenewal(String renewal) {
-    return 'Renewal price / Cycle: $renewal';
+    return 'Renewal price / cycle: $renewal';
   }
 
   @override
@@ -2196,7 +2193,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get backupExcludedConnections =>
-      'SSH settings, host trust, panel accounts, instance links, and API-returned information';
+      'SSH settings, host trust, panel connections, server links, and API-returned details';
 
   @override
   String get backupExcludedNotes =>
@@ -2207,7 +2204,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'Reminder rules, notification schedules, and app preferences (format v1)';
 
   @override
-  String get backupInvalidJson => 'The backup is not valid JSON';
+  String get backupInvalidJson => 'The backup isn’t valid JSON';
 
   @override
   String get backupUnsupportedFormat =>
@@ -2225,14 +2222,14 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get backupMissingGroup =>
-      'A server refers to a group that does not exist';
+      'A server refers to a group that doesn’t exist';
 
   @override
   String get backupInvalidServer => 'Server field validation failed';
 
   @override
   String get backupAnchorMismatch =>
-      'The renewal anchor and expiry date do not match';
+      'The renewal anchor and due date don’t match';
 
   @override
   String get backupInvalidPaymentPeriod => 'Invalid payment service period';
@@ -2250,7 +2247,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get backupServiceDateMismatch =>
-      'Service periods do not match the server dates';
+      'Service periods don’t match the server dates';
 
   @override
   String get backupDuplicateInitialPeriod =>
@@ -2270,11 +2267,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get backupPaymentCycleMismatch =>
-      'A payment service period does not match the renewal cycle';
+      'A payment service period doesn’t match the renewal cycle';
 
   @override
   String get backupInitialPeriodMismatch =>
-      'The initial service period is missing or does not match the original dates';
+      'The initial service period is missing or doesn’t match the original dates';
 
   @override
   String get backupInitialPeriodOutOfRange =>
@@ -2286,7 +2283,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get backupPeriodsDoNotCoverDue =>
-      'Active service periods do not cover the current expiry date';
+      'Active service periods don’t cover the current due date';
 
   @override
   String get backupInvalidRates => 'Invalid reference exchange rates';
@@ -2342,18 +2339,18 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get paymentPeriodsLockFields =>
-      'Payment service periods exist, so dates, cycles, and billing type cannot be edited directly. Review the payments and safely void eligible records first.';
+      'This server has payment service periods, so its dates, cycles, and billing type can’t be edited directly. Review its payments and safely void eligible records first.';
 
   @override
   String get invalidGroupName =>
-      'Enter a group name of 1–40 characters. The reserved name “未分组” is not allowed.';
+      'Enter a group name of 1–40 characters. The reserved name “未分组” isn’t allowed.';
 
   @override
   String get demoRequiresEmptyLedger =>
       'Demo data can be loaded only into an empty ledger';
 
   @override
-  String get futureRateDate => 'The exchange-rate date cannot be in the future';
+  String get futureRateDate => 'The exchange-rate date can’t be in the future';
 
   @override
   String get invalidPaymentId => 'Invalid payment ID';
@@ -2363,7 +2360,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'Enter a valid amount actually paid. Enter 0 for free.';
 
   @override
-  String get futurePaymentDate => 'The payment date cannot be in the future';
+  String get futurePaymentDate => 'The payment date can’t be in the future';
 
   @override
   String get notesTooLong => 'Notes can contain up to 4,000 characters';
@@ -2374,7 +2371,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get paymentIdContentMismatch =>
-      'This payment ID has different details. Do not enter it again.';
+      'This payment ID has different details. Don’t enter it again.';
 
   @override
   String get confirmProviderPayment =>
@@ -2385,19 +2382,18 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get renewalNeedsPrepaidDate =>
-      'Only prepaid services with a known expiry date can be renewed';
+      'Only prepaid services with a known due date can be renewed';
 
   @override
   String get renewalDateMismatch =>
-      'The new expiry date does not match the selected cycles and original renewal anchor';
+      'The new due date doesn’t match the selected cycles and original renewal anchor';
 
   @override
   String get duplicateExpiryPayment =>
-      'A payment already exists for this service expiry date. Do not enter it again.';
+      'A payment already exists for this due date. Don’t enter it again.';
 
   @override
-  String get invalidAccountName =>
-      'The account name must contain 1–80 characters';
+  String get invalidAccountName => 'Use 1–80 characters for the account name';
 
   @override
   String get invalidOptionalBillingPeriod =>
@@ -2407,7 +2403,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get invalidCredentialDetails => 'Invalid credential details';
 
   @override
-  String get secretWriteNotPrepared => 'The secret write is not ready';
+  String get secretWriteNotPrepared => 'The secret isn’t ready to be saved';
 
   @override
   String get chooseOtherCredential => 'Choose a different credential';
@@ -2417,11 +2413,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'Enter a valid host, port, and explicit username';
 
   @override
-  String get verificationCancelled => 'Verification cancelled';
+  String get verificationCancelled => 'Verification canceled';
 
   @override
-  String get invalidServerName =>
-      'The server name must contain 1–80 characters';
+  String get invalidServerName => 'Use 1–80 characters for the server name';
 
   @override
   String get completeLocalResources =>
@@ -2429,56 +2424,56 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get securityOperationIncomplete =>
-      'The security operation did not complete. Try again.';
+      'The security operation didn’t complete. Try again.';
 
   @override
-  String get cloudAccounts => 'Adapter instances';
+  String get cloudAccounts => 'Panel connections';
 
   @override
-  String get cloudAddAccount => 'Add adapter instance';
+  String get cloudAddAccount => 'Add Panel Connection';
 
   @override
   String get cloudPanelReadBadge => 'Read-only panel connections';
 
   @override
   String get cloudManageConnections =>
-      'Manage adapter instances and device links';
+      'Manage panel connections and device links';
 
   @override
   String get cloudConnectionsInfo =>
-      'Each adapter instance has its own authorization and read scope.\nA provider can have multiple single-device or account-scoped adapter instances.';
+      'Each panel connection has its own authorization and read scope.\nA provider can have multiple single-device or account-scoped panel connections.';
 
   @override
   String get cloudMetadataIncomplete =>
-      'Adapter instance details could not be fully loaded. Reload them to continue.';
+      'Panel connection details couldn’t be fully loaded. Reload them to continue.';
 
   @override
-  String get cloudReloadMetadata => 'Reload adapter instance details';
+  String get cloudReloadMetadata => 'Reload Panel Connection Details';
 
   @override
   String get cloudCleanupNotice =>
-      'Old credentials awaiting cleanup may still be in secure storage on this device. Retry cleanup; revoke remote authorization in the panel.';
+      'Old credentials waiting to be cleaned up may still be in this device’s secure storage. Retry the cleanup, and revoke the remote authorization in the panel.';
 
   @override
-  String get cloudRetryCleanup => 'Retry old credential cleanup';
+  String get cloudRetryCleanup => 'Retry cleaning up old credentials';
 
   @override
-  String get cloudFirstAccount => 'Add your first adapter instance';
+  String get cloudFirstAccount => 'Add your first panel connection';
 
   @override
   String get cloudFirstAccountInfo =>
-      'Choose an adapter type and verify its authorization, then review devices and resources before adding them to the ledger.';
+      'Choose a panel type and verify its authorization. Then review the devices and resources before adding them to the ledger.';
 
   @override
-  String get cloudChooseTemplate => 'Choose an adapter type';
+  String get cloudChooseTemplate => 'Choose a panel type';
 
   @override
   String get cloudReadOnlyBoundary =>
-      'This app only reads data; the API credentials themselves may have other permissions.\nAdapter authorization and SSH credentials are managed separately. Unlinking keeps local records, costs, payments, and SSH settings.';
+      'This app only reads data; the API credentials themselves may have other permissions.\nPanel authorization and SSH credentials are managed separately. Unlinking keeps local records, costs, payments, and SSH settings.';
 
   @override
   String get cloudTemplateInfo =>
-      'Choose the adapter type matching the panel. The provider is the business supplying the servers.';
+      'Choose the type that matches your panel. The provider is the company you buy servers from.';
 
   @override
   String get cloudV1TemplateInfo =>
@@ -2494,10 +2489,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get cloudSupportedPanels =>
-      'Reads from SolusVM 1 / 2 and RackNerd ctrl. No power control, no remote changes, and billing is not stopped.';
+      'Reads from SolusVM 1 / 2 and RackNerd ctrl only. It can’t control power or change anything remotely, and it doesn’t stop billing.';
 
   @override
-  String get cloudReauthorize => 'Authorize again';
+  String get cloudReauthorize => 'Authorize Again';
 
   @override
   String get cloudSingleVpsApi => 'Single VPS / Client API';
@@ -2507,13 +2502,13 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get cloudWebPreviewNotice =>
-      'Web preview does not accept real API credentials. Connect in the native app.';
+      'The web preview doesn’t accept real API credentials. Use the native app.';
 
   @override
-  String get cloudAliasLabel => 'Adapter instance name';
+  String get cloudAliasLabel => 'Panel connection name';
 
   @override
-  String get cloudAliasRequired => 'Enter an adapter instance name';
+  String get cloudAliasRequired => 'Enter a panel connection name';
 
   @override
   String get cloudEndpointLabel => 'HTTPS panel address';
@@ -2524,7 +2519,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get cloudEndpointInfo =>
-      'Use the HTTPS panel home address (a specific port is fine). Certificate errors are not bypassed and redirects are not followed.';
+      'Use the panel’s HTTPS home address (a specific port is fine). Certificate errors aren’t bypassed and redirects aren’t followed.';
 
   @override
   String get cloudRackNerdEndpointValidation =>
@@ -2532,11 +2527,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get cloudRackNerdEndpointInfo =>
-      'Use the HTTPS panel home address (a specific port is fine) and check the final address below. Certificate errors are not bypassed and redirects are not followed.';
+      'Use the panel’s HTTPS home address (a specific port is fine) and check the final address below. Certificate errors aren’t bypassed and redirects aren’t followed.';
 
   @override
   String get cloudEndpointIdentityInfo =>
-      'The panel address is tied to this connection’s identity. Add a new connection for another panel. Saved credentials are not shown here.';
+      'The panel address is tied to this connection’s identity. To use another panel, add a new connection. Saved credentials aren’t shown here.';
 
   @override
   String get cloudV1CredentialsInfo =>
@@ -2552,7 +2547,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get cloudV1ReauthorizationInfo =>
-      'This API cannot prove that new credentials belong to the original VPS. After verification, explicitly confirm unlinking old associations, then choose whether to import new records. Existing ledger records, costs, and SSH settings are kept.';
+      'This API can’t prove that new credentials belong to the original VPS. After verification, explicitly confirm unlinking the old links, then choose whether to import new records. Existing ledger records, costs, and SSH settings are kept.';
 
   @override
   String get cloudV2ReauthorizationInfo =>
@@ -2564,31 +2559,31 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get cloudVerifyingInfo =>
-      'Verifying and reading with a timeout. Going back or cancelling stops it.';
+      'Verifying and reading with a timeout. Going back or canceling stops it.';
 
   @override
-  String get cloudCancelVerification => 'Cancel verification';
+  String get cloudCancelVerification => 'Cancel Verification';
 
   @override
-  String get cloudVerifyRead => 'Verify and read';
+  String get cloudVerifyRead => 'Verify and Read';
 
   @override
   String get cloudCredentialMemoryInfo =>
-      'Credential fields are cleared after verification or on leaving. They are not written to the ledger, logs, or exports. Dart does not guarantee secure memory erasure.';
+      'Credential fields are cleared after verification or on leaving. They aren’t written to the ledger, logs, or exports. Dart doesn’t guarantee secure memory erasure.';
 
   @override
   String get r2CopyInfoCredentialHandling => 'How credentials are handled';
 
   @override
-  String get cloudChooseInstances => 'Choose devices to import';
+  String get cloudChooseInstances => 'Choose Devices to Import';
 
   @override
   String get cloudEmptyVerification =>
-      'This authorization returned no devices to import. You can save the adapter instance and read it again later.';
+      'This authorization returned no devices to import. You can save the panel connection and read it again later.';
 
   @override
   String get cloudEmptyInventory =>
-      'The complete read returned no devices to import. The adapter instance is saved; you can read it again later.';
+      'The full read returned no devices to import. The panel connection is saved; you can read it again later.';
 
   @override
   String get cloudV1Instance => 'The single VPS for these credentials';
@@ -2605,7 +2600,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get cloudSelectBeforeComplete =>
-      'Select the device above, then complete the details below. Filling in details alone does not import it.';
+      'Select the device above, then fill in the details below. Filling in details alone doesn’t import it.';
 
   @override
   String get cloudLocalDisplayName => 'Local display name (optional)';
@@ -2620,18 +2615,18 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get cloudRackNerdResourcesInfo =>
-      'RackNerd ctrl provides no device ID. Complete the six hardware fields before import; do not guess values the API omits.';
+      'RackNerd ctrl doesn’t provide a device ID. Fill in the six hardware fields before importing, and don’t guess values the API leaves out.';
 
   @override
   String get cloudRebindWarning =>
-      'Saving new authorization removes this instance’s old device links. Existing records, finances and SSH are kept; importing creates new records and never overwrites or relinks old devices.';
+      'Saving the new authorization removes this panel connection’s old device links. Existing records, finances, and SSH settings are kept. Importing creates new records and never overwrites or relinks old devices.';
 
   @override
   String get cloudConfirmRebind =>
-      'I confirm that saving new authorization will remove old device links';
+      'I confirm that saving the new authorization removes the old device links';
 
   @override
-  String get cloudReturnSelect => 'Return to device selection';
+  String get cloudReturnSelect => 'Return to Device Selection';
 
   @override
   String get cloudSaving => 'Saving…';
@@ -2640,75 +2635,75 @@ class AppLocalizationsEn extends AppLocalizations {
   String get cloudNoneSelected => 'No new devices selected';
 
   @override
-  String get cloudSaveOnly => 'Save adapter instance only';
+  String get cloudSaveOnly => 'Save Panel Connection Only';
 
   @override
   String get cloudUpdateUnlink =>
-      'Update authorization and remove old device links';
+      'Update Authorization and Remove Old Device Links';
 
   @override
-  String get cloudUpdateOnly => 'Update authorization only';
+  String get cloudUpdateOnly => 'Update Authorization Only';
 
   @override
-  String get cloudReturnVerify => 'Go back to verify again';
+  String get cloudReturnVerify => 'Back to Verify';
 
   @override
   String get cloudSavingInfo =>
-      'Saving to this device. Please wait until it finishes before going back.';
+      'Saving to this device. Wait until it finishes before going back.';
 
   @override
-  String get cloudReadImportable => 'Read devices available to import';
+  String get cloudReadImportable => 'Read Devices to Import';
 
   @override
-  String get cloudRefreshAccount => 'Refresh adapter instance status';
+  String get cloudRefreshAccount => 'Refresh Panel Connection';
 
   @override
   String get cloudReadingInfo =>
-      'Reading with a timeout. Cancelling or going back stops it without changing the ledger.';
+      'Reading with a timeout. Canceling or going back stops it without changing the ledger.';
 
   @override
-  String get cloudCancelRead => 'Cancel read';
+  String get cloudCancelRead => 'Cancel Read';
 
   @override
-  String get cloudReadAgain => 'Read again';
+  String get cloudReadAgain => 'Read Again';
 
   @override
   String get cloudReadCompleteInfo =>
-      'Only read results were updated; local details were not overwritten.';
+      'Only read results were updated; local details weren’t overwritten.';
 
   @override
   String get cloudDone => 'Done';
 
   @override
-  String get cloudViewDetails => 'View adapter instance details';
+  String get cloudViewDetails => 'View Panel Connection Details';
 
   @override
-  String get cloudRenameAccount => 'Edit adapter instance name';
+  String get cloudRenameAccount => 'Edit Panel Connection Name';
 
   @override
-  String get cloudContinueImport => 'Import more devices';
+  String get cloudContinueImport => 'Import More Devices';
 
   @override
-  String get cloudLinkedServers => 'Linked servers';
+  String get cloudLinkedServers => 'Linked Servers';
 
   @override
-  String get cloudUnlinkAccount => 'Delete adapter instance';
+  String get cloudUnlinkAccount => 'Delete Panel Connection';
 
   @override
-  String get cloudUnlinkAccountTitle => 'Delete this adapter instance?';
+  String get cloudUnlinkAccountTitle => 'Delete this panel connection?';
 
   @override
-  String get cloudUnlinkLocal => 'Delete local adapter instance';
+  String get cloudUnlinkLocal => 'Delete Local Panel Connection';
 
   @override
-  String get cloudAccountDetails => 'Adapter instance details';
+  String get cloudAccountDetails => 'Panel Connection Details';
 
   @override
   String get cloudAccountRemovedNotice =>
-      'The adapter instance was deleted. All local device records are kept.';
+      'The panel connection was deleted. All local device records are kept.';
 
   @override
-  String get cloudTemplateLabel => 'Adapter type';
+  String get cloudTemplateLabel => 'Panel type';
 
   @override
   String get cloudPanelAddress => 'Panel address';
@@ -2740,7 +2735,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get cloudSecureStorageInfo =>
-      'Secure device storage; API credentials are not shown or exported';
+      'Secure device storage; API credentials aren’t shown or exported';
 
   @override
   String get cloudScopeNotice =>
@@ -2748,7 +2743,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get cloudNoLinkedInstances =>
-      'No linked devices yet. Import more from the adapter instance menu.';
+      'No linked devices yet. Import more from the panel connection’s menu.';
 
   @override
   String get cloudLocalRecord => 'Local record';
@@ -2757,66 +2752,66 @@ class AppLocalizationsEn extends AppLocalizations {
   String get cloudCancel => 'Cancel';
 
   @override
-  String get cloudSaveName => 'Save name';
+  String get cloudSaveName => 'Save Name';
 
   @override
-  String get cloudLinkPanelAccount => 'Link adapter instance';
+  String get cloudLinkPanelAccount => 'Link Panel Connection';
 
   @override
   String get cloudLocalBindingInfo =>
-      'Uses saved read results and does not connect to the panel. If no devices appear, refresh the adapter instance first.';
+      'Uses saved read results and doesn’t connect to the panel. If no devices appear, refresh the panel connection first.';
 
   @override
   String get cloudBindingCommitted =>
-      'Link changes were saved. Reload the details before continuing; do not submit again.';
+      'Link changes were saved. Reload the details before continuing, and don’t submit again.';
 
   @override
   String get cloudLedgerNotUpdated =>
-      'The displayed ledger has not been updated. Reload it first.';
+      'The screen hasn’t caught up with the ledger yet. Reload it first.';
 
   @override
-  String get cloudReloadLocal => 'Reload local list';
+  String get cloudReloadLocal => 'Reload Local List';
 
   @override
   String get cloudBindingReadOnly =>
-      'Panel links cannot be changed for archived or demo records.';
+      'Panel links can’t be changed for archived or demo records.';
 
   @override
   String get cloudCurrentLink => 'Current link';
 
   @override
-  String get cloudUnlinkThis => 'Unlink this server';
+  String get cloudUnlinkThis => 'Unlink This Server';
 
   @override
-  String get cloudSelectAccount => 'Choose an adapter instance';
+  String get cloudSelectAccount => 'Choose a panel connection';
 
   @override
   String get cloudNoSavedAccounts =>
-      'This provider has no adapter instances with confirmed ownership. Add and verify one first.';
+      'This provider has no panel connections with confirmed ownership. Add and verify one first.';
 
   @override
   String get cloudSelectReadInstance => 'Choose a previously read device';
 
   @override
   String get cloudNoSavedInstances =>
-      'This adapter instance has no saved device information. Refresh it manually first.';
+      'This panel connection has no saved device information. Refresh it manually first.';
 
   @override
   String get cloudOtherServer => 'Another server';
 
   @override
   String get cloudMissingRefresh =>
-      'Not returned in this read · Refresh the adapter instance manually';
+      'Not returned in this read · Refresh the panel connection manually';
 
   @override
   String get cloudFailedRefresh =>
-      'Last read failed · Refresh the adapter instance manually';
+      'Last read failed · Refresh the panel connection manually';
 
   @override
-  String get cloudSaveLink => 'Save link';
+  String get cloudSaveLink => 'Save Link';
 
   @override
-  String get cloudChangeLink => 'Change link';
+  String get cloudChangeLink => 'Change Link';
 
   @override
   String get cloudLocalLinkBoundary =>
@@ -2833,73 +2828,73 @@ class AppLocalizationsEn extends AppLocalizations {
   String get cloudChangeServerTitle => 'Change this server’s panel link?';
 
   @override
-  String get cloudOnlyUnlinkThis => 'Unlink only this server';
+  String get cloudOnlyUnlinkThis => 'Unlink Only This Server';
 
   @override
-  String get cloudConfirmChangeLink => 'Confirm link change';
+  String get cloudConfirmChangeLink => 'Confirm Link Change';
 
   @override
   String get cloudMetadataReadFailed =>
-      'Could not load adapter instance details. Try again.';
+      'Couldn’t load panel connection details. Try again.';
 
   @override
   String get cloudSavedReloadFailed =>
-      'Saved, but the details could not be reloaded. Reload before making changes.';
+      'Saved, but the details couldn’t be reloaded. Reload before making changes.';
 
   @override
   String get cloudAccountConflict =>
-      'Adapter instance details have changed. Reload them and try again.';
+      'Panel connection details have changed. Reload them and try again.';
 
   @override
   String get cloudOperationFailed =>
-      'The adapter instance operation did not finish. Try again.';
+      'The panel connection operation didn’t finish. Try again.';
 
   @override
   String get cloudCompleteResources =>
-      'Complete all six hardware details before importing. Confirm unknown items with the provider first.';
+      'Fill in all six hardware details before importing. Confirm unknown items with the provider first.';
 
   @override
   String get cloudCleanupIncomplete =>
-      'Credential cleanup has not finished. Try again later.';
+      'Credential cleanup hasn’t finished. Try again later.';
 
   @override
   String get cloudCleanupStatusFailed =>
-      'Could not read the cleanup status. Try again.';
+      'Couldn’t read the cleanup status. Try again.';
 
   @override
   String get cloudVerifyCancelled =>
-      'Verification cancelled. Authorization was not saved.';
+      'Verification canceled. Authorization wasn’t saved.';
 
   @override
   String get cloudAliasInvalid =>
-      'The adapter instance name must be 1–80 characters.';
+      'Use 1–80 characters for the panel connection name.';
 
   @override
   String get cloudVerifyFailed =>
-      'Verification did not finish. Check the panel address, credentials, and network, then try again.';
+      'Verification didn’t finish. Check the panel address, credentials, and network, then try again.';
 
   @override
   String get cloudVerifyNotSaved =>
-      'Verification did not finish. Authorization was not saved.';
+      'Verification didn’t finish. Authorization wasn’t saved.';
 
   @override
   String get cloudVerifyAgainRequired =>
-      'Authorization was not saved. Verify again before importing.';
+      'Authorization wasn’t saved. Verify again before importing.';
 
   @override
   String get cloudAuthorizationExpired =>
-      'This authorization was cleared when you left the app. Go back and verify again. Any uncommitted save was cancelled.';
+      'This authorization was cleared when you left the app. Go back and verify again. Any save that hadn’t been committed was canceled.';
 
   @override
   String get cloudResourcesIncomplete =>
-      'Check and complete all six hardware details. Confirm unknown items with the provider, then import once they are complete.';
+      'Fill in all six hardware details. Confirm unknown items with the provider, then import once they’re complete.';
 
   @override
-  String get cloudSaveFailed => 'Saving did not finish. Try again.';
+  String get cloudSaveFailed => 'Saving didn’t finish. Try again.';
 
   @override
   String get cloudAccountSavedOnly =>
-      'Adapter instance saved. No new devices were imported.';
+      'Panel connection saved. No new devices were imported.';
 
   @override
   String get cloudInstancesSaved =>
@@ -2907,43 +2902,43 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get cloudReadCancelled =>
-      'Read cancelled. Previously read information is kept.';
+      'Read canceled. Previously read information is kept.';
 
   @override
   String get cloudAccountUnlinkedReturn =>
-      'The adapter instance was deleted. Go back to continue.';
+      'The panel connection was deleted. Go back to continue.';
 
   @override
   String get cloudReadIncomplete =>
-      'The read did not finish. Previously read information is kept.';
+      'The read didn’t finish. Previously read information is kept.';
 
   @override
-  String get cloudAliasSaved => 'Adapter instance name saved.';
+  String get cloudAliasSaved => 'Panel connection name saved.';
 
   @override
-  String get cloudNameSaveFailed => 'The name was not saved. Try again.';
+  String get cloudNameSaveFailed => 'The name wasn’t saved. Try again.';
 
   @override
   String get cloudAccountUnlinked =>
-      'Adapter instance deleted. Local details, finances, and SSH settings are kept.';
+      'Panel connection deleted. Local details, finances, and SSH settings are kept.';
 
   @override
   String get cloudUnlinkFailed =>
-      'Deleting the adapter instance did not finish. Try again.';
+      'Couldn’t delete the panel connection. Try again.';
 
   @override
   String get cloudAliasRange =>
-      'Enter an adapter instance name of 1–80 characters.';
+      'Use 1–80 characters for the panel connection name.';
 
   @override
   String get cloudBindingReadFailed =>
-      'Could not load local link details. Try again.';
+      'Couldn’t load the local link details. Try again.';
 
   @override
   String get cloudServerUnlinked => 'This server’s panel link was removed.';
 
   @override
-  String get cloudBindingSaved => 'Adapter instance link saved.';
+  String get cloudBindingSaved => 'Panel connection link saved.';
 
   @override
   String get cloudFailureInvalidEndpoint =>
@@ -2951,11 +2946,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get cloudFailureInvalidCredentials =>
-      'Enter valid API credentials for this template.';
+      'Enter valid API credentials for this panel type.';
 
   @override
   String get cloudFailureUnauthorized =>
-      'The API credentials could not be verified. Check them or authorize again.';
+      'Couldn’t verify the API credentials. Check them or authorize again.';
 
   @override
   String get cloudFailureApiRejected =>
@@ -2982,35 +2977,35 @@ class AppLocalizationsEn extends AppLocalizations {
       'The read timed out. Previously read information is kept. Try again later.';
 
   @override
-  String get cloudFailureCancelled => 'Read cancelled.';
+  String get cloudFailureCancelled => 'Read canceled.';
 
   @override
   String get cloudFailureRedirect =>
-      'The panel returned a redirect. The request stopped to protect credentials. Check the panel address.';
+      'The panel returned a redirect, so the request stopped to protect your credentials. Check the panel address.';
 
   @override
   String get cloudFailureInvalidResponse =>
-      'The panel response did not match the read protocol. Local details were not updated.';
+      'The panel’s response didn’t match the read protocol. Local details weren’t updated.';
 
   @override
   String get cloudFailureResponseTooLarge =>
-      'The panel response exceeds the safe size limit.';
+      'The panel’s response is larger than the safe size limit.';
 
   @override
   String get cloudFailureInventoryTooLarge =>
-      'The number of devices or pages exceeds this read’s limit. The incomplete list was not imported.';
+      'The number of devices or pages is over this read’s limit. The incomplete list wasn’t imported.';
 
   @override
   String get cloudFailureUnsupportedPlatform =>
-      'This preview platform does not accept real API credentials. Use the native app.';
+      'This preview platform doesn’t accept real API credentials. Use the native app.';
 
   @override
   String get cloudAccountFailureIdentity =>
-      'The remote account or device identity changed. Existing links were not changed. Create a separate adapter instance.';
+      'The remote account or device identity changed. Existing links weren’t changed. Create a separate panel connection.';
 
   @override
   String get cloudAccountFailureV1Rebind =>
-      'This client API cannot prove that new credentials belong to the original device. Explicitly confirm removing old links, then choose devices to import. Existing local records are kept.';
+      'This client API can’t prove that new credentials belong to the original device. Explicitly confirm removing the old links, then choose devices to import. Existing local records are kept.';
 
   @override
   String get cloudAccountFailureSelection =>
@@ -3018,26 +3013,26 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get cloudAccountFailureAlias =>
-      'The adapter instance name must be 1–80 characters.';
+      'Use 1–80 characters for the panel connection name.';
 
   @override
   String get cloudAccountFailureSecret =>
-      'API credentials could not be saved to secure device storage. Original authorization is unchanged. Unlock the device and try again.';
+      'Couldn’t save the API credentials to secure device storage. The original authorization is unchanged. Unlock the device and try again.';
 
   @override
   String get cloudAccountFailureSecretRead =>
-      'Could not read this adapter instance’s saved API credentials. Unlock the device and try again. If it still fails, authorize again from its menu.';
+      'Couldn’t read this panel connection’s saved API credentials. Unlock the device and try again. If it still fails, authorize again from its menu.';
 
   @override
   String get cloudAccountFailureBindingTaken =>
-      'This device is linked to another local server and cannot be overwritten. Reload the local list.';
+      'This device is linked to another local server and can’t be overwritten. Reload the local list.';
 
   @override
   String get cloudAccountFailureBindingUnavailable =>
-      'Device information is not currently available for linking. Refresh the adapter instance manually, then select it again.';
+      'Device information isn’t available for linking right now. Refresh the panel connection manually, then select it again.';
 
   @override
-  String get cloudReadLimitPositive => 'Read limits must be greater than zero.';
+  String get cloudReadLimitPositive => 'Read limits must be greater than 0.';
 
   @override
   String cloudProviderLinks(String provider, int count) {
@@ -3093,7 +3088,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String cloudImportBoundary(String deduplication) {
-    return 'Importing does not overwrite existing local names, costs, payments, notes, or SSH settings. $deduplication Archived linked records are also not imported again.';
+    return 'Importing doesn’t overwrite existing local names, costs, payments, notes, or SSH settings. $deduplication Archived linked records are also not imported again.';
   }
 
   @override
@@ -3131,15 +3126,15 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get cloudAuthorizationUnsaved =>
-      '\nThis authorization has not been saved';
+      '\nThis authorization hasn’t been saved';
 
   @override
   String get cloudV1Deduplication =>
-      'Devices already pinned to this authorization are not created again. Separate authorizations are not merged.';
+      'Devices already pinned to this authorization aren’t created again. Separate authorizations aren’t merged.';
 
   @override
   String get cloudV2Deduplication =>
-      'Duplicates are judged by adapter, panel address, account, project and device ID. A matching IP or hostname is only a hint.';
+      'Duplicates are judged by panel type, panel address, account, project, and device ID. A matching IP or hostname is only a hint.';
 
   @override
   String get cloudArchivedSuffix => ' · Archived';
@@ -3149,8 +3144,8 @@ class AppLocalizationsEn extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count devices',
-      one: '1 device',
+      other: '$count Devices',
+      one: '1 Device',
     );
     return 'Import $_temp0';
   }
@@ -3160,28 +3155,28 @@ class AppLocalizationsEn extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count devices',
-      one: '1 device',
+      other: '$count Devices',
+      one: '1 Device',
     );
-    return 'Save adapter instance and import $_temp0';
+    return 'Save Panel Connection and Import $_temp0';
   }
 
   @override
   String cloudUnlinkAccountMessage(String alias, String remoteAction) {
-    return '$alias\n\nDelete this local adapter instance and its device links. Adding it again requires API credentials. Remote devices are not destroyed and billing does not stop.\n\n$remoteAction';
+    return '$alias\n\nThis deletes the local panel connection and its device links. Adding it again requires API credentials. Remote devices aren’t destroyed and billing doesn’t stop.\n\n$remoteAction';
   }
 
   @override
   String get cloudRevokeV1 =>
-      'You must also disable this VPS’s Client API or reset its Key / Hash in the panel.';
+      'You’ll also need to disable this VPS’s Client API or reset its Key / Hash in the panel.';
 
   @override
   String get cloudRevokeV2 =>
-      'You must also revoke the issued token in the panel.';
+      'You’ll also need to revoke the issued token in the panel.';
 
   @override
   String cloudSuggestedAlias(String provider) {
-    return 'My $provider adapter';
+    return 'My $provider panel';
   }
 
   @override
@@ -3191,7 +3186,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String cloudAlreadyLinkedTo(String name) {
-    return 'Linked to: $name · Cannot overwrite';
+    return 'Linked to: $name · Can’t overwrite';
   }
 
   @override
@@ -3201,7 +3196,7 @@ class AppLocalizationsEn extends AppLocalizations {
     String instance,
     String replacement,
   ) {
-    return '$server\nCurrent: $account · $instance$replacement\n\nOnly the local link changes. Server details, hardware, costs, payments, SSH settings, the adapter instance, and authorization are kept. No remote devices are changed and billing does not stop.';
+    return '$server\nCurrent: $account · $instance$replacement\n\nOnly the local link changes. Server details, hardware, costs, payments, SSH settings, the panel connection, and its authorization are kept. No remote devices are changed and billing doesn’t stop.';
   }
 
   @override
@@ -3236,7 +3231,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get cloudVerifiedManual => 'Verified · Manual reads';
 
   @override
-  String get cloudStepTemplate => 'Adapter type';
+  String get cloudStepTemplate => 'Panel type';
 
   @override
   String get cloudStepCredentials => 'Credentials';
@@ -3258,10 +3253,10 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get serverNameRange => 'The name must contain 1–80 characters';
+  String get serverNameRange => 'Use 1–80 characters for the name';
 
   @override
-  String get serverVendorRange => 'The provider must contain 1–80 characters';
+  String get serverVendorRange => 'Use 1–80 characters for the provider';
 
   @override
   String get serverHostFormat =>
@@ -3280,8 +3275,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get serverInvalidDate => 'Invalid date';
 
   @override
-  String get serverDueAfterStart =>
-      'The expiry date must be after the start date';
+  String get serverDueAfterStart => 'The due date must be after the start date';
 
   @override
   String get resourceMonth => 'Month';
@@ -3294,7 +3288,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get resourceValidIp =>
-      'Enter a valid IPv4 or IPv6 address. Unspecified addresses are not allowed.';
+      'Enter a valid IPv4 or IPv6 address. Unspecified addresses aren’t allowed.';
 
   @override
   String get resourceValidHostname =>
@@ -3302,15 +3296,13 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get resourceValidVcpu =>
-      'vCPU count must be a whole number from 1 to 65,536';
+      'Enter a whole number of vCPUs from 1 to 65,536';
 
   @override
-  String get resourceValidRam =>
-      'Memory capacity must be a valid positive number';
+  String get resourceValidRam => 'Enter a valid positive memory capacity';
 
   @override
-  String get resourceValidDisk =>
-      'Disk capacity must be a valid positive number';
+  String get resourceValidDisk => 'Enter a valid positive disk capacity';
 
   @override
   String get resourceValidTraffic =>
@@ -3325,7 +3317,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get resourceUnknownApiSource =>
-      'Unknown resources cannot be marked as API-sourced';
+      'Unknown resources can’t be marked as API-sourced';
 
   @override
   String get resourceTooLarge => 'Local resource configuration is too large';
@@ -3372,7 +3364,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get resourceSourceMissing =>
-      'Needs input: the API did not return a valid value';
+      'Needs input: the API didn’t return a valid value';
 
   @override
   String get resourceSourceCompleted => 'Source: completed manually';
@@ -3426,7 +3418,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get resourceImportHelp =>
-      'Check and complete all six fields before importing. Capacities use base 1024; 0 does not mean unlimited. Skip this instance for now if details are missing, then import it once they are complete.';
+      'Check and complete all six fields before importing. Capacities use base 1024; 0 doesn’t mean unlimited. Skip this device for now if details are missing, then import it once they’re complete.';
 
   @override
   String get resourceLocalHelp =>
@@ -3455,7 +3447,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get resourceVcpuCount => 'vCPU count';
 
   @override
-  String get serverFilterTitle => 'Filter servers';
+  String get serverFilterTitle => 'Filter Servers';
 
   @override
   String get serverGroup => 'Group';
@@ -3464,7 +3456,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get serverAllGroups => 'All groups';
 
   @override
-  String get serverDueStatus => 'Expiry status';
+  String get serverDueStatus => 'Due status';
 
   @override
   String get serverAllStatuses => 'All statuses';
@@ -3473,10 +3465,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get serverExpired => 'Expired';
 
   @override
-  String get serverDueNext30 => 'Expires in the next 30 days';
+  String get serverDueNext30 => 'Due in the next 30 days';
 
   @override
-  String get serverCostDateUnknown => 'Cost / Expiry date unknown';
+  String get serverCostDateUnknown => 'Cost / due date unknown';
 
   @override
   String get serverApplyFilters => 'Apply filters';
@@ -3491,36 +3483,36 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get serverReloadedLocal =>
-      'Local ledger reloaded. Remote status was not checked.';
+      'Local ledger reloaded. Remote status wasn’t checked.';
 
   @override
-  String get serverAdd => 'Add server';
+  String get serverAdd => 'Add Server';
 
   @override
-  String get serverImportPanel => 'Import from panel account';
+  String get serverImportPanel => 'Import from panel';
 
   @override
   String get serverFirstTitle => 'Your first VPS\nstarts here';
 
   @override
   String get serverFirstDescription =>
-      'Expiry, costs and connections in one place.';
+      'Due dates, costs, and connections in one place.';
 
   @override
-  String get serverAddFirst => 'Add your first server';
+  String get serverAddFirst => 'Add Your First Server';
 
   @override
   String get serverLoadDemoQuestion => 'Load demo data?';
 
   @override
   String get serverLoadDemoHelp =>
-      'Adds 4 demo records with reserved addresses. Nothing connects to a server; archive them anytime.';
+      'Adds 4 demo records with reserved addresses. Nothing connects to a server, and you can archive them anytime.';
 
   @override
-  String get serverLoadDemo => 'Load demo';
+  String get serverLoadDemo => 'Load Demo';
 
   @override
-  String get serverViewDemo => 'View demo data first';
+  String get serverViewDemo => 'View Demo Data First';
 
   @override
   String get serverManualStartHelp =>
@@ -3548,11 +3540,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get serverFilterSelectedSuffix => ' · Applied';
 
   @override
-  String get serverExpiryNeedsCheck => 'Expiry needs checking';
+  String get serverExpiryNeedsCheck => 'Due dates need checking';
 
   @override
   String serverExpiryCounts(String p0, String p1) {
-    return 'Expired: $p0 · Expiring within 30 days: $p1';
+    return 'Expired: $p0 · Due within 30 days: $p1';
   }
 
   @override
@@ -3568,7 +3560,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get serverSortFavorites => 'Favorites first';
 
   @override
-  String get serverSortDue => 'By expiry date';
+  String get serverSortDue => 'By due date';
 
   @override
   String get serverSortName => 'By name';
@@ -3584,7 +3576,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get serverNoMatchesHelp =>
-      'Try adjusting the filters. Restore archived records in Settings.';
+      'Try changing the filters. You can restore archived records in Settings.';
 
   @override
   String get uiServersDueSoon => 'Due in 30 days';
@@ -3600,8 +3592,8 @@ class AppLocalizationsEn extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: 'Show $count servers',
-      one: 'Show 1 server',
+      other: 'Show $count Servers',
+      one: 'Show 1 Server',
     );
     return '$_temp0';
   }
@@ -3611,11 +3603,11 @@ class AppLocalizationsEn extends AppLocalizations {
       'Swipe left or long-press a server for quick actions';
 
   @override
-  String get serverClearFilters => 'Clear filters';
+  String get serverClearFilters => 'Clear Filters';
 
   @override
   String get serverListObservationHelp =>
-      'No continuous monitoring. Days to expiry use the device date.';
+      'Servers aren’t monitored. Days left use the device date.';
 
   @override
   String get serverCostsMissing => 'Add cost details';
@@ -3624,7 +3616,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get serverMeteredBilling => 'Metered billing';
 
   @override
-  String get serverDueUnknown => 'Expiry date unknown';
+  String get serverDueUnknown => 'Due date unknown';
 
   @override
   String serverExpiredDays(int p0) {
@@ -3670,15 +3662,15 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get serverSavedDisplayStale =>
-      'Changes saved; displayed details are not yet updated';
+      'Changes saved, but the screen hasn’t updated yet';
 
   @override
   String get serverReloadBeforeEditing =>
-      'Reload the local ledger before making more changes. Do not submit again. Existing data will not be cleared.';
+      'Reload the local ledger before making more changes. Don’t submit again. Your existing data won’t be cleared.';
 
   @override
   String get serverReloadStillFailed =>
-      'Reload did not complete. Saved changes are kept. Try reloading later.';
+      'Couldn’t reload. Saved changes are kept. Try reloading later.';
 
   @override
   String get serverReload => 'Reload';
@@ -3688,11 +3680,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String serverArchiveHelp(String p0) {
-    return '$p0\n\nArchiving hides the record from the server list and current cost statistics. Payment history is kept. Restore it under Settings / Archived records. This does not stop or destroy the server, or stop provider billing.';
+    return '$p0\n\nArchiving hides the record from the server list and current cost statistics. Payment history is kept. Restore it in Settings > Archived Records. This doesn’t stop or destroy the server, and it doesn’t stop provider billing.';
   }
 
   @override
-  String get serverArchiveLocal => 'Archive local record';
+  String get serverArchiveLocal => 'Archive Local Record';
 
   @override
   String get serverArchived =>
@@ -3703,26 +3695,26 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get serverUndoArchiveFailed =>
-      'Could not undo. Check Archived records in Settings.';
+      'Couldn’t undo. Check Archived Records in Settings.';
 
   @override
   String get serverMissingDetails => 'Not yet added';
 
   @override
-  String get serverDetails => 'Server details';
+  String get serverDetails => 'Server Details';
 
   @override
   String get serverRecordUnavailable =>
       'This record is unavailable. Go back and try again.';
 
   @override
-  String get serverRemoveFavorite => 'Remove from favorites';
+  String get serverRemoveFavorite => 'Remove from Favorites';
 
   @override
-  String get serverSetFavorite => 'Add to favorites';
+  String get serverSetFavorite => 'Add to Favorites';
 
   @override
-  String get serverMoreActions => 'More actions';
+  String get serverMoreActions => 'More Actions';
 
   @override
   String get serverDemoWarning =>
@@ -3738,52 +3730,52 @@ class AppLocalizationsEn extends AppLocalizations {
   String get serverHostAddress => 'Host address';
 
   @override
-  String get serverCopyHost => 'Copy host address';
+  String get serverCopyHost => 'Copy Host Address';
 
   @override
   String get serverHostCopied => 'Host address copied';
 
   @override
   String get serverCopyHostFailed =>
-      'Could not copy the host address. Try again.';
+      'Couldn’t copy the host address. Try again.';
 
   @override
   String get serverOperatingSystem => 'Operating system';
 
   @override
-  String get serverGroupPurpose => 'Group / Purpose';
+  String get serverGroupPurpose => 'Group / purpose';
 
   @override
   String get serverSpecifications => 'Specifications';
 
   @override
   String get serverLocalInfoHelp =>
-      'These are local details. Panel refreshes do not overwrite them. A connection test does not prove ongoing service availability.';
+      'These details are stored locally, and panel refreshes never overwrite them. A connection test doesn’t prove the service stays available.';
 
   @override
-  String get serverEditHardware => 'Edit hardware';
+  String get serverEditHardware => 'Edit Hardware';
 
   @override
   String get serverPanelLink => 'Panel link';
 
   @override
-  String get serverNoPanelLink => 'No linked panel account';
+  String get serverNoPanelLink => 'No linked panel connection';
 
   @override
   String get serverPanelLinkHelp =>
       'Panel refresh never overwrites what you entered.';
 
   @override
-  String get serverLinkPanel => 'Link panel account';
+  String get serverLinkPanel => 'Link panel connection';
 
   @override
   String get serverManageLink => 'Manage link';
 
   @override
-  String get serverReloadPanelDetails => 'Reload panel account details';
+  String get serverReloadPanelDetails => 'Reload panel connection details';
 
   @override
-  String get serverCostExpiry => 'Costs and expiry';
+  String get serverCostExpiry => 'Costs and due date';
 
   @override
   String get serverMonthlyEstimate => 'Monthly cost estimate';
@@ -3812,7 +3804,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get serverUnknown => 'Unknown';
 
   @override
-  String get serverServiceDue => 'Service expiry date';
+  String get serverServiceDue => 'Service due date';
 
   @override
   String get serverUnknownCostHelp =>
@@ -3827,7 +3819,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'Remaining value is a reference at the renewal price, not a refund or resale price.';
 
   @override
-  String get serverReminderPlan => 'Expiry reminders and usage plan';
+  String get serverReminderPlan => 'Reminders & Usage Plan';
 
   @override
   String get serverRemindersOff => 'Reminders off';
@@ -3840,7 +3832,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'Dates or cost details are incomplete. Remaining value is unknown, not 0.';
 
   @override
-  String get serverRecordPayment => 'Record a payment made';
+  String get serverRecordPayment => 'Record Payment';
 
   @override
   String get serverUseForCalculation => 'Calculate using these details';
@@ -3852,7 +3844,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get serverConnectionsControl => 'Connections and controls';
 
   @override
-  String get serverSshSettings => 'SSH connection settings';
+  String get serverSshSettings => 'SSH Connection Settings';
 
   @override
   String get serverSshSettingsDescription =>
@@ -3862,14 +3854,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get serverConnectSsh => 'Connect with SSH';
 
   @override
-  String get serverTcpTest => 'TCP test';
+  String get serverTcpTest => 'TCP Test';
 
   @override
   String get serverPower => 'Server power';
 
   @override
   String get serverConnectionSafety =>
-      'Verify the host fingerprint on first connect. Shutdown or reboot does not stop billing.';
+      'Verify the host fingerprint the first time you connect. Shutting down or restarting doesn’t stop billing.';
 
   @override
   String get serverNotes => 'Notes';
@@ -3883,7 +3875,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get uiDetailCopy => 'Copy';
 
   @override
-  String get uiDetailMenuValuation => 'Use for remaining-value estimate';
+  String get uiDetailMenuValuation => 'Use for Remaining-Value Estimate';
 
   @override
   String get uiDetailPurpose => 'Purpose';
@@ -3914,7 +3906,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get uiDetailValuation => 'Estimate';
 
   @override
-  String get uiDetailFillIn => 'Fill in';
+  String get uiDetailFillIn => 'Fill In';
 
   @override
   String get uiDetailHostKey => 'Host key';
@@ -3929,19 +3921,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get uiDetailNotConfigured => 'Not set up';
 
   @override
-  String get uiDetailNeedSshTitle => 'SSH is not set up';
+  String get uiDetailNeedSshTitle => 'SSH isn’t set up';
 
   @override
   String uiDetailNeedSshMessage(String name) {
-    return 'Set the address, port, username and credential for $name before connecting or using power actions.';
+    return 'Set the address, port, username, and credential for $name before connecting or using power actions.';
   }
 
   @override
-  String get uiDetailGoConfigure => 'Set up';
+  String get uiDetailGoConfigure => 'Set Up';
 
   @override
   String get uiDetailArchivedUnavailable =>
-      'This action is not available for archived servers.';
+      'This action isn’t available for archived servers.';
 
   @override
   String get uiDetailNotPrepaid =>
@@ -3949,11 +3941,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get uiDetailCannotRenew =>
-      'The due date or renewal cycle is incomplete, so a renewal payment cannot be recorded yet. Fill in the cost details first.';
+      'The due date or renewal cycle is incomplete, so a renewal payment can’t be recorded yet. Fill in the cost details first.';
 
   @override
   String get uiDetailReadOnly =>
-      'Local data is still loading or busy, so a payment cannot be recorded now. Reload first.';
+      'Local data is still loading or busy, so you can’t record a payment right now. Reload first.';
 
   @override
   String get uiDetailQuickSsh => 'SSH';
@@ -4036,19 +4028,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get serverStartDate => 'Start date';
 
   @override
-  String get serverDueDate => 'Expiry date';
+  String get serverDueDate => 'Due date';
 
   @override
   String get serverOptionalStart => 'Service start date (optional)';
 
   @override
-  String get serverOptionalDue => 'Service expiry date (optional)';
+  String get serverOptionalDue => 'Service due date (optional)';
 
   @override
   String get serverManualAdd => 'Add manually';
 
   @override
-  String get serverEditTitle => 'Edit server';
+  String get serverEditTitle => 'Edit Server';
 
   @override
   String get serverFormHelp =>
@@ -4079,7 +4071,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get serverSavedHostHelp =>
-      'This address is saved separately. Editing hardware does not change it. Set the SSH connection address separately.';
+      'This address is saved separately. Editing hardware doesn’t change it. Set the SSH connection address separately.';
 
   @override
   String get serverOptionalPurpose => 'Purpose (optional)';
@@ -4101,7 +4093,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get serverPaymentLockHelp =>
-      'Payments exist: billing type, cycle and dates are locked.';
+      'Billing type, cycle, and dates are locked because payments exist.';
 
   @override
   String get serverCostUnknownOption => 'Cost unknown · Add later';
@@ -4131,10 +4123,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get serverNotesSafety =>
-      'Notes are not encrypted. Do not store passwords, keys or tokens.';
+      'Notes aren’t encrypted. Don’t store passwords, keys, or tokens.';
 
   @override
-  String get serverSave => 'Save server';
+  String get serverSave => 'Save Server';
 
   @override
   String get uiFormProvider => 'Provider';
@@ -4158,7 +4150,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get uiFormDone => 'Done';
 
   @override
-  String get uiFormSetUnknown => 'Set unknown';
+  String get uiFormSetUnknown => 'Set Unknown';
 
   @override
   String get uiFormPickDate => 'Choose date';
@@ -4210,11 +4202,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get connectionBrowserTcpUnsupported =>
-      'Browsers do not provide native TCP. Use the native app.';
+      'Browsers can’t open native TCP connections. Use the native app.';
 
   @override
   String get connectionHostKeyUnverified =>
-      'Could not verify the complete host public key. Connection blocked.';
+      'Couldn’t verify the full host key. Connection blocked.';
 
   @override
   String get connectionHandshakeUnsupported =>
@@ -4228,7 +4220,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'Enter an IP address or domain without a protocol, port, or path';
 
   @override
-  String get tcpValidPort => 'The port must be between 1 and 65,535';
+  String get tcpValidPort => 'Enter a port from 1 to 65,535';
 
   @override
   String get tcpSource => 'TCP connection test from this device';
@@ -4243,7 +4235,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tcpTimedOut => 'Connection timed out';
 
   @override
-  String get tcpCancelled => 'Test cancelled';
+  String get tcpCancelled => 'Test canceled';
 
   @override
   String get tcpFailed => 'Connection failed (network or address unavailable)';
@@ -4252,14 +4244,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tcpTimeoutPositive => 'Timeout must be greater than 0';
 
   @override
-  String get tcpSingleTarget => 'Single-target TCP test';
+  String get tcpSingleTarget => 'Single-Target TCP Test';
 
   @override
   String get tcpTestExplanation =>
-      'Only checks whether a TCP connection opens; no data is sent. Success does not mean SSH login works or the service is healthy.';
+      'Only checks whether a TCP connection opens; no data is sent. Success doesn’t mean SSH login works or the service is healthy.';
 
   @override
-  String get tcpAddress => 'IP / Domain';
+  String get tcpAddress => 'IP / domain';
 
   @override
   String get connectionPort => 'Port';
@@ -4270,10 +4262,10 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get tcpCancel => 'Cancel test';
+  String get tcpCancel => 'Cancel Test';
 
   @override
-  String get tcpStart => 'Start test';
+  String get tcpStart => 'Start Test';
 
   @override
   String tcpTimeoutHelp(int p0) {
@@ -4335,7 +4327,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'Commands and snippets · Unsent draft';
 
   @override
-  String get terminalCommandsSnippets => 'Commands and snippets';
+  String get terminalCommandsSnippets => 'Commands and Snippets';
 
   @override
   String get terminalCommands => 'Commands';
@@ -4362,28 +4354,28 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get terminalSendUnconfirmed =>
-      'Sending was not confirmed. The draft is kept. Check the remote state before trying again to avoid duplicate execution.';
+      'Couldn’t confirm the send. The draft is kept. Check the remote state before trying again so it doesn’t run twice.';
 
   @override
   String get terminalSend => 'Send';
 
   @override
-  String get terminalSendExecute => 'Send and execute';
+  String get terminalSendExecute => 'Send and Execute';
 
   @override
-  String get terminalBack => 'Back to terminal';
+  String get terminalBack => 'Back to Terminal';
 
   @override
   String get terminalQuickCommands => 'Quick commands';
 
   @override
-  String get terminalInsertSnippet => 'Insert snippet';
+  String get terminalInsertSnippet => 'Insert Snippet';
 
   @override
   String get terminalDraft => 'Draft to send';
 
   @override
-  String get terminalDraftHint => 'Edit the content to send here';
+  String get terminalDraftHint => 'Edit what you want to send here';
 
   @override
   String get terminalPaste => 'Paste';
@@ -4393,23 +4385,23 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get terminalControlCharacterWarning =>
-      'The content contains newlines, carriage returns, or control characters. It may execute immediately even without appending Enter.';
+      'The text contains newlines, carriage returns, or control characters, so it may run immediately even without Enter.';
 
   @override
   String get terminalSessionChanged =>
-      'The session has changed. Return to the terminal and reopen this panel. The draft is not sent automatically.';
+      'The session has changed. Return to the terminal and reopen this panel. The draft isn’t sent automatically.';
 
   @override
   String get terminalCannotSend =>
-      'Sending is unavailable. Reconnecting clears the draft and does not replay input.';
+      'Can’t send right now. Reconnecting clears the draft and doesn’t replay input.';
 
   @override
   String get terminalSendMeaning =>
-      'Send sends the exact text. Send and execute appends Enter, which is handled by the current terminal program.';
+      'Send sends the text exactly as is. Send and Execute adds Enter, and the current terminal program handles it.';
 
   @override
   String get connectionReadFailed =>
-      'Could not read connection details. Try again.';
+      'Couldn’t read the connection details. Try again.';
 
   @override
   String get connectionTemporary => 'Temporary connection';
@@ -4419,42 +4411,42 @@ class AppLocalizationsEn extends AppLocalizations {
       'Invalid connection details. Check the address, port, and credentials.';
 
   @override
-  String get connectionChoosePowerTarget => 'Choose a server for power control';
+  String get connectionChoosePowerTarget => 'Choose a Server for Power Control';
 
   @override
   String get connectionIdentityFirst =>
-      'Connect to one server at a time. Authentication using the selected credentials is sent only after the host identity is verified.';
+      'Connect to one server at a time. Your selected credentials are sent only after the host’s identity is verified.';
 
   @override
   String get connectionWebPreviewWarning =>
-      'The web preview does not support native SSH / TCP or accept real login credentials. Use the native app.';
+      'The web preview doesn’t support native SSH / TCP or accept real login credentials. Use the native app.';
 
   @override
-  String get connectionReloadDetails => 'Reload connection details';
+  String get connectionReloadDetails => 'Reload Connection Details';
 
   @override
   String get connectionTargetServer => 'Target server';
 
   @override
   String get connectionTemporaryTarget =>
-      'Temporary target · Settings are not saved';
+      'Temporary target · Settings aren’t saved';
 
   @override
   String get connectionDemoSuffix => ' · Demo, no connection';
 
   @override
   String get connectionDemoBlocked =>
-      'Demo servers use reserved addresses and cannot make network connections.';
+      'Demo servers use reserved addresses and can’t make network connections.';
 
   @override
-  String get connectionAddressHint => 'IPv4 / IPv6 / Domain';
+  String get connectionAddressHint => 'IPv4 / IPv6 / domain';
 
   @override
   String get connectionValidHost =>
       'Enter a valid host without a protocol, username, or port';
 
   @override
-  String get connectionPortRange => 'The port must be between 1 and 65,535';
+  String get connectionPortRange => 'Enter a port from 1 to 65,535';
 
   @override
   String get connectionUsername => 'Login username';
@@ -4463,37 +4455,37 @@ class AppLocalizationsEn extends AppLocalizations {
   String get connectionValidUsername => 'Enter a valid login username';
 
   @override
-  String get connectionSavedCredentials => 'Saved login credentials';
+  String get connectionSavedCredentials => 'Saved Login Credentials';
 
   @override
   String get connectionChooseCredentials => 'Choose login credentials';
 
   @override
   String connectionUseDefaultUsername(String p0) {
-    return 'Use default username: $p0';
+    return 'Use Default Username: $p0';
   }
 
   @override
-  String get connectionManageCredentials => 'Manage credentials';
+  String get connectionManageCredentials => 'Manage Credentials';
 
   @override
   String get connectionEditSavedSettings =>
-      'Edit and save SSH settings for this server';
+      'Edit and Save SSH Settings for This Server';
 
   @override
   String get connectionTemporaryChangesHelp =>
-      'Changes on this page apply only to this connection. Passwords or private keys come from saved credentials and are not entered or saved again here. The connection ends when the app enters the background. Use tmux / screen on the remote server for long-running tasks.';
+      'Changes on this page apply only to this connection. Passwords or private keys come from saved credentials and aren’t entered or saved again here. The connection ends when the app enters the background. Use tmux / screen on the remote server for long-running tasks.';
 
   @override
   String get connectionSnippetDraftOnly =>
-      'The snippet goes into a separate draft. Connecting, verification, and authentication do not send it.';
+      'The snippet goes into a separate draft. Connecting, verification, and authentication never send it.';
 
   @override
   String get connectionPowerAfterConnect =>
-      'After connecting, choose restart or shutdown and complete both confirmations. Power-on is not supported.';
+      'After connecting, choose restart or shutdown and complete both confirmations. Powering on isn’t supported.';
 
   @override
-  String get connectionReviewConnect => 'Review and connect';
+  String get connectionReviewConnect => 'Review and Connect';
 
   @override
   String get uiConnTarget => 'Target';
@@ -4529,7 +4521,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get uiConnActualAddress => 'Actual address';
 
   @override
-  String get uiConnMoreActions => 'More actions';
+  String get uiConnMoreActions => 'More Actions';
 
   @override
   String get snippetFullEscapedPreview => 'Full content preview (escaped)';
@@ -4540,13 +4532,13 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get snippetPreviewNoSend =>
-      'Previewing and inserting do not send content. Check the target and full draft in the terminal, then choose Send or Send and execute.';
+      'Previewing and inserting never send anything. Check the target and the full draft in the terminal, then choose Send or Send and Execute.';
 
   @override
   String get connectionClose => 'Close';
 
   @override
-  String get snippetInsertDraftOnly => 'Insert into draft only';
+  String get snippetInsertDraftOnly => 'Insert into Draft Only';
 
   @override
   String get snippetChanged =>
@@ -4554,36 +4546,36 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get snippetOperationFailed =>
-      'The snippet operation did not complete. Try again. Saved content is kept.';
+      'Couldn’t complete that. Try again. Your saved content is kept.';
 
   @override
   String get snippetDeleteQuestion => 'Delete this local snippet?';
 
   @override
   String snippetDeleteHelp(String p0) {
-    return 'Deletes the local template “$p0”. Servers and already-inserted drafts are unchanged.';
+    return 'Deletes “$p0” from this device. Servers and drafts that already include it are unchanged.';
   }
 
   @override
-  String get snippetDelete => 'Delete snippet';
+  String get snippetDelete => 'Delete Snippet';
 
   @override
-  String get snippetChoose => 'Choose a snippet for the draft';
+  String get snippetChoose => 'Choose Snippet';
 
   @override
   String get snippetReadFailed =>
-      'Could not read snippets. Local data is unchanged.';
+      'Couldn’t read snippets. Local data is unchanged.';
 
   @override
   String get snippetSelectPreviewHelp =>
-      'Preview first. Only inserted into the draft; nothing is sent automatically.';
+      'Preview first. The snippet is only added to the draft; nothing is sent automatically.';
 
   @override
   String get snippetPlaintextHelp =>
-      'Snippets are local plain text. Do not save passwords, private keys, or tokens. Choose Insert snippet in the terminal to add one to a draft.';
+      'Snippets are stored as plain text on this device. Don’t save passwords, private keys, or tokens. Choose Insert Snippet in the terminal to add one to a draft.';
 
   @override
-  String get snippetAdd => 'Add snippet';
+  String get snippetAdd => 'Add Snippet';
 
   @override
   String get snippetEmptyHelp =>
@@ -4595,10 +4587,10 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get snippetPreviewInsert => 'Preview and insert into draft';
+  String get snippetPreviewInsert => 'Preview and Insert into Draft';
 
   @override
-  String get snippetFullPreview => 'Full preview';
+  String get snippetFullPreview => 'Full Preview';
 
   @override
   String get connectionDelete => 'Delete';
@@ -4608,20 +4600,20 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get snippetDiscardHelp =>
-      'Unsaved content will not be written to the local snippet.';
+      'Unsaved changes won’t be saved to the snippet.';
 
   @override
-  String get connectionDiscardChanges => 'Discard changes';
+  String get connectionDiscardChanges => 'Discard Changes';
 
   @override
-  String get snippetEdit => 'Edit snippet';
+  String get snippetEdit => 'Edit Snippet';
 
   @override
-  String get snippetCancelEdit => 'Cancel snippet editing';
+  String get snippetCancelEdit => 'Cancel Snippet Editing';
 
   @override
   String get snippetSaveSafety =>
-      'Snippets are stored as plain text. Do not enter passwords, keys or tokens.';
+      'Snippets are stored as plain text. Don’t enter passwords, keys or tokens.';
 
   @override
   String get snippetName => 'Snippet name';
@@ -4642,11 +4634,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get connectionSaving => 'Saving…';
 
   @override
-  String get snippetSave => 'Save snippet';
+  String get snippetSave => 'Save Snippet';
 
   @override
-  String get terminalCopyFailed =>
-      'Could not copy terminal content. Try again.';
+  String get terminalCopyFailed => 'Couldn’t copy terminal content. Try again.';
 
   @override
   String get terminalSelectionCopied => 'Selected terminal content copied';
@@ -4664,7 +4655,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get terminalClipboardReadFailed =>
-      'Could not read the clipboard. The draft is unchanged. Tap Paste again.';
+      'Couldn’t read the clipboard. The draft is unchanged. Tap Paste again.';
 
   @override
   String get terminalReplaceDraftQuestion => 'Replace the current draft?';
@@ -4674,10 +4665,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'The current unsent draft will be replaced. Nothing will be sent over SSH.';
 
   @override
-  String get terminalReplaceDraft => 'Replace draft';
+  String get terminalReplaceDraft => 'Replace Draft';
 
   @override
-  String get terminalCurrentSession => 'Current SSH session';
+  String get terminalCurrentSession => 'Current SSH Session';
 
   @override
   String terminalDimensions(String p0, String p1, String p2) {
@@ -4690,11 +4681,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get terminalInputHelp =>
-      'Keyboard input and special keys go directly to SSH. Quick commands, snippets, and pasted text go into a separate draft first. Send does not append Enter; Send and execute does, for the current terminal program to handle. Newlines already in the content may still execute. Ctrl applies to the next key; tap it again to cancel.';
+      'Keyboard input and special keys go straight to SSH. Quick commands, snippets, and pasted text go into a separate draft first. Send doesn’t add Enter; Send and Execute does, and the current terminal program handles it. Newlines already in the text may still run. Ctrl applies to the next key; tap it again to cancel.';
 
   @override
   String get terminalBackgroundHelp =>
-      'Ending the session, leaving, or backgrounding the app closes this page. Nothing reconnects or replays input automatically. Use tmux / screen remotely for long-running tasks.';
+      'Ending the session, leaving, or backgrounding the app closes this page. Nothing reconnects or replays input automatically. Use tmux / screen on the remote server for long-running tasks.';
 
   @override
   String r2ConnDisconnectHelp(String p0) {
@@ -4706,7 +4697,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'Offline font: DejaVu Sans Mono · Chinese uses device font fallback';
 
   @override
-  String get terminalLicenses => 'Open-source licenses';
+  String get terminalLicenses => 'Open-Source Licenses';
 
   @override
   String get terminalDisconnectQuestion => 'Disconnect the SSH session?';
@@ -4728,34 +4719,34 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get terminalUnsentDraftExit =>
-      'The current draft has not been sent. It will be cleared on exit.';
+      'The draft hasn’t been sent. It will be cleared when you exit.';
 
   @override
   String get terminalDisconnect => 'Disconnect';
 
   @override
-  String get terminalDisconnectExit => 'Disconnect and exit';
+  String get terminalDisconnectExit => 'Disconnect and Exit';
 
   @override
-  String get terminalDiscardExit => 'Discard and exit';
+  String get terminalDiscardExit => 'Discard and Exit';
 
   @override
   String get terminalBackgroundDisconnected =>
-      'The app went to the background; disconnected';
+      'Disconnected because the app went to the background';
 
   @override
-  String get terminalTargetChanged => 'The target changed; disconnected';
+  String get terminalTargetChanged => 'Disconnected because the target changed';
 
   @override
   String get terminalPowerMenuHelp =>
-      'After connecting, choose SSH restart or shutdown in the Terminal menu and complete both confirmations.';
+      'After connecting, choose SSH Restart or SSH Shutdown in the Terminal Menu and complete both confirmations.';
 
   @override
-  String get terminalHostChanged => 'Host key changed · Authentication blocked';
+  String get terminalHostChanged => 'Host Key Changed · Authentication Blocked';
 
   @override
   String get terminalHostChangedHelp =>
-      'This may be a reinstall or a man-in-the-middle attack. Login credentials have not been sent. Verify the reason and new public key through an independent source such as the provider console.';
+      'This may be a reinstall or a man-in-the-middle attack. Your login credentials haven’t been sent. Verify the reason and the new host key through an independent source, such as the provider console.';
 
   @override
   String get terminalPreviousFingerprint => 'Previous fingerprint';
@@ -4767,18 +4758,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get terminalCurrentFingerprint => 'Current fingerprint';
 
   @override
-  String get terminalRejectConnection => 'Reject connection';
+  String get terminalRejectConnection => 'Reject Connection';
 
   @override
-  String get terminalReverify => 'Start independent verification';
+  String get terminalReverify => 'Start Independent Verification';
 
   @override
   String get terminalPowerFailed =>
-      'The power command could not be confirmed successful. Check the connection, remote permissions, and provider console before trying again. It will not be resent automatically.';
+      'Couldn’t confirm that the power command succeeded. Check the connection, remote permissions, and the provider console before trying again. It won’t be resent automatically.';
 
   @override
   String get terminalPowerUnknown =>
-      'Submission of the power command was attempted, but the result is unknown. Disconnection does not prove completion. Check the provider console. It will not be resent automatically.';
+      'We tried to send the power command, but the result is unknown. A disconnect doesn’t prove it finished. Check the provider console. It won’t be resent automatically.';
 
   @override
   String get terminalNotConnected => 'Not connected';
@@ -4802,7 +4793,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get terminalFailed => 'Connection failed';
 
   @override
-  String get terminalExit => 'Exit terminal';
+  String get terminalExit => 'Exit Terminal';
 
   @override
   String terminalSessionSemantics(String p0, String p1) {
@@ -4810,22 +4801,22 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get terminalHideKeyboard => 'Hide keyboard';
+  String get terminalHideKeyboard => 'Hide Keyboard';
 
   @override
-  String get terminalOpenKeyboard => 'Open keyboard';
+  String get terminalOpenKeyboard => 'Open Keyboard';
 
   @override
-  String get terminalMenu => 'Terminal menu';
+  String get terminalMenu => 'Terminal Menu';
 
   @override
-  String get terminalSessionDetails => 'Session details and help';
+  String get terminalSessionDetails => 'Session Details and Help';
 
   @override
-  String get terminalPasteIntoDraft => 'Paste into draft';
+  String get terminalPasteIntoDraft => 'Paste into Draft';
 
   @override
-  String get r3TermColorScheme => 'Colors & highlighting';
+  String get r3TermColorScheme => 'Colors & Highlighting';
 
   @override
   String get r3TermSchemeDark => 'Dark';
@@ -4845,7 +4836,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'Colors paths, IPs, numbers and keywords in uncolored output. Display only; nothing sent or changed.';
 
   @override
-  String get r4HlLanguage => 'Syntax highlighting';
+  String get r4HlLanguage => 'Syntax Highlighting';
 
   @override
   String get r4HlAuto => 'Auto-detect';
@@ -4860,16 +4851,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get r4HlTooLarge => 'Over 256 KiB: highlighting is off';
 
   @override
-  String get terminalReconnectClear => 'Reconnect and clear draft';
+  String get terminalReconnectClear => 'Reconnect and Clear Draft';
 
   @override
-  String get terminalCancelConnection => 'Cancel connection';
+  String get terminalCancelConnection => 'Cancel Connection';
 
   @override
-  String get terminalSshRestart => 'SSH restart';
+  String get terminalSshRestart => 'SSH Restart';
 
   @override
-  String get terminalSshShutdown => 'SSH shutdown';
+  String get terminalSshShutdown => 'SSH Shutdown';
 
   @override
   String get terminalTypeDirectly => 'Tap to type. Keys are sent directly.';
@@ -4878,10 +4869,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get terminalCopy => 'Copy';
 
   @override
-  String get terminalClearSelection => 'Clear selection';
+  String get terminalClearSelection => 'Clear Selection';
 
   @override
-  String get terminalLatestOutput => 'Return to latest output';
+  String get terminalLatestOutput => 'Return to Latest Output';
 
   @override
   String get terminalEstablishingSecure => 'Establishing a secure connection…';
@@ -4893,11 +4884,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get terminalConnect => 'Connect';
 
   @override
-  String get terminalReconnectShort => 'Reconnect · Clear draft';
+  String get terminalReconnectShort => 'Reconnect · Clear Draft';
 
   @override
   String get terminalBrowserUnsupported =>
-      'Browsers do not support native SSH. Use the native app.';
+      'Browsers don’t support native SSH. Use the native app.';
 
   @override
   String get terminalConnectedInputHelp =>
@@ -4908,14 +4899,14 @@ class AppLocalizationsEn extends AppLocalizations {
       'Output is kept. Reconnecting clears the terminal and draft without replaying input.';
 
   @override
-  String get terminalDismissNotice => 'Dismiss notice';
+  String get terminalDismissNotice => 'Dismiss Notice';
 
   @override
-  String get terminalVerifyNewHost => 'Verify the new host public key';
+  String get terminalVerifyNewHost => 'Verify New Host Key';
 
   @override
   String get terminalFirstHostVerification =>
-      'First connection · Verify host identity';
+      'First Connection · Verify Host Identity';
 
   @override
   String terminalHostIdentity(String p0, String p1, String p2) {
@@ -4926,15 +4917,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get terminalSha256Fingerprint => 'SHA-256 fingerprint';
 
   @override
-  String get terminalFullHostKey => 'Full host public key';
+  String get terminalFullHostKey => 'Full host key';
 
   @override
   String get terminalIndependentVerificationHelp =>
-      'Check against the provider console or another independent trusted source. Seeing this dialog does not establish trust.';
+      'Check against the provider console or another independent, trusted source. Seeing this dialog doesn’t establish trust.';
 
   @override
   String get terminalConfirmedChangedHost =>
-      'I independently verified the reason for the change and the full new public key';
+      'I independently verified why it changed and the full new host key';
 
   @override
   String get terminalConfirmedHost =>
@@ -4942,18 +4933,17 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get terminalVerificationExpired =>
-      'The connection was cancelled or timed out. This verification is no longer valid.';
+      'The connection was canceled or timed out. This verification is no longer valid.';
 
   @override
   String get terminalUpdateTrustAuthenticate =>
-      'Update trust and continue authentication';
+      'Update Trust and Continue Authentication';
 
   @override
-  String get terminalTrustAuthenticate => 'Trust and authenticate';
+  String get terminalTrustAuthenticate => 'Trust and Authenticate';
 
   @override
-  String get terminalUnlockKey =>
-      'Unlock the SSH private key for this connection';
+  String get terminalUnlockKey => 'Unlock SSH Key';
 
   @override
   String terminalCredentialName(String p0) {
@@ -4962,7 +4952,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get terminalPassphraseHelp =>
-      'Decrypts the private key; not the login password. Used for this connection only and not saved.';
+      'Decrypts the private key; it isn’t the login password. Used for this connection only and not saved.';
 
   @override
   String get terminalKeyPassphrase =>
@@ -4973,13 +4963,13 @@ class AppLocalizationsEn extends AppLocalizations {
       'The passphrase was cleared. Cancel and reconnect.';
 
   @override
-  String get terminalUnlockOnce => 'Unlock for this connection only';
+  String get terminalUnlockOnce => 'Unlock for This Connection Only';
 
   @override
   String get powerRestart => 'Restart';
 
   @override
-  String get powerShutdown => 'Shut down';
+  String get powerShutdown => 'Shut Down';
 
   @override
   String powerImpactTitle(String p0) {
@@ -4988,11 +4978,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String powerImpactHelp(String p0, String p1, String p2) {
-    return '$p0\n$p1\n\nRun through this single SSH connection:\n$p2\n\nThis may immediately interrupt services and the SSH session, and requires appropriate remote permissions. Shutdown does not stop provider billing, and SSH cannot power the server on again. After a disconnect or timeout, the result is unknown. Check the provider console rather than retrying blindly.';
+    return '$p0\n$p1\n\nRun through this single SSH connection:\n$p2\n\nThis may immediately interrupt services and the SSH session, and it needs the right permissions on the remote server. Shutdown doesn’t stop provider billing, and SSH can’t power the server back on. After a disconnect or timeout, the result is unknown. Check the provider console instead of retrying blindly.';
   }
 
   @override
-  String get powerUnderstandContinue => 'Review target';
+  String get powerUnderstandContinue => 'Review Target';
 
   @override
   String powerFinalTitle(String p0) {
@@ -5012,7 +5002,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String powerExecuteOnce(String p0) {
-    return '$p0 once';
+    return '$p0 Once';
   }
 
   @override
@@ -5022,11 +5012,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get sshCheckTarget => 'Check the SSH port, username, and credentials';
 
   @override
-  String get sshConnectionCancelled => 'SSH connection cancelled';
+  String get sshConnectionCancelled => 'SSH connection canceled';
 
   @override
   String get sshBrowserUnsupported =>
-      'Browsers do not support native SSH. Use the native app.';
+      'Browsers don’t support native SSH. Use the native app.';
 
   @override
   String get sshCredentialReadTimeout => 'Reading SSH credentials timed out';
@@ -5041,7 +5031,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get sshPassphraseCancelled =>
-      'Private-key passphrase entry was cancelled. No connection was made.';
+      'Private-key passphrase entry was canceled. No connection was made.';
 
   @override
   String get sshPassphraseTooLong =>
@@ -5062,11 +5052,11 @@ class AppLocalizationsEn extends AppLocalizations {
       'Host verification or credentials changed. Authentication was blocked.';
 
   @override
-  String get sshVerificationCancelled => 'SSH verification cancelled';
+  String get sshVerificationCancelled => 'SSH verification canceled';
 
   @override
   String get sshVerificationTimeout =>
-      'Host verification timed out. Authentication did not start.';
+      'Host verification timed out. Authentication didn’t start.';
 
   @override
   String get sshCredentialChanged => 'Credentials changed. Reconnect.';
@@ -5082,10 +5072,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get r3SftpUnavailable =>
-      'The server did not open SFTP. It may be disabled for this account.';
+      'The server didn’t open SFTP. It may be turned off for this account.';
 
   @override
-  String get r3SftpTitle => 'SFTP files';
+  String get r3SftpTitle => 'SFTP Files';
 
   @override
   String get r3SftpRowSubtitle => 'Browse and transfer files';
@@ -5097,13 +5087,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get r3SftpRoot => 'Root';
 
   @override
-  String get r3SftpNewFolder => 'New folder';
+  String get r3SftpNewFolder => 'New Folder';
 
   @override
-  String get r3SftpNewFile => 'New empty file';
+  String get r3SftpNewFile => 'New Empty File';
 
   @override
-  String get r3SftpUpload => 'Upload from phone';
+  String get r3SftpUpload => 'Upload from Phone';
 
   @override
   String get r3SftpSort => 'Sort by';
@@ -5121,7 +5111,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get r3SftpShowHidden => 'Show hidden files';
 
   @override
-  String get r3SftpSearch => 'Search this folder';
+  String get r3SftpSearch => 'Search folder';
 
   @override
   String get r3SftpEmpty => 'This folder is empty';
@@ -5131,7 +5121,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String r3SftpShowMore(int count) {
-    return 'Show more ($count)';
+    return 'Show More ($count)';
   }
 
   @override
@@ -5144,16 +5134,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get r3SftpOpen => 'Open';
 
   @override
-  String get r3SftpView => 'View / edit';
+  String get r3SftpView => 'View / Edit';
 
   @override
   String get r3SftpDownload => 'Download';
 
   @override
-  String get r3SftpRename => 'Rename / move';
+  String get r3SftpRename => 'Rename / Move';
 
   @override
-  String get r3SftpCopyPath => 'Copy path';
+  String get r3SftpCopyPath => 'Copy Path';
 
   @override
   String get r3SftpDelete => 'Delete';
@@ -5171,7 +5161,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get r3SftpCreate => 'Create';
 
   @override
-  String get r3SftpRenameTitle => 'Rename or move';
+  String get r3SftpRenameTitle => 'Rename or Move';
 
   @override
   String get r3SftpRenameHint =>
@@ -5181,8 +5171,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get r3SftpInvalidName => 'Enter a name without “/”';
 
   @override
-  String get r3SftpInvalidFolder =>
-      'Folder must be an absolute path starting with /';
+  String get r3SftpInvalidFolder => 'Enter an absolute path starting with /';
 
   @override
   String r3SftpDeleteTitle(String name) {
@@ -5203,11 +5192,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String r3SftpDeleteRecursiveMessage(String name, int max) {
-    return '“$name” is not empty. Everything inside is deleted permanently (recursive delete, links are not followed). Folders with more than $max items are refused and nothing is deleted.';
+    return '“$name” isn’t empty. Everything inside is deleted permanently (recursive delete; links aren’t followed). Folders with more than $max items are refused, and nothing is deleted.';
   }
 
   @override
-  String get r3SftpDeleteRecursiveAction => 'Delete everything';
+  String get r3SftpDeleteRecursiveAction => 'Delete Everything';
 
   @override
   String get r3SftpDeleted => 'Deleted';
@@ -5234,13 +5223,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get r3SftpErrExists => 'Already exists';
 
   @override
-  String get r3SftpErrNotEmpty => 'The folder is not empty';
+  String get r3SftpErrNotEmpty => 'The folder isn’t empty';
 
   @override
-  String get r3SftpErrWrongType => 'Wrong item type for this action';
+  String get r3SftpErrWrongType =>
+      'That item type doesn’t work for this action';
 
   @override
-  String get r3SftpErrCancelled => 'Cancelled';
+  String get r3SftpErrCancelled => 'Canceled';
 
   @override
   String get r3SftpErrTooLarge => 'Too large to open as text (limit 512 KiB)';
@@ -5263,13 +5253,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get r3SftpErrConnectionLost => 'The SFTP connection ended';
 
   @override
-  String get r3SftpErrUnavailable => 'SFTP is not available on this connection';
+  String get r3SftpErrUnavailable => 'SFTP isn’t available on this connection';
 
   @override
-  String get r3SftpErrLocalFile => 'Could not read or write the local file';
+  String get r3SftpErrLocalFile => 'Couldn’t read or write the local file';
 
   @override
-  String get r3SftpErrFailed => 'The operation failed';
+  String get r3SftpErrFailed => 'That didn’t work';
 
   @override
   String r3SftpEditorSize(String size) {
@@ -5284,17 +5274,17 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get r3SftpUnsavedMessage =>
-      'Your edits have not been written to the server.';
+      'Your edits haven’t been saved to the server.';
 
   @override
   String get r3SftpDiscard => 'Discard';
 
   @override
-  String get r3SftpConflictTitle => 'File changed on the server';
+  String get r3SftpConflictTitle => 'File Changed on the Server';
 
   @override
   String get r3SftpConflictMessage =>
-      'It was modified after you opened it. Overwrite the server version with yours?';
+      'It was modified after you opened it. Overwrite the server’s version with yours?';
 
   @override
   String get r3SftpOverwrite => 'Overwrite';
@@ -5312,7 +5302,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'Overwrite the file on the server, or skip this upload?';
 
   @override
-  String get r3SftpLargeTitle => 'Large file';
+  String get r3SftpLargeTitle => 'Large File';
 
   @override
   String r3SftpLargeMessage(String name, String size) {
@@ -5350,16 +5340,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get r3SftpStateFailed => 'Failed';
 
   @override
-  String get r3SftpStateCancelled => 'Cancelled';
+  String get r3SftpStateCancelled => 'Canceled';
 
   @override
   String get r3SftpStateSkipped => 'Skipped';
 
   @override
-  String get r3SftpCancelAll => 'Cancel all';
+  String get r3SftpCancelAll => 'Cancel All';
 
   @override
-  String get r3SftpClearFinished => 'Clear finished';
+  String get r3SftpClearFinished => 'Clear Finished';
 
   @override
   String get r3SftpShare => 'Share';
@@ -5374,14 +5364,14 @@ class AppLocalizationsEn extends AppLocalizations {
       'Downloads are saved in the app folder “SFTP Downloads”. Use Share to keep a copy elsewhere, for example in Files.';
 
   @override
-  String get r3SftpCloseBusyTitle => 'Transfers in progress';
+  String get r3SftpCloseBusyTitle => 'Transfers in Progress';
 
   @override
   String get r3SftpCloseBusyMessage =>
       'Closing cancels the running and waiting transfers.';
 
   @override
-  String get r3SftpCloseBusyAction => 'Cancel transfers and close';
+  String get r3SftpCloseBusyAction => 'Cancel Transfers and Close';
 
   @override
   String get r3SftpBackgroundClosed =>
@@ -5391,20 +5381,20 @@ class AppLocalizationsEn extends AppLocalizations {
   String get r3SftpConnecting => 'Connecting SFTP…';
 
   @override
-  String get r3SftpConnectFailed => 'Could not open SFTP';
+  String get r3SftpConnectFailed => 'Couldn’t open SFTP';
 
   @override
-  String get r3SftpRetry => 'Try again';
+  String get r3SftpRetry => 'Try Again';
 
   @override
   String get r3SftpChooseCredential =>
       'Choose a credential in the SSH settings first.';
 
   @override
-  String get r3SftpSshSettings => 'SSH settings';
+  String get r3SftpSshSettings => 'SSH Settings';
 
   @override
-  String get r3SftpLoadFailed => 'Could not load this folder';
+  String get r3SftpLoadFailed => 'Couldn’t load this folder';
 
   @override
   String get r3SftpClose => 'Close';
@@ -5420,33 +5410,34 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get sshHostNotTrusted =>
-      'The host was not trusted. Authentication did not start.';
+      'The host wasn’t trusted. Authentication didn’t start.';
 
   @override
   String get sshConnectionIncomplete =>
-      'SSH connection did not complete. Check the address, network, and service.';
+      'The SSH connection didn’t complete. Check the address, network, and service.';
 
   @override
   String get sshSessionEnded =>
-      'The SSH session ended. Reconnect to check whether the command completed.';
+      'The SSH session ended. Reconnect to check whether the command finished.';
 
   @override
   String get sshInputUnconfirmed =>
-      'SSH input delivery was not confirmed. Reconnect and check before retrying to avoid duplicate execution.';
+      'Couldn’t confirm that the input reached SSH. Reconnect and check before retrying so it doesn’t run twice.';
 
   @override
-  String get sshResizeFailed => 'Could not resize the SSH terminal. Reconnect.';
+  String get sshResizeFailed => 'Couldn’t resize the SSH terminal. Reconnect.';
 
   @override
   String get sshPrivatePublicMismatch =>
-      'The private key does not match the saved public-key details. Import the private key again before connecting.';
+      'The private key doesn’t match the saved public-key details. Import the private key again before connecting.';
 
   @override
-  String get securityReadFailed => 'Could not read security data. Try again.';
+  String get securityReadFailed =>
+      'Couldn’t read the security data. Try again.';
 
   @override
   String get securitySavedReloadFailed =>
-      'Saved, but the data could not be reloaded. Reload before making more changes.';
+      'Saved, but the data couldn’t be reloaded. Reload before making more changes.';
 
   @override
   String get securityDataChanged =>
@@ -5454,14 +5445,14 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get securityMutationFailed =>
-      'The security action did not complete. Existing data is unchanged. Try again.';
+      'Couldn’t complete that security action. Existing data is unchanged. Try again.';
 
   @override
   String get securityInvalidCredentialIdentity =>
       'Enter a name of 1–80 characters and a valid default username.';
 
   @override
-  String get securitySecretRequired => 'Provide the password or private key.';
+  String get securitySecretRequired => 'Enter the password or private key.';
 
   @override
   String get securityReimportForPassphrase =>
@@ -5469,7 +5460,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get securityPasswordNoPassphrase =>
-      'Password credentials do not use a private-key passphrase.';
+      'Password credentials don’t use a private-key passphrase.';
 
   @override
   String get securitySecretSizeInvalid =>
@@ -5477,7 +5468,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get securitySecretWriteUnverified =>
-      'The secret write could not be verified. The existing credential is unchanged.';
+      'Couldn’t verify that the secret was saved. The existing credential is unchanged.';
 
   @override
   String get securityCleanupIncomplete =>
@@ -5485,7 +5476,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get securityCleanupReadFailed =>
-      'Could not read pending cleanup data. Try again.';
+      'Couldn’t read the pending cleanup data. Try again.';
 
   @override
   String get securitySshCancelled =>
@@ -5497,11 +5488,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get securityCredentialSecretMissing =>
-      'This credential’s password or private key was not found. Open Manage credentials to save the password again or import the private key.';
+      'This credential’s password or private key wasn’t found. Open Manage Credentials to save the password again or import the private key.';
 
   @override
   String get securityStoredSecretUnreadable =>
-      'The data in secure storage could not be read.';
+      'Couldn’t read the data in secure storage.';
 
   @override
   String get securityCredentialChanged =>
@@ -5509,54 +5500,53 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get securitySshCredentialReadFailed =>
-      'Could not read the SSH credential. Try again.';
+      'Couldn’t read the SSH credential. Try again.';
 
   @override
   String get securityAuthenticationHidden =>
-      'Device authentication did not complete. The secret remains hidden.';
+      'Device authentication didn’t complete. The secret stays hidden.';
 
   @override
   String get securitySavedPasswordMissing =>
-      'The saved password was not found. Edit this credential and save the password again.';
+      'The saved password wasn’t found. Edit this credential and save the password again.';
 
   @override
-  String get securityRevealFailed => 'Could not display the secret. Try again.';
+  String get securityRevealFailed => 'Couldn’t show the secret. Try again.';
 
   @override
   String get securityHostTargetMismatch =>
-      'The host verification targets do not match.';
+      'The host verification targets don’t match.';
 
   @override
   String get securityHostAuthenticationIncomplete =>
-      'Host verification or authentication did not complete.';
+      'Host verification or authentication didn’t complete.';
 
   @override
   String get securityInvalidHost =>
       'Invalid host address. Enter an IP address or domain without a scheme, username, port, or path.';
 
   @override
-  String get securityInvalidSshPort =>
-      'The SSH port must be between 1 and 65535.';
+  String get securityInvalidSshPort => 'Enter an SSH port from 1 to 65,535.';
 
   @override
   String get securityHostKeyUnreadable =>
-      'The host public key was not recognized. Check the complete public key and the selected type.';
+      'Couldn’t recognize the host key. Check the complete key and the selected type.';
 
   @override
   String get securityPrivateKeyUnreadable =>
-      'Could not read the private key. Check its complete content, supported format, and decryption passphrase.';
+      'Couldn’t read the private key. Check its complete content, supported format, and decryption passphrase.';
 
   @override
   String get securityNativeStorageUnsupported =>
-      'Native secure storage is not available on this platform.';
+      'Native secure storage isn’t available on this platform.';
 
   @override
   String get securityNativeStorageUnavailable =>
-      'Native secure storage is unavailable or the operation did not complete. Check your device and try again.';
+      'Native secure storage is unavailable or the operation didn’t complete. Check your device and try again.';
 
   @override
   String get securityDeviceAuthUnsupported =>
-      'Device authentication is not supported on this platform, so secrets cannot be displayed.';
+      'Device authentication isn’t supported on this platform, so secrets can’t be shown.';
 
   @override
   String get securityDeviceAuthReason =>
@@ -5564,7 +5554,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get securityDeviceAuthIncomplete =>
-      'Device authentication did not complete.';
+      'Device authentication didn’t complete.';
 
   @override
   String get securityPasswordKind => 'Username and password';
@@ -5573,17 +5563,17 @@ class AppLocalizationsEn extends AppLocalizations {
   String get securityPrivateKeyKind => 'SSH key';
 
   @override
-  String get securityReloadSaved => 'Reload saved data';
+  String get securityReloadSaved => 'Reload Saved Data';
 
   @override
   String get securityCleanupNotice =>
-      'Secure-storage cleanup is incomplete. Current connection references are preserved. Retry when system secure storage is available. Secrets still in use will not be deleted.';
+      'Secure-storage cleanup is incomplete. References used by current connections are kept. Retry when system secure storage is available. Secrets still in use won’t be deleted.';
 
   @override
-  String get securityRetryCleanup => 'Retry unused-secret cleanup';
+  String get securityRetryCleanup => 'Retry Unused-Secret Cleanup';
 
   @override
-  String get securityAddLoginCredential => 'Add login credential';
+  String get securityAddLoginCredential => 'Add Login Credential';
 
   @override
   String get securityImportKey => 'Import SSH key';
@@ -5599,10 +5589,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get securityReusableCredential => 'Can be used by multiple servers';
 
   @override
-  String get securityTitle => 'Keys and security';
+  String get securityTitle => 'Keys & Security';
 
   @override
-  String get securityAddCredential => 'Add credential';
+  String get securityAddCredential => 'Add Credential';
 
   @override
   String get securityCredentialStorageNotice =>
@@ -5639,14 +5629,14 @@ class AppLocalizationsEn extends AppLocalizations {
       'Device and connection security';
 
   @override
-  String get securityTrustedHosts => 'Trusted hosts';
+  String get securityTrustedHosts => 'Trusted Hosts';
 
   @override
   String get securityTrustedHostsSubtitle =>
-      'Host, port, algorithm, and complete host public key';
+      'Host, port, algorithm, and complete host key';
 
   @override
-  String get securityCredentialProtection => 'Credential protection';
+  String get securityCredentialProtection => 'Credential Protection';
 
   @override
   String get securityCredentialProtectionSubtitle =>
@@ -5654,14 +5644,14 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get securityCredentialProtectionDetail =>
-      'Passwords, private keys, and key passphrases are excluded from the ledger database, exports, and logs. Viewing a password requires system device verification. It is hidden after 20 seconds or when you leave the page. This app does not support device verification on Linux, so secrets cannot be viewed there.\n\nDevice authentication gates display in the app; it does not mean each secret is separately encrypted by biometric hardware. Security behavior still needs verification on physical iOS / Android devices. Dart does not guarantee secure memory erasure. Copying or exporting secrets is currently unavailable.';
+      'Passwords, private keys, and key passphrases are excluded from the ledger database, exports, and logs. Viewing a password requires system device verification. It is hidden after 20 seconds or when you leave the page. This app doesn’t support device verification on Linux, so secrets can’t be viewed there.\n\nDevice authentication gates display in the app; it doesn’t mean each secret is separately encrypted by biometric hardware. Security behavior still needs verification on physical iOS / Android devices. Dart doesn’t guarantee secure memory erasure. Copying or exporting secrets is currently unavailable.';
 
   @override
   String get securityLocalCredentialNotice =>
       'Only the local credential changes; the server’s password and authorized_keys are untouched.';
 
   @override
-  String get securityViewDetails => 'View details';
+  String get securityViewDetails => 'View Details';
 
   @override
   String get securityPrivateKeyDetailsSubtitle =>
@@ -5672,20 +5662,20 @@ class AppLocalizationsEn extends AppLocalizations {
       'Password hidden by default; device verification required to view';
 
   @override
-  String get securityEditCredential => 'Edit credential';
+  String get securityEditCredential => 'Edit Credential';
 
   @override
   String get securityKeepSecret => 'Leave blank to keep the saved secret';
 
   @override
-  String get securityLinkedServers => 'Linked servers';
+  String get securityLinkedServers => 'Linked Servers';
 
   @override
   String get securityIndependentUsernames =>
       'Connection usernames are stored separately';
 
   @override
-  String get securityDeleteCredential => 'Delete credential';
+  String get securityDeleteCredential => 'Delete Credential';
 
   @override
   String get securityReviewDeleteImpact =>
@@ -5699,7 +5689,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'Unsaved credential content will be cleared.';
 
   @override
-  String get securityDiscardChanges => 'Discard changes';
+  String get securityDiscardChanges => 'Discard Changes';
 
   @override
   String get securityKeyImported =>
@@ -5707,7 +5697,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get securityKeyFileReadFailed =>
-      'Could not read the private-key file. Choose a UTF-8 private-key file no larger than 128 KB.';
+      'Couldn’t read the private-key file. Choose a UTF-8 private-key file no larger than 128 KB.';
 
   @override
   String get securityKeyPasted =>
@@ -5715,14 +5705,14 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get securityKeyPasteFailed =>
-      'Could not paste the private key. Copy the complete private key, no larger than 128 KB.';
+      'Couldn’t paste the private key. Copy the complete private key, no larger than 128 KB.';
 
   @override
   String get securityCredentialSaved =>
       'Credential saved. Remote authentication details are unchanged.';
 
   @override
-  String get securityCancelCredentialEdit => 'Cancel credential editing';
+  String get securityCancelCredentialEdit => 'Cancel Credential Editing';
 
   @override
   String get securityCredentialName => 'Credential name';
@@ -5743,14 +5733,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get securityChoosingFile => 'Choosing file…';
 
   @override
-  String get securityChoosePrivateKeyFile => 'Choose private-key file';
+  String get securityChoosePrivateKeyFile => 'Choose Private-Key File';
 
   @override
-  String get securityPasteCompleteKey => 'Paste complete private key';
+  String get securityPasteCompleteKey => 'Paste Complete Private Key';
 
   @override
   String get securityPrivateKeyImportNotice =>
-      'OpenSSH / PEM private keys. The file path is not saved and the content stays hidden.';
+      'OpenSSH / PEM private keys. The file path isn’t saved and the content stays hidden.';
 
   @override
   String get securityLoginPassword => 'Login password';
@@ -5782,11 +5772,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get securityStoreKeyPassphraseHelp =>
-      'Not saved by default. If an encrypted key’s passphrase is not saved, you must enter it for each connection. Canceling or entering a wrong passphrase stops the connection. This option applies only when importing a private key.';
+      'Not saved by default. If an encrypted key’s passphrase isn’t saved, you’ll need to enter it for every connection. Canceling or entering a wrong passphrase stops the connection. This option applies only when importing a private key.';
 
   @override
   String get securityCredentialEditNotice =>
-      'The username is only a suggestion for new connections. Updating a credential affects future logins only and changes nothing on the server. Unsaved secrets are cleared in the background.';
+      'The username is only a suggestion for new connections. Updating a credential affects future logins only and changes nothing on the server. Unsaved secrets are cleared when the app goes to the background.';
 
   @override
   String get securityCurrentLinkImpact => 'Impact on current links';
@@ -5798,10 +5788,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get securitySaving => 'Saving…';
 
   @override
-  String get securitySaveCredential => 'Save credential';
+  String get securitySaveCredential => 'Save Credential';
 
   @override
-  String get securityCredentialDetails => 'Credential details';
+  String get securityCredentialDetails => 'Credential Details';
 
   @override
   String get securityCredentialDeleted => 'Credential deleted';
@@ -5826,10 +5816,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get securityFingerprintCopied => 'Public-key fingerprint copied';
 
   @override
-  String get securityCopyFailed => 'Copying did not complete. Try again.';
+  String get securityCopyFailed => 'Couldn’t copy. Try again.';
 
   @override
-  String get securityCopyFingerprint => 'Copy public-key fingerprint';
+  String get securityCopyFingerprint => 'Copy Public-Key Fingerprint';
 
   @override
   String get securityProtectedPassword => 'Protected password';
@@ -5840,16 +5830,16 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get securityPasswordHiddenNotice =>
-      'Shown briefly after successful verification. It stays hidden if device authentication is unavailable. Viewing is currently unavailable on Linux.';
+      'Shown briefly after successful verification. It stays hidden if device authentication isn’t available. Viewing isn’t available on Linux yet.';
 
   @override
-  String get securityHidePassword => 'Hide password';
+  String get securityHidePassword => 'Hide Password';
 
   @override
-  String get securityVerifyViewPassword => 'Verify device to view password';
+  String get securityVerifyViewPassword => 'Verify Device to View Password';
 
   @override
-  String get securityCancelVerifyHide => 'Cancel verification and hide';
+  String get securityCancelVerifyHide => 'Cancel Verification and Hide';
 
   @override
   String securityCredentialReferenceCount(int count) {
@@ -5864,7 +5854,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get securityNoCredentialReferences =>
-      'No links yet. Select this credential in SSH configuration on a server’s details page.';
+      'No links yet. Choose this credential in a server’s SSH settings.';
 
   @override
   String securityCredentialDeleteImpact(int count) {
@@ -5893,7 +5883,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get securityUnlinkCredentialNotice =>
-      'Unlinking keeps servers, usernames, and payments. Select a credential again before the next connection.';
+      'Unlinking keeps servers, usernames, and payments. You’ll need to choose a credential again before the next connection.';
 
   @override
   String get securityReplaceCredentialNotice =>
@@ -5901,29 +5891,29 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get securityDeleteLocalCredentialNotice =>
-      'Deletes only the local credential and cannot be undone. Servers and cloud services are unaffected.';
+      'Deletes only the local credential and can’t be undone. Servers and cloud services are unaffected.';
 
   @override
   String get securityConfirmCredentialImpact =>
-      'I have reviewed the linked-server impact and want to delete the local credential';
+      'I’ve reviewed the impact on linked servers and want to delete the local credential';
 
   @override
   String get securityLocalCredentialDeleted =>
       'Local credential deleted. Remote authentication details are unchanged.';
 
   @override
-  String get securityConfirmDelete => 'Confirm deletion';
+  String get securityConfirmDelete => 'Confirm Deletion';
 
   @override
-  String get securityVerifyHostKey => 'Verify host public key';
+  String get securityVerifyHostKey => 'Verify Host Key';
 
   @override
   String get securityHostTrustNotice =>
-      'Trust is bound to the host address, port and full public key, separate from login credentials.';
+      'Trust is tied to the host address, port, and full host key, and is separate from login credentials.';
 
   @override
   String get securityNoTrustedHosts =>
-      'No trusted hosts yet. Enter a public key obtained through an independent trusted source, such as the provider’s console or an administrator, or verify it on the first SSH connection. This page does not connect to the server.';
+      'No trusted hosts yet. Enter a host key you got from an independent, trusted source (such as the provider’s console or an administrator), or verify it on the first SSH connection. This page doesn’t connect to the server.';
 
   @override
   String securityHostVerifiedAt(String algorithm, String date) {
@@ -5931,10 +5921,10 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get securityCompleteHostKey => 'Complete host public key';
+  String get securityCompleteHostKey => 'Full host key';
 
   @override
-  String get securityReverifyHost => 'Reverify host';
+  String get securityReverifyHost => 'Reverify Host';
 
   @override
   String get securityRemoveHostTrustTitle => 'Remove host trust?';
@@ -5945,23 +5935,23 @@ class AppLocalizationsEn extends AppLocalizations {
     int port,
     String fingerprint,
   ) {
-    return '$host:$port\n$fingerprint\n\nThe host’s identity must be verified again on the next connection. The server and login credentials will not be deleted.';
+    return '$host:$port\n$fingerprint\n\nThe host’s identity must be verified again on the next connection. The server and login credentials won’t be deleted.';
   }
 
   @override
-  String get securityRemoveHostTrust => 'Remove trust';
+  String get securityRemoveHostTrust => 'Remove Trust';
 
   @override
   String get securityHostChangedNotice =>
-      'If the host key changes, authentication must stop until the host is verified again through an independent source. There is no “ignore and connect” option.';
+      'If a host key changes, authentication stops until you verify the host again through an independent source. There’s no “ignore and connect” option.';
 
   @override
   String get securityHostTrustReadFailed =>
-      'Could not read host trust data. Try again.';
+      'Couldn’t read the host trust data. Try again.';
 
   @override
   String get securityHostTrustInputNotice =>
-      'Enter the host public key from an independent trusted source such as the provider console. This page only saves local trust and does not connect.';
+      'Enter the host key from an independent, trusted source such as the provider console. This page only saves local trust and doesn’t connect.';
 
   @override
   String get securityHostAddress => 'Host address';
@@ -5970,7 +5960,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get securityPort => 'Port';
 
   @override
-  String get securityHostKeyType => 'Host public-key type';
+  String get securityHostKeyType => 'Host key type';
 
   @override
   String get securityHostKeyHelp =>
@@ -5987,14 +5977,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get securityChecking => 'Validating…';
 
   @override
-  String get securityCheckFingerprint => 'Check and verify fingerprint';
+  String get securityCheckFingerprint => 'Check Fingerprint';
 
   @override
-  String get securityHostKeyMismatch =>
-      'Host public key differs from the saved record';
+  String get securityHostKeyMismatch => 'Host Key Differs from Saved Record';
 
   @override
-  String get securityFirstHostVerification => 'First host verification';
+  String get securityFirstHostVerification => 'First Host Verification';
 
   @override
   String get securityHostMismatchBadge =>
@@ -6016,7 +6005,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get securityBeginHostReverification =>
-      'Start independent reverification';
+      'Start Independent Reverification';
 
   @override
   String get securityConfirmHostVerified =>
@@ -6027,13 +6016,13 @@ class AppLocalizationsEn extends AppLocalizations {
       'Host trust saved. No connection or authentication was started.';
 
   @override
-  String get securityReverifyReplaceTrust => 'Reverify and replace trust';
+  String get securityReverifyReplaceTrust => 'Reverify and Replace Trust';
 
   @override
-  String get securitySaveVerifiedHostTrust => 'Save verified host trust';
+  String get securitySaveVerifiedHostTrust => 'Save Verified Host Trust';
 
   @override
-  String get securityRejectBack => 'Reject and go back';
+  String get securityRejectBack => 'Reject and Go Back';
 
   @override
   String get uiSecurityVerified => 'Verified';
@@ -6042,32 +6031,32 @@ class AppLocalizationsEn extends AppLocalizations {
   String get uiSecurityUnverified => 'Not verified';
 
   @override
-  String get uiSecurityKeyChanged => 'Key changed';
+  String get uiSecurityKeyChanged => 'Host key changed';
 
   @override
   String get securitySavingHostTrust =>
-      'Saving confirmed trust. You cannot go back until this finishes.';
+      'Saving confirmed trust. You can’t go back until this finishes.';
 
   @override
   String get securityLocalHostTrustOnly =>
-      'Only local trust is recorded. Rejecting, cancelling or going back saves nothing.';
+      'Only local trust is recorded. Rejecting, canceling, or going back saves nothing.';
 
   @override
-  String get securityDiscardSshTitle => 'Discard connection configuration?';
+  String get securityDiscardSshTitle => 'Discard connection settings?';
 
   @override
   String get securityDiscardSshMessage =>
-      'Unsaved address, username, and credential choices will not take effect.';
+      'Unsaved address, username, and credential choices won’t take effect.';
 
   @override
-  String get securityChooseCredential => 'Select login credential';
+  String get securityChooseCredential => 'Choose Login Credential';
 
   @override
   String get securityUnlinkCurrentCredential => 'Unlink current credential';
 
   @override
   String get securityChooseCredentialLater =>
-      'Keep connection configuration and select later';
+      'Keep the settings and choose a credential later';
 
   @override
   String securityCredentialChoiceSubtitle(String kind, String username) {
@@ -6079,7 +6068,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get securityNoCredentialsToChoose =>
-      'No credentials yet. Go back and use Manage credentials to add one.';
+      'No credentials yet. Go back and use Manage Credentials to add one.';
 
   @override
   String get securityAdoptUsernameTitle =>
@@ -6094,22 +6083,21 @@ class AppLocalizationsEn extends AppLocalizations {
   String get securityNotEntered => 'Not entered';
 
   @override
-  String get securityAdoptUsername => 'Use default username';
+  String get securityAdoptUsername => 'Use Default Username';
 
   @override
   String get securitySshConfigurationSaved =>
-      'SSH configuration saved. No network connection was made.';
+      'SSH settings saved. No network connection was made.';
 
   @override
-  String get securitySshConfiguration => 'SSH connection configuration';
+  String get securitySshConfiguration => 'SSH Connection Settings';
 
   @override
-  String get securityCancelSshConfiguration =>
-      'Cancel connection configuration';
+  String get securityCancelSshConfiguration => 'Cancel Connection Settings';
 
   @override
   String get securitySshConfigurationNotice =>
-      'Connection configuration and the ledger address are stored separately. Cloud server settings are not changed.';
+      'Connection settings and the ledger address are stored separately. Cloud server settings aren’t changed.';
 
   @override
   String get securityHostHint => 'IPv4 / IPv6 / domain, without a scheme';
@@ -6118,7 +6106,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get securityHostRequired => 'Enter a host address.';
 
   @override
-  String get securityPortRequired => 'The port must be between 1 and 65535.';
+  String get securityPortRequired => 'Enter a port from 1 to 65,535.';
 
   @override
   String get securityConnectionUsername => 'Current connection username';
@@ -6131,14 +6119,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get securityLoginCredential => 'Login credential';
 
   @override
-  String get securityManageCredentials => 'Manage credentials';
+  String get securityManageCredentials => 'Manage Credentials';
 
   @override
   String get securityCredentialNotConfigured => 'Credential not configured';
 
   @override
   String get securityCredentialRequiredBeforeConnect =>
-      'You can save the configuration now, but must select a credential before connecting';
+      'You can save now, but you must choose a credential before connecting';
 
   @override
   String securityChangeCredentialSubtitle(String kind) {
@@ -6147,14 +6135,14 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get securityConnectionUsernameNotice =>
-      'The username belongs to this connection. Changing credentials changes it only if you explicitly select “Use default username.” Canceling or selecting the same username does not change other connections.';
+      'The username belongs to this connection. Changing credentials changes it only if you explicitly choose “Use Default Username.” Canceling or choosing the same username doesn’t change other connections.';
 
   @override
   String get securityConfigurationOnlyNotice =>
       'Saves connection settings only. The host key is verified before login; a changed key pauses authentication.';
 
   @override
-  String get securitySaveSshConfiguration => 'Save SSH configuration';
+  String get securitySaveSshConfiguration => 'Save SSH Settings';
 
   @override
   String get securityOpenKeyFile => 'Import';
@@ -6175,21 +6163,21 @@ class AppLocalizationsEn extends AppLocalizations {
   String get securityAuthBiometricSuccess => 'Verified';
 
   @override
-  String get securityAuthRequiredTitle => 'Biometric verification required';
+  String get securityAuthRequiredTitle => 'Biometric Verification Required';
 
   @override
   String get securityAuthSetupDescription =>
       'Enable biometric verification in your device settings.';
 
   @override
-  String get securityAuthGoToSettings => 'Go to settings';
+  String get securityAuthGoToSettings => 'Go to Settings';
 
   @override
   String get securityAuthDeviceSetupDescription =>
       'Enable device authentication in your device settings.';
 
   @override
-  String get securityAuthDeviceRequiredTitle => 'Device verification required';
+  String get securityAuthDeviceRequiredTitle => 'Device Verification Required';
 
   @override
   String get securityAuthIosLockout =>
@@ -6218,7 +6206,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get providerReviewRequired =>
-      'Confirm this instance’s provider before adding authorization, importing, or linking servers.';
+      'Confirm this panel connection’s provider before adding authorization, importing, or linking servers.';
 
   @override
   String get providerNameRange => 'Use 1–80 characters for the provider name.';
@@ -6229,19 +6217,19 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get providerChangeNeedsUnlink =>
-      'Confirm unlinking the current adapter before changing the provider.';
+      'Confirm unlinking the current panel connection before changing the provider.';
 
   @override
   String get adapterProviderMismatch =>
-      'The server and adapter instance must have the same provider.';
+      'The server and panel connection must have the same provider.';
 
   @override
   String get adapterScopeUnavailable =>
-      'This instance’s authorization scope is unverified. New links are unavailable.';
+      'This panel connection’s authorization scope is unverified. New links are unavailable.';
 
   @override
   String get adapterSingletonPinned =>
-      'These single-device credentials are pinned to another local server. Unlinking does not expand their scope. Return to that record or explicitly reauthorize.';
+      'These single-device credentials are pinned to another local server. Unlinking doesn’t release them for another server. Return to that record or explicitly reauthorize.';
 
   @override
   String get providerUiTitle => 'Providers';
@@ -6263,13 +6251,13 @@ class AppLocalizationsEn extends AppLocalizations {
       'Panel keys are stored only in secure device storage. Reading never changes the remote panel.';
 
   @override
-  String get providerUiDetails => 'Provider details';
+  String get providerUiDetails => 'Provider Details';
 
   @override
-  String get providerUiAdd => 'Add provider';
+  String get providerUiAdd => 'Add Provider';
 
   @override
-  String get providerUiRename => 'Rename provider';
+  String get providerUiRename => 'Rename Provider';
 
   @override
   String get providerUiName => 'Provider name';
@@ -6283,11 +6271,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get providerUiHierarchyHelp =>
-      'A provider is who sells your servers; each adapter instance holds a separate authorization.';
+      'A provider is who sells you servers. Each panel connection has its own authorization.';
 
   @override
   String providerUiSummary(int instances, int devices) {
-    return '$instances adapter instances · $devices servers';
+    return '$instances panel connections · $devices servers';
   }
 
   @override
@@ -6295,7 +6283,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get providerUiEmptyHelp =>
-      'Add a provider name, then enter servers manually or configure a read-only adapter.';
+      'Add a provider name, then add servers manually or set up a read-only panel connection.';
 
   @override
   String get providerUiNeedsReview =>
@@ -6307,11 +6295,11 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get providerUiChoose => 'Choose a provider';
+  String get providerUiChoose => 'Choose a Provider';
 
   @override
   String get providerUiChooseHelp =>
-      'Choose the business provider. You will select the panel type and authorization later.';
+      'Choose the provider you buy from. You’ll choose the panel type and authorization later.';
 
   @override
   String get providerUiSelected => 'Server provider';
@@ -6327,25 +6315,25 @@ class AppLocalizationsEn extends AppLocalizations {
       'Enter details manually. Unknown hardware and costs can stay blank.';
 
   @override
-  String get providerUiAutomatic => 'Read through an adapter';
+  String get providerUiAutomatic => 'Read from a panel';
 
   @override
   String get providerUiAutomaticHelp =>
-      'Choose an existing authorization or add an adapter, then review the devices to import.';
+      'Choose an existing authorization or add a panel connection, then review the devices to import.';
 
   @override
   String get providerUiAutoNeedsProvider =>
       'Choose a confirmed provider before automatic reading.';
 
   @override
-  String get providerUiInstances => 'Adapter instances';
+  String get providerUiInstances => 'Panel connections';
 
   @override
   String get providerUiNoInstances =>
-      'No adapters configured. You can still add servers manually.';
+      'No panel connections yet. You can still add servers manually.';
 
   @override
-  String get providerUiAddInstance => 'Add adapter instance';
+  String get providerUiAddInstance => 'Add Panel Connection';
 
   @override
   String get providerUiDevices => 'Provider servers';
@@ -6354,10 +6342,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get providerUiNoDevices => 'No servers belong to this provider yet.';
 
   @override
-  String get providerUiManualDevice => 'No adapter link';
+  String get providerUiManualDevice => 'No panel link';
 
   @override
-  String get providerUiLinkedDevice => 'Adapter linked';
+  String get providerUiLinkedDevice => 'Panel linked';
 
   @override
   String providerUiLinkedCount(int count) {
@@ -6375,26 +6363,26 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String providerUiPinnedHelp(String name) {
-    return 'This single-device authorization is pinned to “$name”. Unlinking does not free it for another device. Return to that record or explicitly reauthorize.';
+    return 'This single-device authorization is pinned to “$name”. Unlinking doesn’t release it for another device. Return to that record or explicitly reauthorize.';
   }
 
   @override
-  String get providerUiChooseInstance => 'Choose an adapter instance';
+  String get providerUiChooseInstance => 'Choose a Panel Connection';
 
   @override
   String get providerUiInstanceChoiceHelp =>
-      'Only this provider’s instances are listed.';
+      'Only this provider’s panel connections are listed.';
 
   @override
   String get providerUiReviewHelp =>
-      'The business provider could not be determined from older records. Confirm the provider and all affected servers for each instance. Until then, only existing links can be refreshed.';
+      'Older records don’t say which provider this belongs to. Confirm the provider and all affected servers for each panel connection. Until then, you can only refresh existing links.';
 
   @override
   String get providerUiRenameReviewHelp =>
-      'Renaming does not confirm ownership. Confirm the provider for the instance separately.';
+      'Renaming doesn’t confirm ownership. Confirm the provider for the panel connection separately.';
 
   @override
-  String get providerUiConfirmOwnership => 'Confirm instance provider';
+  String get providerUiConfirmOwnership => 'Confirm Provider';
 
   @override
   String providerUiConfirmOwnershipMessage(
@@ -6402,7 +6390,7 @@ class AppLocalizationsEn extends AppLocalizations {
     String provider,
     String devices,
   ) {
-    return 'Assign “$alias” to “$provider”. These linked servers will move with it:\n$devices\n\nExisting authorization, server details, costs, and SSH remain. This does not expand authorization scope.';
+    return 'Assign “$alias” to “$provider”. These linked servers will move with it:\n$devices\n\nExisting authorization, server details, costs, and SSH remain. This doesn’t expand the authorization scope.';
   }
 
   @override
@@ -6413,7 +6401,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'This provider changed or is unavailable. Go back and choose again.';
 
   @override
-  String get providerUiChange => 'Change provider';
+  String get providerUiChange => 'Change Provider';
 
   @override
   String providerUiChangeMessage(
@@ -6422,11 +6410,11 @@ class AppLocalizationsEn extends AppLocalizations {
     String newProvider,
     String linkEffect,
   ) {
-    return 'Change “$server” from “$oldProvider” to “$newProvider”.\n\n$linkEffect\n\nThe server ID, manual details, costs, and SSH remain. This does not automatically add authorization or a new link.';
+    return 'Change “$server” from “$oldProvider” to “$newProvider”.\n\n$linkEffect\n\nThe server ID, manual details, costs, and SSH remain. This doesn’t automatically add authorization or a new link.';
   }
 
   @override
-  String get providerUiChangeNoLink => 'This server has no adapter link.';
+  String get providerUiChangeNoLink => 'This server has no panel link.';
 
   @override
   String providerUiChangeUnlink(String alias) {
@@ -6434,20 +6422,20 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get providerUiUnlinkAndChange => 'Unlink and change provider';
+  String get providerUiUnlinkAndChange => 'Unlink and Change Provider';
 
   @override
   String get providerUiChangeFromDetails =>
-      'To change an existing server’s provider, return to details and choose “Change provider”. Any existing link must be explicitly removed.';
+      'To change an existing server’s provider, go back to its details and choose “Change Provider”. Any existing link must be explicitly removed.';
 
   @override
-  String get providerUiProviderAndAdapter => 'Provider and adapter';
+  String get providerUiProviderAndAdapter => 'Provider and panel connection';
 
   @override
   String get providerUiOpenProvider => 'View provider';
 
   @override
-  String get providerUiOpenInstance => 'View adapter instance';
+  String get providerUiOpenInstance => 'View panel connection';
 
   @override
   String providerPendingName(String name) {
@@ -6456,11 +6444,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get providerBindingAssignFirst =>
-      'Assign a provider in server details before choosing an adapter instance to link.';
+      'Assign a provider in server details before choosing a panel connection to link.';
 
   @override
   String get cloudImportSaved =>
-      'Adapter instance saved. Its authorization is kept independently of these device import results.';
+      'Panel connection saved. Its authorization is kept independently of these device import results.';
 
   @override
   String get cloudImportReady => 'Resources complete';
@@ -6481,17 +6469,17 @@ class AppLocalizationsEn extends AppLocalizations {
   String get cloudImportUnprocessed => 'Not processed';
 
   @override
-  String get cloudImportCompleteResources => 'Complete resources';
+  String get cloudImportCompleteResources => 'Complete Resources';
 
   @override
-  String get cloudImportReviewResources => 'Review resources';
+  String get cloudImportReviewResources => 'Review Resources';
 
   @override
-  String get cloudImportCompleteAndSelect => 'Save draft and select';
+  String get cloudImportCompleteAndSelect => 'Save Draft and Select';
 
   @override
   String get cloudImportCompletionInfo =>
-      'Check all six resource fields before importing. Values the API omits stay unknown; choose unlimited traffic only when confirmed. Edits stay local.';
+      'Check all six resource fields before importing. Values the API leaves out stay unknown; choose unlimited traffic only when you’ve confirmed it. Edits stay on this device.';
 
   @override
   String get cloudImportFinanceLater =>
@@ -6509,30 +6497,30 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String cloudImportRetryCount(int count) {
-    return 'Retry only $count unfinished devices';
+    return 'Retry Only $count Unfinished Devices';
   }
 
   @override
-  String get cloudImportCancel => 'Stop remaining imports';
+  String get cloudImportCancel => 'Stop Remaining Imports';
 
   @override
   String get cloudImportCancelling => 'Stopping…';
 
   @override
   String get cloudImportCancelled =>
-      'Remaining imports stopped. Committed devices are kept. Review the results before retrying unfinished items.';
+      'Remaining imports stopped. Devices already imported are kept. Review the results before retrying unfinished ones.';
 
   @override
   String get cloudImportResultsTitle => 'Import results';
 
   @override
   String cloudImportExistingConflict(int count) {
-    return 'Found $count local records with the same remote identity. Review each record; none is chosen or merged automatically.';
+    return 'Found $count local records with the same remote identity. Review each one; none is chosen or merged automatically.';
   }
 
   @override
   String cloudImportAddressHint(String names) {
-    return 'IP or hostname also appears on: $names. This is a review hint only and does not prove the devices are identical.';
+    return 'IP or hostname also appears on: $names. This is a review hint only and doesn’t prove the devices are the same.';
   }
 
   @override

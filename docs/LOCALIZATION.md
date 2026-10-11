@@ -17,11 +17,53 @@
 ## 内容与数据边界
 
 - 覆盖应用导航、表单、验证、安全/网络错误、空态、确认框、提示、无障碍标签、Material 内置控件、提醒内容，以及计算结果的复制文本和 PNG。
-- 「发送 / Send」发送原始正文，不追加回车；「发送并执行 / Send and execute」只在原文后追加一个 CR，由当前终端程序处理。已有换行或控制字符仍可能触发远端行为。
+- 「发送 / Send」发送原始正文，不追加回车；「发送并执行 / Send and Execute」只在原文后追加一个 CR，由当前终端程序处理。已有换行或控制字符仍可能触发远端行为。
 - 不翻译或改写用户名称、备注、命令正文、SSH 输出、IP/主机名、密钥、协议字段、枚举存储值、数据库 ID 或 JSON key。
 - 已保存的演示资料、厂商待补填默认值和历史自动规格摘要继续保留原始内容。默认未分组是通过空分组 ID 表示的界面标签；旧版保留名称的输入约束使用固定历史值，不随语言变化。
 - 日期继续采用无歧义的 `YYYY-MM-DD`，时间仍按明确的设备时区/24 小时制展示。原币代码、整数分金额、续费月数、汇率及服务期 `[start, due)` 的计算和序列化完全不随语言变化。英文日/月计数使用正确的单复数。
 - 导出在用户请求时捕获不可变的语言快照，防止进行中的 PNG 与结果说明混用语言。导出白名单及隐私排除项不变。
+
+## 英文文案规范
+
+英文以 Apple HIG / iOS 的写法为准：短、地道、动作用动词、标题用名词，避免逐字直译中文结构。只改 `app_en.arb` 的值，key、占位符和 ICU 结构保持不变。
+
+### 大小写
+
+| 位置 | 写法 | 示例 |
+| --- | --- | --- |
+| 导航标题、Tab 名、按钮、菜单项、操作表/对话框按钮、动作行（点了就执行的行） | 标题式（Title Case） | `Add Server`、`Record Payment`、`Send and Execute`、`Keys & Security` |
+| 打开另一页的设置/工具入口行 | 标题式，与目标页标题一致 | `Manage Groups`、`Notification Access` |
+| 对话框标题：整句或疑问句 | 句式（Sentence case）加问号 | `Delete this payment record?` |
+| 对话框标题：名词短语 | 标题式 | `Large File`、`Rename or Move` |
+| 分组标题、字段/行标签、占位符、胶囊、指标、脚注、提示、Toast、错误 | 句式 | `Monthly cost reference`、`Search by server name` |
+
+标题式：首词和末词大写；`a an the and but or nor for as at by in of on to with from into onto over vs via per` 小写；连字符两侧、`·` 或 `:` 之后的词按新片段处理；`SSH`、`iOS`、`vCPU` 等已含大写或数字的词保持原样。同一 key 同时用作标题和行标签时按较强的角色（标题/按钮）处理。句式标签里，`/` 后的词小写（`Group / purpose`），`·` 后的片段首字母大写（`Verified · Manual reads`）。
+
+标点：按钮、标题、标签、胶囊不加句号；脚注和提示是完整句子时加句号；消息中自然使用缩写（`can’t`、`don’t`、`couldn’t`）。使用美式拼写（`canceled`）。占位符中的撇号一律用 `’`，因为 ASCII `'` 在 ICU 中是转义符。
+
+保持原样的名称：`vps tell you`（品牌小写）、SSH、SFTP、TCP、IP、IPv4/IPv6、vCPU、GiB/MiB/TiB、SolusVM、RackNerd ctrl、CNY/USD/EUR、JSON、PNG、Face ID、iOS、Android。
+
+### 英文术语表
+
+| 英文 | 中文 | 说明 |
+| --- | --- | --- |
+| ledger | 台账 | 应用内的本地账本；`local ledger` |
+| record | 记录 | 服务器的本地记录；`Archive Local Record` 保留，强调不影响远端 |
+| provider | 提供商 / 厂商 | 卖服务器的公司；不用 vendor |
+| panel connection | 适配器实例 / 面板账户 | 与某个厂商面板的一份只读授权；不再使用 adapter instance / panel account |
+| panel type | 适配器类型 | SolusVM 1 / SolusVM 2 / RackNerd ctrl |
+| device | 设备 | 面板里读取到的远端实例；本地的叫 server |
+| due date | 到期日期 | 服务期结束日，不计入服务期；`expires` / `expired` 作动词和状态；提醒功能名保留 `Expiry reminders` |
+| renewal price / cycle | 续费金额 / 周期 | 一个周期的价格与时长，不等于实际支付 |
+| remaining value | 剩余价值 | 参考折算，不是退款或成交价 |
+| payment record | 付款记录 | 仅记账；`Void` 对应撤销，`Delete` 对应删除 |
+| archive | 归档 | 不取消服务、不停止计费 |
+| host key | 主机公钥 | 界面统称 host key；输入公钥行时说 public key |
+| credential / passphrase | 凭据 / 口令 | passphrase 仅指私钥解密口令 |
+| snippet | 片段 | 命令片段；只进入草稿，不自动发送 |
+| Send / Send and Execute | 发送 / 发送并执行 | 前者发送原文，后者追加 Enter |
+
+安全含义不因措辞改变：归档不等于取消计费；付款只是记账；秘密不导出；主机公钥变化会阻止认证；电源命令的结果可能未知；未加密备份；提醒不保证送达；估值和汇率仅供参考。
 
 ## 实现
 
