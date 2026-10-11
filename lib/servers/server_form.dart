@@ -205,30 +205,50 @@ class _ServerFormState extends State<ServerForm> {
     bool required = false,
     int max = 80,
     TextStyle? style,
-  }) => FormField<void>(
-    validator: (_) =>
-        _validateField(id, label, fields[id]!.text, required: required),
-    builder: (state) => AppFormRow(
-      label: label,
-      required: required,
-      errorText: state.errorText,
-      child: _semantic(
-        semanticLabel,
-        state.errorText,
-        AppTextField(
-          key: ValueKey('field-$id'),
-          controller: fields[id],
-          enabled: !saving,
-          maxLength: max,
-          hint: hint ?? context.l10n.uiFormOptional,
-          label: semanticLabel,
-          style: style,
-          textInputAction: TextInputAction.next,
-          autocorrect: id != 'host',
-          enableSuggestions: id != 'host',
+
+    /// Longest value (characters, in [style]) that must fit beside the label;
+    /// when it cannot, the field goes below the label. Decided from the widest
+    /// *possible* value, never from the typed text, so focus survives typing.
+    int? stackBeyond,
+  }) => LayoutBuilder(
+    builder: (context, box) {
+      final stacked =
+          stackBeyond != null &&
+          measureFormText(context, label, 16) +
+                  44 +
+                  MediaQuery.textScalerOf(context)
+                          .scale(style?.fontSize ?? 16) *
+                      .62 *
+                      stackBeyond >
+              box.maxWidth;
+      return FormField<void>(
+        validator: (_) =>
+            _validateField(id, label, fields[id]!.text, required: required),
+        builder: (state) => AppFormRow(
+          label: label,
+          required: required,
+          errorText: state.errorText,
+          stacked: stacked,
+          child: _semantic(
+            semanticLabel,
+            state.errorText,
+            AppTextField(
+              key: ValueKey('field-$id'),
+              controller: fields[id],
+              enabled: !saving,
+              maxLength: max,
+              hint: hint ?? context.l10n.uiFormOptional,
+              label: semanticLabel,
+              style: style,
+              textAlign: stacked ? TextAlign.start : TextAlign.end,
+              textInputAction: TextInputAction.next,
+              autocorrect: id != 'host',
+              enableSuggestions: id != 'host',
+            ),
+          ),
         ),
-      ),
-    ),
+      );
+    },
   );
 
   void _explainLock() => showAppToast(
@@ -855,6 +875,7 @@ class _ServerFormState extends State<ServerForm> {
                           hint: l10n.serverHostExample,
                           max: 253,
                           style: kMonoTextStyle.copyWith(fontSize: 15),
+                          stackBeyond: 39,
                         ),
                         AppFormRow.pick(
                           key: const ValueKey('field-group'),

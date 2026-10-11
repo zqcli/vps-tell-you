@@ -407,7 +407,7 @@ class LedgerStore {
           'JP-01',
           'GreenCloud',
           '日本',
-          '203.0.113.22',
+          '2001:db8:0:22::1',
           '开发环境',
           BillingKind.prepaid,
           4500,

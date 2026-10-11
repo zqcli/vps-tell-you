@@ -85,3 +85,32 @@ Copy actions copy the bare address.
 * Input forms accepted for the same IPv6 address share one host-trust key.
 * Numeric-looking names (`127.1`, `0x7f.1`) fail closed for connections.
 * Backups accept `ipv6` (optional) and still reject any other unknown key.
+  `ip` holding an IPv6 (older data) is moved to `ipv6` on read; with both set
+  it is rejected.
+* SQLite is untouched: `resources_json` / `host` are TEXT, so no schema bump
+  and no migration; backup stays v1.
+
+## 4. Where it applies
+
+| Place | Behaviour |
+|---|---|
+| Server form address | any host; IP literals stored canonical (no `[]`); `[v6]` accepted; port rejected |
+| Server form hardware | `IPv4` + `IPv6` rows; mirror rule above; fields stack under the label when a full-length address cannot share the line (decided from the maximum width, not the typed text, so focus is kept) |
+| Detail | `IPv4` tile in the grid, `IPv6` full-width tile (wraps); address card up to 3 lines; copy copies the bare address |
+| Search | host, hardware IPv4 / IPv6; an IPv6 query in any spelling also matches the canonical form |
+| SSH settings | inline validation (`NetAddress`), saved canonical |
+| SSH / SFTP / TCP connect | bare canonical host to `Socket.connect`; host-trust key `host` + `port` |
+| TCP test | address field takes `host`, `host:port`, `[v6]`, `[v6]:port`; the port moves into the port field; a bare IPv6 is never split; result shows the connected address and its family |
+| Display | `[v6]:port`, `user@[v6]:port` (terminal title, prompts, trust lists, SSH row) |
+| Terminal highlight | also `[v6]:port` |
+| Demo data | JP-01 uses `2001:db8:0:22::1` |
+
+## 5. Verification
+
+`test/net_address_test.dart` (RFC 5952 vectors), `server_resources_test`,
+`ledger_backup_test`, `hardware_configuration_test` (form), `ipv6_search_test`,
+`tcp_test` / `tcp_widget_test`, `security_validation_test` (trust key across
+spellings), `security_widget_test` (SSH settings) and
+`ssh_ipv6_loopback_test` (real SSH + SFTP over `::1` through the loopback-only
+fixture, `--bind ::1`; skipped with a stated reason on hosts without `::1`).
+The zone-id TCP test needs `fe80::1%lo0` (macOS / BSD) and is skipped elsewhere.

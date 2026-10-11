@@ -433,44 +433,61 @@ class ServerResourceFieldsState extends State<ServerResourceFields> {
     final isAddress = key == 'ip' || key == 'ipv6';
     // Addresses are monospace; 14 px keeps a typical IPv6 on the row.
     final style = isAddress ? kMonoTextStyle.copyWith(fontSize: 14) : null;
-    return FormField<void>(
-      validator: (_) => _validate(key),
-      builder: (field) => _block(
-        AppFormRow(
-          label: label,
-          errorText: field.errorText,
-          child: _mirrored(key)
-              ? Semantics(
-                  label: label,
-                  value: _text(key),
-                  child: Text(
-                    _text(key),
-                    key: ValueKey('resource-$key-mirrored'),
-                    textAlign: TextAlign.end,
-                    style: style!.copyWith(color: context.palette.text2),
-                  ),
-                )
-              : _semantic(
-                  label,
-                  field.errorText,
-                  AppTextField(
-                    key: ValueKey('resource-$key'),
-                    controller: _fields[key],
-                    enabled: widget.enabled,
-                    maxLength: key == 'hostname' ? 253 : 45,
-                    hint: context.l10n.serverUnknown,
-                    label: label,
-                    style: style,
-                    textInputAction: TextInputAction.next,
-                    autocorrect: false,
-                    enableSuggestions: false,
-                    keyboardType: isAddress ? TextInputType.url : null,
-                    onChanged: (_) => setState(() {}),
-                  ),
-                ),
-        ),
-        key,
-      ),
+    final longest = key == 'ipv6' ? 39 : 15; // characters of the longest value
+    return LayoutBuilder(
+      builder: (context, box) {
+        // Decided from the widest *possible* value, never from what is typed,
+        // so the field keeps focus while the text grows. When label and a full
+        // address cannot share a line the field goes below the label.
+        final stacked =
+            isAddress &&
+            _textWidth(label, 16) +
+                    44 +
+                    MediaQuery.textScalerOf(context).scale(14) * .62 * longest >
+                box.maxWidth;
+        final align = stacked ? TextAlign.start : TextAlign.end;
+        return FormField<void>(
+          validator: (_) => _validate(key),
+          builder: (field) => _block(
+            AppFormRow(
+              label: label,
+              errorText: field.errorText,
+              stacked: stacked,
+              child: _mirrored(key)
+                  ? Semantics(
+                      label: label,
+                      value: _text(key),
+                      child: Text(
+                        _text(key),
+                        key: ValueKey('resource-$key-mirrored'),
+                        textAlign: align,
+                        style: style!.copyWith(color: context.palette.text2),
+                      ),
+                    )
+                  : _semantic(
+                      label,
+                      field.errorText,
+                      AppTextField(
+                        key: ValueKey('resource-$key'),
+                        controller: _fields[key],
+                        enabled: widget.enabled,
+                        maxLength: key == 'hostname' ? 253 : 45,
+                        hint: context.l10n.serverUnknown,
+                        label: label,
+                        style: style,
+                        textAlign: align,
+                        textInputAction: TextInputAction.next,
+                        autocorrect: false,
+                        enableSuggestions: false,
+                        keyboardType: isAddress ? TextInputType.url : null,
+                        onChanged: (_) => setState(() {}),
+                      ),
+                    ),
+            ),
+            key,
+          ),
+        );
+      },
     );
   }
 
