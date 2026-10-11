@@ -4,6 +4,7 @@ import '../l10n/locale_preference.dart';
 import 'package:flutter/cupertino.dart' show CupertinoActivityIndicator;
 import 'package:flutter/material.dart';
 
+import '../core/net_address.dart';
 import '../core/ui/ui.dart';
 import 'connection_form.dart';
 import 'tcp_test.dart';
@@ -81,6 +82,13 @@ class _TcpTestPageState extends State<TcpTestPage> with WidgetsBindingObserver {
       return;
     }
     _hasValidated = true;
+    // `host:port` / `[v6]:port` in the address field wins over the port field
+    // and is split back into the two fields so the tested target is visible.
+    final split = splitHostPort(host.text.trim());
+    if (split?.port != null && RegExp(r'^[0-9]+$').hasMatch(split!.port!)) {
+      host.text = split.host;
+      port.text = split.port!;
+    }
     if (!form.currentState!.validate()) {
       return;
     }
@@ -189,7 +197,7 @@ class _TcpTestPageState extends State<TcpTestPage> with WidgetsBindingObserver {
                       onChanged: (_) => controller.clearTarget(),
                       validator: (value) {
                         try {
-                          TcpTarget(host: value, port: 22);
+                          TcpTarget.parse(value, defaultPort: 22);
                           return null;
                         } on ArgumentError catch (error) {
                           return localizedText(error, l10n);
@@ -246,7 +254,10 @@ class _TcpTestPageState extends State<TcpTestPage> with WidgetsBindingObserver {
                       if (result.remoteAddress != null)
                         AppKeyValueRow(
                           label: l10n.uiConnActualAddress,
-                          value: result.remoteAddress,
+                          value: result.remoteFamily == null
+                              ? result.remoteAddress
+                              : '${result.remoteAddress} · '
+                                    '${result.remoteFamily == NetHostKind.ipv6 ? 'IPv6' : 'IPv4'}',
                           mono: true,
                         ),
                       AppKeyValueRow(

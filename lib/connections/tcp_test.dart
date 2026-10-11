@@ -7,7 +7,7 @@ import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 
-import '../servers/server_record.dart';
+import '../core/net_address.dart';
 
 typedef TcpConnector = Future<ConnectionTask<Socket>> Function(
   String host,
@@ -17,28 +17,48 @@ typedef TcpConnector = Future<ConnectionTask<Socket>> Function(
 enum TcpOutcome { connected, refused, timedOut, cancelled, failed }
 
 class TcpTarget {
-  const TcpTarget._(this.host, this.port);
+  const TcpTarget._(this.host, this.port, this.kind);
+
+  /// [host] is an IPv4, IPv6 (optionally bracketed; link-local may carry a
+  /// zone) or DNS name. Only the bare canonical form is kept, which is what
+  /// `Socket.connect` takes; brackets are for display ([label]).
   factory TcpTarget({required String host, required int port}) {
-    var normalized = host.trim();
-    if (normalized.startsWith('[') && normalized.endsWith(']')) {
-      normalized = normalized.substring(1, normalized.length - 1);
-      if (InternetAddress.tryParse(normalized)?.type !=
-          InternetAddressType.IPv6) {
-        throw LocalizedArgumentError((l10n) => l10n.tcpValidIpv6);
-      }
-    }
-    if (normalized.isEmpty || !ServerRecord.validHost(normalized)) {
-      throw LocalizedArgumentError((l10n) => l10n.tcpValidHost);
+    final input = host.trim();
+    final address = NetAddress.tryParse(input);
+    if (address == null) {
+      // A bracketed non-IPv6 is a different mistake than a bad host name.
+      throw LocalizedArgumentError(
+        (l10n) => input.startsWith('[') && input.endsWith(']')
+            ? l10n.tcpValidIpv6
+            : l10n.tcpValidHost,
+      );
     }
     if (port < 1 || port > 65535) {
       throw LocalizedArgumentError((l10n) => l10n.tcpValidPort);
     }
-    final address = InternetAddress.tryParse(normalized);
-    return TcpTarget._(address?.address ?? normalized.toLowerCase(), port);
+    return TcpTarget._(address.host, port, address.kind);
   }
+
+  /// One-field input: `host`, `host:port`, `[v6]` or `[v6]:port`. A bare IPv6
+  /// is always an address. [defaultPort] is used when no port is given.
+  factory TcpTarget.parse(String input, {required int defaultPort}) {
+    final split = splitHostPort(input.trim());
+    if (split == null) {
+      throw LocalizedArgumentError((l10n) => l10n.tcpValidHost);
+    }
+    final text = split.port;
+    if (text != null && !RegExp(r'^[0-9]+$').hasMatch(text)) {
+      // `https://host`, `host:` ... are not a host with a port.
+      throw LocalizedArgumentError((l10n) => l10n.tcpValidHost);
+    }
+    final port = text == null ? defaultPort : (int.tryParse(text) ?? 0);
+    return TcpTarget(host: split.host, port: port);
+  }
+
   final String host;
   final int port;
-  String get label => host.contains(':') ? '[$host]:$port' : '$host:$port';
+  final NetHostKind kind;
+  String get label => formatHostPort(host, port);
 }
 
 class TcpTestResult {
@@ -48,12 +68,16 @@ class TcpTestResult {
     required this.finishedAt,
     required this.elapsed,
     this.remoteAddress,
+    this.remoteFamily,
   });
   final TcpTarget target;
   final TcpOutcome outcome;
   final DateTime finishedAt;
   final Duration elapsed;
   final String? remoteAddress;
+
+  /// Family the connection actually used (a name can resolve to either).
+  final NetHostKind? remoteFamily;
   String get source => sourceFor(defaultLocalizations);
   String sourceFor(AppLocalizations l10n) => l10n.tcpSource;
   String get label => labelFor(defaultLocalizations);
@@ -128,6 +152,11 @@ class TcpTestController extends ChangeNotifier {
                 attempt,
                 TcpOutcome.connected,
                 remoteAddress: socket.remoteAddress.address,
+                remoteFamily: switch (socket.remoteAddress.type) {
+                  InternetAddressType.IPv6 => NetHostKind.ipv6,
+                  InternetAddressType.IPv4 => NetHostKind.ipv4,
+                  _ => null,
+                },
               );
             }
           } finally {
@@ -163,6 +192,7 @@ class TcpTestController extends ChangeNotifier {
     _TcpAttempt attempt,
     TcpOutcome outcome, {
     String? remoteAddress,
+    NetHostKind? remoteFamily,
     bool publish = true,
   }) {
     if (attempt.ended) {
@@ -181,6 +211,7 @@ class TcpTestController extends ChangeNotifier {
         finishedAt: _clock().toUtc(),
         elapsed: attempt.watch.elapsed,
         remoteAddress: remoteAddress,
+        remoteFamily: remoteFamily,
       );
       notifyListeners();
     }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../core/net_address.dart';
 import '../core/ui/ui.dart';
 import '../servers/ledger_controller.dart';
 import 'host_trust.dart';
@@ -67,7 +68,7 @@ class HostTrustPage extends StatelessWidget {
                 AppRow(
                   icon: Icons.verified_user_outlined,
                   iconColor: AppTints.green,
-                  title: '${pin.host}:${pin.port}',
+                  title: formatHostPort(pin.host, pin.port),
                   subtitle: l10n.securityHostVerifiedAt(
                     pin.algorithm,
                     pin.verifiedAt.toLocal().toString().substring(0, 16),
@@ -118,7 +119,7 @@ class HostTrustPage extends StatelessWidget {
                       ),
                       message: LocalizedText(
                         (l10n) => l10n.securityRemoveHostTrustMessage(
-                          pin.host,
+                          bracketedHost(pin.host),
                           pin.port,
                           pin.fingerprint,
                         ),
@@ -404,7 +405,10 @@ class _HostVerificationPageState extends State<HostVerificationPage> {
                 AppRow(
                   icon: Icons.dns_outlined,
                   iconColor: changed ? AppTints.red : AppTints.orange,
-                  title: '${widget.identity.host}:${widget.identity.port}',
+                  title: formatHostPort(
+                    widget.identity.host,
+                    widget.identity.port,
+                  ),
                   trailing: StatusPill(
                     changed
                         ? l10n.uiSecurityKeyChanged

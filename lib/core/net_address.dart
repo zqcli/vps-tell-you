@@ -158,13 +158,15 @@ class NetAddress {
 }
 
 /// `host:port` for display; IPv6 hosts (anything with a colon) get brackets.
-String formatHostPort(String host, int port) => '${_bracketIfIpv6(host)}:$port';
+String formatHostPort(String host, int port) => '${bracketedHost(host)}:$port';
 
 /// `user@host:port` for display with an unambiguous IPv6 host.
 String formatUserHostPort(String user, String host, int port) =>
     '$user@${formatHostPort(host, port)}';
 
-String _bracketIfIpv6(String host) =>
+/// [host] ready to be followed by `:port`: IPv6 (anything with a colon) in
+/// brackets, everything else unchanged.
+String bracketedHost(String host) =>
     host.contains(':') && !host.startsWith('[') ? '[$host]' : host;
 
 List<int>? _parseIpv4(String text) {
