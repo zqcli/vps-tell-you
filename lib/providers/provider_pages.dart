@@ -223,6 +223,61 @@ class _ProviderNameDialogState extends State<_ProviderNameDialog> {
   }
 }
 
+/// A package row: name with its optional "Default" pill, then the price and
+/// hardware summary. The pill sits beside the name and wraps below it on
+/// narrow screens or large text instead of squeezing the row.
+AppRow _packageRow(
+  BuildContext context, {
+  required Key key,
+  required CatalogPackage package,
+  Widget? trailing,
+  bool chevron = false,
+  VoidCallback? onTap,
+}) {
+  final l10n = context.l10n;
+  final p = context.palette;
+  return AppRow.custom(
+    key: key,
+    leading: chevron
+        ? const AppIconSquare(
+            icon: Icons.inventory_2_outlined,
+            color: AppTints.purple,
+          )
+        : null,
+    trailing: trailing,
+    chevron: chevron,
+    onTap: onTap,
+    child: Padding(
+      padding: const EdgeInsets.symmetric(vertical: 11),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Wrap(
+            spacing: 8,
+            runSpacing: 4,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            children: [
+              Text(
+                package.name,
+                style: TextStyle(fontSize: 16, height: 1.3, color: p.text),
+              ),
+              if (package.isDefault) StatusPill(l10n.r6CatDefaultPill),
+            ],
+          ),
+          if (packageSummaryLine(l10n, package).isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.only(top: 2),
+              child: Text(
+                packageSummaryLine(l10n, package),
+                style: TextStyle(fontSize: 13, height: 1.35, color: p.text2),
+              ),
+            ),
+        ],
+      ),
+    ),
+  );
+}
+
 /// Opens the new-server form for [selection] (and [package]) as a page sheet
 /// and returns the id of the saved server.
 Future<String?> openServerForm(
@@ -706,22 +761,11 @@ class _PackageChoicePageState extends State<PackageChoicePage> {
             footer: l10n.r6CatPackageFooter,
             children: [
               for (final package in catalog.packages)
-                AppRow(
+                _packageRow(
+                  context,
                   key: ValueKey('choose-package-${package.id}'),
-                  title: package.name,
-                  subtitle: packageSummaryLine(l10n, package),
-                  subtitleMaxLines: 3,
-                  trailing: package.isDefault
-                      ? Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            StatusPill(l10n.r6CatDefaultPill),
-                            const SizedBox(width: 8),
-                            if (selectedId == package.id)
-                              check(true) ?? const SizedBox.shrink(),
-                          ],
-                        )
-                      : check(selectedId == package.id),
+                  package: package,
+                  trailing: check(selectedId == package.id),
                   onTap: () => setState(() => selectedId = package.id),
                 ),
               AppRow(
@@ -913,16 +957,10 @@ class _ProviderDetailsPageState extends State<ProviderDetailsPage> {
                   : l10n.r6CatPackagesFooter,
               children: [
                 for (final package in catalog.packages)
-                  AppRow(
+                  _packageRow(
+                    context,
                     key: ValueKey('provider-package-${package.id}'),
-                    icon: Icons.inventory_2_outlined,
-                    iconColor: AppTints.purple,
-                    title: package.name,
-                    subtitle: packageSummaryLine(l10n, package),
-                    subtitleMaxLines: 3,
-                    trailing: package.isDefault
-                        ? StatusPill(l10n.r6CatDefaultPill)
-                        : null,
+                    package: package,
                     chevron: true,
                     onTap: opening
                         ? null

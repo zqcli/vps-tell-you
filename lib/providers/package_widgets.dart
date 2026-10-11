@@ -99,7 +99,7 @@ class CatalogFailureBanner extends StatelessWidget {
               key: const ValueKey('catalog-retry'),
               center: true,
               title: context.l10n.r6CatRetry,
-              onTap: ledger.loadCatalog,
+              onTap: () => ledger.loadCatalog(),
             ),
           ],
         ),

@@ -64,8 +64,13 @@ class LedgerController extends ChangeNotifier {
   bool get catalogLoaded => _catalog != null;
 
   /// Loads the catalog once (concurrent callers share the load). Safe to call
-  /// from `initState`; a failed load can be retried by calling it again.
-  Future<void> loadCatalog() => _catalogLoading ??= _readCatalog();
+  /// from `initState`; a failed load can be retried by calling it again, and
+  /// [force] re-reads an already loaded catalog.
+  Future<void> loadCatalog({bool force = false}) {
+    if (_catalog != null && !force) return Future<void>.value();
+    return _catalogLoading ??= _readCatalog();
+  }
+
   Future<void> _readCatalog() async {
     try {
       final loaded = await catalogSource.load();

@@ -103,7 +103,11 @@ class _ServerFormState extends State<ServerForm> {
   @override
   void initState() {
     super.initState();
-    widget.controller.loadCatalog();
+    // The package rows depend on the catalog; this build method reads it
+    // outside the controller's ListenableBuilder, so rebuild explicitly.
+    widget.controller.loadCatalog().then((_) {
+      if (mounted) setState(() {});
+    });
     final s = widget.record;
     selectedProvider =
         widget.businessProvider ??
