@@ -88,7 +88,7 @@ void main() {
     );
     expect(
       convertedAmount(const FinanceAmount.notApplicable('USD'), fx, l10n: en),
-      'Not applicable / Excluded',
+      'Not applicable / excluded',
     );
     expect(
       convertedAmount(FinanceAmount.money(const Money('EUR', 0)), fx, l10n: en),
@@ -334,7 +334,7 @@ void main() {
         await tester.pumpAndSettle();
         expect(
           tester.state<FormFieldState<String>>(due).errorText,
-          'Enter a valid expiry date',
+          'Enter a valid due date',
         );
         expect(
           tester.widget<FinanceFieldRow>(due).controller.text,

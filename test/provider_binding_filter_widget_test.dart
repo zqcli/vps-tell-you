@@ -221,7 +221,7 @@ void main() {
       await mount(tester);
       expect(
         find.text(
-          'Assign a provider in server details before choosing an adapter instance to link.',
+          'Assign a provider in server details before choosing a panel connection to link.',
         ),
         findsOneWidget,
       );
@@ -294,7 +294,7 @@ void main() {
       // confirmation state rather than trust its previous provider metadata.
       await mount(tester, refresh: false);
       expect(
-        find.textContaining('Confirm this instance’s provider'),
+        find.textContaining('Confirm this panel connection’s provider'),
         findsOneWidget,
       );
       expect(find.text('Observed north'), findsOneWidget);
@@ -319,7 +319,7 @@ void main() {
       await tester.pumpAndSettle();
       expect(await store.cloudBindings(), hasLength(1));
       await tap(tester, 'server-cloud-unbind');
-      await tester.tap(find.text('Unlink only this server'));
+      await tester.tap(find.text('Unlink Only This Server'));
       await tester.pumpAndSettle();
       expect(result, isTrue);
       expect(await store.cloudBindings(), isEmpty);
@@ -374,7 +374,7 @@ void main() {
       expect(find.text('Observed north'), findsWidgets);
       await saveDisabled(tester);
       await tap(tester, 'server-cloud-unbind');
-      await tester.tap(find.text('Unlink only this server'));
+      await tester.tap(find.text('Unlink Only This Server'));
       await tester.pumpAndSettle();
       expect(result, isTrue);
       expect(await store.cloudBindings(), isEmpty);

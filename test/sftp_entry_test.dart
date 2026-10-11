@@ -300,7 +300,7 @@ void main() {
     testWidgets('English title', (tester) async {
       await mountDetail(tester, 'ready', locale: 'en');
       await reveal(tester);
-      expect(find.text('SFTP files'), findsOneWidget);
+      expect(find.text('SFTP Files'), findsOneWidget);
     });
 
     testWidgets('no SSH configuration: dimmed, offers to set it up', (

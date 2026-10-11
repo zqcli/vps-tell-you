@@ -131,7 +131,7 @@ void main() {
 
   /// "Change provider" lives in the detail page's more-actions menu.
   Future<void> changeProviderFromMenu(WidgetTester tester) async {
-    await tester.tap(find.byTooltip('More actions'));
+    await tester.tap(find.byTooltip('More Actions'));
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const ValueKey('server-change-provider')));
     await tester.pumpAndSettle();
@@ -429,14 +429,14 @@ void main() {
       await changeProviderFromMenu(tester);
       await tap(tester, 'choose-provider-south');
       expect(find.textContaining('Adapter single'), findsWidgets);
-      expect(find.text('Unlink and change provider'), findsOneWidget);
+      expect(find.text('Unlink and Change Provider'), findsOneWidget);
       await tester.tap(find.text('Cancel'));
       await tester.pumpAndSettle();
       expect(ledger.byId(before.id)!.providerId, north.id);
       expect(ledger.cloud.bindings, hasLength(1));
       await changeProviderFromMenu(tester);
       await tap(tester, 'choose-provider-south');
-      await tester.tap(find.text('Unlink and change provider'));
+      await tester.tap(find.text('Unlink and Change Provider'));
       await tester.pumpAndSettle();
       final after = ledger.byId(before.id)!;
       expect(after.providerId, south.id);
@@ -490,7 +490,7 @@ void main() {
       );
       final confirm = find.widgetWithText(
         CupertinoDialogAction,
-        'Confirm instance provider',
+        'Confirm Provider',
       );
       await tester.tap(confirm);
       await tester.pumpAndSettle();

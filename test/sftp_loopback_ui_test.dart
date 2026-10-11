@@ -192,7 +192,7 @@ void main() {
     await tester.tap(find.text('Delete').last);
     await pumpReal(tester);
     expect(find.text('Delete folder and everything in it?'), findsOneWidget);
-    await tester.tap(find.text('Delete everything'));
+    await tester.tap(find.text('Delete Everything'));
     await pumpReal(tester, 60);
     expect(Directory('${root.path}/inbox').existsSync(), isFalse);
     expect(entry('inbox'), findsNothing);
