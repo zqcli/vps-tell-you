@@ -21,14 +21,12 @@ void main() {
     ramBytes: 1610612736,
     diskBytes: 21474836480,
     trafficBytes: 9007199254740991,
-    apiFields: ServerResources.fieldKeys,
   );
 
   Future<GlobalKey<ServerResourceFieldsState>> mount(
     WidgetTester tester, {
     required double width,
     required double scale,
-    required bool importing,
     bool enabled = true,
   }) async {
     tester.view.physicalSize = Size(width, 844);
@@ -75,7 +73,6 @@ void main() {
               child: ServerResourceFields(
                 key: key,
                 initial: initial,
-                importing: importing,
                 enabled: enabled,
               ),
             ),
@@ -118,183 +115,147 @@ void main() {
 
   for (final width in [320.0, 360.0, 390.0]) {
     for (final scale in [1.0, 2.0]) {
-      for (final importing in [false, true]) {
-        testWidgets(
-          'capacity rows stay inline at $width px / $scale text, importing=$importing',
-          (tester) async {
-            final key = await mount(
-              tester,
-              width: width,
-              scale: scale,
-              importing: importing,
-            );
-            expect(
-              key.currentState!.validateAndRead()!.toJson(),
-              initial.toJson(),
-            );
-            for (final field in ['diskBytes', 'trafficBytes', 'ramBytes']) {
-              final row = find.byKey(ValueKey('resource-row-$field'));
-              await tester.ensureVisible(row);
-              await tester.pumpAndSettle();
-              final value = tester.getRect(
-                find.byKey(ValueKey('resource-$field')),
-              );
-              final unit = tester.getRect(
-                find.byKey(ValueKey('resource-unit-$field')),
-              );
-              // Beside the value when the row is wide enough, otherwise on
-              // its own line below it; never clipped or overlapping.
-              expect(
-                unit.top >= value.bottom - 0.01 || value.right <= unit.left,
-                isTrue,
-                reason: 'unit selector must not overlap the value field',
-              );
-              expect(value.width, greaterThanOrEqualTo(48));
-              expect(value.height, greaterThanOrEqualTo(40));
-              expect(unit.width, greaterThanOrEqualTo(48));
-              // The selector scales down (never clips) when four units cannot
-              // fit the width at large text sizes.
-              expect(unit.height, greaterThanOrEqualTo(20));
-              final selectedUnit = find.descendant(
-                of: find.byKey(ValueKey('resource-unit-$field')),
-                matching: find.text(
-                  field == 'ramBytes'
-                      ? 'MiB'
-                      : field == 'diskBytes'
-                      ? 'GiB'
-                      : 'B',
-                ),
-              );
-              final unitParagraph = tester.renderObject<RenderParagraph>(
-                selectedUnit,
-              );
-              expect(
-                unitParagraph.getBoxesForSelection(
-                  TextSelection(
-                    baseOffset: 0,
-                    extentOffset: field == 'trafficBytes' ? 1 : 3,
-                  ),
-                ),
-                hasLength(1),
-                reason:
-                    'Selected capacity units must remain complete on one line',
-              );
-              expect(value.left, greaterThanOrEqualTo(16));
-              expect(unit.right, lessThanOrEqualTo(width - 16 + 0.001));
-              if (field == 'trafficBytes') {
-                final period = tester.getRect(
-                  find.byKey(const ValueKey('resource-traffic-period')),
-                );
-                expect(period.top, greaterThan(unit.top));
-                expect(period.right, lessThanOrEqualTo(width - 16 + 0.001));
-                expect(period.height, greaterThanOrEqualTo(44));
-                if (!importing) {
-                  await capture(
-                    tester,
-                    'traffic-${width.toInt()}-${scale.toInt()}x',
-                  );
-                }
-              }
-              expect(tester.takeException(), isNull);
-            }
-            await chooseUnit(tester, 'ramBytes', 'GiB');
-            final ram = find.byKey(const ValueKey('resource-ramBytes'));
-            await tester.ensureVisible(ram);
-            await tester.enterText(ram, '1.5');
-            await tester.pumpAndSettle();
-            expect(key.currentState!.validateAndRead()!.ramBytes, 1610612736);
-            for (final period in {
-              '每月': 1,
-              '每季': 3,
-              '每年': 12,
-              '未设置': null,
-            }.entries) {
-              await chooseOption(
-                tester,
-                find.byKey(const ValueKey('resource-traffic-period')),
-                period.key,
-              );
-              final result = key.currentState!.validateAndRead()!;
-              expect(result.trafficPeriodMonths, period.value);
-              expect(result.trafficBytes, 9007199254740991);
-            }
-            // Shown in the best unit (8192 TiB); the exact stored bytes are
-            // kept (asserted above) because the field was not edited.
-            expect(
-              fieldController(tester, 'resource-trafficBytes').text,
-              '8192',
-            );
-            final unlimited = find.byKey(
-              const ValueKey('resource-traffic-unlimited'),
-            );
-            await tester.ensureVisible(unlimited);
-            await tester.tap(unlimited);
-            await tester.pumpAndSettle();
-            expect(
-              tester
-                  .widget<AppTextField>(
-                    find.byKey(const ValueKey('resource-trafficBytes')),
-                  )
-                  .enabled,
-              isFalse,
-            );
-            expect(unitIgnoresTaps(tester, 'trafficBytes'), isTrue);
-            // The quota period stays editable for unlimited traffic.
-            await chooseOption(
-              tester,
+      testWidgets('capacity rows stay inline at $width px / $scale text', (
+        tester,
+      ) async {
+        final key = await mount(tester, width: width, scale: scale);
+        expect(key.currentState!.validateAndRead()!.toJson(), initial.toJson());
+        for (final field in ['diskBytes', 'trafficBytes', 'ramBytes']) {
+          final row = find.byKey(ValueKey('resource-row-$field'));
+          await tester.ensureVisible(row);
+          await tester.pumpAndSettle();
+          final value = tester.getRect(find.byKey(ValueKey('resource-$field')));
+          final unit = tester.getRect(
+            find.byKey(ValueKey('resource-unit-$field')),
+          );
+          // Beside the value when the row is wide enough, otherwise on
+          // its own line below it; never clipped or overlapping.
+          expect(
+            unit.top >= value.bottom - 0.01 || value.right <= unit.left,
+            isTrue,
+            reason: 'unit selector must not overlap the value field',
+          );
+          expect(value.width, greaterThanOrEqualTo(48));
+          expect(value.height, greaterThanOrEqualTo(40));
+          expect(unit.width, greaterThanOrEqualTo(48));
+          // The selector scales down (never clips) when four units cannot
+          // fit the width at large text sizes.
+          expect(unit.height, greaterThanOrEqualTo(20));
+          final selectedUnit = find.descendant(
+            of: find.byKey(ValueKey('resource-unit-$field')),
+            matching: find.text(
+              field == 'ramBytes'
+                  ? 'MiB'
+                  : field == 'diskBytes'
+                  ? 'GiB'
+                  : 'B',
+            ),
+          );
+          final unitParagraph = tester.renderObject<RenderParagraph>(
+            selectedUnit,
+          );
+          expect(
+            unitParagraph.getBoxesForSelection(
+              TextSelection(
+                baseOffset: 0,
+                extentOffset: field == 'trafficBytes' ? 1 : 3,
+              ),
+            ),
+            hasLength(1),
+            reason: 'Selected capacity units must remain complete on one line',
+          );
+          expect(value.left, greaterThanOrEqualTo(16));
+          expect(unit.right, lessThanOrEqualTo(width - 16 + 0.001));
+          if (field == 'trafficBytes') {
+            final period = tester.getRect(
               find.byKey(const ValueKey('resource-traffic-period')),
-              '每季',
             );
-            expect(key.currentState!.validateAndRead()!.trafficPeriodMonths, 3);
-            expect(
-              key.currentState!.validateAndRead()!.trafficUnlimited,
-              isTrue,
-            );
-            await tester.ensureVisible(unlimited);
-            await tester.tap(unlimited);
-            await tester.pumpAndSettle();
-            expect(
-              key.currentState!.validateAndRead()!.trafficBytes,
-              9007199254740991,
-            );
-            expect(tester.takeException(), isNull);
-            if (!importing) {
-              await chooseUnit(tester, 'trafficBytes', 'TiB');
-              final traffic = find.byKey(
-                const ValueKey('resource-trafficBytes'),
-              );
-              await tester.ensureVisible(traffic);
-              await tester.enterText(traffic, '1.5');
-              FocusManager.instance.primaryFocus?.unfocus();
-              await tester.pumpAndSettle();
-              expect(
-                key.currentState!.validateAndRead()!.trafficBytes,
-                1649267441664,
-              );
-              await tester.ensureVisible(
-                find.byKey(const ValueKey('resource-row-trafficBytes')),
-              );
-              await capture(
-                tester,
-                'quarter-${width.toInt()}-${scale.toInt()}x',
-              );
-            }
-          },
+            expect(period.top, greaterThan(unit.top));
+            expect(period.right, lessThanOrEqualTo(width - 16 + 0.001));
+            expect(period.height, greaterThanOrEqualTo(44));
+
+            await capture(tester, 'traffic-${width.toInt()}-${scale.toInt()}x');
+          }
+          expect(tester.takeException(), isNull);
+        }
+        await chooseUnit(tester, 'ramBytes', 'GiB');
+        final ram = find.byKey(const ValueKey('resource-ramBytes'));
+        await tester.ensureVisible(ram);
+        await tester.enterText(ram, '1.5');
+        await tester.pumpAndSettle();
+        expect(key.currentState!.validateAndRead()!.ramBytes, 1610612736);
+        for (final period in {
+          '每月': 1,
+          '每季': 3,
+          '每年': 12,
+          '未设置': null,
+        }.entries) {
+          await chooseOption(
+            tester,
+            find.byKey(const ValueKey('resource-traffic-period')),
+            period.key,
+          );
+          final result = key.currentState!.validateAndRead()!;
+          expect(result.trafficPeriodMonths, period.value);
+          expect(result.trafficBytes, 9007199254740991);
+        }
+        // Shown in the best unit (8192 TiB); the exact stored bytes are
+        // kept (asserted above) because the field was not edited.
+        expect(fieldController(tester, 'resource-trafficBytes').text, '8192');
+        final unlimited = find.byKey(
+          const ValueKey('resource-traffic-unlimited'),
         );
-      }
+        await tester.ensureVisible(unlimited);
+        await tester.tap(unlimited);
+        await tester.pumpAndSettle();
+        expect(
+          tester
+              .widget<AppTextField>(
+                find.byKey(const ValueKey('resource-trafficBytes')),
+              )
+              .enabled,
+          isFalse,
+        );
+        expect(unitIgnoresTaps(tester, 'trafficBytes'), isTrue);
+        // The quota period stays editable for unlimited traffic.
+        await chooseOption(
+          tester,
+          find.byKey(const ValueKey('resource-traffic-period')),
+          '每季',
+        );
+        expect(key.currentState!.validateAndRead()!.trafficPeriodMonths, 3);
+        expect(key.currentState!.validateAndRead()!.trafficUnlimited, isTrue);
+        await tester.ensureVisible(unlimited);
+        await tester.tap(unlimited);
+        await tester.pumpAndSettle();
+        expect(
+          key.currentState!.validateAndRead()!.trafficBytes,
+          9007199254740991,
+        );
+        expect(tester.takeException(), isNull);
+
+        await chooseUnit(tester, 'trafficBytes', 'TiB');
+        final traffic = find.byKey(const ValueKey('resource-trafficBytes'));
+        await tester.ensureVisible(traffic);
+        await tester.enterText(traffic, '1.5');
+        FocusManager.instance.primaryFocus?.unfocus();
+        await tester.pumpAndSettle();
+        expect(
+          key.currentState!.validateAndRead()!.trafficBytes,
+          1649267441664,
+        );
+        await tester.ensureVisible(
+          find.byKey(const ValueKey('resource-row-trafficBytes')),
+        );
+        await capture(tester, 'quarter-${width.toInt()}-${scale.toInt()}x');
+      });
     }
   }
 
   testWidgets(
     'compact controls respect disabled state without losing exact values',
     (tester) async {
-      final key = await mount(
-        tester,
-        width: 320,
-        scale: 2,
-        importing: true,
-        enabled: false,
-      );
+      final key = await mount(tester, width: 320, scale: 2, enabled: false);
       for (final field in ['ramBytes', 'diskBytes', 'trafficBytes']) {
         expect(
           tester
@@ -320,7 +281,7 @@ void main() {
   testWidgets('long validation errors remain readable at narrow doubled text', (
     tester,
   ) async {
-    final key = await mount(tester, width: 320, scale: 2, importing: false);
+    final key = await mount(tester, width: 320, scale: 2);
     final field = find.byKey(const ValueKey('resource-trafficBytes'));
     await tester.ensureVisible(field);
     await tester.enterText(field, '0.000000001');

@@ -108,7 +108,9 @@ void main() {
           (r) => r.toMap()
             ..remove('renewal_anchor_date')
             ..remove('resources_json')
-            ..remove('provider_id'),
+            ..remove('provider_id')
+            ..remove('package_id')
+            ..remove('package_snapshot'),
         )
         .toList();
     final v1 = await databaseFactoryFfiNoIsolate.openDatabase(
@@ -141,7 +143,9 @@ void main() {
       final actual = loaded.singleWhere((r) => r.id == expected['id']).toMap()
         ..remove('renewal_anchor_date')
         ..remove('resources_json')
-        ..remove('provider_id');
+        ..remove('provider_id')
+        ..remove('package_id')
+        ..remove('package_snapshot');
       expect(actual, expected);
     }
     expect((await store.groups()).single.name, 'Production');

@@ -2,12 +2,12 @@ import '../l10n/localized_message.dart';
 
 import 'package:flutter/material.dart';
 
-import '../cloud/provider_pages.dart';
 import '../core/app_theme.dart';
 import '../core/ui/ui.dart';
 import '../data/ledger_store.dart';
 import '../finance/fx_page.dart';
 import '../l10n/locale_preference.dart';
+import '../providers/provider_pages.dart';
 import '../security/security_pages.dart';
 import '../servers/ledger_controller.dart';
 import '../servers/refresh_failure_notice.dart';
@@ -187,7 +187,7 @@ class _SettingsPageState extends State<SettingsPage> {
                 icon: Icons.apartment_outlined,
                 iconColor: AppTints.blue,
                 title: l10n.providerUiTitle,
-                value: controller.cloud.accounts.length.toString(),
+                value: controller.providers.length.toString(),
                 chevron: true,
                 onTap: openCloud,
               ),

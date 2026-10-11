@@ -1,131 +1,31 @@
 part of 'ledger_store.dart';
 
-/// The upgrade runs in SQLite's version-change transaction. It never opens the
-/// OS secret store and never rewrites a legacy user field or relationship.
-Future<void> _addProviderSchema(DatabaseExecutor db) async {
+/// Providers plus the package link columns (schema v12). Fresh databases
+/// create this directly; [_migrateToCatalogSchema] upgrades older ones.
+Future<void> _createProviderTables(DatabaseExecutor db) async {
   await db.execute('''CREATE TABLE providers (
     id TEXT PRIMARY KEY, name TEXT NOT NULL CHECK(length(name) BETWEEN 1 AND 80),
-    revision INTEGER NOT NULL DEFAULT 0,
-    needs_review INTEGER NOT NULL DEFAULT 0 CHECK(needs_review IN (0,1)),
-    created_at TEXT NOT NULL)''');
-  await db.execute('''CREATE UNIQUE INDEX confirmed_provider_name
-    ON providers(name COLLATE NOCASE) WHERE needs_review = 0''');
+    revision INTEGER NOT NULL DEFAULT 0, created_at TEXT NOT NULL)''');
+  await db.execute(
+    'CREATE UNIQUE INDEX providers_name ON providers(name COLLATE NOCASE)',
+  );
   await db.execute(
     'ALTER TABLE servers ADD COLUMN provider_id TEXT REFERENCES providers(id)',
   );
-  await db.execute('''ALTER TABLE cloud_accounts ADD COLUMN
-    business_provider_id TEXT REFERENCES providers(id)''');
-  await db.execute('''ALTER TABLE cloud_accounts ADD COLUMN auth_scope TEXT
-    NOT NULL DEFAULT 'unknown'
-    CHECK(auth_scope IN ('unknown','singleDevice','account'))''');
-  // Intentionally not ON DELETE SET NULL: a deleted local record cannot free a
-  // singleton credential for a different device in the same authority epoch.
-  await db.execute(
-    'ALTER TABLE cloud_accounts ADD COLUMN pinned_server_id TEXT',
-  );
-  final servers = await db.query('servers', orderBy: 'id');
-  final accounts = await db.query('cloud_accounts', orderBy: 'id');
-  final bindings = await db.query('cloud_bindings', orderBy: 'server_id');
-  final byServer = {for (final row in servers) row['id'] as String: row};
-  final linkedIds = bindings.map((row) => row['server_id']).toSet();
-  final names = <String, String>{};
-  bool knownName(String value) =>
-      value.trim().isNotEmpty && value.trim() != legacyUnknownVendor;
-  Future<String> providerFor(String name, String createdAt) async {
-    final clean = name.trim();
-    // SQLite NOCASE is ASCII-only. Preserve non-ASCII names exactly rather
-    // than silently merging labels using a different normalization algorithm.
-    final key = clean.replaceAllMapped(
-      RegExp('[A-Z]'),
-      (m) => m[0]!.toLowerCase(),
-    );
-    if (names[key] case final existing?) return existing;
-    final id = newLocalId();
-    await db.insert('providers', {
-      'id': id,
-      'name': clean,
-      'created_at': createdAt,
-    });
-    names[key] = id;
-    return id;
-  }
-
-  for (final account in accounts) {
-    final linked = bindings
-        .where((b) => b['account_id'] == account['id'])
-        .toList();
-    final singleton = CloudProvider.values
-        .byName(account['provider'] as String)
-        .isSingleInstance;
-    if (singleton &&
-        (linked.length > 1 ||
-            linked.any((b) => b['instance_key'] != 'single'))) {
-      throw StateError('Ambiguous legacy singleton; migration was not applied');
-    }
-    final vendors = linked
-        .map((b) => byServer[b['server_id']]!['vendor'] as String)
-        .toSet();
-    final consistent = vendors.length == 1 && knownName(vendors.single);
-    final String providerId;
-    if (consistent) {
-      providerId = await providerFor(
-        vendors.single,
-        account['created_at'] as String,
-      );
-    } else {
-      providerId = newLocalId();
-      await db.insert('providers', {
-        'id': providerId,
-        'name': account['alias'],
-        'needs_review': 1,
-        'created_at': account['created_at'],
-      });
-    }
-    final scope = singleton
-        ? AdapterAuthScope.singleDevice
-        : (account['remote_account_id'] as int? ?? 0) > 0
-        ? AdapterAuthScope.account
-        : AdapterAuthScope.unknown;
-    await db.update(
-      'cloud_accounts',
-      {
-        'business_provider_id': providerId,
-        'auth_scope': scope.name,
-        'pinned_server_id': singleton && linked.isNotEmpty
-            ? linked.first['server_id']
-            : null,
-      },
-      where: 'id = ?',
-      whereArgs: [account['id']],
-    );
-    for (final binding in linked) {
-      await db.update(
-        'servers',
-        {'provider_id': providerId},
-        where: 'id = ?',
-        whereArgs: [binding['server_id']],
-      );
-    }
-  }
-  for (final server in servers) {
-    if (linkedIds.contains(server['id'])) continue;
-    final vendor = server['vendor'] as String;
-    if (!knownName(vendor)) continue;
-    final providerId = await providerFor(
-      vendor,
-      server['created_at'] as String,
-    );
-    await db.update(
-      'servers',
-      {'provider_id': providerId},
-      where: 'id = ?',
-      whereArgs: [server['id']],
-    );
-  }
-  await _addProviderGuards(db);
 }
 
-const _providerGuardNames = [
+/// Nullable catalog link and package reference. Existing rows stay empty: the
+/// ledger never invents a catalog relationship for old data.
+Future<void> _addCatalogColumns(DatabaseExecutor db) async {
+  await db.execute('ALTER TABLE providers ADD COLUMN catalog_id TEXT');
+  await db.execute('''CREATE UNIQUE INDEX providers_catalog_id
+    ON providers(catalog_id) WHERE catalog_id IS NOT NULL''');
+  await db.execute('ALTER TABLE servers ADD COLUMN package_id TEXT');
+  await db.execute('ALTER TABLE servers ADD COLUMN package_snapshot TEXT');
+  await db.execute('CREATE INDEX servers_package ON servers(package_id)');
+}
+
+const _retiredAdapterTriggers = [
   'adapter_provider_insert',
   'adapter_provider_update',
   'binding_provider_insert',
@@ -136,90 +36,179 @@ const _providerGuardNames = [
   'singleton_pin_binding_update',
 ];
 
-Future<void> _removeProviderGuards(DatabaseExecutor db) async {
-  for (final name in _providerGuardNames) {
+/// Schema v12 upgrade for every older version. It runs inside sqflite's
+/// version-change transaction: any exception rolls everything back and the
+/// database keeps its old version. Servers, payments, SSH configurations and
+/// credentials are never deleted. It never opens the OS secret store.
+Future<void> _migrateToCatalogSchema(DatabaseExecutor db, DateTime now) async {
+  Future<bool> hasTable(String name) async => (await db.rawQuery(
+    "SELECT 1 FROM sqlite_master WHERE type='table' AND name=?",
+    [name],
+  )).isNotEmpty;
+  Future<Set<String>> columns(String table) async =>
+      (await db.rawQuery('PRAGMA table_info($table)'))
+          .map((row) => row['name'] as String)
+          .toSet();
+
+  // 1. Every adapter secret reference joins the existing cleanup journal so the
+  // device secure-storage items are removed by the ordinary retry path.
+  if (await hasTable('cloud_accounts')) {
+    for (final row in await db.query(
+      'cloud_accounts',
+      columns: ['secret_ref'],
+    )) {
+      final ref = row['secret_ref'];
+      if (ref is! String || ref.isEmpty) {
+        throw StateError('Invalid adapter secret reference');
+      }
+      await db.insert('secret_cleanup', {
+        'secret_ref': ref,
+        'created_at': now.toUtc().toIso8601String(),
+      }, conflictAlgorithm: ConflictAlgorithm.ignore);
+    }
+  }
+
+  // 2. Drop the adapter graph. Guards go first: one of them lives on servers
+  // and references the cloud tables.
+  for (final name in _retiredAdapterTriggers) {
     await db.execute('DROP TRIGGER IF EXISTS $name');
   }
-}
+  for (final table in [
+    'cloud_bindings',
+    'cloud_observations',
+    'cloud_accounts',
+  ]) {
+    await db.execute('DROP TABLE IF EXISTS $table');
+  }
 
-Future<void> _addProviderGuards(DatabaseExecutor db) async {
-  for (final operation in ['INSERT', 'UPDATE']) {
+  // 3. Providers: create them from legacy vendor text for databases which
+  // predate them, otherwise make every migrated provider an ordinary one.
+  final providersExist = await hasTable('providers');
+  final serverColumns = await columns('servers');
+  if (providersExist != serverColumns.contains('provider_id')) {
+    throw StateError('Incomplete ledger provider schema');
+  }
+  String fold(String value) =>
+      value.replaceAllMapped(RegExp('[A-Z]'), (m) => m[0]!.toLowerCase());
+  if (!providersExist) {
+    await _createProviderTables(db);
+    final byName = <String, String>{};
+    for (final server in await db.query(
+      'servers',
+      columns: ['id', 'vendor', 'created_at'],
+      orderBy: 'created_at, id',
+    )) {
+      final vendor = (server['vendor'] as String).trim();
+      if (vendor.isEmpty || vendor == legacyUnknownVendor) continue;
+      // SQLite NOCASE folds ASCII only; mirror that to avoid merging labels
+      // with a different normalization algorithm.
+      var providerId = byName[fold(vendor)];
+      if (providerId == null) {
+        providerId = byName[fold(vendor)] = newLocalId();
+        await db.insert('providers', {
+          'id': providerId,
+          'name': vendor,
+          'created_at': server['created_at'],
+        });
+      }
+      await db.update(
+        'servers',
+        {'provider_id': providerId},
+        where: 'id = ?',
+        whereArgs: [server['id']],
+      );
+    }
+  } else {
+    await db.execute('DROP INDEX IF EXISTS confirmed_provider_name');
+    if ((await columns('providers')).contains('needs_review')) {
+      final rows = await db.query(
+        'providers',
+        orderBy: 'needs_review, created_at, id',
+      );
+      final taken = {
+        for (final row in rows)
+          if (row['needs_review'] == 0) fold(row['name'] as String),
+      };
+      for (final row in rows.where((r) => r['needs_review'] != 0)) {
+        final id = row['id'];
+        final used = Sqflite.firstIntValue(
+          await db.rawQuery(
+            'SELECT COUNT(*) FROM servers WHERE provider_id = ?',
+            [id],
+          ),
+        )!;
+        if (used == 0) {
+          // A placeholder derived from an adapter alias which owns nothing.
+          await db.delete('providers', where: 'id = ?', whereArgs: [id]);
+          continue;
+        }
+        final base = row['name'] as String;
+        var name = base;
+        for (var n = 2; taken.contains(fold(name)); n++) {
+          final suffix = ' ($n)';
+          var cut = 80 - suffix.length;
+          if (base.length <= cut) cut = base.length;
+          // Keep a surrogate pair intact when truncating.
+          if (cut > 0 && cut < base.length) {
+            final unit = base.codeUnitAt(cut - 1);
+            if (unit >= 0xd800 && unit <= 0xdbff) cut--;
+          }
+          name = '${base.substring(0, cut)}$suffix';
+        }
+        taken.add(fold(name));
+        await db.update(
+          'providers',
+          {'name': name, 'needs_review': 0},
+          where: 'id = ?',
+          whereArgs: [id],
+        );
+      }
+    }
     await db.execute(
-      '''CREATE TRIGGER adapter_provider_${operation.toLowerCase()}
-      BEFORE $operation ON cloud_accounts BEGIN
-      SELECT CASE WHEN NEW.business_provider_id IS NULL OR NOT EXISTS(
-        SELECT 1 FROM providers WHERE id = NEW.business_provider_id)
-        THEN RAISE(ABORT, 'adapter provider required') END;
-      SELECT CASE WHEN NOT (
-        NEW.auth_scope = 'unknown' OR
-        (NEW.provider IN ('solusVm1','rackNerd') AND NEW.auth_scope = 'singleDevice') OR
-        (NEW.provider = 'solusVm2' AND NEW.auth_scope = 'account'
-          AND NEW.remote_account_id IS NOT NULL AND NEW.remote_account_id > 0))
-        THEN RAISE(ABORT, 'invalid adapter scope') END;
-      SELECT CASE WHEN EXISTS(
-        SELECT 1 FROM cloud_bindings b JOIN servers s ON s.id = b.server_id
-        WHERE b.account_id = NEW.id AND
-          (s.provider_id IS NULL OR s.provider_id != NEW.business_provider_id))
-        THEN RAISE(ABORT, 'provider relationship mismatch') END;
-      END''',
-    );
-    await db.execute(
-      '''CREATE TRIGGER binding_provider_${operation.toLowerCase()}
-      BEFORE $operation ON cloud_bindings BEGIN
-      SELECT CASE WHEN NOT EXISTS(
-        SELECT 1 FROM cloud_accounts a JOIN servers s ON s.id = NEW.server_id
-        JOIN providers p ON p.id = a.business_provider_id
-        WHERE a.id = NEW.account_id AND s.provider_id = a.business_provider_id
-          AND p.needs_review = 0 AND a.auth_scope != 'unknown'
-          AND (a.auth_scope != 'singleDevice' OR
-            (NEW.instance_key = 'single' AND
-             (a.pinned_server_id IS NULL OR a.pinned_server_id = NEW.server_id))))
-        THEN RAISE(ABORT, 'binding outside adapter authority') END;
-      END''',
+      'CREATE UNIQUE INDEX providers_name ON providers(name COLLATE NOCASE)',
     );
   }
-  await db.execute('''CREATE TRIGGER server_provider_update BEFORE UPDATE OF provider_id ON servers
-    WHEN EXISTS(SELECT 1 FROM cloud_bindings b JOIN cloud_accounts a ON a.id = b.account_id
-      WHERE b.server_id = NEW.id AND
-        (NEW.provider_id IS NULL OR NEW.provider_id != a.business_provider_id))
-    BEGIN SELECT RAISE(ABORT, 'unlink before changing provider'); END''');
-  await db.execute('''CREATE TRIGGER singleton_pin_update
-    BEFORE UPDATE OF pinned_server_id ON cloud_accounts
-    WHEN OLD.pinned_server_id IS NOT NULL
-      AND NEW.secret_ref = OLD.secret_ref
-      AND (NEW.pinned_server_id IS NULL OR NEW.pinned_server_id != OLD.pinned_server_id)
-    BEGIN SELECT RAISE(ABORT, 'singleton authority is pinned'); END''');
-  await db.execute(
-    '''CREATE TRIGGER singleton_pin_insert AFTER INSERT ON cloud_bindings
-    BEGIN UPDATE cloud_accounts SET pinned_server_id = NEW.server_id
-      WHERE id = NEW.account_id AND auth_scope = 'singleDevice'; END''',
-  );
-  await db.execute('''CREATE TRIGGER singleton_pin_binding_update
-    AFTER UPDATE OF server_id, account_id, instance_key ON cloud_bindings
-    BEGIN UPDATE cloud_accounts SET pinned_server_id = NEW.server_id
-      WHERE id = NEW.account_id AND auth_scope = 'singleDevice'; END''');
+
+  // 4. Catalog link and package reference columns.
+  await _addCatalogColumns(db);
+
+  // 5. Remove API provenance markers, keeping every value byte for byte.
+  for (final row in await db.query(
+    'servers',
+    columns: ['id', 'resources_json'],
+    where: 'resources_json IS NOT NULL',
+  )) {
+    final source = row['resources_json'] as String;
+    Object? decoded;
+    try {
+      decoded = jsonDecode(source);
+    } catch (_) {
+      continue; // Unreadable data is left untouched, never rewritten.
+    }
+    if (decoded is! Map || !decoded.containsKey('apiFields')) continue;
+    await db.update(
+      'servers',
+      {'resources_json': jsonEncode(Map.of(decoded)..remove('apiFields'))},
+      where: 'id = ?',
+      whereArgs: [row['id']],
+    );
+  }
+
+  if ((await db.rawQuery('PRAGMA foreign_key_check')).isNotEmpty) {
+    throw StateError('Invalid ledger migration references');
+  }
 }
 
-Future<ProviderRecord> _providerRow(
-  DatabaseExecutor db,
-  String id, {
-  bool confirmed = true,
-}) async {
+Future<ProviderRecord> _providerRow(DatabaseExecutor db, String id) async {
   final rows = await db.query('providers', where: 'id = ?', whereArgs: [id]);
   if (rows.length != 1) throw const LedgerConflict();
-  final provider = ProviderRecord.fromMap(rows.single);
-  if (confirmed && provider.needsReview) {
-    throw CloudAccountFailure(
-      LocalizedText((l10n) => l10n.providerReviewRequired),
-    );
-  }
-  return provider;
+  return ProviderRecord.fromMap(rows.single);
 }
 
 extension LedgerProviders on LedgerStore {
   Future<List<ProviderRecord>> providers() async => (await _db.query(
     'providers',
-    orderBy: 'needs_review, name COLLATE NOCASE, id',
+    orderBy: 'name COLLATE NOCASE, id',
   )).map(ProviderRecord.fromMap).toList(growable: false);
 
   Future<void> saveProvider(
@@ -232,24 +221,22 @@ extension LedgerProviders on LedgerStore {
     }
     if ((await txn.query(
       'providers',
-      where: 'name = ? COLLATE NOCASE AND id != ? AND needs_review = 0',
+      where: 'name = ? COLLATE NOCASE AND id != ?',
       whereArgs: [clean, record.id],
     )).isNotEmpty) {
       throw LocalizedArgumentError((l10n) => l10n.providerAlreadyExists);
     }
     final map = record.toMap()..['name'] = clean;
     if (isNew) {
-      if (record.needsReview) throw const LedgerConflict();
       map['revision'] = 0;
       await txn.insert('providers', map);
     } else {
-      final current = await _providerRow(txn, record.id, confirmed: false);
-      if (current.revision != record.revision ||
-          current.needsReview != record.needsReview) {
-        throw const LedgerConflict();
-      }
-      // Renaming cannot silently confirm a migrated provider or alter scope.
-      map.remove('created_at');
+      final current = await _providerRow(txn, record.id);
+      if (current.revision != record.revision) throw const LedgerConflict();
+      // Only the display name is editable; the catalog link is immutable here.
+      map
+        ..remove('created_at')
+        ..remove('catalog_id');
       map['revision'] = current.revision + 1;
       await txn.update(
         'providers',
@@ -257,139 +244,6 @@ extension LedgerProviders on LedgerStore {
         where: 'id = ?',
         whereArgs: [record.id],
       );
-      await txn.rawUpdate(
-        'UPDATE cloud_accounts SET generation = generation + 1 WHERE business_provider_id = ?',
-        [record.id],
-      );
-    }
-  });
-
-  Future<ProviderRecord> verifiedProvider(String id) => _providerRow(_db, id);
-
-  /// Explicit device ownership edit. It grants no adapter authority. The caller
-  /// must disclose the old link and authorize its removal before setting true.
-  Future<void> setServerProvider(
-    ServerCloudBindingOptions expected,
-    String? providerId, {
-    bool confirmUnlink = false,
-  }) => _db.transaction((txn) async {
-    final rows = await txn.query(
-      'servers',
-      where: 'id = ?',
-      whereArgs: [expected.server.id],
-    );
-    if (rows.length != 1) throw const LedgerConflict();
-    final current = ServerRecord.fromMap(rows.single);
-    if (current.revision != expected.server.revision ||
-        current.providerId != expected.server.providerId ||
-        current.archived ||
-        current.isDemo) {
-      throw const LedgerConflict();
-    }
-    final accounts = await txn.query('cloud_accounts');
-    if (accounts.length != expected.accounts.length) {
-      throw const LedgerConflict();
-    }
-    for (final account in expected.accounts) {
-      await LedgerStore._currentCloud(txn, account);
-    }
-    if (providerId == current.providerId) return;
-    if (providerId != null) await _providerRow(txn, providerId);
-    final links = await txn.query(
-      'cloud_bindings',
-      where: 'server_id = ?',
-      whereArgs: [current.id],
-    );
-    final old = links.firstOrNull;
-    if (old?['account_id'] != expected.current?.accountId ||
-        old?['instance_key'] != expected.current?.instanceKey) {
-      throw const LedgerConflict();
-    }
-    if (links.isNotEmpty && !confirmUnlink) {
-      throw CloudAccountFailure(
-        LocalizedText((l10n) => l10n.providerChangeNeedsUnlink),
-      );
-    }
-    await txn.delete(
-      'cloud_bindings',
-      where: 'server_id = ?',
-      whereArgs: [current.id],
-    );
-    await txn.update(
-      'servers',
-      {
-        'provider_id': providerId,
-        'revision': current.revision + 1,
-        'updated_at': clock().toUtc().toIso8601String(),
-      },
-      where: 'id = ?',
-      whereArgs: [current.id],
-    );
-    await txn.rawUpdate(
-      'UPDATE cloud_accounts SET generation = generation + 1',
-    );
-  });
-
-  /// Resolves one ambiguous migrated instance and all its current local links.
-  /// It never reads a credential, changes endpoint, or imports another device.
-  Future<void> confirmAdapterProvider(
-    CloudAccount expected,
-    ProviderRecord target,
-  ) => _db.transaction((txn) async {
-    final current = await LedgerStore._currentCloud(txn, expected);
-    final previous = await _providerRow(
-      txn,
-      current.businessProviderId,
-      confirmed: false,
-    );
-    final confirmed = await _providerRow(txn, target.id);
-    if (!previous.needsReview || target.revision != confirmed.revision) {
-      throw const LedgerConflict();
-    }
-    final bindings = await txn.query(
-      'cloud_bindings',
-      where: 'account_id = ?',
-      whereArgs: [current.id],
-    );
-    // Temporarily remove and restore the identical rows within the transaction
-    // so both sides can move together under the cross-table provider guards.
-    await txn.delete(
-      'cloud_bindings',
-      where: 'account_id = ?',
-      whereArgs: [current.id],
-    );
-    await txn.update(
-      'cloud_accounts',
-      {
-        'business_provider_id': target.id,
-        'revision': current.revision + 1,
-        'generation': current.generation + 1,
-      },
-      where: 'id = ?',
-      whereArgs: [current.id],
-    );
-    for (final binding in bindings) {
-      await txn.rawUpdate(
-        'UPDATE servers SET provider_id = ?, revision = revision + 1 WHERE id = ?',
-        [target.id, binding['server_id']],
-      );
-      await txn.insert('cloud_bindings', binding);
-    }
-    await txn.rawUpdate(
-      'UPDATE cloud_accounts SET generation = generation + 1 WHERE id != ?',
-      [current.id],
-    );
-    if ((await txn.query(
-          'cloud_accounts',
-          where: 'business_provider_id = ?',
-          whereArgs: [previous.id],
-        )).isEmpty &&
-        (await txn.query(
-          'servers',
-          where: 'provider_id = ?',
-          whereArgs: [previous.id],
-        )).isEmpty) {
-      await txn.delete('providers', where: 'id = ?', whereArgs: [previous.id]);
     }
   });
 }

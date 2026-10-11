@@ -166,6 +166,10 @@ void main() {
         );
         final ip = find.byKey(const ValueKey('resource-ip'));
         await tester.enterText(ip, '192.0.2.10');
+        await tester.enterText(
+          find.byKey(const ValueKey('resource-hostname')),
+          'bad host',
+        );
         expect(key.currentState!.validateAndRead(), isNull);
         await tester.pumpAndSettle();
         locale.value = const Locale('en');

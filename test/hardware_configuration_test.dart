@@ -21,7 +21,6 @@ ServerResources _complete() => ServerResources(
   trafficBytes: 1099511627776,
   ramBytes: 1073741824,
   vcpu: 2,
-  apiFields: ServerResources.fieldKeys,
 );
 
 void main() {
@@ -46,9 +45,9 @@ void main() {
     },
   );
 
-  test('old eight-key JSON remains strict with an unknown traffic period', () {
+  test('old seven-key JSON remains strict with an unknown traffic period', () {
     final legacy = _complete().toJson()..remove('trafficPeriodMonths');
-    expect(legacy.length, 8);
+    expect(legacy.length, 7);
     final restored = ServerResources.decode(jsonEncode(legacy));
     expect(restored.trafficPeriodMonths, isNull);
     expect(restored.trafficPeriodLabel, '未设置');
@@ -97,32 +96,15 @@ void main() {
     );
   });
 
-  test(
-    'partial resource data cannot claim API provenance for unknown values',
-    () {
-      for (final key in ServerResources.fieldKeys) {
-        expect(ServerResources(apiFields: {key}).validate(), isNotNull);
-      }
-      expect(
-        ServerResources(
-          trafficUnlimited: true,
-          apiFields: {'trafficBytes'},
-        ).validate(),
-        isNull,
-      );
-      expect(
-        ServerResources(vcpu: 0).validate(),
-        isNotNull,
-        reason: 'unknown is null, never a zero placeholder',
-      );
-    },
-  );
+  test('unknown is null, never a zero placeholder', () {
+    expect(ServerResources(vcpu: 0).validate(), isNotNull);
+    expect(ServerResources(trafficUnlimited: true).validate(), isNull);
+  });
 
   group('reusable manual hardware editor', () {
     Future<GlobalKey<ServerResourceFieldsState>> mount(
       WidgetTester tester, {
       ServerResources? initial,
-      bool importing = false,
       int? defaultPeriod,
     }) async {
       final key = GlobalKey<ServerResourceFieldsState>();
@@ -134,7 +116,6 @@ void main() {
               child: ServerResourceFields(
                 key: key,
                 initial: initial,
-                importing: importing,
                 defaultTrafficPeriodMonths: defaultPeriod,
               ),
             ),
@@ -156,19 +137,13 @@ void main() {
       await tester.pump();
     }
 
-    testWidgets('all six unknown fields can save manually but not on import', (
-      tester,
-    ) async {
+    testWidgets('all six unknown fields can be saved', (tester) async {
       final manual = await mount(tester);
       for (final key in ServerResources.fieldKeys) {
         expect(find.byKey(ValueKey('resource-$key')), findsOneWidget);
       }
       final result = manual.currentState!.validateAndRead()!;
       expect(result.toJson(), ServerResources().toJson());
-      final importing = await mount(tester, importing: true);
-      expect(importing.currentState!.validateAndRead(), isNull);
-      await tester.pump();
-      expect(find.text('硬件信息 · 六项必填'), findsOneWidget);
     });
 
     testWidgets(
@@ -323,7 +298,6 @@ void main() {
         expect(saved.resources!.vcpu, 4);
         expect(saved.resources!.ramBytes, isNull);
         expect(saved.resources!.trafficPeriodMonths, 1);
-        expect(saved.resources!.apiFields, isEmpty);
         expect(tester.takeException(), isNull);
       });
     }
@@ -374,7 +348,6 @@ void main() {
           'vcpu': 3,
           'trafficUnlimited': false,
           'trafficPeriodMonths': 12,
-          'apiFields': <String>[],
         });
         await mount(tester, record: reopened);
         final fields = tester.state<ServerResourceFieldsState>(
@@ -457,7 +430,6 @@ void main() {
       final saved = (await store.servers()).single;
       expect(saved.host, '192.0.2.99');
       expect(saved.resources!.ip, '192.0.2.99');
-      expect(saved.resources!.apiFields, isNot(contains('ip')));
       expect(saved.resources!.hostname, 'changed.example');
       expect(saved.resources!.trafficPeriodMonths, isNull);
     });

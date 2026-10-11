@@ -4,13 +4,13 @@ import '../l10n/locale_preference.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-import '../cloud/provider_pages.dart';
 import '../connections/connection_pages.dart';
 import '../core/app_theme.dart' show showFailure;
 import '../core/ui/ui.dart';
 import '../finance/finance_math.dart';
 import '../finance/payment_pages.dart';
 import '../l10n/generated/app_localizations.dart';
+import '../providers/provider_pages.dart';
 import 'ledger_controller.dart';
 import 'refresh_failure_notice.dart';
 import 'server_detail.dart';
@@ -947,7 +947,6 @@ class _ServerRowState extends State<ServerRow> {
     final pill = StatusPill(due, tone: tone, dot: tone != AppTone.neutral);
     final big = MediaQuery.textScalerOf(context).scale(14) > 20;
     final provider = c.providerFor(s);
-    final binding = c.cloud.bindingFor(s.id);
     final titleLine = Text.rich(
       TextSpan(
         children: [
@@ -979,10 +978,6 @@ class _ServerRowState extends State<ServerRow> {
     );
     final subLine = Row(
       children: [
-        if (binding != null) ...[
-          Icon(Icons.cloud_outlined, size: 14, color: p.text3),
-          const SizedBox(width: 4),
-        ],
         Flexible(
           child: Text(
             [

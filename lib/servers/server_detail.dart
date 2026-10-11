@@ -6,10 +6,6 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-import '../cloud/cloud_pages.dart';
-import '../cloud/provider_pages.dart';
-import '../cloud/cloud_widgets.dart';
-import '../cloud/server_cloud_binding_page.dart';
 import '../core/app_theme.dart';
 import '../core/ui/ui.dart';
 import '../core/value_types.dart';
@@ -21,6 +17,7 @@ import '../finance/calculator_page.dart';
 import '../finance/finance_math.dart';
 import '../finance/finance_models.dart';
 import '../finance/payment_pages.dart';
+import '../providers/provider_pages.dart';
 import '../security/host_trust_pages.dart';
 import '../security/ssh_configuration_page.dart';
 import '../settings/reminder_page.dart';
@@ -181,12 +178,6 @@ class ServerDetail extends StatelessWidget {
   }
 
   void _showMoreMenu(BuildContext context, ServerRecord s) {
-    final canChangeProvider =
-        controller.canMutate &&
-        !s.archived &&
-        !s.isDemo &&
-        !controller.cloud.busy &&
-        !controller.cloud.needsReload;
     showAppActionMenu<void>(
       context,
       title: s.name,
@@ -200,12 +191,6 @@ class ServerDetail extends StatelessWidget {
           AppMenuAction(
             label: context.l10n.uiDetailMenuValuation,
             onPressed: () => _openCalculator(context, s),
-          ),
-        if (canChangeProvider)
-          AppMenuAction(
-            key: const ValueKey('server-change-provider'),
-            label: context.l10n.providerUiChange,
-            onPressed: () => changeServerProvider(context, controller, s),
           ),
         AppMenuAction(
           label: context.l10n.serverArchiveLocal,
@@ -740,7 +725,7 @@ class ServerDetail extends StatelessWidget {
       }
       final p = context.palette;
       final editable = controller.canMutate && !s.archived;
-      final provider = controller.cloud.providers
+      final provider = controller.providers
           .where((x) => x.id == s.providerId)
           .firstOrNull;
       final groupName = controller.groupName(s.groupId, l10n: l10n);
@@ -975,26 +960,19 @@ class _SectionHeader extends StatelessWidget {
   );
 }
 
-/// Wraps an [AppRow] to indent it under its parent row (adapter instance under
-/// provider) or dim it while keeping taps alive (unavailable action rows that
-/// explain themselves when tapped).
+/// Wraps an [AppRow] to indent it under its parent row or dim it while keeping
+/// taps alive (unavailable action rows that explain themselves when tapped).
 class _RowFrame extends StatelessWidget implements AppSectionItem {
-  const _RowFrame({required this.child, this.indent = 0, this.dimmed = false});
+  const _RowFrame({required this.child, this.dimmed = false});
   final AppRow child;
-  final double indent;
   final bool dimmed;
 
   @override
-  double get separatorInset => child.separatorInset + indent;
+  double get separatorInset => child.separatorInset;
 
   @override
-  Widget build(BuildContext context) => Opacity(
-    opacity: dimmed ? .45 : 1,
-    child: Padding(
-      padding: EdgeInsetsDirectional.only(start: indent),
-      child: child,
-    ),
-  );
+  Widget build(BuildContext context) =>
+      Opacity(opacity: dimmed ? .45 : 1, child: child);
 }
 
 class _Footnote extends StatelessWidget {
@@ -1034,22 +1012,9 @@ class _ServerProviderCardState extends State<_ServerProviderCard> {
     final controller = widget.controller;
     final server = widget.server;
     final l10n = context.l10n;
-    final provider = controller.cloud.providers
-        .where((p) => p.id == server.providerId)
-        .firstOrNull;
-    final binding = controller.cloud.bindingFor(server.id);
-    final account = controller.cloud.accounts
-        .where((a) => a.id == binding?.accountId)
-        .firstOrNull;
-    final editable =
-        !opening &&
-        controller.canMutate &&
-        !server.archived &&
-        !controller.cloud.busy &&
-        !controller.cloud.needsReload;
+    final provider = controller.providerFor(server);
     return AppSection(
-      header: l10n.providerUiProviderAndAdapter,
-      footer: l10n.serverPanelLinkHelp,
+      header: l10n.uiFormProvider,
       children: [
         AppRow(
           key: const ValueKey('server-provider-link'),
@@ -1061,9 +1026,7 @@ class _ServerProviderCardState extends State<_ServerProviderCard> {
             size: 30,
           ),
           title: provider?.name ?? l10n.providerUiUnspecified,
-          subtitle: provider?.needsReview == true
-              ? l10n.providerUiNeedsReview
-              : l10n.providerUiOpenProvider,
+          subtitle: l10n.providerUiOpenProvider,
           chevron: true,
           onTap: provider == null || opening
               ? null
@@ -1079,83 +1042,6 @@ class _ServerProviderCardState extends State<_ServerProviderCard> {
                   );
                 }),
         ),
-        if (account != null)
-          _RowFrame(
-            indent: 42,
-            child: AppRow(
-              key: const ValueKey('server-adapter-link'),
-              icon: Icons.cloud_outlined,
-              iconColor: AppTints.purple,
-              title: account.alias,
-              subtitle:
-                  '${cloudProviderName(account.adapterType)} · '
-                  '${l10n.providerUiOpenInstance}',
-              chevron: true,
-              onTap: opening
-                  ? null
-                  : () => open(() async {
-                      await Navigator.push<void>(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => CloudAccountDetailsPage(
-                            ledger: controller,
-                            accountId: account.id,
-                          ),
-                        ),
-                      );
-                    }),
-            ),
-          ),
-        AppRow(
-          key: const ValueKey('server-cloud-binding'),
-          icon: Icons.link_rounded,
-          iconColor: AppTints.purple,
-          title: binding == null ? l10n.serverLinkPanel : l10n.serverManageLink,
-          subtitle: account == null ? l10n.serverNoPanelLink : null,
-          enabled: editable,
-          chevron: true,
-          onTap: editable
-              ? () => open(() async {
-                  await Navigator.push<bool>(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => ServerCloudBindingPage(
-                        ledger: controller,
-                        serverId: server.id,
-                      ),
-                    ),
-                  );
-                })
-              : null,
-        ),
-        if (provider?.needsReview == true && account != null)
-          AppRow(
-            key: const ValueKey('server-confirm-ownership'),
-            icon: Icons.fact_check_outlined,
-            iconColor: AppTints.green,
-            title: l10n.providerUiConfirmOwnership,
-            enabled: editable,
-            chevron: true,
-            onTap: editable
-                ? () => open(() async {
-                    await confirmAdapterProviderOwnership(
-                      context,
-                      controller,
-                      account,
-                    );
-                  })
-                : null,
-          ),
-        if (controller.cloud.needsReload)
-          AppRow(
-            key: const ValueKey('server-reload-panel'),
-            title: l10n.serverReloadPanelDetails,
-            center: true,
-            enabled: !controller.cloud.busy,
-            onTap: controller.cloud.busy
-                ? null
-                : () => controller.cloud.reload(),
-          ),
       ],
     );
   }

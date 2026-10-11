@@ -29,18 +29,14 @@
 - SFTP 文件管理（服务器详情“SFTP 文件”或终端 ⋯ 菜单的整页面板）：浏览 / 新建 / 重命名移动 / 删除（含显式递归确认）/ 文本编辑 / 上传 / 下载，复用 SSH 凭据与主机核验；终端内打开不中断 shell。详见 [SSH_TERMINAL_UX](docs/SSH_TERMINAL_UX.md)
 - 单机 SSH 重启 / 关机，经影响确认和完整目标二次核对；不开机、无 API 电源，不自动重试不确定结果
 
-- SolusVM 1、RackNerd ctrl 客户端 Key/Hash 与 SolusVM 2 用户 Token 的原生只读接入；各协议独立，严格 HTTPS、证书验证、取消 / 超时 / 响应及分页上界
-- 提供商 → 适配器实例 → 服务器三层归属，统一手动 / 自动添加、多实例独立授权、六资源补填和逐台导入 / 局部重试
-- 相同类型复用适配器实现；V1 / RackNerd 客户端读取与持久单设备 pin，V2 按端点 / 用户 / 项目 / 设备 ID 及 UUID 围栏排重，不按 IP 或名称猜同机
-- 服务器详情统一硬件信息，六项可手动维护并记录流量月/季/年周期；API 观测保留后台，不再铺满详情
-- 提供商 / 实例 / 服务器双向导航；只关联同提供商且在已确认授权范围内的设备，更改归属先确认解绑，删除实例保留服务器、账务和 SSH
-- API 秘密只进设备安全存储，失败重新授权保留旧引用；SolusVM 1 / RackNerd ctrl 换凭据需明确解除旧关联再重新选择导入
+- 提供商（我的提供商 + 目录提供商）与套餐：新增服务器时先选提供商再选套餐（默认套餐预选，也可不选），套餐预填硬件与费用；服务器详情显示所属提供商与套餐，套餐页列出关联服务器。套餐目录当前内置 2 个示例提供商，日后由远端 API 提供；没有目录的提供商、没有套餐的服务器和用户自建提供商都可用
+- 服务器自己的硬件与费用始终是事实来源：套餐只在选择时预填，并保存当时的快照；目录之后变化只提示“目录已更新”，不会改动台账
 
 每台到期提醒 / 使用计划、原生通知权限接线、PNG 系统分享、台账 JSON 导出 / 空台账恢复、深浅色与跟随系统外观已实现。手机实际投递 / 分享与安装持久化仍须真机验证，不以云端测试代替。没有系统快照、最近使用或费用“接下来需要做什么”。
 
 简体中文 / English 界面与「设置 / 语言」已接入；默认保留中文，另可选择跟随系统。切换保留草稿和当前连接，规则与数据边界见 [LOCALIZATION](docs/LOCALIZATION.md)。中文界面用语与行为边界见 [UI_COPY_REVIEW](docs/UI_COPY_REVIEW.md)。
 
-提供商 / 适配器 / 设备、逐台导入、身份排重、迁移和备份边界见 [PROVIDERS_AND_ADAPTERS](docs/PROVIDERS_AND_ADAPTERS.md)。
+提供商 / 套餐模型、目录来源、迁移、备份与日后远端 API 合同见 [PROVIDERS_AND_PACKAGES](docs/PROVIDERS_AND_PACKAGES.md)。
 
 最新服务器资料交互与兼容规则见 [SERVER_MANAGEMENT_UX](docs/SERVER_MANAGEMENT_UX.md)，全屏终端、快捷输入与字体说明见 [SSH_TERMINAL_UX](docs/SSH_TERMINAL_UX.md)。
 
@@ -83,19 +79,19 @@ flutter run -d <simulator-id>
 ## 代码结构与数据规则
 
 - `lib/core`：主题色板与 `lib/core/ui` 设计组件（用法见 `lib/core/ui/README.md`）、纯 Dart 日期 / Money 值类型
-- `lib/data`：schema v11、真实旧版本及两种 v10 分支结构的事务迁移、SQLite 事务与平台打开方式
+- `lib/data`：schema v12、真实旧版本的事务迁移、SQLite 事务与平台打开方式
 - `lib/servers`：本地字段模型、ChangeNotifier 控制器、列表 / 表单 / 详情
 - `lib/finance`：纯 Dart 财务 / FX、付款、计算器、白名单 PNG 导出
 - `lib/security`：凭据元数据与原生存储、密钥校验、设备认证、SSH 配置、完整主机信任
 - `lib/connections`：SSH 服务 / xterm、临时连接、单目标 TCP、片段 / 待发送区与电源确认
-- `lib/cloud`：业务提供商、独立适配器实例、SolusVM / RackNerd 只读协议 / API 观测、补填 / 逐台导入 / 重试 / 刷新 / 重新授权 / 解绑
+- `lib/providers`：提供商与套餐目录（`ProviderCatalog`、内置 JSON 资源）、提供商 / 套餐页面与新增服务器流程
 - `lib/settings`：分组、归档、币种与手动汇率、提醒纯逻辑 / 原生调度、权限、外观与备份
 - `lib/l10n`：官方 ARB / gen-l10n、简体中文与英文、稳定语言偏好和显示时本地化消息
 - `lib/app.dart`：启动恢复状态和四 Tab；使用 Flutter Navigator
 
 只有一个本地数据库，无后端或额外状态/路由框架；仅使用 Flutter 官方 gen-l10n 生成本地化访问代码。依赖来自 pub.dev 维护者，直接版本固定，传递版本保存于 `pubspec.lock`。
 
-服务器和分组使用稳定本地 ID。归档不删除服务器。用户手动资料与云账户 API 观测分开存储，刷新不得整对象覆盖用户字段。财务表保存服务期间、付款与手动 FX。安全表保存凭据元数据、SSH 引用、公开主机公钥与未引用秘密清理队列；没有明文秘密表。历史 cloud_accounts 表保留原 ID，语义为提供商下的适配器实例，仅存独立连接元数据和秘密引用；API 观测与服务器关联单独存储。provider_id 表示当前业务归属，原 vendor 文字为历史资料，不授予授权。
+服务器和分组使用稳定本地 ID。归档不删除服务器。服务器资料全部由用户维护；套餐只在选择时预填。财务表保存服务期间、付款与手动 FX。安全表保存凭据元数据、SSH 引用、公开主机公钥与未引用秘密清理队列；没有明文秘密表。provider_id 表示当前业务归属，原 vendor 文字为历史资料；package_id / package_snapshot 记录选择的套餐及当时的内容。
 
 USD / CNY / EUR 金额使用整数分，0 是免费、null 是未知，不跨币种直接相加。比例与 FX 使用 BigInt 精确分数，合计后四舍五入到分，中点远离 0；缺汇率明确显示可转换部分与覆盖率。日期是日历日期，服务期 `[start, due)`；UTC 仅作日序数，避免 DST 午夜毫秒差。缺日期保持未知。未来 30 天为今天起 `[0, 30)`，不含第 30 天。显示的“未检测”不代表运行状态。
 
@@ -109,9 +105,9 @@ USD / CNY / EUR 金额使用整数分，0 是免费、null 是未知，不跨币
 
 数据库 `ledger.sqlite3` 位于平台的 application-support 目录，Linux 通常是 `$XDG_DATA_HOME/com.vpstellyou.vps_tell_you/`。应用没有遥测、自动上传或云同步。
 
-可在“设置 / 台账备份与恢复”导出未加密 JSON，范围见下节；凭据不在其中。不要清除应用数据、卸载重装或删除数据库来“修复”。打不开时先检查磁盘空间、权限与应用版本，再点“重试打开”。较新 schema 会阻止旧应用打开，不执行破坏性降级。旧版本事务迁移保留 ID、分组、归档及费用字段，只为可推断的预付资料建立初始服务期；不虚构历史实付或汇率。v2 → v3 只添加安全资料表，不读取或创建钥匙环；v3 → v4 只添加命令片段表；v4 → v5 添加云账户、观测和关联表，保留现有台账、账务与 SSH 配置。v5 → v6 仅添加提醒规则、服务器创建触发器与外观设置。v6 → v7 仅添加可空的本地资源配置 JSON，保留全部既有资料。v7 → v8 为可空硬件字段与独立流量周期提供版本围栏，不重写旧数据。v8 → v9 只添加默认中文的界面语言偏好。
+可在“设置 / 台账备份与恢复”导出未加密 JSON，范围见下节；凭据不在其中。不要清除应用数据、卸载重装或删除数据库来“修复”。打不开时先检查磁盘空间、权限与应用版本，再点“重试打开”。较新 schema 会阻止旧应用打开，不执行破坏性降级。旧版本事务迁移保留 ID、分组、归档及费用字段，只为可推断的预付资料建立初始服务期；不虚构历史实付或汇率。v2 → v3 只添加安全资料表，不读取或创建钥匙环；v3 → v4 只添加命令片段表；v4 → v5 曾添加面板适配器表（v12 已移除）。v5 → v6 仅添加提醒规则、服务器创建触发器与外观设置。v6 → v7 仅添加可空的本地资源配置 JSON，保留全部既有资料。v7 → v8 为可空硬件字段与独立流量周期提供版本围栏，不重写旧数据。v8 → v9 只添加默认中文的界面语言偏好。
 
-本地 RackNerd 与上游提供商功能曾分别使用不同结构的 v10。合并版本统一为 **v11**：依据实际表结构兼容两种 v10，保留完整账户 / 观测 / 关联 / 秘密引用，同时提供 RackNerd 类型约束、业务提供商关系、授权范围与单设备 pin。模糊旧归属逐实例待确认；异常多绑定或不完整结构导致事务回滚，不猜测、不删库。迁移不读取钥匙环或请求面板，JSON 备份仍为 v1。后续 schema 变更仍须增加事务迁移并验证旧数据。
+v11 → **v12**：面板适配器功能整体移除。同一事务内把全部适配器秘密引用写入已有的清理队列（由“重试清理”从设备安全存储删除），删除 cloud_accounts / cloud_observations / cloud_bindings 与相关触发器，把适配器产生的“待确认”提供商转为普通提供商（无服务器的占位提供商删除、重名追加序号），新增 providers.catalog_id 与 servers.package_id / package_snapshot，并清除资源 JSON 中的 API 来源标记（数值保留）。不删除服务器、付款、SSH 配置或凭据；失败整体回滚。JSON 备份见下文 v2。细节见 [PROVIDERS_AND_PACKAGES](docs/PROVIDERS_AND_PACKAGES.md)。后续 schema 变更仍须增加事务迁移并验证旧数据。
 
 恢复开发：先读本文件、`docs/STATUS.md`、`docs/ACCEPTANCE.md` → 检查 `git status`、当前分支与远端 → 核对远端 SHA/CI → 执行分析与最小测试 → 从首个未通过项继续。不要自动 tag、强推或改变其他分支。
 
@@ -151,19 +147,6 @@ VPS_SSH_FIXTURE_PYTHON="$PWD/.ssh-test-venv/bin/python" flutter test
 ```
 
 fixture 只绑定 loopback 临时端口，从不执行 shell / exec；依赖缺失会明确失败，不把跳过当通过。CI 安装同一固定 AsyncSSH 版本。所有 `.fixture` 私钥均为合成测试资料，不得用于真实访问。
-
-## SolusVM / RackNerd 验证边界
-
-RackNerd `ctrl.racknerd.com` 应选择新增的 **RackNerd ctrl**，不是 SolusVM 1/2；支持面板首页或精确 `/api/client/command.php` 地址（末尾不加句号）。它的兼容客户端接口通过 `info` 读取资源，现有 SolusVM 1 的 `status` / XML 行为保持不变。真实只读验证已取得 IP、hostname、内存、磁盘、流量，API 未返回的 CPU 核数必须手动核实补填；也可先仅保存连接。操作步骤、协议差异与验证范围见 [RACKNERD](docs/RACKNERD.md)。
-
-协议与身份说明见 [docs/SOLUSVM.md](docs/SOLUSVM.md)。自动测试只用官方协议形状的合成数据及本地 HTTPS fixture。实际服务商的面板版本、Client API 开放、Token 权限、字段缺失、证书与手机平台兼容性仍须真机验收；先前用户本人提交的 VirMach 只读诊断确认 IP、hostname、磁盘与流量可得，内存和 CPU 仍未知；不索取或记录真实秘密。正式六资源导入规则和实测边界见 [docs/SOLUSVM_RESOURCES.md](docs/SOLUSVM_RESOURCES.md)。
-
-```sh
-flutter test test/solusvm_adapter_test.dart test/solusvm_tls_test.dart
-```
-
-原生 GUI 合成验收入口和隔离要求见 `test/support/solusvm_fixture/README.md`；生产入口始终为 `lib/main.dart`，不带测试证书信任或 fixture 凭据。
-
 
 ## 到期提醒与外观
 

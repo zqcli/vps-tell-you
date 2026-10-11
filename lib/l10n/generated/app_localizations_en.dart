@@ -661,14 +661,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get accountsPreferences => 'Accounts and preferences';
 
   @override
-  String get panelAccounts => 'Panel connections';
-
-  @override
-  String panelConnectionCount(String p0) {
-    return 'Saved panel connections: $p0';
-  }
-
-  @override
   String get keysSecurity => 'Keys & Security';
 
   @override
@@ -2192,8 +2184,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'Passwords, private keys, passphrases, tokens, credential metadata, and secure-storage references';
 
   @override
-  String get backupExcludedConnections =>
-      'SSH settings, host trust, panel connections, server links, and API-returned details';
+  String get backupExcludedConnections => 'SSH settings and host trust';
 
   @override
   String get backupExcludedNotes =>
@@ -2201,7 +2192,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get backupExcludedPreferences =>
-      'Reminder rules, notification schedules, and app preferences (format v1)';
+      'Reminder rules, notification schedules, and app preferences';
 
   @override
   String get backupInvalidJson => 'The backup isn’t valid JSON';
@@ -2416,841 +2407,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get verificationCancelled => 'Verification canceled';
 
   @override
-  String get invalidServerName => 'Use 1–80 characters for the server name';
-
-  @override
   String get completeLocalResources =>
       'Complete and confirm all six local resource fields first';
 
   @override
   String get securityOperationIncomplete =>
       'The security operation didn’t complete. Try again.';
-
-  @override
-  String get cloudAccounts => 'Panel connections';
-
-  @override
-  String get cloudAddAccount => 'Add Panel Connection';
-
-  @override
-  String get cloudPanelReadBadge => 'Read-only panel connections';
-
-  @override
-  String get cloudManageConnections =>
-      'Manage panel connections and device links';
-
-  @override
-  String get cloudConnectionsInfo =>
-      'Each panel connection has its own authorization and read scope.\nA provider can have multiple single-device or account-scoped panel connections.';
-
-  @override
-  String get cloudMetadataIncomplete =>
-      'Panel connection details couldn’t be fully loaded. Reload them to continue.';
-
-  @override
-  String get cloudReloadMetadata => 'Reload Panel Connection Details';
-
-  @override
-  String get cloudCleanupNotice =>
-      'Old credentials waiting to be cleaned up may still be in this device’s secure storage. Retry the cleanup, and revoke the remote authorization in the panel.';
-
-  @override
-  String get cloudRetryCleanup => 'Retry cleaning up old credentials';
-
-  @override
-  String get cloudFirstAccount => 'Add your first panel connection';
-
-  @override
-  String get cloudFirstAccountInfo =>
-      'Choose a panel type and verify its authorization. Then review the devices and resources before adding them to the ledger.';
-
-  @override
-  String get cloudChooseTemplate => 'Choose a panel type';
-
-  @override
-  String get cloudReadOnlyBoundary =>
-      'This app only reads data; the API credentials themselves may have other permissions.\nPanel authorization and SSH credentials are managed separately. Unlinking keeps local records, costs, payments, and SSH settings.';
-
-  @override
-  String get cloudTemplateInfo =>
-      'Choose the type that matches your panel. The provider is the company you buy servers from.';
-
-  @override
-  String get cloudV1TemplateInfo =>
-      'Client API Key + Hash\nEach credential pair corresponds to one VPS';
-
-  @override
-  String get cloudV2TemplateInfo =>
-      'User API Token\nRead the current user’s projects and devices';
-
-  @override
-  String get cloudRackNerdTemplateInfo =>
-      'ctrl panel Client API Key + Hash\nRead one VPS through the compatible client interface';
-
-  @override
-  String get cloudSupportedPanels =>
-      'Reads from SolusVM 1 / 2 and RackNerd ctrl only. It can’t control power or change anything remotely, and it doesn’t stop billing.';
-
-  @override
-  String get cloudReauthorize => 'Authorize Again';
-
-  @override
-  String get cloudSingleVpsApi => 'Single VPS / Client API';
-
-  @override
-  String get cloudUserAccountApi => 'User account / API Token';
-
-  @override
-  String get cloudWebPreviewNotice =>
-      'The web preview doesn’t accept real API credentials. Use the native app.';
-
-  @override
-  String get cloudAliasLabel => 'Panel connection name';
-
-  @override
-  String get cloudAliasRequired => 'Enter a panel connection name';
-
-  @override
-  String get cloudEndpointLabel => 'HTTPS panel address';
-
-  @override
-  String get cloudEndpointValidation =>
-      'Enter the HTTPS panel home address without credentials, parameters, or an API path';
-
-  @override
-  String get cloudEndpointInfo =>
-      'Use the panel’s HTTPS home address (a specific port is fine). Certificate errors aren’t bypassed and redirects aren’t followed.';
-
-  @override
-  String get cloudRackNerdEndpointValidation =>
-      'Enter the HTTPS panel home address, or the exact /api/client/command.php address, without credentials, parameters, or other paths';
-
-  @override
-  String get cloudRackNerdEndpointInfo =>
-      'Use the panel’s HTTPS home address (a specific port is fine) and check the final address below. Certificate errors aren’t bypassed and redirects aren’t followed.';
-
-  @override
-  String get cloudEndpointIdentityInfo =>
-      'The panel address is tied to this connection’s identity. To use another panel, add a new connection. Saved credentials aren’t shown here.';
-
-  @override
-  String get cloudV1CredentialsInfo =>
-      'Enter this VPS’s Client API Key / Hash (not a login password or admin credentials). The provider must enable Client API.';
-
-  @override
-  String get cloudRackNerdCredentialsInfo =>
-      'Enter the Client API Key / Hash of this VPS from RackNerd ctrl (not a login password or admin credentials).';
-
-  @override
-  String get cloudV2CredentialsInfo =>
-      'Use a token from Account → API Tokens in the SolusVM 2 user area, not an administrator token.';
-
-  @override
-  String get cloudV1ReauthorizationInfo =>
-      'This API can’t prove that new credentials belong to the original VPS. After verification, explicitly confirm unlinking the old links, then choose whether to import new records. Existing ledger records, costs, and SSH settings are kept.';
-
-  @override
-  String get cloudV2ReauthorizationInfo =>
-      'Reauthorization must verify the same remote user account. Otherwise the original authorization and links are kept.';
-
-  @override
-  String get cloudVerifyScopeInfo =>
-      'This app only reads data, but the credentials may allow more. Verification only reads status; credentials enter secure device storage when you save.';
-
-  @override
-  String get cloudVerifyingInfo =>
-      'Verifying and reading with a timeout. Going back or canceling stops it.';
-
-  @override
-  String get cloudCancelVerification => 'Cancel Verification';
-
-  @override
-  String get cloudVerifyRead => 'Verify and Read';
-
-  @override
-  String get cloudCredentialMemoryInfo =>
-      'Credential fields are cleared after verification or on leaving. They aren’t written to the ledger, logs, or exports. Dart doesn’t guarantee secure memory erasure.';
-
-  @override
-  String get r2CopyInfoCredentialHandling => 'How credentials are handled';
-
-  @override
-  String get cloudChooseInstances => 'Choose Devices to Import';
-
-  @override
-  String get cloudEmptyVerification =>
-      'This authorization returned no devices to import. You can save the panel connection and read it again later.';
-
-  @override
-  String get cloudEmptyInventory =>
-      'The full read returned no devices to import. The panel connection is saved; you can read it again later.';
-
-  @override
-  String get cloudV1Instance => 'The single VPS for these credentials';
-
-  @override
-  String get cloudAlreadyLinked => 'Already linked · Duplicate import skipped';
-
-  @override
-  String get cloudV1Identity =>
-      'No stable device ID · Identified by this separate authorization';
-
-  @override
-  String get cloudIpNotProvided => 'IP not provided';
-
-  @override
-  String get cloudSelectBeforeComplete =>
-      'Select the device above, then fill in the details below. Filling in details alone doesn’t import it.';
-
-  @override
-  String get cloudLocalDisplayName => 'Local display name (optional)';
-
-  @override
-  String get cloudLocalNameInfo =>
-      'Used only for the new local record, not as remote device identity';
-
-  @override
-  String get cloudV1ResourcesInfo =>
-      'SolusVM 1 provides no device ID and the readable fields depend on the provider. What you enter stays on this device.';
-
-  @override
-  String get cloudRackNerdResourcesInfo =>
-      'RackNerd ctrl doesn’t provide a device ID. Fill in the six hardware fields before importing, and don’t guess values the API leaves out.';
-
-  @override
-  String get cloudRebindWarning =>
-      'Saving the new authorization removes this panel connection’s old device links. Existing records, finances, and SSH settings are kept. Importing creates new records and never overwrites or relinks old devices.';
-
-  @override
-  String get cloudConfirmRebind =>
-      'I confirm that saving the new authorization removes the old device links';
-
-  @override
-  String get cloudReturnSelect => 'Return to Device Selection';
-
-  @override
-  String get cloudSaving => 'Saving…';
-
-  @override
-  String get cloudNoneSelected => 'No new devices selected';
-
-  @override
-  String get cloudSaveOnly => 'Save Panel Connection Only';
-
-  @override
-  String get cloudUpdateUnlink =>
-      'Update Authorization and Remove Old Device Links';
-
-  @override
-  String get cloudUpdateOnly => 'Update Authorization Only';
-
-  @override
-  String get cloudReturnVerify => 'Back to Verify';
-
-  @override
-  String get cloudSavingInfo =>
-      'Saving to this device. Wait until it finishes before going back.';
-
-  @override
-  String get cloudReadImportable => 'Read Devices to Import';
-
-  @override
-  String get cloudRefreshAccount => 'Refresh Panel Connection';
-
-  @override
-  String get cloudReadingInfo =>
-      'Reading with a timeout. Canceling or going back stops it without changing the ledger.';
-
-  @override
-  String get cloudCancelRead => 'Cancel Read';
-
-  @override
-  String get cloudReadAgain => 'Read Again';
-
-  @override
-  String get cloudReadCompleteInfo =>
-      'Only read results were updated; local details weren’t overwritten.';
-
-  @override
-  String get cloudDone => 'Done';
-
-  @override
-  String get cloudViewDetails => 'View Panel Connection Details';
-
-  @override
-  String get cloudRenameAccount => 'Edit Panel Connection Name';
-
-  @override
-  String get cloudContinueImport => 'Import More Devices';
-
-  @override
-  String get cloudLinkedServers => 'Linked Servers';
-
-  @override
-  String get cloudUnlinkAccount => 'Delete Panel Connection';
-
-  @override
-  String get cloudUnlinkAccountTitle => 'Delete this panel connection?';
-
-  @override
-  String get cloudUnlinkLocal => 'Delete Local Panel Connection';
-
-  @override
-  String get cloudAccountDetails => 'Panel Connection Details';
-
-  @override
-  String get cloudAccountRemovedNotice =>
-      'The panel connection was deleted. All local device records are kept.';
-
-  @override
-  String get cloudTemplateLabel => 'Panel type';
-
-  @override
-  String get cloudPanelAddress => 'Panel address';
-
-  @override
-  String get cloudReadStatus => 'Read status';
-
-  @override
-  String get cloudLastAttempt => 'Last read attempt';
-
-  @override
-  String get cloudNoAttempts => 'No attempts yet';
-
-  @override
-  String get cloudVerifiedScope => 'Verified read scope';
-
-  @override
-  String get cloudV1Scope =>
-      'Single device · Client API, without stable device identity';
-
-  @override
-  String get cloudAppCapabilities => 'App capabilities';
-
-  @override
-  String get cloudReadCapabilities => 'Reads data only; no API power control';
-
-  @override
-  String get cloudAuthorizationStorage => 'Credential storage';
-
-  @override
-  String get cloudSecureStorageInfo =>
-      'Secure device storage; API credentials aren’t shown or exported';
-
-  @override
-  String get cloudScopeNotice =>
-      'The credentials may allow more; check in the provider’s panel. Results reflect only the time of the read.';
-
-  @override
-  String get cloudNoLinkedInstances =>
-      'No linked devices yet. Import more from the panel connection’s menu.';
-
-  @override
-  String get cloudLocalRecord => 'Local record';
-
-  @override
-  String get cloudCancel => 'Cancel';
-
-  @override
-  String get cloudSaveName => 'Save Name';
-
-  @override
-  String get cloudLinkPanelAccount => 'Link Panel Connection';
-
-  @override
-  String get cloudLocalBindingInfo =>
-      'Uses saved read results and doesn’t connect to the panel. If no devices appear, refresh the panel connection first.';
-
-  @override
-  String get cloudBindingCommitted =>
-      'Link changes were saved. Reload the details before continuing, and don’t submit again.';
-
-  @override
-  String get cloudLedgerNotUpdated =>
-      'The screen hasn’t caught up with the ledger yet. Reload it first.';
-
-  @override
-  String get cloudReloadLocal => 'Reload Local List';
-
-  @override
-  String get cloudBindingReadOnly =>
-      'Panel links can’t be changed for archived or demo records.';
-
-  @override
-  String get cloudCurrentLink => 'Current link';
-
-  @override
-  String get cloudUnlinkThis => 'Unlink This Server';
-
-  @override
-  String get cloudSelectAccount => 'Choose a panel connection';
-
-  @override
-  String get cloudNoSavedAccounts =>
-      'This provider has no panel connections with confirmed ownership. Add and verify one first.';
-
-  @override
-  String get cloudSelectReadInstance => 'Choose a previously read device';
-
-  @override
-  String get cloudNoSavedInstances =>
-      'This panel connection has no saved device information. Refresh it manually first.';
-
-  @override
-  String get cloudOtherServer => 'Another server';
-
-  @override
-  String get cloudMissingRefresh =>
-      'Not returned in this read · Refresh the panel connection manually';
-
-  @override
-  String get cloudFailedRefresh =>
-      'Last read failed · Refresh the panel connection manually';
-
-  @override
-  String get cloudSaveLink => 'Save Link';
-
-  @override
-  String get cloudChangeLink => 'Change Link';
-
-  @override
-  String get cloudLocalLinkBoundary =>
-      'Only the local link changes. Server details, hardware, finances, and SSH settings are kept.';
-
-  @override
-  String get cloudSingleAccountInstance =>
-      'The single device for this authorization';
-
-  @override
-  String get cloudUnlinkServerTitle => 'Unlink this server from the panel?';
-
-  @override
-  String get cloudChangeServerTitle => 'Change this server’s panel link?';
-
-  @override
-  String get cloudOnlyUnlinkThis => 'Unlink Only This Server';
-
-  @override
-  String get cloudConfirmChangeLink => 'Confirm Link Change';
-
-  @override
-  String get cloudMetadataReadFailed =>
-      'Couldn’t load panel connection details. Try again.';
-
-  @override
-  String get cloudSavedReloadFailed =>
-      'Saved, but the details couldn’t be reloaded. Reload before making changes.';
-
-  @override
-  String get cloudAccountConflict =>
-      'Panel connection details have changed. Reload them and try again.';
-
-  @override
-  String get cloudOperationFailed =>
-      'The panel connection operation didn’t finish. Try again.';
-
-  @override
-  String get cloudCompleteResources =>
-      'Fill in all six hardware details before importing. Confirm unknown items with the provider first.';
-
-  @override
-  String get cloudCleanupIncomplete =>
-      'Credential cleanup hasn’t finished. Try again later.';
-
-  @override
-  String get cloudCleanupStatusFailed =>
-      'Couldn’t read the cleanup status. Try again.';
-
-  @override
-  String get cloudVerifyCancelled =>
-      'Verification canceled. Authorization wasn’t saved.';
-
-  @override
-  String get cloudAliasInvalid =>
-      'Use 1–80 characters for the panel connection name.';
-
-  @override
-  String get cloudVerifyFailed =>
-      'Verification didn’t finish. Check the panel address, credentials, and network, then try again.';
-
-  @override
-  String get cloudVerifyNotSaved =>
-      'Verification didn’t finish. Authorization wasn’t saved.';
-
-  @override
-  String get cloudVerifyAgainRequired =>
-      'Authorization wasn’t saved. Verify again before importing.';
-
-  @override
-  String get cloudAuthorizationExpired =>
-      'This authorization was cleared when you left the app. Go back and verify again. Any save that hadn’t been committed was canceled.';
-
-  @override
-  String get cloudResourcesIncomplete =>
-      'Fill in all six hardware details. Confirm unknown items with the provider, then import once they’re complete.';
-
-  @override
-  String get cloudSaveFailed => 'Saving didn’t finish. Try again.';
-
-  @override
-  String get cloudAccountSavedOnly =>
-      'Panel connection saved. No new devices were imported.';
-
-  @override
-  String get cloudInstancesSaved =>
-      'Saved. Selected devices were added to the local ledger.';
-
-  @override
-  String get cloudReadCancelled =>
-      'Read canceled. Previously read information is kept.';
-
-  @override
-  String get cloudAccountUnlinkedReturn =>
-      'The panel connection was deleted. Go back to continue.';
-
-  @override
-  String get cloudReadIncomplete =>
-      'The read didn’t finish. Previously read information is kept.';
-
-  @override
-  String get cloudAliasSaved => 'Panel connection name saved.';
-
-  @override
-  String get cloudNameSaveFailed => 'The name wasn’t saved. Try again.';
-
-  @override
-  String get cloudAccountUnlinked =>
-      'Panel connection deleted. Local details, finances, and SSH settings are kept.';
-
-  @override
-  String get cloudUnlinkFailed =>
-      'Couldn’t delete the panel connection. Try again.';
-
-  @override
-  String get cloudAliasRange =>
-      'Use 1–80 characters for the panel connection name.';
-
-  @override
-  String get cloudBindingReadFailed =>
-      'Couldn’t load the local link details. Try again.';
-
-  @override
-  String get cloudServerUnlinked => 'This server’s panel link was removed.';
-
-  @override
-  String get cloudBindingSaved => 'Panel connection link saved.';
-
-  @override
-  String get cloudFailureInvalidEndpoint =>
-      'Enter the HTTPS panel home address without login details, query parameters, or an API path.';
-
-  @override
-  String get cloudFailureInvalidCredentials =>
-      'Enter valid API credentials for this panel type.';
-
-  @override
-  String get cloudFailureUnauthorized =>
-      'Couldn’t verify the API credentials. Check them or authorize again.';
-
-  @override
-  String get cloudFailureApiRejected =>
-      'The panel rejected the API read. Check the credentials, API availability, and service status.';
-
-  @override
-  String get cloudFailureForbidden =>
-      'The panel denied the read. Check API permissions and provider settings.';
-
-  @override
-  String get cloudFailureRateLimited =>
-      'Too many panel requests. Retry manually later.';
-
-  @override
-  String get cloudFailureUnavailable =>
-      'The panel is temporarily unable to serve API reads.';
-
-  @override
-  String get cloudFailureConnection =>
-      'Connection failed. Check the network, panel address, and HTTPS certificate.';
-
-  @override
-  String get cloudFailureTimeout =>
-      'The read timed out. Previously read information is kept. Try again later.';
-
-  @override
-  String get cloudFailureCancelled => 'Read canceled.';
-
-  @override
-  String get cloudFailureRedirect =>
-      'The panel returned a redirect, so the request stopped to protect your credentials. Check the panel address.';
-
-  @override
-  String get cloudFailureInvalidResponse =>
-      'The panel’s response didn’t match the read protocol. Local details weren’t updated.';
-
-  @override
-  String get cloudFailureResponseTooLarge =>
-      'The panel’s response is larger than the safe size limit.';
-
-  @override
-  String get cloudFailureInventoryTooLarge =>
-      'The number of devices or pages is over this read’s limit. The incomplete list wasn’t imported.';
-
-  @override
-  String get cloudFailureUnsupportedPlatform =>
-      'This preview platform doesn’t accept real API credentials. Use the native app.';
-
-  @override
-  String get cloudAccountFailureIdentity =>
-      'The remote account or device identity changed. Existing links weren’t changed. Create a separate panel connection.';
-
-  @override
-  String get cloudAccountFailureV1Rebind =>
-      'This client API can’t prove that new credentials belong to the original device. Explicitly confirm removing the old links, then choose devices to import. Existing local records are kept.';
-
-  @override
-  String get cloudAccountFailureSelection =>
-      'The import list changed or the selection is invalid. Read it again.';
-
-  @override
-  String get cloudAccountFailureAlias =>
-      'Use 1–80 characters for the panel connection name.';
-
-  @override
-  String get cloudAccountFailureSecret =>
-      'Couldn’t save the API credentials to secure device storage. The original authorization is unchanged. Unlock the device and try again.';
-
-  @override
-  String get cloudAccountFailureSecretRead =>
-      'Couldn’t read this panel connection’s saved API credentials. Unlock the device and try again. If it still fails, authorize again from its menu.';
-
-  @override
-  String get cloudAccountFailureBindingTaken =>
-      'This device is linked to another local server and can’t be overwritten. Reload the local list.';
-
-  @override
-  String get cloudAccountFailureBindingUnavailable =>
-      'Device information isn’t available for linking right now. Refresh the panel connection manually, then select it again.';
-
-  @override
-  String get cloudReadLimitPositive => 'Read limits must be greater than 0.';
-
-  @override
-  String cloudProviderLinks(String provider, int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count linked servers',
-      one: '1 linked server',
-    );
-    return '$provider · $_temp0';
-  }
-
-  @override
-  String cloudRequiredField(String label) {
-    return 'Enter $label';
-  }
-
-  @override
-  String cloudConnectProvider(String provider) {
-    return 'Connect $provider';
-  }
-
-  @override
-  String cloudVerifyTarget(String normalization, String origin) {
-    return '${normalization}Verification will connect to: $origin';
-  }
-
-  @override
-  String cloudInventoryComplete(int count, String time, String authorization) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count devices',
-      one: '1 device',
-    );
-    return 'Complete read finished · $_temp0\nRead at: $time$authorization';
-  }
-
-  @override
-  String cloudInstanceFallback(String id) {
-    return 'Device $id';
-  }
-
-  @override
-  String cloudProjectInstance(String project, String id) {
-    return 'Project $project · Device ID $id';
-  }
-
-  @override
-  String cloudPowerLastRead(String power) {
-    return 'Power: $power · Last read';
-  }
-
-  @override
-  String cloudImportBoundary(String deduplication) {
-    return 'Importing doesn’t overwrite existing local names, costs, payments, notes, or SSH settings. $deduplication Archived linked records are also not imported again.';
-  }
-
-  @override
-  String cloudV2Scope(String id) {
-    return 'Verified user account $id · Projects and devices';
-  }
-
-  @override
-  String cloudLinkedCount(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count linked servers',
-      one: '1 linked server',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String cloudRecordWithState(String name, String state) {
-    return '$name$state';
-  }
-
-  @override
-  String cloudBindingWithTime(String summary, String time) {
-    return '$summary\nRead at: $time';
-  }
-
-  @override
-  String get cloudConsolePathRemoved => 'Removed /home.php.\n';
-
-  @override
-  String get cloudRackNerdApiPathRemoved =>
-      'Removed /api/client/command.php for RackNerd ctrl.\n';
-
-  @override
-  String get cloudAuthorizationUnsaved =>
-      '\nThis authorization hasn’t been saved';
-
-  @override
-  String get cloudV1Deduplication =>
-      'Devices already pinned to this authorization aren’t created again. Separate authorizations aren’t merged.';
-
-  @override
-  String get cloudV2Deduplication =>
-      'Duplicates are judged by panel type, panel address, account, project, and device ID. A matching IP or hostname is only a hint.';
-
-  @override
-  String get cloudArchivedSuffix => ' · Archived';
-
-  @override
-  String cloudImportCount(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count Devices',
-      one: '1 Device',
-    );
-    return 'Import $_temp0';
-  }
-
-  @override
-  String cloudSaveImportCount(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count Devices',
-      one: '1 Device',
-    );
-    return 'Save Panel Connection and Import $_temp0';
-  }
-
-  @override
-  String cloudUnlinkAccountMessage(String alias, String remoteAction) {
-    return '$alias\n\nThis deletes the local panel connection and its device links. Adding it again requires API credentials. Remote devices aren’t destroyed and billing doesn’t stop.\n\n$remoteAction';
-  }
-
-  @override
-  String get cloudRevokeV1 =>
-      'You’ll also need to disable this VPS’s Client API or reset its Key / Hash in the panel.';
-
-  @override
-  String get cloudRevokeV2 =>
-      'You’ll also need to revoke the issued token in the panel.';
-
-  @override
-  String cloudSuggestedAlias(String provider) {
-    return 'My $provider panel';
-  }
-
-  @override
-  String cloudReadAt(String time) {
-    return 'Read at: $time';
-  }
-
-  @override
-  String cloudAlreadyLinkedTo(String name) {
-    return 'Linked to: $name · Can’t overwrite';
-  }
-
-  @override
-  String cloudChangeLinkMessage(
-    String server,
-    String account,
-    String instance,
-    String replacement,
-  ) {
-    return '$server\nCurrent: $account · $instance$replacement\n\nOnly the local link changes. Server details, hardware, costs, payments, SSH settings, the panel connection, and its authorization are kept. No remote devices are changed and billing doesn’t stop.';
-  }
-
-  @override
-  String cloudReplacementLink(String account, String instance) {
-    return '\nReplace with: $account · $instance';
-  }
-
-  @override
-  String get cloudPowerRunning => 'Running';
-
-  @override
-  String get cloudPowerStopped => 'Stopped';
-
-  @override
-  String get cloudPowerUnknown => 'Unknown';
-
-  @override
-  String get cloudMissingKept =>
-      'Not returned in this read · Previous information kept';
-
-  @override
-  String get cloudFailedKept => 'Read failed · Previous information kept';
-
-  @override
-  String get cloudLastRead => 'Last read';
-
-  @override
-  String get cloudAuthorizationFailedKept =>
-      'Authorization verification failed · Existing ledger kept';
-
-  @override
-  String get cloudVerifiedManual => 'Verified · Manual reads';
-
-  @override
-  String get cloudStepTemplate => 'Panel type';
-
-  @override
-  String get cloudStepCredentials => 'Credentials';
-
-  @override
-  String get cloudStepInstances => 'Devices';
-
-  @override
-  String get cloudApiUnknown => 'Unknown (not provided by API)';
-
-  @override
-  String cloudBindingSummary(String freshness, String power) {
-    return '$freshness · Power: $power';
-  }
-
-  @override
-  String cloudStepLabel(int number, String label) {
-    return '0$number $label';
-  }
 
   @override
   String get serverNameRange => 'Use 1–80 characters for the name';
@@ -3313,21 +2475,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'Choose a monthly, quarterly, yearly, or unset traffic period';
 
   @override
-  String get resourceInvalidSources => 'Invalid resource-source fields';
-
-  @override
-  String get resourceUnknownApiSource =>
-      'Unknown resources can’t be marked as API-sourced';
-
-  @override
   String get resourceTooLarge => 'Local resource configuration is too large';
 
   @override
   String get resourceInvalidFields => 'Invalid local resource fields';
-
-  @override
-  String get resourceInvalidSourceFields =>
-      'Invalid local resource-source fields';
 
   @override
   String get resourceUnlimitedTraffic => 'Unlimited traffic';
@@ -3352,25 +2503,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String resourceDiskQuota(String p0) {
     return '$p0 disk';
   }
-
-  @override
-  String get resourceSourceManual => 'Source: entered manually';
-
-  @override
-  String get resourceSourceApi => 'Source: API';
-
-  @override
-  String get resourceSourceUnlimited => 'Source: unlimited confirmed manually';
-
-  @override
-  String get resourceSourceMissing =>
-      'Needs input: the API didn’t return a valid value';
-
-  @override
-  String get resourceSourceCompleted => 'Source: completed manually';
-
-  @override
-  String get resourceSourceEditedApi => 'Source: API value edited manually';
 
   @override
   String get resourceFieldValidIp =>
@@ -3410,19 +2542,11 @@ class AppLocalizationsEn extends AppLocalizations {
       'The period is separate from the capacity unit. Choose Not set if unknown.';
 
   @override
-  String get resourceSixRequired =>
-      'Hardware details · All six fields required';
-
-  @override
   String get resourceHardware => 'Hardware details';
 
   @override
-  String get resourceImportHelp =>
-      'Check and complete all six fields before importing. Capacities use base 1024; 0 doesn’t mean unlimited. Skip this device for now if details are missing, then import it once they’re complete.';
-
-  @override
   String get resourceLocalHelp =>
-      'Capacities use 1024 units; panel refresh never overwrites manual edits.';
+      'Capacities use 1024 units. Choosing a package fills these in, and you can still edit them.';
 
   @override
   String get resourceIpAddress => 'IP address';
@@ -3487,9 +2611,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get serverAdd => 'Add Server';
-
-  @override
-  String get serverImportPanel => 'Import from panel';
 
   @override
   String get serverFirstTitle => 'Your first VPS\nstarts here';
@@ -3658,7 +2779,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get resourceCardHelp =>
-      'Local data only; panel refresh never overwrites it.';
+      'Local data only; a package only pre-fills it.';
 
   @override
   String get serverSavedDisplayStale =>
@@ -3749,30 +2870,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get serverSpecifications => 'Specifications';
 
   @override
-  String get serverLocalInfoHelp =>
-      'These details are stored locally, and panel refreshes never overwrite them. A connection test doesn’t prove the service stays available.';
-
-  @override
   String get serverEditHardware => 'Edit Hardware';
-
-  @override
-  String get serverPanelLink => 'Panel link';
-
-  @override
-  String get serverNoPanelLink => 'No linked panel connection';
-
-  @override
-  String get serverPanelLinkHelp =>
-      'Panel refresh never overwrites what you entered.';
-
-  @override
-  String get serverLinkPanel => 'Link panel connection';
-
-  @override
-  String get serverManageLink => 'Manage link';
-
-  @override
-  String get serverReloadPanelDetails => 'Reload panel connection details';
 
   @override
   String get serverCostExpiry => 'Costs and due date';
@@ -4188,10 +3286,6 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get r2FormAddressHelp =>
       'Empty address uses the hardware IP or hostname; SSH address is separate.';
-
-  @override
-  String get r2FormProviderLocked =>
-      'Change the provider from the detail page.';
 
   @override
   String get serverWaitForOperation =>
@@ -6205,10 +5299,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get resourceTrafficPeriodYearShort => 'Y';
 
   @override
-  String get providerReviewRequired =>
-      'Confirm this panel connection’s provider before adding authorization, importing, or linking servers.';
-
-  @override
   String get providerNameRange => 'Use 1–80 characters for the provider name.';
 
   @override
@@ -6216,39 +5306,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'This provider already exists. Select it from the list.';
 
   @override
-  String get providerChangeNeedsUnlink =>
-      'Confirm unlinking the current panel connection before changing the provider.';
-
-  @override
-  String get adapterProviderMismatch =>
-      'The server and panel connection must have the same provider.';
-
-  @override
-  String get adapterScopeUnavailable =>
-      'This panel connection’s authorization scope is unverified. New links are unavailable.';
-
-  @override
-  String get adapterSingletonPinned =>
-      'These single-device credentials are pinned to another local server. Unlinking doesn’t release them for another server. Return to that record or explicitly reauthorize.';
-
-  @override
   String get providerUiTitle => 'Providers';
 
   @override
   String get uiCloudProvidersTitle => 'Providers';
-
-  @override
-  String get uiCloudNeedsReviewPill => 'Ownership pending';
-
-  @override
-  String get uiCloudOwnerSection => 'Provider';
-
-  @override
-  String get uiCloudMethodSection => 'How to add';
-
-  @override
-  String get uiCloudAddFooter =>
-      'Panel keys are stored only in secure device storage. Reading never changes the remote panel.';
 
   @override
   String get providerUiDetails => 'Provider Details';
@@ -6267,15 +5328,22 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get providerUiUnspecifiedHelp =>
-      'Manual entry only. You can assign a provider later in server details.';
+      'You can assign a provider later by editing the server.';
 
   @override
   String get providerUiHierarchyHelp =>
-      'A provider is who sells you servers. Each panel connection has its own authorization.';
+      'A provider is who sells you servers. A catalog provider also lists its packages.';
 
   @override
-  String providerUiSummary(int instances, int devices) {
-    return '$instances panel connections · $devices servers';
+  String r6CatProviderSummary(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count servers',
+      one: '1 server',
+      zero: 'No servers',
+    );
+    return '$_temp0';
   }
 
   @override
@@ -6283,11 +5351,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get providerUiEmptyHelp =>
-      'Add a provider name, then add servers manually or set up a read-only panel connection.';
-
-  @override
-  String get providerUiNeedsReview =>
-      'Ownership needs confirmation. New authorization and links are unavailable.';
+      'Add a provider name, or choose one from the catalog when you add a server.';
 
   @override
   String providerUiUnspecifiedCount(int count) {
@@ -6298,42 +5362,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get providerUiChoose => 'Choose a Provider';
 
   @override
-  String get providerUiChooseHelp =>
-      'Choose the provider you buy from. You’ll choose the panel type and authorization later.';
-
-  @override
-  String get providerUiSelected => 'Server provider';
-
-  @override
-  String get providerUiChooseAnother => 'Choose another provider';
-
-  @override
-  String get providerUiChooseMethod => 'Choose how to add';
-
-  @override
-  String get providerUiManualHelp =>
-      'Enter details manually. Unknown hardware and costs can stay blank.';
-
-  @override
-  String get providerUiAutomatic => 'Read from a panel';
-
-  @override
-  String get providerUiAutomaticHelp =>
-      'Choose an existing authorization or add a panel connection, then review the devices to import.';
-
-  @override
-  String get providerUiAutoNeedsProvider =>
-      'Choose a confirmed provider before automatic reading.';
-
-  @override
-  String get providerUiInstances => 'Panel connections';
-
-  @override
-  String get providerUiNoInstances =>
-      'No panel connections yet. You can still add servers manually.';
-
-  @override
-  String get providerUiAddInstance => 'Add Panel Connection';
+  String get providerUiChooseHelp => 'Choose the provider you buy from.';
 
   @override
   String get providerUiDevices => 'Provider servers';
@@ -6342,192 +5371,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get providerUiNoDevices => 'No servers belong to this provider yet.';
 
   @override
-  String get providerUiManualDevice => 'No panel link';
-
-  @override
-  String get providerUiLinkedDevice => 'Panel linked';
-
-  @override
-  String providerUiLinkedCount(int count) {
-    return '$count linked servers';
-  }
-
-  @override
-  String get providerUiSingleScope => 'Single-device authorization';
-
-  @override
-  String get providerUiAccountScope => 'Account-scoped authorization';
-
-  @override
-  String get providerUiUnknownScope => 'Authorization scope unverified';
-
-  @override
-  String providerUiPinnedHelp(String name) {
-    return 'This single-device authorization is pinned to “$name”. Unlinking doesn’t release it for another device. Return to that record or explicitly reauthorize.';
-  }
-
-  @override
-  String get providerUiChooseInstance => 'Choose a Panel Connection';
-
-  @override
-  String get providerUiInstanceChoiceHelp =>
-      'Only this provider’s panel connections are listed.';
-
-  @override
-  String get providerUiReviewHelp =>
-      'Older records don’t say which provider this belongs to. Confirm the provider and all affected servers for each panel connection. Until then, you can only refresh existing links.';
-
-  @override
-  String get providerUiRenameReviewHelp =>
-      'Renaming doesn’t confirm ownership. Confirm the provider for the panel connection separately.';
-
-  @override
-  String get providerUiConfirmOwnership => 'Confirm Provider';
-
-  @override
-  String providerUiConfirmOwnershipMessage(
-    String alias,
-    String provider,
-    String devices,
-  ) {
-    return 'Assign “$alias” to “$provider”. These linked servers will move with it:\n$devices\n\nExisting authorization, server details, costs, and SSH remain. This doesn’t expand the authorization scope.';
-  }
-
-  @override
-  String get providerUiNoAffectedDevices => 'No linked servers.';
-
-  @override
   String get providerUiUnavailable =>
       'This provider changed or is unavailable. Go back and choose again.';
 
   @override
-  String get providerUiChange => 'Change Provider';
-
-  @override
-  String providerUiChangeMessage(
-    String server,
-    String oldProvider,
-    String newProvider,
-    String linkEffect,
-  ) {
-    return 'Change “$server” from “$oldProvider” to “$newProvider”.\n\n$linkEffect\n\nThe server ID, manual details, costs, and SSH remain. This doesn’t automatically add authorization or a new link.';
-  }
-
-  @override
-  String get providerUiChangeNoLink => 'This server has no panel link.';
-
-  @override
-  String providerUiChangeUnlink(String alias) {
-    return 'The local link to “$alias” must be removed. Its authorization remains, including any single-device pin.';
-  }
-
-  @override
-  String get providerUiUnlinkAndChange => 'Unlink and Change Provider';
-
-  @override
-  String get providerUiChangeFromDetails =>
-      'To change an existing server’s provider, go back to its details and choose “Change Provider”. Any existing link must be explicitly removed.';
-
-  @override
-  String get providerUiProviderAndAdapter => 'Provider and panel connection';
-
-  @override
   String get providerUiOpenProvider => 'View provider';
-
-  @override
-  String get providerUiOpenInstance => 'View panel connection';
-
-  @override
-  String providerPendingName(String name) {
-    return '$name · provider unconfirmed';
-  }
-
-  @override
-  String get providerBindingAssignFirst =>
-      'Assign a provider in server details before choosing a panel connection to link.';
-
-  @override
-  String get cloudImportSaved =>
-      'Panel connection saved. Its authorization is kept independently of these device import results.';
-
-  @override
-  String get cloudImportReady => 'Resources complete';
-
-  @override
-  String get cloudImportNeedsCompletion => 'Resources need completion';
-
-  @override
-  String get cloudImportImported => 'Imported';
-
-  @override
-  String get cloudImportExisting => 'Already exists';
-
-  @override
-  String get cloudImportFailed => 'Failed';
-
-  @override
-  String get cloudImportUnprocessed => 'Not processed';
-
-  @override
-  String get cloudImportCompleteResources => 'Complete Resources';
-
-  @override
-  String get cloudImportReviewResources => 'Review Resources';
-
-  @override
-  String get cloudImportCompleteAndSelect => 'Save Draft and Select';
-
-  @override
-  String get cloudImportCompletionInfo =>
-      'Check all six resource fields before importing. Values the API leaves out stay unknown; choose unlimited traffic only when you’ve confirmed it. Edits stay on this device.';
-
-  @override
-  String get cloudImportFinanceLater =>
-      'Only devices and resource details are added; no costs or payments are created.';
-
-  @override
-  String cloudImportSummary(
-    int imported,
-    int existing,
-    int failed,
-    int unprocessed,
-  ) {
-    return 'Imported $imported · Existing $existing · Failed $failed · Not processed $unprocessed';
-  }
-
-  @override
-  String cloudImportRetryCount(int count) {
-    return 'Retry Only $count Unfinished Devices';
-  }
-
-  @override
-  String get cloudImportCancel => 'Stop Remaining Imports';
-
-  @override
-  String get cloudImportCancelling => 'Stopping…';
-
-  @override
-  String get cloudImportCancelled =>
-      'Remaining imports stopped. Devices already imported are kept. Review the results before retrying unfinished ones.';
-
-  @override
-  String get cloudImportResultsTitle => 'Import results';
-
-  @override
-  String cloudImportExistingConflict(int count) {
-    return 'Found $count local records with the same remote identity. Review each one; none is chosen or merged automatically.';
-  }
-
-  @override
-  String cloudImportAddressHint(String names) {
-    return 'IP or hostname also appears on: $names. This is a review hint only and doesn’t prove the devices are the same.';
-  }
-
-  @override
-  String cloudInstanceDeleteImpact(int count, String names) {
-    return 'This removes links from $count local servers:\n$names\n\nAll local details, hardware, finances, and SSH settings are kept.';
-  }
-
-  @override
-  String get cloudImportIdentityConflict => 'Device identity conflict';
 }

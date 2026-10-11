@@ -41,7 +41,6 @@ void main() {
       diskBytes: 30 * 1073741824,
       trafficBytes: 1099511627776,
       trafficPeriodMonths: 1,
-      apiFields: ServerResources.fieldKeys,
     );
     // Exactly what a panel import stores: host = API IP, spec = summary.
     await store.saveServer(
@@ -111,7 +110,6 @@ void main() {
       expect(saved.host, '192.0.2.99');
       expect(saved.resources!.ip, '192.0.2.99');
       expect(saved.resources!.hostname, 'manual-host.example');
-      expect(saved.resources!.apiFields, {'vcpu'});
       // Derived text follows the edit instead of keeping the API summary.
       expect(saved.spec, '2 vCPU · 4 GiB · 80 GiB');
       expect(saved.spec, isNot(contains('2 GiB')));

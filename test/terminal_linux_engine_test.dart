@@ -10,7 +10,6 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
-import 'package:vps_tell_you/cloud/cloud_controller.dart';
 import 'package:vps_tell_you/connections/ssh_service.dart';
 import 'package:vps_tell_you/connections/terminal_font.dart';
 import 'package:vps_tell_you/connections/terminal_page.dart';
@@ -130,11 +129,6 @@ void main() {
         store: store,
         secrets: secrets,
         authenticator: DeniedAuthentication(),
-      ),
-      cloud: CloudController(
-        store: store,
-        secrets: secrets,
-        adapterFactory: (_, _, _) => throw StateError('No cloud network'),
       ),
     );
     await ledger.refresh();

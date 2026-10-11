@@ -16,12 +16,12 @@ import 'package:flutter/cupertino.dart'
         CupertinoThemeData;
 import 'package:flutter/material.dart';
 
-import '../cloud/provider_pages.dart';
-import '../cloud/provider_record.dart';
 import '../core/app_theme.dart';
 import '../core/form_feedback.dart';
 import '../core/ui/ui.dart';
 import '../core/value_types.dart';
+import '../providers/provider_pages.dart';
+import '../providers/provider_record.dart';
 import 'ledger_controller.dart';
 import 'server_record.dart';
 import 'server_resource_fields.dart';
@@ -84,7 +84,9 @@ class _ServerFormState extends State<ServerForm> {
   void initState() {
     super.initState();
     final s = widget.record;
-    selectedProvider = widget.businessProvider;
+    selectedProvider =
+        widget.businessProvider ??
+        (s == null ? null : widget.controller.providerFor(s));
     fields = {
       'name': TextEditingController(text: s?.name),
       'host': TextEditingController(text: s?.host),
@@ -585,7 +587,7 @@ class _ServerFormState extends State<ServerForm> {
   }
 
   Future<void> chooseProvider() async {
-    if (choosingProvider || saving || widget.record != null) return;
+    if (choosingProvider || saving) return;
     setState(() => choosingProvider = true);
     try {
       final selected = await Navigator.push<ProviderSelection>(
@@ -633,11 +635,7 @@ class _ServerFormState extends State<ServerForm> {
   }
 
   Future<void> save() async {
-    if (saving ||
-        !widget.controller.canMutate ||
-        widget.controller.cloud.needsReload) {
-      return;
-    }
+    if (saving || !widget.controller.canMutate) return;
     _hasValidated = true;
     // One address concept: an IP typed as the address is also the hardware IP
     // (the IP row is hidden then). A domain leaves the stored IP untouched.
@@ -677,7 +675,7 @@ class _ServerFormState extends State<ServerForm> {
       name: text('name'),
       // Legacy vendor text stays historical; providerId is current ownership.
       vendor: old?.vendor ?? selectedProvider?.name ?? '',
-      providerId: old == null ? selectedProvider?.id : old.providerId,
+      providerId: selectedProvider?.id,
       host: text('host').isEmpty
           ? (resources.ip.isNotEmpty ? resources.ip : resources.hostname)
           : text('host'),
@@ -734,25 +732,18 @@ class _ServerFormState extends State<ServerForm> {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    final canSave =
-        !saving &&
-        widget.controller.canMutate &&
-        !widget.controller.cloud.needsReload;
+    final canSave = !saving && widget.controller.canMutate;
     final amountLabel = billing == BillingKind.metered
         ? l10n.serverMonthlyEstimate
         : l10n.serverRenewalAmount;
-    final providerName = widget.record == null
-        ? widget.controller.cloud.providers
-                  .where((p) => p.id == selectedProvider?.id)
-                  .firstOrNull
-                  ?.name ??
-              selectedProvider?.name
-        : serverProviderLabel(context, widget.controller, widget.record!);
+    final providerName =
+        widget.controller.providers
+            .where((p) => p.id == selectedProvider?.id)
+            .firstOrNull
+            ?.name ??
+        selectedProvider?.name;
     final canChooseProvider =
-        widget.record == null &&
-        !saving &&
-        !choosingProvider &&
-        widget.controller.canMutate;
+        !saving && !choosingProvider && widget.controller.canMutate;
     final groupName =
         widget.controller.groups
             .where((g) => g.id == groupId)
@@ -782,22 +773,7 @@ class _ServerFormState extends State<ServerForm> {
                     AppSection(
                       header: l10n.serverBasicData,
                       topSpacing: 8,
-                      footerWidget: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          Text(
-                            l10n.r2FormAddressHelp,
-                            style: context.footnoteStyle,
-                          ),
-                          if (widget.record != null) ...[
-                            const SizedBox(height: 6),
-                            Text(
-                              l10n.r2FormProviderLocked,
-                              style: context.footnoteStyle,
-                            ),
-                          ],
-                        ],
-                      ),
+                      footer: l10n.r2FormAddressHelp,
                       children: [
                         _textRow(
                           'name',
@@ -806,27 +782,13 @@ class _ServerFormState extends State<ServerForm> {
                           hint: l10n.uiFormNameHint,
                           required: true,
                         ),
-                        if (widget.record == null)
-                          AppFormRow.pick(
-                            key: const ValueKey('form-provider'),
-                            label: l10n.uiFormProvider,
-                            value: providerName,
-                            placeholder: l10n.providerUiUnspecified,
-                            onTap: canChooseProvider ? chooseProvider : null,
-                          )
-                        else
-                          AppFormRow(
-                            key: const ValueKey('form-provider'),
-                            label: l10n.uiFormProvider,
-                            child: Text(
-                              providerName ?? l10n.providerUiUnspecified,
-                              textAlign: TextAlign.end,
-                              style: TextStyle(
-                                fontSize: 16,
-                                color: context.palette.text2,
-                              ),
-                            ),
-                          ),
+                        AppFormRow.pick(
+                          key: const ValueKey('form-provider'),
+                          label: l10n.uiFormProvider,
+                          value: providerName,
+                          placeholder: l10n.providerUiUnspecified,
+                          onTap: canChooseProvider ? chooseProvider : null,
+                        ),
                         _textRow(
                           'host',
                           l10n.serverHostAddress,
@@ -862,7 +824,6 @@ class _ServerFormState extends State<ServerForm> {
                       key: _resources,
                       initial: widget.record?.resources,
                       enabled: !saving,
-                      importing: false,
                       collapsible: true,
                       hideIp: _hostIsIp,
                       defaultTrafficPeriodMonths: widget.record == null

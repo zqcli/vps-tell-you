@@ -11,7 +11,6 @@ ServerResources resourceFixture({
   int diskBytes = 32212254720,
   int? trafficBytes = 1099511627776,
   bool trafficUnlimited = false,
-  Set<String> apiFields = const {'ip', 'hostname', 'ramBytes'},
 }) => ServerResources(
   ip: ip,
   hostname: hostname,
@@ -20,7 +19,6 @@ ServerResources resourceFixture({
   diskBytes: diskBytes,
   trafficBytes: trafficBytes,
   trafficUnlimited: trafficUnlimited,
-  apiFields: apiFields,
 );
 
 void main() {
@@ -151,25 +149,21 @@ void main() {
     },
   );
 
-  test('provenance is whitelisted and defensively immutable', () {
-    final fields = {'ip'};
-    final resources = resourceFixture(apiFields: fields);
-    fields.add('password');
-    expect(resources.apiFields, {'ip'});
-    expect(() => resources.apiFields.add('hostname'), throwsUnsupportedError);
+  test('the retired apiFields marker is tolerated on read, never written', () {
+    final resources = resourceFixture();
+    expect(resources.toJson().containsKey('apiFields'), isFalse);
+    final legacy = {
+      ...resources.toJson(),
+      'apiFields': ['ip', 'ramBytes'],
+    };
+    final decoded = ServerResources.decode(jsonEncode(legacy));
+    expect(decoded.toJson(), resources.toJson());
+    expect(decoded.encode(), resources.encode());
     expect(
-      resourceFixture(apiFields: {'trafficUnlimited'})
-          .validate(requireComplete: true),
-      isNotNull,
-    );
-    expect(
-      resourceFixture(apiFields: {'password'}).validate(requireComplete: true),
-      isNotNull,
-    );
-    expect(
-      resourceFixture(apiFields: {'trafficBytes'})
-          .validate(requireComplete: true),
-      isNull,
+      () => ServerResources.decode(
+        jsonEncode({...resources.toJson(), 'apiFields': 'ip'}),
+      ),
+      throwsFormatException,
     );
   });
 
@@ -185,18 +179,6 @@ void main() {
         {...map, 'ramBytes': '2147483648'},
         {...map, 'vcpu': 2.5},
         {...map, 'trafficUnlimited': 1},
-        {
-          ...map,
-          'apiFields': ['ip', 'ip'],
-        },
-        {
-          ...map,
-          'apiFields': ['secretRef'],
-        },
-        {
-          ...map,
-          'apiFields': [1],
-        },
         {...map, 'ip': '0.0.0.0'},
         {...map, 'trafficBytes': 0},
         {...map, 'trafficUnlimited': true},

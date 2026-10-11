@@ -7,7 +7,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:vps_tell_you/app.dart';
-import 'package:vps_tell_you/cloud/cloud_pages.dart';
+import 'package:vps_tell_you/providers/provider_pages.dart';
 import 'package:vps_tell_you/connections/connection_pages.dart';
 import 'package:vps_tell_you/connections/snippet_pages.dart';
 import 'package:vps_tell_you/connections/tcp_test_page.dart';
@@ -242,7 +242,7 @@ void main() {
     'backup': () => BackupPage(controller: ledger),
     'reminder': () => ReminderPage(controller: ledger, serverId: server.id),
     'notification': () => NotificationPage(controller: ledger),
-    'panel-accounts': () => CloudAccountsPage(ledger: ledger),
+    'providers': () => ProvidersPage(ledger: ledger),
     'security': () => SecurityPage(ledger: ledger),
     'ssh-config': () =>
         SshConfigurationPage(ledger: ledger, serverId: server.id),

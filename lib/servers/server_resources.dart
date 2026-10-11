@@ -5,9 +5,9 @@ import '../l10n/generated/app_localizations.dart';
 import 'dart:convert';
 import 'dart:io';
 
-/// Local resource configuration, including explicitly unknown values. Provider
-/// observations remain in cloud inventory; refreshes must never overwrite these
-/// user-reviewed values.
+/// Local resource configuration, including explicitly unknown values. A
+/// catalog package only pre-fills these fields; the values stored here are the
+/// user's own and never change when the catalog does.
 class ServerResources {
   ServerResources({
     this.ip = '',
@@ -18,8 +18,7 @@ class ServerResources {
     this.trafficBytes,
     this.trafficUnlimited = false,
     this.trafficPeriodMonths,
-    Set<String> apiFields = const {},
-  }) : apiFields = Set.unmodifiable(apiFields);
+  });
 
   final String ip, hostname;
   final int? vcpu, ramBytes, diskBytes;
@@ -36,10 +35,6 @@ class ServerResources {
     12: l10n.resourceYear,
   };
 
-  /// The six allowed keys mark reviewed values originally supplied by the API.
-  /// A manually completed or overridden value must not retain its API marker.
-  final Set<String> apiFields;
-
   static const maxVcpu = 65536;
   // JSON stays exact even when a backup is handled by a JavaScript consumer.
   static const maxBytes = 9007199254740991;
@@ -51,11 +46,7 @@ class ServerResources {
     'diskBytes',
     'trafficBytes',
   };
-  static const _legacyJsonKeys = {
-    ...fieldKeys,
-    'trafficUnlimited',
-    'apiFields',
-  };
+  static const _legacyJsonKeys = {...fieldKeys, 'trafficUnlimited'};
   static const _jsonKeys = {..._legacyJsonKeys, 'trafficPeriodMonths'};
 
   static bool validIp(String value) {
@@ -118,20 +109,6 @@ class ServerResources {
         !trafficPeriods.containsKey(trafficPeriodMonths)) {
       return l10n.resourceValidPeriod;
     }
-    if (!fieldKeys.containsAll(apiFields)) {
-      return l10n.resourceInvalidSources;
-    }
-    final values = {
-      'ip': ip.isEmpty ? null : ip,
-      'hostname': hostname.isEmpty ? null : hostname,
-      'vcpu': vcpu,
-      'ramBytes': ramBytes,
-      'diskBytes': diskBytes,
-      'trafficBytes': trafficUnlimited ? true : trafficBytes,
-    };
-    if (apiFields.any((key) => values[key] == null)) {
-      return l10n.resourceUnknownApiSource;
-    }
     return null;
   }
 
@@ -144,7 +121,6 @@ class ServerResources {
     'trafficBytes': trafficBytes,
     'trafficUnlimited': trafficUnlimited,
     'trafficPeriodMonths': trafficPeriodMonths,
-    'apiFields': apiFields.toList()..sort(),
   };
 
   String encode() => jsonEncode(toJson());
@@ -162,7 +138,10 @@ class ServerResources {
     }
     final legacy = !value.containsKey('trafficPeriodMonths');
     final keys = legacy ? _legacyJsonKeys : _jsonKeys;
-    if (value.length != keys.length ||
+    // Rows written before v12 may carry the retired `apiFields` marker. It is
+    // tolerated (and ignored) when reading; the writer never emits it.
+    final extra = value.containsKey('apiFields') ? 1 : 0;
+    if (value.length != keys.length + extra ||
         !keys.every(value.containsKey) ||
         value['ip'] is! String ||
         value['hostname'] is! String ||
@@ -173,15 +152,8 @@ class ServerResources {
         (value['trafficPeriodMonths'] != null &&
             value['trafficPeriodMonths'] is! int) ||
         value['trafficUnlimited'] is! bool ||
-        value['apiFields'] is! List) {
+        (extra == 1 && value['apiFields'] is! List)) {
       throw LocalizedFormatException((l10n) => l10n.resourceInvalidFields);
-    }
-    final sources = value['apiFields'] as List;
-    if (sources.any((field) => field is! String) ||
-        sources.toSet().length != sources.length) {
-      throw LocalizedFormatException(
-        (l10n) => l10n.resourceInvalidSourceFields,
-      );
     }
     final result = ServerResources(
       ip: value['ip'] as String,
@@ -192,7 +164,6 @@ class ServerResources {
       trafficBytes: value['trafficBytes'] as int?,
       trafficUnlimited: value['trafficUnlimited'] as bool,
       trafficPeriodMonths: value['trafficPeriodMonths'] as int?,
-      apiFields: sources.cast<String>().toSet(),
     );
     final error = result.validate(requireComplete: legacy);
     if (error != null) {

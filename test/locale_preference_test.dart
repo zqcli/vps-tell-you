@@ -1,14 +1,12 @@
 import 'support/provider_fixture.dart';
 
 import 'dart:io';
-import 'dart:async';
 import 'dart:ui' show CheckedState;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:vps_tell_you/app.dart';
-import 'package:vps_tell_you/cloud/cloud_controller.dart';
 import 'package:vps_tell_you/core/ui/ui.dart';
 import 'package:vps_tell_you/data/ledger_store.dart';
 import 'package:vps_tell_you/l10n/generated/app_localizations.dart';
@@ -20,20 +18,6 @@ import 'package:vps_tell_you/settings/settings_page.dart';
 
 import 'security_store_test.dart' show FakeDeviceAuth, FakeSecretStore;
 import 'support/reminder_platform.dart';
-
-class CountingCloudController extends CloudController {
-  CountingCloudController({required super.store, required super.secrets});
-  int reloads = 0;
-  Completer<void>? reloadGate;
-  Completer<void>? reloadStarted;
-  @override
-  Future<bool> reload() async {
-    reloads++;
-    reloadStarted?.complete();
-    await reloadGate?.future;
-    return super.reload();
-  }
-}
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -129,29 +113,20 @@ void main() {
       secrets: secrets,
       authenticator: FakeDeviceAuth(),
     );
-    final cloud = CountingCloudController(store: store, secrets: secrets);
     final controller = LedgerController(
       store,
       security: security,
-      cloud: cloud,
       reminderPlatform: FakeReminderPlatform()..supported = false,
     );
     await controller.refresh();
     final records = controller.records;
-    final reloads = cloud.reloads;
     await controller.setLanguage(LocalePreference.english);
     expect(controller.languagePreference, LocalePreference.english);
     expect(identical(controller.records, records), isTrue);
-    expect(identical(controller.cloud, cloud), isTrue);
     expect(identical(controller.security, security), isTrue);
-    expect(cloud.reloads, reloads);
     expect(secrets.values, isEmpty);
-    cloud.reloadStarted = Completer<void>();
-    cloud.reloadGate = Completer<void>();
     final earlierRefresh = controller.refresh();
-    await cloud.reloadStarted!.future;
     await controller.setLanguage(LocalePreference.chinese);
-    cloud.reloadGate!.complete();
     await earlierRefresh;
     expect(controller.languagePreference, LocalePreference.chinese);
     expect(await store.languagePreference(), LocalePreference.chinese);

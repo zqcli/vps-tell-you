@@ -4,13 +4,13 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 
-import '../cloud/cloud_controller.dart';
 import '../core/value_types.dart';
 import '../data/ledger_store.dart';
 import '../l10n/locale_preference.dart';
 import '../l10n/generated/app_localizations.dart';
 import '../finance/finance_math.dart';
 import '../finance/finance_models.dart';
+import '../providers/provider_record.dart';
 import '../security/security_controller.dart';
 import '../settings/reminder_rule.dart';
 import '../settings/reminder_scheduler.dart';
@@ -27,22 +27,17 @@ class LedgerController extends ChangeNotifier {
     this.store, {
     DateTime Function()? clock,
     SecurityController? security,
-    CloudController? cloud,
     ReminderPlatform? reminderPlatform,
   }) : clock = clock ?? DateTime.now,
        security = security ?? SecurityController(store: store) {
-    this.cloud =
-        cloud ?? CloudController(store: store, secrets: this.security.secrets);
-    this.cloud.addListener(_cloudChanged);
     reminders = ReminderScheduler(
       store,
       platform: reminderPlatform,
       clock: this.clock,
     );
-    reminders.addListener(_cloudChanged);
+    reminders.addListener(notifyListeners);
   }
   final SecurityController security;
-  late final CloudController cloud;
   late final ReminderScheduler reminders;
   List<ReminderRule> reminderRules = const [];
   String themeMode = 'system';
@@ -66,7 +61,7 @@ class LedgerController extends ChangeNotifier {
       languagePreference = preference;
       reminders.languagePreference = preference;
       // Resubmit existing reminder content in the saved language. This does
-      // not reload ledger/cloud/SSH state, and native failures stay separate.
+      // not reload ledger/SSH state, and native failures stay separate.
       unawaited(reminders.reconcile());
     } finally {
       savingLanguage = false;
@@ -77,15 +72,11 @@ class LedgerController extends ChangeNotifier {
   ReminderRule? reminderFor(String id) =>
       reminderRules.where((r) => r.serverId == id).firstOrNull;
 
-  void _cloudChanged() => notifyListeners();
-
   @override
   void dispose() {
     _disposed = true;
-    cloud.removeListener(_cloudChanged);
-    reminders.removeListener(_cloudChanged);
+    reminders.removeListener(notifyListeners);
     reminders.dispose();
-    cloud.dispose();
     security.dispose();
     super.dispose();
   }
@@ -96,6 +87,7 @@ class LedgerController extends ChangeNotifier {
   List<ServerGroup> groups = [];
   List<ServicePeriod> periods = [];
   List<PaymentRecord> payments = [];
+  List<ProviderRecord> providers = const [];
   FxSettings fx = const FxSettings();
   List<ServicePeriod> periodsFor(String serverId) =>
       periods.where((p) => p.serverId == serverId).toList(growable: false);
@@ -181,16 +173,12 @@ class LedgerController extends ChangeNotifier {
       groups.where((g) => g.id == id).firstOrNull?.name ??
       (l10n ?? defaultLocalizations).ungrouped;
   ProviderRecord? providerFor(ServerRecord server) =>
-      cloud.providers.where((p) => p.id == server.providerId).firstOrNull;
+      providers.where((p) => p.id == server.providerId).firstOrNull;
 
   String providerNameFor(ServerRecord server, {AppLocalizations? l10n}) {
     final strings = l10n ?? defaultLocalizations;
     final provider = providerFor(server);
-    if (provider != null) {
-      return provider.needsReview
-          ? strings.providerPendingName(provider.name)
-          : provider.name;
-    }
+    if (provider != null) return provider.name;
     return server.vendor.trim().isNotEmpty &&
             server.vendor.trim() != legacyUnknownVendor
         ? server.vendor
@@ -249,8 +237,9 @@ class LedgerController extends ChangeNotifier {
     final loadedRules = await store.reminderRules();
     final loadedTheme = await store.themeMode();
     final loadedLanguage = await store.languagePreference();
-    await cloud.reload();
+    final loadedProviders = await store.providers();
     refreshFailed = false;
+    providers = List.unmodifiable(loadedProviders);
     periods = List.unmodifiable(loadedPeriods);
     payments = List.unmodifiable(loadedPayments);
     fx = loadedFx;
@@ -273,17 +262,6 @@ class LedgerController extends ChangeNotifier {
     // Native permission/scheduling errors must never turn a committed ledger
     // mutation into a failed save or block access to local data.
     unawaited(reminders.reconcile());
-  }
-
-  /// A cloud write is already committed. Surface a reload failure without
-  /// inviting duplicate imports or losing the successful write result.
-  Future<void> refreshAfterCloudCommit() async {
-    try {
-      await refresh();
-    } catch (_) {
-      refreshFailed = true;
-      notifyListeners();
-    }
   }
 
   Future<T> mutate<T>(Future<T> Function() action) async {
