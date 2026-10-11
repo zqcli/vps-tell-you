@@ -1748,6 +1748,18 @@ abstract class AppLocalizations {
   /// **'请输入有效到期日'**
   String get financeDueError;
 
+  /// No description provided for @r6CalcServiceStart.
+  ///
+  /// In zh, this message translates to:
+  /// **'服务开始日期'**
+  String get r6CalcServiceStart;
+
+  /// No description provided for @r6CalcDueAutoNote.
+  ///
+  /// In zh, this message translates to:
+  /// **'到期日按开始日期和周期自动推算；手动选择其他日期后不再自动更新。'**
+  String get r6CalcDueAutoNote;
+
   /// No description provided for @financeAlgorithmTitle.
   ///
   /// In zh, this message translates to:

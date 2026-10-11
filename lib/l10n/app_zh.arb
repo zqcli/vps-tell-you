@@ -498,6 +498,8 @@
   "financeValuationDateError": "请输入有效估值日",
   "financeServiceDue": "服务到期日",
   "financeDueError": "请输入有效到期日",
+  "r6CalcServiceStart": "服务开始日期",
+  "r6CalcDueAutoNote": "到期日按开始日期和周期自动推算；手动选择其他日期后不再自动更新。",
   "financeAlgorithmTitle": "周期与算法说明",
   "financeAlgorithmNote": "剩余价值 = Σ（每周期续费金额 × 该周期未用天数比例）。\n日历周期按真实天数计算，不固定每月 30 天；月底由原到期日锚点倒推，年度处理闰年。估值早于已知开始日不会超过该期整价。\n独立模式向前倒推至覆盖估值日，限制 100 年。到期当天为 0，不检查服务能否转让或退款。",
   "financeCalculateValue": "计算剩余价值",

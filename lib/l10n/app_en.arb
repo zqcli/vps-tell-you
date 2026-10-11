@@ -329,6 +329,8 @@
   "financeValuationDateError": "Enter a valid valuation date",
   "financeServiceDue": "Service due date",
   "financeDueError": "Enter a valid due date",
+  "r6CalcServiceStart": "Service start date",
+  "r6CalcDueAutoNote": "The due date follows the start date and cycle until you pick a different one.",
   "financeAlgorithmTitle": "Periods and calculation method",
   "financeAlgorithmNote": "Remaining value = Σ (renewal price per cycle × fraction of unused days in that cycle).\nCalendar cycles use actual day counts, not fixed 30-day months. Month-end dates are calculated backward from the original due-date anchor, with leap years handled for yearly cycles. Valuing a period before its known start never exceeds its full price.\nIndependent mode works backward to cover the valuation date, up to 100 years. Value is 0 on the due date. Transferability and refund eligibility aren’t checked.",
   "financeCalculateValue": "Calculate Remaining Value",
