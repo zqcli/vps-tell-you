@@ -216,9 +216,9 @@ class _AppDropdownRowState<T> extends State<AppDropdownRow<T>> {
             backgroundColor: WidgetStatePropertyAll(p.surface),
             surfaceTintColor: const WidgetStatePropertyAll(Colors.transparent),
             shadowColor: WidgetStatePropertyAll(
-              Colors.black.withValues(alpha: p.isDark ? .6 : .22),
+              Colors.black.withValues(alpha: p.isDark ? .5 : .16),
             ),
-            elevation: const WidgetStatePropertyAll(12),
+            elevation: const WidgetStatePropertyAll(8),
             padding: const WidgetStatePropertyAll(EdgeInsets.zero),
             shape: WidgetStatePropertyAll(
               RoundedRectangleBorder(
@@ -228,7 +228,7 @@ class _AppDropdownRowState<T> extends State<AppDropdownRow<T>> {
             ),
             minimumSize: WidgetStatePropertyAll(Size(width, 0)),
             maximumSize: WidgetStatePropertyAll(
-              Size(width, math.max(240, media.size.height * .55)),
+              Size(width, math.max(240, media.size.height * .8)),
             ),
           ),
           menuChildren: _children(context, width),

@@ -691,7 +691,9 @@ class _ServerFormState extends State<ServerForm> {
             key: ValueKey('form-provider-catalog-${provider.id}'),
             value: 'catalog:${provider.id}',
             title: provider.name,
-            subtitle: l10n.r6CatPackageCount(provider.packages.length),
+            subtitle: provider.packages.isEmpty
+                ? null
+                : l10n.r6CatPackageCount(provider.packages.length),
           ),
     ];
     return [
