@@ -38,7 +38,7 @@ void main() {
       catalog: MemoryCatalog(),
     );
     await store.saveProvider(
-      ProviderRecord(id: 'mine', name: 'My Own Host', createdAt: now),
+      ProviderRecord(id: 'mine', name: 'A provider with a rather long name for narrow phones', createdAt: now),
       isNew: true,
     );
     await ledger.refresh();
@@ -66,6 +66,7 @@ void main() {
   for (final (lang, width, scale) in [
     ('zh', 390.0, 1.0),
     ('en', 390.0, 1.0),
+    ('en', 320.0, 1.0),
     ('zh', 320.0, 2.0),
     ('en', 320.0, 2.0),
   ]) {
