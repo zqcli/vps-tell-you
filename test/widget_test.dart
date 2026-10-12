@@ -73,7 +73,11 @@ void main() {
       expect(controller.records, isEmpty);
       await tester.tap(find.byKey(const ValueKey('add-server')));
       await tester.pumpAndSettle();
-      await tester.tap(find.byKey(const ValueKey('choose-provider-add')));
+      // Adding goes straight to the form; the provider is a dropdown row.
+      expect(find.byType(ServerForm), findsOneWidget);
+      await tester.tap(find.byKey(const ValueKey('form-provider')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('form-provider-new')));
       await tester.pumpAndSettle();
       await tester.enterText(
         find.byKey(const ValueKey('provider-name')),
@@ -81,12 +85,21 @@ void main() {
       );
       await tester.tap(find.byKey(const ValueKey('provider-save')));
       await tester.pumpAndSettle();
+      // Named only: nothing is written until the server is saved.
+      expect(await store.providers(), isEmpty);
       await fill(tester, 'name', 'My VPS');
-      await fill(tester, 'host', '192.0.2.42');
+      final ip = find.byKey(const ValueKey('resource-ip'));
+      await tester.ensureVisible(ip);
+      await tester.enterText(ip, '192.0.2.42');
+      await tester.pumpAndSettle();
       await tester.tap(find.text('保存'));
       await tester.pumpAndSettle();
       expect(find.byType(ServerDetail), findsOneWidget);
-      expect((await store.servers()).single.host, '192.0.2.42');
+      final created = (await store.servers()).single;
+      expect(created.host, isEmpty);
+      expect(created.resources!.ip, '192.0.2.42');
+      expect((await store.providers()).single.name, 'Custom');
+      expect(created.providerId, (await store.providers()).single.id);
       await tester.tap(find.text('编辑'));
       await tester.pumpAndSettle();
       await fill(tester, 'name', 'Unsaved edit');
@@ -106,7 +119,9 @@ void main() {
       await tester.tap(find.byKey(const ValueKey('add-server')));
       await tester.pumpAndSettle();
       final provider = (await store.providers()).single;
-      await tester.tap(find.byKey(ValueKey('choose-provider-${provider.id}')));
+      await tester.tap(find.byKey(const ValueKey('form-provider')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(ValueKey('form-provider-${provider.id}')));
       await tester.pumpAndSettle();
       await fill(tester, 'name', 'Cancelled new');
       await tester.binding.handlePopRoute();

@@ -310,8 +310,7 @@ void main() {
     'small viewport reveals invalid IP and keeps the save action reachable',
     (tester) async {
       await mount(tester, 320, 2, height: 560);
-      // The IPv4 row is editable next to a domain address.
-      await fill(tester, 'field-host', 'gateway.example');
+      await fill(tester, 'resource-hostname', 'gateway.example');
       await fill(tester, 'resource-ip', '0.0.0.0');
       await fill(tester, 'field-notes', 'A draft survives validation');
       await tapSave(tester);
@@ -339,14 +338,17 @@ void main() {
       expect(find.text('未知可留空，之后可手动补充'), findsNothing);
       expect(find.text('容量单位按 1024 进制'), findsNothing);
       expect(find.textContaining('凭据库将在后续阶段提供'), findsNothing);
-      final host = tester.widget<TextField>(
-        find.descendant(
-          of: find.byKey(const ValueKey('field-host')),
-          matching: find.byType(TextField),
-        ),
-      );
-      expect(host.autocorrect, isFalse);
-      expect(host.textInputAction, TextInputAction.next);
+      expect(find.byKey(const ValueKey('field-host')), findsNothing);
+      for (final key in ['resource-ip', 'resource-ipv6', 'resource-hostname']) {
+        final address = tester.widget<TextField>(
+          find.descendant(
+            of: find.byKey(ValueKey(key)),
+            matching: find.byType(TextField),
+          ),
+        );
+        expect(address.autocorrect, isFalse, reason: key);
+        expect(address.textInputAction, TextInputAction.next, reason: key);
+      }
       final notes = tester.widget<TextField>(
         find.descendant(
           of: find.byKey(const ValueKey('field-notes')),

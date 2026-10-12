@@ -97,9 +97,9 @@ void main() {
       await type('resource-diskBytes', '80');
       await type('resource-trafficBytes', '2');
       await chooseUnit(tester, 'trafficBytes', 'TiB');
-      // The IP is the address (one concept): the hardware IP row is hidden.
-      expect(find.byKey(const ValueKey('resource-ip')), findsNothing);
-      await type('field-host', '192.0.2.99');
+      // The old connection address (= the IP) is just the IPv4 field now.
+      expect(find.byKey(const ValueKey('field-host')), findsNothing);
+      await type('resource-ip', '192.0.2.99');
       await type('resource-hostname', 'manual-host.example');
       await tapSave(tester);
 
@@ -107,7 +107,7 @@ void main() {
       expect(saved.resources!.ramBytes, 4 * 1073741824);
       expect(saved.resources!.diskBytes, 80 * 1073741824);
       expect(saved.resources!.trafficBytes, 2 * 1099511627776);
-      expect(saved.host, '192.0.2.99');
+      expect(saved.host, isEmpty, reason: 'legacy host moved into the IPv4');
       expect(saved.resources!.ip, '192.0.2.99');
       expect(saved.resources!.hostname, 'manual-host.example');
       // Derived text follows the edit instead of keeping the API summary.
