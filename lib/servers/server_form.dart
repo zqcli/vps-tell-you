@@ -86,10 +86,13 @@ class _ServerFormState extends State<ServerForm> {
   /// Catalog provider without a local provider yet (created on save).
   CatalogProvider? pendingCatalog;
 
+  /// Provider named in the "New Provider…" prompt; written on save only, so
+  /// leaving the form never leaves a provider behind.
+  ProviderRecord? pendingNew;
+
   /// The chosen package (as it will be saved) and, for an existing server,
   /// the one it had when the form opened.
   CatalogPackage? package;
-  bool choosingProvider = false;
   bool saving = false;
 
   /// True while the due date is the value derived from start date + cycle (or
@@ -112,10 +115,13 @@ class _ServerFormState extends State<ServerForm> {
         widget.businessProvider ??
         (s == null ? null : widget.controller.providerFor(s));
     if (selectedProvider == null) pendingCatalog = widget.catalogProvider;
-    package = s == null
-        ? widget.initialPackage
-        : widget.controller.packageSnapshotFor(s);
-    final prefill = s == null ? widget.initialPackage : null;
+    // A new server of a catalog provider starts with its default package.
+    final prefill = s != null
+        ? null
+        : widget.initialPackage ??
+              _catalogOf(selectedProvider, pendingCatalog)?.defaultPackage;
+    _seedPackage = prefill;
+    package = s == null ? prefill : widget.controller.packageSnapshotFor(s);
     fields = {
       'name': TextEditingController(text: s?.name),
       'region': TextEditingController(text: s?.region ?? prefill?.region),
@@ -156,6 +162,9 @@ class _ServerFormState extends State<ServerForm> {
   /// belongs to so that it is visible and moves there on save.
   late final LegacyHost? _legacyHost;
   late final ServerResources? _initialResources;
+
+  /// Package whose hardware and price the new form opened with.
+  late final CatalogPackage? _seedPackage;
 
   /// The legacy value is stored in its address field as the form opens.
   late final bool _hostCarried;
@@ -608,41 +617,15 @@ class _ServerFormState extends State<ServerForm> {
     );
   }
 
-  Future<void> chooseProvider() async {
-    if (choosingProvider || saving) return;
-    setState(() => choosingProvider = true);
-    try {
-      final selected = await Navigator.push<ProviderSelection>(
-        context,
-        MaterialPageRoute(
-          builder: (_) => ProviderPickerPage(
-            ledger: widget.controller,
-            allowUnspecified: true,
-          ),
-        ),
-      );
-      if (mounted && selected != null) {
-        setState(() {
-          selectedProvider = selected.provider;
-          pendingCatalog = selected.isPending ? selected.catalog : null;
-          // A package belongs to its own catalog provider.
-          if (package != null &&
-              (selectedProvider?.catalogId ?? pendingCatalog?.id) !=
-                  package!.providerId) {
-            package = null;
-          }
-        });
-      }
-    } finally {
-      if (mounted) setState(() => choosingProvider = false);
-    }
+  /// Catalog entry behind a (local or pending) provider choice.
+  CatalogProvider? _catalogOf(ProviderRecord? local, CatalogProvider? pending) {
+    final id = local?.catalogId ?? pending?.id;
+    return id == null ? null : widget.controller.catalog.provider(id);
   }
 
   /// The catalog provider of the current selection, if any.
-  CatalogProvider? get _catalogOfSelection {
-    final id = selectedProvider?.catalogId ?? pendingCatalog?.id;
-    return id == null ? null : widget.controller.catalog.provider(id);
-  }
+  CatalogProvider? get _catalogOfSelection =>
+      _catalogOf(selectedProvider, pendingCatalog);
 
   /// Fills hardware and price from [chosen]; addresses and dates stay.
   void _applyPackage(CatalogPackage chosen) {
@@ -660,44 +643,157 @@ class _ServerFormState extends State<ServerForm> {
     }
   }
 
-  Future<void> _pickPackage() async {
-    final catalog = _catalogOfSelection;
-    if (catalog == null || saving) return;
-    const none = '';
-    final result = await showFormPicker<String>(
-      context,
-      title: context.l10n.r6CatFormPackage,
-      selected: package?.id ?? none,
-      options: (l10n) => [
-        AppPickerOption(
+  Future<bool> _confirmReplace() => showAppConfirm(
+    context,
+    title: LocalizedText((l10n) => l10n.r6CatReplaceTitle),
+    message: LocalizedText((l10n) => l10n.r6CatReplaceMessage),
+    action: LocalizedText((l10n) => l10n.r6CatReplaceAction),
+  );
+
+  // ---- provider and package dropdowns ------------------------------------
+
+  static const _noneKey = 'none', _newKey = 'new', _draftKey = 'draft';
+  String get _providerKey => selectedProvider != null
+      ? 'local:${selectedProvider!.id}'
+      : pendingCatalog != null
+      ? 'catalog:${pendingCatalog!.id}'
+      : pendingNew != null
+      ? _draftKey
+      : _noneKey;
+
+  List<AppDropdownGroup<String>> _providerGroups(AppLocalizations l10n) {
+    final controller = widget.controller;
+    String? packages(ProviderRecord provider) {
+      final count = controller.catalogProviderFor(provider)?.packages.length;
+      return count == null || count == 0 ? null : l10n.r6CatPackageCount(count);
+    }
+
+    final added = {for (final p in controller.providers) ?p.catalogId};
+    final mine = [
+      if (pendingNew != null)
+        AppDropdownItem(
+          key: const ValueKey('form-provider-draft'),
+          value: _draftKey,
+          title: pendingNew!.name,
+        ),
+      for (final provider in controller.providers)
+        AppDropdownItem(
+          key: ValueKey('form-provider-${provider.id}'),
+          value: 'local:${provider.id}',
+          title: provider.name,
+          subtitle: packages(provider),
+        ),
+    ];
+    final catalog = [
+      for (final provider in controller.catalog.providers)
+        if (!added.contains(provider.id))
+          AppDropdownItem(
+            key: ValueKey('form-provider-catalog-${provider.id}'),
+            value: 'catalog:${provider.id}',
+            title: provider.name,
+            subtitle: l10n.r6CatPackageCount(provider.packages.length),
+          ),
+    ];
+    return [
+      AppDropdownGroup(
+        items: [
+          AppDropdownItem(
+            key: const ValueKey('form-provider-none'),
+            value: _noneKey,
+            title: l10n.r7FormProviderNone,
+          ),
+        ],
+      ),
+      AppDropdownGroup(header: l10n.r6CatMineSection, items: mine),
+      AppDropdownGroup(header: l10n.r6CatCatalogSection, items: catalog),
+      AppDropdownGroup(
+        items: [
+          AppDropdownItem(
+            key: const ValueKey('form-provider-new'),
+            value: _newKey,
+            title: l10n.r7FormProviderNew,
+          ),
+        ],
+      ),
+    ];
+  }
+
+  Future<void> _chooseProvider(String key) async {
+    if (saving || key == _providerKey || key == _draftKey) return;
+    final controller = widget.controller;
+    ProviderRecord? local;
+    CatalogProvider? catalog;
+    ProviderRecord? draft;
+    if (key == _newKey) {
+      draft = await draftProvider(context, controller);
+      if (draft == null || !mounted) return;
+    } else if (key.startsWith('local:')) {
+      local = controller.providers
+          .where((p) => 'local:${p.id}' == key)
+          .firstOrNull;
+      if (local == null) return;
+    } else if (key.startsWith('catalog:')) {
+      catalog = controller.catalog.provider(key.substring(8));
+      if (catalog == null) return;
+    }
+    final target = _catalogOf(local, catalog);
+    final hadPackage = package != null;
+    setState(() {
+      selectedProvider = local;
+      pendingCatalog = catalog;
+      pendingNew = draft;
+      // A package belongs to its own catalog provider.
+      if (package != null && package!.providerId != target?.id) package = null;
+    });
+    // Only a new server starts from the provider's default package; an
+    // existing one keeps its values until a package is picked explicitly.
+    final fallback = target?.defaultPackage;
+    if (widget.record != null || package != null || fallback == null) return;
+    final manual =
+        !hadPackage &&
+        (_resources.currentState?.hasHardwareInput == true ||
+            billing != BillingKind.unknown ||
+            fields['amount']!.text.trim().isNotEmpty);
+    if (manual && !await _confirmReplace()) return;
+    if (!mounted) return;
+    setState(() {
+      package = fallback;
+      _applyPackage(fallback);
+    });
+  }
+
+  List<AppDropdownGroup<String>> _packageGroups(
+    AppLocalizations l10n,
+    CatalogProvider? catalog,
+  ) => [
+    AppDropdownGroup(
+      items: [
+        AppDropdownItem(
           key: const ValueKey('form-package-none'),
-          value: none,
+          value: '',
           title: l10n.r6CatNoPackage,
         ),
-        for (final option in catalog.packages)
-          AppPickerOption(
+        for (final option in catalog?.packages ?? const <CatalogPackage>[])
+          AppDropdownItem(
             key: ValueKey('form-package-${option.id}'),
             value: option.id,
             title: option.name,
             subtitle: packageSummaryLine(l10n, option),
           ),
       ],
-    );
-    if (result == null || !mounted || result == (package?.id ?? none)) return;
-    final chosen = catalog.package(result);
+    ),
+  ];
+
+  Future<void> _choosePackage(String id) async {
+    final catalog = _catalogOfSelection;
+    if (saving || id == (package?.id ?? '')) return;
+    final chosen = catalog?.package(id);
     if (chosen == null) {
       setState(() => package = null);
       return;
     }
-    if (widget.record != null) {
-      final replace = await showAppConfirm(
-        context,
-        title: LocalizedText((l10n) => l10n.r6CatReplaceTitle),
-        message: LocalizedText((l10n) => l10n.r6CatReplaceMessage),
-        action: LocalizedText((l10n) => l10n.r6CatReplaceAction),
-      );
-      if (!replace || !mounted) return;
-    }
+    if (widget.record != null && !await _confirmReplace()) return;
+    if (!mounted) return;
     setState(() {
       package = chosen;
       _applyPackage(chosen);
@@ -776,7 +872,11 @@ class _ServerFormState extends State<ServerForm> {
       name: text('name'),
       // Legacy vendor text stays historical; providerId is current ownership.
       vendor:
-          old?.vendor ?? selectedProvider?.name ?? pendingCatalog?.name ?? '',
+          old?.vendor ??
+          selectedProvider?.name ??
+          pendingCatalog?.name ??
+          pendingNew?.name ??
+          '',
       providerId: selectedProvider?.id,
       packageId: package?.id,
       packageSnapshot: package?.encodeSnapshot(),
@@ -827,6 +927,7 @@ class _ServerFormState extends State<ServerForm> {
                   name: pendingCatalog!.name,
                 )
               : null,
+          newProvider: selectedProvider == null ? pendingNew : null,
         ),
       );
       if (mounted) {
@@ -853,11 +954,14 @@ class _ServerFormState extends State<ServerForm> {
             .firstOrNull
             ?.name ??
         selectedProvider?.name ??
-        pendingCatalog?.name;
-    final packageList = _catalogOfSelection?.packages ?? const [];
-    final canPickPackage = !saving && packageList.isNotEmpty;
-    final canChooseProvider =
-        !saving && !choosingProvider && widget.controller.canMutate;
+        pendingCatalog?.name ??
+        pendingNew?.name;
+    final catalog = _catalogOfSelection;
+    final packageList = catalog?.packages ?? const <CatalogPackage>[];
+    // Also shown for a saved package whose catalog entry is gone, so that it
+    // can still be cleared.
+    final showPackage = packageList.isNotEmpty || package != null;
+    final canChooseProvider = !saving && widget.controller.canMutate;
     final groupName =
         widget.controller.groups
             .where((g) => g.id == groupId)
@@ -869,9 +973,7 @@ class _ServerFormState extends State<ServerForm> {
       builder: (context, _) => PopScope(
         canPop: !saving,
         child: AppScaffold.modal(
-          title: widget.record == null
-              ? l10n.serverManualAdd
-              : l10n.serverEditTitle,
+          title: widget.record == null ? l10n.serverAdd : l10n.serverEditTitle,
           actionLabel: l10n.save,
           onAction: canSave ? save : null,
           actionBusy: saving,
@@ -887,9 +989,7 @@ class _ServerFormState extends State<ServerForm> {
                     AppSection(
                       header: l10n.serverBasicData,
                       topSpacing: 8,
-                      footer: packageList.isEmpty
-                          ? null
-                          : l10n.r6CatFormPackageFooter,
+                      footer: showPackage ? l10n.r6CatFormPackageFooter : null,
                       children: [
                         _textRow(
                           'name',
@@ -898,22 +998,27 @@ class _ServerFormState extends State<ServerForm> {
                           hint: l10n.uiFormNameHint,
                           required: true,
                         ),
-                        AppFormRow.pick(
+                        AppDropdownRow<String>(
                           key: const ValueKey('form-provider'),
                           label: l10n.uiFormProvider,
                           value: providerName,
-                          placeholder: l10n.providerUiUnspecified,
-                          onTap: canChooseProvider ? chooseProvider : null,
+                          placeholder: l10n.r7FormProviderNone,
+                          selected: _providerKey,
+                          enabled: canChooseProvider,
+                          groups: _providerGroups(l10n),
+                          onSelected: _chooseProvider,
                         ),
-                        AppFormRow.pick(
-                          key: const ValueKey('form-package'),
-                          label: l10n.r6CatFormPackage,
-                          value: package?.name,
-                          placeholder: packageList.isEmpty
-                              ? l10n.r6CatNoPackageList
-                              : l10n.r6CatNoPackage,
-                          onTap: canPickPackage ? _pickPackage : null,
-                        ),
+                        if (showPackage)
+                          AppDropdownRow<String>(
+                            key: const ValueKey('form-package'),
+                            label: l10n.r6CatFormPackage,
+                            value: package?.name,
+                            placeholder: l10n.r6CatNoPackage,
+                            selected: package?.id ?? '',
+                            enabled: !saving,
+                            groups: _packageGroups(l10n, catalog),
+                            onSelected: _choosePackage,
+                          ),
                         AppFormRow.pick(
                           key: const ValueKey('field-group'),
                           label: l10n.serverGroup,
@@ -939,8 +1044,7 @@ class _ServerFormState extends State<ServerForm> {
                     ),
                     ServerResourceFields(
                       key: _resources,
-                      initial:
-                          _initialResources ?? widget.initialPackage?.resources,
+                      initial: _initialResources ?? _seedPackage?.resources,
                       enabled: !saving,
                       collapsible: true,
                       defaultTrafficPeriodMonths: widget.record == null

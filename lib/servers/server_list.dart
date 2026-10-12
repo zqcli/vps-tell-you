@@ -14,15 +14,17 @@ import '../providers/provider_pages.dart';
 import 'ledger_controller.dart';
 import 'refresh_failure_notice.dart';
 import 'server_detail.dart';
+import 'server_form.dart';
 import 'server_record.dart';
 
 Future<void> addServer(
   BuildContext context,
   LedgerController controller,
 ) async {
-  final id = await Navigator.push<String>(
+  // Straight to the form: the provider and package are rows inside it.
+  final id = await showAppModal<String>(
     context,
-    MaterialPageRoute(builder: (_) => AddServerPage(ledger: controller)),
+    builder: (_) => ServerForm(controller: controller),
   );
   if (id != null && context.mounted && controller.byId(id) != null) {
     Navigator.push<void>(

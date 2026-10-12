@@ -90,10 +90,27 @@ Future<ProviderRecord?> editProvider(
   builder: (_) => _ProviderNameDialog(ledger: ledger, provider: provider),
 );
 
+/// Asks for the name of a new provider but writes nothing: the draft is saved
+/// together with the server that uses it, so cancelling leaves no provider.
+Future<ProviderRecord?> draftProvider(
+  BuildContext context,
+  LedgerController ledger,
+) => showCupertinoDialog<ProviderRecord>(
+  context: context,
+  builder: (_) => _ProviderNameDialog(ledger: ledger, deferred: true),
+);
+
 class _ProviderNameDialog extends StatefulWidget {
-  const _ProviderNameDialog({required this.ledger, this.provider});
+  const _ProviderNameDialog({
+    required this.ledger,
+    this.provider,
+    this.deferred = false,
+  });
   final LedgerController ledger;
   final ProviderRecord? provider;
+
+  /// Return a draft instead of saving it.
+  final bool deferred;
   @override
   State<_ProviderNameDialog> createState() => _ProviderNameDialogState();
 }
@@ -115,6 +132,15 @@ class _ProviderNameDialogState extends State<_ProviderNameDialog> {
       setState(() => error = LocalizedText((l10n) => l10n.providerNameRange));
       return;
     }
+    if (widget.deferred &&
+        widget.ledger.providers.any(
+          (p) => p.name.toLowerCase() == value.toLowerCase(),
+        )) {
+      setState(
+        () => error = LocalizedText((l10n) => l10n.providerAlreadyExists),
+      );
+      return;
+    }
     final old = widget.provider;
     final provider = ProviderRecord(
       id: old?.id ?? newLocalId(),
@@ -123,6 +149,10 @@ class _ProviderNameDialogState extends State<_ProviderNameDialog> {
       revision: old?.revision ?? 0,
       catalogId: old?.catalogId,
     );
+    if (widget.deferred) {
+      Navigator.pop(context, provider);
+      return;
+    }
     setState(() {
       saving = true;
       error = null;
@@ -295,25 +325,6 @@ Future<String?> openServerForm(
   ),
 );
 
-/// Continues the add flow after the provider was chosen: the package page for
-/// a catalog provider with packages, otherwise straight to the form.
-Future<String?> continueAddServer(
-  BuildContext context,
-  LedgerController ledger,
-  ProviderSelection selection,
-) {
-  final packages = selection.catalog?.packages ?? const [];
-  return packages.isEmpty
-      ? openServerForm(context, ledger, selection)
-      : Navigator.push<String>(
-          context,
-          MaterialPageRoute(
-            builder: (_) =>
-                PackageChoicePage(ledger: ledger, selection: selection),
-          ),
-        );
-}
-
 class ProvidersPage extends StatefulWidget {
   const ProvidersPage({super.key, required this.ledger});
   final LedgerController ledger;
@@ -462,321 +473,6 @@ class _ProvidersPageState extends State<ProvidersPage> {
                 ),
               ],
             ),
-        ],
-      );
-    },
-  );
-}
-
-/// Grouped provider choices: catalog providers, the user's own, "new
-/// provider" and, when allowed, the explicit "no provider" row.
-class _ProviderChoices extends StatelessWidget {
-  const _ProviderChoices({
-    required this.ledger,
-    required this.allowUnspecified,
-    required this.enabled,
-    required this.onSelected,
-    required this.onAdd,
-  });
-  final LedgerController ledger;
-  final bool allowUnspecified, enabled;
-  final ValueChanged<ProviderSelection> onSelected;
-  final VoidCallback onAdd;
-  @override
-  Widget build(BuildContext context) {
-    final l10n = context.l10n;
-    final catalogIds = {for (final c in ledger.catalog.providers) c.id};
-    // A linked provider whose catalog entry vanished is just one of "mine".
-    final mine = [
-      for (final p in ledger.providers)
-        if (p.catalogId == null || !catalogIds.contains(p.catalogId)) p,
-    ];
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        if (ledger.catalog.providers.isNotEmpty)
-          AppSection(
-            header: l10n.r6CatCatalogSection,
-            topSpacing: 8,
-            footer: l10n.r6CatCatalogFooter,
-            children: [
-              for (final catalog in ledger.catalog.providers)
-                () {
-                  final local = ledger.localProviderForCatalog(catalog.id);
-                  return AppRow(
-                    key: ValueKey('choose-catalog-${catalog.id}'),
-                    leading: ProviderAvatar(name: catalog.name),
-                    title: catalog.name,
-                    subtitle: l10n.r6CatPackageCount(catalog.packages.length),
-                    trailing: local == null
-                        ? null
-                        : Icon(
-                            Icons.check_rounded,
-                            size: 20,
-                            color: context.palette.text3,
-                          ),
-                    enabled: enabled,
-                    onTap: enabled
-                        ? () => onSelected(
-                            ProviderSelection(local, catalog: catalog),
-                          )
-                        : null,
-                  );
-                }(),
-            ],
-          ),
-        AppSection(
-          header: ledger.catalog.providers.isEmpty
-              ? null
-              : l10n.r6CatMineSection,
-          topSpacing: ledger.catalog.providers.isEmpty ? 8 : null,
-          footer: ledger.catalog.providers.isEmpty
-              ? l10n.providerUiChooseHelp
-              : null,
-          children: [
-            for (final provider in mine)
-              AppRow(
-                key: ValueKey('choose-provider-${provider.id}'),
-                leading: ProviderAvatar(name: provider.name),
-                title: provider.name,
-                subtitle: _providerSummary(context, ledger, provider),
-                enabled: enabled,
-                onTap: enabled
-                    ? () => onSelected(ProviderSelection(provider))
-                    : null,
-              ),
-            AppRow(
-              key: const ValueKey('choose-provider-add'),
-              icon: Icons.add_rounded,
-              iconColor: AppTints.green,
-              title: l10n.providerUiAdd,
-              enabled: enabled,
-              onTap: enabled ? onAdd : null,
-            ),
-          ],
-        ),
-        if (allowUnspecified)
-          AppSection(
-            children: [
-              AppRow(
-                key: const ValueKey('choose-provider-unspecified'),
-                leading: const ProviderAvatar(name: null),
-                title: l10n.providerUiUnspecified,
-                subtitle: l10n.providerUiUnspecifiedHelp,
-                enabled: enabled,
-                onTap: enabled
-                    ? () => onSelected(const ProviderSelection(null))
-                    : null,
-              ),
-            ],
-          ),
-      ],
-    );
-  }
-}
-
-/// Provider choice used by the server form. Pops a [ProviderSelection].
-class ProviderPickerPage extends StatefulWidget {
-  const ProviderPickerPage({
-    super.key,
-    required this.ledger,
-    this.allowUnspecified = false,
-  });
-  final LedgerController ledger;
-  final bool allowUnspecified;
-  @override
-  State<ProviderPickerPage> createState() => _ProviderPickerPageState();
-}
-
-class _ProviderPickerPageState extends State<ProviderPickerPage> {
-  bool opening = false;
-  @override
-  void initState() {
-    super.initState();
-    widget.ledger.loadCatalog();
-  }
-
-  Future<void> add() async {
-    if (opening || !_canEdit(widget.ledger)) return;
-    setState(() => opening = true);
-    final provider = await editProvider(context, widget.ledger);
-    if (!mounted) return;
-    setState(() => opening = false);
-    if (provider != null && _canEdit(widget.ledger)) {
-      opening = true;
-      Navigator.pop(context, ProviderSelection(provider));
-    }
-  }
-
-  void choose(ProviderSelection value) {
-    if (opening || !_canEdit(widget.ledger)) return;
-    opening = true;
-    Navigator.pop(context, value);
-  }
-
-  @override
-  Widget build(BuildContext context) => ListenableBuilder(
-    listenable: widget.ledger,
-    builder: (context, _) => AppScaffold(
-      title: context.l10n.providerUiChoose,
-      largeTitle: false,
-      children: [
-        _ProviderNotices(widget.ledger),
-        _ProviderChoices(
-          ledger: widget.ledger,
-          allowUnspecified: widget.allowUnspecified,
-          enabled: !opening && _canEdit(widget.ledger),
-          onSelected: choose,
-          onAdd: add,
-        ),
-      ],
-    ),
-  );
-}
-
-/// Add flow, step 1: choose the provider. A catalog provider with packages
-/// continues to [PackageChoicePage], everything else straight to the form.
-class AddServerPage extends StatefulWidget {
-  const AddServerPage({super.key, required this.ledger});
-  final LedgerController ledger;
-  @override
-  State<AddServerPage> createState() => _AddServerPageState();
-}
-
-class _AddServerPageState extends State<AddServerPage> {
-  bool opening = false;
-  bool finishing = false;
-  @override
-  void initState() {
-    super.initState();
-    widget.ledger.loadCatalog();
-  }
-
-  void finish(String id) {
-    if (!mounted || finishing) return;
-    final route = ModalRoute.of(context);
-    setState(() => finishing = true);
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted && route?.isCurrent == true) Navigator.pop(context, id);
-    });
-  }
-
-  Future<void> choose(ProviderSelection selection) async {
-    if (opening || finishing || !_canEdit(widget.ledger)) return;
-    setState(() => opening = true);
-    try {
-      final id = await continueAddServer(context, widget.ledger, selection);
-      if (id != null && mounted) finish(id);
-    } finally {
-      if (mounted) setState(() => opening = false);
-    }
-  }
-
-  Future<void> addProvider() async {
-    if (opening || finishing || !_canEdit(widget.ledger)) return;
-    setState(() => opening = true);
-    final created = await editProvider(context, widget.ledger);
-    if (!mounted) return;
-    setState(() => opening = false);
-    if (created != null) await choose(ProviderSelection(created));
-  }
-
-  @override
-  Widget build(BuildContext context) => ListenableBuilder(
-    listenable: widget.ledger,
-    builder: (context, _) => AppScaffold(
-      title: context.l10n.serverAdd,
-      largeTitle: false,
-      children: [
-        _ProviderNotices(widget.ledger),
-        _ProviderChoices(
-          ledger: widget.ledger,
-          allowUnspecified: true,
-          enabled: !opening && !finishing && _canEdit(widget.ledger),
-          onAdd: addProvider,
-          onSelected: choose,
-        ),
-      ],
-    ),
-  );
-}
-
-/// Add flow, step 2: choose the package of a catalog provider. The default
-/// package is preselected; "No Package" is an explicit choice.
-class PackageChoicePage extends StatefulWidget {
-  const PackageChoicePage({
-    super.key,
-    required this.ledger,
-    required this.selection,
-  });
-  final LedgerController ledger;
-  final ProviderSelection selection;
-  @override
-  State<PackageChoicePage> createState() => _PackageChoicePageState();
-}
-
-class _PackageChoicePageState extends State<PackageChoicePage> {
-  late String? selectedId = widget.selection.catalog?.defaultPackage?.id;
-  bool opening = false;
-
-  Future<void> next() async {
-    if (opening || !_canEdit(widget.ledger)) return;
-    final package = widget.selection.catalog?.package(selectedId ?? '');
-    setState(() => opening = true);
-    try {
-      final id = await openServerForm(
-        context,
-        widget.ledger,
-        widget.selection,
-        package: package,
-      );
-      if (id != null && mounted) Navigator.pop(context, id);
-    } finally {
-      if (mounted) setState(() => opening = false);
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) => ListenableBuilder(
-    listenable: widget.ledger,
-    builder: (context, _) {
-      final l10n = context.l10n;
-      final p = context.palette;
-      final catalog = widget.selection.catalog!;
-      Widget? check(bool on) =>
-          on ? Icon(Icons.check_rounded, size: 22, color: p.primary) : null;
-      return AppScaffold(
-        title: l10n.r6CatChoosePackage,
-        largeTitle: false,
-        bottomBar: AppButton(
-          key: const ValueKey('package-continue'),
-          label: l10n.r6CatContinue,
-          onPressed: opening || !_canEdit(widget.ledger) ? null : next,
-        ),
-        children: [
-          _ProviderNotices(widget.ledger),
-          AppSection(
-            header: catalog.name,
-            topSpacing: 8,
-            footer: l10n.r6CatPackageFooter,
-            children: [
-              for (final package in catalog.packages)
-                _packageRow(
-                  context,
-                  key: ValueKey('choose-package-${package.id}'),
-                  package: package,
-                  trailing: check(selectedId == package.id),
-                  onTap: () => setState(() => selectedId = package.id),
-                ),
-              AppRow(
-                key: const ValueKey('choose-package-none'),
-                title: l10n.r6CatNoPackage,
-                subtitle: l10n.r6CatNoPackageHelp,
-                trailing: check(selectedId == null),
-                onTap: () => setState(() => selectedId = null),
-              ),
-            ],
-          ),
         ],
       );
     },
@@ -1018,7 +714,7 @@ class _ProviderDetailsPageState extends State<ProviderDetailsPage> {
                 enabled: editable,
                 onTap: editable
                     ? () => open(() async {
-                        final id = await continueAddServer(
+                        final id = await openServerForm(
                           context,
                           ledger,
                           selection,

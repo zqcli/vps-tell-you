@@ -1812,7 +1812,6 @@
   "serverDueDate": "到期日期",
   "serverOptionalStart": "服务开始日（选填）",
   "serverOptionalDue": "服务到期日（选填）",
-  "serverManualAdd": "手动添加",
   "serverEditTitle": "编辑服务器",
   "serverFormHelp": "仅保存在本机，不会修改远端。",
   "serverBasicData": "基本资料",
@@ -3427,10 +3426,6 @@
   "@providerUiUnspecified": {
     "description": "Provider navigation and ownership UI."
   },
-  "providerUiUnspecifiedHelp": "之后可在编辑服务器时指定提供商。",
-  "@providerUiUnspecifiedHelp": {
-    "description": "Provider navigation and ownership UI."
-  },
   "providerUiHierarchyHelp": "提供商是服务器的业务归属；目录提供商还会列出自己的套餐。",
   "@providerUiHierarchyHelp": {
     "description": "Provider navigation and ownership UI."
@@ -3465,36 +3460,16 @@
       }
     }
   },
-  "r6CatNoPackageList": "无套餐列表",
-  "@r6CatNoPackageList": {
-    "description": "Provider catalog and packages."
-  },
   "r6CatAdded": "已添加",
   "@r6CatAdded": {
-    "description": "Provider catalog and packages."
-  },
-  "r6CatChoosePackage": "选择套餐",
-  "@r6CatChoosePackage": {
-    "description": "Provider catalog and packages."
-  },
-  "r6CatPackageFooter": "套餐会预填硬件与费用，下一步仍可全部修改。",
-  "@r6CatPackageFooter": {
     "description": "Provider catalog and packages."
   },
   "r6CatNoPackage": "不选套餐",
   "@r6CatNoPackage": {
     "description": "Provider catalog and packages."
   },
-  "r6CatNoPackageHelp": "自行填写硬件与费用。",
-  "@r6CatNoPackageHelp": {
-    "description": "Provider catalog and packages."
-  },
   "r6CatDefaultPill": "默认",
   "@r6CatDefaultPill": {
-    "description": "Provider catalog and packages."
-  },
-  "r6CatContinue": "继续",
-  "@r6CatContinue": {
     "description": "Provider catalog and packages."
   },
   "r6CatPackageDetails": "套餐",
@@ -3665,14 +3640,6 @@
         "type": "int"
       }
     }
-  },
-  "providerUiChoose": "选择提供商",
-  "@providerUiChoose": {
-    "description": "Provider navigation and ownership UI."
-  },
-  "providerUiChooseHelp": "选择购买服务器的提供商。",
-  "@providerUiChooseHelp": {
-    "description": "Provider navigation and ownership UI."
   },
   "providerUiDevices": "名下服务器",
   "@providerUiDevices": {

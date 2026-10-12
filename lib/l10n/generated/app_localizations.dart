@@ -4961,12 +4961,6 @@ abstract class AppLocalizations {
   /// **'服务到期日（选填）'**
   String get serverOptionalDue;
 
-  /// No description provided for @serverManualAdd.
-  ///
-  /// In zh, this message translates to:
-  /// **'手动添加'**
-  String get serverManualAdd;
-
   /// No description provided for @serverEditTitle.
   ///
   /// In zh, this message translates to:
@@ -8706,12 +8700,6 @@ abstract class AppLocalizations {
   /// Provider navigation and ownership UI.
   ///
   /// In zh, this message translates to:
-  /// **'之后可在编辑服务器时指定提供商。'**
-  String get providerUiUnspecifiedHelp;
-
-  /// Provider navigation and ownership UI.
-  ///
-  /// In zh, this message translates to:
   /// **'提供商是服务器的业务归属；目录提供商还会列出自己的套餐。'**
   String get providerUiHierarchyHelp;
 
@@ -8748,26 +8736,8 @@ abstract class AppLocalizations {
   /// Provider catalog and packages.
   ///
   /// In zh, this message translates to:
-  /// **'无套餐列表'**
-  String get r6CatNoPackageList;
-
-  /// Provider catalog and packages.
-  ///
-  /// In zh, this message translates to:
   /// **'已添加'**
   String get r6CatAdded;
-
-  /// Provider catalog and packages.
-  ///
-  /// In zh, this message translates to:
-  /// **'选择套餐'**
-  String get r6CatChoosePackage;
-
-  /// Provider catalog and packages.
-  ///
-  /// In zh, this message translates to:
-  /// **'套餐会预填硬件与费用，下一步仍可全部修改。'**
-  String get r6CatPackageFooter;
 
   /// Provider catalog and packages.
   ///
@@ -8778,20 +8748,8 @@ abstract class AppLocalizations {
   /// Provider catalog and packages.
   ///
   /// In zh, this message translates to:
-  /// **'自行填写硬件与费用。'**
-  String get r6CatNoPackageHelp;
-
-  /// Provider catalog and packages.
-  ///
-  /// In zh, this message translates to:
   /// **'默认'**
   String get r6CatDefaultPill;
-
-  /// Provider catalog and packages.
-  ///
-  /// In zh, this message translates to:
-  /// **'继续'**
-  String get r6CatContinue;
 
   /// Provider catalog and packages.
   ///
@@ -9014,18 +8972,6 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'{count} 台服务器尚未指定提供商。'**
   String providerUiUnspecifiedCount(int count);
-
-  /// Provider navigation and ownership UI.
-  ///
-  /// In zh, this message translates to:
-  /// **'选择提供商'**
-  String get providerUiChoose;
-
-  /// Provider navigation and ownership UI.
-  ///
-  /// In zh, this message translates to:
-  /// **'选择购买服务器的提供商。'**
-  String get providerUiChooseHelp;
 
   /// Provider navigation and ownership UI.
   ///

@@ -3154,9 +3154,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get serverOptionalDue => 'Service due date (optional)';
 
   @override
-  String get serverManualAdd => 'Add manually';
-
-  @override
   String get serverEditTitle => 'Edit Server';
 
   @override
@@ -5342,10 +5339,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get providerUiUnspecified => 'Unspecified provider';
 
   @override
-  String get providerUiUnspecifiedHelp =>
-      'You can assign a provider later by editing the server.';
-
-  @override
   String get providerUiHierarchyHelp =>
       'A provider is who sells you servers. A catalog provider also lists its packages.';
 
@@ -5383,29 +5376,13 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get r6CatNoPackageList => 'No package list';
-
-  @override
   String get r6CatAdded => 'Added';
-
-  @override
-  String get r6CatChoosePackage => 'Choose a Package';
-
-  @override
-  String get r6CatPackageFooter =>
-      'A package fills in hardware and price. You can still edit everything in the next step.';
 
   @override
   String get r6CatNoPackage => 'No Package';
 
   @override
-  String get r6CatNoPackageHelp => 'Fill in the hardware and price yourself.';
-
-  @override
   String get r6CatDefaultPill => 'Default';
-
-  @override
-  String get r6CatContinue => 'Continue';
 
   @override
   String get r6CatPackageDetails => 'Package';
@@ -5534,12 +5511,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String providerUiUnspecifiedCount(int count) {
     return '$count servers have no provider assigned.';
   }
-
-  @override
-  String get providerUiChoose => 'Choose a Provider';
-
-  @override
-  String get providerUiChooseHelp => 'Choose the provider you buy from.';
 
   @override
   String get providerUiDevices => 'Provider servers';

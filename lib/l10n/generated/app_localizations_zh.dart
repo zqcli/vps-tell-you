@@ -2744,9 +2744,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get serverOptionalDue => '服务到期日（选填）';
 
   @override
-  String get serverManualAdd => '手动添加';
-
-  @override
   String get serverEditTitle => '编辑服务器';
 
   @override
@@ -4736,9 +4733,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get providerUiUnspecified => '未指定提供商';
 
   @override
-  String get providerUiUnspecifiedHelp => '之后可在编辑服务器时指定提供商。';
-
-  @override
   String get providerUiHierarchyHelp => '提供商是服务器的业务归属；目录提供商还会列出自己的套餐。';
 
   @override
@@ -4761,28 +4755,13 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String get r6CatNoPackageList => '无套餐列表';
-
-  @override
   String get r6CatAdded => '已添加';
-
-  @override
-  String get r6CatChoosePackage => '选择套餐';
-
-  @override
-  String get r6CatPackageFooter => '套餐会预填硬件与费用，下一步仍可全部修改。';
 
   @override
   String get r6CatNoPackage => '不选套餐';
 
   @override
-  String get r6CatNoPackageHelp => '自行填写硬件与费用。';
-
-  @override
   String get r6CatDefaultPill => '默认';
-
-  @override
-  String get r6CatContinue => '继续';
 
   @override
   String get r6CatPackageDetails => '套餐';
@@ -4900,12 +4879,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String providerUiUnspecifiedCount(int count) {
     return '$count 台服务器尚未指定提供商。';
   }
-
-  @override
-  String get providerUiChoose => '选择提供商';
-
-  @override
-  String get providerUiChooseHelp => '选择购买服务器的提供商。';
 
   @override
   String get providerUiDevices => '名下服务器';

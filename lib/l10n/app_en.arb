@@ -1508,7 +1508,6 @@
   "serverDueDate": "Due date",
   "serverOptionalStart": "Service start date (optional)",
   "serverOptionalDue": "Service due date (optional)",
-  "serverManualAdd": "Add manually",
   "serverEditTitle": "Edit Server",
   "serverFormHelp": "Saved on this device only; remote servers are unchanged.",
   "serverBasicData": "Basic details",
@@ -2959,10 +2958,6 @@
   "@providerUiUnspecified": {
     "description": "Provider navigation and ownership UI."
   },
-  "providerUiUnspecifiedHelp": "You can assign a provider later by editing the server.",
-  "@providerUiUnspecifiedHelp": {
-    "description": "Provider navigation and ownership UI."
-  },
   "providerUiHierarchyHelp": "A provider is who sells you servers. A catalog provider also lists its packages.",
   "@providerUiHierarchyHelp": {
     "description": "Provider navigation and ownership UI."
@@ -2997,36 +2992,16 @@
       }
     }
   },
-  "r6CatNoPackageList": "No package list",
-  "@r6CatNoPackageList": {
-    "description": "Provider catalog and packages."
-  },
   "r6CatAdded": "Added",
   "@r6CatAdded": {
-    "description": "Provider catalog and packages."
-  },
-  "r6CatChoosePackage": "Choose a Package",
-  "@r6CatChoosePackage": {
-    "description": "Provider catalog and packages."
-  },
-  "r6CatPackageFooter": "A package fills in hardware and price. You can still edit everything in the next step.",
-  "@r6CatPackageFooter": {
     "description": "Provider catalog and packages."
   },
   "r6CatNoPackage": "No Package",
   "@r6CatNoPackage": {
     "description": "Provider catalog and packages."
   },
-  "r6CatNoPackageHelp": "Fill in the hardware and price yourself.",
-  "@r6CatNoPackageHelp": {
-    "description": "Provider catalog and packages."
-  },
   "r6CatDefaultPill": "Default",
   "@r6CatDefaultPill": {
-    "description": "Provider catalog and packages."
-  },
-  "r6CatContinue": "Continue",
-  "@r6CatContinue": {
     "description": "Provider catalog and packages."
   },
   "r6CatPackageDetails": "Package",
@@ -3197,14 +3172,6 @@
         "type": "int"
       }
     }
-  },
-  "providerUiChoose": "Choose a Provider",
-  "@providerUiChoose": {
-    "description": "Provider navigation and ownership UI."
-  },
-  "providerUiChooseHelp": "Choose the provider you buy from.",
-  "@providerUiChooseHelp": {
-    "description": "Provider navigation and ownership UI."
   },
   "providerUiDevices": "Provider servers",
   "@providerUiDevices": {

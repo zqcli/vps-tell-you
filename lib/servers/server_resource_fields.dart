@@ -196,6 +196,17 @@ class ServerResourceFieldsState extends State<ServerResourceFields> {
 
   String _text(String key) => _fields[key]!.text.trim();
 
+  /// Any capacity typed or chosen (addresses do not count): a package would
+  /// overwrite these.
+  bool get hasHardwareInput =>
+      _unlimited ||
+      [
+        'vcpu',
+        'ramBytes',
+        'diskBytes',
+        'trafficBytes',
+      ].any((key) => _fields[key]!.text.trim().isNotEmpty);
+
   static String _canonicalIpv6(String text) {
     final address = NetAddress.tryParse(text, allowBrackets: false);
     return address != null && address.isIpv6 && address.zone == null
