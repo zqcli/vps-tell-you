@@ -299,8 +299,8 @@ class CatalogSnapshot {
   }) : providers = List.unmodifiable(providers);
 
   static const schemaVersion = 1;
-  static const maxBytes = 1024 * 1024;
-  static const maxProviders = 200;
+  static const maxBytes = 8 * 1024 * 1024;
+  static const maxProviders = 1000;
   static const maxPackages = 200;
 
   final int catalogVersion;

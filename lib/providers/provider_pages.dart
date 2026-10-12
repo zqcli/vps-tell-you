@@ -267,6 +267,9 @@ AppRow packageRow(
   Widget? trailing,
   bool chevron = false,
   int useCount = 0,
+
+  /// Extra third line (e.g. "2 servers"); wraps instead of squeezing the row.
+  String? note,
   VoidCallback? onTap,
 }) {
   final l10n = context.l10n;
@@ -307,6 +310,14 @@ AppRow packageRow(
               child: Text(
                 packageSummaryLine(l10n, package),
                 style: TextStyle(fontSize: 13, height: 1.35, color: p.text2),
+              ),
+            ),
+          if (note != null)
+            Padding(
+              padding: const EdgeInsets.only(top: 2),
+              child: Text(
+                note,
+                style: TextStyle(fontSize: 13, height: 1.35, color: p.text3),
               ),
             ),
         ],
@@ -538,13 +549,7 @@ class _ProviderDetailsPageState extends State<ProviderDetailsPage> {
                     key: ValueKey('provider-package-${package.id}'),
                     package: package,
                     chevron: true,
-                    trailing: Text(
-                      l10n.r6CatProviderSummary(linked.length),
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: context.palette.text2,
-                      ),
-                    ),
+                    note: l10n.r6CatProviderSummary(linked.length),
                     onTap: opening
                         ? null
                         : () => open(() async {

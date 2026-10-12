@@ -89,6 +89,11 @@ void main() {
     await tester.pumpAndSettle();
   }
 
+  /// The list of the topmost sheet (the picker), not the form behind it.
+  Finder topScrollable() => find
+      .byWidgetPredicate((w) => w is Scrollable && w.axis == Axis.vertical)
+      .last;
+
   Finder verticalScrollable() => find
       .byWidgetPredicate((w) => w is Scrollable && w.axis == Axis.vertical)
       .first;
@@ -160,21 +165,26 @@ void main() {
   Future<void> pick(WidgetTester tester, String row, String item) async {
     await tap(tester, row);
     final target = find.byKey(ValueKey(item));
-    expect(target, findsOneWidget, reason: '$item in the open menu');
-    await tester.ensureVisible(target); // a tall menu scrolls inside itself
+    await tester.scrollUntilVisible(target, 200, scrollable: topScrollable());
+    expect(target, findsOneWidget, reason: '$item in the open picker');
     await tester.pumpAndSettle();
     await tester.tap(target);
     await tester.pumpAndSettle();
   }
 
   String? rowValue(WidgetTester tester, String key) =>
-      tester.widget<AppDropdownRow<String>>(find.byKey(ValueKey(key))).value;
+      tester.widget<AppFormRow>(find.byKey(ValueKey(key))).value;
+
+  /// Closes the open picker sheet without choosing.
+  Future<void> cancelPicker(WidgetTester tester) async {
+    await tester.binding.handlePopRoute();
+    await tester.pumpAndSettle();
+  }
 
   Future<void> newProvider(WidgetTester tester, String name) async {
     await tap(tester, 'form-provider');
-    final item = find.byKey(const ValueKey('form-provider-new'));
-    await tester.ensureVisible(item);
-    await tester.pumpAndSettle();
+    final item = find.byKey(const ValueKey('picker-provider-new'));
+    await tester.scrollUntilVisible(item, 200, scrollable: topScrollable());
     await tester.tap(item);
     await tester.pumpAndSettle();
     await tester.enterText(find.byKey(const ValueKey('provider-name')), name);
@@ -183,7 +193,7 @@ void main() {
   }
 
   group('add flow', () {
-    testWidgets('adding opens the form directly; provider is a dropdown row', (
+    testWidgets('adding opens the form directly; provider is a picker row', (
       tester,
     ) async {
       await startAdd(tester);
@@ -193,28 +203,49 @@ void main() {
       // No catalog package list without a catalog provider.
       expect(find.byKey(const ValueKey('form-package')), findsNothing);
       expect(find.byKey(const ValueKey('field-host')), findsNothing);
-      // Browsing the dropdown stores nothing.
+      // Browsing the picker stores nothing.
       await tap(tester, 'form-provider');
       expect(await store.providers(), isEmpty);
     });
 
-    testWidgets('the dropdown separates mine from the catalog', (tester) async {
+    testWidgets('the provider picker separates in-use, mine and the catalog', (
+      tester,
+    ) async {
       await store.saveProvider(
         ProviderRecord(id: 'mine', name: 'My Own Host', createdAt: now),
+        isNew: true,
+      );
+      await store.saveProvider(
+        ProviderRecord(id: 'busy', name: 'Busy Host', createdAt: now),
+        isNew: true,
+      );
+      await store.saveServer(
+        ServerRecord(
+          id: 'used',
+          name: 'Uses Busy',
+          vendor: '',
+          providerId: 'busy',
+          createdAt: now,
+          updatedAt: now,
+        ),
         isNew: true,
       );
       await ledger.refresh();
       await startAdd(tester);
       await tap(tester, 'form-provider');
+      expect(find.text('Choose a Provider'), findsOneWidget);
       double top(Finder f) => tester.getTopLeft(f).dy;
       final order = [
-        find.byKey(const ValueKey('form-provider-none')),
+        find.byKey(const ValueKey('picker-provider-none')),
+        find.text('In use'),
+        find.byKey(const ValueKey('picker-provider-busy')),
         find.text('My providers'),
-        find.byKey(const ValueKey('form-provider-mine')),
+        find.byKey(const ValueKey('picker-provider-mine')),
         find.text('Catalog providers'),
-        find.byKey(const ValueKey('form-provider-catalog-fixture-cloud')),
-        find.byKey(const ValueKey('form-provider-catalog-empty-host')),
-        find.byKey(const ValueKey('form-provider-new')),
+        // Sorted by name: Empty Host, Fixture Cloud.
+        find.byKey(const ValueKey('picker-catalog-empty-host')),
+        find.byKey(const ValueKey('picker-catalog-fixture-cloud')),
+        find.byKey(const ValueKey('picker-provider-new')),
       ];
       for (final f in order) {
         expect(f, findsOneWidget);
@@ -222,38 +253,99 @@ void main() {
       for (var i = 1; i < order.length; i++) {
         expect(top(order[i]), greaterThan(top(order[i - 1])));
       }
-      // Catalog rows show how many packages they bring; "None" is selected.
+      // Rows tell what is behind them; "None" is the current choice.
+      String subtitleOf(String key) => tester
+          .widgetList<Text>(
+            find.descendant(
+              of: find.byKey(ValueKey(key)),
+              matching: find.byType(Text),
+            ),
+          )
+          .map((t) => t.data)
+          .join('|');
       expect(
-        find.descendant(
-          of: find.byKey(const ValueKey('form-provider-catalog-fixture-cloud')),
-          matching: find.text('3 packages'),
-        ),
-        findsOneWidget,
+        subtitleOf('picker-catalog-fixture-cloud'),
+        contains('3 packages'),
       );
+      expect(subtitleOf('picker-provider-busy'), contains('1 server'));
       expect(
         find.descendant(
-          of: find.byKey(const ValueKey('form-provider-none')),
+          of: find.byKey(const ValueKey('picker-provider-none')),
           matching: find.byIcon(Icons.check_rounded),
         ),
         findsOneWidget,
       );
       expect(find.text('New Provider…'), findsOneWidget);
-      // Tapping outside closes it without choosing.
-      await tester.tapAt(const Offset(5, 880));
-      await tester.pumpAndSettle();
-      expect(find.byKey(const ValueKey('form-provider-new')), findsNothing);
+      // Cancelling leaves the selection alone.
+      await cancelPicker(tester);
+      expect(find.byKey(const ValueKey('picker-provider-new')), findsNothing);
       expect(rowValue(tester, 'form-provider'), isNull);
+    });
+
+    testWidgets('provider search narrows the list and offers the typed name', (
+      tester,
+    ) async {
+      await startAdd(tester);
+      await tap(tester, 'form-provider');
+      await tester.enterText(find.byKey(const ValueKey('list-search')), 'fixt');
+      await tester.pumpAndSettle();
+      expect(
+        find.byKey(const ValueKey('picker-catalog-fixture-cloud')),
+        findsOneWidget,
+      );
+      expect(
+        find.byKey(const ValueKey('picker-catalog-empty-host')),
+        findsNothing,
+      );
+      expect(find.byKey(const ValueKey('picker-provider-none')), findsNothing);
+      // Not an exact name: the text can become a new provider.
+      expect(find.text('New Provider “fixt”'), findsOneWidget);
+      // An exact (case-insensitive) name does not offer a duplicate.
+      await tester.enterText(
+        find.byKey(const ValueKey('list-search')),
+        'FIXTURE cloud',
+      );
+      await tester.pumpAndSettle();
+      expect(
+        find.byKey(const ValueKey('picker-provider-new-named')),
+        findsNothing,
+      );
+      await tester.enterText(find.byKey(const ValueKey('list-search')), 'zzz');
+      await tester.pumpAndSettle();
+      expect(
+        find.byKey(const ValueKey('picker-provider-new-named')),
+        findsOneWidget,
+      );
+      await tester.tap(find.byKey(const ValueKey('picker-provider-new-named')));
+      await tester.pumpAndSettle();
+      expect(rowValue(tester, 'form-provider'), 'zzz');
+      expect(await store.providers(), isEmpty, reason: 'created on save only');
+      await fill(tester, 'field-name', 'Named by search');
+      await save(tester);
+      expect((await store.providers()).single.name, 'zzz');
+      expect(
+        (await store.servers()).single.providerId,
+        (await store.providers()).single.id,
+      );
+    });
+
+    testWidgets('a no-match search says so', (tester) async {
+      await startAdd(tester);
+      await tap(tester, 'form-provider');
+      await tester.enterText(
+        find.byKey(const ValueKey('list-search')),
+        'x' * 81,
+      );
+      await tester.pumpAndSettle();
+      expect(find.byKey(const ValueKey('picker-no-match')), findsOneWidget);
+      expect(find.text('No matches.'), findsOneWidget);
     });
 
     testWidgets(
       'catalog provider: default package is preselected and prefills the form',
       (tester) async {
         await startAdd(tester);
-        await pick(
-          tester,
-          'form-provider',
-          'form-provider-catalog-fixture-cloud',
-        );
+        await pick(tester, 'form-provider', 'picker-catalog-fixture-cloud');
         expect(rowValue(tester, 'form-provider'), 'Fixture Cloud');
         expect(rowValue(tester, 'form-package'), 'Small');
         expect(fieldText(tester, 'field-amount'), '12.00');
@@ -267,20 +359,19 @@ void main() {
         // price and hardware; the default one is checked.
         await tap(tester, 'form-package');
         for (final id in ['none', 'fc-nano', 'fc-small', 'fc-large']) {
-          expect(find.byKey(ValueKey('form-package-$id')), findsOneWidget);
+          expect(find.byKey(ValueKey('picker-package-$id')), findsOneWidget);
         }
         expect(find.text('No Package'), findsOneWidget);
         expect(find.textContaining('12.00 USD'), findsWidgets);
         expect(find.textContaining('2 vCPU'), findsWidgets);
         expect(
           find.descendant(
-            of: find.byKey(const ValueKey('form-package-fc-small')),
+            of: find.byKey(const ValueKey('picker-package-fc-small')),
             matching: find.byIcon(Icons.check_rounded),
           ),
           findsOneWidget,
         );
-        await tester.tapAt(const Offset(5, 880));
-        await tester.pumpAndSettle();
+        await cancelPicker(tester);
 
         await fill(tester, 'field-name', 'Prefilled');
         await save(tester);
@@ -300,12 +391,8 @@ void main() {
 
     testWidgets('another package prefills its own values', (tester) async {
       await startAdd(tester);
-      await pick(
-        tester,
-        'form-provider',
-        'form-provider-catalog-fixture-cloud',
-      );
-      await pick(tester, 'form-package', 'form-package-fc-large');
+      await pick(tester, 'form-provider', 'picker-catalog-fixture-cloud');
+      await pick(tester, 'form-package', 'picker-package-fc-large');
       expect(rowValue(tester, 'form-package'), 'Large');
       expect(fieldText(tester, 'field-amount'), '96.00');
       await fill(tester, 'field-name', 'Large');
@@ -321,12 +408,8 @@ void main() {
       tester,
     ) async {
       await startAdd(tester);
-      await pick(
-        tester,
-        'form-provider',
-        'form-provider-catalog-fixture-cloud',
-      );
-      await pick(tester, 'form-package', 'form-package-none');
+      await pick(tester, 'form-provider', 'picker-catalog-fixture-cloud');
+      await pick(tester, 'form-package', 'picker-package-none');
       expect(rowValue(tester, 'form-package'), isNull);
       expect(fieldText(tester, 'field-amount'), '12.00');
       await fill(tester, 'field-name', 'No package');
@@ -342,11 +425,7 @@ void main() {
       tester,
     ) async {
       await startAdd(tester);
-      await pick(
-        tester,
-        'form-provider',
-        'form-provider-catalog-fixture-cloud',
-      );
+      await pick(tester, 'form-provider', 'picker-catalog-fixture-cloud');
       await newProvider(tester, 'Never Saved');
       expect(rowValue(tester, 'form-provider'), 'Never Saved');
       await tester.tap(find.text('Cancel'));
@@ -360,7 +439,7 @@ void main() {
       tester,
     ) async {
       await startAdd(tester);
-      await pick(tester, 'form-provider', 'form-provider-catalog-empty-host');
+      await pick(tester, 'form-provider', 'picker-catalog-empty-host');
       expect(find.byKey(const ValueKey('form-package')), findsNothing);
       expect(find.byKey(const ValueKey('field-amount')), findsNothing);
       await fill(tester, 'field-name', 'Plain');
@@ -381,13 +460,12 @@ void main() {
       await tap(tester, 'form-provider');
       expect(
         find.descendant(
-          of: find.byKey(const ValueKey('form-provider-draft')),
+          of: find.byKey(const ValueKey('picker-provider-draft')),
           matching: find.byIcon(Icons.check_rounded),
         ),
         findsOneWidget,
       );
-      await tester.tapAt(const Offset(5, 880));
-      await tester.pumpAndSettle();
+      await cancelPicker(tester);
       await fill(tester, 'field-name', 'Custom');
       await save(tester);
       final provider = (await store.providers()).single;
@@ -406,7 +484,7 @@ void main() {
       await ledger.refresh();
       await startAdd(tester);
       await tap(tester, 'form-provider');
-      await tester.tap(find.byKey(const ValueKey('form-provider-new')));
+      await tester.tap(find.byKey(const ValueKey('picker-provider-new')));
       await tester.pumpAndSettle();
       await tester.enterText(find.byKey(const ValueKey('provider-name')), '  ');
       await tester.tap(find.byKey(const ValueKey('provider-save')));
@@ -436,11 +514,10 @@ void main() {
       await ledger.refresh();
       await startAdd(tester);
       await newProvider(tester, 'Draft');
-      await pick(tester, 'form-provider', 'form-provider-mine');
+      await pick(tester, 'form-provider', 'picker-provider-mine');
       await tap(tester, 'form-provider');
-      expect(find.byKey(const ValueKey('form-provider-draft')), findsNothing);
-      await tester.tapAt(const Offset(5, 880));
-      await tester.pumpAndSettle();
+      expect(find.byKey(const ValueKey('picker-provider-draft')), findsNothing);
+      await cancelPicker(tester);
       await fill(tester, 'field-name', 'Uses Mine');
       await save(tester);
       expect((await store.providers()).single.id, 'mine');
@@ -465,12 +542,12 @@ void main() {
       await startAdd(tester);
       await tap(tester, 'form-provider');
       expect(
-        find.byKey(const ValueKey('form-provider-catalog-fixture-cloud')),
+        find.byKey(const ValueKey('picker-catalog-fixture-cloud')),
         findsNothing,
         reason: 'only providers not added yet are listed under the catalog',
       );
       final local = (await store.providers()).single;
-      final row = find.byKey(ValueKey('form-provider-${local.id}'));
+      final row = find.byKey(ValueKey('picker-provider-${local.id}'));
       expect(
         find.descendant(of: row, matching: find.text('3 packages')),
         findsOneWidget,
@@ -503,10 +580,10 @@ void main() {
       await tap(tester, 'form-provider');
       expect(find.text('Catalog providers'), findsNothing);
       expect(
-        find.byKey(const ValueKey('form-provider-catalog-fixture-cloud')),
+        find.byKey(const ValueKey('picker-catalog-fixture-cloud')),
         findsNothing,
       );
-      await tester.tap(find.byKey(const ValueKey('form-provider-mine')));
+      await tester.tap(find.byKey(const ValueKey('picker-provider-mine')));
       await tester.pumpAndSettle();
       await fill(tester, 'field-name', 'Offline');
       await save(tester);
@@ -518,11 +595,7 @@ void main() {
     ) async {
       await startAdd(tester);
       await setVcpu(tester, 3);
-      await pick(
-        tester,
-        'form-provider',
-        'form-provider-catalog-fixture-cloud',
-      );
+      await pick(tester, 'form-provider', 'picker-catalog-fixture-cloud');
       expect(find.text('Replace hardware and price?'), findsOneWidget);
       // Declining keeps the provider but neither the package nor its values.
       await tester.tap(find.text('Cancel').last);
@@ -532,7 +605,7 @@ void main() {
       expect(vcpuText(tester), '3');
       expect(find.byKey(const ValueKey('field-amount')), findsNothing);
       // Picking the package explicitly replaces them without asking again.
-      await pick(tester, 'form-package', 'form-package-fc-small');
+      await pick(tester, 'form-package', 'picker-package-fc-small');
       expect(vcpuText(tester), '2');
       expect(fieldText(tester, 'field-amount'), '12.00');
     });
@@ -546,13 +619,9 @@ void main() {
       );
       await ledger.refresh();
       await startAdd(tester);
-      await pick(
-        tester,
-        'form-provider',
-        'form-provider-catalog-fixture-cloud',
-      );
+      await pick(tester, 'form-provider', 'picker-catalog-fixture-cloud');
       expect(rowValue(tester, 'form-package'), 'Small');
-      await pick(tester, 'form-provider', 'form-provider-mine');
+      await pick(tester, 'form-provider', 'picker-provider-mine');
       // A package belongs to its provider: row and link are gone ...
       expect(find.byKey(const ValueKey('form-package')), findsNothing);
       await fill(tester, 'field-name', 'Moved');
@@ -590,7 +659,7 @@ void main() {
         await ledger.refresh();
         await openEditForm(tester, 's1');
         expect(rowValue(tester, 'form-package'), 'Small');
-        await pick(tester, 'form-package', 'form-package-fc-nano');
+        await pick(tester, 'form-package', 'picker-package-fc-nano');
         expect(find.text('Replace hardware and price?'), findsOneWidget);
         await tester.tap(find.text('Replace Values'));
         await tester.pumpAndSettle();
@@ -603,7 +672,7 @@ void main() {
 
         // Clearing the package keeps every value.
         await openEditForm(tester, 's1');
-        await pick(tester, 'form-package', 'form-package-none');
+        await pick(tester, 'form-package', 'picker-package-none');
         await save(tester);
         final cleared = (await store.servers()).single;
         expect(cleared.packageId, isNull);
@@ -635,7 +704,7 @@ void main() {
         );
         await ledger.refresh();
         await openEditForm(tester, 's1');
-        await pick(tester, 'form-provider', 'form-provider-mine');
+        await pick(tester, 'form-provider', 'picker-provider-mine');
         // The package belongs to the old provider: its row goes away, and an
         // existing server never gets a default package of the new one.
         expect(find.byKey(const ValueKey('form-package')), findsNothing);
@@ -673,59 +742,191 @@ void main() {
     }
 
     testWidgets(
-      'providers page lists mine and the catalog providers not yet added',
+      'providers page lists only providers with servers; All Providers has the rest',
       (tester) async {
         await store.saveProvider(
           ProviderRecord(id: 'mine', name: 'Mine', createdAt: now),
           isNew: true,
         );
-        await ledger.refresh();
+        await addPackaged('a'); // Fixture Cloud, 1 server, 1 package in use
         await mount(tester, ProvidersPage(ledger: ledger));
-        expect(find.byKey(const ValueKey('provider-mine')), findsOneWidget);
+        // Only the provider that has a server.
+        expect(find.byKey(const ValueKey('provider-mine')), findsNothing);
+        final used = find.byKey(
+          ValueKey(
+            'provider-${ledger.localProviderForCatalog('fixture-cloud')!.id}',
+          ),
+        );
+        expect(used, findsOneWidget);
         expect(
-          find.byKey(const ValueKey('catalog-provider-fixture-cloud')),
+          find.descendant(
+            of: used,
+            matching: find.text('1 server · 1 package in use'),
+          ),
+          findsOneWidget,
+        );
+        // Mine + Fixture Cloud + Empty Host (catalog, not added).
+        expect(
+          find.descendant(
+            of: find.byKey(const ValueKey('providers-all')),
+            matching: find.text('3'),
+          ),
           findsOneWidget,
         );
         expect(
           find.byKey(const ValueKey('catalog-provider-empty-host')),
-          findsOneWidget,
+          findsNothing,
         );
-        expect(find.text('3 packages'), findsOneWidget);
 
-        // The catalog provider page shows its packages and offers adding it.
-        await tap(tester, 'catalog-provider-fixture-cloud');
+        await tap(tester, 'providers-all');
+        expect(find.byType(AllProvidersPage), findsOneWidget);
+        expect(find.byKey(const ValueKey('provider-mine')), findsOneWidget);
         expect(
-          find.byKey(const ValueKey('provider-package-fc-small')),
+          find.byKey(const ValueKey('catalog-provider-empty-host')),
           findsOneWidget,
         );
         expect(
-          find.descendant(
-            of: find.byKey(const ValueKey('provider-package-fc-small')),
-            matching: find.text('Default'),
-          ),
-          findsOneWidget,
+          find.byKey(const ValueKey('catalog-provider-fixture-cloud')),
+          findsNothing,
+          reason: 'already added, so it is one of mine',
         );
-        expect(await store.providers(), hasLength(1));
-        await tap(tester, 'provider-add-catalog');
+
+        // A catalog provider page offers adding it, and lists packages behind
+        // "All Packages" instead of inline.
+        await tap(tester, 'catalog-provider-empty-host');
+        expect(
+          find.byKey(const ValueKey('provider-all-packages')),
+          findsNothing,
+        );
         expect(await store.providers(), hasLength(2));
+        await tap(tester, 'provider-add-catalog');
+        expect(await store.providers(), hasLength(3));
         expect(
           find.byKey(const ValueKey('provider-add-catalog')),
           findsNothing,
-        );
-        expect(
-          find.byKey(const ValueKey('provider-package-fc-small')),
-          findsOneWidget,
         );
         await tester.pageBack();
         await tester.pumpAndSettle();
         // Added: moved from the catalog section into "my providers".
         expect(
-          find.byKey(const ValueKey('catalog-provider-fixture-cloud')),
+          find.byKey(const ValueKey('catalog-provider-empty-host')),
           findsNothing,
         );
-        expect(find.text('Fixture Cloud'), findsOneWidget);
+        expect(find.text('Empty Host'), findsOneWidget);
       },
     );
+
+    testWidgets(
+      'provider page: packages in use, no-package servers, all packages',
+      (tester) async {
+        await addPackaged('a'); // fc-small
+        await addPackaged('b'); // fc-small again
+        await addPackaged('c', packageId: 'fc-large');
+        await store.saveServer(
+          ServerRecord(
+            id: 'plain',
+            name: 'No package server',
+            vendor: '',
+            createdAt: now,
+            updatedAt: now,
+          ),
+          isNew: true,
+          catalogProvider: _cloudRef,
+        );
+        await ledger.refresh();
+        await mount(
+          tester,
+          ProviderDetailsPage(ledger: ledger, catalogId: 'fixture-cloud'),
+        );
+        expect(find.byKey(const ValueKey('provider-badge')), findsOneWidget);
+        expect(find.text('Catalog'), findsWidgets);
+        // In use: Small (2 servers) and Large (1); Nano is not listed.
+        final small = find.byKey(const ValueKey('provider-package-fc-small'));
+        expect(small, findsOneWidget);
+        expect(
+          find.descendant(of: small, matching: find.text('2 servers')),
+          findsOneWidget,
+        );
+        expect(
+          find.byKey(const ValueKey('provider-package-fc-large')),
+          findsOneWidget,
+        );
+        expect(
+          find.byKey(const ValueKey('provider-package-fc-nano')),
+          findsNothing,
+        );
+        // Servers without a package are listed; packaged servers are not.
+        expect(find.text('No package'), findsOneWidget);
+        expect(
+          find.byKey(const ValueKey('provider-device-plain')),
+          findsOneWidget,
+        );
+        expect(find.byKey(const ValueKey('provider-device-a')), findsNothing);
+        await tap(tester, 'provider-package-fc-small');
+        expect(find.byType(PackageDetailsPage), findsOneWidget);
+        expect(find.byKey(const ValueKey('package-server-a')), findsOneWidget);
+        expect(find.byKey(const ValueKey('package-server-b')), findsOneWidget);
+        await tester.pageBack();
+        await tester.pumpAndSettle();
+
+        // All Packages: every package, with Default and In use badges.
+        await tap(tester, 'provider-all-packages');
+        expect(find.byType(PackageListPage), findsOneWidget);
+        for (final id in ['fc-nano', 'fc-small', 'fc-large']) {
+          expect(find.byKey(ValueKey('package-list-$id')), findsOneWidget);
+        }
+        final row = find.byKey(const ValueKey('package-list-fc-small'));
+        expect(
+          find.descendant(of: row, matching: find.text('Default')),
+          findsOneWidget,
+        );
+        expect(
+          find.descendant(of: row, matching: find.text('In use · 2')),
+          findsOneWidget,
+        );
+        expect(
+          find.descendant(
+            of: find.byKey(const ValueKey('package-list-fc-nano')),
+            matching: find.textContaining('In use'),
+          ),
+          findsNothing,
+        );
+        await tester.enterText(
+          find.byKey(const ValueKey('list-search')),
+          'larg',
+        );
+        await tester.pumpAndSettle();
+        expect(
+          find.byKey(const ValueKey('package-list-fc-large')),
+          findsOneWidget,
+        );
+        expect(
+          find.byKey(const ValueKey('package-list-fc-small')),
+          findsNothing,
+        );
+        await tap(tester, 'package-list-fc-large');
+        expect(find.byType(PackageDetailsPage), findsOneWidget);
+      },
+    );
+
+    testWidgets('a provider without servers still opens with Add Server', (
+      tester,
+    ) async {
+      await store.saveProvider(
+        ProviderRecord(id: 'mine', name: 'Mine', createdAt: now),
+        isNew: true,
+      );
+      await ledger.refresh();
+      await mount(
+        tester,
+        ProviderDetailsPage(ledger: ledger, providerId: 'mine'),
+      );
+      expect(find.text('Custom'), findsOneWidget);
+      expect(find.byKey(const ValueKey('provider-badge')), findsOneWidget);
+      expect(find.byKey(const ValueKey('provider-all-packages')), findsNothing);
+      expect(find.text('No package'), findsNothing);
+      expect(find.byKey(const ValueKey('provider-add-server')), findsOneWidget);
+    });
 
     testWidgets('package page shows specs and the linked servers', (
       tester,
@@ -834,7 +1035,11 @@ void main() {
         find.byKey(const ValueKey('provider-package-fc-small')),
         findsOneWidget,
       );
-      expect(find.byKey(const ValueKey('provider-device-a')), findsOneWidget);
+      expect(find.byKey(const ValueKey('provider-device-a')), findsNothing);
+      expect(
+        find.byKey(const ValueKey('provider-all-packages')),
+        findsOneWidget,
+      );
     });
 
     testWidgets(
@@ -874,8 +1079,9 @@ void main() {
   group('layout and languages', () {
     for (final lang in ['en', 'zh']) {
       for (final scale in [1.0, 2.0]) {
-        testWidgets('$lang 320px ${scale}x: dropdown menus fit and stay '
-            'reachable', (tester) async {
+        testWidgets('$lang 320px ${scale}x: pickers fit and stay reachable', (
+          tester,
+        ) async {
           locale.value = Locale(lang);
           await store.saveProvider(
             ProviderRecord(
@@ -894,34 +1100,35 @@ void main() {
           );
           await tap(tester, 'form-provider');
           expect(tester.takeException(), isNull);
-          final menu = find.byKey(const ValueKey('form-provider-new'));
-          expect(menu, findsOneWidget);
-          // A tall menu scrolls inside itself; the last item can be reached
-          // and ends up fully on screen.
-          await tester.ensureVisible(menu);
-          await tester.pumpAndSettle();
-          final box = tester.getRect(menu);
+          // The search stays pinned and every row is within the screen; the
+          // list scrolls, so the last row can be reached.
+          expect(find.byKey(const ValueKey('list-search')), findsOneWidget);
+          final last = find.byKey(const ValueKey('picker-provider-new'));
+          await tester.scrollUntilVisible(
+            last,
+            200,
+            scrollable: topScrollable(),
+          );
+          final box = tester.getRect(last);
           expect(box.left, greaterThanOrEqualTo(0));
           expect(box.right, lessThanOrEqualTo(320));
-          expect(box.bottom, lessThanOrEqualTo(900));
-          await tester.tapAt(const Offset(5, 880));
-          await tester.pumpAndSettle();
-          await pick(
-            tester,
-            'form-provider',
-            'form-provider-catalog-fixture-cloud',
-          );
+          expect(find.byKey(const ValueKey('list-search')), findsOneWidget);
+          await cancelPicker(tester);
+          await pick(tester, 'form-provider', 'picker-catalog-fixture-cloud');
           await tap(tester, 'form-package');
           expect(tester.takeException(), isNull);
           for (final id in ['none', 'fc-nano', 'fc-small', 'fc-large']) {
-            final item = tester.getRect(
-              find.byKey(ValueKey('form-package-$id')),
+            final target = find.byKey(ValueKey('picker-package-$id'));
+            await tester.scrollUntilVisible(
+              target,
+              200,
+              scrollable: topScrollable(),
             );
+            final item = tester.getRect(target);
             expect(item.left, greaterThanOrEqualTo(0), reason: id);
             expect(item.right, lessThanOrEqualTo(320), reason: id);
           }
-          await tester.tapAt(const Offset(5, 880));
-          await tester.pumpAndSettle();
+          await cancelPicker(tester);
           await newProvider(tester, 'Fits');
           expect(rowValue(tester, 'form-provider'), 'Fits');
           expect(tester.takeException(), isNull);
@@ -947,6 +1154,9 @@ void main() {
           await ledger.refresh();
           final pages = <String, Widget Function()>{
             'providers': () => ProvidersPage(ledger: ledger),
+            'all providers': () => AllProvidersPage(ledger: ledger),
+            'package list': () =>
+                PackageListPage(ledger: ledger, catalogId: 'fixture-cloud'),
             'provider details': () =>
                 ProviderDetailsPage(ledger: ledger, catalogId: 'fixture-cloud'),
             'package': () => PackageDetailsPage(
