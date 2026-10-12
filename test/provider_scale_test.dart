@@ -7,7 +7,6 @@ import 'package:vps_tell_you/core/app_theme.dart';
 import 'package:vps_tell_you/core/ui/ui.dart';
 import 'package:vps_tell_you/data/ledger_store.dart';
 import 'package:vps_tell_you/l10n/generated/app_localizations.dart';
-import 'package:vps_tell_you/providers/provider_catalog.dart';
 import 'package:vps_tell_you/providers/provider_pages.dart';
 import 'package:vps_tell_you/providers/provider_pickers.dart';
 import 'package:vps_tell_you/providers/provider_record.dart';
