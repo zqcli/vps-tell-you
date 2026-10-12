@@ -77,7 +77,7 @@ void main() {
       expect(find.byType(ServerForm), findsOneWidget);
       await tester.tap(find.byKey(const ValueKey('form-provider')));
       await tester.pumpAndSettle();
-      await tester.tap(find.byKey(const ValueKey('form-provider-new')));
+      await tester.tap(find.byKey(const ValueKey('picker-provider-new')));
       await tester.pumpAndSettle();
       await tester.enterText(
         find.byKey(const ValueKey('provider-name')),
@@ -121,7 +121,7 @@ void main() {
       final provider = (await store.providers()).single;
       await tester.tap(find.byKey(const ValueKey('form-provider')));
       await tester.pumpAndSettle();
-      await tester.tap(find.byKey(ValueKey('form-provider-${provider.id}')));
+      await tester.tap(find.byKey(ValueKey('picker-provider-${provider.id}')));
       await tester.pumpAndSettle();
       await fill(tester, 'name', 'Cancelled new');
       await tester.binding.handlePopRoute();

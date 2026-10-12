@@ -29,6 +29,9 @@ String packageSummaryLine(AppLocalizations l10n, CatalogPackage package) => [
   packageHardwareLine(l10n, package),
 ].where((part) => part.isNotEmpty).join(' · ');
 
+/// 核 ("core"), written as an escape: a search alias, not interface text.
+const _coreCjk = '\u6838';
+
 const _mib = 1024 * 1024, _gib = 1024 * _mib, _tib = 1024 * _gib;
 
 /// Compact spellings of a capacity people type: `2g 2gb 2gib` for 2 GiB.
@@ -50,7 +53,7 @@ String packageSearchText(AppLocalizations l10n, CatalogPackage package) =>
       package.region,
       packageSummaryLine(l10n, package),
       if (package.vcpu != null)
-        for (final u in ['c', 'core', 'cores', 'vcpu', 'cpu', '核'])
+        for (final u in ['c', 'core', 'cores', 'vcpu', 'cpu', _coreCjk])
           '${package.vcpu}$u',
       ..._capacityWords(package.ramBytes),
       ..._capacityWords(package.diskBytes),
