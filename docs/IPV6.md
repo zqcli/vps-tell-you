@@ -45,17 +45,19 @@ change (section 1), the design (section 2) and the behaviour contract
 
 ### Form
 
-The address row accepts anything. The hardware section always shows the
-`IPv4` and `IPv6` rows:
+There is no host/address field. The hardware section has independent,
+optional `IPv4`, `IPv6` and `Hostname` rows; nothing is mirrored between them.
+`ServerRecord.primaryAddress` (IPv4, else IPv6, else hostname, else the legacy
+`servers.host`) is what the list, detail, copy action and the SSH / TCP
+defaults use.
 
-* address is an IPv4 literal → the IPv4 row **mirrors** it (read-only, caption
-  "Same as address"); IPv6 stays editable (dual-stack machine);
-* address is a global/ULA IPv6 literal → IPv6 row mirrors it, IPv4 editable;
-* domain, empty, or link-local IPv6 with a zone → both rows are editable (a
-  zone-scoped link-local address is not a public hardware address).
-
-The mirror is applied on save only, so the user's own previous entry in the
-row comes back if the address is changed again.
+**Legacy `servers.host`** (column kept, no schema change): when an older
+server is edited, its host is prefilled into the matching *empty* field (IPv4 →
+`IPv4`, IPv6 → `IPv6` in canonical form, domain → `Hostname`) and `host` is
+cleared on save once the value is stored there. If that field already holds a
+different value, or the host fits no field (zoned link-local, odd names), `host`
+is left untouched and the detail page keeps showing it as "Saved address".
+Blanking the prefilled field also keeps `host`; nothing is ever dropped.
 
 ### Canonical form
 
@@ -94,10 +96,9 @@ Copy actions copy the bare address.
 
 | Place | Behaviour |
 |---|---|
-| Server form address | any host; IP literals stored canonical (no `[]`); `[v6]` accepted; port rejected |
-| Server form hardware | `IPv4` + `IPv6` rows; mirror rule above; fields stack under the label when a full-length address cannot share the line (decided from the maximum width, not the typed text, so focus is kept) |
-| Detail | `IPv4` tile in the grid, `IPv6` full-width tile (wraps); address card up to 3 lines; copy copies the bare address |
-| Search | host, hardware IPv4 / IPv6; an IPv6 query in any spelling also matches the canonical form |
+| Server form | `IPv4`, `IPv6`, `Hostname` rows, independent and optional (validated with `net_address.dart`; IPv6 stored canonical); fields stack under the label when a full-length address cannot share the line (decided from the maximum width, not the typed text, so focus is kept) |
+| Detail | `IPv4` tile in the grid, `IPv6` full-width tile (wraps); no separate address card (only a legacy host that fits no field is shown, up to 3 lines); Copy Address copies the bare primary address |
+| Search | hardware IPv4 / IPv6 / hostname and the legacy host; an IPv6 query in any spelling also matches the canonical form |
 | SSH settings | inline validation (`NetAddress`), saved canonical |
 | SSH / SFTP / TCP connect | bare canonical host to `Socket.connect`; host-trust key `host` + `port` |
 | TCP test | address field takes `host`, `host:port`, `[v6]`, `[v6]:port`; the port moves into the port field; a bare IPv6 is never split; result shows the connected address and its family |
