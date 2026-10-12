@@ -2573,9 +2573,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get r6IpIpv6 => 'IPv6';
 
   @override
-  String get r6IpSameAsAddress => 'Same as the host address';
-
-  @override
   String get resourceHostname => 'Hostname';
 
   @override
@@ -2875,14 +2872,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get serverHostAddress => 'Host address';
 
   @override
-  String get serverCopyHost => 'Copy Host Address';
+  String get r7DetailSavedAddress => 'Saved address';
 
   @override
-  String get serverHostCopied => 'Host address copied';
+  String get serverCopyHost => 'Copy Address';
 
   @override
-  String get serverCopyHostFailed =>
-      'Couldn’t copy the host address. Try again.';
+  String get serverHostCopied => 'Address copied';
+
+  @override
+  String get serverCopyHostFailed => 'Couldn’t copy the address. Try again.';
 
   @override
   String get serverOperatingSystem => 'Operating system';
@@ -3100,10 +3099,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get serverDateExample => 'Enter a valid date, for example 2026-10-06';
 
   @override
-  String get serverPlainHost =>
-      'Enter an IP address or domain without a protocol, port, or path';
-
-  @override
   String get serverBillingType => 'Billing type';
 
   @override
@@ -3182,12 +3177,6 @@ class AppLocalizationsEn extends AppLocalizations {
       'For example: BandwagonHost / Your provider';
 
   @override
-  String get serverOptionalHost => 'Host address (optional)';
-
-  @override
-  String get serverHostExample => 'IPv4, IPv6, or domain; no protocol or port';
-
-  @override
   String get serverNewHostHelp =>
       'For new records, leaving this blank uses the IP or hostname from hardware details. Set the SSH connection address separately.';
 
@@ -3254,6 +3243,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get uiFormProvider => 'Provider';
 
   @override
+  String get r7FormProviderNone => 'None';
+
+  @override
+  String get r7FormProviderNew => 'New Provider…';
+
+  @override
   String get uiFormPurpose => 'Purpose';
 
   @override
@@ -3306,10 +3301,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get uiFormBillingMetered => 'Metered';
-
-  @override
-  String get r2FormAddressHelp =>
-      'Empty address uses the hardware IP or hostname; SSH address is separate.';
 
   @override
   String get serverWaitForOperation =>

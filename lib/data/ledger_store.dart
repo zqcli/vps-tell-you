@@ -149,10 +149,13 @@ class LedgerStore {
   /// [catalogProvider] makes the server belong to that catalog provider's local
   /// provider, created in the same transaction when it does not exist yet (so
   /// cancelling the form leaves nothing behind). It overrides `providerId`.
+  /// [newProvider] likewise creates a user provider (no catalog link) together
+  /// with the server; the two options exclude each other.
   Future<void> saveServer(
     ServerRecord record, {
     required bool isNew,
     CatalogProviderRef? catalogProvider,
+    ProviderRecord? newProvider,
   }) async {
     final error = record.validate();
     if (error != null) {
@@ -167,6 +170,9 @@ class LedgerStore {
           catalogProvider,
           clock(),
         )).id;
+        map['provider_id'] = providerId;
+      } else if (newProvider != null) {
+        providerId = (await _insertNewProvider(txn, newProvider)).id;
         map['provider_id'] = providerId;
       }
       if (record.groupId != null &&

@@ -123,9 +123,9 @@ class ServerDetail extends StatelessWidget {
     }
   }
 
-  Future<void> _copyHost(BuildContext context, ServerRecord s) async {
+  Future<void> _copyHost(BuildContext context, String address) async {
     try {
-      await Clipboard.setData(ClipboardData(text: s.host));
+      await Clipboard.setData(ClipboardData(text: address));
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -185,10 +185,10 @@ class ServerDetail extends StatelessWidget {
       context,
       title: s.name,
       actions: [
-        if (s.host.isNotEmpty)
+        if (s.primaryAddress.isNotEmpty)
           AppMenuAction(
             label: context.l10n.serverCopyHost,
-            onPressed: () => _copyHost(context, s),
+            onPressed: () => _copyHost(context, s.primaryAddress),
           ),
         if (s.billing == BillingKind.prepaid)
           AppMenuAction(
@@ -222,6 +222,12 @@ class ServerDetail extends StatelessWidget {
       : context.l10n.serverDueInDays(days);
 
   /// Side-by-side layouts need ~300 px of text-scale-normalised width.
+  bool _hostShownInHardware(ServerRecord s) {
+    final r = s.resources;
+    return r != null &&
+        (s.host == r.ip || s.host == r.ipv6 || s.host == r.hostname);
+  }
+
   bool _isNarrow(BuildContext context, BoxConstraints box) =>
       box.maxWidth / MediaQuery.textScalerOf(context).scale(1) < 300;
 
@@ -379,7 +385,10 @@ class ServerDetail extends StatelessWidget {
             if (blocked) return blockedNotice();
             _push(
               context,
-              TcpTestPage(initialHost: s.host, initialPort: config?.port ?? 22),
+              TcpTestPage(
+                initialHost: s.primaryAddress,
+                initialPort: config?.port ?? 22,
+              ),
             );
           },
         ),
@@ -825,66 +834,65 @@ class ServerDetail extends StatelessWidget {
               text: l10n.serverDemoWarning,
               margin: const EdgeInsets.fromLTRB(16, 0, 16, 10),
             ),
-          AppCard(
-            padding: const EdgeInsets.fromLTRB(16, 6, 8, 6),
-            child: LayoutBuilder(
-              builder: (context, box) {
-                final label = Text(
-                  l10n.serverHostAddress,
-                  style: TextStyle(fontSize: 13, color: p.text2),
-                );
-                final host = Text(
-                  s.host.isEmpty ? l10n.serverNotEntered : s.host,
-                  maxLines: 3,
-                  overflow: TextOverflow.ellipsis,
-                  style: kMonoTextStyle.copyWith(
-                    fontSize: 15,
-                    color: s.host.isEmpty ? p.text3 : p.text,
-                  ),
-                );
-                final copy = Tooltip(
-                  message: l10n.serverCopyHost,
-                  child: AppButton(
-                    key: const ValueKey('server-copy-host'),
-                    label: l10n.uiDetailCopy,
-                    icon: Icons.copy_outlined,
-                    kind: AppButtonKind.tonal,
-                    compact: true,
-                    onPressed: s.host.isEmpty
-                        ? null
-                        : () => _copyHost(context, s),
-                  ),
-                );
-                if (_isNarrow(context, box)) {
-                  return Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+          // The address lives in the hardware tiles below. Only an older
+          // record whose `host` could not move into one of them still shows it.
+          if (s.host.isNotEmpty && !_hostShownInHardware(s))
+            AppCard(
+              key: const ValueKey('server-saved-address'),
+              padding: const EdgeInsets.fromLTRB(16, 6, 8, 6),
+              child: LayoutBuilder(
+                builder: (context, box) {
+                  final label = Text(
+                    l10n.r7DetailSavedAddress,
+                    style: TextStyle(fontSize: 13, color: p.text2),
+                  );
+                  final host = Text(
+                    s.host,
+                    maxLines: 3,
+                    overflow: TextOverflow.ellipsis,
+                    style: kMonoTextStyle.copyWith(fontSize: 15, color: p.text),
+                  );
+                  final copy = Tooltip(
+                    message: l10n.serverCopyHost,
+                    child: AppButton(
+                      key: const ValueKey('server-saved-address-copy'),
+                      label: l10n.uiDetailCopy,
+                      icon: Icons.copy_outlined,
+                      kind: AppButtonKind.tonal,
+                      compact: true,
+                      onPressed: () => _copyHost(context, s.host),
+                    ),
+                  );
+                  if (_isNarrow(context, box)) {
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Expanded(child: label),
+                            const SizedBox(width: 8),
+                            copy,
+                          ],
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 6, right: 8),
+                          child: host,
+                        ),
+                      ],
+                    );
+                  }
+                  return Row(
                     children: [
-                      Row(
-                        children: [
-                          Expanded(child: label),
-                          const SizedBox(width: 8),
-                          copy,
-                        ],
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.only(bottom: 6, right: 8),
-                        child: host,
-                      ),
+                      label,
+                      const SizedBox(width: 10),
+                      Expanded(child: host),
+                      const SizedBox(width: 8),
+                      copy,
                     ],
                   );
-                }
-                return Row(
-                  children: [
-                    label,
-                    const SizedBox(width: 10),
-                    Expanded(child: host),
-                    const SizedBox(width: 8),
-                    copy,
-                  ],
-                );
-              },
+                },
+              ),
             ),
-          ),
           _SectionHeader(
             l10n.resourceHardware,
             action: AppLinkButton(

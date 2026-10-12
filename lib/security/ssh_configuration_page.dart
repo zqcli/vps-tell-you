@@ -43,7 +43,10 @@ class _SshConfigurationPageState extends State<SshConfigurationPage> {
     await widget.ledger.security.initialize();
     if (!mounted) return;
     final config = widget.ledger.security.configFor(widget.serverId);
-    host.text = config?.host ?? widget.ledger.byId(widget.serverId)?.host ?? '';
+    host.text =
+        config?.host ??
+        widget.ledger.byId(widget.serverId)?.primaryAddress ??
+        '';
     port.text = '${config?.port ?? 22}';
     username.text = config?.username ?? '';
     credentialId = config?.credentialId;

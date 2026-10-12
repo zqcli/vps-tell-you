@@ -104,9 +104,26 @@ class ServerRecord {
     };
   }
 
-  /// Stored connection address: bare IPv4, IPv6 (zone only on link-local) or
-  /// a DNS name. Numeric-looking names stay readable for legacy records; every
-  /// connection path re-checks them strictly.
+  /// The address shown and copied for this server, and the default host of
+  /// its SSH/TCP tools: IPv4, else IPv6, else hostname (all hardware fields),
+  /// else the legacy `host` column of older records. Empty when none is set.
+  String get primaryAddress {
+    for (final value in [
+      resources?.ip,
+      resources?.ipv6,
+      resources?.hostname,
+      host,
+    ]) {
+      if (value != null && value.isNotEmpty) return value;
+    }
+    return '';
+  }
+
+  /// Legacy `host` column: bare IPv4, IPv6 (zone only on link-local) or a DNS
+  /// name. It is no longer edited (the form moves it into the address fields
+  /// on save, see [LegacyHost]); it stays valid for older records.
+  /// Numeric-looking names stay readable; every connection path re-checks
+  /// them strictly.
   static bool validHost(String host) =>
       host.isEmpty ||
       NetAddress.tryParse(host, allowBrackets: false, lenientNames: true) !=
@@ -224,6 +241,58 @@ class ServerRecord {
     revision: row['revision'] as int? ?? 0,
     isDemo: row['is_demo'] == 1,
   );
+}
+
+enum LegacyHostField { ipv4, ipv6, hostname }
+
+/// The legacy `servers.host` value of an older record and the address field
+/// it belongs to. The form prefills that field when it is empty and clears
+/// `host` on save only once the value is safely stored there; a value that
+/// fits no field (zoned IPv6, odd names) simply stays in `host`.
+class LegacyHost {
+  const LegacyHost._(this.field, this.value);
+  final LegacyHostField field;
+
+  /// Canonical spelling (RFC 5952 for IPv6).
+  final String value;
+
+  static LegacyHost? of(String host) {
+    final text = host.trim();
+    if (text.isEmpty) return null;
+    final address = NetAddress.tryParse(text, allowBrackets: false);
+    if (address != null && address.isIp) {
+      if (ServerResources.validIpv4(text)) {
+        return LegacyHost._(LegacyHostField.ipv4, address.address);
+      }
+      if (ServerResources.validIpv6(text)) {
+        return LegacyHost._(LegacyHostField.ipv6, address.address);
+      }
+      return null;
+    }
+    return ServerResources.validHostname(text)
+        ? LegacyHost._(LegacyHostField.hostname, text)
+        : null;
+  }
+
+  String fieldValue(ServerResources? resources) => switch (field) {
+    LegacyHostField.ipv4 => resources?.ip ?? '',
+    LegacyHostField.ipv6 => resources?.ipv6 ?? '',
+    LegacyHostField.hostname => resources?.hostname ?? '',
+  };
+
+  /// Whether [resources] holds this value in its field.
+  bool isStoredIn(ServerResources? resources) => fieldValue(resources) == value;
+
+  /// [resources] with the value filled into its (empty) field; unchanged when
+  /// the field is already used, even by a different value.
+  ServerResources? prefill(ServerResources? resources) =>
+      fieldValue(resources).isNotEmpty
+      ? resources
+      : (resources ?? ServerResources()).withAddress(
+          ip: field == LegacyHostField.ipv4 ? value : null,
+          ipv6: field == LegacyHostField.ipv6 ? value : null,
+          hostname: field == LegacyHostField.hostname ? value : null,
+        );
 }
 
 /// Specification text for display, search and export: generated from the

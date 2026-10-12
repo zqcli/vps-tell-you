@@ -251,6 +251,39 @@ Future<ProviderRecord> _ensureCatalogProvider(
   return created;
 }
 
+/// The trimmed name of [record] after the length and duplicate checks that
+/// every provider write shares.
+Future<String> _checkedProviderName(
+  DatabaseExecutor txn,
+  ProviderRecord record,
+) async {
+  final clean = record.name.trim();
+  if (clean.isEmpty || clean.length > 80) {
+    throw LocalizedArgumentError((l10n) => l10n.providerNameRange);
+  }
+  if ((await txn.query(
+    'providers',
+    where: 'name = ? COLLATE NOCASE AND id != ?',
+    whereArgs: [clean, record.id],
+  )).isNotEmpty) {
+    throw LocalizedArgumentError((l10n) => l10n.providerAlreadyExists);
+  }
+  return clean;
+}
+
+/// Inserts a brand-new user provider inside the caller's transaction.
+Future<ProviderRecord> _insertNewProvider(
+  DatabaseExecutor txn,
+  ProviderRecord record,
+) async {
+  final map = record.toMap()
+    ..['name'] = await _checkedProviderName(txn, record)
+    ..['revision'] = 0
+    ..['catalog_id'] = null;
+  await txn.insert('providers', map);
+  return ProviderRecord.fromMap(map);
+}
+
 /// A server's package must come with its snapshot and belong to the server's
 /// (catalog) provider. Ledger values themselves are never checked against it.
 Future<void> _checkPackageLink(
@@ -289,17 +322,7 @@ extension LedgerProviders on LedgerStore {
     ProviderRecord record, {
     required bool isNew,
   }) => _db.transaction((txn) async {
-    final clean = record.name.trim();
-    if (clean.isEmpty || clean.length > 80) {
-      throw LocalizedArgumentError((l10n) => l10n.providerNameRange);
-    }
-    if ((await txn.query(
-      'providers',
-      where: 'name = ? COLLATE NOCASE AND id != ?',
-      whereArgs: [clean, record.id],
-    )).isNotEmpty) {
-      throw LocalizedArgumentError((l10n) => l10n.providerAlreadyExists);
-    }
+    final clean = await _checkedProviderName(txn, record);
     final map = record.toMap()..['name'] = clean;
     if (isNew) {
       map['revision'] = 0;

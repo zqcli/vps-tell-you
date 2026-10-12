@@ -994,7 +994,7 @@ class _ProviderDetailsPageState extends State<ProviderDetailsPage> {
                   subtitle: [
                     if (server.archived) l10n.archivedRecords,
                     ?ledger.packageSnapshotFor(server)?.name,
-                    server.host,
+                    server.primaryAddress,
                   ].where((s) => s.isNotEmpty).join(' · '),
                   chevron: true,
                   onTap: opening
@@ -1216,7 +1216,7 @@ class _PackageDetailsPageState extends State<PackageDetailsPage> {
                   title: server.name,
                   subtitle: [
                     if (server.archived) l10n.archivedRecords,
-                    server.host,
+                    server.primaryAddress,
                   ].where((s) => s.isNotEmpty).join(' · '),
                   trailing: packageStatePill(
                     l10n,

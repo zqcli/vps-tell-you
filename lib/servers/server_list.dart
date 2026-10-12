@@ -754,7 +754,7 @@ class _ServerRowState extends State<ServerRow> {
 
   Future<void> copyHost() async {
     try {
-      await Clipboard.setData(ClipboardData(text: s.host));
+      await Clipboard.setData(ClipboardData(text: s.primaryAddress));
       if (mounted) showAppToast(context, context.l10n.serverHostCopied);
     } catch (error) {
       if (mounted) {
@@ -778,9 +778,11 @@ class _ServerRowState extends State<ServerRow> {
         c.canMutate && s.billing == BillingKind.prepaid && canRenew(s);
     return showAppActionMenu<void>(
       context,
-      title: s.host.isEmpty ? s.name : '${s.name} · ${s.host}',
+      title: s.primaryAddress.isEmpty
+          ? s.name
+          : '${s.name} · ${s.primaryAddress}',
       actions: [
-        if (s.host.isNotEmpty)
+        if (s.primaryAddress.isNotEmpty)
           AppMenuAction(label: l10n.serverCopyHost, onPressed: copyHost),
         if (canSsh)
           AppMenuAction(label: l10n.serverConnectSsh, onPressed: openSsh),

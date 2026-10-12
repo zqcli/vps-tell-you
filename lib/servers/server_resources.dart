@@ -22,9 +22,23 @@ class ServerResources {
   });
 
   /// [ip] is the IPv4 address (the JSON key predates IPv6); [ipv6] is the
-  /// optional IPv6 address. Both are hardware addresses, independent of the
-  /// connection address in `ServerRecord.host`.
+  /// optional IPv6 address. All three are independent, optional addresses;
+  /// `ServerRecord.primaryAddress` picks the one to show and connect to.
   final String ip, ipv6, hostname;
+
+  /// Copy with the given addresses replaced; everything else is unchanged.
+  ServerResources withAddress({String? ip, String? ipv6, String? hostname}) =>
+      ServerResources(
+        ip: ip ?? this.ip,
+        ipv6: ipv6 ?? this.ipv6,
+        hostname: hostname ?? this.hostname,
+        vcpu: vcpu,
+        ramBytes: ramBytes,
+        diskBytes: diskBytes,
+        trafficBytes: trafficBytes,
+        trafficUnlimited: trafficUnlimited,
+        trafficPeriodMonths: trafficPeriodMonths,
+      );
   final int? vcpu, ramBytes, diskBytes;
   final int? trafficBytes;
   final bool trafficUnlimited;

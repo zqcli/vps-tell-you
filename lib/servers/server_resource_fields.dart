@@ -94,8 +94,6 @@ class ServerResourceFields extends StatefulWidget {
     this.defaultTrafficPeriodMonths,
     this.collapsible = false,
     this.initiallyExpanded = true,
-    this.mirroredIp,
-    this.mirroredIpv6,
     this.margin = const EdgeInsets.symmetric(horizontal: 16),
   });
   final ServerResources? initial;
@@ -110,12 +108,6 @@ class ServerResourceFields extends StatefulWidget {
 
   /// Outer margin of the grouped section.
   final EdgeInsets margin;
-
-  /// The surrounding form's connection address when it is itself an IPv4 /
-  /// IPv6 literal. The matching row then shows it read-only ("same as the host
-  /// address") and the result uses it; the row's own draft is kept untouched
-  /// and comes back if the address stops being that literal.
-  final String? mirroredIp, mirroredIpv6;
   @override
   State<ServerResourceFields> createState() => ServerResourceFieldsState();
 }
@@ -202,12 +194,7 @@ class ServerResourceFieldsState extends State<ServerResourceFields> {
     super.dispose();
   }
 
-  /// The text a field currently stands for: the form's address while that row
-  /// mirrors it, otherwise what the user typed.
-  String _text(String key) =>
-      (key == 'ip' ? widget.mirroredIp : null) ??
-      (key == 'ipv6' ? widget.mirroredIpv6 : null) ??
-      _fields[key]!.text.trim();
+  String _text(String key) => _fields[key]!.text.trim();
 
   static String _canonicalIpv6(String text) {
     final address = NetAddress.tryParse(text, allowBrackets: false);
@@ -215,10 +202,6 @@ class ServerResourceFieldsState extends State<ServerResourceFields> {
         ? address.address
         : text;
   }
-
-  bool _mirrored(String key) =>
-      (key == 'ip' && widget.mirroredIp != null) ||
-      (key == 'ipv6' && widget.mirroredIpv6 != null);
 
   /// Replaces the hardware fields with [resources] (a package pre-fill). The
   /// IP and hostname rows are left alone: packages never carry addresses.
@@ -365,26 +348,6 @@ class ServerResourceFieldsState extends State<ServerResourceFields> {
     child: child,
   );
 
-  /// Row plus, for a mirrored address, the small "same as the host address"
-  /// caption under it.
-  Widget _block(Widget row, String key) {
-    if (!_mirrored(key)) return row;
-    final p = context.palette;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        row,
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
-          child: Text(
-            context.l10n.r6IpSameAsAddress,
-            style: TextStyle(fontSize: 12.5, height: 1.3, color: p.text3),
-          ),
-        ),
-      ],
-    );
-  }
-
   Widget _textRow(String key, String label) {
     final isAddress = key == 'ip' || key == 'ipv6';
     // Addresses are monospace; 14 px keeps a typical IPv6 on the row.
@@ -404,43 +367,29 @@ class ServerResourceFieldsState extends State<ServerResourceFields> {
         final align = stacked ? TextAlign.start : TextAlign.end;
         return FormField<void>(
           validator: (_) => _validate(key),
-          builder: (field) => _block(
-            AppFormRow(
-              label: label,
-              errorText: field.errorText,
-              stacked: stacked,
-              child: _mirrored(key)
-                  ? Semantics(
-                      label: label,
-                      value: _text(key),
-                      child: Text(
-                        _text(key),
-                        key: ValueKey('resource-$key-mirrored'),
-                        textAlign: align,
-                        style: style!.copyWith(color: context.palette.text2),
-                      ),
-                    )
-                  : _semantic(
-                      label,
-                      field.errorText,
-                      AppTextField(
-                        key: ValueKey('resource-$key'),
-                        controller: _fields[key],
-                        enabled: widget.enabled,
-                        maxLength: key == 'hostname' ? 253 : 45,
-                        hint: context.l10n.serverUnknown,
-                        label: label,
-                        style: style,
-                        textAlign: align,
-                        textInputAction: TextInputAction.next,
-                        autocorrect: false,
-                        enableSuggestions: false,
-                        keyboardType: isAddress ? TextInputType.url : null,
-                        onChanged: (_) => setState(() {}),
-                      ),
-                    ),
+          builder: (field) => AppFormRow(
+            label: label,
+            errorText: field.errorText,
+            stacked: stacked,
+            child: _semantic(
+              label,
+              field.errorText,
+              AppTextField(
+                key: ValueKey('resource-$key'),
+                controller: _fields[key],
+                enabled: widget.enabled,
+                maxLength: key == 'hostname' ? 253 : 45,
+                hint: context.l10n.serverUnknown,
+                label: label,
+                style: style,
+                textAlign: align,
+                textInputAction: TextInputAction.next,
+                autocorrect: false,
+                enableSuggestions: false,
+                keyboardType: isAddress ? TextInputType.url : null,
+                onChanged: (_) => setState(() {}),
+              ),
             ),
-            key,
           ),
         );
       },

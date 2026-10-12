@@ -3977,12 +3977,6 @@ abstract class AppLocalizations {
   /// **'IPv6'**
   String get r6IpIpv6;
 
-  /// No description provided for @r6IpSameAsAddress.
-  ///
-  /// In zh, this message translates to:
-  /// **'与主机地址相同'**
-  String get r6IpSameAsAddress;
-
   /// No description provided for @resourceHostname.
   ///
   /// In zh, this message translates to:
@@ -4481,22 +4475,28 @@ abstract class AppLocalizations {
   /// **'主机地址'**
   String get serverHostAddress;
 
+  /// Server form and detail.
+  ///
+  /// In zh, this message translates to:
+  /// **'原有地址'**
+  String get r7DetailSavedAddress;
+
   /// No description provided for @serverCopyHost.
   ///
   /// In zh, this message translates to:
-  /// **'复制主机地址'**
+  /// **'复制地址'**
   String get serverCopyHost;
 
   /// No description provided for @serverHostCopied.
   ///
   /// In zh, this message translates to:
-  /// **'主机地址已复制'**
+  /// **'地址已复制'**
   String get serverHostCopied;
 
   /// No description provided for @serverCopyHostFailed.
   ///
   /// In zh, this message translates to:
-  /// **'未能复制主机地址，请重试。'**
+  /// **'未能复制地址，请重试。'**
   String get serverCopyHostFailed;
 
   /// No description provided for @serverOperatingSystem.
@@ -4871,12 +4871,6 @@ abstract class AppLocalizations {
   /// **'请使用有效日期，例如 2026-10-06'**
   String get serverDateExample;
 
-  /// No description provided for @serverPlainHost.
-  ///
-  /// In zh, this message translates to:
-  /// **'请输入纯 IP 或域名，不含协议、端口或路径'**
-  String get serverPlainHost;
-
   /// No description provided for @serverBillingType.
   ///
   /// In zh, this message translates to:
@@ -5009,18 +5003,6 @@ abstract class AppLocalizations {
   /// **'例如：搬瓦工 / 自定义厂商'**
   String get serverProviderExample;
 
-  /// No description provided for @serverOptionalHost.
-  ///
-  /// In zh, this message translates to:
-  /// **'主机地址（选填）'**
-  String get serverOptionalHost;
-
-  /// No description provided for @serverHostExample.
-  ///
-  /// In zh, this message translates to:
-  /// **'IPv4、IPv6 或域名，不含协议或端口'**
-  String get serverHostExample;
-
   /// No description provided for @serverNewHostHelp.
   ///
   /// In zh, this message translates to:
@@ -5141,6 +5123,18 @@ abstract class AppLocalizations {
   /// **'提供商'**
   String get uiFormProvider;
 
+  /// Server form and detail.
+  ///
+  /// In zh, this message translates to:
+  /// **'不指定'**
+  String get r7FormProviderNone;
+
+  /// Server form and detail.
+  ///
+  /// In zh, this message translates to:
+  /// **'新建提供商…'**
+  String get r7FormProviderNew;
+
   /// No description provided for @uiFormPurpose.
   ///
   /// In zh, this message translates to:
@@ -5248,12 +5242,6 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'按量'**
   String get uiFormBillingMetered;
-
-  /// No description provided for @r2FormAddressHelp.
-  ///
-  /// In zh, this message translates to:
-  /// **'地址留空时取硬件 IP 或主机名；SSH 地址另设。'**
-  String get r2FormAddressHelp;
 
   /// No description provided for @serverWaitForOperation.
   ///

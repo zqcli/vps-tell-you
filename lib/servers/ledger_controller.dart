@@ -279,6 +279,7 @@ class LedgerController extends ChangeNotifier {
       final days = dueIn(s);
       final text =
           '${s.name} ${s.host} ${s.resources?.ip ?? ''} ${s.resources?.ipv6 ?? ''} '
+                  '${s.resources?.hostname ?? ''} '
                   '${s.vendor} ${providerNameFor(s)} ${s.purpose} ${s.region}'
               .toLowerCase();
       return (query.isEmpty ||

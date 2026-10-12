@@ -90,7 +90,8 @@ class _SshConnectPageState extends State<SshConnectPage> {
   void _selectServer(String? id) {
     _serverId = id;
     final config = id == null ? null : widget.ledger.security.configFor(id);
-    _host.text = config?.host ?? widget.ledger.byId(id ?? '')?.host ?? '';
+    _host.text =
+        config?.host ?? widget.ledger.byId(id ?? '')?.primaryAddress ?? '';
     _port.text = '${config?.port ?? 22}';
     _username.text = config?.username ?? '';
     _credentialId = config?.credentialId;

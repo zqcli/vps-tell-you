@@ -2222,9 +2222,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get r6IpIpv6 => 'IPv6';
 
   @override
-  String get r6IpSameAsAddress => '与主机地址相同';
-
-  @override
   String get resourceHostname => '主机名';
 
   @override
@@ -2488,13 +2485,16 @@ class AppLocalizationsZh extends AppLocalizations {
   String get serverHostAddress => '主机地址';
 
   @override
-  String get serverCopyHost => '复制主机地址';
+  String get r7DetailSavedAddress => '原有地址';
 
   @override
-  String get serverHostCopied => '主机地址已复制';
+  String get serverCopyHost => '复制地址';
 
   @override
-  String get serverCopyHostFailed => '未能复制主机地址，请重试。';
+  String get serverHostCopied => '地址已复制';
+
+  @override
+  String get serverCopyHostFailed => '未能复制地址，请重试。';
 
   @override
   String get serverOperatingSystem => '操作系统';
@@ -2695,9 +2695,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get serverDateExample => '请使用有效日期，例如 2026-10-06';
 
   @override
-  String get serverPlainHost => '请输入纯 IP 或域名，不含协议、端口或路径';
-
-  @override
   String get serverBillingType => '计费方式';
 
   @override
@@ -2768,12 +2765,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get serverProviderExample => '例如：搬瓦工 / 自定义厂商';
 
   @override
-  String get serverOptionalHost => '主机地址（选填）';
-
-  @override
-  String get serverHostExample => 'IPv4、IPv6 或域名，不含协议或端口';
-
-  @override
   String get serverNewHostHelp => '新建时留空会采用硬件信息中的 IP 或主机名；SSH 连接地址另行设置。';
 
   @override
@@ -2834,6 +2825,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get uiFormProvider => '提供商';
 
   @override
+  String get r7FormProviderNone => '不指定';
+
+  @override
+  String get r7FormProviderNew => '新建提供商…';
+
+  @override
   String get uiFormPurpose => '用途';
 
   @override
@@ -2886,9 +2883,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get uiFormBillingMetered => '按量';
-
-  @override
-  String get r2FormAddressHelp => '地址留空时取硬件 IP 或主机名；SSH 地址另设。';
 
   @override
   String get serverWaitForOperation => '请等待当前操作完成';
