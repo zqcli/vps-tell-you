@@ -1027,4 +1027,110 @@ void main() {
       expect(tester.takeException(), isNull);
     });
   });
+
+  group('AppDropdownRow', () {
+    Future<List<String>> mount(
+      WidgetTester tester, {
+      bool enabled = true,
+      double scale = 1,
+    }) async {
+      final chosen = <String>[];
+      tester.view.physicalSize = const Size(320, 700);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: appTheme(),
+          builder: (context, child) => MediaQuery(
+            data: MediaQuery.of(context)
+                .copyWith(textScaler: TextScaler.linear(scale)),
+            child: child!,
+          ),
+          home: Scaffold(
+            body: ListView(
+              children: [
+                AppSection(
+                  children: [
+                    AppDropdownRow<String>(
+                      key: const ValueKey('dd'),
+                      label: 'Provider',
+                      value: 'B',
+                      placeholder: 'None',
+                      selected: 'b',
+                      enabled: enabled,
+                      groups: const [
+                        AppDropdownGroup(
+                          items: [AppDropdownItem(value: '', title: 'None')],
+                        ),
+                        AppDropdownGroup(
+                          header: 'Mine',
+                          items: [
+                            AppDropdownItem(
+                              key: ValueKey('i-a'),
+                              value: 'a',
+                              title: 'A',
+                            ),
+                            AppDropdownItem(
+                              key: ValueKey('i-b'),
+                              value: 'b',
+                              title: 'B',
+                              subtitle: '3 packages',
+                            ),
+                          ],
+                        ),
+                        AppDropdownGroup(header: 'Empty', items: []),
+                      ],
+                      onSelected: chosen.add,
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+      return chosen;
+    }
+
+    testWidgets('opens below the row with groups, check and subtitle', (
+      tester,
+    ) async {
+      final chosen = await mount(tester);
+      expect(find.text('Mine'), findsNothing);
+      await tester.tap(find.byKey(const ValueKey('dd')));
+      await tester.pumpAndSettle();
+      expect(find.text('Mine'), findsOneWidget);
+      expect(find.text('Empty'), findsNothing, reason: 'empty group hidden');
+      expect(find.text('3 packages'), findsOneWidget);
+      expect(
+        find.descendant(
+          of: find.byKey(const ValueKey('i-b')),
+          matching: find.byIcon(Icons.check_rounded),
+        ),
+        findsOneWidget,
+      );
+      await tester.tap(find.byKey(const ValueKey('i-a')));
+      await tester.pumpAndSettle();
+      expect(chosen, ['a']);
+      expect(find.text('Mine'), findsNothing, reason: 'closes on choice');
+    });
+
+    testWidgets('disabled row never opens', (tester) async {
+      await mount(tester, enabled: false);
+      await tester.tap(find.byKey(const ValueKey('dd')));
+      await tester.pumpAndSettle();
+      expect(find.text('Mine'), findsNothing);
+    });
+
+    testWidgets('fits 320px at 2x text', (tester) async {
+      await mount(tester, scale: 2);
+      await tester.tap(find.byKey(const ValueKey('dd')));
+      await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull);
+      final box = tester.getRect(find.byKey(const ValueKey('i-a')));
+      expect(box.left, greaterThanOrEqualTo(0));
+      expect(box.right, lessThanOrEqualTo(320));
+    });
+  });
 }
