@@ -3447,6 +3447,97 @@
   "@r6CatMineSection": {
     "description": "Provider catalog and packages."
   },
+  "r8ProvidersInUse": "使用中的提供商",
+  "@r8ProvidersInUse": {
+    "description": "Providers and packages UI (r8)."
+  },
+  "r8NoProvidersInUse": "还没有提供商关联服务器。",
+  "@r8NoProvidersInUse": {
+    "description": "Providers and packages UI (r8)."
+  },
+  "r8AllProviders": "全部提供商",
+  "@r8AllProviders": {
+    "description": "Providers and packages UI (r8)."
+  },
+  "r8SearchProviders": "搜索提供商",
+  "@r8SearchProviders": {
+    "description": "Providers and packages UI (r8)."
+  },
+  "r8SearchPackages": "搜索套餐名称、地区或规格",
+  "@r8SearchPackages": {
+    "description": "Providers and packages UI (r8)."
+  },
+  "r8NoMatches": "没有匹配的结果。",
+  "@r8NoMatches": {
+    "description": "Providers and packages UI (r8)."
+  },
+  "r8BadgeCatalog": "目录",
+  "@r8BadgeCatalog": {
+    "description": "Providers and packages UI (r8)."
+  },
+  "r8BadgeCustom": "自建",
+  "@r8BadgeCustom": {
+    "description": "Providers and packages UI (r8)."
+  },
+  "r8PackagesInUse": "使用中的套餐",
+  "@r8PackagesInUse": {
+    "description": "Providers and packages UI (r8)."
+  },
+  "r8PackagesInUseCount": "{count} 个套餐在用",
+  "@r8PackagesInUseCount": {
+    "description": "Providers and packages UI (r8).",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "r8AllPackages": "全部套餐",
+  "@r8AllPackages": {
+    "description": "Providers and packages UI (r8)."
+  },
+  "r8InUseCount": "使用中 · {count}",
+  "@r8InUseCount": {
+    "description": "Providers and packages UI (r8).",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "r8SortListed": "目录顺序",
+  "@r8SortListed": {
+    "description": "Providers and packages UI (r8)."
+  },
+  "r8SortPrice": "价格",
+  "@r8SortPrice": {
+    "description": "Providers and packages UI (r8)."
+  },
+  "r8SortName": "名称",
+  "@r8SortName": {
+    "description": "Providers and packages UI (r8)."
+  },
+  "r8SectionInUse": "使用中",
+  "@r8SectionInUse": {
+    "description": "Providers and packages UI (r8)."
+  },
+  "r8NewProviderNamed": "新建提供商“{name}”",
+  "@r8NewProviderNamed": {
+    "description": "Providers and packages UI (r8).",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "r8PickProvider": "选择提供商",
+  "@r8PickProvider": {
+    "description": "Providers and packages UI (r8)."
+  },
+  "r8PickPackage": "选择套餐",
+  "@r8PickPackage": {
+    "description": "Providers and packages UI (r8)."
+  },
   "r6CatCatalogFooter": "目录提供商附带现成的套餐。没有找到时可以新增提供商。",
   "@r6CatCatalogFooter": {
     "description": "Provider catalog and packages."
@@ -3579,14 +3670,6 @@
   "@r6CatReplaceAction": {
     "description": "Provider catalog and packages."
   },
-  "r6CatPackagesHeader": "套餐",
-  "@r6CatPackagesHeader": {
-    "description": "Provider catalog and packages."
-  },
-  "r6CatPackagesFooter": "套餐来自目录，仅用于预填新服务器。",
-  "@r6CatPackagesFooter": {
-    "description": "Provider catalog and packages."
-  },
   "r6CatNoPackagesYet": "这个提供商没有套餐列表。",
   "@r6CatNoPackagesYet": {
     "description": "Provider catalog and packages."
@@ -3628,10 +3711,6 @@
   "@providerUiEmpty": {
     "description": "Provider navigation and ownership UI."
   },
-  "providerUiEmptyHelp": "记录提供商名称，或在添加服务器时从目录中选择。",
-  "@providerUiEmptyHelp": {
-    "description": "Provider navigation and ownership UI."
-  },
   "providerUiUnspecifiedCount": "{count} 台服务器尚未指定提供商。",
   "@providerUiUnspecifiedCount": {
     "description": "Provider navigation and ownership UI.",
@@ -3643,10 +3722,6 @@
   },
   "providerUiDevices": "名下服务器",
   "@providerUiDevices": {
-    "description": "Provider navigation and ownership UI."
-  },
-  "providerUiNoDevices": "这个提供商下还没有服务器。",
-  "@providerUiNoDevices": {
     "description": "Provider navigation and ownership UI."
   },
   "providerUiUnavailable": "此提供商已变更或不可用，请返回重新选择。",

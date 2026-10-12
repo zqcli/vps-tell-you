@@ -8721,6 +8721,120 @@ abstract class AppLocalizations {
   /// **'我的提供商'**
   String get r6CatMineSection;
 
+  /// Providers and packages UI (r8).
+  ///
+  /// In zh, this message translates to:
+  /// **'使用中的提供商'**
+  String get r8ProvidersInUse;
+
+  /// Providers and packages UI (r8).
+  ///
+  /// In zh, this message translates to:
+  /// **'还没有提供商关联服务器。'**
+  String get r8NoProvidersInUse;
+
+  /// Providers and packages UI (r8).
+  ///
+  /// In zh, this message translates to:
+  /// **'全部提供商'**
+  String get r8AllProviders;
+
+  /// Providers and packages UI (r8).
+  ///
+  /// In zh, this message translates to:
+  /// **'搜索提供商'**
+  String get r8SearchProviders;
+
+  /// Providers and packages UI (r8).
+  ///
+  /// In zh, this message translates to:
+  /// **'搜索套餐名称、地区或规格'**
+  String get r8SearchPackages;
+
+  /// Providers and packages UI (r8).
+  ///
+  /// In zh, this message translates to:
+  /// **'没有匹配的结果。'**
+  String get r8NoMatches;
+
+  /// Providers and packages UI (r8).
+  ///
+  /// In zh, this message translates to:
+  /// **'目录'**
+  String get r8BadgeCatalog;
+
+  /// Providers and packages UI (r8).
+  ///
+  /// In zh, this message translates to:
+  /// **'自建'**
+  String get r8BadgeCustom;
+
+  /// Providers and packages UI (r8).
+  ///
+  /// In zh, this message translates to:
+  /// **'使用中的套餐'**
+  String get r8PackagesInUse;
+
+  /// Providers and packages UI (r8).
+  ///
+  /// In zh, this message translates to:
+  /// **'{count} 个套餐在用'**
+  String r8PackagesInUseCount(int count);
+
+  /// Providers and packages UI (r8).
+  ///
+  /// In zh, this message translates to:
+  /// **'全部套餐'**
+  String get r8AllPackages;
+
+  /// Providers and packages UI (r8).
+  ///
+  /// In zh, this message translates to:
+  /// **'使用中 · {count}'**
+  String r8InUseCount(int count);
+
+  /// Providers and packages UI (r8).
+  ///
+  /// In zh, this message translates to:
+  /// **'目录顺序'**
+  String get r8SortListed;
+
+  /// Providers and packages UI (r8).
+  ///
+  /// In zh, this message translates to:
+  /// **'价格'**
+  String get r8SortPrice;
+
+  /// Providers and packages UI (r8).
+  ///
+  /// In zh, this message translates to:
+  /// **'名称'**
+  String get r8SortName;
+
+  /// Providers and packages UI (r8).
+  ///
+  /// In zh, this message translates to:
+  /// **'使用中'**
+  String get r8SectionInUse;
+
+  /// Providers and packages UI (r8).
+  ///
+  /// In zh, this message translates to:
+  /// **'新建提供商“{name}”'**
+  String r8NewProviderNamed(String name);
+
+  /// Providers and packages UI (r8).
+  ///
+  /// In zh, this message translates to:
+  /// **'选择提供商'**
+  String get r8PickProvider;
+
+  /// Providers and packages UI (r8).
+  ///
+  /// In zh, this message translates to:
+  /// **'选择套餐'**
+  String get r8PickPackage;
+
   /// Provider catalog and packages.
   ///
   /// In zh, this message translates to:
@@ -8898,18 +9012,6 @@ abstract class AppLocalizations {
   /// Provider catalog and packages.
   ///
   /// In zh, this message translates to:
-  /// **'套餐'**
-  String get r6CatPackagesHeader;
-
-  /// Provider catalog and packages.
-  ///
-  /// In zh, this message translates to:
-  /// **'套餐来自目录，仅用于预填新服务器。'**
-  String get r6CatPackagesFooter;
-
-  /// Provider catalog and packages.
-  ///
-  /// In zh, this message translates to:
   /// **'这个提供商没有套餐列表。'**
   String get r6CatNoPackagesYet;
 
@@ -8964,12 +9066,6 @@ abstract class AppLocalizations {
   /// Provider navigation and ownership UI.
   ///
   /// In zh, this message translates to:
-  /// **'记录提供商名称，或在添加服务器时从目录中选择。'**
-  String get providerUiEmptyHelp;
-
-  /// Provider navigation and ownership UI.
-  ///
-  /// In zh, this message translates to:
   /// **'{count} 台服务器尚未指定提供商。'**
   String providerUiUnspecifiedCount(int count);
 
@@ -8978,12 +9074,6 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'名下服务器'**
   String get providerUiDevices;
-
-  /// Provider navigation and ownership UI.
-  ///
-  /// In zh, this message translates to:
-  /// **'这个提供商下还没有服务器。'**
-  String get providerUiNoDevices;
 
   /// Provider navigation and ownership UI.
   ///

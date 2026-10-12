@@ -4747,6 +4747,69 @@ class AppLocalizationsZh extends AppLocalizations {
   String get r6CatMineSection => '我的提供商';
 
   @override
+  String get r8ProvidersInUse => '使用中的提供商';
+
+  @override
+  String get r8NoProvidersInUse => '还没有提供商关联服务器。';
+
+  @override
+  String get r8AllProviders => '全部提供商';
+
+  @override
+  String get r8SearchProviders => '搜索提供商';
+
+  @override
+  String get r8SearchPackages => '搜索套餐名称、地区或规格';
+
+  @override
+  String get r8NoMatches => '没有匹配的结果。';
+
+  @override
+  String get r8BadgeCatalog => '目录';
+
+  @override
+  String get r8BadgeCustom => '自建';
+
+  @override
+  String get r8PackagesInUse => '使用中的套餐';
+
+  @override
+  String r8PackagesInUseCount(int count) {
+    return '$count 个套餐在用';
+  }
+
+  @override
+  String get r8AllPackages => '全部套餐';
+
+  @override
+  String r8InUseCount(int count) {
+    return '使用中 · $count';
+  }
+
+  @override
+  String get r8SortListed => '目录顺序';
+
+  @override
+  String get r8SortPrice => '价格';
+
+  @override
+  String get r8SortName => '名称';
+
+  @override
+  String get r8SectionInUse => '使用中';
+
+  @override
+  String r8NewProviderNamed(String name) {
+    return '新建提供商“$name”';
+  }
+
+  @override
+  String get r8PickProvider => '选择提供商';
+
+  @override
+  String get r8PickPackage => '选择套餐';
+
+  @override
   String get r6CatCatalogFooter => '目录提供商附带现成的套餐。没有找到时可以新增提供商。';
 
   @override
@@ -4838,12 +4901,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get r6CatReplaceAction => '替换';
 
   @override
-  String get r6CatPackagesHeader => '套餐';
-
-  @override
-  String get r6CatPackagesFooter => '套餐来自目录，仅用于预填新服务器。';
-
-  @override
   String get r6CatNoPackagesYet => '这个提供商没有套餐列表。';
 
   @override
@@ -4873,18 +4930,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get providerUiEmpty => '还没有提供商';
 
   @override
-  String get providerUiEmptyHelp => '记录提供商名称，或在添加服务器时从目录中选择。';
-
-  @override
   String providerUiUnspecifiedCount(int count) {
     return '$count 台服务器尚未指定提供商。';
   }
 
   @override
   String get providerUiDevices => '名下服务器';
-
-  @override
-  String get providerUiNoDevices => '这个提供商下还没有服务器。';
 
   @override
   String get providerUiUnavailable => '此提供商已变更或不可用，请返回重新选择。';

@@ -20,9 +20,8 @@ import '../core/app_theme.dart';
 import '../core/form_feedback.dart';
 import '../core/ui/ui.dart';
 import '../core/value_types.dart';
-import '../providers/package_widgets.dart';
 import '../providers/provider_catalog.dart';
-import '../providers/provider_pages.dart';
+import '../providers/provider_pickers.dart';
 import '../providers/provider_record.dart';
 import 'ledger_controller.dart';
 import 'server_record.dart';
@@ -650,93 +649,41 @@ class _ServerFormState extends State<ServerForm> {
     action: LocalizedText((l10n) => l10n.r6CatReplaceAction),
   );
 
-  // ---- provider and package dropdowns ------------------------------------
+  // ---- provider and package pickers --------------------------------------
 
-  static const _noneKey = 'none', _newKey = 'new', _draftKey = 'draft';
-  String get _providerKey => selectedProvider != null
-      ? 'local:${selectedProvider!.id}'
-      : pendingCatalog != null
-      ? 'catalog:${pendingCatalog!.id}'
-      : pendingNew != null
-      ? _draftKey
-      : _noneKey;
+  bool _picking = false;
 
-  List<AppDropdownGroup<String>> _providerGroups(AppLocalizations l10n) {
-    final controller = widget.controller;
-    String? packages(ProviderRecord provider) {
-      final count = controller.catalogProviderFor(provider)?.packages.length;
-      return count == null || count == 0 ? null : l10n.r6CatPackageCount(count);
+  Future<void> _pickProvider() async {
+    if (saving || _picking || !widget.controller.canMutate) return;
+    _picking = true;
+    try {
+      final choice = await pickProvider(
+        context,
+        ledger: widget.controller,
+        selected: selectedProvider,
+        pendingCatalog: pendingCatalog,
+        pendingNew: pendingNew,
+      );
+      if (choice != null && mounted) await _applyProvider(choice);
+    } finally {
+      _picking = false;
     }
-
-    final added = {for (final p in controller.providers) ?p.catalogId};
-    final mine = [
-      if (pendingNew != null)
-        AppDropdownItem(
-          key: const ValueKey('form-provider-draft'),
-          value: _draftKey,
-          title: pendingNew!.name,
-        ),
-      for (final provider in controller.providers)
-        AppDropdownItem(
-          key: ValueKey('form-provider-${provider.id}'),
-          value: 'local:${provider.id}',
-          title: provider.name,
-          subtitle: packages(provider),
-        ),
-    ];
-    final catalog = [
-      for (final provider in controller.catalog.providers)
-        if (!added.contains(provider.id))
-          AppDropdownItem(
-            key: ValueKey('form-provider-catalog-${provider.id}'),
-            value: 'catalog:${provider.id}',
-            title: provider.name,
-            subtitle: provider.packages.isEmpty
-                ? null
-                : l10n.r6CatPackageCount(provider.packages.length),
-          ),
-    ];
-    return [
-      AppDropdownGroup(
-        items: [
-          AppDropdownItem(
-            key: const ValueKey('form-provider-none'),
-            value: _noneKey,
-            title: l10n.r7FormProviderNone,
-          ),
-        ],
-      ),
-      AppDropdownGroup(header: l10n.r6CatMineSection, items: mine),
-      AppDropdownGroup(header: l10n.r6CatCatalogSection, items: catalog),
-      AppDropdownGroup(
-        items: [
-          AppDropdownItem(
-            key: const ValueKey('form-provider-new'),
-            value: _newKey,
-            title: l10n.r7FormProviderNew,
-          ),
-        ],
-      ),
-    ];
   }
 
-  Future<void> _chooseProvider(String key) async {
-    if (saving || key == _providerKey || key == _draftKey) return;
-    final controller = widget.controller;
-    ProviderRecord? local;
-    CatalogProvider? catalog;
-    ProviderRecord? draft;
-    if (key == _newKey) {
-      draft = await draftProvider(context, controller);
-      if (draft == null || !mounted) return;
-    } else if (key.startsWith('local:')) {
-      local = controller.providers
-          .where((p) => 'local:${p.id}' == key)
-          .firstOrNull;
-      if (local == null) return;
-    } else if (key.startsWith('catalog:')) {
-      catalog = controller.catalog.provider(key.substring(8));
-      if (catalog == null) return;
+  Future<void> _applyProvider(ProviderChoice choice) async {
+    final local = choice.local, catalog = choice.catalog, draft = choice.draft;
+    // Choosing what is already chosen changes nothing.
+    String key(ProviderRecord? l, CatalogProvider? c, ProviderRecord? d) =>
+        l != null
+        ? 'local:${l.id}'
+        : c != null
+        ? 'catalog:${c.id}'
+        : d != null
+        ? 'draft:${d.id}'
+        : 'none';
+    if (key(local, catalog, draft) ==
+        key(selectedProvider, pendingCatalog, pendingNew)) {
+      return;
     }
     final target = _catalogOf(local, catalog);
     final hadPackage = package != null;
@@ -764,32 +711,25 @@ class _ServerFormState extends State<ServerForm> {
     });
   }
 
-  List<AppDropdownGroup<String>> _packageGroups(
-    AppLocalizations l10n,
-    CatalogProvider? catalog,
-  ) => [
-    AppDropdownGroup(
-      items: [
-        AppDropdownItem(
-          key: const ValueKey('form-package-none'),
-          value: '',
-          title: l10n.r6CatNoPackage,
-        ),
-        for (final option in catalog?.packages ?? const <CatalogPackage>[])
-          AppDropdownItem(
-            key: ValueKey('form-package-${option.id}'),
-            value: option.id,
-            title: option.name,
-            subtitle: packageSummaryLine(l10n, option),
-          ),
-      ],
-    ),
-  ];
-
-  Future<void> _choosePackage(String id) async {
+  Future<void> _pickPackage() async {
     final catalog = _catalogOfSelection;
-    if (saving || id == (package?.id ?? '')) return;
-    final chosen = catalog?.package(id);
+    if (saving || _picking || catalog == null) return;
+    _picking = true;
+    try {
+      final choice = await pickPackage(
+        context,
+        ledger: widget.controller,
+        provider: catalog,
+        selected: package,
+      );
+      if (choice != null && mounted) await _applyPackageChoice(choice.package);
+    } finally {
+      _picking = false;
+    }
+  }
+
+  Future<void> _applyPackageChoice(CatalogPackage? chosen) async {
+    if (chosen?.id == package?.id) return;
     if (chosen == null) {
       setState(() => package = null);
       return;
@@ -1000,26 +940,22 @@ class _ServerFormState extends State<ServerForm> {
                           hint: l10n.uiFormNameHint,
                           required: true,
                         ),
-                        AppDropdownRow<String>(
+                        AppFormRow.pick(
                           key: const ValueKey('form-provider'),
                           label: l10n.uiFormProvider,
                           value: providerName,
                           placeholder: l10n.r7FormProviderNone,
-                          selected: _providerKey,
-                          enabled: canChooseProvider,
-                          groups: _providerGroups(l10n),
-                          onSelected: _chooseProvider,
+                          onTap: canChooseProvider ? _pickProvider : null,
                         ),
                         if (showPackage)
-                          AppDropdownRow<String>(
+                          AppFormRow.pick(
                             key: const ValueKey('form-package'),
                             label: l10n.r6CatFormPackage,
                             value: package?.name,
                             placeholder: l10n.r6CatNoPackage,
-                            selected: package?.id ?? '',
-                            enabled: !saving,
-                            groups: _packageGroups(l10n, catalog),
-                            onSelected: _choosePackage,
+                            onTap: !saving && catalog != null
+                                ? _pickPackage
+                                : null,
                           ),
                         AppFormRow.pick(
                           key: const ValueKey('field-group'),

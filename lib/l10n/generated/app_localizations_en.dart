@@ -5361,6 +5361,75 @@ class AppLocalizationsEn extends AppLocalizations {
   String get r6CatMineSection => 'My providers';
 
   @override
+  String get r8ProvidersInUse => 'Providers in use';
+
+  @override
+  String get r8NoProvidersInUse => 'No provider has servers yet.';
+
+  @override
+  String get r8AllProviders => 'All Providers';
+
+  @override
+  String get r8SearchProviders => 'Search providers';
+
+  @override
+  String get r8SearchPackages => 'Search by name, region or specs';
+
+  @override
+  String get r8NoMatches => 'No matches.';
+
+  @override
+  String get r8BadgeCatalog => 'Catalog';
+
+  @override
+  String get r8BadgeCustom => 'Custom';
+
+  @override
+  String get r8PackagesInUse => 'Packages in use';
+
+  @override
+  String r8PackagesInUseCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count packages in use',
+      one: '1 package in use',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get r8AllPackages => 'All Packages';
+
+  @override
+  String r8InUseCount(int count) {
+    return 'In use · $count';
+  }
+
+  @override
+  String get r8SortListed => 'Listed';
+
+  @override
+  String get r8SortPrice => 'Price';
+
+  @override
+  String get r8SortName => 'Name';
+
+  @override
+  String get r8SectionInUse => 'In use';
+
+  @override
+  String r8NewProviderNamed(String name) {
+    return 'New Provider “$name”';
+  }
+
+  @override
+  String get r8PickProvider => 'Choose a Provider';
+
+  @override
+  String get r8PickPackage => 'Choose a Package';
+
+  @override
   String get r6CatCatalogFooter =>
       'Catalog providers come with ready-made packages. Choose Add Provider if yours isn’t listed.';
 
@@ -5465,13 +5534,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get r6CatReplaceAction => 'Replace Values';
 
   @override
-  String get r6CatPackagesHeader => 'Packages';
-
-  @override
-  String get r6CatPackagesFooter =>
-      'Packages come from the catalog and only pre-fill a new server.';
-
-  @override
   String get r6CatNoPackagesYet => 'This provider has no package list.';
 
   @override
@@ -5504,19 +5566,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get providerUiEmpty => 'No providers yet';
 
   @override
-  String get providerUiEmptyHelp =>
-      'Add a provider name, or choose one from the catalog when you add a server.';
-
-  @override
   String providerUiUnspecifiedCount(int count) {
     return '$count servers have no provider assigned.';
   }
 
   @override
   String get providerUiDevices => 'Provider servers';
-
-  @override
-  String get providerUiNoDevices => 'No servers belong to this provider yet.';
 
   @override
   String get providerUiUnavailable =>

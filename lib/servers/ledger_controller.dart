@@ -219,6 +219,44 @@ class LedgerController extends ChangeNotifier {
   String groupName(String? id, {AppLocalizations? l10n}) =>
       groups.where((g) => g.id == id).firstOrNull?.name ??
       (l10n ?? defaultLocalizations).ungrouped;
+  List<ServerRecord>? _usageSource;
+  Map<String, ProviderUsage> _usage = const {};
+  Map<String, int> _packageUse = const {};
+
+  /// Servers (active and archived) and packages in use per local provider id.
+  /// Providers without servers are absent. Rebuilt only when [records] change,
+  /// so lists of hundreds of providers stay cheap.
+  Map<String, ProviderUsage> get providerUsage {
+    _ensureUsage();
+    return _usage;
+  }
+
+  /// Number of servers (active and archived) using catalog package [id].
+  int packageUseCount(String id) {
+    _ensureUsage();
+    return _packageUse[id] ?? 0;
+  }
+
+  void _ensureUsage() {
+    if (identical(_usageSource, records)) return;
+    final servers = <String, List<ServerRecord>>{};
+    final packages = <String, int>{};
+    for (final s in records) {
+      if (s.providerId != null) {
+        (servers[s.providerId!] ??= []).add(s);
+      }
+      if (s.packageId != null) {
+        packages[s.packageId!] = (packages[s.packageId!] ?? 0) + 1;
+      }
+    }
+    _usage = {
+      for (final e in servers.entries)
+        e.key: ProviderUsage(e.value, {for (final s in e.value) ?s.packageId}),
+    };
+    _packageUse = packages;
+    _usageSource = records;
+  }
+
   ProviderRecord? providerFor(ServerRecord server) =>
       providers.where((p) => p.id == server.providerId).firstOrNull;
 
@@ -407,4 +445,11 @@ class LedgerController extends ChangeNotifier {
     groupFilter = null;
     notifyListeners();
   }
+}
+
+/// What a provider is used for: its servers and the distinct packages they use.
+class ProviderUsage {
+  const ProviderUsage(this.servers, this.packageIds);
+  final List<ServerRecord> servers;
+  final Set<String> packageIds;
 }

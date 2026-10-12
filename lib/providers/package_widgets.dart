@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../core/search_match.dart';
 import '../core/ui/ui.dart';
 import '../l10n/generated/app_localizations.dart';
 import '../l10n/locale_preference.dart';
@@ -27,6 +28,35 @@ String packageSummaryLine(AppLocalizations l10n, CatalogPackage package) => [
   if (package.price != null) packagePriceText(l10n, package.price!),
   packageHardwareLine(l10n, package),
 ].where((part) => part.isNotEmpty).join(' · ');
+
+const _mib = 1024 * 1024, _gib = 1024 * _mib, _tib = 1024 * _gib;
+
+/// Compact spellings of a capacity people type: `2g 2gb 2gib` for 2 GiB.
+Iterable<String> _capacityWords(int? bytes) {
+  if (bytes == null || bytes <= 0) return const [];
+  final (n, units) = bytes % _tib == 0
+      ? (bytes ~/ _tib, ['t', 'tb', 'tib'])
+      : bytes % _gib == 0
+      ? (bytes ~/ _gib, ['g', 'gb', 'gib'])
+      : (bytes ~/ _mib, ['m', 'mb', 'mib']);
+  return [for (final u in units) '$n$u'];
+}
+
+/// Everything a user may search a package by: name, region, the localized
+/// summary, price, and compact spec spellings (`2c`, `2gb`, `40g`, `2核`).
+String packageSearchText(AppLocalizations l10n, CatalogPackage package) =>
+    searchHaystack([
+      package.name,
+      package.region,
+      packageSummaryLine(l10n, package),
+      if (package.vcpu != null)
+        for (final u in ['c', 'core', 'cores', 'vcpu', 'cpu', '核'])
+          '${package.vcpu}$u',
+      ..._capacityWords(package.ramBytes),
+      ..._capacityWords(package.diskBytes),
+      ..._capacityWords(package.trafficBytes),
+      if (package.trafficUnlimited) 'unlimited',
+    ]);
 
 /// Pill describing how a saved package relates to the current catalog.
 StatusPill? packageStatePill(

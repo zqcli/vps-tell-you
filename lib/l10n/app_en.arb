@@ -2979,6 +2979,97 @@
   "@r6CatMineSection": {
     "description": "Provider catalog and packages."
   },
+  "r8ProvidersInUse": "Providers in use",
+  "@r8ProvidersInUse": {
+    "description": "Providers and packages UI (r8)."
+  },
+  "r8NoProvidersInUse": "No provider has servers yet.",
+  "@r8NoProvidersInUse": {
+    "description": "Providers and packages UI (r8)."
+  },
+  "r8AllProviders": "All Providers",
+  "@r8AllProviders": {
+    "description": "Providers and packages UI (r8)."
+  },
+  "r8SearchProviders": "Search providers",
+  "@r8SearchProviders": {
+    "description": "Providers and packages UI (r8)."
+  },
+  "r8SearchPackages": "Search by name, region or specs",
+  "@r8SearchPackages": {
+    "description": "Providers and packages UI (r8)."
+  },
+  "r8NoMatches": "No matches.",
+  "@r8NoMatches": {
+    "description": "Providers and packages UI (r8)."
+  },
+  "r8BadgeCatalog": "Catalog",
+  "@r8BadgeCatalog": {
+    "description": "Providers and packages UI (r8)."
+  },
+  "r8BadgeCustom": "Custom",
+  "@r8BadgeCustom": {
+    "description": "Providers and packages UI (r8)."
+  },
+  "r8PackagesInUse": "Packages in use",
+  "@r8PackagesInUse": {
+    "description": "Providers and packages UI (r8)."
+  },
+  "r8PackagesInUseCount": "{count, plural, =1{1 package in use} other{{count} packages in use}}",
+  "@r8PackagesInUseCount": {
+    "description": "Providers and packages UI (r8).",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "r8AllPackages": "All Packages",
+  "@r8AllPackages": {
+    "description": "Providers and packages UI (r8)."
+  },
+  "r8InUseCount": "In use · {count}",
+  "@r8InUseCount": {
+    "description": "Providers and packages UI (r8).",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "r8SortListed": "Listed",
+  "@r8SortListed": {
+    "description": "Providers and packages UI (r8)."
+  },
+  "r8SortPrice": "Price",
+  "@r8SortPrice": {
+    "description": "Providers and packages UI (r8)."
+  },
+  "r8SortName": "Name",
+  "@r8SortName": {
+    "description": "Providers and packages UI (r8)."
+  },
+  "r8SectionInUse": "In use",
+  "@r8SectionInUse": {
+    "description": "Providers and packages UI (r8)."
+  },
+  "r8NewProviderNamed": "New Provider “{name}”",
+  "@r8NewProviderNamed": {
+    "description": "Providers and packages UI (r8).",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "r8PickProvider": "Choose a Provider",
+  "@r8PickProvider": {
+    "description": "Providers and packages UI (r8)."
+  },
+  "r8PickPackage": "Choose a Package",
+  "@r8PickPackage": {
+    "description": "Providers and packages UI (r8)."
+  },
   "r6CatCatalogFooter": "Catalog providers come with ready-made packages. Choose Add Provider if yours isn’t listed.",
   "@r6CatCatalogFooter": {
     "description": "Provider catalog and packages."
@@ -3111,14 +3202,6 @@
   "@r6CatReplaceAction": {
     "description": "Provider catalog and packages."
   },
-  "r6CatPackagesHeader": "Packages",
-  "@r6CatPackagesHeader": {
-    "description": "Provider catalog and packages."
-  },
-  "r6CatPackagesFooter": "Packages come from the catalog and only pre-fill a new server.",
-  "@r6CatPackagesFooter": {
-    "description": "Provider catalog and packages."
-  },
   "r6CatNoPackagesYet": "This provider has no package list.",
   "@r6CatNoPackagesYet": {
     "description": "Provider catalog and packages."
@@ -3160,10 +3243,6 @@
   "@providerUiEmpty": {
     "description": "Provider navigation and ownership UI."
   },
-  "providerUiEmptyHelp": "Add a provider name, or choose one from the catalog when you add a server.",
-  "@providerUiEmptyHelp": {
-    "description": "Provider navigation and ownership UI."
-  },
   "providerUiUnspecifiedCount": "{count} servers have no provider assigned.",
   "@providerUiUnspecifiedCount": {
     "description": "Provider navigation and ownership UI.",
@@ -3175,10 +3254,6 @@
   },
   "providerUiDevices": "Provider servers",
   "@providerUiDevices": {
-    "description": "Provider navigation and ownership UI."
-  },
-  "providerUiNoDevices": "No servers belong to this provider yet.",
-  "@providerUiNoDevices": {
     "description": "Provider navigation and ownership UI."
   },
   "providerUiUnavailable": "This provider changed or is unavailable. Go back and choose again.",
