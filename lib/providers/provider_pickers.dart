@@ -134,7 +134,7 @@ class _ProviderPickerPageState extends State<ProviderPickerPage> {
       final local = [
         for (final provider in ledger.providers)
           if (matches(provider.name)) provider,
-      ]..sort((a, b) => _fold(a.name).compareTo(_fold(b.name)));
+      ]..sort((a, b) => compareNames(a.name, b.name));
       final inUse = [
         for (final provider in local)
           if (usage.containsKey(provider.id)) provider,
@@ -146,7 +146,7 @@ class _ProviderPickerPageState extends State<ProviderPickerPage> {
       final catalog = [
         for (final provider in notAddedCatalogProviders(ledger))
           if (matches(provider.name)) provider,
-      ]..sort((a, b) => _fold(a.name).compareTo(_fold(b.name)));
+      ]..sort((a, b) => compareNames(a.name, b.name));
       final draft = widget.pendingNew;
       final showDraft = draft != null && matches(draft.name);
       final searching = tokens.isNotEmpty;
@@ -238,6 +238,18 @@ class _ProviderPickerPageState extends State<ProviderPickerPage> {
                       onTap: () => _pick(const ProviderChoice.none()),
                     ),
                   ),
+                // Kept near the top: the catalog can run to hundreds of rows.
+                if (!searching && ledger.canMutate)
+                  AppListSection(
+                    count: 1,
+                    itemBuilder: (context, _) => AppRow(
+                      key: const ValueKey('picker-provider-new'),
+                      icon: Icons.add_rounded,
+                      iconColor: AppTints.green,
+                      title: l10n.r7FormProviderNew,
+                      onTap: _newProvider,
+                    ),
+                  ),
                 if (showDraft)
                   AppListSection(
                     count: 1,
@@ -268,17 +280,6 @@ class _ProviderPickerPageState extends State<ProviderPickerPage> {
                     );
                   },
                 ),
-                if (!searching && ledger.canMutate)
-                  AppListSection(
-                    count: 1,
-                    itemBuilder: (context, _) => AppRow(
-                      key: const ValueKey('picker-provider-new'),
-                      icon: Icons.add_rounded,
-                      iconColor: AppTints.green,
-                      title: l10n.r7FormProviderNew,
-                      onTap: _newProvider,
-                    ),
-                  ),
               ],
             ),
         ],

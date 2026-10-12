@@ -18,11 +18,7 @@ String providerUsageLine(BuildContext context, ProviderUsage usage) {
   ].join(' · ');
 }
 
-int _byName(String a, String b) {
-  final x = foldSearch(a), y = foldSearch(b);
-  final c = x.compareTo(y);
-  return c != 0 ? c : a.compareTo(b);
-}
+int _byName(String a, String b) => compareNames(a, b);
 
 /// Catalog providers that have no local provider yet.
 List<CatalogProvider> notAddedCatalogProviders(LedgerController ledger) {

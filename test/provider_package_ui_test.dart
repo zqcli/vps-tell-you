@@ -237,6 +237,8 @@ void main() {
       double top(Finder f) => tester.getTopLeft(f).dy;
       final order = [
         find.byKey(const ValueKey('picker-provider-none')),
+        // Near the top so a long catalog never hides it.
+        find.byKey(const ValueKey('picker-provider-new')),
         find.text('In use'),
         find.byKey(const ValueKey('picker-provider-busy')),
         find.text('My providers'),
@@ -245,7 +247,6 @@ void main() {
         // Sorted by name: Empty Host, Fixture Cloud.
         find.byKey(const ValueKey('picker-catalog-empty-host')),
         find.byKey(const ValueKey('picker-catalog-fixture-cloud')),
-        find.byKey(const ValueKey('picker-provider-new')),
       ];
       for (final f in order) {
         expect(f, findsOneWidget);

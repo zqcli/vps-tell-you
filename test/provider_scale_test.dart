@@ -343,12 +343,12 @@ void main() {
         find.descendant(of: plan(5), matching: find.textContaining('In use')),
         findsNothing,
       );
-      // Listed order: Plan 0 first. Name order: "Plan 0, Plan 1, Plan 10".
+      // Listed order: Plan 0 first. Name order is natural: Plan 2 < Plan 10.
       double top(Finder f) => tester.getTopLeft(f).dy;
       expect(top(plan(0)), lessThan(top(plan(1))));
       await tester.tap(find.text('Name'));
       await tester.pumpAndSettle();
-      expect(top(plan(10)), lessThan(top(plan(2))), reason: 'text order');
+      expect(top(plan(2)), lessThan(top(plan(10))), reason: 'natural order');
       // Price: cheapest first (5 + j USD), so Plan 0 again before Plan 1.
       await tester.tap(find.text('Price'));
       await tester.pumpAndSettle();

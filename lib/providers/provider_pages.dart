@@ -3,6 +3,7 @@ import 'package:flutter/cupertino.dart'
 import 'package:flutter/material.dart';
 
 import '../core/app_theme.dart' show showFailure;
+import '../core/search_match.dart';
 import '../core/ui/ui.dart';
 import '../data/ledger_store.dart';
 import '../l10n/locale_preference.dart';
@@ -440,14 +441,10 @@ class _ProviderDetailsPageState extends State<ProviderDetailsPage> {
       CatalogPackage? packageOf(String id) =>
           catalog?.package(id) ??
           byPackage[id]!.map(ledger.packageSnapshotFor).nonNulls.firstOrNull;
-      final inUse =
-          [
-            for (final id in byPackage.keys)
-              if (packageOf(id) != null) (packageOf(id)!, byPackage[id]!),
-          ]..sort(
-            (a, b) =>
-                a.$1.name.toLowerCase().compareTo(b.$1.name.toLowerCase()),
-          );
+      final inUse = [
+        for (final id in byPackage.keys)
+          if (packageOf(id) != null) (packageOf(id)!, byPackage[id]!),
+      ]..sort((a, b) => compareNames(a.$1.name, b.$1.name));
       final editable = !opening && _canEdit(ledger);
       final selection = ProviderSelection(local, catalog: catalog);
       return AppScaffold(

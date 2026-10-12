@@ -92,3 +92,33 @@ bool matchesTokens(String haystack, List<String> tokens) {
   }
   return true;
 }
+
+final _digitRun = RegExp(r'\d+');
+
+/// Orders names by folded text with digit runs compared by value, so
+/// "Plan 2" sorts before "Plan 10". Ties fall back to the raw strings.
+int compareNames(String a, String b) {
+  final x = foldSearch(a), y = foldSearch(b);
+  var i = 0, j = 0;
+  while (i < x.length && j < y.length) {
+    final mx = _digitRun.matchAsPrefix(x, i);
+    final my = _digitRun.matchAsPrefix(y, j);
+    if (mx != null && my != null) {
+      final dx = mx[0]!.replaceFirst(RegExp(r'^0+(?=\d)'), '');
+      final dy = my[0]!.replaceFirst(RegExp(r'^0+(?=\d)'), '');
+      final c = dx.length != dy.length
+          ? dx.length.compareTo(dy.length)
+          : dx.compareTo(dy);
+      if (c != 0) return c;
+      i = mx.end;
+      j = my.end;
+      continue;
+    }
+    final c = x.codeUnitAt(i).compareTo(y.codeUnitAt(j));
+    if (c != 0) return c;
+    i++;
+    j++;
+  }
+  final c = (x.length - i).compareTo(y.length - j);
+  return c != 0 ? c : a.compareTo(b);
+}

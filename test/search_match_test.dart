@@ -39,4 +39,24 @@ void main() {
     expect(hit('plan 12', '12'), isTrue);
     expect(hit('plan 12', '2'), isFalse);
   });
+
+  test('names sort with numbers by value', () {
+    final names = [
+      'Plan 10',
+      'plan 2',
+      'Plan 02b',
+      'Café 1',
+      'cafe 1',
+      'Plan 1',
+    ];
+    names.sort(compareNames);
+    expect(names, [
+      'Café 1',
+      'cafe 1',
+      'Plan 1',
+      'plan 2',
+      'Plan 02b',
+      'Plan 10',
+    ]);
+  });
 }
