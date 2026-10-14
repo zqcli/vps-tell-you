@@ -18,7 +18,6 @@ import '../finance/calculator_page.dart';
 import '../finance/finance_math.dart';
 import '../finance/finance_models.dart';
 import '../finance/payment_pages.dart';
-import '../providers/package_widgets.dart';
 import '../providers/provider_pages.dart';
 import '../security/host_trust.dart' show normalizedHost;
 import '../security/host_trust_pages.dart';
@@ -1037,7 +1036,6 @@ class _ServerProviderCardState extends State<_ServerProviderCard> {
     final server = widget.server;
     final l10n = context.l10n;
     final provider = controller.providerFor(server);
-    final package = controller.packageSnapshotFor(server);
     return AppSection(
       header: l10n.r6CatServerSection,
       footer: l10n.r6CatServerFooter,
@@ -1068,42 +1066,6 @@ class _ServerProviderCardState extends State<_ServerProviderCard> {
                   );
                 }),
         ),
-        if (package == null)
-          AppRow(
-            key: const ValueKey('server-package-link'),
-            icon: Icons.inventory_2_outlined,
-            iconColor: AppTints.purple,
-            title: l10n.r6CatNoPackageRow,
-            enabled: false,
-          )
-        else
-          AppRow(
-            key: const ValueKey('server-package-link'),
-            icon: Icons.inventory_2_outlined,
-            iconColor: AppTints.purple,
-            title: package.name,
-            subtitle: packageSummaryLine(l10n, package),
-            subtitleMaxLines: 3,
-            trailing: packageStatePill(
-              l10n,
-              controller.packageStateFor(server),
-            ),
-            chevron: true,
-            onTap: opening
-                ? null
-                : () => open(() async {
-                    await Navigator.push<void>(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => PackageDetailsPage(
-                          ledger: controller,
-                          packageId: package.id,
-                          server: server,
-                        ),
-                      ),
-                    );
-                  }),
-          ),
       ],
     );
   }

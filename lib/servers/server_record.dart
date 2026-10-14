@@ -50,8 +50,6 @@ class ServerRecord {
     this.notes = '',
     this.groupId,
     this.providerId,
-    this.packageId,
-    this.packageSnapshot,
     this.favorite = false,
     this.billing = BillingKind.unknown,
     this.currency = 'USD',
@@ -67,11 +65,6 @@ class ServerRecord {
   final String id, name, vendor, host, region, purpose, os, spec, notes;
   final String? groupId;
   final String? providerId;
-
-  /// Catalog package chosen for this server and the package JSON at that
-  /// moment. Both are set or both are null; the server's own hardware and
-  /// billing fields stay the source of truth when the catalog changes.
-  final String? packageId, packageSnapshot;
   final ServerResources? resources;
   final bool favorite, isDemo;
   final BillingKind billing;
@@ -178,8 +171,6 @@ class ServerRecord {
     'name': name,
     'vendor': vendor,
     'provider_id': providerId,
-    'package_id': packageId,
-    'package_snapshot': packageSnapshot,
     'host': host,
     'region': region,
     'purpose': purpose,
@@ -207,8 +198,6 @@ class ServerRecord {
     name: row['name'] as String,
     vendor: row['vendor'] as String,
     providerId: row['provider_id'] as String?,
-    packageId: row['package_id'] as String?,
-    packageSnapshot: row['package_snapshot'] as String?,
     host: row['host'] as String,
     region: row['region'] as String,
     purpose: row['purpose'] as String,

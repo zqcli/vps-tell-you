@@ -3,7 +3,6 @@ import 'package:flutter/cupertino.dart'
 import 'package:flutter/material.dart';
 
 import '../core/app_theme.dart' show showFailure;
-import '../core/search_match.dart';
 import '../core/ui/ui.dart';
 import '../data/ledger_store.dart';
 import '../l10n/locale_preference.dart';
@@ -13,13 +12,10 @@ import '../servers/refresh_failure_notice.dart';
 import '../servers/server_detail.dart';
 import '../servers/server_form.dart';
 import '../servers/server_record.dart';
-import 'package_widgets.dart';
 import 'provider_catalog.dart';
-import 'provider_lists.dart';
 import 'provider_record.dart';
 
-export 'provider_lists.dart'
-    show ProvidersPage, AllProvidersPage, PackageListPage;
+export 'provider_lists.dart' show ProvidersPage, AllProvidersPage;
 
 /// What the user picked as the provider of a server. A null route result
 /// means cancellation. [provider] is the existing local provider; [catalog] is
@@ -57,15 +53,9 @@ String _providerSummary(
   BuildContext context,
   LedgerController ledger,
   ProviderRecord provider,
-) {
-  final servers = context.l10n.r6CatProviderSummary(
-    ledger.providerUsage[provider.id]?.servers.length ?? 0,
-  );
-  final catalog = ledger.catalogProviderFor(provider);
-  return catalog == null || catalog.packages.isEmpty
-      ? servers
-      : '$servers · ${context.l10n.r6CatPackageCount(catalog.packages.length)}';
-}
+) => context.l10n.r6CatProviderSummary(
+  ledger.providerUsage[provider.id]?.servers.length ?? 0,
+);
 
 /// Shared status for all provider routes. A successful write followed by a
 /// failed reload stays committed, and cannot be submitted a second time.
@@ -84,6 +74,39 @@ class ProviderNotices extends StatelessWidget {
       CatalogFailureBanner(ledger: ledger),
     ],
   );
+}
+
+/// Shown on pages which depend on the directory when it could not be loaded.
+class CatalogFailureBanner extends StatelessWidget {
+  const CatalogFailureBanner({super.key, required this.ledger});
+  final LedgerController ledger;
+  @override
+  Widget build(BuildContext context) {
+    if (!ledger.catalogFailed || ledger.catalogLoaded) {
+      return const SizedBox.shrink();
+    }
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        AppBanner(
+          text: context.l10n.r6CatCatalogFailed,
+          tone: AppTone.amber,
+          icon: Icons.error_outline_rounded,
+        ),
+        AppSection(
+          topSpacing: 10,
+          children: [
+            AppRow(
+              key: const ValueKey('catalog-retry'),
+              center: true,
+              title: context.l10n.r6CatRetry,
+              onTap: () => ledger.loadCatalog(),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
 }
 
 Future<ProviderRecord?> editProvider(
@@ -258,89 +281,18 @@ class _ProviderNameDialogState extends State<_ProviderNameDialog> {
   }
 }
 
-/// A package row: name with its optional "Default" / "In use · N" pills, then
-/// the price and hardware summary. The pills sit beside the name and wrap
-/// below it on narrow screens or large text instead of squeezing the row.
-AppRow packageRow(
-  BuildContext context, {
-  required Key key,
-  required CatalogPackage package,
-  Widget? trailing,
-  bool chevron = false,
-  int useCount = 0,
-
-  /// Extra third line (e.g. "2 servers"); wraps instead of squeezing the row.
-  String? note,
-  VoidCallback? onTap,
-}) {
-  final l10n = context.l10n;
-  final p = context.palette;
-  return AppRow.custom(
-    key: key,
-    leading: chevron
-        ? const AppIconSquare(
-            icon: Icons.inventory_2_outlined,
-            color: AppTints.purple,
-          )
-        : null,
-    trailing: trailing,
-    chevron: chevron,
-    onTap: onTap,
-    child: Padding(
-      padding: const EdgeInsets.symmetric(vertical: 11),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Wrap(
-            spacing: 8,
-            runSpacing: 4,
-            crossAxisAlignment: WrapCrossAlignment.center,
-            children: [
-              Text(
-                package.name,
-                style: TextStyle(fontSize: 16, height: 1.3, color: p.text),
-              ),
-              if (package.isDefault) StatusPill(l10n.r6CatDefaultPill),
-              if (useCount > 0)
-                StatusPill(l10n.r8InUseCount(useCount), tone: AppTone.blue),
-            ],
-          ),
-          if (packageSummaryLine(l10n, package).isNotEmpty)
-            Padding(
-              padding: const EdgeInsets.only(top: 2),
-              child: Text(
-                packageSummaryLine(l10n, package),
-                style: TextStyle(fontSize: 13, height: 1.35, color: p.text2),
-              ),
-            ),
-          if (note != null)
-            Padding(
-              padding: const EdgeInsets.only(top: 2),
-              child: Text(
-                note,
-                style: TextStyle(fontSize: 13, height: 1.35, color: p.text3),
-              ),
-            ),
-        ],
-      ),
-    ),
-  );
-}
-
-/// Opens the new-server form for [selection] (and [package]) as a page sheet
-/// and returns the id of the saved server.
+/// Opens the new-server form for [selection] as a page sheet and returns the
+/// id of the saved server.
 Future<String?> openServerForm(
   BuildContext context,
   LedgerController ledger,
-  ProviderSelection selection, {
-  CatalogPackage? package,
-}) => showAppModal<String>(
+  ProviderSelection selection,
+) => showAppModal<String>(
   context,
   builder: (_) => ServerForm(
     controller: ledger,
     businessProvider: selection.provider,
     catalogProvider: selection.isPending ? selection.catalog : null,
-    initialPackage: package,
   ),
 );
 
@@ -427,24 +379,6 @@ class _ProviderDetailsPageState extends State<ProviderDetailsPage> {
       final servers = local == null
           ? const <ServerRecord>[]
           : ledger.providerUsage[local.id]?.servers ?? const <ServerRecord>[];
-      // Only what is in use is listed here; the rest of a catalog lives behind
-      // "All Packages".
-      final byPackage = <String, List<ServerRecord>>{};
-      final noPackage = <ServerRecord>[];
-      for (final server in servers) {
-        if (server.packageId == null) {
-          noPackage.add(server);
-        } else {
-          (byPackage[server.packageId!] ??= []).add(server);
-        }
-      }
-      CatalogPackage? packageOf(String id) =>
-          catalog?.package(id) ??
-          byPackage[id]!.map(ledger.packageSnapshotFor).nonNulls.firstOrNull;
-      final inUse = [
-        for (final id in byPackage.keys)
-          if (packageOf(id) != null) (packageOf(id)!, byPackage[id]!),
-      ]..sort((a, b) => compareNames(a.$1.name, b.$1.name));
       final editable = !opening && _canEdit(ledger);
       final selection = ProviderSelection(local, catalog: catalog);
       return AppScaffold(
@@ -483,9 +417,7 @@ class _ProviderDetailsPageState extends State<ProviderDetailsPage> {
                       const SizedBox(height: 3),
                       Text(
                         local == null
-                            ? l10n.r6CatPackageCount(
-                                catalog?.packages.length ?? 0,
-                              )
+                            ? l10n.r6CatProviderSummary(0)
                             : _providerSummary(context, ledger, local),
                         style: TextStyle(
                           fontSize: 14,
@@ -536,70 +468,11 @@ class _ProviderDetailsPageState extends State<ProviderDetailsPage> {
               ],
             ),
           ],
-          if (inUse.isNotEmpty)
+          if (servers.isNotEmpty)
             AppSection(
-              header: l10n.r8PackagesInUse,
+              header: l10n.providerUiDevices,
               children: [
-                for (final (package, linked) in inUse)
-                  packageRow(
-                    context,
-                    key: ValueKey('provider-package-${package.id}'),
-                    package: package,
-                    chevron: true,
-                    note: l10n.r6CatProviderSummary(linked.length),
-                    onTap: opening
-                        ? null
-                        : () => open(() async {
-                            await Navigator.push<void>(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => PackageDetailsPage(
-                                  ledger: ledger,
-                                  packageId: package.id,
-                                ),
-                              ),
-                            );
-                          }),
-                  ),
-              ],
-            ),
-          if (catalog != null)
-            AppSection(
-              footer: catalog.packages.isEmpty ? l10n.r6CatNoPackagesYet : null,
-              children: [
-                if (catalog.packages.isNotEmpty)
-                  AppRow(
-                    key: const ValueKey('provider-all-packages'),
-                    icon: Icons.inventory_2_outlined,
-                    iconColor: AppTints.purple,
-                    title: l10n.r8AllPackages,
-                    value: '${catalog.packages.length}',
-                    chevron: true,
-                    onTap: opening
-                        ? null
-                        : () => open(() async {
-                            await Navigator.push<void>(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => PackageListPage(
-                                  ledger: ledger,
-                                  catalogId: catalog.id,
-                                ),
-                              ),
-                            );
-                          }),
-                  )
-                else
-                  AppRow(title: l10n.r6CatNoPackagesYet, enabled: false),
-              ],
-            ),
-          if (noPackage.isNotEmpty)
-            AppSection(
-              header: catalog != null && catalog.packages.isNotEmpty
-                  ? l10n.r6CatNoPackageRow
-                  : l10n.providerUiDevices,
-              children: [
-                for (final server in noPackage)
+                for (final server in servers)
                   AppRow(
                     key: ValueKey('provider-device-${server.id}'),
                     icon: Icons.dns_outlined,
@@ -656,238 +529,6 @@ class _ProviderDetailsPageState extends State<ProviderDetailsPage> {
               ),
             ],
           ),
-        ],
-      );
-    },
-  );
-}
-
-/// One package: specification, price, the servers linked to it and, when the
-/// catalog changed since a server chose it, what that server saved.
-class PackageDetailsPage extends StatefulWidget {
-  const PackageDetailsPage({
-    super.key,
-    required this.ledger,
-    required this.packageId,
-    this.server,
-  });
-  final LedgerController ledger;
-  final String packageId;
-
-  /// The server this page was opened from; its saved snapshot is compared
-  /// with the current catalog.
-  final ServerRecord? server;
-  @override
-  State<PackageDetailsPage> createState() => _PackageDetailsPageState();
-}
-
-class _PackageDetailsPageState extends State<PackageDetailsPage> {
-  bool opening = false;
-  @override
-  void initState() {
-    super.initState();
-    widget.ledger.loadCatalog();
-  }
-
-  Future<void> open(Future<void> Function() action) async {
-    if (opening) return;
-    setState(() => opening = true);
-    try {
-      await action();
-    } finally {
-      if (mounted) setState(() => opening = false);
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) => ListenableBuilder(
-    listenable: widget.ledger,
-    builder: (context, _) {
-      final ledger = widget.ledger;
-      final l10n = context.l10n;
-      final linked = ledger.serversForPackage(widget.packageId);
-      final current = ledger.catalog.package(widget.packageId);
-      final from = widget.server == null
-          ? null
-          : ledger.byId(widget.server!.id) ?? widget.server;
-      // An unlisted package is still described by what servers saved.
-      final saved =
-          (from?.packageId == widget.packageId
-              ? ledger.packageSnapshotFor(from!)
-              : null) ??
-          linked.map(ledger.packageSnapshotFor).nonNulls.firstOrNull;
-      final shown = current ?? saved;
-      if (shown == null) {
-        return AppScaffold(
-          title: l10n.r6CatPackageDetails,
-          largeTitle: false,
-          children: [
-            ProviderNotices(ledger),
-            if (ledger.catalogLoaded)
-              AppBanner(
-                text: l10n.providerUiUnavailable,
-                tone: AppTone.amber,
-                icon: Icons.error_outline_rounded,
-              ),
-          ],
-        );
-      }
-      final catalogProvider = ledger.catalog.provider(shown.providerId);
-      final local = ledger.localProviderForCatalog(shown.providerId);
-      final providerName = local?.name ?? catalogProvider?.name;
-      final state = current == null
-          ? (ledger.catalogLoaded
-                ? PackageCatalogState.removed
-                : PackageCatalogState.unknown)
-          : (saved != null && !current.sameSpecAs(saved)
-                ? PackageCatalogState.changed
-                : PackageCatalogState.same);
-      final showSaved =
-          state == PackageCatalogState.changed &&
-          from != null &&
-          ledger.packageStateFor(from) == PackageCatalogState.changed;
-      final canAdd =
-          !opening &&
-          _canEdit(ledger) &&
-          current != null &&
-          catalogProvider != null;
-      return AppScaffold(
-        title: l10n.r6CatPackageDetails,
-        largeTitle: false,
-        children: [
-          ProviderNotices(ledger),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(20, 12, 20, 4),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  shown.name,
-                  key: const ValueKey('package-name'),
-                  style: TextStyle(
-                    fontSize: 22,
-                    height: 1.25,
-                    fontWeight: FontWeight.w700,
-                    color: context.palette.text,
-                  ),
-                ),
-                if (providerName != null)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 3),
-                    child: Text(
-                      providerName,
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: context.palette.text2,
-                      ),
-                    ),
-                  ),
-                Padding(
-                  padding: const EdgeInsets.only(top: 8),
-                  child: Wrap(
-                    spacing: 6,
-                    runSpacing: 6,
-                    children: [
-                      if (current?.isDefault ?? false)
-                        StatusPill(l10n.r6CatDefaultPill),
-                      ?packageStatePill(l10n, state),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-          if (state == PackageCatalogState.changed)
-            AppBanner(
-              key: const ValueKey('package-changed-note'),
-              text: l10n.r6CatChangedNotice,
-              tone: AppTone.amber,
-              icon: Icons.info_outline_rounded,
-            ),
-          if (state == PackageCatalogState.removed)
-            AppBanner(
-              key: const ValueKey('package-removed-note'),
-              text: l10n.r6CatRemovedNotice,
-              icon: Icons.info_outline_rounded,
-            ),
-          AppSection(
-            header: showSaved ? l10n.r6CatCurrentValues : l10n.r6CatSpecs,
-            children: packageSpecRows(context, shown),
-          ),
-          if (showSaved)
-            AppSection(
-              header: l10n.r6CatSavedValues,
-              children: packageSpecRows(context, saved!),
-            ),
-          AppSection(
-            header: l10n.r6CatLinkedServers,
-            footer: l10n.r6CatLinkedFooter,
-            children: [
-              if (linked.isEmpty)
-                AppRow(title: l10n.r6CatNoLinkedServers, enabled: false),
-              for (final server in linked)
-                AppRow(
-                  key: ValueKey('package-server-${server.id}'),
-                  icon: Icons.dns_outlined,
-                  iconColor: AppTints.slate,
-                  title: server.name,
-                  subtitle: [
-                    if (server.archived) l10n.archivedRecords,
-                    server.primaryAddress,
-                  ].where((s) => s.isNotEmpty).join(' · '),
-                  trailing: packageStatePill(
-                    l10n,
-                    ledger.packageStateFor(server),
-                  ),
-                  chevron: true,
-                  onTap: opening
-                      ? null
-                      : () => open(() async {
-                          await Navigator.push<void>(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => ServerDetail(
-                                controller: ledger,
-                                id: server.id,
-                              ),
-                            ),
-                          );
-                        }),
-                ),
-            ],
-          ),
-          if (current != null && catalogProvider != null)
-            AppSection(
-              children: [
-                AppRow(
-                  key: const ValueKey('package-add-server'),
-                  center: true,
-                  title: l10n.r6CatAddServerWithPackage,
-                  enabled: canAdd,
-                  onTap: canAdd
-                      ? () => open(() async {
-                          final id = await openServerForm(
-                            context,
-                            ledger,
-                            ProviderSelection(local, catalog: catalogProvider),
-                            package: current,
-                          );
-                          if (id != null &&
-                              context.mounted &&
-                              ledger.byId(id) != null) {
-                            await Navigator.push<void>(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) =>
-                                    ServerDetail(controller: ledger, id: id),
-                              ),
-                            );
-                          }
-                        })
-                      : null,
-                ),
-              ],
-            ),
         ],
       );
     },

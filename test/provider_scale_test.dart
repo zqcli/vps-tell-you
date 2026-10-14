@@ -16,8 +16,8 @@ import 'package:vps_tell_you/servers/server_record.dart';
 
 import 'support/large_catalog.dart';
 
-/// Providers and packages with a catalog of 300 providers × 40 packages: the
-/// pages must stay small, searchable and lazy.
+/// A directory of 300 providers: the pages must stay small, searchable and
+/// lazy.
 void main() {
   late Directory directory;
   late LedgerStore store;
@@ -46,18 +46,13 @@ void main() {
     await directory.delete(recursive: true);
   });
 
-  /// A server of catalog provider [n] using package [j] (null = none).
-  Future<void> addServer(String id, int n, {int? j}) async {
-    final package = j == null
-        ? null
-        : catalog.snapshot.package('${largeProviderId(n)}-p$j')!;
+  /// A server of directory provider [n].
+  Future<void> addServer(String id, int n) async {
     await store.saveServer(
       ServerRecord(
         id: id,
         name: 'srv-$id',
         vendor: '',
-        packageId: package?.id,
-        packageSnapshot: package?.encodeSnapshot(),
         createdAt: now,
         updatedAt: now,
       ),
@@ -116,8 +111,8 @@ void main() {
     testWidgets('lists only providers that have servers, name-sorted', (
       tester,
     ) async {
-      await addServer('a', 7, j: 3);
-      await addServer('b', 7, j: 4);
+      await addServer('a', 7);
+      await addServer('b', 7);
       await addServer('c', 2); // no package
       await store.saveProvider(
         ProviderRecord(id: 'unused', name: 'Unused Own', createdAt: now),
@@ -141,7 +136,7 @@ void main() {
         tester.getTopLeft(find.text('Café Hosting 2')).dy,
         lessThan(tester.getTopLeft(find.text('Ünited Servers 7')).dy),
       );
-      expect(find.text('2 servers · 2 packages in use'), findsOneWidget);
+      expect(find.text('2 servers'), findsOneWidget);
       expect(find.text('1 server'), findsOneWidget);
       // 300 catalog + 1 own (the two used ones are already local, so counted
       // once).
@@ -208,7 +203,7 @@ void main() {
     testWidgets('sections: mine first, then the catalog not yet added', (
       tester,
     ) async {
-      await addServer('a', 5, j: 3);
+      await addServer('a', 5);
       await store.saveProvider(
         ProviderRecord(id: 'own', name: 'Own Host', createdAt: now),
         isNew: true,
@@ -216,7 +211,7 @@ void main() {
       await ledger.refresh();
       await mount(tester, AllProvidersPage(ledger: ledger));
       final mine = find.text('My providers');
-      final cat = find.text('Catalog providers');
+      final cat = find.text('Directory');
       expect(mine, findsOneWidget);
       expect(cat, findsOneWidget);
       expect(tester.getTopLeft(mine).dy, lessThan(tester.getTopLeft(cat).dy));
@@ -230,7 +225,7 @@ void main() {
       expect(find.byType(ProviderDetailsPage), findsOneWidget);
     });
 
-    testWidgets('a catalog provider opens with All Packages, not 40 rows', (
+    testWidgets('a directory provider opens with the Add button', (
       tester,
     ) async {
       await mount(tester, AllProvidersPage(ledger: ledger));
@@ -239,124 +234,9 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.byType(ProviderDetailsPage), findsOneWidget);
       expect(
-        find.byKey(const ValueKey('provider-all-packages')),
-        findsOneWidget,
-      );
-      expect(
-        find.descendant(
-          of: find.byKey(const ValueKey('provider-all-packages')),
-          matching: find.text('40'),
-        ),
-        findsOneWidget,
-      );
-      expect(find.textContaining('Plan '), findsNothing);
-      expect(
         find.byKey(const ValueKey('provider-add-catalog')),
         findsOneWidget,
       );
-    });
-  });
-
-  group('provider page and package list', () {
-    testWidgets('only packages in use are inline', (tester) async {
-      await addServer('a', 4, j: 3);
-      await addServer('b', 4, j: 3);
-      await addServer('c', 4, j: 12);
-      await addServer('d', 4);
-      await mount(
-        tester,
-        ProviderDetailsPage(ledger: ledger, catalogId: largeProviderId(4)),
-      );
-      final inline = [
-        for (var j = 0; j < 40; j++)
-          if (find
-              .byKey(ValueKey('provider-package-${largeProviderId(4)}-p$j'))
-              .evaluate()
-              .isNotEmpty)
-            j,
-      ];
-      expect(inline, [3, 12]);
-      expect(find.text('2 servers'), findsOneWidget);
-      expect(find.byKey(const ValueKey('provider-device-d')), findsOneWidget);
-      expect(
-        find.byKey(const ValueKey('provider-all-packages')),
-        findsOneWidget,
-      );
-    });
-
-    Future<void> openList(WidgetTester tester, {double height = 900}) async {
-      await mount(
-        tester,
-        PackageListPage(ledger: ledger, catalogId: largeProviderId(4)),
-        height: height,
-      );
-    }
-
-    Finder plan(int j) =>
-        find.byKey(ValueKey('package-list-${largeProviderId(4)}-p$j'));
-
-    testWidgets('lazy: 40 packages, a screenful built', (tester) async {
-      await openList(tester);
-      expect(rows().evaluate().length, lessThan(40));
-      expect(rows().evaluate().length, greaterThan(4));
-      expect(find.text('All Packages'), findsWidgets);
-      expect(find.text('Cloud Nine 4'), findsOneWidget, reason: 'subtitle');
-    });
-
-    testWidgets('search by spec text, region and name', (tester) async {
-      await openList(tester, height: 5000); // tall: every match is built
-      // "2 GB" is written many ways; RAM 2 GiB is every j % 5 == 1.
-      await type(tester, '2 GB');
-      expect(rows().evaluate().length, 8);
-      expect(plan(1), findsOneWidget);
-      await type(tester, '2gb');
-      expect(rows().evaluate().length, 8);
-      // vCPU 2 is j % 8 == 1; "2C" must not match 12 GB, 20C ... anything.
-      await type(tester, '2C');
-      expect(rows().evaluate().length, 5);
-      await type(tester, '2 vCPU 2 GiB');
-      expect(plan(1), findsOneWidget);
-      await type(tester, 'tokyo');
-      expect(rows().evaluate().length, 4, reason: 'j % 10 == 0');
-      await type(tester, 'plan 39');
-      expect(plan(39), findsOneWidget);
-      await type(tester, 'nothing like this');
-      expect(find.byKey(const ValueKey('packages-no-match')), findsOneWidget);
-    });
-
-    testWidgets('badges: Default and In use; sort by price and name', (
-      tester,
-    ) async {
-      await addServer('a', 4, j: 3);
-      await addServer('b', 4, j: 3);
-      await openList(tester, height: 5000);
-      final row = plan(3);
-      expect(
-        find.descendant(of: row, matching: find.text('Default')),
-        findsOneWidget,
-      );
-      expect(
-        find.descendant(of: row, matching: find.text('In use · 2')),
-        findsOneWidget,
-      );
-      expect(
-        find.descendant(of: plan(5), matching: find.textContaining('In use')),
-        findsNothing,
-      );
-      // Listed order: Plan 0 first. Name order is natural: Plan 2 < Plan 10.
-      double top(Finder f) => tester.getTopLeft(f).dy;
-      expect(top(plan(0)), lessThan(top(plan(1))));
-      await tester.tap(find.text('Name'));
-      await tester.pumpAndSettle();
-      expect(top(plan(2)), lessThan(top(plan(10))), reason: 'natural order');
-      // Price: cheapest first (5 + j USD), so Plan 0 again before Plan 1.
-      await tester.tap(find.text('Price'));
-      await tester.pumpAndSettle();
-      expect(top(plan(0)), lessThan(top(plan(1))));
-      expect(top(plan(1)), lessThan(top(plan(2))));
-      await tester.tap(plan(2));
-      await tester.pumpAndSettle();
-      expect(find.byType(PackageDetailsPage), findsOneWidget);
     });
   });
 
@@ -382,16 +262,10 @@ void main() {
       await tester.pumpAndSettle();
     }
 
-    Finder topScrollable() => find
-        .byWidgetPredicate((w) => w is Scrollable && w.axis == Axis.vertical)
-        .last;
-
     String? value(WidgetTester tester, String key) =>
         tester.widget<AppFormRow>(find.byKey(ValueKey(key))).value;
 
-    testWidgets('provider picker: lazy, search, default package prefill', (
-      tester,
-    ) async {
+    testWidgets('provider picker: lazy, search, choose', (tester) async {
       await openForm(tester);
       await tester.tap(find.byKey(const ValueKey('form-provider')));
       await tester.pumpAndSettle();
@@ -402,85 +276,19 @@ void main() {
         ValueKey('picker-catalog-${largeProviderId(11)}'),
       );
       expect(item, findsOneWidget);
-      expect(find.text('40 packages'), findsWidgets);
       await tester.tap(item);
       await tester.pumpAndSettle();
       expect(find.byType(ProviderPickerPage), findsNothing);
       expect(value(tester, 'form-provider'), 'Ünited Servers 11');
-      // Default package (Plan 3) preselected and applied.
-      expect(value(tester, 'form-package'), 'Plan 3');
-      expect(
-        tester
-            .widget<AppTextField>(find.byKey(const ValueKey('field-amount')))
-            .controller!
-            .text,
-        '8.00',
-      );
-      // Nothing is stored before saving.
-      expect(await store.providers(), isEmpty);
-    });
-
-    testWidgets('package picker: search, choose, cancel keeps the choice', (
-      tester,
-    ) async {
-      await openForm(tester);
-      await tester.tap(find.byKey(const ValueKey('form-provider')));
-      await tester.pumpAndSettle();
-      await type(tester, '云海 9');
-      await tester.tap(
-        find.byKey(ValueKey('picker-catalog-${largeProviderId(9)}')),
-      );
-      await tester.pumpAndSettle();
-      await tester.tap(find.byKey(const ValueKey('form-package')));
-      await tester.pumpAndSettle();
-      expect(find.byType(PackagePickerPage), findsOneWidget);
-      expect(rows().evaluate().length, lessThan(40), reason: 'lazy');
-      // The current package carries the check and the Default badge.
-      final current = find.byKey(
-        ValueKey('picker-package-${largeProviderId(9)}-p3'),
-      );
-      expect(
-        find.descendant(
-          of: current,
-          matching: find.byIcon(Icons.check_rounded),
-        ),
-        findsOneWidget,
-      );
-      expect(
-        find.descendant(of: current, matching: find.text('Default')),
-        findsOneWidget,
-      );
-      await type(tester, 'tokyo');
-      expect(find.byKey(const ValueKey('picker-package-none')), findsNothing);
-      // Cancel: the selection is unchanged.
-      await tester.binding.handlePopRoute();
-      await tester.pumpAndSettle();
-      expect(value(tester, 'form-package'), 'Plan 3');
-      // Choose another one: values are replaced (new server, same provider
-      // package -> no confirmation).
-      await tester.tap(find.byKey(const ValueKey('form-package')));
-      await tester.pumpAndSettle();
-      await type(tester, 'tokyo');
-      final tokyo = find.byKey(
-        ValueKey('picker-package-${largeProviderId(9)}-p10'),
-      );
-      await tester.scrollUntilVisible(tokyo, 200, scrollable: topScrollable());
-      await tester.tap(tokyo);
-      await tester.pumpAndSettle();
-      expect(value(tester, 'form-package'), 'Plan 10');
-      expect(
-        tester
-            .widget<AppTextField>(find.byKey(const ValueKey('field-amount')))
-            .controller!
-            .text,
-        '15.00',
-      );
+      expect(find.byKey(const ValueKey('form-package')), findsNothing);
       await tester.enterText(find.byKey(const ValueKey('field-name')), 'Big');
       await tester.tap(find.text('Save'));
       await tester.pumpAndSettle();
-      final saved = (await store.servers()).single;
-      expect(saved.packageId, '${largeProviderId(9)}-p10');
-      expect((await store.providers()).single.catalogId, largeProviderId(9));
+      expect((await store.providers()).single.catalogId, largeProviderId(11));
+      expect(
+        (await store.servers()).single.providerId,
+        (await store.providers()).single.id,
+      );
     });
 
     testWidgets('picker: None and cancel leave things unchanged', (
@@ -539,13 +347,11 @@ void main() {
           tester,
         ) async {
           locale.value = Locale(lang);
-          await addServer('a', 1, j: 3);
-          await addServer('b', 2, j: 5);
+          await addServer('a', 1);
+          await addServer('b', 2);
           final pages = <String, Widget Function()>{
             'overview': () => ProvidersPage(ledger: ledger),
             'all providers': () => AllProvidersPage(ledger: ledger),
-            'package list': () =>
-                PackageListPage(ledger: ledger, catalogId: largeProviderId(1)),
             'provider': () => ProviderDetailsPage(
               ledger: ledger,
               providerId: ledger
@@ -553,11 +359,6 @@ void main() {
                   .id,
             ),
             'provider picker': () => ProviderPickerPage(ledger: ledger),
-            'package picker': () => PackagePickerPage(
-              ledger: ledger,
-              provider: catalog.snapshot.provider(largeProviderId(1))!,
-              selected: catalog.snapshot.package('${largeProviderId(1)}-p3'),
-            ),
           };
           for (final entry in pages.entries) {
             await mount(tester, entry.value(), width: 320, scale: scale);

@@ -2958,7 +2958,7 @@
   "@providerUiUnspecified": {
     "description": "Provider navigation and ownership UI."
   },
-  "providerUiHierarchyHelp": "A provider is who sells you servers. A catalog provider also lists its packages.",
+  "providerUiHierarchyHelp": "A provider is who sells you servers. Add one from the directory or create your own.",
   "@providerUiHierarchyHelp": {
     "description": "Provider navigation and ownership UI."
   },
@@ -2971,7 +2971,7 @@
       }
     }
   },
-  "r6CatCatalogSection": "Catalog providers",
+  "r6CatCatalogSection": "Directory",
   "@r6CatCatalogSection": {
     "description": "Provider catalog and packages."
   },
@@ -2995,58 +2995,16 @@
   "@r8SearchProviders": {
     "description": "Providers and packages UI (r8)."
   },
-  "r8SearchPackages": "Search by name, region or specs",
-  "@r8SearchPackages": {
-    "description": "Providers and packages UI (r8)."
-  },
   "r8NoMatches": "No matches.",
   "@r8NoMatches": {
     "description": "Providers and packages UI (r8)."
   },
-  "r8BadgeCatalog": "Catalog",
+  "r8BadgeCatalog": "Directory",
   "@r8BadgeCatalog": {
     "description": "Providers and packages UI (r8)."
   },
   "r8BadgeCustom": "Custom",
   "@r8BadgeCustom": {
-    "description": "Providers and packages UI (r8)."
-  },
-  "r8PackagesInUse": "Packages in use",
-  "@r8PackagesInUse": {
-    "description": "Providers and packages UI (r8)."
-  },
-  "r8PackagesInUseCount": "{count, plural, =1{1 package in use} other{{count} packages in use}}",
-  "@r8PackagesInUseCount": {
-    "description": "Providers and packages UI (r8).",
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "r8AllPackages": "All Packages",
-  "@r8AllPackages": {
-    "description": "Providers and packages UI (r8)."
-  },
-  "r8InUseCount": "In use · {count}",
-  "@r8InUseCount": {
-    "description": "Providers and packages UI (r8).",
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "r8SortListed": "Listed",
-  "@r8SortListed": {
-    "description": "Providers and packages UI (r8)."
-  },
-  "r8SortPrice": "Price",
-  "@r8SortPrice": {
-    "description": "Providers and packages UI (r8)."
-  },
-  "r8SortName": "Name",
-  "@r8SortName": {
     "description": "Providers and packages UI (r8)."
   },
   "r8SectionInUse": "In use",
@@ -3066,147 +3024,19 @@
   "@r8PickProvider": {
     "description": "Providers and packages UI (r8)."
   },
-  "r8PickPackage": "Choose a Package",
-  "@r8PickPackage": {
-    "description": "Providers and packages UI (r8)."
-  },
-  "r6CatCatalogFooter": "Catalog providers come with ready-made packages. Choose Add Provider if yours isn’t listed.",
+  "r6CatCatalogFooter": "Directory providers can be added as they are. Choose Add Provider if yours isn’t listed.",
   "@r6CatCatalogFooter": {
     "description": "Provider catalog and packages."
   },
-  "r6CatPackageCount": "{count, plural, =1{1 package} other{{count} packages}}",
-  "@r6CatPackageCount": {
-    "description": "Provider catalog and packages.",
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "r6CatAdded": "Added",
-  "@r6CatAdded": {
-    "description": "Provider catalog and packages."
-  },
-  "r6CatNoPackage": "No Package",
-  "@r6CatNoPackage": {
-    "description": "Provider catalog and packages."
-  },
-  "r6CatDefaultPill": "Default",
-  "@r6CatDefaultPill": {
-    "description": "Provider catalog and packages."
-  },
-  "r6CatPackageDetails": "Package",
-  "@r6CatPackageDetails": {
-    "description": "Provider catalog and packages."
-  },
-  "r6CatSpecs": "Specifications",
-  "@r6CatSpecs": {
-    "description": "Provider catalog and packages."
-  },
-  "r6CatPrice": "Price",
-  "@r6CatPrice": {
-    "description": "Provider catalog and packages."
-  },
-  "r6CatPriceValue": "{amount} {currency} · {cycle}",
-  "@r6CatPriceValue": {
-    "description": "Provider catalog and packages.",
-    "placeholders": {
-      "amount": {
-        "type": "String"
-      },
-      "currency": {
-        "type": "String"
-      },
-      "cycle": {
-        "type": "String"
-      }
-    }
-  },
-  "r6CatUnknownPrice": "No price listed",
-  "@r6CatUnknownPrice": {
-    "description": "Provider catalog and packages."
-  },
-  "r6CatLinkedServers": "Servers with this package",
-  "@r6CatLinkedServers": {
-    "description": "Provider catalog and packages."
-  },
-  "r6CatNoLinkedServers": "No server uses this package yet.",
-  "@r6CatNoLinkedServers": {
-    "description": "Provider catalog and packages."
-  },
-  "r6CatLinkedFooter": "Servers keep their own hardware and price; the package is only a record of what you picked.",
-  "@r6CatLinkedFooter": {
-    "description": "Provider catalog and packages."
-  },
-  "r6CatAddServerWithPackage": "Add Server with This Package",
-  "@r6CatAddServerWithPackage": {
-    "description": "Provider catalog and packages."
-  },
-  "r6CatChangedNotice": "The catalog has updated this package since it was chosen. Servers keep the values they saved.",
-  "@r6CatChangedNotice": {
-    "description": "Provider catalog and packages."
-  },
-  "r6CatChangedPill": "Catalog updated",
-  "@r6CatChangedPill": {
-    "description": "Provider catalog and packages."
-  },
-  "r6CatRemovedNotice": "The catalog no longer lists this package. Servers keep the values they saved.",
-  "@r6CatRemovedNotice": {
-    "description": "Provider catalog and packages."
-  },
-  "r6CatRemovedPill": "No longer listed",
-  "@r6CatRemovedPill": {
-    "description": "Provider catalog and packages."
-  },
-  "r6CatSavedValues": "As saved on this server",
-  "@r6CatSavedValues": {
-    "description": "Provider catalog and packages."
-  },
-  "r6CatCurrentValues": "Current catalog",
-  "@r6CatCurrentValues": {
-    "description": "Provider catalog and packages."
-  },
-  "r6CatServerSection": "Provider and package",
+  "r6CatServerSection": "Provider",
   "@r6CatServerSection": {
     "description": "Provider catalog and packages."
   },
-  "r6CatServerFooter": "The server keeps its own hardware and price. Edit the server to change its provider or package.",
+  "r6CatServerFooter": "The server keeps its own hardware and price. Edit the server to change its provider.",
   "@r6CatServerFooter": {
     "description": "Provider catalog and packages."
   },
-  "r6CatNoPackageRow": "No package",
-  "@r6CatNoPackageRow": {
-    "description": "Provider catalog and packages."
-  },
-  "r6CatOpenPackage": "View package",
-  "@r6CatOpenPackage": {
-    "description": "Provider catalog and packages."
-  },
-  "r6CatFormPackage": "Package",
-  "@r6CatFormPackage": {
-    "description": "Provider catalog and packages."
-  },
-  "r6CatFormPackageFooter": "Choosing a package fills in hardware and price. You can still edit them.",
-  "@r6CatFormPackageFooter": {
-    "description": "Provider catalog and packages."
-  },
-  "r6CatReplaceTitle": "Replace hardware and price?",
-  "@r6CatReplaceTitle": {
-    "description": "Provider catalog and packages."
-  },
-  "r6CatReplaceMessage": "The package’s values will replace this server’s hardware and price in the form. Nothing is saved until you save.",
-  "@r6CatReplaceMessage": {
-    "description": "Provider catalog and packages."
-  },
-  "r6CatReplaceAction": "Replace Values",
-  "@r6CatReplaceAction": {
-    "description": "Provider catalog and packages."
-  },
-  "r6CatNoPackagesYet": "This provider has no package list.",
-  "@r6CatNoPackagesYet": {
-    "description": "Provider catalog and packages."
-  },
-  "r6CatCatalogFailed": "The package catalog couldn’t be loaded. You can still use your own providers.",
+  "r6CatCatalogFailed": "The provider directory couldn’t be loaded. You can still use your own providers.",
   "@r6CatCatalogFailed": {
     "description": "Provider catalog and packages."
   },
@@ -3214,12 +3044,8 @@
   "@r6CatRetry": {
     "description": "Provider catalog and packages."
   },
-  "r6CatCatalogProviderHelp": "Not added yet. Add it to use its packages when you add servers.",
+  "r6CatCatalogProviderHelp": "Not added yet. Add it to link your servers to it.",
   "@r6CatCatalogProviderHelp": {
-    "description": "Provider catalog and packages."
-  },
-  "r6CatPackageInvalid": "The package doesn’t match this server’s provider.",
-  "@r6CatPackageInvalid": {
     "description": "Provider catalog and packages."
   },
   "r6CatBackupProviders": "providers",
@@ -3234,10 +3060,6 @@
         "type": "int"
       }
     }
-  },
-  "r6CatSampleNote": "Sample catalog data for testing.",
-  "@r6CatSampleNote": {
-    "description": "Provider catalog and packages."
   },
   "providerUiEmpty": "No providers yet",
   "@providerUiEmpty": {

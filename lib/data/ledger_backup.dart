@@ -2,8 +2,9 @@ part of 'ledger_store.dart';
 
 /// A deliberately ledger-only, plaintext interchange format. It never carries
 /// SSH configuration or credentials and never reads the SecretStore. The writer
-/// emits version 2 (adds providers and each server's provider / package link);
-/// the reader also accepts version 1, which has neither.
+/// emits version 2 (adds providers and each server's provider link); the reader
+/// also accepts version 1, which has neither. Package fields written by app
+/// versions 6–8 into version 2 files are ignored.
 class LedgerBackupSnapshot {
   LedgerBackupSnapshot._({
     required this.exportedAt,
@@ -100,7 +101,9 @@ class LedgerBackupSnapshot {
           final row = _backupObject(
             item,
             columns,
-            optional: key == 'servers' ? const ['resources_json'] : const [],
+            optional: key == 'servers'
+                ? const ['resources_json', ..._backupRetiredServerColumns]
+                : const [],
           );
           _backupText(row, 'id', max: 160, nonempty: true);
           if (!ids.add(row['id'] as String)) {
@@ -113,19 +116,22 @@ class LedgerBackupSnapshot {
 
     final providers = rows('providers', _backupProviderColumns);
     final groups = rows('groups', _backupGroupColumns);
-    // Version 1 rows have no provider / package keys; they become explicit
-    // nulls so everything downstream (and the re-encoded file) is version 2.
+    // Version 1 rows have no provider key; it becomes an explicit null so
+    // everything downstream (and the re-encoded file) is version 2. Retired
+    // package fields are dropped without being looked at.
     final servers = List<Map<String, Object?>>.unmodifiable([
       for (final row in rows(
         'servers',
-        v1 ? _backupServerColumns : _backupServerColumnsV2,
+        v1
+            ? _backupServerColumns
+            : [..._backupServerColumnsV2, ..._backupRetiredServerColumns],
       ))
-        Map<String, Object?>.unmodifiable({
-          'provider_id': null,
-          'package_id': null,
-          'package_snapshot': null,
-          ...row,
-        }),
+        Map<String, Object?>.unmodifiable(
+          {
+            'provider_id': null,
+            ...row,
+          }..removeWhere((key, _) => _backupRetiredServerColumns.contains(key)),
+        ),
     ]);
     final payments = rows('payments', _backupPaymentColumns);
     final periods = rows('service_periods', _backupPeriodColumns);
@@ -195,28 +201,9 @@ class LedgerBackupSnapshot {
       }
       _backupText(row, 'resources_json', max: 4096, nullable: true);
       _backupText(row, 'provider_id', max: 160, nullable: true, nonempty: true);
-      _backupText(row, 'package_id', max: 64, nullable: true, nonempty: true);
-      _backupText(row, 'package_snapshot', max: 4096, nullable: true);
-      final linkedProvider = providerById[row['provider_id']];
-      if (row['provider_id'] != null && linkedProvider == null) {
+      if (row['provider_id'] != null &&
+          !providerById.containsKey(row['provider_id'])) {
         throw LocalizedFormatException((l10n) => l10n.backupInvalidServer);
-      }
-      if ((row['package_id'] == null) != (row['package_snapshot'] == null)) {
-        throw LocalizedFormatException((l10n) => l10n.backupInvalidServer);
-      }
-      if (row['package_id'] != null) {
-        try {
-          final snapshot = CatalogPackage.decodeSnapshot(
-            row['package_snapshot'] as String,
-          );
-          if (snapshot.id != row['package_id'] ||
-              linkedProvider == null ||
-              linkedProvider['catalog_id'] != snapshot.providerId) {
-            throw const CatalogFormatException('package link');
-          }
-        } on CatalogFormatException {
-          throw LocalizedFormatException((l10n) => l10n.backupInvalidServer);
-        }
       }
       // Strict decoding also prevents private/unknown fields from hitchhiking
       // inside an otherwise whitelisted local resources blob.
@@ -663,12 +650,10 @@ const _backupServerColumns = [
   'revision',
   'is_demo',
 ];
-const _backupServerColumnsV2 = [
-  ..._backupServerColumns,
-  'provider_id',
-  'package_id',
-  'package_snapshot',
-];
+const _backupServerColumnsV2 = [..._backupServerColumns, 'provider_id'];
+
+/// Written by app versions 6–8 into version 2 files; accepted and ignored.
+const _backupRetiredServerColumns = ['package_id', 'package_snapshot'];
 const _backupPaymentColumns = [
   'id',
   'server_id',

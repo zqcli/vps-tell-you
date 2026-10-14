@@ -986,7 +986,6 @@ class _ServerRowState extends State<ServerRow> {
           child: Text(
             [
               serverProviderLabel(context, c, s),
-              ?c.packageSnapshotFor(s)?.name,
               s.region,
             ].where((e) => e.isNotEmpty).join(' · '),
             maxLines: big ? 2 : 1,

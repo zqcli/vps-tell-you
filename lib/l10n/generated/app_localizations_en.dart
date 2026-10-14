@@ -5340,7 +5340,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get providerUiHierarchyHelp =>
-      'A provider is who sells you servers. A catalog provider also lists its packages.';
+      'A provider is who sells you servers. Add one from the directory or create your own.';
 
   @override
   String r6CatProviderSummary(int count) {
@@ -5355,7 +5355,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get r6CatCatalogSection => 'Catalog providers';
+  String get r6CatCatalogSection => 'Directory';
 
   @override
   String get r6CatMineSection => 'My providers';
@@ -5373,47 +5373,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get r8SearchProviders => 'Search providers';
 
   @override
-  String get r8SearchPackages => 'Search by name, region or specs';
-
-  @override
   String get r8NoMatches => 'No matches.';
 
   @override
-  String get r8BadgeCatalog => 'Catalog';
+  String get r8BadgeCatalog => 'Directory';
 
   @override
   String get r8BadgeCustom => 'Custom';
-
-  @override
-  String get r8PackagesInUse => 'Packages in use';
-
-  @override
-  String r8PackagesInUseCount(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count packages in use',
-      one: '1 package in use',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String get r8AllPackages => 'All Packages';
-
-  @override
-  String r8InUseCount(int count) {
-    return 'In use · $count';
-  }
-
-  @override
-  String get r8SortListed => 'Listed';
-
-  @override
-  String get r8SortPrice => 'Price';
-
-  @override
-  String get r8SortName => 'Name';
 
   @override
   String get r8SectionInUse => 'In use';
@@ -5427,129 +5393,26 @@ class AppLocalizationsEn extends AppLocalizations {
   String get r8PickProvider => 'Choose a Provider';
 
   @override
-  String get r8PickPackage => 'Choose a Package';
-
-  @override
   String get r6CatCatalogFooter =>
-      'Catalog providers come with ready-made packages. Choose Add Provider if yours isn’t listed.';
+      'Directory providers can be added as they are. Choose Add Provider if yours isn’t listed.';
 
   @override
-  String r6CatPackageCount(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count packages',
-      one: '1 package',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String get r6CatAdded => 'Added';
-
-  @override
-  String get r6CatNoPackage => 'No Package';
-
-  @override
-  String get r6CatDefaultPill => 'Default';
-
-  @override
-  String get r6CatPackageDetails => 'Package';
-
-  @override
-  String get r6CatSpecs => 'Specifications';
-
-  @override
-  String get r6CatPrice => 'Price';
-
-  @override
-  String r6CatPriceValue(String amount, String currency, String cycle) {
-    return '$amount $currency · $cycle';
-  }
-
-  @override
-  String get r6CatUnknownPrice => 'No price listed';
-
-  @override
-  String get r6CatLinkedServers => 'Servers with this package';
-
-  @override
-  String get r6CatNoLinkedServers => 'No server uses this package yet.';
-
-  @override
-  String get r6CatLinkedFooter =>
-      'Servers keep their own hardware and price; the package is only a record of what you picked.';
-
-  @override
-  String get r6CatAddServerWithPackage => 'Add Server with This Package';
-
-  @override
-  String get r6CatChangedNotice =>
-      'The catalog has updated this package since it was chosen. Servers keep the values they saved.';
-
-  @override
-  String get r6CatChangedPill => 'Catalog updated';
-
-  @override
-  String get r6CatRemovedNotice =>
-      'The catalog no longer lists this package. Servers keep the values they saved.';
-
-  @override
-  String get r6CatRemovedPill => 'No longer listed';
-
-  @override
-  String get r6CatSavedValues => 'As saved on this server';
-
-  @override
-  String get r6CatCurrentValues => 'Current catalog';
-
-  @override
-  String get r6CatServerSection => 'Provider and package';
+  String get r6CatServerSection => 'Provider';
 
   @override
   String get r6CatServerFooter =>
-      'The server keeps its own hardware and price. Edit the server to change its provider or package.';
-
-  @override
-  String get r6CatNoPackageRow => 'No package';
-
-  @override
-  String get r6CatOpenPackage => 'View package';
-
-  @override
-  String get r6CatFormPackage => 'Package';
-
-  @override
-  String get r6CatFormPackageFooter =>
-      'Choosing a package fills in hardware and price. You can still edit them.';
-
-  @override
-  String get r6CatReplaceTitle => 'Replace hardware and price?';
-
-  @override
-  String get r6CatReplaceMessage =>
-      'The package’s values will replace this server’s hardware and price in the form. Nothing is saved until you save.';
-
-  @override
-  String get r6CatReplaceAction => 'Replace Values';
-
-  @override
-  String get r6CatNoPackagesYet => 'This provider has no package list.';
+      'The server keeps its own hardware and price. Edit the server to change its provider.';
 
   @override
   String get r6CatCatalogFailed =>
-      'The package catalog couldn’t be loaded. You can still use your own providers.';
+      'The provider directory couldn’t be loaded. You can still use your own providers.';
 
   @override
   String get r6CatRetry => 'Retry';
 
   @override
   String get r6CatCatalogProviderHelp =>
-      'Not added yet. Add it to use its packages when you add servers.';
-
-  @override
-  String get r6CatPackageInvalid =>
-      'The package doesn’t match this server’s provider.';
+      'Not added yet. Add it to link your servers to it.';
 
   @override
   String get r6CatBackupProviders => 'providers';
@@ -5558,9 +5421,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String r6CatBackupProviderCount(int count) {
     return 'Providers: $count';
   }
-
-  @override
-  String get r6CatSampleNote => 'Sample catalog data for testing.';
 
   @override
   String get providerUiEmpty => 'No providers yet';

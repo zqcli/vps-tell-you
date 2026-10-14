@@ -6,7 +6,6 @@ import '../core/value_types.dart';
 import '../l10n/locale_preference.dart';
 import '../l10n/generated/app_localizations.dart';
 import '../l10n/localized_message.dart';
-import '../providers/provider_catalog.dart';
 import '../providers/provider_record.dart';
 import '../connections/snippet.dart';
 import '../servers/server_record.dart';
@@ -44,7 +43,7 @@ class LedgerStore {
   LedgerStore._(this._db, this.clock);
   final Database _db;
   final DateTime Function() clock;
-  static const schemaVersion = 12;
+  static const schemaVersion = 13;
   // Shared by both credential controllers using this store. A durable journal
   // reservation is not an orphan while its native write/DB commit is active.
   final Set<String> _activeSecretReservations = {};
@@ -92,6 +91,10 @@ class LedgerStore {
           if (oldVersion < 12) {
             await _migrateToCatalogSchema(db, (clock ?? DateTime.now)());
           }
+          // v13 removes packages: providers only, with a remote directory.
+          if (oldVersion < 13) {
+            await _migrateToProviderDirectorySchema(db);
+          }
         },
         onDowngrade: (db, oldVersion, newVersion) async {
           throw StateError('Newer ledger version; upgrade the app');
@@ -129,7 +132,8 @@ class LedgerStore {
     await _addResourcesSchema(db);
     await _addLanguageSchema(db);
     await _createProviderTables(db);
-    await _addCatalogColumns(db);
+    await _addCatalogLink(db);
+    await _addDirectorySettings(db);
   }
 
   /// Nullable by design: old/manual records are not populated with fabricated
@@ -201,7 +205,6 @@ class LedgerStore {
       if (providerId != null) {
         await _providerRow(txn, providerId);
       }
-      await _checkPackageLink(txn, record, providerId);
       final termsChanged =
           previous == null ||
           previous.billing != record.billing ||

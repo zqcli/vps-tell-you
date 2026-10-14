@@ -269,7 +269,7 @@ void main() {
     return raw;
   }
 
-  test('v11 upgrades: adapters dropped, secrets queued, nothing else lost', () async {
+  test('v11 upgrades (through v12 to the current schema): adapters dropped, secrets queued, nothing else lost', () async {
     db = await v11();
     final before = await _rows(db!, _keptTables);
     final serversBefore = await db!.query('servers', orderBy: 'id');
@@ -283,7 +283,7 @@ void main() {
       clock: () => fixtureTime,
     );
     db = await openRawLedger(path);
-    expect(await db!.getVersion(), 12);
+    expect(await db!.getVersion(), LedgerStore.schemaVersion);
     expect(await db!.rawQuery('PRAGMA foreign_key_check'), isEmpty);
 
     final tables = await _objects(db!, 'table');
@@ -313,7 +313,15 @@ void main() {
       isTrue,
     );
 
-    expect(await _rows(db!, _keptTables), before);
+    final after = {
+      for (final e in (await _rows(db!, _keptTables)).entries)
+        e.key: [for (final r in e.value) Map<String, Object?>.of(r)],
+    };
+    // The only difference: v13 adds the directory preference column.
+    for (final row in after['app_settings']!) {
+      expect(row.remove('provider_directory_auto'), 1);
+    }
+    expect(after, before);
     final serversAfter = await db!.query('servers', orderBy: 'id');
     expect(serversAfter, hasLength(serversBefore.length));
     for (var i = 0; i < serversAfter.length; i++) {
@@ -423,28 +431,28 @@ void main() {
     expect(await _objects(db!, 'trigger'), contains('server_provider_update'));
   });
 
-  test('a fresh database has the v12 shape and no adapter tables', () async {
-    store = await LedgerStore.open(
-      factory: databaseFactoryFfiNoIsolate,
-      path: path,
-    );
-    db = await openRawLedger(path);
-    expect(await db!.getVersion(), 12);
-    final tables = await _objects(db!, 'table');
-    expect(tables.where((t) => t.startsWith('cloud_')), isEmpty);
-    final columns = (await db!.rawQuery('PRAGMA table_info(servers)'))
-        .map((r) => r['name'])
-        .toSet();
-    expect(
-      columns,
-      containsAll(['provider_id', 'package_id', 'package_snapshot']),
-    );
-    final providerColumns = (await db!.rawQuery('PRAGMA table_info(providers)'))
-        .map((r) => r['name'])
-        .toSet();
-    expect(
-      providerColumns,
-      containsAll(['id', 'name', 'revision', 'catalog_id']),
-    );
-  });
+  test(
+    'a fresh database has the current shape and no adapter tables',
+    () async {
+      store = await LedgerStore.open(
+        factory: databaseFactoryFfiNoIsolate,
+        path: path,
+      );
+      db = await openRawLedger(path);
+      expect(await db!.getVersion(), LedgerStore.schemaVersion);
+      final tables = await _objects(db!, 'table');
+      expect(tables.where((t) => t.startsWith('cloud_')), isEmpty);
+      final columns = (await db!.rawQuery('PRAGMA table_info(servers)'))
+          .map((r) => r['name'])
+          .toSet();
+      expect(columns, contains('provider_id'));
+      final providerColumns = (await db!.rawQuery(
+        'PRAGMA table_info(providers)',
+      )).map((r) => r['name']).toSet();
+      expect(
+        providerColumns,
+        containsAll(['id', 'name', 'revision', 'catalog_id']),
+      );
+    },
+  );
 }

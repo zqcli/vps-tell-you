@@ -5,9 +5,8 @@ import '../l10n/generated/app_localizations.dart';
 
 import 'dart:convert';
 
-/// Local resource configuration, including explicitly unknown values. A
-/// catalog package only pre-fills these fields; the values stored here are the
-/// user's own and never change when the catalog does.
+/// Local resource configuration, including explicitly unknown values. The
+/// values stored here are the user's own.
 class ServerResources {
   ServerResources({
     this.ip = '',

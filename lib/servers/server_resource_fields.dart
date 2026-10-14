@@ -196,55 +196,11 @@ class ServerResourceFieldsState extends State<ServerResourceFields> {
 
   String _text(String key) => _fields[key]!.text.trim();
 
-  /// Any capacity typed or chosen (addresses do not count): a package would
-  /// overwrite these.
-  bool get hasHardwareInput =>
-      _unlimited ||
-      [
-        'vcpu',
-        'ramBytes',
-        'diskBytes',
-        'trafficBytes',
-      ].any((key) => _fields[key]!.text.trim().isNotEmpty);
-
   static String _canonicalIpv6(String text) {
     final address = NetAddress.tryParse(text, allowBrackets: false);
     return address != null && address.isIpv6 && address.zone == null
         ? address.address
         : text;
-  }
-
-  /// Replaces the hardware fields with [resources] (a package pre-fill). The
-  /// IP and hostname rows are left alone: packages never carry addresses.
-  void applyResources(ServerResources resources) {
-    setState(() {
-      _fields['vcpu']!.text = resources.vcpu?.toString() ?? '';
-      for (final entry in {
-        'ramBytes': resources.ramBytes,
-        'diskBytes': resources.diskBytes,
-        'trafficBytes': resources.trafficBytes,
-      }.entries) {
-        final bytes = entry.value;
-        _exact.remove(entry.key);
-        if (bytes == null) {
-          _fields[entry.key]!.text = '';
-          _units[entry.key] = entry.key == 'ramBytes'
-              ? units['MiB']!
-              : units['GiB']!;
-        } else {
-          final shown = ServerResources.editableAmount(bytes);
-          _units[entry.key] = shown.factor;
-          _fields[entry.key]!.text = shown.text;
-          _exact[entry.key] = (
-            bytes: bytes,
-            text: shown.text,
-            factor: shown.factor,
-          );
-        }
-      }
-      _unlimited = resources.trafficUnlimited;
-      _trafficPeriodMonths = resources.trafficPeriodMonths;
-    });
   }
 
   int? _bytes(String key) {

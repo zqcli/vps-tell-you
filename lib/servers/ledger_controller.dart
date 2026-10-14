@@ -24,15 +24,6 @@ enum DueFilter { all, overdue, next30, unknown }
 
 enum ServerSort { favorites, due, name, updated }
 
-/// How a server's package snapshot relates to the current catalog.
-enum PackageCatalogState {
-  /// The catalog has not been loaded (yet, or it failed): say nothing.
-  unknown,
-  same,
-  changed,
-  removed,
-}
-
 class LedgerController extends ChangeNotifier {
   LedgerController(
     this.store, {
@@ -52,7 +43,7 @@ class LedgerController extends ChangeNotifier {
   }
   final SecurityController security;
 
-  /// Where providers and packages come from (bundled asset today).
+  /// Where the provider directory comes from (bundled asset for now).
   final ProviderCatalog catalogSource;
   CatalogSnapshot? _catalog;
   Future<void>? _catalogLoading;
@@ -221,9 +212,8 @@ class LedgerController extends ChangeNotifier {
       (l10n ?? defaultLocalizations).ungrouped;
   List<ServerRecord>? _usageSource;
   Map<String, ProviderUsage> _usage = const {};
-  Map<String, int> _packageUse = const {};
 
-  /// Servers (active and archived) and packages in use per local provider id.
+  /// Servers (active and archived) per local provider id.
   /// Providers without servers are absent. Rebuilt only when [records] change,
   /// so lists of hundreds of providers stay cheap.
   Map<String, ProviderUsage> get providerUsage {
@@ -231,29 +221,15 @@ class LedgerController extends ChangeNotifier {
     return _usage;
   }
 
-  /// Number of servers (active and archived) using catalog package [id].
-  int packageUseCount(String id) {
-    _ensureUsage();
-    return _packageUse[id] ?? 0;
-  }
-
   void _ensureUsage() {
     if (identical(_usageSource, records)) return;
     final servers = <String, List<ServerRecord>>{};
-    final packages = <String, int>{};
     for (final s in records) {
       if (s.providerId != null) {
         (servers[s.providerId!] ??= []).add(s);
       }
-      if (s.packageId != null) {
-        packages[s.packageId!] = (packages[s.packageId!] ?? 0) + 1;
-      }
     }
-    _usage = {
-      for (final e in servers.entries)
-        e.key: ProviderUsage(e.value, {for (final s in e.value) ?s.packageId}),
-    };
-    _packageUse = packages;
+    _usage = {for (final e in servers.entries) e.key: ProviderUsage(e.value)};
     _usageSource = records;
   }
 
@@ -265,30 +241,6 @@ class LedgerController extends ChangeNotifier {
 
   CatalogProvider? catalogProviderFor(ProviderRecord provider) =>
       provider.catalogId == null ? null : catalog.provider(provider.catalogId!);
-
-  List<ServerRecord> serversForPackage(String packageId) =>
-      records.where((s) => s.packageId == packageId).toList(growable: false);
-
-  /// The package as it was when the server chose it (null without a package).
-  CatalogPackage? packageSnapshotFor(ServerRecord server) {
-    final source = server.packageSnapshot;
-    if (source == null) return null;
-    try {
-      return CatalogPackage.decodeSnapshot(source);
-    } on CatalogFormatException {
-      return null;
-    }
-  }
-
-  PackageCatalogState packageStateFor(ServerRecord server) {
-    final snapshot = packageSnapshotFor(server);
-    if (snapshot == null || !catalogLoaded) return PackageCatalogState.unknown;
-    final current = catalog.package(snapshot.id);
-    if (current == null) return PackageCatalogState.removed;
-    return current.sameSpecAs(snapshot)
-        ? PackageCatalogState.same
-        : PackageCatalogState.changed;
-  }
 
   String providerNameFor(ServerRecord server, {AppLocalizations? l10n}) {
     final strings = l10n ?? defaultLocalizations;
@@ -447,9 +399,8 @@ class LedgerController extends ChangeNotifier {
   }
 }
 
-/// What a provider is used for: its servers and the distinct packages they use.
+/// What a provider is used for: its servers (active and archived).
 class ProviderUsage {
-  const ProviderUsage(this.servers, this.packageIds);
+  const ProviderUsage(this.servers);
   final List<ServerRecord> servers;
-  final Set<String> packageIds;
 }

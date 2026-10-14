@@ -7,6 +7,12 @@ Future<void> _addLanguageSchema(DatabaseExecutor db) => db.execute(
   "CHECK(language IN ('zh','en','system'))",
 );
 
+/// Whether the provider directory refreshes itself on launch (default on).
+Future<void> _addDirectorySettings(DatabaseExecutor db) => db.execute(
+  'ALTER TABLE app_settings ADD COLUMN provider_directory_auto '
+  'INTEGER NOT NULL DEFAULT 1',
+);
+
 Future<void> _addSettingsSchema(DatabaseExecutor db) async {
   await db.execute('''CREATE TABLE app_settings (
     id INTEGER PRIMARY KEY CHECK(id=1),
@@ -45,6 +51,22 @@ extension LedgerSettings on LedgerStore {
     }, where: 'id=1');
     if (changed != 1) {
       throw StateError('Language preference row is missing');
+    }
+  }
+
+  Future<bool> providerDirectoryAuto() async =>
+      (await _db.query(
+        'app_settings',
+        columns: ['provider_directory_auto'],
+      )).single['provider_directory_auto'] ==
+      1;
+
+  Future<void> saveProviderDirectoryAuto(bool enabled) async {
+    final changed = await _db.update('app_settings', {
+      'provider_directory_auto': enabled ? 1 : 0,
+    }, where: 'id=1');
+    if (changed != 1) {
+      throw StateError('Settings row is missing');
     }
   }
 

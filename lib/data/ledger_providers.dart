@@ -1,7 +1,7 @@
 part of 'ledger_store.dart';
 
-/// Providers plus the package link columns (schema v12). Fresh databases
-/// create this directly; [_migrateToCatalogSchema] upgrades older ones.
+/// Providers with their directory link. Fresh databases create this directly;
+/// [_migrateToCatalogSchema] upgrades older ones.
 Future<void> _createProviderTables(DatabaseExecutor db) async {
   await db.execute('''CREATE TABLE providers (
     id TEXT PRIMARY KEY, name TEXT NOT NULL CHECK(length(name) BETWEEN 1 AND 80),
@@ -14,12 +14,19 @@ Future<void> _createProviderTables(DatabaseExecutor db) async {
   );
 }
 
-/// Nullable catalog link and package reference. Existing rows stay empty: the
-/// ledger never invents a catalog relationship for old data.
-Future<void> _addCatalogColumns(DatabaseExecutor db) async {
+/// Nullable directory link. Existing rows stay empty: the ledger never invents
+/// a directory relationship for old data.
+Future<void> _addCatalogLink(DatabaseExecutor db) async {
   await db.execute('ALTER TABLE providers ADD COLUMN catalog_id TEXT');
   await db.execute('''CREATE UNIQUE INDEX providers_catalog_id
     ON providers(catalog_id) WHERE catalog_id IS NOT NULL''');
+}
+
+/// Columns of schema v12 which schema v13 retires. SQLite cannot reliably
+/// DROP COLUMN on older Android versions, so they stay in migrated databases
+/// (always NULL, never read or written by the app). Fresh v13 databases do not
+/// have them; only the upgrade path through v12 creates them.
+Future<void> _addRetiredPackageColumns(DatabaseExecutor db) async {
   await db.execute('ALTER TABLE servers ADD COLUMN package_id TEXT');
   await db.execute('ALTER TABLE servers ADD COLUMN package_snapshot TEXT');
   await db.execute('CREATE INDEX servers_package ON servers(package_id)');
@@ -36,7 +43,7 @@ const _retiredAdapterTriggers = [
   'singleton_pin_binding_update',
 ];
 
-/// Schema v12 upgrade for every older version. It runs inside sqflite's
+/// Schema v12 upgrade for every older version (v13 follows it). It runs inside sqflite's
 /// version-change transaction: any exception rolls everything back and the
 /// database keeps its old version. Servers, payments, SSH configurations and
 /// credentials are never deleted. It never opens the OS secret store.
@@ -169,8 +176,9 @@ Future<void> _migrateToCatalogSchema(DatabaseExecutor db, DateTime now) async {
     );
   }
 
-  // 4. Catalog link and package reference columns.
-  await _addCatalogColumns(db);
+  // 4. Catalog link (and the package columns v13 retires again right after).
+  await _addCatalogLink(db);
+  await _addRetiredPackageColumns(db);
 
   // 5. Remove API provenance markers, keeping every value byte for byte.
   for (final row in await db.query(
@@ -284,27 +292,24 @@ Future<ProviderRecord> _insertNewProvider(
   return ProviderRecord.fromMap(map);
 }
 
-/// A server's package must come with its snapshot and belong to the server's
-/// (catalog) provider. Ledger values themselves are never checked against it.
-Future<void> _checkPackageLink(
-  DatabaseExecutor txn,
-  ServerRecord record,
-  String? providerId,
-) async {
-  if (record.packageId == null && record.packageSnapshot == null) return;
-  final CatalogPackage snapshot;
-  try {
-    snapshot = CatalogPackage.decodeSnapshot(record.packageSnapshot ?? '');
-  } on CatalogFormatException {
-    throw LocalizedArgumentError((l10n) => l10n.r6CatPackageInvalid);
-  }
-  if (snapshot.id != record.packageId || providerId == null) {
-    throw LocalizedArgumentError((l10n) => l10n.r6CatPackageInvalid);
-  }
-  final provider = await _providerRow(txn, providerId);
-  if (provider.catalogId != snapshot.providerId) {
-    throw LocalizedArgumentError((l10n) => l10n.r6CatPackageInvalid);
-  }
+/// Schema v13 (providers only). Runs in sqflite's version-change transaction
+/// after every older step; any exception rolls the whole upgrade back.
+///
+/// * Package links are cleared; the columns stay (see
+///   [_addRetiredPackageColumns]) and are never touched again.
+/// * The round-6 sample directory ids no longer exist anywhere.
+/// * The provider directory auto-update preference gets its column.
+///
+/// Servers' other data, payments and credentials are never touched.
+Future<void> _migrateToProviderDirectorySchema(DatabaseExecutor db) async {
+  await db.execute(
+    'UPDATE servers SET package_id = NULL, package_snapshot = NULL',
+  );
+  await db.execute(
+    "UPDATE providers SET catalog_id = NULL "
+    "WHERE catalog_id IN ('example-cloud','demo-vps')",
+  );
+  await _addDirectorySettings(db);
 }
 
 extension LedgerProviders on LedgerStore {

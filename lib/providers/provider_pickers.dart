@@ -5,7 +5,6 @@ import '../core/ui/ui.dart';
 import '../l10n/locale_preference.dart';
 import '../servers/ledger_controller.dart';
 import '../servers/server_record.dart';
-import 'package_widgets.dart';
 import 'provider_catalog.dart';
 import 'provider_lists.dart';
 import 'provider_pages.dart';
@@ -28,21 +27,15 @@ class ProviderChoice {
   /// An existing local provider.
   final ProviderRecord? local;
 
-  /// A catalog provider that gets its local provider when the server is saved.
+  /// A directory provider that gets its local provider when the server is saved.
   final CatalogProvider? catalog;
 
   /// A new user provider that is created when the server is saved.
   final ProviderRecord? draft;
 }
 
-/// Returned by the package picker; `package == null` is "No Package".
-class PackageChoice {
-  const PackageChoice(this.package);
-  final CatalogPackage? package;
-}
-
 /// Full-height provider picker for the server form: search on top, then None,
-/// providers in use, the user's others, the catalog and "New Provider…".
+/// providers in use, the user's others, the directory and "New Provider…".
 /// Nothing is written: new and catalog providers are created on save.
 Future<ProviderChoice?> pickProvider(
   BuildContext context, {
@@ -176,16 +169,13 @@ class _ProviderPickerPageState extends State<ProviderPickerPage> {
         itemBuilder: (context, i) {
           final provider = items[i];
           final used = usage[provider.id];
-          final packages = ledger.catalogProviderFor(provider)?.packages.length;
           return AppRow(
             key: ValueKey('picker-provider-${provider.id}'),
             leading: ProviderAvatar(name: provider.name),
             title: provider.name,
-            subtitle: [
-              if (used != null) l10n.r6CatProviderSummary(used.servers.length),
-              if (packages != null && packages > 0)
-                l10n.r6CatPackageCount(packages),
-            ].join(' · '),
+            subtitle: used == null
+                ? null
+                : l10n.r6CatProviderSummary(used.servers.length),
             trailing: check(widget.selected?.id == provider.id),
             onTap: () => _pick(ProviderChoice.local(provider)),
           );
@@ -272,131 +262,8 @@ class _ProviderPickerPageState extends State<ProviderPickerPage> {
                       key: ValueKey('picker-catalog-${provider.id}'),
                       leading: ProviderAvatar(name: provider.name),
                       title: provider.name,
-                      subtitle: provider.packages.isEmpty
-                          ? null
-                          : l10n.r6CatPackageCount(provider.packages.length),
                       trailing: check(widget.pendingCatalog?.id == provider.id),
                       onTap: () => _pick(ProviderChoice.catalog(provider)),
-                    );
-                  },
-                ),
-              ],
-            ),
-        ],
-      );
-    },
-  );
-}
-
-/// Full-height package picker of one catalog provider (dozens of packages):
-/// search, "No Package", then the packages with Default and In use badges.
-Future<PackageChoice?> pickPackage(
-  BuildContext context, {
-  required LedgerController ledger,
-  required CatalogProvider provider,
-  CatalogPackage? selected,
-}) => showAppModal<PackageChoice>(
-  context,
-  builder: (_) =>
-      PackagePickerPage(ledger: ledger, provider: provider, selected: selected),
-);
-
-class PackagePickerPage extends StatefulWidget {
-  const PackagePickerPage({
-    super.key,
-    required this.ledger,
-    required this.provider,
-    this.selected,
-  });
-  final LedgerController ledger;
-  final CatalogProvider provider;
-  final CatalogPackage? selected;
-  @override
-  State<PackagePickerPage> createState() => _PackagePickerPageState();
-}
-
-class _PackagePickerPageState extends State<PackagePickerPage> {
-  final query = TextEditingController();
-  final _text = <String, String>{};
-
-  @override
-  void dispose() {
-    query.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) => ListenableBuilder(
-    listenable: widget.ledger,
-    builder: (context, _) {
-      final ledger = widget.ledger;
-      final l10n = context.l10n;
-      final p = context.palette;
-      final tokens = searchTokens(query.text);
-      final packages = [
-        for (final package in widget.provider.packages)
-          if (tokens.isEmpty ||
-              matchesTokens(
-                _text.putIfAbsent(
-                  '${l10n.localeName}/${package.id}',
-                  () => packageSearchText(l10n, package),
-                ),
-                tokens,
-              ))
-            package,
-      ];
-      return AppScaffold.modal(
-        title: l10n.r8PickPackage,
-        slivers: [
-          SliverToBoxAdapter(child: ProviderNotices(ledger)),
-          AppPinnedSearch(
-            controller: query,
-            placeholder: l10n.r8SearchPackages,
-            onChanged: (_) => setState(() {}),
-          ),
-          if (packages.isEmpty)
-            AppListMessage(
-              l10n.r8NoMatches,
-              key: const ValueKey('picker-no-match'),
-            )
-          else
-            AppLazySections(
-              sections: [
-                if (tokens.isEmpty)
-                  AppListSection(
-                    count: 1,
-                    itemBuilder: (context, _) => AppRow(
-                      key: const ValueKey('picker-package-none'),
-                      title: l10n.r6CatNoPackage,
-                      trailing: widget.selected == null
-                          ? Icon(
-                              Icons.check_rounded,
-                              size: 22,
-                              color: p.primary,
-                            )
-                          : null,
-                      onTap: () =>
-                          Navigator.pop(context, const PackageChoice(null)),
-                    ),
-                  ),
-                AppListSection(
-                  count: packages.length,
-                  itemBuilder: (context, i) {
-                    final package = packages[i];
-                    return packageRow(
-                      context,
-                      key: ValueKey('picker-package-${package.id}'),
-                      package: package,
-                      useCount: ledger.packageUseCount(package.id),
-                      trailing: widget.selected?.id == package.id
-                          ? Icon(
-                              Icons.check_rounded,
-                              size: 22,
-                              color: p.primary,
-                            )
-                          : null,
-                      onTap: () =>
-                          Navigator.pop(context, PackageChoice(package)),
                     );
                   },
                 ),

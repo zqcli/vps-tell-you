@@ -1,4 +1,4 @@
-/// Forgiving text search for long lists (providers, packages).
+/// Forgiving text search for long lists (providers).
 ///
 /// Both sides are *folded* first: lower case, accents removed (`Café` finds
 /// `cafe`), width-folded (full-width Latin / digits), and a number glued to

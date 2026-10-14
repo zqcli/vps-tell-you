@@ -14,11 +14,11 @@ Future<void> addTestProvider(LedgerStore store) =>
 /// reopening it runs the real upgrade. Do not make the production migration
 /// idempotent to accommodate test fixtures.
 Future<void> removeProviderSchema(Database db) async {
-  await db.execute('DROP INDEX IF EXISTS servers_package');
-  for (final column in ['package_snapshot', 'package_id', 'provider_id']) {
-    await db.execute('ALTER TABLE servers DROP COLUMN $column');
-  }
+  await db.execute('ALTER TABLE servers DROP COLUMN provider_id');
   await db.execute('DROP TABLE providers');
+  await db.execute(
+    'ALTER TABLE app_settings DROP COLUMN provider_directory_auto',
+  );
 }
 
 Map<String, Object?> legacyProviderProjection(Map<String, Object?> row) =>

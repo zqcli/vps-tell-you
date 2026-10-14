@@ -4733,7 +4733,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get providerUiUnspecified => '未指定提供商';
 
   @override
-  String get providerUiHierarchyHelp => '提供商是服务器的业务归属；目录提供商还会列出自己的套餐。';
+  String get providerUiHierarchyHelp => '提供商是服务器的业务归属。可以从目录里添加，也可以自己新建。';
 
   @override
   String r6CatProviderSummary(int count) {
@@ -4741,7 +4741,7 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String get r6CatCatalogSection => '目录提供商';
+  String get r6CatCatalogSection => '目录';
 
   @override
   String get r6CatMineSection => '我的提供商';
@@ -4759,9 +4759,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get r8SearchProviders => '搜索提供商';
 
   @override
-  String get r8SearchPackages => '搜索套餐名称、地区或规格';
-
-  @override
   String get r8NoMatches => '没有匹配的结果。';
 
   @override
@@ -4769,31 +4766,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get r8BadgeCustom => '自建';
-
-  @override
-  String get r8PackagesInUse => '使用中的套餐';
-
-  @override
-  String r8PackagesInUseCount(int count) {
-    return '$count 个套餐在用';
-  }
-
-  @override
-  String get r8AllPackages => '全部套餐';
-
-  @override
-  String r8InUseCount(int count) {
-    return '使用中 · $count';
-  }
-
-  @override
-  String get r8SortListed => '目录顺序';
-
-  @override
-  String get r8SortPrice => '价格';
-
-  @override
-  String get r8SortName => '名称';
 
   @override
   String get r8SectionInUse => '使用中';
@@ -4807,113 +4779,22 @@ class AppLocalizationsZh extends AppLocalizations {
   String get r8PickProvider => '选择提供商';
 
   @override
-  String get r8PickPackage => '选择套餐';
+  String get r6CatCatalogFooter => '目录里的提供商可以直接添加；没有找到时，可以新建自己的提供商。';
 
   @override
-  String get r6CatCatalogFooter => '目录提供商附带现成的套餐。没有找到时可以新增提供商。';
+  String get r6CatServerSection => '提供商';
 
   @override
-  String r6CatPackageCount(int count) {
-    return '$count 个套餐';
-  }
+  String get r6CatServerFooter => '服务器保留自己的硬件与费用。如需更换提供商，请编辑服务器。';
 
   @override
-  String get r6CatAdded => '已添加';
-
-  @override
-  String get r6CatNoPackage => '不选套餐';
-
-  @override
-  String get r6CatDefaultPill => '默认';
-
-  @override
-  String get r6CatPackageDetails => '套餐';
-
-  @override
-  String get r6CatSpecs => '规格';
-
-  @override
-  String get r6CatPrice => '价格';
-
-  @override
-  String r6CatPriceValue(String amount, String currency, String cycle) {
-    return '$amount $currency · $cycle';
-  }
-
-  @override
-  String get r6CatUnknownPrice => '未列出价格';
-
-  @override
-  String get r6CatLinkedServers => '使用此套餐的服务器';
-
-  @override
-  String get r6CatNoLinkedServers => '还没有服务器使用此套餐。';
-
-  @override
-  String get r6CatLinkedFooter => '服务器保留自己的硬件与费用；套餐只记录你选过什么。';
-
-  @override
-  String get r6CatAddServerWithPackage => '用此套餐添加服务器';
-
-  @override
-  String get r6CatChangedNotice => '自选择以来，目录已更新此套餐。服务器保留各自保存的值。';
-
-  @override
-  String get r6CatChangedPill => '目录已更新';
-
-  @override
-  String get r6CatRemovedNotice => '目录已不再列出此套餐。服务器保留各自保存的值。';
-
-  @override
-  String get r6CatRemovedPill => '已不在目录';
-
-  @override
-  String get r6CatSavedValues => '此服务器保存的内容';
-
-  @override
-  String get r6CatCurrentValues => '当前目录';
-
-  @override
-  String get r6CatServerSection => '提供商与套餐';
-
-  @override
-  String get r6CatServerFooter => '服务器保留自己的硬件与费用。如需更换提供商或套餐，请编辑服务器。';
-
-  @override
-  String get r6CatNoPackageRow => '无套餐';
-
-  @override
-  String get r6CatOpenPackage => '查看套餐';
-
-  @override
-  String get r6CatFormPackage => '套餐';
-
-  @override
-  String get r6CatFormPackageFooter => '选择套餐会预填硬件与费用，之后仍可修改。';
-
-  @override
-  String get r6CatReplaceTitle => '替换硬件与费用？';
-
-  @override
-  String get r6CatReplaceMessage => '套餐的值会替换表单中的硬件与费用，保存后才会生效。';
-
-  @override
-  String get r6CatReplaceAction => '替换';
-
-  @override
-  String get r6CatNoPackagesYet => '这个提供商没有套餐列表。';
-
-  @override
-  String get r6CatCatalogFailed => '套餐目录未能加载。仍可使用自己的提供商。';
+  String get r6CatCatalogFailed => '提供商目录未能加载。仍可使用自己的提供商。';
 
   @override
   String get r6CatRetry => '重试';
 
   @override
-  String get r6CatCatalogProviderHelp => '尚未添加。添加后，新增服务器时即可使用它的套餐。';
-
-  @override
-  String get r6CatPackageInvalid => '套餐与此服务器的提供商不匹配。';
+  String get r6CatCatalogProviderHelp => '尚未添加。添加后即可把服务器关联到它。';
 
   @override
   String get r6CatBackupProviders => '提供商';
@@ -4922,9 +4803,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String r6CatBackupProviderCount(int count) {
     return '提供商：$count';
   }
-
-  @override
-  String get r6CatSampleNote => '示例目录数据，仅用于测试。';
 
   @override
   String get providerUiEmpty => '还没有提供商';
