@@ -1,0 +1,19 @@
+{
+  "id": "hostdare",
+  "name": {
+    "zh": "HostDare",
+    "en": "HostDare"
+  },
+  "aliases": [
+    "Host Dare",
+    "HD",
+    "好大胆"
+  ],
+  "kind": "vps",
+  "region": "global",
+  "website": "https://hostdare.com",
+  "description": {
+    "zh": "VPS 主机商，提供美国及日本节点。",
+    "en": "VPS hosting provider with US and Japan locations."
+  }
+}

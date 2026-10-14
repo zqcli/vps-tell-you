@@ -1,0 +1,19 @@
+{
+  "id": "azure",
+  "name": {
+    "zh": "微软 Azure",
+    "en": "Microsoft Azure"
+  },
+  "aliases": [
+    "Azure",
+    "微软云",
+    "Microsoft Cloud"
+  ],
+  "kind": "cloud",
+  "region": "global",
+  "website": "https://azure.microsoft.com",
+  "description": {
+    "zh": "微软旗下云平台，计算节点遍布全球。",
+    "en": "Microsoft's cloud platform offering compute services across global regions."
+  }
+}

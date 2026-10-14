@@ -1,0 +1,17 @@
+{
+  "id": "huaweicloud",
+  "name": {
+    "zh": "华为云",
+    "en": "Huawei Cloud"
+  },
+  "aliases": [
+    "华为云 ECS"
+  ],
+  "kind": "cloud",
+  "region": "cn",
+  "website": "https://www.huaweicloud.com",
+  "description": {
+    "zh": "中国云服务商，提供境内及海外计算服务。",
+    "en": "Chinese cloud provider with compute services in mainland China and international regions."
+  }
+}

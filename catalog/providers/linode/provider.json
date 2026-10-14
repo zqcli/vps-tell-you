@@ -1,0 +1,21 @@
+{
+  "id": "linode",
+  "name": {
+    "zh": "Linode (Akamai)",
+    "en": "Linode (Akamai)"
+  },
+  "aliases": [
+    "Linode",
+    "Akamai Cloud",
+    "Akamai Connected Cloud",
+    "Akamai Cloud Computing",
+    "阿卡迈云"
+  ],
+  "kind": "cloud",
+  "region": "global",
+  "website": "https://www.linode.com",
+  "description": {
+    "zh": "Akamai 旗下云计算品牌，节点覆盖全球。",
+    "en": "Akamai's cloud computing brand, with compute regions across the globe."
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "id": "unicomcloud",
+  "name": {
+    "zh": "联通云",
+    "en": "China Unicom Cloud"
+  },
+  "aliases": [
+    "联通沃云",
+    "沃云",
+    "Unicom Cloud",
+    "CUCloud"
+  ],
+  "kind": "cloud",
+  "region": "cn",
+  "website": "https://www.cucloud.cn",
+  "description": {
+    "zh": "中国联通旗下云平台，提供中国境内云服务器。",
+    "en": "China Unicom's cloud platform offering virtual machines in mainland China."
+  }
+}

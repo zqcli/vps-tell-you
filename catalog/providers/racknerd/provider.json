@@ -1,12 +1,19 @@
 {
   "id": "racknerd",
-  "name": {"zh": "RackNerd", "en": "RackNerd"},
-  "aliases": ["RackNerd", "Rack Nerd"],
+  "name": {
+    "zh": "RackNerd",
+    "en": "RackNerd"
+  },
+  "aliases": [
+    "Rack Nerd",
+    "RN",
+    "Nerdrack"
+  ],
   "kind": "vps",
   "region": "global",
   "website": "https://www.racknerd.com",
   "description": {
-    "zh": "主打低价的 VPS 主机商，数据中心主要在美国。",
-    "en": "Budget VPS hosting with data centers mainly in the US."
+    "zh": "美国主机商，节点覆盖北美、欧洲及亚洲。",
+    "en": "US hosting provider offering VPS and dedicated servers in North America, Europe, and Asia."
   }
 }

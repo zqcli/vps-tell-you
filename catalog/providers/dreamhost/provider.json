@@ -1,0 +1,18 @@
+{
+  "id": "dreamhost",
+  "name": {
+    "zh": "DreamHost",
+    "en": "DreamHost"
+  },
+  "aliases": [
+    "Dream Host",
+    "梦幻主机"
+  ],
+  "kind": "vps",
+  "region": "global",
+  "website": "https://www.dreamhost.com",
+  "description": {
+    "zh": "美国主机商，提供美国节点的托管 VPS。",
+    "en": "US hosting provider offering managed VPS with US datacenter locations."
+  }
+}

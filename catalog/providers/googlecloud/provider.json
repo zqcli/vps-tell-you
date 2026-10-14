@@ -1,0 +1,20 @@
+{
+  "id": "googlecloud",
+  "name": {
+    "zh": "谷歌云",
+    "en": "Google Cloud"
+  },
+  "aliases": [
+    "GCP",
+    "Google Cloud Platform",
+    "Google Compute Engine",
+    "谷歌云平台"
+  ],
+  "kind": "cloud",
+  "region": "global",
+  "website": "https://cloud.google.com",
+  "description": {
+    "zh": "谷歌旗下云平台，计算节点遍布全球。",
+    "en": "Google's cloud platform offering compute services across global regions."
+  }
+}

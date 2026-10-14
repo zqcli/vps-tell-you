@@ -1,0 +1,18 @@
+{
+  "id": "liteserver",
+  "name": {
+    "zh": "LiteServer",
+    "en": "LiteServer"
+  },
+  "aliases": [
+    "Lite Server",
+    "LiteServer.nl"
+  ],
+  "kind": "vps",
+  "region": "global",
+  "website": "https://liteserver.nl",
+  "description": {
+    "zh": "荷兰 VPS 及服务器商，主要节点位于荷兰。",
+    "en": "Dutch VPS and dedicated server provider with datacenter locations in the Netherlands."
+  }
+}

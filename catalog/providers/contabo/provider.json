@@ -1,0 +1,17 @@
+{
+  "id": "contabo",
+  "name": {
+    "zh": "Contabo",
+    "en": "Contabo"
+  },
+  "aliases": [
+    "Giga-International"
+  ],
+  "kind": "vps",
+  "region": "global",
+  "website": "https://contabo.com",
+  "description": {
+    "zh": "德国 VPS 及服务器商，节点覆盖欧洲、美洲及亚洲。",
+    "en": "German VPS and dedicated server provider with locations in Europe, the Americas, and Asia."
+  }
+}

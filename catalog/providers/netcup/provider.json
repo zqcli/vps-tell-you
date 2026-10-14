@@ -1,0 +1,19 @@
+{
+  "id": "netcup",
+  "name": {
+    "zh": "netcup",
+    "en": "netcup"
+  },
+  "aliases": [
+    "Net Cup",
+    "德国杯子",
+    "奶杯"
+  ],
+  "kind": "vps",
+  "region": "global",
+  "website": "https://www.netcup.com",
+  "description": {
+    "zh": "德国 VPS 及服务器商，节点覆盖欧洲、美国和新加坡。",
+    "en": "German VPS and server provider with datacenter locations in Europe, the US, and Singapore."
+  }
+}

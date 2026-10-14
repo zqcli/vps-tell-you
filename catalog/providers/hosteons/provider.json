@@ -1,0 +1,18 @@
+{
+  "id": "hosteons",
+  "name": {
+    "zh": "HostEONS",
+    "en": "HostEONS"
+  },
+  "aliases": [
+    "Host Eons",
+    "Hosteons VPS"
+  ],
+  "kind": "vps",
+  "region": "global",
+  "website": "https://hosteons.com",
+  "description": {
+    "zh": "VPS 主机商，提供美国及欧洲节点。",
+    "en": "VPS hosting provider offering locations in the US and Europe."
+  }
+}

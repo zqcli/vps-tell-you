@@ -1,0 +1,19 @@
+{
+  "id": "virmach",
+  "name": {
+    "zh": "VirMach",
+    "en": "VirMach"
+  },
+  "aliases": [
+    "Vir Mach",
+    "胖子",
+    "VirMach VPS"
+  ],
+  "kind": "vps",
+  "region": "global",
+  "website": "https://virmach.com",
+  "description": {
+    "zh": "VPS 主机商，节点覆盖美国、欧洲和日本。",
+    "en": "VPS hosting provider with locations in the US, Europe, and Japan."
+  }
+}

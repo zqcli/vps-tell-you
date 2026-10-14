@@ -1,0 +1,17 @@
+{
+  "id": "clouvider",
+  "name": {
+    "zh": "Clouvider",
+    "en": "Clouvider"
+  },
+  "aliases": [
+    "Clouvider VPS"
+  ],
+  "kind": "vps",
+  "region": "global",
+  "website": "https://www.clouvider.com",
+  "description": {
+    "zh": "英国网络及主机商，在欧洲和美国提供 VPS。",
+    "en": "UK network and hosting provider offering VPS in Europe and the US."
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "id": "vps",
+  "name": {
+    "zh": "V.PS",
+    "en": "V.PS"
+  },
+  "aliases": [
+    "VPS by xTom",
+    "xTom",
+    "VPS xTom",
+    "V.PS xTom"
+  ],
+  "kind": "vps",
+  "region": "global",
+  "website": "https://v.ps",
+  "description": {
+    "zh": "xTom 旗下 VPS 品牌，节点覆盖欧洲、美洲及亚太。",
+    "en": "xTom's VPS hosting brand, with locations in Europe, the Americas, and Asia-Pacific."
+  }
+}

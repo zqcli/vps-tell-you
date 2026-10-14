@@ -1,0 +1,17 @@
+{
+  "id": "extravm",
+  "name": {
+    "zh": "ExtraVM",
+    "en": "ExtraVM"
+  },
+  "aliases": [
+    "Extra VM"
+  ],
+  "kind": "vps",
+  "region": "global",
+  "website": "https://extravm.com",
+  "description": {
+    "zh": "美国主机商，提供北美、欧洲和亚洲 VPS。",
+    "en": "US hosting provider offering VPS in North America, Europe, and Asia."
+  }
+}

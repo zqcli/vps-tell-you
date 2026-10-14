@@ -1,0 +1,18 @@
+{
+  "id": "hostdzire",
+  "name": {
+    "zh": "HostDZire",
+    "en": "HostDZire"
+  },
+  "aliases": [
+    "Host Dzire",
+    "HostDZire VPS"
+  ],
+  "kind": "vps",
+  "region": "global",
+  "website": "https://hostdzire.com",
+  "description": {
+    "zh": "主机服务商，在亚洲、欧洲及美国提供 VPS。",
+    "en": "Hosting provider offering VPS locations in Asia, Europe, and the US."
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "id": "onidel",
+  "name": {
+    "zh": "Onidel",
+    "en": "Onidel"
+  },
+  "aliases": [
+    "Onidel VPS"
+  ],
+  "kind": "vps",
+  "region": "global",
+  "website": "https://onidel.com",
+  "description": {
+    "zh": "澳大利亚主机商，提供亚太、欧洲及美国 VPS。",
+    "en": "Australian hosting provider offering VPS in Asia-Pacific, Europe, and the US."
+  }
+}

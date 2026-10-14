@@ -33,7 +33,7 @@ catalog/
   providers/<id>/logo.png        256×256 PNG，≤ 64 KiB，透明或白底，居中留约 12 % 边距
 ```
 
-字段与规则见 [catalog/README.md](../catalog/README.md)。`tool/build_catalog.py`（仅 Python 标准库）校验每个 `provider.json`（字段、id 与文件夹同名、名称与别名全局不重复、https 官网、PNG 文件头 / 尺寸 / 大小），计算 Logo 的 sha256，确定性地写出 `index.json`；内容有变化时 `catalogVersion` 加 1，没有变化则字节不变。`--check` 在 `index.json` 过期时以非零状态退出，CI 已接入。当前 `aliyun` / `aws` / `racknerd` 三个是开发用占位数据。
+字段与规则见 [catalog/README.md](../catalog/README.md)。`tool/build_catalog.py`（仅 Python 标准库）校验每个 `provider.json`（字段、id 与文件夹同名、名称与别名全局不重复、https 官网、PNG 文件头 / 尺寸 / 大小），计算 Logo 的 sha256，确定性地写出 `index.json`；内容有变化时 `catalogVersion` 加 1，没有变化则字节不变。`--check` 在 `index.json` 过期时以非零状态退出，CI 已接入。当前内容与取舍见 catalog/README.md，Logo 来源见 catalog/SOURCES.md；Logo 是可选的，缺失时应用显示首字母头像。
 
 `index.json`：
 

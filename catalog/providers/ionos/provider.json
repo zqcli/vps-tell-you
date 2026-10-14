@@ -1,0 +1,19 @@
+{
+  "id": "ionos",
+  "name": {
+    "zh": "IONOS",
+    "en": "IONOS"
+  },
+  "aliases": [
+    "1&1 IONOS",
+    "1and1",
+    "1&1"
+  ],
+  "kind": "vps",
+  "region": "global",
+  "website": "https://www.ionos.com",
+  "description": {
+    "zh": "德国主机及云服务商，节点覆盖欧洲和美国。",
+    "en": "German hosting and cloud provider with datacenters in Europe and the US."
+  }
+}

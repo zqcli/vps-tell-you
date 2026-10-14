@@ -69,7 +69,7 @@ def _lang_map(value, label: str, limits: dict[str, int]) -> dict[str, str]:
 def check_logo(path: Path, label: str) -> tuple[str, int]:
     """Returns (sha256, bytes) of a valid logo, else raises Invalid."""
     if not path.is_file():
-        raise Invalid(f"{label}: logo.png is missing")
+        raise Invalid(f"{label}: logo.png is not a file")
     data = path.read_bytes()
     if len(data) > LOGO_MAX_BYTES:
         raise Invalid(f"{label}: logo.png is {len(data)} bytes (max {LOGO_MAX_BYTES})")
@@ -120,8 +120,12 @@ def load_provider(folder: Path) -> dict:
     if not re.match(r"^https://[^/\s]+(/\S*)?$", website):
         raise Invalid(f"{label}: website must be an https:// URL")
 
-    sha, size = check_logo(folder / "logo.png", label)
-    return {
+    # The logo is optional: without logo.png the app shows initials.
+    logo = None
+    if (folder / "logo.png").exists():
+        sha, size = check_logo(folder / "logo.png", label)
+        logo = {"path": f"providers/{provider_id}/logo.png", "sha256": sha, "bytes": size}
+    entry = {
         "id": provider_id,
         "name": _lang_map(raw["name"], f"{label}: name", {"zh": NAME_MAX, "en": NAME_MAX}),
         "aliases": aliases,
@@ -129,8 +133,10 @@ def load_provider(folder: Path) -> dict:
         "region": raw["region"],
         "website": website,
         "description": _lang_map(raw["description"], f"{label}: description", DESCRIPTION_MAX),
-        "logo": {"path": f"providers/{provider_id}/logo.png", "sha256": sha, "bytes": size},
     }
+    if logo:
+        entry["logo"] = logo
+    return entry
 
 
 def load_all() -> list[dict]:

@@ -1,0 +1,18 @@
+{
+  "id": "namecheap",
+  "name": {
+    "zh": "Namecheap",
+    "en": "Namecheap"
+  },
+  "aliases": [
+    "Name Cheap",
+    "Namecheap VPS"
+  ],
+  "kind": "vps",
+  "region": "global",
+  "website": "https://www.namecheap.com",
+  "description": {
+    "zh": "美国域名及主机商，在美国提供 VPS。",
+    "en": "US domain registrar and hosting provider offering VPS in the US."
+  }
+}

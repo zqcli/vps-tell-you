@@ -1,0 +1,20 @@
+{
+  "id": "zgovps",
+  "name": {
+    "zh": "ZgoCloud",
+    "en": "ZgoCloud"
+  },
+  "aliases": [
+    "ZgoVPS",
+    "Zgo VPS",
+    "Zgo Cloud",
+    "Zgo"
+  ],
+  "kind": "vps",
+  "region": "global",
+  "website": "https://zgovps.com",
+  "description": {
+    "zh": "VPS 主机商，提供美国和亚洲节点。",
+    "en": "VPS hosting provider offering locations in the US and Asia."
+  }
+}

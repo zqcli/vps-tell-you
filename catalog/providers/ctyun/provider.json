@@ -1,0 +1,19 @@
+{
+  "id": "ctyun",
+  "name": {
+    "zh": "天翼云",
+    "en": "China Telecom Cloud"
+  },
+  "aliases": [
+    "CTYun",
+    "中国电信云",
+    "天翼云电脑"
+  ],
+  "kind": "cloud",
+  "region": "cn",
+  "website": "https://www.ctyun.cn",
+  "description": {
+    "zh": "中国电信旗下云平台，节点覆盖中国境内。",
+    "en": "China Telecom's cloud platform with datacenters across mainland China."
+  }
+}

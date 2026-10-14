@@ -1,8 +1,56 @@
 {
   "schemaVersion": 1,
-  "catalogVersion": 1,
+  "catalogVersion": 2,
   "generatedAt": "2026-10-14T00:00:00Z",
   "providers": [
+    {
+      "id": "advinservers",
+      "name": {
+        "zh": "Advin Servers",
+        "en": "Advin Servers"
+      },
+      "aliases": [
+        "AdvinServers",
+        "Advin",
+        "Advin VPS"
+      ],
+      "kind": "vps",
+      "region": "global",
+      "website": "https://advinservers.com",
+      "description": {
+        "zh": "美国主机商，提供北美、欧洲及亚洲 VPS。",
+        "en": "US hosting provider offering VPS in North America, Europe, and Asia."
+      },
+      "logo": {
+        "path": "providers/advinservers/logo.png",
+        "sha256": "892da305cc873dc7745de1fc99c9da0363719ad16dbeb96d35dd509f16becd16",
+        "bytes": 13462
+      }
+    },
+    {
+      "id": "akile",
+      "name": {
+        "zh": "AkileCloud",
+        "en": "AkileCloud"
+      },
+      "aliases": [
+        "Akile",
+        "Akile Cloud",
+        "Akile云"
+      ],
+      "kind": "vps",
+      "region": "global",
+      "website": "https://akile.io",
+      "description": {
+        "zh": "VPS 主机商，节点覆盖亚洲、美洲和欧洲。",
+        "en": "VPS hosting provider with locations in Asia, the Americas, and Europe."
+      },
+      "logo": {
+        "path": "providers/akile/logo.png",
+        "sha256": "14d6942184d7ebdac212655fc2d7b80d331bdd56ebaac9535f56bdda32a32441",
+        "bytes": 11533
+      }
+    },
     {
       "id": "aliyun",
       "name": {
@@ -11,20 +59,46 @@
       },
       "aliases": [
         "Aliyun",
-        "Alibaba Cloud",
-        "阿里云"
+        "Alibaba Cloud International",
+        "阿里云国际版",
+        "阿里云轻量",
+        "阿里云轻量应用服务器",
+        "阿里云 ECS"
       ],
       "kind": "cloud",
       "region": "cn",
       "website": "https://www.aliyun.com",
       "description": {
-        "zh": "阿里巴巴集团旗下的云计算服务商。",
-        "en": "Cloud computing services from Alibaba Group."
+        "zh": "中国云服务商，提供境内及海外云服务器。",
+        "en": "Chinese cloud provider offering virtual machines in mainland China and international regions."
       },
       "logo": {
         "path": "providers/aliyun/logo.png",
-        "sha256": "789c85c7c09da8cbe9183e1e85e649db7588d1d723aad79358ce1d516071a794",
-        "bytes": 2259
+        "sha256": "da3af909f4bd0dfbfeb7725fef6f212963ccc6fa3168a8c924bcc16bb2fbdb15",
+        "bytes": 5884
+      }
+    },
+    {
+      "id": "alphavps",
+      "name": {
+        "zh": "AlphaVPS",
+        "en": "AlphaVPS"
+      },
+      "aliases": [
+        "Alpha VPS",
+        "阿尔法 VPS"
+      ],
+      "kind": "vps",
+      "region": "global",
+      "website": "https://alphavps.com",
+      "description": {
+        "zh": "保加利亚主机商，提供欧洲及美国 VPS。",
+        "en": "Bulgarian hosting provider offering VPS in Europe and the US."
+      },
+      "logo": {
+        "path": "providers/alphavps/logo.png",
+        "sha256": "ed1de359ccbc13c1ca3728be40ce6ba05e957de02317c930dff6443f2ec5f77a",
+        "bytes": 13518
       }
     },
     {
@@ -35,21 +109,1254 @@
       },
       "aliases": [
         "AWS",
-        "Amazon Web Services",
-        "亚马逊云科技",
-        "亚马逊云"
+        "Amazon AWS",
+        "亚马逊云",
+        "亚马逊 AWS"
       ],
       "kind": "cloud",
       "region": "global",
       "website": "https://aws.amazon.com",
       "description": {
-        "zh": "亚马逊旗下的全球云计算平台。",
-        "en": "Amazon's global cloud computing platform."
+        "zh": "美国云服务商，计算节点遍布全球。",
+        "en": "US cloud provider offering compute services across global regions."
       },
       "logo": {
         "path": "providers/aws/logo.png",
-        "sha256": "e50325a1497d257269f62caafaac2ccc888e8657296e239b18322146a6d53d5d",
-        "bytes": 5826
+        "sha256": "00b02574d5a085ae81a12e976598aabc602c864dacca28e0552de9c53a87d6f1",
+        "bytes": 15384
+      }
+    },
+    {
+      "id": "azure",
+      "name": {
+        "zh": "微软 Azure",
+        "en": "Microsoft Azure"
+      },
+      "aliases": [
+        "Azure",
+        "微软云",
+        "Microsoft Cloud"
+      ],
+      "kind": "cloud",
+      "region": "global",
+      "website": "https://azure.microsoft.com",
+      "description": {
+        "zh": "微软旗下云平台，计算节点遍布全球。",
+        "en": "Microsoft's cloud platform offering compute services across global regions."
+      },
+      "logo": {
+        "path": "providers/azure/logo.png",
+        "sha256": "7fe74107a376085672b29e3c5a4a1f6400b27fa10241a4edefb9e746f78cc8a9",
+        "bytes": 24193
+      }
+    },
+    {
+      "id": "bage",
+      "name": {
+        "zh": "八戒",
+        "en": "BAGEVM"
+      },
+      "aliases": [
+        "Bage",
+        "Bage Cloud",
+        "八戒云",
+        "八戒 VPS"
+      ],
+      "kind": "vps",
+      "region": "global",
+      "website": "https://www.bagevm.com",
+      "description": {
+        "zh": "VPS 主机商，节点覆盖亚洲、美国和欧洲。",
+        "en": "VPS hosting provider with datacenters in Asia, the US, and Europe."
+      },
+      "logo": {
+        "path": "providers/bage/logo.png",
+        "sha256": "ee6ca732ba2fc645e9e56c1a92241124bd075d32fe3572cc6f1daaa729a8027b",
+        "bytes": 13361
+      }
+    },
+    {
+      "id": "baiducloud",
+      "name": {
+        "zh": "百度智能云",
+        "en": "Baidu AI Cloud"
+      },
+      "aliases": [
+        "百度云",
+        "Baidu Cloud",
+        "百度云 BCC"
+      ],
+      "kind": "cloud",
+      "region": "cn",
+      "website": "https://cloud.baidu.com",
+      "description": {
+        "zh": "中国云服务商，提供云服务器及人工智能服务。",
+        "en": "Chinese cloud provider offering virtual machines and AI services, with mainland China regions."
+      },
+      "logo": {
+        "path": "providers/baiducloud/logo.png",
+        "sha256": "b54bcb02ce335ec34c484644217eeae66418b6e2917339e94a54e60b24465278",
+        "bytes": 30755
+      }
+    },
+    {
+      "id": "bandwagonhost",
+      "name": {
+        "zh": "搬瓦工",
+        "en": "BandwagonHost"
+      },
+      "aliases": [
+        "Bandwagon Host",
+        "BWG",
+        "BWH",
+        "搬瓦工 VPS",
+        "瓦工"
+      ],
+      "kind": "vps",
+      "region": "global",
+      "website": "https://bandwagonhost.com",
+      "description": {
+        "zh": "VPS 主机商，在美国、欧洲和亚洲提供服务。",
+        "en": "VPS hosting provider with locations in the US, Europe, and Asia."
+      },
+      "logo": {
+        "path": "providers/bandwagonhost/logo.png",
+        "sha256": "fec64876e6bed86d38f96252845fe06aca8a0bd48a83ac3b5bb0e0386c3d95bc",
+        "bytes": 18519
+      }
+    },
+    {
+      "id": "berohost",
+      "name": {
+        "zh": "BeroHost",
+        "en": "BeroHost"
+      },
+      "aliases": [
+        "Bero-Host",
+        "Bero Host",
+        "bero"
+      ],
+      "kind": "vps",
+      "region": "global",
+      "website": "https://bero-host.de",
+      "description": {
+        "zh": "德国主机商，提供位于德国的 VPS 和服务器。",
+        "en": "German hosting provider offering VPS and dedicated servers in Germany."
+      },
+      "logo": {
+        "path": "providers/berohost/logo.png",
+        "sha256": "4608fd4d0ea0b5303f0a86cfdf36102506549b051cf9399ba1f26756823a6399",
+        "bytes": 16045
+      }
+    },
+    {
+      "id": "buyvm",
+      "name": {
+        "zh": "BuyVM",
+        "en": "BuyVM"
+      },
+      "aliases": [
+        "Buy VM",
+        "FranTech",
+        "BuyVM.net"
+      ],
+      "kind": "vps",
+      "region": "global",
+      "website": "https://buyvm.net",
+      "description": {
+        "zh": "VPS 主机商，节点位于美国和卢森堡。",
+        "en": "VPS hosting provider with locations in the US and Luxembourg."
+      },
+      "logo": {
+        "path": "providers/buyvm/logo.png",
+        "sha256": "ee985455d9daeefcae7e21f411ceb48825821cde973f51eeb66e345c03a4c90f",
+        "bytes": 10960
+      }
+    },
+    {
+      "id": "cloudcone",
+      "name": {
+        "zh": "CloudCone",
+        "en": "CloudCone"
+      },
+      "aliases": [
+        "Cloud Cone",
+        "CC",
+        "云锥"
+      ],
+      "kind": "vps",
+      "region": "global",
+      "website": "https://cloudcone.com",
+      "description": {
+        "zh": "VPS 主机商，主要节点位于美国洛杉矶。",
+        "en": "VPS hosting provider with its main datacenter location in Los Angeles, US."
+      },
+      "logo": {
+        "path": "providers/cloudcone/logo.png",
+        "sha256": "f63b8322975e3f251523d71efb1943a746e24bc69b5f97caf6755307fc770684",
+        "bytes": 14581
+      }
+    },
+    {
+      "id": "cloudfanatic",
+      "name": {
+        "zh": "CloudFanatic",
+        "en": "CloudFanatic"
+      },
+      "aliases": [
+        "Cloud Fanatic",
+        "ServerCheap",
+        "ServerCheap.net"
+      ],
+      "kind": "vps",
+      "region": "global",
+      "website": "https://cloudfanatic.net",
+      "description": {
+        "zh": "VPS 主机商，主要节点位于美国。",
+        "en": "VPS hosting provider with its main datacenter locations in the US."
+      },
+      "logo": {
+        "path": "providers/cloudfanatic/logo.png",
+        "sha256": "d7831971c8710a1b2c0fea07b0167e04c6510b53fa95f0bdd7561c04ae445bc6",
+        "bytes": 2089
+      }
+    },
+    {
+      "id": "clouvider",
+      "name": {
+        "zh": "Clouvider",
+        "en": "Clouvider"
+      },
+      "aliases": [
+        "Clouvider VPS"
+      ],
+      "kind": "vps",
+      "region": "global",
+      "website": "https://www.clouvider.com",
+      "description": {
+        "zh": "英国网络及主机商，在欧洲和美国提供 VPS。",
+        "en": "UK network and hosting provider offering VPS in Europe and the US."
+      },
+      "logo": {
+        "path": "providers/clouvider/logo.png",
+        "sha256": "b200fb4f9a11d6eff0a343fc5badd7c69f896884d352ed30a6b791fff0e6b4b6",
+        "bytes": 17609
+      }
+    },
+    {
+      "id": "cmcloud",
+      "name": {
+        "zh": "移动云",
+        "en": "China Mobile Cloud"
+      },
+      "aliases": [
+        "中国移动云",
+        "CMCloud",
+        "移动云 ECloud"
+      ],
+      "kind": "cloud",
+      "region": "cn",
+      "website": "https://ecloud.10086.cn",
+      "description": {
+        "zh": "中国移动旗下云平台，提供中国境内计算服务。",
+        "en": "China Mobile's cloud platform offering compute services in mainland China."
+      },
+      "logo": {
+        "path": "providers/cmcloud/logo.png",
+        "sha256": "e3e8292789a6c4794082a112f46d89e999a1dfa2eedb8592f587b004c3afa422",
+        "bytes": 18423
+      }
+    },
+    {
+      "id": "colocrossing",
+      "name": {
+        "zh": "ColoCrossing",
+        "en": "ColoCrossing"
+      },
+      "aliases": [
+        "Colo Crossing",
+        "ColoCrossing Cloud",
+        "CC机房"
+      ],
+      "kind": "vps",
+      "region": "global",
+      "website": "https://www.colocrossing.com",
+      "description": {
+        "zh": "美国数据中心商，提供 VPS、服务器和托管服务。",
+        "en": "US datacenter provider offering VPS, dedicated servers, and colocation in US cities."
+      },
+      "logo": {
+        "path": "providers/colocrossing/logo.png",
+        "sha256": "94bb402af19be0b2689de0c731418747cb71b99facf86425fd104edf37c48cdd",
+        "bytes": 20531
+      }
+    },
+    {
+      "id": "contabo",
+      "name": {
+        "zh": "Contabo",
+        "en": "Contabo"
+      },
+      "aliases": [
+        "Giga-International"
+      ],
+      "kind": "vps",
+      "region": "global",
+      "website": "https://contabo.com",
+      "description": {
+        "zh": "德国 VPS 及服务器商，节点覆盖欧洲、美洲及亚洲。",
+        "en": "German VPS and dedicated server provider with locations in Europe, the Americas, and Asia."
+      },
+      "logo": {
+        "path": "providers/contabo/logo.png",
+        "sha256": "8de5c636e9f253d0f1df38c231b59e01fad9f2bda973f23606f5dc6e309719b6",
+        "bytes": 18511
+      }
+    },
+    {
+      "id": "ctyun",
+      "name": {
+        "zh": "天翼云",
+        "en": "China Telecom Cloud"
+      },
+      "aliases": [
+        "CTYun",
+        "中国电信云",
+        "天翼云电脑"
+      ],
+      "kind": "cloud",
+      "region": "cn",
+      "website": "https://www.ctyun.cn",
+      "description": {
+        "zh": "中国电信旗下云平台，节点覆盖中国境内。",
+        "en": "China Telecom's cloud platform with datacenters across mainland China."
+      },
+      "logo": {
+        "path": "providers/ctyun/logo.png",
+        "sha256": "04eacf820f1d3c775eddb18690149706c24ce17611616ffbe6ec3b0c86e7acab",
+        "bytes": 15516
+      }
+    },
+    {
+      "id": "dedirock",
+      "name": {
+        "zh": "DediRock",
+        "en": "DediRock"
+      },
+      "aliases": [
+        "Dedi Rock",
+        "Dedirock VPS"
+      ],
+      "kind": "vps",
+      "region": "global",
+      "website": "https://dedirock.com",
+      "description": {
+        "zh": "VPS 及服务器商，在美国多地提供服务。",
+        "en": "VPS and dedicated server provider with datacenters in multiple US cities."
+      },
+      "logo": {
+        "path": "providers/dedirock/logo.png",
+        "sha256": "5f294d8442a4d2f01fa25d2db3edfabb7d3d87863207955c080c7b71836fb34d",
+        "bytes": 25579
+      }
+    },
+    {
+      "id": "digitalocean",
+      "name": {
+        "zh": "DigitalOcean",
+        "en": "DigitalOcean"
+      },
+      "aliases": [
+        "DO",
+        "Digital Ocean",
+        "数字海洋",
+        "Droplet"
+      ],
+      "kind": "cloud",
+      "region": "global",
+      "website": "https://www.digitalocean.com",
+      "description": {
+        "zh": "美国云服务商，节点覆盖美洲、欧洲及亚洲。",
+        "en": "US cloud provider with compute regions in the Americas, Europe, and Asia."
+      },
+      "logo": {
+        "path": "providers/digitalocean/logo.png",
+        "sha256": "e8d91d1b3e20d514ca9fadabcaf957b5e2096332a6a4a9a60ef7b807a1b15723",
+        "bytes": 9540
+      }
+    },
+    {
+      "id": "dmit",
+      "name": {
+        "zh": "DMIT",
+        "en": "DMIT"
+      },
+      "aliases": [
+        "DMIT.io",
+        "DMIT Cloud",
+        "大妈"
+      ],
+      "kind": "vps",
+      "region": "global",
+      "website": "https://www.dmit.io",
+      "description": {
+        "zh": "VPS 及服务器商，节点位于美国、香港和日本。",
+        "en": "VPS and dedicated server provider with locations in the US, Hong Kong, and Japan."
+      },
+      "logo": {
+        "path": "providers/dmit/logo.png",
+        "sha256": "47359f9021357f011a6f50671cd7c6636cd97bb3dfdbbc287a673f85f3e1db77",
+        "bytes": 8831
+      }
+    },
+    {
+      "id": "dreamhost",
+      "name": {
+        "zh": "DreamHost",
+        "en": "DreamHost"
+      },
+      "aliases": [
+        "Dream Host",
+        "梦幻主机"
+      ],
+      "kind": "vps",
+      "region": "global",
+      "website": "https://www.dreamhost.com",
+      "description": {
+        "zh": "美国主机商，提供美国节点的托管 VPS。",
+        "en": "US hosting provider offering managed VPS with US datacenter locations."
+      },
+      "logo": {
+        "path": "providers/dreamhost/logo.png",
+        "sha256": "34512292fb7e1bf1cb0bef8d2ff66c42ec846dc4bbe37e91d54a3c58ca471fab",
+        "bytes": 11391
+      }
+    },
+    {
+      "id": "ethernetservers",
+      "name": {
+        "zh": "Ethernet Servers",
+        "en": "Ethernet Servers"
+      },
+      "aliases": [
+        "EthernetServers",
+        "Ethernet Server"
+      ],
+      "kind": "vps",
+      "region": "global",
+      "website": "https://www.ethernetservers.com",
+      "description": {
+        "zh": "英国主机商，在美洲、欧洲及亚洲提供 VPS。",
+        "en": "UK hosting provider offering VPS in the Americas, Europe, and Asia."
+      },
+      "logo": {
+        "path": "providers/ethernetservers/logo.png",
+        "sha256": "adbb1a7219a307e48a0f2fd2ca0198ba5274a590e622d056f9d619804be67862",
+        "bytes": 20971
+      }
+    },
+    {
+      "id": "extravm",
+      "name": {
+        "zh": "ExtraVM",
+        "en": "ExtraVM"
+      },
+      "aliases": [
+        "Extra VM"
+      ],
+      "kind": "vps",
+      "region": "global",
+      "website": "https://extravm.com",
+      "description": {
+        "zh": "美国主机商，提供北美、欧洲和亚洲 VPS。",
+        "en": "US hosting provider offering VPS in North America, Europe, and Asia."
+      },
+      "logo": {
+        "path": "providers/extravm/logo.png",
+        "sha256": "dfea5c6b67c13f4866d89254a97faedbb359cd245e018e19fd138206e8809c98",
+        "bytes": 10725
+      }
+    },
+    {
+      "id": "googlecloud",
+      "name": {
+        "zh": "谷歌云",
+        "en": "Google Cloud"
+      },
+      "aliases": [
+        "GCP",
+        "Google Cloud Platform",
+        "Google Compute Engine",
+        "谷歌云平台"
+      ],
+      "kind": "cloud",
+      "region": "global",
+      "website": "https://cloud.google.com",
+      "description": {
+        "zh": "谷歌旗下云平台，计算节点遍布全球。",
+        "en": "Google's cloud platform offering compute services across global regions."
+      },
+      "logo": {
+        "path": "providers/googlecloud/logo.png",
+        "sha256": "f84bf25bfeb16fe7311ff6426ad15e0b7e4ae33c26cb572f20ca00f31a06043b",
+        "bytes": 16972
+      }
+    },
+    {
+      "id": "greencloudvps",
+      "name": {
+        "zh": "绿云",
+        "en": "GreenCloudVPS"
+      },
+      "aliases": [
+        "GreenCloud",
+        "Green Cloud",
+        "GGS",
+        "绿云 VPS"
+      ],
+      "kind": "vps",
+      "region": "global",
+      "website": "https://greencloudvps.com",
+      "description": {
+        "zh": "VPS 主机商，节点覆盖美洲、欧洲及亚太。",
+        "en": "VPS hosting provider with datacenters in the Americas, Europe, and Asia-Pacific."
+      }
+    },
+    {
+      "id": "hetzner",
+      "name": {
+        "zh": "Hetzner",
+        "en": "Hetzner"
+      },
+      "aliases": [
+        "Hetzner Cloud",
+        "Hetzner Online",
+        "赫兹纳",
+        "HZ"
+      ],
+      "kind": "cloud",
+      "region": "global",
+      "website": "https://www.hetzner.com",
+      "description": {
+        "zh": "德国云及服务器商，节点位于欧洲、美国和新加坡。",
+        "en": "German cloud and server provider with locations in Europe, the US, and Singapore."
+      },
+      "logo": {
+        "path": "providers/hetzner/logo.png",
+        "sha256": "a53b86af416d7ae66cda5b42a947b4185e03ff7e9a7a6898ae2153277e225b3c",
+        "bytes": 2387
+      }
+    },
+    {
+      "id": "hostbilby",
+      "name": {
+        "zh": "HostBilby",
+        "en": "HostBilby"
+      },
+      "aliases": [
+        "Host Bilby"
+      ],
+      "kind": "vps",
+      "region": "global",
+      "website": "https://hostbilby.com",
+      "description": {
+        "zh": "主机服务商，在加拿大和美国提供 VPS。",
+        "en": "Hosting provider offering VPS with datacenters in Canada and the US."
+      },
+      "logo": {
+        "path": "providers/hostbilby/logo.png",
+        "sha256": "1ff11d3484a020d768da91fa707c799647c6e4946ec22650d722c39e65df7a3e",
+        "bytes": 13145
+      }
+    },
+    {
+      "id": "hostbrr",
+      "name": {
+        "zh": "HostBrr",
+        "en": "HostBrr"
+      },
+      "aliases": [
+        "Host Brr"
+      ],
+      "kind": "vps",
+      "region": "global",
+      "website": "https://hostbrr.com",
+      "description": {
+        "zh": "VPS 主机商，提供欧洲和美国节点。",
+        "en": "VPS hosting provider offering locations in Europe and the US."
+      },
+      "logo": {
+        "path": "providers/hostbrr/logo.png",
+        "sha256": "dd62dfb8da43dab56efb838a87bddf621bd34e13c45ad274ae6e3a86efe1a363",
+        "bytes": 1980
+      }
+    },
+    {
+      "id": "hostdare",
+      "name": {
+        "zh": "HostDare",
+        "en": "HostDare"
+      },
+      "aliases": [
+        "Host Dare",
+        "HD",
+        "好大胆"
+      ],
+      "kind": "vps",
+      "region": "global",
+      "website": "https://hostdare.com",
+      "description": {
+        "zh": "VPS 主机商，提供美国及日本节点。",
+        "en": "VPS hosting provider with US and Japan locations."
+      }
+    },
+    {
+      "id": "hostdzire",
+      "name": {
+        "zh": "HostDZire",
+        "en": "HostDZire"
+      },
+      "aliases": [
+        "Host Dzire",
+        "HostDZire VPS"
+      ],
+      "kind": "vps",
+      "region": "global",
+      "website": "https://hostdzire.com",
+      "description": {
+        "zh": "主机服务商，在亚洲、欧洲及美国提供 VPS。",
+        "en": "Hosting provider offering VPS locations in Asia, Europe, and the US."
+      },
+      "logo": {
+        "path": "providers/hostdzire/logo.png",
+        "sha256": "4e1eb15f573145330172ecedb2f13dda396f3eed479b8ef5c264148bc297c4b6",
+        "bytes": 15699
+      }
+    },
+    {
+      "id": "hosteons",
+      "name": {
+        "zh": "HostEONS",
+        "en": "HostEONS"
+      },
+      "aliases": [
+        "Host Eons",
+        "Hosteons VPS"
+      ],
+      "kind": "vps",
+      "region": "global",
+      "website": "https://hosteons.com",
+      "description": {
+        "zh": "VPS 主机商，提供美国及欧洲节点。",
+        "en": "VPS hosting provider offering locations in the US and Europe."
+      }
+    },
+    {
+      "id": "hosthatch",
+      "name": {
+        "zh": "HostHatch",
+        "en": "HostHatch"
+      },
+      "aliases": [
+        "Host Hatch",
+        "HH",
+        "孵化器"
+      ],
+      "kind": "vps",
+      "region": "global",
+      "website": "https://hosthatch.com",
+      "description": {
+        "zh": "VPS 主机商，节点覆盖美洲、欧洲及亚太。",
+        "en": "VPS hosting provider with locations in the Americas, Europe, and Asia-Pacific."
+      },
+      "logo": {
+        "path": "providers/hosthatch/logo.png",
+        "sha256": "eba09e0e3415d8c1273042d0a57f0046b45133a003d5533ce10267119dc70841",
+        "bytes": 16510
+      }
+    },
+    {
+      "id": "hostinger",
+      "name": {
+        "zh": "Hostinger",
+        "en": "Hostinger"
+      },
+      "aliases": [
+        "Hostinger VPS",
+        "霍斯汀格"
+      ],
+      "kind": "vps",
+      "region": "global",
+      "website": "https://www.hostinger.com",
+      "description": {
+        "zh": "主机服务商，在欧洲、美洲及亚洲提供 VPS。",
+        "en": "Hosting provider offering VPS in Europe, the Americas, and Asia."
+      },
+      "logo": {
+        "path": "providers/hostinger/logo.png",
+        "sha256": "4a2378572e62a5f9e1add54c60a143822bfdec7b77165cd3d406d76e23f30280",
+        "bytes": 6901
+      }
+    },
+    {
+      "id": "hostus",
+      "name": {
+        "zh": "HostUS",
+        "en": "HostUS"
+      },
+      "aliases": [
+        "Host US",
+        "HostUS VPS"
+      ],
+      "kind": "vps",
+      "region": "global",
+      "website": "https://hostus.us",
+      "description": {
+        "zh": "VPS 主机商，节点覆盖美国、欧洲及亚洲。",
+        "en": "VPS hosting provider with locations in the US, Europe, and Asia."
+      },
+      "logo": {
+        "path": "providers/hostus/logo.png",
+        "sha256": "8cddeeeb6cfebc6455f1b47fd431cdad99248e773a50a7b06bbee6266ec70a35",
+        "bytes": 24945
+      }
+    },
+    {
+      "id": "hostwinds",
+      "name": {
+        "zh": "Hostwinds",
+        "en": "Hostwinds"
+      },
+      "aliases": [
+        "Host Winds",
+        "Hostwinds VPS"
+      ],
+      "kind": "vps",
+      "region": "global",
+      "website": "https://www.hostwinds.com",
+      "description": {
+        "zh": "美国主机商，在美国和荷兰提供 VPS。",
+        "en": "US hosting provider offering VPS in the US and the Netherlands."
+      },
+      "logo": {
+        "path": "providers/hostwinds/logo.png",
+        "sha256": "eb3195b17fff60c76bb1c25d2d1d05697dcd9621e91c6d681cddb2a51d7c529b",
+        "bytes": 22386
+      }
+    },
+    {
+      "id": "hostyun",
+      "name": {
+        "zh": "主机云",
+        "en": "HostYun"
+      },
+      "aliases": [
+        "Host Yun",
+        "HostYun VPS",
+        "HostYun主机云"
+      ],
+      "kind": "vps",
+      "region": "cn",
+      "website": "https://hostyun.com",
+      "description": {
+        "zh": "中国主机商，提供境内及海外 VPS。",
+        "en": "Chinese hosting provider offering VPS in mainland China and overseas regions."
+      },
+      "logo": {
+        "path": "providers/hostyun/logo.png",
+        "sha256": "9f682c77e9fba2ae1671d903050aa015d94ab021d140cdb0c51c7a9cf8290eaf",
+        "bytes": 31407
+      }
+    },
+    {
+      "id": "huaweicloud",
+      "name": {
+        "zh": "华为云",
+        "en": "Huawei Cloud"
+      },
+      "aliases": [
+        "华为云 ECS"
+      ],
+      "kind": "cloud",
+      "region": "cn",
+      "website": "https://www.huaweicloud.com",
+      "description": {
+        "zh": "中国云服务商，提供境内及海外计算服务。",
+        "en": "Chinese cloud provider with compute services in mainland China and international regions."
+      },
+      "logo": {
+        "path": "providers/huaweicloud/logo.png",
+        "sha256": "ec7677f1a196606d9cc8b0ae0979033decc8d5f6dd11387d113690d5cf32b492",
+        "bytes": 22575
+      }
+    },
+    {
+      "id": "ibmcloud",
+      "name": {
+        "zh": "IBM 云",
+        "en": "IBM Cloud"
+      },
+      "aliases": [
+        "IBMCloud",
+        "SoftLayer",
+        "IBM SoftLayer"
+      ],
+      "kind": "cloud",
+      "region": "global",
+      "website": "https://www.ibm.com/cloud",
+      "description": {
+        "zh": "IBM 旗下云平台，提供全球计算和裸金属服务。",
+        "en": "IBM's cloud platform offering virtual machines and bare-metal servers in global regions."
+      },
+      "logo": {
+        "path": "providers/ibmcloud/logo.png",
+        "sha256": "b40a6b135b7114277b5eac9f68de68d132c5aa3e025e58b21297540f6db3b9fd",
+        "bytes": 20398
+      }
+    },
+    {
+      "id": "inmotionhosting",
+      "name": {
+        "zh": "InMotion Hosting",
+        "en": "InMotion Hosting"
+      },
+      "aliases": [
+        "InMotion",
+        "In Motion Hosting"
+      ],
+      "kind": "vps",
+      "region": "global",
+      "website": "https://www.inmotionhosting.com",
+      "description": {
+        "zh": "美国主机商，在美国和荷兰提供 VPS。",
+        "en": "US hosting provider offering VPS in the US and the Netherlands."
+      }
+    },
+    {
+      "id": "interserver",
+      "name": {
+        "zh": "InterServer",
+        "en": "InterServer"
+      },
+      "aliases": [
+        "Inter Server",
+        "Interserver VPS"
+      ],
+      "kind": "vps",
+      "region": "global",
+      "website": "https://www.interserver.net",
+      "description": {
+        "zh": "美国主机商，在美国提供 VPS 和服务器。",
+        "en": "US hosting provider offering VPS and dedicated servers in the US."
+      },
+      "logo": {
+        "path": "providers/interserver/logo.png",
+        "sha256": "d8cd97a28282890705d09366ac7403596db9fdabd10960cc42b8fdc8593204c8",
+        "bytes": 31069
+      }
+    },
+    {
+      "id": "ionos",
+      "name": {
+        "zh": "IONOS",
+        "en": "IONOS"
+      },
+      "aliases": [
+        "1&1 IONOS",
+        "1and1",
+        "1&1"
+      ],
+      "kind": "vps",
+      "region": "global",
+      "website": "https://www.ionos.com",
+      "description": {
+        "zh": "德国主机及云服务商，节点覆盖欧洲和美国。",
+        "en": "German hosting and cloud provider with datacenters in Europe and the US."
+      },
+      "logo": {
+        "path": "providers/ionos/logo.png",
+        "sha256": "98b2e740c93752813a2f0cd8c0ece5fc493f4ebaddc42db9031c77d160d6bc93",
+        "bytes": 6444
+      }
+    },
+    {
+      "id": "jdcloud",
+      "name": {
+        "zh": "京东云",
+        "en": "JD Cloud"
+      },
+      "aliases": [
+        "JDCLOUD",
+        "京东云轻量"
+      ],
+      "kind": "cloud",
+      "region": "cn",
+      "website": "https://www.jdcloud.com",
+      "description": {
+        "zh": "京东旗下云平台，提供中国境内云服务器。",
+        "en": "JD's cloud platform offering virtual machines in mainland China."
+      },
+      "logo": {
+        "path": "providers/jdcloud/logo.png",
+        "sha256": "d2b930d6067c2cc25271a6360dd695023b135a64b4103aee6e4561d2bb9db6df",
+        "bytes": 20793
+      }
+    },
+    {
+      "id": "kamatera",
+      "name": {
+        "zh": "Kamatera",
+        "en": "Kamatera"
+      },
+      "aliases": [
+        "Kamatera Cloud"
+      ],
+      "kind": "cloud",
+      "region": "global",
+      "website": "https://www.kamatera.com",
+      "description": {
+        "zh": "云服务器商，节点覆盖美洲、欧洲及亚洲。",
+        "en": "Cloud server provider with datacenters in the Americas, Europe, and Asia."
+      },
+      "logo": {
+        "path": "providers/kamatera/logo.png",
+        "sha256": "07e9bad1e287880ffd46286571ad886fa32f915f537ef4719409130bd17293f7",
+        "bytes": 14692
+      }
+    },
+    {
+      "id": "kingsoftcloud",
+      "name": {
+        "zh": "金山云",
+        "en": "Kingsoft Cloud"
+      },
+      "aliases": [
+        "KSYun",
+        "金山云 KEC"
+      ],
+      "kind": "cloud",
+      "region": "cn",
+      "website": "https://www.ksyun.com",
+      "description": {
+        "zh": "中国云服务商，提供云服务器及存储服务。",
+        "en": "Chinese cloud provider offering virtual machines and storage, with mainland China regions."
+      },
+      "logo": {
+        "path": "providers/kingsoftcloud/logo.png",
+        "sha256": "8e7bd57b0d057e4d04cd69e8d5152f682e6d7af123d24e9fca1d0a27d54a71eb",
+        "bytes": 33298
+      }
+    },
+    {
+      "id": "laikayun",
+      "name": {
+        "zh": "莱卡云",
+        "en": "LCAyun"
+      },
+      "aliases": [
+        "莱卡",
+        "Laika Cloud",
+        "LCA Cloud"
+      ],
+      "kind": "vps",
+      "region": "cn",
+      "website": "https://www.lcayun.com",
+      "description": {
+        "zh": "中国主机商，提供境内及海外 VPS 和服务器。",
+        "en": "Chinese hosting provider offering VPS and dedicated servers in mainland China and overseas."
+      },
+      "logo": {
+        "path": "providers/laikayun/logo.png",
+        "sha256": "e2d5e80e115d3107bb9c38a2d9f26eb43e5dbb4661df596fc4669f89ae177054",
+        "bytes": 11107
+      }
+    },
+    {
+      "id": "leaseweb",
+      "name": {
+        "zh": "Leaseweb",
+        "en": "Leaseweb"
+      },
+      "aliases": [
+        "Lease Web"
+      ],
+      "kind": "vps",
+      "region": "global",
+      "website": "https://www.leaseweb.com",
+      "description": {
+        "zh": "荷兰基础设施服务商，在欧洲、美国和亚太提供 VPS。",
+        "en": "Dutch infrastructure provider offering VPS in Europe, the US, and Asia-Pacific."
+      },
+      "logo": {
+        "path": "providers/leaseweb/logo.png",
+        "sha256": "991bba61af007ecb16a38d539b4db12e01e6e3c132036bea20440a6de1992fe5",
+        "bytes": 13508
+      }
+    },
+    {
+      "id": "linode",
+      "name": {
+        "zh": "Linode (Akamai)",
+        "en": "Linode (Akamai)"
+      },
+      "aliases": [
+        "Linode",
+        "Akamai Cloud",
+        "Akamai Connected Cloud",
+        "Akamai Cloud Computing",
+        "阿卡迈云"
+      ],
+      "kind": "cloud",
+      "region": "global",
+      "website": "https://www.linode.com",
+      "description": {
+        "zh": "Akamai 旗下云计算品牌，节点覆盖全球。",
+        "en": "Akamai's cloud computing brand, with compute regions across the globe."
+      },
+      "logo": {
+        "path": "providers/linode/logo.png",
+        "sha256": "cd1419f48c85e59baa3e6676fe83958120d57a4f9bb154ea10ce3bcfb3ee6110",
+        "bytes": 9635
+      }
+    },
+    {
+      "id": "liquidweb",
+      "name": {
+        "zh": "Liquid Web",
+        "en": "Liquid Web"
+      },
+      "aliases": [
+        "LiquidWeb",
+        "液态网络"
+      ],
+      "kind": "vps",
+      "region": "global",
+      "website": "https://www.liquidweb.com",
+      "description": {
+        "zh": "美国主机商，在美国和荷兰提供 VPS。",
+        "en": "US hosting provider offering VPS in the US and the Netherlands."
+      },
+      "logo": {
+        "path": "providers/liquidweb/logo.png",
+        "sha256": "45e42f8dfbd5f13be8567725d52e80c3c56203b9f58b956f55baac0c594fe377",
+        "bytes": 9930
+      }
+    },
+    {
+      "id": "lisahost",
+      "name": {
+        "zh": "丽萨主机",
+        "en": "LisaHost"
+      },
+      "aliases": [
+        "Lisa Host",
+        "丽莎主机",
+        "丽萨"
+      ],
+      "kind": "vps",
+      "region": "global",
+      "website": "https://lisahost.com",
+      "description": {
+        "zh": "香港主机商，提供美国及亚洲 VPS。",
+        "en": "Hong Kong hosting provider offering VPS in the US and Asia."
+      },
+      "logo": {
+        "path": "providers/lisahost/logo.png",
+        "sha256": "5a93e4da396912041ed0f06f9fc1725e3c40c58e7843a95a231298d0463f4d4d",
+        "bytes": 11608
+      }
+    },
+    {
+      "id": "liteserver",
+      "name": {
+        "zh": "LiteServer",
+        "en": "LiteServer"
+      },
+      "aliases": [
+        "Lite Server",
+        "LiteServer.nl"
+      ],
+      "kind": "vps",
+      "region": "global",
+      "website": "https://liteserver.nl",
+      "description": {
+        "zh": "荷兰 VPS 及服务器商，主要节点位于荷兰。",
+        "en": "Dutch VPS and dedicated server provider with datacenter locations in the Netherlands."
+      },
+      "logo": {
+        "path": "providers/liteserver/logo.png",
+        "sha256": "e69391f7aaa0aea14b606c214181dd1a173dbc42e2e88f6af85125a154592606",
+        "bytes": 30432
+      }
+    },
+    {
+      "id": "namecheap",
+      "name": {
+        "zh": "Namecheap",
+        "en": "Namecheap"
+      },
+      "aliases": [
+        "Name Cheap",
+        "Namecheap VPS"
+      ],
+      "kind": "vps",
+      "region": "global",
+      "website": "https://www.namecheap.com",
+      "description": {
+        "zh": "美国域名及主机商，在美国提供 VPS。",
+        "en": "US domain registrar and hosting provider offering VPS in the US."
+      },
+      "logo": {
+        "path": "providers/namecheap/logo.png",
+        "sha256": "b834db7677bad0ed2358b10969b66b9d4bdc7941b8d112de38954e5e317a3b62",
+        "bytes": 11497
+      }
+    },
+    {
+      "id": "netcup",
+      "name": {
+        "zh": "netcup",
+        "en": "netcup"
+      },
+      "aliases": [
+        "Net Cup",
+        "德国杯子",
+        "奶杯"
+      ],
+      "kind": "vps",
+      "region": "global",
+      "website": "https://www.netcup.com",
+      "description": {
+        "zh": "德国 VPS 及服务器商，节点覆盖欧洲、美国和新加坡。",
+        "en": "German VPS and server provider with datacenter locations in Europe, the US, and Singapore."
+      },
+      "logo": {
+        "path": "providers/netcup/logo.png",
+        "sha256": "e57a69afbaf36a681e584ff940539877f169dc04cbe05eb04799147a2ded568e",
+        "bytes": 6304
+      }
+    },
+    {
+      "id": "oci",
+      "name": {
+        "zh": "甲骨文云",
+        "en": "Oracle Cloud"
+      },
+      "aliases": [
+        "OCI",
+        "Oracle Cloud Infrastructure",
+        "甲骨文",
+        "乌龟壳",
+        "龟壳"
+      ],
+      "kind": "cloud",
+      "region": "global",
+      "website": "https://www.oracle.com/cloud/",
+      "description": {
+        "zh": "甲骨文旗下云平台，计算节点遍布全球。",
+        "en": "Oracle's cloud platform offering compute services across global regions."
+      },
+      "logo": {
+        "path": "providers/oci/logo.png",
+        "sha256": "8c365412157e4e2c22e966cb4db22cc27f1eee454bc6af3de6a9e6e41a05e33a",
+        "bytes": 8790
+      }
+    },
+    {
+      "id": "onidel",
+      "name": {
+        "zh": "Onidel",
+        "en": "Onidel"
+      },
+      "aliases": [
+        "Onidel VPS"
+      ],
+      "kind": "vps",
+      "region": "global",
+      "website": "https://onidel.com",
+      "description": {
+        "zh": "澳大利亚主机商，提供亚太、欧洲及美国 VPS。",
+        "en": "Australian hosting provider offering VPS in Asia-Pacific, Europe, and the US."
+      },
+      "logo": {
+        "path": "providers/onidel/logo.png",
+        "sha256": "4b20027b80a6dddd089f2c34283930dfe42626380e923b29283c13f422c30763",
+        "bytes": 8701
+      }
+    },
+    {
+      "id": "ovhcloud",
+      "name": {
+        "zh": "OVHcloud",
+        "en": "OVHcloud"
+      },
+      "aliases": [
+        "OVH",
+        "OVH Cloud",
+        "Kimsufi",
+        "So You Start",
+        "SoYouStart",
+        "SYS",
+        "KS"
+      ],
+      "kind": "cloud",
+      "region": "global",
+      "website": "https://www.ovhcloud.com",
+      "description": {
+        "zh": "法国云及服务器商，在欧洲、美洲和亚太设有节点。",
+        "en": "French cloud and server provider with datacenters in Europe, the Americas, and Asia-Pacific."
+      },
+      "logo": {
+        "path": "providers/ovhcloud/logo.png",
+        "sha256": "2abf812b3a803f8ffa4281b9c1bc1f1cb8f2be27e784a6b62febe3493f039c77",
+        "bytes": 7325
+      }
+    },
+    {
+      "id": "qingcloud",
+      "name": {
+        "zh": "青云",
+        "en": "QingCloud"
+      },
+      "aliases": [
+        "青云 QingCloud",
+        "青云科技"
+      ],
+      "kind": "cloud",
+      "region": "cn",
+      "website": "https://www.qingcloud.com",
+      "description": {
+        "zh": "中国云服务商，提供公有云和混合云计算服务。",
+        "en": "Chinese cloud provider offering public and hybrid cloud compute services in mainland China."
+      },
+      "logo": {
+        "path": "providers/qingcloud/logo.png",
+        "sha256": "0afb8bed167e9a377cffdf66eb950cfe49c55a777126353d6f6c2eabdcd658f0",
+        "bytes": 17327
+      }
+    },
+    {
+      "id": "qiniu",
+      "name": {
+        "zh": "七牛云",
+        "en": "Qiniu Cloud"
+      },
+      "aliases": [
+        "七牛",
+        "Qiniu",
+        "七牛云 QVM"
+      ],
+      "kind": "cloud",
+      "region": "cn",
+      "website": "https://www.qiniu.com",
+      "description": {
+        "zh": "中国云服务商，提供境内云主机、存储和音视频服务。",
+        "en": "Chinese cloud provider offering QVM virtual machines in mainland China, storage, and audio/video services."
+      },
+      "logo": {
+        "path": "providers/qiniu/logo.png",
+        "sha256": "b91d3b1e1301ce62983f68df2685ac25a33230639899ae33d205093bd843f670",
+        "bytes": 37381
       }
     },
     {
@@ -59,20 +1366,420 @@
         "en": "RackNerd"
       },
       "aliases": [
-        "RackNerd",
-        "Rack Nerd"
+        "Rack Nerd",
+        "RN",
+        "Nerdrack"
       ],
       "kind": "vps",
       "region": "global",
       "website": "https://www.racknerd.com",
       "description": {
-        "zh": "主打低价的 VPS 主机商，数据中心主要在美国。",
-        "en": "Budget VPS hosting with data centers mainly in the US."
+        "zh": "美国主机商，节点覆盖北美、欧洲及亚洲。",
+        "en": "US hosting provider offering VPS and dedicated servers in North America, Europe, and Asia."
       },
       "logo": {
         "path": "providers/racknerd/logo.png",
-        "sha256": "1e2301c0f9df7e9c8521d069323b4aa5d3f8bf2a57733f8c92c8a24df924f269",
-        "bytes": 3107
+        "sha256": "c8c3d96929c10b23657d52676d8fd51f32c1dfecb5f53ac3cc3488566d5cad3f",
+        "bytes": 8705
+      }
+    },
+    {
+      "id": "ramnode",
+      "name": {
+        "zh": "RamNode",
+        "en": "RamNode"
+      },
+      "aliases": [
+        "Ram Node",
+        "RN云"
+      ],
+      "kind": "vps",
+      "region": "global",
+      "website": "https://ramnode.com",
+      "description": {
+        "zh": "InMotion 旗下 VPS 品牌，节点覆盖美国和荷兰。",
+        "en": "InMotion's VPS hosting brand, with datacenters in the US and the Netherlands."
+      },
+      "logo": {
+        "path": "providers/ramnode/logo.png",
+        "sha256": "74341215ef39adbe4e46447df29ea92261838f65202bf9a50d420aae924cad94",
+        "bytes": 27127
+      }
+    },
+    {
+      "id": "scaleway",
+      "name": {
+        "zh": "Scaleway",
+        "en": "Scaleway"
+      },
+      "aliases": [
+        "Online.net",
+        "Scaleway Cloud"
+      ],
+      "kind": "cloud",
+      "region": "global",
+      "website": "https://www.scaleway.com",
+      "description": {
+        "zh": "法国云服务商，计算节点位于欧洲。",
+        "en": "French cloud provider offering compute services in European regions."
+      },
+      "logo": {
+        "path": "providers/scaleway/logo.png",
+        "sha256": "789b87fd5fa7da2e7dabbd32363c00728e28872c434b11f284d9862837df612d",
+        "bytes": 9102
+      }
+    },
+    {
+      "id": "servarica",
+      "name": {
+        "zh": "ServaRICA",
+        "en": "ServaRICA"
+      },
+      "aliases": [
+        "Serva Rica"
+      ],
+      "kind": "vps",
+      "region": "global",
+      "website": "https://servarica.com",
+      "description": {
+        "zh": "加拿大 VPS 主机商，节点位于蒙特利尔。",
+        "en": "Canadian VPS hosting provider with datacenter facilities in Montreal."
+      },
+      "logo": {
+        "path": "providers/servarica/logo.png",
+        "sha256": "da4884526e454fb777fd35a7243a20fe783b12ab755a752a14bb8756599a84dc",
+        "bytes": 27823
+      }
+    },
+    {
+      "id": "spartanhost",
+      "name": {
+        "zh": "斯巴达",
+        "en": "SpartanHost"
+      },
+      "aliases": [
+        "Spartan Host",
+        "spartahost",
+        "斯巴达主机",
+        "SpartanHost.net"
+      ],
+      "kind": "vps",
+      "region": "global",
+      "website": "https://spartanhost.org",
+      "description": {
+        "zh": "VPS 及服务器商，节点位于美国西雅图和达拉斯。",
+        "en": "VPS and dedicated server provider with locations in Seattle and Dallas, US."
+      }
+    },
+    {
+      "id": "speedypage",
+      "name": {
+        "zh": "SpeedyPage",
+        "en": "SpeedyPage"
+      },
+      "aliases": [
+        "Speedy Page"
+      ],
+      "kind": "vps",
+      "region": "global",
+      "website": "https://speedypage.com",
+      "description": {
+        "zh": "英国主机商，在欧洲、美国及亚太提供 VPS。",
+        "en": "UK hosting provider offering VPS in Europe, the US, and Asia-Pacific."
+      },
+      "logo": {
+        "path": "providers/speedypage/logo.png",
+        "sha256": "e7d599d398226f4057e1db8f7c3b70cb76aabba304bc666ba9087c3b0fa63f98",
+        "bytes": 11784
+      }
+    },
+    {
+      "id": "synteq",
+      "name": {
+        "zh": "Synteq",
+        "en": "Synteq"
+      },
+      "aliases": [
+        "Synteq Digital",
+        "Crunchbits",
+        "Crunch Bits",
+        "Crunchbits VPS"
+      ],
+      "kind": "vps",
+      "region": "global",
+      "website": "https://synteq.com",
+      "description": {
+        "zh": "美国计算服务商，提供美国及保加利亚 VPS。",
+        "en": "US compute provider offering VPS and dedicated servers in the US and Bulgaria."
+      },
+      "logo": {
+        "path": "providers/synteq/logo.png",
+        "sha256": "d4a78ca45a750fecbe8303110dc44f598bba1ed38af662960e558222f04b69a1",
+        "bytes": 9228
+      }
+    },
+    {
+      "id": "tencentcloud",
+      "name": {
+        "zh": "腾讯云",
+        "en": "Tencent Cloud"
+      },
+      "aliases": [
+        "Qcloud",
+        "Tencent Cloud International",
+        "腾讯云国际版",
+        "腾讯轻量",
+        "腾讯云轻量应用服务器",
+        "Lighthouse",
+        "腾讯云 CVM"
+      ],
+      "kind": "cloud",
+      "region": "cn",
+      "website": "https://cloud.tencent.com",
+      "description": {
+        "zh": "中国云服务商，提供境内及海外云服务器。",
+        "en": "Chinese cloud provider offering virtual machines in mainland China and international regions."
+      },
+      "logo": {
+        "path": "providers/tencentcloud/logo.png",
+        "sha256": "d474904bec30319ab0f5f4541d35e78de7933ed9744ca066e15f0fc73db0f47a",
+        "bytes": 19986
+      }
+    },
+    {
+      "id": "time4vps",
+      "name": {
+        "zh": "Time4VPS",
+        "en": "Time4VPS"
+      },
+      "aliases": [
+        "Time 4 VPS",
+        "Time4 VPS"
+      ],
+      "kind": "vps",
+      "region": "global",
+      "website": "https://www.time4vps.com",
+      "description": {
+        "zh": "立陶宛 VPS 主机商，节点位于立陶宛。",
+        "en": "Lithuanian VPS hosting provider with datacenter facilities in Lithuania."
+      },
+      "logo": {
+        "path": "providers/time4vps/logo.png",
+        "sha256": "8f8e6b90fd7580c23e58bd8dcd23088aa4e3a8c374b42b0dfcdf60e9486e3af8",
+        "bytes": 8892
+      }
+    },
+    {
+      "id": "ucloud",
+      "name": {
+        "zh": "优刻得",
+        "en": "UCloud"
+      },
+      "aliases": [
+        "优刻得云",
+        "UCloud 云",
+        "UHost"
+      ],
+      "kind": "cloud",
+      "region": "cn",
+      "website": "https://www.ucloud.cn",
+      "description": {
+        "zh": "中国云服务商，提供境内及海外计算服务。",
+        "en": "Chinese cloud provider offering compute services in mainland China and overseas regions."
+      },
+      "logo": {
+        "path": "providers/ucloud/logo.png",
+        "sha256": "b760b2ca8235f55443bf7a36c253748230aa57076bb93691ac552129ee74794e",
+        "bytes": 6340
+      }
+    },
+    {
+      "id": "unicomcloud",
+      "name": {
+        "zh": "联通云",
+        "en": "China Unicom Cloud"
+      },
+      "aliases": [
+        "联通沃云",
+        "沃云",
+        "Unicom Cloud",
+        "CUCloud"
+      ],
+      "kind": "cloud",
+      "region": "cn",
+      "website": "https://www.cucloud.cn",
+      "description": {
+        "zh": "中国联通旗下云平台，提供中国境内云服务器。",
+        "en": "China Unicom's cloud platform offering virtual machines in mainland China."
+      },
+      "logo": {
+        "path": "providers/unicomcloud/logo.png",
+        "sha256": "b1e73381a1468a811d4b0cd9c9fee2b5b67915f5b8eed1a6eaacce0a428e9294",
+        "bytes": 24864
+      }
+    },
+    {
+      "id": "upcloud",
+      "name": {
+        "zh": "UpCloud",
+        "en": "UpCloud"
+      },
+      "aliases": [
+        "Up Cloud"
+      ],
+      "kind": "cloud",
+      "region": "global",
+      "website": "https://upcloud.com",
+      "description": {
+        "zh": "芬兰云服务商，节点覆盖欧洲、美国及亚太。",
+        "en": "Finnish cloud provider with compute regions in Europe, the US, and Asia-Pacific."
+      },
+      "logo": {
+        "path": "providers/upcloud/logo.png",
+        "sha256": "c296ea3a32c97501aba6be2fc0a72d7996b32dc9dcd32050a456111d80eac0ea",
+        "bytes": 5488
+      }
+    },
+    {
+      "id": "virmach",
+      "name": {
+        "zh": "VirMach",
+        "en": "VirMach"
+      },
+      "aliases": [
+        "Vir Mach",
+        "胖子",
+        "VirMach VPS"
+      ],
+      "kind": "vps",
+      "region": "global",
+      "website": "https://virmach.com",
+      "description": {
+        "zh": "VPS 主机商，节点覆盖美国、欧洲和日本。",
+        "en": "VPS hosting provider with locations in the US, Europe, and Japan."
+      },
+      "logo": {
+        "path": "providers/virmach/logo.png",
+        "sha256": "309e767f3c35a039ca3c123ea0c2b06c1004bd726966e0c051fa11d399e3dd37",
+        "bytes": 47832
+      }
+    },
+    {
+      "id": "volcengine",
+      "name": {
+        "zh": "火山引擎",
+        "en": "Volcengine"
+      },
+      "aliases": [
+        "火山云",
+        "字节云",
+        "Volcano Engine"
+      ],
+      "kind": "cloud",
+      "region": "cn",
+      "website": "https://www.volcengine.com",
+      "description": {
+        "zh": "字节跳动旗下云平台，提供中国境内计算服务。",
+        "en": "ByteDance's cloud platform offering compute services in mainland China."
+      },
+      "logo": {
+        "path": "providers/volcengine/logo.png",
+        "sha256": "b3cf143c8d751c1365ad1366f694e2bf45c988ca90086be1fe5244b9756df1bf",
+        "bytes": 9510
+      }
+    },
+    {
+      "id": "vps",
+      "name": {
+        "zh": "V.PS",
+        "en": "V.PS"
+      },
+      "aliases": [
+        "VPS by xTom",
+        "xTom",
+        "VPS xTom",
+        "V.PS xTom"
+      ],
+      "kind": "vps",
+      "region": "global",
+      "website": "https://v.ps",
+      "description": {
+        "zh": "xTom 旗下 VPS 品牌，节点覆盖欧洲、美洲及亚太。",
+        "en": "xTom's VPS hosting brand, with locations in Europe, the Americas, and Asia-Pacific."
+      },
+      "logo": {
+        "path": "providers/vps/logo.png",
+        "sha256": "080174684e81bd47146b5962447bd9cf0a861fcdb641c5883f4a51d37a77c4bc",
+        "bytes": 8861
+      }
+    },
+    {
+      "id": "vpsdime",
+      "name": {
+        "zh": "VPSDime",
+        "en": "VPSDime"
+      },
+      "aliases": [
+        "VPS Dime"
+      ],
+      "kind": "vps",
+      "region": "global",
+      "website": "https://vpsdime.com",
+      "description": {
+        "zh": "VPS 主机商，节点位于美国、英国和荷兰。",
+        "en": "VPS hosting provider with datacenters in the US, the UK, and the Netherlands."
+      },
+      "logo": {
+        "path": "providers/vpsdime/logo.png",
+        "sha256": "16f6e3f3b0a56af5ebd965cae476c720d5bc2a7bd5986a8be8d31a476bd6ad7a",
+        "bytes": 13845
+      }
+    },
+    {
+      "id": "vultr",
+      "name": {
+        "zh": "Vultr",
+        "en": "Vultr"
+      },
+      "aliases": [
+        "Vultr Cloud"
+      ],
+      "kind": "cloud",
+      "region": "global",
+      "website": "https://www.vultr.com",
+      "description": {
+        "zh": "美国云服务商，在全球多地提供虚拟机。",
+        "en": "US cloud provider offering virtual machines in multiple regions worldwide."
+      },
+      "logo": {
+        "path": "providers/vultr/logo.png",
+        "sha256": "f9d24e805a5eeb898c8355c5e5e08710204a6e7d67c341ee0d2449e43c14df1a",
+        "bytes": 9600
+      }
+    },
+    {
+      "id": "zgovps",
+      "name": {
+        "zh": "ZgoCloud",
+        "en": "ZgoCloud"
+      },
+      "aliases": [
+        "ZgoVPS",
+        "Zgo VPS",
+        "Zgo Cloud",
+        "Zgo"
+      ],
+      "kind": "vps",
+      "region": "global",
+      "website": "https://zgovps.com",
+      "description": {
+        "zh": "VPS 主机商，提供美国和亚洲节点。",
+        "en": "VPS hosting provider offering locations in the US and Asia."
+      },
+      "logo": {
+        "path": "providers/zgovps/logo.png",
+        "sha256": "80e736eca7f5d91fded5000a2dc44bfa5d9237f0187038e8e06ea285a39ed3cc",
+        "bytes": 22362
       }
     }
   ]

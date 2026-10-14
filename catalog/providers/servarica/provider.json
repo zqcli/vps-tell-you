@@ -1,0 +1,17 @@
+{
+  "id": "servarica",
+  "name": {
+    "zh": "ServaRICA",
+    "en": "ServaRICA"
+  },
+  "aliases": [
+    "Serva Rica"
+  ],
+  "kind": "vps",
+  "region": "global",
+  "website": "https://servarica.com",
+  "description": {
+    "zh": "加拿大 VPS 主机商，节点位于蒙特利尔。",
+    "en": "Canadian VPS hosting provider with datacenter facilities in Montreal."
+  }
+}

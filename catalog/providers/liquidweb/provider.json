@@ -1,0 +1,18 @@
+{
+  "id": "liquidweb",
+  "name": {
+    "zh": "Liquid Web",
+    "en": "Liquid Web"
+  },
+  "aliases": [
+    "LiquidWeb",
+    "液态网络"
+  ],
+  "kind": "vps",
+  "region": "global",
+  "website": "https://www.liquidweb.com",
+  "description": {
+    "zh": "美国主机商，在美国和荷兰提供 VPS。",
+    "en": "US hosting provider offering VPS in the US and the Netherlands."
+  }
+}

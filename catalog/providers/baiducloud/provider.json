@@ -1,0 +1,19 @@
+{
+  "id": "baiducloud",
+  "name": {
+    "zh": "百度智能云",
+    "en": "Baidu AI Cloud"
+  },
+  "aliases": [
+    "百度云",
+    "Baidu Cloud",
+    "百度云 BCC"
+  ],
+  "kind": "cloud",
+  "region": "cn",
+  "website": "https://cloud.baidu.com",
+  "description": {
+    "zh": "中国云服务商，提供云服务器及人工智能服务。",
+    "en": "Chinese cloud provider offering virtual machines and AI services, with mainland China regions."
+  }
+}

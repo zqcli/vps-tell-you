@@ -1,0 +1,18 @@
+{
+  "id": "interserver",
+  "name": {
+    "zh": "InterServer",
+    "en": "InterServer"
+  },
+  "aliases": [
+    "Inter Server",
+    "Interserver VPS"
+  ],
+  "kind": "vps",
+  "region": "global",
+  "website": "https://www.interserver.net",
+  "description": {
+    "zh": "美国主机商，在美国提供 VPS 和服务器。",
+    "en": "US hosting provider offering VPS and dedicated servers in the US."
+  }
+}

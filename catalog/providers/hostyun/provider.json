@@ -1,0 +1,19 @@
+{
+  "id": "hostyun",
+  "name": {
+    "zh": "主机云",
+    "en": "HostYun"
+  },
+  "aliases": [
+    "Host Yun",
+    "HostYun VPS",
+    "HostYun主机云"
+  ],
+  "kind": "vps",
+  "region": "cn",
+  "website": "https://hostyun.com",
+  "description": {
+    "zh": "中国主机商，提供境内及海外 VPS。",
+    "en": "Chinese hosting provider offering VPS in mainland China and overseas regions."
+  }
+}

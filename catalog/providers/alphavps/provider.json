@@ -1,0 +1,18 @@
+{
+  "id": "alphavps",
+  "name": {
+    "zh": "AlphaVPS",
+    "en": "AlphaVPS"
+  },
+  "aliases": [
+    "Alpha VPS",
+    "阿尔法 VPS"
+  ],
+  "kind": "vps",
+  "region": "global",
+  "website": "https://alphavps.com",
+  "description": {
+    "zh": "保加利亚主机商，提供欧洲及美国 VPS。",
+    "en": "Bulgarian hosting provider offering VPS in Europe and the US."
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "id": "advinservers",
+  "name": {
+    "zh": "Advin Servers",
+    "en": "Advin Servers"
+  },
+  "aliases": [
+    "AdvinServers",
+    "Advin",
+    "Advin VPS"
+  ],
+  "kind": "vps",
+  "region": "global",
+  "website": "https://advinservers.com",
+  "description": {
+    "zh": "美国主机商，提供北美、欧洲及亚洲 VPS。",
+    "en": "US hosting provider offering VPS in North America, Europe, and Asia."
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "id": "vultr",
+  "name": {
+    "zh": "Vultr",
+    "en": "Vultr"
+  },
+  "aliases": [
+    "Vultr Cloud"
+  ],
+  "kind": "cloud",
+  "region": "global",
+  "website": "https://www.vultr.com",
+  "description": {
+    "zh": "美国云服务商，在全球多地提供虚拟机。",
+    "en": "US cloud provider offering virtual machines in multiple regions worldwide."
+  }
+}

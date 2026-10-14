@@ -1,0 +1,19 @@
+{
+  "id": "colocrossing",
+  "name": {
+    "zh": "ColoCrossing",
+    "en": "ColoCrossing"
+  },
+  "aliases": [
+    "Colo Crossing",
+    "ColoCrossing Cloud",
+    "CC机房"
+  ],
+  "kind": "vps",
+  "region": "global",
+  "website": "https://www.colocrossing.com",
+  "description": {
+    "zh": "美国数据中心商，提供 VPS、服务器和托管服务。",
+    "en": "US datacenter provider offering VPS, dedicated servers, and colocation in US cities."
+  }
+}

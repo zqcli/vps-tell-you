@@ -1,0 +1,18 @@
+{
+  "id": "kingsoftcloud",
+  "name": {
+    "zh": "金山云",
+    "en": "Kingsoft Cloud"
+  },
+  "aliases": [
+    "KSYun",
+    "金山云 KEC"
+  ],
+  "kind": "cloud",
+  "region": "cn",
+  "website": "https://www.ksyun.com",
+  "description": {
+    "zh": "中国云服务商，提供云服务器及存储服务。",
+    "en": "Chinese cloud provider offering virtual machines and storage, with mainland China regions."
+  }
+}

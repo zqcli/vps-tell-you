@@ -1,0 +1,18 @@
+{
+  "id": "ethernetservers",
+  "name": {
+    "zh": "Ethernet Servers",
+    "en": "Ethernet Servers"
+  },
+  "aliases": [
+    "EthernetServers",
+    "Ethernet Server"
+  ],
+  "kind": "vps",
+  "region": "global",
+  "website": "https://www.ethernetservers.com",
+  "description": {
+    "zh": "英国主机商，在美洲、欧洲及亚洲提供 VPS。",
+    "en": "UK hosting provider offering VPS in the Americas, Europe, and Asia."
+  }
+}

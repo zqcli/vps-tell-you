@@ -1,0 +1,18 @@
+{
+  "id": "hostus",
+  "name": {
+    "zh": "HostUS",
+    "en": "HostUS"
+  },
+  "aliases": [
+    "Host US",
+    "HostUS VPS"
+  ],
+  "kind": "vps",
+  "region": "global",
+  "website": "https://hostus.us",
+  "description": {
+    "zh": "VPS 主机商，节点覆盖美国、欧洲及亚洲。",
+    "en": "VPS hosting provider with locations in the US, Europe, and Asia."
+  }
+}

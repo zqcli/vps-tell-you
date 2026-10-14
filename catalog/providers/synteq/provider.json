@@ -1,0 +1,20 @@
+{
+  "id": "synteq",
+  "name": {
+    "zh": "Synteq",
+    "en": "Synteq"
+  },
+  "aliases": [
+    "Synteq Digital",
+    "Crunchbits",
+    "Crunch Bits",
+    "Crunchbits VPS"
+  ],
+  "kind": "vps",
+  "region": "global",
+  "website": "https://synteq.com",
+  "description": {
+    "zh": "美国计算服务商，提供美国及保加利亚 VPS。",
+    "en": "US compute provider offering VPS and dedicated servers in the US and Bulgaria."
+  }
+}

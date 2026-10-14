@@ -1,0 +1,19 @@
+{
+  "id": "dmit",
+  "name": {
+    "zh": "DMIT",
+    "en": "DMIT"
+  },
+  "aliases": [
+    "DMIT.io",
+    "DMIT Cloud",
+    "大妈"
+  ],
+  "kind": "vps",
+  "region": "global",
+  "website": "https://www.dmit.io",
+  "description": {
+    "zh": "VPS 及服务器商，节点位于美国、香港和日本。",
+    "en": "VPS and dedicated server provider with locations in the US, Hong Kong, and Japan."
+  }
+}

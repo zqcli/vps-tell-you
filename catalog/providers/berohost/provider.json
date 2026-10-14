@@ -1,0 +1,19 @@
+{
+  "id": "berohost",
+  "name": {
+    "zh": "BeroHost",
+    "en": "BeroHost"
+  },
+  "aliases": [
+    "Bero-Host",
+    "Bero Host",
+    "bero"
+  ],
+  "kind": "vps",
+  "region": "global",
+  "website": "https://bero-host.de",
+  "description": {
+    "zh": "德国主机商，提供位于德国的 VPS 和服务器。",
+    "en": "German hosting provider offering VPS and dedicated servers in Germany."
+  }
+}

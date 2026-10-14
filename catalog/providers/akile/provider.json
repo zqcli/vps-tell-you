@@ -1,0 +1,19 @@
+{
+  "id": "akile",
+  "name": {
+    "zh": "AkileCloud",
+    "en": "AkileCloud"
+  },
+  "aliases": [
+    "Akile",
+    "Akile Cloud",
+    "Akile云"
+  ],
+  "kind": "vps",
+  "region": "global",
+  "website": "https://akile.io",
+  "description": {
+    "zh": "VPS 主机商，节点覆盖亚洲、美洲和欧洲。",
+    "en": "VPS hosting provider with locations in Asia, the Americas, and Europe."
+  }
+}

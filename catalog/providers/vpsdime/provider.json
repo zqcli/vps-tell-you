@@ -1,0 +1,17 @@
+{
+  "id": "vpsdime",
+  "name": {
+    "zh": "VPSDime",
+    "en": "VPSDime"
+  },
+  "aliases": [
+    "VPS Dime"
+  ],
+  "kind": "vps",
+  "region": "global",
+  "website": "https://vpsdime.com",
+  "description": {
+    "zh": "VPS 主机商，节点位于美国、英国和荷兰。",
+    "en": "VPS hosting provider with datacenters in the US, the UK, and the Netherlands."
+  }
+}

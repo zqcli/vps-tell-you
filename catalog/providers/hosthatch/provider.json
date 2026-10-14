@@ -1,0 +1,19 @@
+{
+  "id": "hosthatch",
+  "name": {
+    "zh": "HostHatch",
+    "en": "HostHatch"
+  },
+  "aliases": [
+    "Host Hatch",
+    "HH",
+    "孵化器"
+  ],
+  "kind": "vps",
+  "region": "global",
+  "website": "https://hosthatch.com",
+  "description": {
+    "zh": "VPS 主机商，节点覆盖美洲、欧洲及亚太。",
+    "en": "VPS hosting provider with locations in the Americas, Europe, and Asia-Pacific."
+  }
+}

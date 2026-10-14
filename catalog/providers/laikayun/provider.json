@@ -1,0 +1,19 @@
+{
+  "id": "laikayun",
+  "name": {
+    "zh": "莱卡云",
+    "en": "LCAyun"
+  },
+  "aliases": [
+    "莱卡",
+    "Laika Cloud",
+    "LCA Cloud"
+  ],
+  "kind": "vps",
+  "region": "cn",
+  "website": "https://www.lcayun.com",
+  "description": {
+    "zh": "中国主机商，提供境内及海外 VPS 和服务器。",
+    "en": "Chinese hosting provider offering VPS and dedicated servers in mainland China and overseas."
+  }
+}

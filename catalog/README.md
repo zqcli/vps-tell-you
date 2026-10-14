@@ -7,7 +7,8 @@ catalog/
   README.md                    本文件
   index.json                   由 tool/build_catalog.py 生成，应用只轮询这一个文件，不要手改
   providers/<id>/provider.json 每个提供商的数据（唯一的事实来源）
-  providers/<id>/logo.png      Logo
+  providers/<id>/logo.png      Logo（可选）
+  SOURCES.md                   每个 Logo 的来源（署名 / 审核用）
 ```
 
 ## 添加或修改提供商
@@ -46,12 +47,21 @@ catalog/
 
 ### Logo
 
+- **可选**：找不到清晰的官方 Logo 时不要放 `logo.png`（不要用猜测或生成的图），应用显示首字母头像；
 - 方形 PNG，**256 × 256**，**≤ 64 KiB**；
 - 透明或白色背景（应用把它放在白色圆角底板上，深色模式也一样）；
 - 图形居中，四周留约 12 % 边距（约 30 px）；
 - 脚本检查 PNG 文件头、尺寸与大小，并写入 `sha256`；应用下载后逐一校验，不符的文件不会被使用。
 
-当前 `aliyun`、`aws`、`racknerd` 三个是**开发用占位数据**（彩色底板加字母，非官方标识），会被真实目录替换。
+Logo 来源见 [SOURCES.md](SOURCES.md)。
+
+## 当前内容与取舍（2026-10-14 调研）
+
+76 个提供商：云厂商 26（中国大陆为主 13、全球 13），VPS 主机商 50（大陆 2、全球 48）。`region` 表示目录面向的用户群，不是公司注册地。
+
+- **合并**：阿里云国内站 / 国际站共用 `aliyun`，腾讯云共用 `tencentcloud`（轻量应用服务器 / Lighthouse 只是别名）；OVH、Kimsufi、So You Start 共用 `ovhcloud`；`spartahost` 是 SpartanHost 的笔误别名；`nerdrack.com` 跳转 RackNerd，Nerdrack 是别名；Crunchbits 并入 `synteq`（保留别名）。BuyVM 官网仍在售卖，单独保留（属 Cloudzy，FranTech 为别名）。`zgovps` 现名 ZgoCloud，id 不变。
+- **未收录**：DediPath（2023-08 停止运营）、NexusBytes（已停运）、Inception Hosting（2025-01 并入 Clouvider）。没有使用未经证实的“跑路”指控作为排除理由。
+- **无 Logo（显示首字母）**：`greencloudvps`、`hostdare`、`hosteons`、`inmotionhosting`、`spartanhost`（官方站点拒绝自动访问，或只有无法在 40 px 下辨认的文字标）。
 
 ## 商标说明
 

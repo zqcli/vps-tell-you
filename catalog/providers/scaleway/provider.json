@@ -1,0 +1,18 @@
+{
+  "id": "scaleway",
+  "name": {
+    "zh": "Scaleway",
+    "en": "Scaleway"
+  },
+  "aliases": [
+    "Online.net",
+    "Scaleway Cloud"
+  ],
+  "kind": "cloud",
+  "region": "global",
+  "website": "https://www.scaleway.com",
+  "description": {
+    "zh": "法国云服务商，计算节点位于欧洲。",
+    "en": "French cloud provider offering compute services in European regions."
+  }
+}

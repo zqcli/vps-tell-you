@@ -1,0 +1,17 @@
+{
+  "id": "leaseweb",
+  "name": {
+    "zh": "Leaseweb",
+    "en": "Leaseweb"
+  },
+  "aliases": [
+    "Lease Web"
+  ],
+  "kind": "vps",
+  "region": "global",
+  "website": "https://www.leaseweb.com",
+  "description": {
+    "zh": "荷兰基础设施服务商，在欧洲、美国和亚太提供 VPS。",
+    "en": "Dutch infrastructure provider offering VPS in Europe, the US, and Asia-Pacific."
+  }
+}

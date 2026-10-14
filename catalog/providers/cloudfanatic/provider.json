@@ -1,0 +1,19 @@
+{
+  "id": "cloudfanatic",
+  "name": {
+    "zh": "CloudFanatic",
+    "en": "CloudFanatic"
+  },
+  "aliases": [
+    "Cloud Fanatic",
+    "ServerCheap",
+    "ServerCheap.net"
+  ],
+  "kind": "vps",
+  "region": "global",
+  "website": "https://cloudfanatic.net",
+  "description": {
+    "zh": "VPS 主机商，主要节点位于美国。",
+    "en": "VPS hosting provider with its main datacenter locations in the US."
+  }
+}

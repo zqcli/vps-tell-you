@@ -1,0 +1,23 @@
+{
+  "id": "tencentcloud",
+  "name": {
+    "zh": "腾讯云",
+    "en": "Tencent Cloud"
+  },
+  "aliases": [
+    "Qcloud",
+    "Tencent Cloud International",
+    "腾讯云国际版",
+    "腾讯轻量",
+    "腾讯云轻量应用服务器",
+    "Lighthouse",
+    "腾讯云 CVM"
+  ],
+  "kind": "cloud",
+  "region": "cn",
+  "website": "https://cloud.tencent.com",
+  "description": {
+    "zh": "中国云服务商，提供境内及海外云服务器。",
+    "en": "Chinese cloud provider offering virtual machines in mainland China and international regions."
+  }
+}

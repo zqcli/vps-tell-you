@@ -1,0 +1,23 @@
+{
+  "id": "ovhcloud",
+  "name": {
+    "zh": "OVHcloud",
+    "en": "OVHcloud"
+  },
+  "aliases": [
+    "OVH",
+    "OVH Cloud",
+    "Kimsufi",
+    "So You Start",
+    "SoYouStart",
+    "SYS",
+    "KS"
+  ],
+  "kind": "cloud",
+  "region": "global",
+  "website": "https://www.ovhcloud.com",
+  "description": {
+    "zh": "法国云及服务器商，在欧洲、美洲和亚太设有节点。",
+    "en": "French cloud and server provider with datacenters in Europe, the Americas, and Asia-Pacific."
+  }
+}

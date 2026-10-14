@@ -1,0 +1,19 @@
+{
+  "id": "buyvm",
+  "name": {
+    "zh": "BuyVM",
+    "en": "BuyVM"
+  },
+  "aliases": [
+    "Buy VM",
+    "FranTech",
+    "BuyVM.net"
+  ],
+  "kind": "vps",
+  "region": "global",
+  "website": "https://buyvm.net",
+  "description": {
+    "zh": "VPS 主机商，节点位于美国和卢森堡。",
+    "en": "VPS hosting provider with locations in the US and Luxembourg."
+  }
+}

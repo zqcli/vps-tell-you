@@ -1,0 +1,18 @@
+{
+  "id": "inmotionhosting",
+  "name": {
+    "zh": "InMotion Hosting",
+    "en": "InMotion Hosting"
+  },
+  "aliases": [
+    "InMotion",
+    "In Motion Hosting"
+  ],
+  "kind": "vps",
+  "region": "global",
+  "website": "https://www.inmotionhosting.com",
+  "description": {
+    "zh": "美国主机商，在美国和荷兰提供 VPS。",
+    "en": "US hosting provider offering VPS in the US and the Netherlands."
+  }
+}

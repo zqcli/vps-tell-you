@@ -1,0 +1,20 @@
+{
+  "id": "spartanhost",
+  "name": {
+    "zh": "斯巴达",
+    "en": "SpartanHost"
+  },
+  "aliases": [
+    "Spartan Host",
+    "spartahost",
+    "斯巴达主机",
+    "SpartanHost.net"
+  ],
+  "kind": "vps",
+  "region": "global",
+  "website": "https://spartanhost.org",
+  "description": {
+    "zh": "VPS 及服务器商，节点位于美国西雅图和达拉斯。",
+    "en": "VPS and dedicated server provider with locations in Seattle and Dallas, US."
+  }
+}

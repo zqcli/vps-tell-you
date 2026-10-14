@@ -1,0 +1,19 @@
+{
+  "id": "ibmcloud",
+  "name": {
+    "zh": "IBM 云",
+    "en": "IBM Cloud"
+  },
+  "aliases": [
+    "IBMCloud",
+    "SoftLayer",
+    "IBM SoftLayer"
+  ],
+  "kind": "cloud",
+  "region": "global",
+  "website": "https://www.ibm.com/cloud",
+  "description": {
+    "zh": "IBM 旗下云平台，提供全球计算和裸金属服务。",
+    "en": "IBM's cloud platform offering virtual machines and bare-metal servers in global regions."
+  }
+}

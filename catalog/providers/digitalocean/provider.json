@@ -1,0 +1,20 @@
+{
+  "id": "digitalocean",
+  "name": {
+    "zh": "DigitalOcean",
+    "en": "DigitalOcean"
+  },
+  "aliases": [
+    "DO",
+    "Digital Ocean",
+    "数字海洋",
+    "Droplet"
+  ],
+  "kind": "cloud",
+  "region": "global",
+  "website": "https://www.digitalocean.com",
+  "description": {
+    "zh": "美国云服务商，节点覆盖美洲、欧洲及亚洲。",
+    "en": "US cloud provider with compute regions in the Americas, Europe, and Asia."
+  }
+}

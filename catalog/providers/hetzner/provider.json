@@ -1,0 +1,20 @@
+{
+  "id": "hetzner",
+  "name": {
+    "zh": "Hetzner",
+    "en": "Hetzner"
+  },
+  "aliases": [
+    "Hetzner Cloud",
+    "Hetzner Online",
+    "赫兹纳",
+    "HZ"
+  ],
+  "kind": "cloud",
+  "region": "global",
+  "website": "https://www.hetzner.com",
+  "description": {
+    "zh": "德国云及服务器商，节点位于欧洲、美国和新加坡。",
+    "en": "German cloud and server provider with locations in Europe, the US, and Singapore."
+  }
+}

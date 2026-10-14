@@ -1,0 +1,18 @@
+{
+  "id": "time4vps",
+  "name": {
+    "zh": "Time4VPS",
+    "en": "Time4VPS"
+  },
+  "aliases": [
+    "Time 4 VPS",
+    "Time4 VPS"
+  ],
+  "kind": "vps",
+  "region": "global",
+  "website": "https://www.time4vps.com",
+  "description": {
+    "zh": "立陶宛 VPS 主机商，节点位于立陶宛。",
+    "en": "Lithuanian VPS hosting provider with datacenter facilities in Lithuania."
+  }
+}

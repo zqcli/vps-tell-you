@@ -1,0 +1,18 @@
+{
+  "id": "ramnode",
+  "name": {
+    "zh": "RamNode",
+    "en": "RamNode"
+  },
+  "aliases": [
+    "Ram Node",
+    "RN云"
+  ],
+  "kind": "vps",
+  "region": "global",
+  "website": "https://ramnode.com",
+  "description": {
+    "zh": "InMotion 旗下 VPS 品牌，节点覆盖美国和荷兰。",
+    "en": "InMotion's VPS hosting brand, with datacenters in the US and the Netherlands."
+  }
+}

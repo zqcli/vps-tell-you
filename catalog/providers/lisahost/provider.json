@@ -1,0 +1,19 @@
+{
+  "id": "lisahost",
+  "name": {
+    "zh": "丽萨主机",
+    "en": "LisaHost"
+  },
+  "aliases": [
+    "Lisa Host",
+    "丽莎主机",
+    "丽萨"
+  ],
+  "kind": "vps",
+  "region": "global",
+  "website": "https://lisahost.com",
+  "description": {
+    "zh": "香港主机商，提供美国及亚洲 VPS。",
+    "en": "Hong Kong hosting provider offering VPS in the US and Asia."
+  }
+}

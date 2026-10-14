@@ -1,0 +1,19 @@
+{
+  "id": "qiniu",
+  "name": {
+    "zh": "七牛云",
+    "en": "Qiniu Cloud"
+  },
+  "aliases": [
+    "七牛",
+    "Qiniu",
+    "七牛云 QVM"
+  ],
+  "kind": "cloud",
+  "region": "cn",
+  "website": "https://www.qiniu.com",
+  "description": {
+    "zh": "中国云服务商，提供境内云主机、存储和音视频服务。",
+    "en": "Chinese cloud provider offering QVM virtual machines in mainland China, storage, and audio/video services."
+  }
+}

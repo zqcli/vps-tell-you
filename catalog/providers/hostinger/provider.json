@@ -1,0 +1,18 @@
+{
+  "id": "hostinger",
+  "name": {
+    "zh": "Hostinger",
+    "en": "Hostinger"
+  },
+  "aliases": [
+    "Hostinger VPS",
+    "霍斯汀格"
+  ],
+  "kind": "vps",
+  "region": "global",
+  "website": "https://www.hostinger.com",
+  "description": {
+    "zh": "主机服务商，在欧洲、美洲及亚洲提供 VPS。",
+    "en": "Hosting provider offering VPS in Europe, the Americas, and Asia."
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "id": "cmcloud",
+  "name": {
+    "zh": "移动云",
+    "en": "China Mobile Cloud"
+  },
+  "aliases": [
+    "中国移动云",
+    "CMCloud",
+    "移动云 ECloud"
+  ],
+  "kind": "cloud",
+  "region": "cn",
+  "website": "https://ecloud.10086.cn",
+  "description": {
+    "zh": "中国移动旗下云平台，提供中国境内计算服务。",
+    "en": "China Mobile's cloud platform offering compute services in mainland China."
+  }
+}

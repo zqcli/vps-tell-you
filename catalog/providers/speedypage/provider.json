@@ -1,0 +1,17 @@
+{
+  "id": "speedypage",
+  "name": {
+    "zh": "SpeedyPage",
+    "en": "SpeedyPage"
+  },
+  "aliases": [
+    "Speedy Page"
+  ],
+  "kind": "vps",
+  "region": "global",
+  "website": "https://speedypage.com",
+  "description": {
+    "zh": "英国主机商，在欧洲、美国及亚太提供 VPS。",
+    "en": "UK hosting provider offering VPS in Europe, the US, and Asia-Pacific."
+  }
+}

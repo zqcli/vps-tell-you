@@ -1,0 +1,17 @@
+{
+  "id": "kamatera",
+  "name": {
+    "zh": "Kamatera",
+    "en": "Kamatera"
+  },
+  "aliases": [
+    "Kamatera Cloud"
+  ],
+  "kind": "cloud",
+  "region": "global",
+  "website": "https://www.kamatera.com",
+  "description": {
+    "zh": "云服务器商，节点覆盖美洲、欧洲及亚洲。",
+    "en": "Cloud server provider with datacenters in the Americas, Europe, and Asia."
+  }
+}

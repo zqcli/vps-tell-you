@@ -1,0 +1,17 @@
+{
+  "id": "hostbilby",
+  "name": {
+    "zh": "HostBilby",
+    "en": "HostBilby"
+  },
+  "aliases": [
+    "Host Bilby"
+  ],
+  "kind": "vps",
+  "region": "global",
+  "website": "https://hostbilby.com",
+  "description": {
+    "zh": "主机服务商，在加拿大和美国提供 VPS。",
+    "en": "Hosting provider offering VPS with datacenters in Canada and the US."
+  }
+}

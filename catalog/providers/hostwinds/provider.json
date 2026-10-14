@@ -1,0 +1,18 @@
+{
+  "id": "hostwinds",
+  "name": {
+    "zh": "Hostwinds",
+    "en": "Hostwinds"
+  },
+  "aliases": [
+    "Host Winds",
+    "Hostwinds VPS"
+  ],
+  "kind": "vps",
+  "region": "global",
+  "website": "https://www.hostwinds.com",
+  "description": {
+    "zh": "美国主机商，在美国和荷兰提供 VPS。",
+    "en": "US hosting provider offering VPS in the US and the Netherlands."
+  }
+}

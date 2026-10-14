@@ -1,0 +1,19 @@
+{
+  "id": "volcengine",
+  "name": {
+    "zh": "火山引擎",
+    "en": "Volcengine"
+  },
+  "aliases": [
+    "火山云",
+    "字节云",
+    "Volcano Engine"
+  ],
+  "kind": "cloud",
+  "region": "cn",
+  "website": "https://www.volcengine.com",
+  "description": {
+    "zh": "字节跳动旗下云平台，提供中国境内计算服务。",
+    "en": "ByteDance's cloud platform offering compute services in mainland China."
+  }
+}

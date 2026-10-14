@@ -1,0 +1,19 @@
+{
+  "id": "cloudcone",
+  "name": {
+    "zh": "CloudCone",
+    "en": "CloudCone"
+  },
+  "aliases": [
+    "Cloud Cone",
+    "CC",
+    "云锥"
+  ],
+  "kind": "vps",
+  "region": "global",
+  "website": "https://cloudcone.com",
+  "description": {
+    "zh": "VPS 主机商，主要节点位于美国洛杉矶。",
+    "en": "VPS hosting provider with its main datacenter location in Los Angeles, US."
+  }
+}

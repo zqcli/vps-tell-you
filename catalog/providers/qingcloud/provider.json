@@ -1,0 +1,18 @@
+{
+  "id": "qingcloud",
+  "name": {
+    "zh": "青云",
+    "en": "QingCloud"
+  },
+  "aliases": [
+    "青云 QingCloud",
+    "青云科技"
+  ],
+  "kind": "cloud",
+  "region": "cn",
+  "website": "https://www.qingcloud.com",
+  "description": {
+    "zh": "中国云服务商，提供公有云和混合云计算服务。",
+    "en": "Chinese cloud provider offering public and hybrid cloud compute services in mainland China."
+  }
+}

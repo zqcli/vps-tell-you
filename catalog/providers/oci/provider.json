@@ -1,0 +1,21 @@
+{
+  "id": "oci",
+  "name": {
+    "zh": "甲骨文云",
+    "en": "Oracle Cloud"
+  },
+  "aliases": [
+    "OCI",
+    "Oracle Cloud Infrastructure",
+    "甲骨文",
+    "乌龟壳",
+    "龟壳"
+  ],
+  "kind": "cloud",
+  "region": "global",
+  "website": "https://www.oracle.com/cloud/",
+  "description": {
+    "zh": "甲骨文旗下云平台，计算节点遍布全球。",
+    "en": "Oracle's cloud platform offering compute services across global regions."
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "id": "hostbrr",
+  "name": {
+    "zh": "HostBrr",
+    "en": "HostBrr"
+  },
+  "aliases": [
+    "Host Brr"
+  ],
+  "kind": "vps",
+  "region": "global",
+  "website": "https://hostbrr.com",
+  "description": {
+    "zh": "VPS 主机商，提供欧洲和美国节点。",
+    "en": "VPS hosting provider offering locations in Europe and the US."
+  }
+}

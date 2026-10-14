@@ -1,0 +1,19 @@
+{
+  "id": "ucloud",
+  "name": {
+    "zh": "优刻得",
+    "en": "UCloud"
+  },
+  "aliases": [
+    "优刻得云",
+    "UCloud 云",
+    "UHost"
+  ],
+  "kind": "cloud",
+  "region": "cn",
+  "website": "https://www.ucloud.cn",
+  "description": {
+    "zh": "中国云服务商，提供境内及海外计算服务。",
+    "en": "Chinese cloud provider offering compute services in mainland China and overseas regions."
+  }
+}

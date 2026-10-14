@@ -1,0 +1,20 @@
+{
+  "id": "bage",
+  "name": {
+    "zh": "八戒",
+    "en": "BAGEVM"
+  },
+  "aliases": [
+    "Bage",
+    "Bage Cloud",
+    "八戒云",
+    "八戒 VPS"
+  ],
+  "kind": "vps",
+  "region": "global",
+  "website": "https://www.bagevm.com",
+  "description": {
+    "zh": "VPS 主机商，节点覆盖亚洲、美国和欧洲。",
+    "en": "VPS hosting provider with datacenters in Asia, the US, and Europe."
+  }
+}

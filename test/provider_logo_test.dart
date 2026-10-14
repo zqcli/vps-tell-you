@@ -55,7 +55,7 @@ void main() {
     sqfliteFfiInit();
     temp = await Directory.systemTemp.createTemp('vps-logo-');
     // A real 256 px PNG: the seed logo of the catalog.
-    logo = await File('catalog/providers/aws/logo.png')
+    logo = await File('test/fixtures/logo.png')
         .copy('${temp.path}/fixture-cloud-12345678.png');
     store = await LedgerStore.open(
       factory: databaseFactoryFfiNoIsolate,

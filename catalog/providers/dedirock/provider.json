@@ -1,0 +1,18 @@
+{
+  "id": "dedirock",
+  "name": {
+    "zh": "DediRock",
+    "en": "DediRock"
+  },
+  "aliases": [
+    "Dedi Rock",
+    "Dedirock VPS"
+  ],
+  "kind": "vps",
+  "region": "global",
+  "website": "https://dedirock.com",
+  "description": {
+    "zh": "VPS 及服务器商，在美国多地提供服务。",
+    "en": "VPS and dedicated server provider with datacenters in multiple US cities."
+  }
+}

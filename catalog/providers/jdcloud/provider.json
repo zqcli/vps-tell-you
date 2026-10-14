@@ -1,0 +1,18 @@
+{
+  "id": "jdcloud",
+  "name": {
+    "zh": "京东云",
+    "en": "JD Cloud"
+  },
+  "aliases": [
+    "JDCLOUD",
+    "京东云轻量"
+  ],
+  "kind": "cloud",
+  "region": "cn",
+  "website": "https://www.jdcloud.com",
+  "description": {
+    "zh": "京东旗下云平台，提供中国境内云服务器。",
+    "en": "JD's cloud platform offering virtual machines in mainland China."
+  }
+}

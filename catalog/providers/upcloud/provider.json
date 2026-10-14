@@ -1,0 +1,17 @@
+{
+  "id": "upcloud",
+  "name": {
+    "zh": "UpCloud",
+    "en": "UpCloud"
+  },
+  "aliases": [
+    "Up Cloud"
+  ],
+  "kind": "cloud",
+  "region": "global",
+  "website": "https://upcloud.com",
+  "description": {
+    "zh": "芬兰云服务商，节点覆盖欧洲、美国及亚太。",
+    "en": "Finnish cloud provider with compute regions in Europe, the US, and Asia-Pacific."
+  }
+}

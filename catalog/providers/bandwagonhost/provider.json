@@ -1,0 +1,21 @@
+{
+  "id": "bandwagonhost",
+  "name": {
+    "zh": "搬瓦工",
+    "en": "BandwagonHost"
+  },
+  "aliases": [
+    "Bandwagon Host",
+    "BWG",
+    "BWH",
+    "搬瓦工 VPS",
+    "瓦工"
+  ],
+  "kind": "vps",
+  "region": "global",
+  "website": "https://bandwagonhost.com",
+  "description": {
+    "zh": "VPS 主机商，在美国、欧洲和亚洲提供服务。",
+    "en": "VPS hosting provider with locations in the US, Europe, and Asia."
+  }
+}
