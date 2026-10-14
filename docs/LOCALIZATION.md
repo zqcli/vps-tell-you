@@ -50,8 +50,7 @@
 | ledger | 台账 | 应用内的本地账本；`local ledger` |
 | record | 记录 | 服务器的本地记录；`Archive Local Record` 保留，强调不影响远端 |
 | provider | 提供商 / 厂商 | 卖服务器的公司；不用 vendor |
-| package | 套餐 | 提供商目录里的一档规格与价格；服务器保存自己的值和选择时的快照 |
-| catalog | 目录 | 随应用内置（日后远端提供）的提供商与套餐列表 |
+| directory | 目录 | 提供商目录：从 GitHub 下载并缓存的公开提供商列表（名称、Logo、简介），界面写 `Directory` / `Provider Directory`，仓库目录叫 `catalog/` |
 | due date | 到期日期 | 服务期结束日，不计入服务期；`expires` / `expired` 作动词和状态；提醒功能名保留 `Expiry reminders` |
 | renewal price / cycle | 续费金额 / 周期 | 一个周期的价格与时长，不等于实际支付 |
 | remaining value | 剩余价值 | 参考折算，不是退款或成交价 |
