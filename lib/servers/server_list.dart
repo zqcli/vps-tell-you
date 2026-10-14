@@ -10,6 +10,7 @@ import '../core/ui/ui.dart';
 import '../finance/finance_math.dart';
 import '../finance/payment_pages.dart';
 import '../l10n/generated/app_localizations.dart';
+import '../providers/directory_widgets.dart';
 import '../providers/provider_pages.dart';
 import 'ledger_controller.dart';
 import 'refresh_failure_notice.dart';
@@ -999,8 +1000,9 @@ class _ServerRowState extends State<ServerRow> {
         ],
       ],
     );
-    final avatar = ProviderAvatar(
-      name: provider?.name,
+    final avatar = ProviderLogo(
+      ledger: c,
+      provider: provider,
       mark: provider == null ? null : serverProviderMark(c, s),
       starred: s.favorite,
     );

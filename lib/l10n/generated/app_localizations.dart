@@ -8942,6 +8942,36 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'提供商目录尚未下载。联网后，到“设置 → 提供商”检查更新。'**
   String get r9DirEmptyHint;
+
+  /// No description provided for @r9Website.
+  ///
+  /// In zh, this message translates to:
+  /// **'官网'**
+  String get r9Website;
+
+  /// No description provided for @r9WebsiteCopied.
+  ///
+  /// In zh, this message translates to:
+  /// **'已复制网址'**
+  String get r9WebsiteCopied;
+
+  /// No description provided for @r9ProviderDelete.
+  ///
+  /// In zh, this message translates to:
+  /// **'删除提供商'**
+  String get r9ProviderDelete;
+
+  /// Delete provider confirmation title.
+  ///
+  /// In zh, this message translates to:
+  /// **'删除“{name}”？'**
+  String r9ProviderDeleteTitle(String name);
+
+  /// Delete provider confirmation message.
+  ///
+  /// In zh, this message translates to:
+  /// **'{count, plural, =0{将从你的台账中移除这个提供商。} other{将从你的台账中移除这个提供商。它的 {count} 台服务器会保留，显示为未指定提供商。}}'**
+  String r9ProviderDeleteMessage(int count);
 }
 
 class _AppLocalizationsDelegate

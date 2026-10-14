@@ -5516,4 +5516,31 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get r9DirEmptyHint =>
       'The provider directory hasn’t been downloaded yet. When you’re online, choose Check for Updates in Settings > Providers.';
+
+  @override
+  String get r9Website => 'Website';
+
+  @override
+  String get r9WebsiteCopied => 'Website address copied';
+
+  @override
+  String get r9ProviderDelete => 'Delete Provider';
+
+  @override
+  String r9ProviderDeleteTitle(String name) {
+    return 'Delete “$name”?';
+  }
+
+  @override
+  String r9ProviderDeleteMessage(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other:
+          'This provider will be removed from your ledger. Its $count servers stay and show as unspecified.',
+      one: 'This provider will be removed from your ledger. Its 1 server stays and shows as unspecified.',
+      zero: 'This provider will be removed from your ledger.',
+    );
+    return '$_temp0';
+  }
 }

@@ -56,7 +56,7 @@ import '../core/ui/ui.dart';      // everything below + AppPalette / context.pal
 |---|---|
 | `AppCard` | `AppCard(child: …, onTap: …)` free-form surface (radius 14). `margin: EdgeInsets.zero` when nested. |
 | `StatusPill` | `StatusPill('Expired 2 days', tone: AppTone.red, dot: true)`; tones `neutral, amber, red, green, blue`. |
-| `ProviderAvatar` | `ProviderAvatar(name: provider?.name, mark: 'BWG', size: 42, starred: favorite)`; hashed colour, initials, grey `?` for null. |
+| `ProviderAvatar` | `ProviderAvatar(name: provider?.name, mark: 'BWG', size: 42, starred: favorite)`; hashed colour, initials, grey `?` for null. `logo: FileImage(file)` shows a picture on a white tile with a hairline border (both themes; decoded at `size × devicePixelRatio`, initials if it cannot be decoded); the semantics label is the name. In screens use `ProviderLogo(ledger:, provider:)` / `ProviderLogo(ledger:, directoryId:, name:)` (lib/providers/directory_widgets.dart), which finds the cached directory logo, so a provider looks the same everywhere. |
 | `AppSearchField` | `AppSearchField(controller: q, placeholder: l10n.search, onChanged: …)`. |
 | `AppSegmented<T>` | `AppSegmented<String>(options: {'a': 'GiB', 'b': 'TiB'}, value: v, onChanged: set, compact: true)` (compact inside form rows). |
 | `AppStepper` | `AppStepper(value: vcpu, min: 1, max: 128, onChanged: set)`. |

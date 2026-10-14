@@ -117,7 +117,7 @@ class _ProvidersPageState extends State<ProvidersPage> {
                 for (final provider in used)
                   AppRow(
                     key: ValueKey('provider-${provider.id}'),
-                    leading: ProviderAvatar(name: provider.name),
+                    leading: ProviderLogo(ledger: ledger, provider: provider),
                     title: provider.name,
                     subtitle: providerUsageLine(context, usage[provider.id]!),
                     chevron: true,
@@ -287,7 +287,7 @@ class _AllProvidersPageState extends State<AllProvidersPage> {
                     final used = usage[provider.id];
                     return AppRow(
                       key: ValueKey('provider-${provider.id}'),
-                      leading: ProviderAvatar(name: provider.name),
+                      leading: ProviderLogo(ledger: ledger, provider: provider),
                       title: provider.name,
                       subtitle: used == null
                           ? null
@@ -313,7 +313,11 @@ class _AllProvidersPageState extends State<AllProvidersPage> {
                     final name = provider.displayName(l10n);
                     return AppRow(
                       key: ValueKey('catalog-provider-${provider.id}'),
-                      leading: ProviderAvatar(name: name),
+                      leading: ProviderLogo(
+                        ledger: ledger,
+                        directoryId: provider.id,
+                        name: name,
+                      ),
                       title: name,
                       chevron: true,
                       onTap: opening

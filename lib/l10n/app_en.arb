@@ -3136,5 +3136,26 @@
       }
     }
   },
-  "r9DirEmptyHint": "The provider directory hasn’t been downloaded yet. When you’re online, choose Check for Updates in Settings > Providers."
+  "r9DirEmptyHint": "The provider directory hasn’t been downloaded yet. When you’re online, choose Check for Updates in Settings > Providers.",
+  "r9Website": "Website",
+  "r9WebsiteCopied": "Website address copied",
+  "r9ProviderDelete": "Delete Provider",
+  "r9ProviderDeleteTitle": "Delete “{name}”?",
+  "@r9ProviderDeleteTitle": {
+    "description": "Delete provider confirmation title.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "r9ProviderDeleteMessage": "{count, plural, =0{This provider will be removed from your ledger.} =1{This provider will be removed from your ledger. Its 1 server stays and shows as unspecified.} other{This provider will be removed from your ledger. Its {count} servers stay and show as unspecified.}}",
+  "@r9ProviderDeleteMessage": {
+    "description": "Delete provider confirmation message.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  }
 }

@@ -18,6 +18,7 @@ import '../finance/calculator_page.dart';
 import '../finance/finance_math.dart';
 import '../finance/finance_models.dart';
 import '../finance/payment_pages.dart';
+import '../providers/directory_widgets.dart';
 import '../providers/provider_pages.dart';
 import '../security/host_trust.dart' show normalizedHost;
 import '../security/host_trust_pages.dart';
@@ -786,8 +787,9 @@ class ServerDetail extends StatelessWidget {
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                ProviderAvatar(
-                  name: provider?.name,
+                ProviderLogo(
+                  ledger: controller,
+                  provider: provider,
                   mark: provider == null
                       ? null
                       : serverProviderMark(controller, s),
@@ -1037,8 +1039,9 @@ class _ServerProviderCardState extends State<_ServerProviderCard> {
       children: [
         AppRow(
           key: const ValueKey('server-provider-link'),
-          leading: ProviderAvatar(
-            name: provider?.name,
+          leading: ProviderLogo(
+            ledger: controller,
+            provider: provider,
             mark: provider == null
                 ? null
                 : serverProviderMark(controller, server),

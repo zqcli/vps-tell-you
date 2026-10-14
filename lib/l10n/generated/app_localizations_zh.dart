@@ -4872,4 +4872,29 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get r9DirEmptyHint => '提供商目录尚未下载。联网后，到“设置 → 提供商”检查更新。';
+
+  @override
+  String get r9Website => '官网';
+
+  @override
+  String get r9WebsiteCopied => '已复制网址';
+
+  @override
+  String get r9ProviderDelete => '删除提供商';
+
+  @override
+  String r9ProviderDeleteTitle(String name) {
+    return '删除“$name”？';
+  }
+
+  @override
+  String r9ProviderDeleteMessage(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '将从你的台账中移除这个提供商。它的 $count 台服务器会保留，显示为未指定提供商。',
+      zero: '将从你的台账中移除这个提供商。',
+    );
+    return '$_temp0';
+  }
 }

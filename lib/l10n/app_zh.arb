@@ -3604,5 +3604,26 @@
       }
     }
   },
-  "r9DirEmptyHint": "提供商目录尚未下载。联网后，到“设置 → 提供商”检查更新。"
+  "r9DirEmptyHint": "提供商目录尚未下载。联网后，到“设置 → 提供商”检查更新。",
+  "r9Website": "官网",
+  "r9WebsiteCopied": "已复制网址",
+  "r9ProviderDelete": "删除提供商",
+  "r9ProviderDeleteTitle": "删除“{name}”？",
+  "@r9ProviderDeleteTitle": {
+    "description": "Delete provider confirmation title.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "r9ProviderDeleteMessage": "{count, plural, =0{将从你的台账中移除这个提供商。} other{将从你的台账中移除这个提供商。它的 {count} 台服务器会保留，显示为未指定提供商。}}",
+  "@r9ProviderDeleteMessage": {
+    "description": "Delete provider confirmation message.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  }
 }

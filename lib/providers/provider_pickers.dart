@@ -169,7 +169,7 @@ class _ProviderPickerPageState extends State<ProviderPickerPage> {
           final used = usage[provider.id];
           return AppRow(
             key: ValueKey('picker-provider-${provider.id}'),
-            leading: ProviderAvatar(name: provider.name),
+            leading: ProviderLogo(ledger: ledger, provider: provider),
             title: provider.name,
             subtitle: used == null
                 ? null
@@ -259,7 +259,11 @@ class _ProviderPickerPageState extends State<ProviderPickerPage> {
                     final name = provider.displayName(l10n);
                     return AppRow(
                       key: ValueKey('picker-catalog-${provider.id}'),
-                      leading: ProviderAvatar(name: name),
+                      leading: ProviderLogo(
+                        ledger: ledger,
+                        directoryId: provider.id,
+                        name: name,
+                      ),
                       title: name,
                       trailing: check(
                         widget.pendingCatalog?.catalogId == provider.id,

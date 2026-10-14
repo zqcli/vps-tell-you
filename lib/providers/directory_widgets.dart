@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 
 import '../core/app_theme.dart' show showFailure;
@@ -19,6 +21,52 @@ extension DirectoryProviderL10n on DirectoryProvider {
   /// What the local provider is created with when the user picks this entry.
   CatalogProviderRef refIn(AppLocalizations l10n) =>
       CatalogProviderRef(catalogId: id, name: displayName(l10n));
+}
+
+/// The provider picture used on every screen: the directory logo when one is
+/// cached for the provider, otherwise the initials avatar. Pass the local
+/// [provider] (its `catalogId` selects the logo), or a [directoryId] for an
+/// entry which has not been added yet; unknown ids simply show initials.
+///
+/// Because every screen goes through this widget, a provider looks the same
+/// in the server list, detail header, pickers and provider pages.
+class ProviderLogo extends StatelessWidget implements AppLeading {
+  const ProviderLogo({
+    super.key,
+    required this.ledger,
+    this.provider,
+    this.directoryId,
+    this.name,
+    this.mark,
+    this.size = 42,
+    this.starred = false,
+  });
+
+  final LedgerController ledger;
+  final ProviderRecord? provider;
+  final String? directoryId;
+
+  /// Name for initials and semantics; defaults to the local provider's name.
+  final String? name;
+  final String? mark;
+  final double size;
+  final bool starred;
+
+  @override
+  double get leadingExtent => size;
+
+  @override
+  Widget build(BuildContext context) {
+    final id = provider?.catalogId ?? directoryId;
+    final File? file = id == null ? null : ledger.directory.logoFor(id);
+    return ProviderAvatar(
+      name: name ?? provider?.name,
+      mark: mark,
+      size: size,
+      starred: starred,
+      logo: file == null ? null : FileImage(file),
+    );
+  }
 }
 
 /// "just now", "5 minutes ago", "3 hours ago", "2 days ago".

@@ -91,6 +91,59 @@ void main() {
     });
   });
 
+  group('deleting a provider', () {
+    test('its servers stay, unlinked; archived ones are not revised', () async {
+      final provider = await store.addCatalogProvider(_cloud);
+      await store.saveServer(server('a', providerId: provider.id), isNew: true);
+      await store.saveServer(server('b', providerId: provider.id), isNew: true);
+      await store.saveServer(server('other'), isNew: true);
+      final b = (await store.servers()).firstWhere((s) => s.id == 'b');
+      await store.archive(b);
+      final before = {for (final s in await store.servers()) s.id: s};
+
+      await store.deleteProvider((await store.providers()).single);
+      expect(await store.providers(), isEmpty);
+      final after = {for (final s in await store.servers()) s.id: s};
+      expect(after.keys, before.keys, reason: 'no server is deleted');
+      expect(after.values.map((s) => s.providerId), everyElement(isNull));
+      expect(after['a']!.revision, before['a']!.revision + 1);
+      expect(after['b']!.revision, before['b']!.revision, reason: 'archived');
+      expect(after['other']!.revision, before['other']!.revision);
+      expect(after['a']!.name, before['a']!.name);
+      expect(after['a']!.vendor, before['a']!.vendor, reason: 'history kept');
+      // The directory entry can be added again afterwards.
+      final again = await store.addCatalogProvider(_cloud);
+      expect(again.id, isNot(provider.id));
+    });
+
+    test('an outdated record is a conflict and deletes nothing', () async {
+      final provider = await store.addCatalogProvider(_cloud);
+      await store.saveProvider(
+        ProviderRecord(
+          id: provider.id,
+          name: 'Renamed',
+          createdAt: provider.createdAt,
+          revision: provider.revision,
+        ),
+        isNew: false,
+      );
+      await expectLater(
+        store.deleteProvider(provider),
+        throwsA(isA<LedgerConflict>()),
+      );
+      expect(await store.providers(), hasLength(1));
+    });
+
+    test('deleting a missing provider is a conflict', () async {
+      await expectLater(
+        store.deleteProvider(
+          ProviderRecord(id: 'gone', name: 'Gone', createdAt: now),
+        ),
+        throwsA(isA<LedgerConflict>()),
+      );
+    });
+  });
+
   group('server provider link', () {
     test(
       'saving creates the directory provider in the same transaction',

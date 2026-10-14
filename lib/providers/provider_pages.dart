@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart'
     show CupertinoAlertDialog, CupertinoDialogAction, showCupertinoDialog;
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart' show Clipboard, ClipboardData;
 
 import '../core/app_theme.dart' show showFailure;
 import '../core/ui/ui.dart';
@@ -13,6 +14,7 @@ import '../servers/server_detail.dart';
 import '../servers/server_form.dart';
 import '../servers/server_record.dart';
 import 'directory_widgets.dart';
+import 'provider_directory.dart';
 import 'provider_record.dart';
 
 export 'provider_lists.dart' show ProvidersPage, AllProvidersPage;
@@ -297,6 +299,7 @@ class _ProviderDetailsPageState extends State<ProviderDetailsPage> {
     title: provider.name,
     actions: [
       AppMenuAction(
+        key: const ValueKey('provider-rename'),
         label: context.l10n.providerUiRename,
         onPressed: editable
             ? () => open(() async {
@@ -304,8 +307,39 @@ class _ProviderDetailsPageState extends State<ProviderDetailsPage> {
               })
             : null,
       ),
+      AppMenuAction(
+        key: const ValueKey('provider-delete'),
+        label: context.l10n.r9ProviderDelete,
+        destructive: true,
+        onPressed: editable
+            ? () => open(() => _delete(ledger, provider))
+            : null,
+      ),
     ],
   );
+
+  Future<void> _delete(LedgerController ledger, ProviderRecord provider) async {
+    final count = ledger.providerUsage[provider.id]?.servers.length ?? 0;
+    final confirmed = await showAppConfirm(
+      context,
+      title: LocalizedText((l10n) => l10n.r9ProviderDeleteTitle(provider.name)),
+      message: LocalizedText((l10n) => l10n.r9ProviderDeleteMessage(count)),
+      action: LocalizedText((l10n) => l10n.r9ProviderDelete),
+      dangerous: true,
+    );
+    if (!confirmed || !mounted) return;
+    try {
+      await ledger.mutate(() => ledger.store.deleteProvider(provider));
+      if (mounted) Navigator.pop(context);
+    } catch (error) {
+      if (mounted) showFailure(context, error);
+    }
+  }
+
+  void _copyWebsite(DirectoryProvider provider) {
+    Clipboard.setData(ClipboardData(text: provider.website));
+    showAppToast(context, context.l10n.r9WebsiteCopied);
+  }
 
   @override
   Widget build(BuildContext context) => ListenableBuilder(
@@ -358,7 +392,13 @@ class _ProviderDetailsPageState extends State<ProviderDetailsPage> {
             padding: const EdgeInsets.fromLTRB(20, 12, 20, 4),
             child: Row(
               children: [
-                ProviderAvatar(name: name, size: 60),
+                ProviderLogo(
+                  ledger: ledger,
+                  provider: local,
+                  directoryId: widget.catalogId,
+                  name: name,
+                  size: 60,
+                ),
                 const SizedBox(width: 14),
                 Expanded(
                   child: Column(
@@ -397,6 +437,40 @@ class _ProviderDetailsPageState extends State<ProviderDetailsPage> {
               ],
             ),
           ),
+          if (catalog != null) ...[
+            if (catalog.displayDescription(l10n).isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 8, 20, 4),
+                child: Text(
+                  catalog.displayDescription(l10n),
+                  key: const ValueKey('provider-description'),
+                  style: TextStyle(
+                    fontSize: 15,
+                    height: 1.4,
+                    color: context.palette.text,
+                  ),
+                ),
+              ),
+            AppSection(
+              topSpacing: 8,
+              children: [
+                AppRow(
+                  key: const ValueKey('provider-website'),
+                  icon: Icons.language_rounded,
+                  iconColor: AppTints.blue,
+                  title: l10n.r9Website,
+                  subtitle: catalog.website,
+                  subtitleMaxLines: 2,
+                  trailing: Icon(
+                    Icons.copy_outlined,
+                    size: 18,
+                    color: context.palette.text3,
+                  ),
+                  onTap: () => _copyWebsite(catalog),
+                ),
+              ],
+            ),
+          ],
           if (local == null) ...[
             AppBanner(
               text: l10n.r6CatCatalogProviderHelp,

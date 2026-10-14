@@ -323,6 +323,24 @@ extension LedgerProviders on LedgerStore {
   Future<ProviderRecord> addCatalogProvider(CatalogProviderRef ref) =>
       _db.transaction((txn) => _ensureCatalogProvider(txn, ref, clock()));
 
+  /// Deletes a provider. Its servers (archived ones too) stay in the ledger and
+  /// become "unspecified": only their provider link is cleared, active servers
+  /// get a new revision like any edit. A directory-linked provider simply
+  /// returns to the directory list. Fails with [LedgerConflict] when [record]
+  /// is outdated.
+  Future<void> deleteProvider(ProviderRecord record) =>
+      _db.transaction((txn) async {
+        final current = await _providerRow(txn, record.id);
+        if (current.revision != record.revision) throw const LedgerConflict();
+        await txn.rawUpdate(
+          'UPDATE servers SET provider_id = NULL, '
+          'revision = CASE WHEN archived_at IS NULL THEN revision + 1 ELSE revision END, '
+          'updated_at = ? WHERE provider_id = ?',
+          [clock().toUtc().toIso8601String(), record.id],
+        );
+        await txn.delete('providers', where: 'id = ?', whereArgs: [record.id]);
+      });
+
   Future<void> saveProvider(
     ProviderRecord record, {
     required bool isNew,
