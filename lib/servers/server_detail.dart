@@ -1014,11 +1014,6 @@ class _ServerProviderCard extends StatefulWidget {
 
 class _ServerProviderCardState extends State<_ServerProviderCard> {
   bool opening = false;
-  @override
-  void initState() {
-    super.initState();
-    widget.controller.loadCatalog();
-  }
 
   Future<void> open(Future<void> Function() action) async {
     if (opening) return;

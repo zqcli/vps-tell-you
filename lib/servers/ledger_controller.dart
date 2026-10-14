@@ -11,7 +11,7 @@ import '../l10n/locale_preference.dart';
 import '../l10n/generated/app_localizations.dart';
 import '../finance/finance_math.dart';
 import '../finance/finance_models.dart';
-import '../providers/provider_catalog.dart';
+import '../providers/provider_directory.dart';
 import '../providers/provider_record.dart';
 import '../security/security_controller.dart';
 import '../settings/reminder_rule.dart';
@@ -30,9 +30,9 @@ class LedgerController extends ChangeNotifier {
     DateTime Function()? clock,
     SecurityController? security,
     ReminderPlatform? reminderPlatform,
-    ProviderCatalog? catalog,
+    ProviderDirectory? directory,
   }) : clock = clock ?? DateTime.now,
-       catalogSource = catalog ?? const BuiltinProviderCatalog(),
+       directory = directory ?? ProviderDirectory.memory(),
        security = security ?? SecurityController(store: store) {
     reminders = ReminderScheduler(
       store,
@@ -40,40 +40,35 @@ class LedgerController extends ChangeNotifier {
       clock: this.clock,
     );
     reminders.addListener(notifyListeners);
+    this.directory.addListener(notifyListeners);
   }
   final SecurityController security;
 
-  /// Where the provider directory comes from (bundled asset for now).
-  final ProviderCatalog catalogSource;
-  CatalogSnapshot? _catalog;
-  Future<void>? _catalogLoading;
+  /// The public provider directory (names, logos, descriptions). It is
+  /// independent of the ledger: a slow or failed download never affects it.
+  final ProviderDirectory directory;
 
-  /// The last successfully loaded catalog, or an empty one. A catalog failure
-  /// never affects the ledger: the app then offers only local providers.
-  CatalogSnapshot get catalog => _catalog ?? CatalogSnapshot.empty;
-  bool catalogFailed = false;
-  bool get catalogLoaded => _catalog != null;
+  /// Whether the directory refreshes itself on launch (persisted setting).
+  bool directoryAuto = true;
+  bool _directoryStarted = false;
 
-  /// Loads the catalog once (concurrent callers share the load). Safe to call
-  /// from `initState`; a failed load can be retried by calling it again, and
-  /// [force] re-reads an already loaded catalog.
-  Future<void> loadCatalog({bool force = false}) {
-    if (_catalog != null && !force) return Future<void>.value();
-    return _catalogLoading ??= _readCatalog();
+  /// Reads the cached directory, then — if the setting allows and the cache is
+  /// older than 12 hours — refreshes it in the background. Never throws.
+  Future<void> startDirectory() async {
+    if (_directoryStarted) return;
+    _directoryStarted = true;
+    await directory.load();
+    await directory.autoRefresh(enabled: directoryAuto);
   }
 
-  Future<void> _readCatalog() async {
-    try {
-      final loaded = await catalogSource.load();
-      if (_disposed) return;
-      _catalog = loaded;
-      catalogFailed = false;
-    } catch (_) {
-      catalogFailed = true;
-    } finally {
-      _catalogLoading = null;
-    }
-    if (!_disposed) notifyListeners();
+  /// Persists the "Update on Launch" switch. A preference-only write like
+  /// [setLanguage]: it does not reload the ledger.
+  Future<void> setDirectoryAuto(bool enabled) async {
+    if (_disposed || enabled == directoryAuto) return;
+    await store.saveProviderDirectoryAuto(enabled);
+    if (_disposed) return;
+    directoryAuto = enabled;
+    notifyListeners();
   }
 
   late final ReminderScheduler reminders;
@@ -114,6 +109,7 @@ class LedgerController extends ChangeNotifier {
   void dispose() {
     _disposed = true;
     reminders.removeListener(notifyListeners);
+    directory.removeListener(notifyListeners);
     reminders.dispose();
     security.dispose();
     super.dispose();
@@ -239,8 +235,10 @@ class LedgerController extends ChangeNotifier {
   ProviderRecord? localProviderForCatalog(String catalogId) =>
       providers.where((p) => p.catalogId == catalogId).firstOrNull;
 
-  CatalogProvider? catalogProviderFor(ProviderRecord provider) =>
-      provider.catalogId == null ? null : catalog.provider(provider.catalogId!);
+  DirectoryProvider? directoryProviderFor(ProviderRecord provider) =>
+      provider.catalogId == null
+      ? null
+      : directory.provider(provider.catalogId!);
 
   String providerNameFor(ServerRecord server, {AppLocalizations? l10n}) {
     final strings = l10n ?? defaultLocalizations;
@@ -313,8 +311,10 @@ class LedgerController extends ChangeNotifier {
     final loadedTheme = await store.themeMode();
     final loadedLanguage = await store.languagePreference();
     final loadedProviders = await store.providers();
+    final loadedDirectoryAuto = await store.providerDirectoryAuto();
     refreshFailed = false;
     providers = List.unmodifiable(loadedProviders);
+    directoryAuto = loadedDirectoryAuto;
     periods = List.unmodifiable(loadedPeriods);
     payments = List.unmodifiable(loadedPayments);
     fx = loadedFx;

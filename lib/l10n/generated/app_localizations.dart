@@ -8802,18 +8802,6 @@ abstract class AppLocalizations {
   /// Provider catalog and packages.
   ///
   /// In zh, this message translates to:
-  /// **'提供商目录未能加载。仍可使用自己的提供商。'**
-  String get r6CatCatalogFailed;
-
-  /// Provider catalog and packages.
-  ///
-  /// In zh, this message translates to:
-  /// **'重试'**
-  String get r6CatRetry;
-
-  /// Provider catalog and packages.
-  ///
-  /// In zh, this message translates to:
   /// **'尚未添加。添加后即可把服务器关联到它。'**
   String get r6CatCatalogProviderHelp;
 
@@ -8858,6 +8846,102 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'查看提供商'**
   String get providerUiOpenProvider;
+
+  /// No description provided for @r9DirSection.
+  ///
+  /// In zh, this message translates to:
+  /// **'提供商目录'**
+  String get r9DirSection;
+
+  /// No description provided for @r9DirNone.
+  ///
+  /// In zh, this message translates to:
+  /// **'尚未下载'**
+  String get r9DirNone;
+
+  /// Provider directory status: version and number of providers.
+  ///
+  /// In zh, this message translates to:
+  /// **'版本 {version} · {count} 个提供商'**
+  String r9DirSummary(int version, int count);
+
+  /// No description provided for @r9DirUpToDate.
+  ///
+  /// In zh, this message translates to:
+  /// **'已是最新'**
+  String get r9DirUpToDate;
+
+  /// No description provided for @r9DirUpdated.
+  ///
+  /// In zh, this message translates to:
+  /// **'已更新'**
+  String get r9DirUpdated;
+
+  /// No description provided for @r9DirUnreachable.
+  ///
+  /// In zh, this message translates to:
+  /// **'无法连接 GitHub'**
+  String get r9DirUnreachable;
+
+  /// When the provider directory was last checked, e.g. 3 hours ago.
+  ///
+  /// In zh, this message translates to:
+  /// **'检查于 {when}'**
+  String r9DirChecked(String when);
+
+  /// No description provided for @r9DirNeverChecked.
+  ///
+  /// In zh, this message translates to:
+  /// **'尚未检查'**
+  String get r9DirNeverChecked;
+
+  /// No description provided for @r9DirCheck.
+  ///
+  /// In zh, this message translates to:
+  /// **'检查更新'**
+  String get r9DirCheck;
+
+  /// No description provided for @r9DirAuto.
+  ///
+  /// In zh, this message translates to:
+  /// **'启动时更新'**
+  String get r9DirAuto;
+
+  /// No description provided for @r9DirAutoFooter.
+  ///
+  /// In zh, this message translates to:
+  /// **'只下载公开的提供商列表；你的台账不会离开设备。'**
+  String get r9DirAutoFooter;
+
+  /// No description provided for @r9TimeJustNow.
+  ///
+  /// In zh, this message translates to:
+  /// **'刚刚'**
+  String get r9TimeJustNow;
+
+  /// Relative time.
+  ///
+  /// In zh, this message translates to:
+  /// **'{count} 分钟前'**
+  String r9TimeMinutesAgo(int count);
+
+  /// Relative time.
+  ///
+  /// In zh, this message translates to:
+  /// **'{count} 小时前'**
+  String r9TimeHoursAgo(int count);
+
+  /// Relative time.
+  ///
+  /// In zh, this message translates to:
+  /// **'{count} 天前'**
+  String r9TimeDaysAgo(int count);
+
+  /// No description provided for @r9DirEmptyHint.
+  ///
+  /// In zh, this message translates to:
+  /// **'提供商目录尚未下载。联网后，到“设置 → 提供商”检查更新。'**
+  String get r9DirEmptyHint;
 }
 
 class _AppLocalizationsDelegate

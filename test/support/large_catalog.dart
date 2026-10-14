@@ -1,6 +1,8 @@
 import 'dart:convert';
 
-import 'package:vps_tell_you/providers/provider_catalog.dart';
+import 'package:vps_tell_you/providers/provider_directory.dart';
+
+import 'catalog_fixture.dart';
 
 /// Test-only directory for scale: [providers] providers (300 by default).
 /// Names mix English, accents and Chinese so that folding and CJK search can
@@ -11,7 +13,8 @@ import 'package:vps_tell_you/providers/provider_catalog.dart';
 /// * `n % 4 == 2` → `Café Hosting <n>`
 /// * `n % 4 == 3` → `Ünited Servers <n>`
 ///
-/// Provider ids are `big-<n>` (zero padded to 3).
+/// Provider ids are `big-<n>` (zero padded to 3). Both language names are the
+/// same text, so the tests do not depend on the interface language.
 String largeProviderName(int n) {
   final id = '$n';
   return switch (n % 4) {
@@ -24,21 +27,22 @@ String largeProviderName(int n) {
 
 String largeProviderId(int n) => 'big-${n.toString().padLeft(3, '0')}';
 
-CatalogSnapshot largeCatalog({int providers = 300}) => CatalogSnapshot.parse(
-  jsonEncode({
-    'schemaVersion': 1,
-    'catalogVersion': 1,
-    'providers': [
-      for (var n = 0; n < providers; n++)
-        {'id': largeProviderId(n), 'name': largeProviderName(n)},
-    ],
-  }),
-);
+DirectorySnapshot largeCatalog({int providers = 300}) =>
+    DirectorySnapshot.parse(
+      jsonEncode(
+        directoryIndexJson(
+          version: 1,
+          providers: [
+            for (var n = 0; n < providers; n++)
+              directoryEntry(
+                largeProviderId(n),
+                zh: largeProviderName(n),
+                en: largeProviderName(n),
+              ),
+          ],
+        ),
+      ),
+    );
 
-class LargeCatalog implements ProviderCatalog {
-  LargeCatalog({int providers = 300})
-    : snapshot = largeCatalog(providers: providers);
-  final CatalogSnapshot snapshot;
-  @override
-  Future<CatalogSnapshot> load() async => snapshot;
-}
+ProviderDirectory largeDirectory({int providers = 300}) =>
+    ProviderDirectory.memory(largeCatalog(providers: providers));

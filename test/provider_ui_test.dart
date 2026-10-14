@@ -7,7 +7,7 @@ import 'package:vps_tell_you/core/app_theme.dart';
 import 'package:vps_tell_you/core/ui/ui.dart';
 import 'package:vps_tell_you/data/ledger_store.dart';
 import 'package:vps_tell_you/l10n/generated/app_localizations.dart';
-import 'package:vps_tell_you/providers/provider_catalog.dart';
+import 'package:vps_tell_you/providers/provider_directory.dart';
 import 'package:vps_tell_you/providers/provider_pages.dart';
 import 'package:vps_tell_you/providers/provider_record.dart';
 import 'package:vps_tell_you/servers/ledger_controller.dart';
@@ -27,11 +27,10 @@ void main() {
   late Directory directory;
   late LedgerStore store;
   late LedgerController ledger;
-  late MemoryCatalog catalog;
   final locale = ValueNotifier<Locale>(const Locale('en'));
   final now = DateTime.utc(2026, 10, 6);
 
-  Future<void> boot({ProviderCatalog? source}) async {
+  Future<void> boot() async {
     sqfliteFfiInit();
     directory = await Directory.systemTemp.createTemp('vps-package-ui-');
     store = await LedgerStore.open(
@@ -39,11 +38,10 @@ void main() {
       path: '${directory.path}/ledger.sqlite3',
       clock: () => now,
     );
-    catalog = MemoryCatalog();
     ledger = LedgerController(
       store,
       clock: () => now,
-      catalog: source ?? catalog,
+      directory: fixtureDirectory(),
     );
     await ledger.refresh();
   }
@@ -474,12 +472,14 @@ void main() {
       expect((await store.servers()).single.providerId, local.id);
     });
 
-    testWidgets('a failed catalog leaves only local providers', (tester) async {
+    testWidgets('without a directory only local providers are offered', (
+      tester,
+    ) async {
       ledger.dispose();
       ledger = LedgerController(
         store,
         clock: () => now,
-        catalog: FailingCatalog(),
+        directory: ProviderDirectory.memory(),
       );
       await ledger.refresh();
       await store.saveProvider(
@@ -488,9 +488,12 @@ void main() {
       );
       await ledger.refresh();
       await startAdd(tester);
-      expect(ledger.catalogFailed, isTrue);
       await tap(tester, 'form-provider');
       expect(find.text('Directory'), findsNothing);
+      expect(
+        find.byKey(const ValueKey('directory-empty-hint')),
+        findsOneWidget,
+      );
       expect(
         find.byKey(const ValueKey('picker-catalog-fixture-cloud')),
         findsNothing,
@@ -750,7 +753,10 @@ void main() {
             'server detail': () => ServerDetail(controller: ledger, id: 'long'),
             'form': () => ServerForm(
               controller: ledger,
-              catalogProvider: catalog.snapshot.provider('fixture-cloud'),
+              catalogProvider: const CatalogProviderRef(
+                catalogId: 'fixture-cloud',
+                name: 'Fixture Cloud',
+              ),
             ),
           };
           for (final entry in pages.entries) {

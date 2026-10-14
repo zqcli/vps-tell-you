@@ -22,6 +22,8 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
+      - name: Provider directory index is current
+        run: python tool/build_catalog.py --check
       - name: Isolated SSH protocol fixture dependency
         run: python -m pip install --disable-pip-version-check -r test/support/ssh_fixture/requirements.txt
       - run: flutter pub get --enforce-lockfile

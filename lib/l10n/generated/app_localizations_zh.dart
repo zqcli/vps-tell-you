@@ -4788,12 +4788,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get r6CatServerFooter => '服务器保留自己的硬件与费用。如需更换提供商，请编辑服务器。';
 
   @override
-  String get r6CatCatalogFailed => '提供商目录未能加载。仍可使用自己的提供商。';
-
-  @override
-  String get r6CatRetry => '重试';
-
-  @override
   String get r6CatCatalogProviderHelp => '尚未添加。添加后即可把服务器关联到它。';
 
   @override
@@ -4820,4 +4814,62 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get providerUiOpenProvider => '查看提供商';
+
+  @override
+  String get r9DirSection => '提供商目录';
+
+  @override
+  String get r9DirNone => '尚未下载';
+
+  @override
+  String r9DirSummary(int version, int count) {
+    return '版本 $version · $count 个提供商';
+  }
+
+  @override
+  String get r9DirUpToDate => '已是最新';
+
+  @override
+  String get r9DirUpdated => '已更新';
+
+  @override
+  String get r9DirUnreachable => '无法连接 GitHub';
+
+  @override
+  String r9DirChecked(String when) {
+    return '检查于 $when';
+  }
+
+  @override
+  String get r9DirNeverChecked => '尚未检查';
+
+  @override
+  String get r9DirCheck => '检查更新';
+
+  @override
+  String get r9DirAuto => '启动时更新';
+
+  @override
+  String get r9DirAutoFooter => '只下载公开的提供商列表；你的台账不会离开设备。';
+
+  @override
+  String get r9TimeJustNow => '刚刚';
+
+  @override
+  String r9TimeMinutesAgo(int count) {
+    return '$count 分钟前';
+  }
+
+  @override
+  String r9TimeHoursAgo(int count) {
+    return '$count 小时前';
+  }
+
+  @override
+  String r9TimeDaysAgo(int count) {
+    return '$count 天前';
+  }
+
+  @override
+  String get r9DirEmptyHint => '提供商目录尚未下载。联网后，到“设置 → 提供商”检查更新。';
 }

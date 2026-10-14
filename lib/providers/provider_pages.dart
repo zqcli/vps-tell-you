@@ -12,7 +12,7 @@ import '../servers/refresh_failure_notice.dart';
 import '../servers/server_detail.dart';
 import '../servers/server_form.dart';
 import '../servers/server_record.dart';
-import 'provider_catalog.dart';
+import 'directory_widgets.dart';
 import 'provider_record.dart';
 
 export 'provider_lists.dart' show ProvidersPage, AllProvidersPage;
@@ -25,13 +25,11 @@ export 'provider_lists.dart' show ProvidersPage, AllProvidersPage;
 class ProviderSelection {
   const ProviderSelection(this.provider, {this.catalog});
   final ProviderRecord? provider;
-  final CatalogProvider? catalog;
+  final CatalogProviderRef? catalog;
 
   bool get isPending => provider == null && catalog != null;
   String? get name => provider?.name ?? catalog?.name;
-  CatalogProviderRef? get pendingRef => isPending
-      ? CatalogProviderRef(catalogId: catalog!.id, name: catalog!.name)
-      : null;
+  CatalogProviderRef? get pendingRef => isPending ? catalog : null;
 }
 
 String serverProviderLabel(
@@ -71,42 +69,8 @@ class ProviderNotices extends StatelessWidget {
           padding: const EdgeInsets.fromLTRB(16, 10, 16, 0),
           child: RefreshFailureNotice(controller: ledger),
         ),
-      CatalogFailureBanner(ledger: ledger),
     ],
   );
-}
-
-/// Shown on pages which depend on the directory when it could not be loaded.
-class CatalogFailureBanner extends StatelessWidget {
-  const CatalogFailureBanner({super.key, required this.ledger});
-  final LedgerController ledger;
-  @override
-  Widget build(BuildContext context) {
-    if (!ledger.catalogFailed || ledger.catalogLoaded) {
-      return const SizedBox.shrink();
-    }
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        AppBanner(
-          text: context.l10n.r6CatCatalogFailed,
-          tone: AppTone.amber,
-          icon: Icons.error_outline_rounded,
-        ),
-        AppSection(
-          topSpacing: 10,
-          children: [
-            AppRow(
-              key: const ValueKey('catalog-retry'),
-              center: true,
-              title: context.l10n.r6CatRetry,
-              onTap: () => ledger.loadCatalog(),
-            ),
-          ],
-        ),
-      ],
-    );
-  }
 }
 
 Future<ProviderRecord?> editProvider(
@@ -313,11 +277,6 @@ class ProviderDetailsPage extends StatefulWidget {
 
 class _ProviderDetailsPageState extends State<ProviderDetailsPage> {
   bool opening = false;
-  @override
-  void initState() {
-    super.initState();
-    widget.ledger.loadCatalog();
-  }
 
   Future<void> open(Future<void> Function() action) async {
     if (opening) return;
@@ -358,16 +317,16 @@ class _ProviderDetailsPageState extends State<ProviderDetailsPage> {
           ? ledger.providers.where((p) => p.id == widget.providerId).firstOrNull
           : ledger.localProviderForCatalog(widget.catalogId!);
       final catalog = local != null
-          ? ledger.catalogProviderFor(local)
-          : ledger.catalog.provider(widget.catalogId ?? '');
-      final name = local?.name ?? catalog?.name;
+          ? ledger.directoryProviderFor(local)
+          : ledger.directory.provider(widget.catalogId ?? '');
+      final name = local?.name ?? catalog?.displayName(l10n);
       if (name == null) {
         return AppScaffold(
           title: l10n.providerUiDetails,
           largeTitle: false,
           children: [
             ProviderNotices(ledger),
-            if (widget.providerId != null || ledger.catalogLoaded)
+            if (widget.providerId != null || ledger.directory.loaded)
               AppBanner(
                 text: l10n.providerUiUnavailable,
                 tone: AppTone.amber,
@@ -380,7 +339,7 @@ class _ProviderDetailsPageState extends State<ProviderDetailsPage> {
           ? const <ServerRecord>[]
           : ledger.providerUsage[local.id]?.servers ?? const <ServerRecord>[];
       final editable = !opening && _canEdit(ledger);
-      final selection = ProviderSelection(local, catalog: catalog);
+      final selection = ProviderSelection(local, catalog: catalog?.refIn(l10n));
       return AppScaffold(
         title: l10n.providerUiDetails,
         largeTitle: false,

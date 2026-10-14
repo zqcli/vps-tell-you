@@ -3504,14 +3504,6 @@
   "@r6CatServerFooter": {
     "description": "Provider catalog and packages."
   },
-  "r6CatCatalogFailed": "提供商目录未能加载。仍可使用自己的提供商。",
-  "@r6CatCatalogFailed": {
-    "description": "Provider catalog and packages."
-  },
-  "r6CatRetry": "重试",
-  "@r6CatRetry": {
-    "description": "Provider catalog and packages."
-  },
   "r6CatCatalogProviderHelp": "尚未添加。添加后即可把服务器关联到它。",
   "@r6CatCatalogProviderHelp": {
     "description": "Provider catalog and packages."
@@ -3553,5 +3545,64 @@
   "providerUiOpenProvider": "查看提供商",
   "@providerUiOpenProvider": {
     "description": "Provider navigation and ownership UI."
-  }
+  },
+  "r9DirSection": "提供商目录",
+  "r9DirNone": "尚未下载",
+  "r9DirSummary": "版本 {version} · {count} 个提供商",
+  "@r9DirSummary": {
+    "description": "Provider directory status: version and number of providers.",
+    "placeholders": {
+      "version": {
+        "type": "int"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "r9DirUpToDate": "已是最新",
+  "r9DirUpdated": "已更新",
+  "r9DirUnreachable": "无法连接 GitHub",
+  "r9DirChecked": "检查于 {when}",
+  "@r9DirChecked": {
+    "description": "When the provider directory was last checked, e.g. 3 hours ago.",
+    "placeholders": {
+      "when": {
+        "type": "String"
+      }
+    }
+  },
+  "r9DirNeverChecked": "尚未检查",
+  "r9DirCheck": "检查更新",
+  "r9DirAuto": "启动时更新",
+  "r9DirAutoFooter": "只下载公开的提供商列表；你的台账不会离开设备。",
+  "r9TimeJustNow": "刚刚",
+  "r9TimeMinutesAgo": "{count} 分钟前",
+  "@r9TimeMinutesAgo": {
+    "description": "Relative time.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "r9TimeHoursAgo": "{count} 小时前",
+  "@r9TimeHoursAgo": {
+    "description": "Relative time.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "r9TimeDaysAgo": "{count} 天前",
+  "@r9TimeDaysAgo": {
+    "description": "Relative time.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "r9DirEmptyHint": "提供商目录尚未下载。联网后，到“设置 → 提供商”检查更新。"
 }

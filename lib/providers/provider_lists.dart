@@ -4,7 +4,8 @@ import '../core/search_match.dart';
 import '../core/ui/ui.dart';
 import '../l10n/locale_preference.dart';
 import '../servers/ledger_controller.dart';
-import 'provider_catalog.dart';
+import 'directory_widgets.dart';
+import 'provider_directory.dart';
 import 'provider_pages.dart';
 
 /// "3 servers" for a provider that has servers.
@@ -14,10 +15,10 @@ String providerUsageLine(BuildContext context, ProviderUsage usage) =>
 int _byName(String a, String b) => compareNames(a, b);
 
 /// Directory providers that have no local provider yet.
-List<CatalogProvider> notAddedCatalogProviders(LedgerController ledger) {
+List<DirectoryProvider> notAddedDirectoryProviders(LedgerController ledger) {
   final added = {for (final p in ledger.providers) ?p.catalogId};
   return [
-    for (final c in ledger.catalog.providers)
+    for (final c in ledger.directory.providers)
       if (!added.contains(c.id)) c,
   ];
 }
@@ -33,12 +34,6 @@ class ProvidersPage extends StatefulWidget {
 
 class _ProvidersPageState extends State<ProvidersPage> {
   bool opening = false;
-  @override
-  void initState() {
-    super.initState();
-    widget.ledger.loadCatalog();
-  }
-
   Future<void> open(Future<void> Function() action) async {
     if (opening) return;
     setState(() => opening = true);
@@ -83,7 +78,7 @@ class _ProvidersPageState extends State<ProvidersPage> {
           if (usage.containsKey(p.id)) p,
       ]..sort((a, b) => _byName(a.name, b.name));
       final total =
-          ledger.providers.length + notAddedCatalogProviders(ledger).length;
+          ledger.providers.length + notAddedDirectoryProviders(ledger).length;
       final canAdd = !opening && ledger.canMutate;
       final unspecified = ledger.records
           .where((s) => s.providerId == null)
@@ -163,6 +158,7 @@ class _ProvidersPageState extends State<ProvidersPage> {
                 ),
               ],
             ),
+          DirectorySettingsSection(ledger: ledger),
         ],
       );
     },
@@ -185,20 +181,25 @@ class _AllProvidersPageState extends State<AllProvidersPage> {
   bool opening = false;
 
   @override
-  void initState() {
-    super.initState();
-    widget.ledger.loadCatalog();
-  }
-
-  @override
   void dispose() {
     query.dispose();
     super.dispose();
   }
 
-  bool _matches(String name, List<String> tokens) =>
+  bool _matches(String text, List<String> tokens) =>
       tokens.isEmpty ||
-      matchesTokens(_folded.putIfAbsent(name, () => foldSearch(name)), tokens);
+      matchesTokens(_folded.putIfAbsent(text, () => foldSearch(text)), tokens);
+
+  /// Both names and every alias of a directory entry.
+  bool _matchesDirectory(DirectoryProvider provider, List<String> tokens) =>
+      tokens.isEmpty || _matches(provider.searchNames.join('\u0001'), tokens);
+
+  Future<void> _refreshDirectory() async {
+    final outcome = await widget.ledger.directory.refresh();
+    if (outcome == DirectoryOutcome.failed && mounted) {
+      showAppToast(context, context.l10n.r9DirUnreachable);
+    }
+  }
 
   Future<void> push(Widget page) async {
     if (opening) return;
@@ -247,12 +248,14 @@ class _AllProvidersPageState extends State<AllProvidersPage> {
           if (_matches(p.name, tokens)) p,
       ]..sort((a, b) => _byName(a.name, b.name));
       final catalog = [
-        for (final c in notAddedCatalogProviders(ledger))
-          if (_matches(c.name, tokens)) c,
-      ]..sort((a, b) => _byName(a.name, b.name));
-      final nothing = mine.isEmpty && catalog.isEmpty;
+        for (final c in notAddedDirectoryProviders(ledger))
+          if (_matchesDirectory(c, tokens)) c,
+      ]..sort((a, b) => _byName(a.displayName(l10n), b.displayName(l10n)));
+      final hint = directoryIsEmpty(ledger.directory) && tokens.isEmpty;
+      final nothing = mine.isEmpty && catalog.isEmpty && !hint;
       return AppScaffold(
         title: l10n.r8AllProviders,
+        onRefresh: _refreshDirectory,
         actions: [
           AppNavButton.icon(
             Icons.add,
@@ -307,10 +310,11 @@ class _AllProvidersPageState extends State<AllProvidersPage> {
                   count: catalog.length,
                   itemBuilder: (context, i) {
                     final provider = catalog[i];
+                    final name = provider.displayName(l10n);
                     return AppRow(
                       key: ValueKey('catalog-provider-${provider.id}'),
-                      leading: ProviderAvatar(name: provider.name),
-                      title: provider.name,
+                      leading: ProviderAvatar(name: name),
+                      title: name,
                       chevron: true,
                       onTap: opening
                           ? null
@@ -325,6 +329,7 @@ class _AllProvidersPageState extends State<AllProvidersPage> {
                 ),
               ],
             ),
+          if (hint) const SliverToBoxAdapter(child: DirectoryEmptyHint()),
         ],
       );
     },

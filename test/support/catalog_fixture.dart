@@ -1,34 +1,57 @@
 import 'dart:convert';
 
-import 'package:vps_tell_you/providers/provider_catalog.dart';
+import 'package:vps_tell_you/providers/provider_directory.dart';
 
-/// Document with two providers.
-Map<String, Object?> fixtureCatalogJson({int version = 3}) => {
-  'schemaVersion': 1,
-  'catalogVersion': version,
-  'providers': [
-    {'id': 'fixture-cloud', 'name': 'Fixture Cloud'},
-    {'id': 'empty-host', 'name': 'Empty Host'},
-  ],
+/// One `index.json` entry (without a logo unless [logo] is given).
+Map<String, Object?> directoryEntry(
+  String id, {
+  String? zh,
+  String? en,
+  List<String> aliases = const [],
+  String kind = 'cloud',
+  String region = 'global',
+  String? descriptionZh,
+  String? descriptionEn,
+  Map<String, Object?>? logo,
+}) => {
+  'id': id,
+  'name': {'zh': zh ?? '$id 中文', 'en': en ?? id},
+  'aliases': aliases,
+  'kind': kind,
+  'region': region,
+  'website': 'https://$id.example.com',
+  'description': {
+    'zh': descriptionZh ?? '$id 的说明。',
+    'en': descriptionEn ?? 'About $id.',
+  },
+  'logo': ?logo,
 };
 
-CatalogSnapshot fixtureCatalog({int version = 3}) =>
-    CatalogSnapshot.parse(jsonEncode(fixtureCatalogJson(version: version)));
+Map<String, Object?> directoryIndexJson({
+  int version = 3,
+  List<Object?>? providers,
+}) => {
+  'schemaVersion': 1,
+  'catalogVersion': version,
+  'generatedAt': '2026-10-12T00:00:00Z',
+  'providers':
+      providers ??
+      [
+        directoryEntry(
+          'fixture-cloud',
+          zh: '夹具云',
+          en: 'Fixture Cloud',
+          aliases: ['FixtureCloud', '夹具'],
+          descriptionZh: '用于测试的云服务商。',
+          descriptionEn: 'A cloud provider for tests.',
+        ),
+        directoryEntry('empty-host', zh: '空主机', en: 'Empty Host'),
+      ],
+};
 
-class MemoryCatalog implements ProviderCatalog {
-  MemoryCatalog([CatalogSnapshot? snapshot])
-    : snapshot = snapshot ?? fixtureCatalog();
-  CatalogSnapshot snapshot;
-  int loads = 0;
-  @override
-  Future<CatalogSnapshot> load() async {
-    loads++;
-    return snapshot;
-  }
-}
+DirectorySnapshot fixtureCatalog({int version = 3}) =>
+    DirectorySnapshot.parse(jsonEncode(directoryIndexJson(version: version)));
 
-class FailingCatalog implements ProviderCatalog {
-  @override
-  Future<CatalogSnapshot> load() async =>
-      throw const CatalogFormatException('synthetic failure');
-}
+/// A directory with the two fixture providers and no network or disk.
+ProviderDirectory fixtureDirectory({int version = 3}) =>
+    ProviderDirectory.memory(fixtureCatalog(version: version));

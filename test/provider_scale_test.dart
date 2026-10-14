@@ -22,7 +22,6 @@ void main() {
   late Directory directory;
   late LedgerStore store;
   late LedgerController ledger;
-  late LargeCatalog catalog;
   final locale = ValueNotifier<Locale>(const Locale('en'));
   final now = DateTime.utc(2026, 10, 6);
 
@@ -35,10 +34,12 @@ void main() {
       path: '${directory.path}/ledger.sqlite3',
       clock: () => now,
     );
-    catalog = LargeCatalog();
-    ledger = LedgerController(store, clock: () => now, catalog: catalog);
+    ledger = LedgerController(
+      store,
+      clock: () => now,
+      directory: largeDirectory(),
+    );
     await ledger.refresh();
-    await ledger.loadCatalog();
   });
   tearDown(() async {
     ledger.dispose();
@@ -125,9 +126,9 @@ void main() {
           if (ledger.providerUsage.containsKey(p.id)) p,
       ];
       expect(used, hasLength(2));
-      // 3 rows at most: two providers + "All Providers" (+ nothing for the
-      // 298 other catalog entries).
-      expect(rows().evaluate().length, lessThanOrEqualTo(4));
+      // Two providers + "All Providers" + the three directory rows (and
+      // nothing for the 298 other directory entries).
+      expect(rows().evaluate().length, lessThanOrEqualTo(8));
       expect(find.text('Café Hosting 2'), findsOneWidget);
       expect(find.text('Ünited Servers 7'), findsOneWidget);
       expect(find.text('Unused Own'), findsNothing);

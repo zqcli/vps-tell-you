@@ -3036,14 +3036,6 @@
   "@r6CatServerFooter": {
     "description": "Provider catalog and packages."
   },
-  "r6CatCatalogFailed": "The provider directory couldn’t be loaded. You can still use your own providers.",
-  "@r6CatCatalogFailed": {
-    "description": "Provider catalog and packages."
-  },
-  "r6CatRetry": "Retry",
-  "@r6CatRetry": {
-    "description": "Provider catalog and packages."
-  },
   "r6CatCatalogProviderHelp": "Not added yet. Add it to link your servers to it.",
   "@r6CatCatalogProviderHelp": {
     "description": "Provider catalog and packages."
@@ -3085,5 +3077,64 @@
   "providerUiOpenProvider": "View provider",
   "@providerUiOpenProvider": {
     "description": "Provider navigation and ownership UI."
-  }
+  },
+  "r9DirSection": "Provider Directory",
+  "r9DirNone": "Not downloaded yet",
+  "r9DirSummary": "Version {version} · {count, plural, =1{1 provider} other{{count} providers}}",
+  "@r9DirSummary": {
+    "description": "Provider directory status: version and number of providers.",
+    "placeholders": {
+      "version": {
+        "type": "int"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "r9DirUpToDate": "Up to date",
+  "r9DirUpdated": "Updated",
+  "r9DirUnreachable": "Couldn’t reach GitHub",
+  "r9DirChecked": "Checked {when}",
+  "@r9DirChecked": {
+    "description": "When the provider directory was last checked, e.g. 3 hours ago.",
+    "placeholders": {
+      "when": {
+        "type": "String"
+      }
+    }
+  },
+  "r9DirNeverChecked": "Never checked",
+  "r9DirCheck": "Check for Updates",
+  "r9DirAuto": "Update on Launch",
+  "r9DirAutoFooter": "Only the public provider list is downloaded; your ledger never leaves the device.",
+  "r9TimeJustNow": "just now",
+  "r9TimeMinutesAgo": "{count, plural, =1{1 minute ago} other{{count} minutes ago}}",
+  "@r9TimeMinutesAgo": {
+    "description": "Relative time.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "r9TimeHoursAgo": "{count, plural, =1{1 hour ago} other{{count} hours ago}}",
+  "@r9TimeHoursAgo": {
+    "description": "Relative time.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "r9TimeDaysAgo": "{count, plural, =1{1 day ago} other{{count} days ago}}",
+  "@r9TimeDaysAgo": {
+    "description": "Relative time.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "r9DirEmptyHint": "The provider directory hasn’t been downloaded yet. When you’re online, choose Check for Updates in Settings > Providers."
 }

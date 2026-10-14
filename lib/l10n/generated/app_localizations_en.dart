@@ -5404,13 +5404,6 @@ class AppLocalizationsEn extends AppLocalizations {
       'The server keeps its own hardware and price. Edit the server to change its provider.';
 
   @override
-  String get r6CatCatalogFailed =>
-      'The provider directory couldn’t be loaded. You can still use your own providers.';
-
-  @override
-  String get r6CatRetry => 'Retry';
-
-  @override
   String get r6CatCatalogProviderHelp =>
       'Not added yet. Add it to link your servers to it.';
 
@@ -5439,4 +5432,88 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get providerUiOpenProvider => 'View provider';
+
+  @override
+  String get r9DirSection => 'Provider Directory';
+
+  @override
+  String get r9DirNone => 'Not downloaded yet';
+
+  @override
+  String r9DirSummary(int version, int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count providers',
+      one: '1 provider',
+    );
+    return 'Version $version · $_temp0';
+  }
+
+  @override
+  String get r9DirUpToDate => 'Up to date';
+
+  @override
+  String get r9DirUpdated => 'Updated';
+
+  @override
+  String get r9DirUnreachable => 'Couldn’t reach GitHub';
+
+  @override
+  String r9DirChecked(String when) {
+    return 'Checked $when';
+  }
+
+  @override
+  String get r9DirNeverChecked => 'Never checked';
+
+  @override
+  String get r9DirCheck => 'Check for Updates';
+
+  @override
+  String get r9DirAuto => 'Update on Launch';
+
+  @override
+  String get r9DirAutoFooter =>
+      'Only the public provider list is downloaded; your ledger never leaves the device.';
+
+  @override
+  String get r9TimeJustNow => 'just now';
+
+  @override
+  String r9TimeMinutesAgo(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count minutes ago',
+      one: '1 minute ago',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String r9TimeHoursAgo(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count hours ago',
+      one: '1 hour ago',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String r9TimeDaysAgo(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count days ago',
+      one: '1 day ago',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get r9DirEmptyHint =>
+      'The provider directory hasn’t been downloaded yet. When you’re online, choose Check for Updates in Settings > Providers.';
 }

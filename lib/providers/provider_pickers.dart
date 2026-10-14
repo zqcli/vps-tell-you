@@ -5,7 +5,7 @@ import '../core/ui/ui.dart';
 import '../l10n/locale_preference.dart';
 import '../servers/ledger_controller.dart';
 import '../servers/server_record.dart';
-import 'provider_catalog.dart';
+import 'directory_widgets.dart';
 import 'provider_lists.dart';
 import 'provider_pages.dart';
 import 'provider_record.dart';
@@ -17,7 +17,7 @@ class ProviderChoice {
   const ProviderChoice.local(ProviderRecord this.local)
     : catalog = null,
       draft = null;
-  const ProviderChoice.catalog(CatalogProvider this.catalog)
+  const ProviderChoice.catalog(CatalogProviderRef this.catalog)
     : local = null,
       draft = null;
   const ProviderChoice.draft(ProviderRecord this.draft)
@@ -28,7 +28,7 @@ class ProviderChoice {
   final ProviderRecord? local;
 
   /// A directory provider that gets its local provider when the server is saved.
-  final CatalogProvider? catalog;
+  final CatalogProviderRef? catalog;
 
   /// A new user provider that is created when the server is saved.
   final ProviderRecord? draft;
@@ -41,7 +41,7 @@ Future<ProviderChoice?> pickProvider(
   BuildContext context, {
   required LedgerController ledger,
   ProviderRecord? selected,
-  CatalogProvider? pendingCatalog,
+  CatalogProviderRef? pendingCatalog,
   ProviderRecord? pendingNew,
 }) => showAppModal<ProviderChoice>(
   context,
@@ -63,7 +63,7 @@ class ProviderPickerPage extends StatefulWidget {
   });
   final LedgerController ledger;
   final ProviderRecord? selected, pendingNew;
-  final CatalogProvider? pendingCatalog;
+  final CatalogProviderRef? pendingCatalog;
   @override
   State<ProviderPickerPage> createState() => _ProviderPickerPageState();
 }
@@ -72,12 +72,6 @@ class _ProviderPickerPageState extends State<ProviderPickerPage> {
   final query = TextEditingController();
   final _folded = <String, String>{};
   bool busy = false;
-
-  @override
-  void initState() {
-    super.initState();
-    widget.ledger.loadCatalog();
-  }
 
   @override
   void dispose() {
@@ -137,9 +131,11 @@ class _ProviderPickerPageState extends State<ProviderPickerPage> {
           if (!usage.containsKey(provider.id)) provider,
       ];
       final catalog = [
-        for (final provider in notAddedCatalogProviders(ledger))
-          if (matches(provider.name)) provider,
-      ]..sort((a, b) => compareNames(a.name, b.name));
+        for (final provider in notAddedDirectoryProviders(ledger))
+          if (tokens.isEmpty ||
+              matchesTokens(_fold(provider.searchNames.join('\u0001')), tokens))
+            provider,
+      ]..sort((a, b) => compareNames(a.displayName(l10n), b.displayName(l10n)));
       final draft = widget.pendingNew;
       final showDraft = draft != null && matches(draft.name);
       final searching = tokens.isNotEmpty;
@@ -147,8 +143,10 @@ class _ProviderPickerPageState extends State<ProviderPickerPage> {
       final exact =
           searching &&
           (ledger.providers.any((x) => _fold(x.name) == foldSearch(typed)) ||
-              ledger.catalog.providers.any(
-                (x) => _fold(x.name) == foldSearch(typed),
+              ledger.directory.providers.any(
+                (x) => x.searchNames.any(
+                  (n) => foldSearch(n) == foldSearch(typed),
+                ),
               ) ||
               (draft != null && _fold(draft.name) == foldSearch(typed)));
       final canOfferTyped =
@@ -258,17 +256,23 @@ class _ProviderPickerPageState extends State<ProviderPickerPage> {
                   count: catalog.length,
                   itemBuilder: (context, i) {
                     final provider = catalog[i];
+                    final name = provider.displayName(l10n);
                     return AppRow(
                       key: ValueKey('picker-catalog-${provider.id}'),
-                      leading: ProviderAvatar(name: provider.name),
-                      title: provider.name,
-                      trailing: check(widget.pendingCatalog?.id == provider.id),
-                      onTap: () => _pick(ProviderChoice.catalog(provider)),
+                      leading: ProviderAvatar(name: name),
+                      title: name,
+                      trailing: check(
+                        widget.pendingCatalog?.catalogId == provider.id,
+                      ),
+                      onTap: () =>
+                          _pick(ProviderChoice.catalog(provider.refIn(l10n))),
                     );
                   },
                 ),
               ],
             ),
+          if (!searching && directoryIsEmpty(ledger.directory))
+            const SliverToBoxAdapter(child: DirectoryEmptyHint()),
         ],
       );
     },

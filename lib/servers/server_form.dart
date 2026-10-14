@@ -20,7 +20,6 @@ import '../core/app_theme.dart';
 import '../core/form_feedback.dart';
 import '../core/ui/ui.dart';
 import '../core/value_types.dart';
-import '../providers/provider_catalog.dart';
 import '../providers/provider_pickers.dart';
 import '../providers/provider_record.dart';
 import 'ledger_controller.dart';
@@ -44,7 +43,7 @@ class ServerForm extends StatefulWidget {
   final ProviderRecord? businessProvider;
 
   /// ...or a catalog provider whose local provider is created on save.
-  final CatalogProvider? catalogProvider;
+  final CatalogProviderRef? catalogProvider;
 
   final bool focusHardware;
   @override
@@ -80,7 +79,7 @@ class _ServerFormState extends State<ServerForm> {
   ProviderRecord? selectedProvider;
 
   /// Catalog provider without a local provider yet (created on save).
-  CatalogProvider? pendingCatalog;
+  CatalogProviderRef? pendingCatalog;
 
   /// Provider named in the "New Provider…" prompt; written on save only, so
   /// leaving the form never leaves a provider behind.
@@ -97,7 +96,6 @@ class _ServerFormState extends State<ServerForm> {
   @override
   void initState() {
     super.initState();
-    widget.controller.loadCatalog();
     final s = widget.record;
     selectedProvider =
         widget.businessProvider ??
@@ -740,12 +738,7 @@ class _ServerFormState extends State<ServerForm> {
         () => widget.controller.store.saveServer(
           s,
           isNew: old == null,
-          catalogProvider: selectedProvider == null && pendingCatalog != null
-              ? CatalogProviderRef(
-                  catalogId: pendingCatalog!.id,
-                  name: pendingCatalog!.name,
-                )
-              : null,
+          catalogProvider: selectedProvider == null ? pendingCatalog : null,
           newProvider: selectedProvider == null ? pendingNew : null,
         ),
       );

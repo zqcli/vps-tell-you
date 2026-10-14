@@ -1,0 +1,12 @@
+{
+  "id": "aws",
+  "name": {"zh": "亚马逊云科技", "en": "Amazon Web Services"},
+  "aliases": ["AWS", "Amazon Web Services", "亚马逊云科技", "亚马逊云"],
+  "kind": "cloud",
+  "region": "global",
+  "website": "https://aws.amazon.com",
+  "description": {
+    "zh": "亚马逊旗下的全球云计算平台。",
+    "en": "Amazon's global cloud computing platform."
+  }
+}

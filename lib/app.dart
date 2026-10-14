@@ -13,6 +13,7 @@ import 'data/ledger_store.dart';
 import 'data/open_ledger.dart';
 import 'l10n/generated/app_localizations.dart';
 import 'l10n/locale_preference.dart';
+import 'providers/provider_directory.dart';
 import 'finance/finance_page.dart';
 import 'finance/calculator_page.dart';
 import 'servers/ledger_controller.dart';
@@ -27,9 +28,14 @@ class LedgerApp extends StatefulWidget {
     super.key,
     this.openStore = openLedger,
     this.reminderPlatform,
+    this.directory,
   });
   final Future<LedgerStore> Function() openStore;
   final ReminderPlatform? reminderPlatform;
+
+  /// The provider directory. `main` passes the real, downloading one; without
+  /// it (tests) the app uses an empty directory and never touches the network.
+  final ProviderDirectory? directory;
   @override
   State<LedgerApp> createState() => _LedgerAppState();
 }
@@ -60,11 +66,12 @@ class _LedgerAppState extends State<LedgerApp> with WidgetsBindingObserver {
         reminderPlatform:
             widget.reminderPlatform ??
             NativeReminderPlatform(onOpen: openReminder),
+        directory: widget.directory,
       );
       await ready.refresh();
-      // The catalog is independent of the ledger: a slow or failed load never
-      // delays or blocks opening it.
-      unawaited(ready.loadCatalog());
+      // The directory is independent of the ledger: reading its cache and the
+      // background refresh never delay or block opening it.
+      unawaited(ready.startDirectory());
       if (!mounted) {
         ready.dispose();
         await store.close();
