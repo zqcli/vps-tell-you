@@ -636,7 +636,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get darkTheme => 'Dark';
 
   @override
-  String get appDescription => 'Personal VPS ledger · Local-first';
+  String get appDescription => 'Renewals, costs and access, on device';
+
+  @override
+  String get r11AppSlogan => 'Know every VPS at a glance';
 
   @override
   String get organizationData => 'Organization and data';
@@ -689,7 +692,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get about => 'About';
 
   @override
-  String get developmentVersion => 'Development build · 0.1.0';
+  String get developmentVersion => '0.1.0 · Dev build';
 
   @override
   String get appLocalDataHelp =>

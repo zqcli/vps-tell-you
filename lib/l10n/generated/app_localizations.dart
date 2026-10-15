@@ -1151,8 +1151,14 @@ abstract class AppLocalizations {
   /// No description provided for @appDescription.
   ///
   /// In zh, this message translates to:
-  /// **'个人 VPS 台账 · 本地优先'**
+  /// **'到期、费用、连接，都在本机'**
   String get appDescription;
+
+  /// No description provided for @r11AppSlogan.
+  ///
+  /// In zh, this message translates to:
+  /// **'每台 VPS，心里有数'**
+  String get r11AppSlogan;
 
   /// No description provided for @organizationData.
   ///
@@ -1241,7 +1247,7 @@ abstract class AppLocalizations {
   /// No description provided for @developmentVersion.
   ///
   /// In zh, this message translates to:
-  /// **'开发测试版 · 0.1.0'**
+  /// **'0.1.0 · 开发版'**
   String get developmentVersion;
 
   /// No description provided for @appLocalDataHelp.

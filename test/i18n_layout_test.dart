@@ -7,6 +7,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:vps_tell_you/app.dart';
+import 'package:vps_tell_you/core/ui/app_logo.dart';
 import 'package:vps_tell_you/providers/provider_pages.dart';
 import 'package:vps_tell_you/connections/connection_pages.dart';
 import 'package:vps_tell_you/connections/snippet_pages.dart';
@@ -249,6 +250,23 @@ void main() {
         );
       });
     }
+    testWidgets('$locale settings banner shows the logo and slogan', (
+      tester,
+    ) async {
+      await mount(
+        tester,
+        Scaffold(body: SettingsPage(controller: ledger)),
+        locale: locale,
+      );
+      expect(find.byType(AppLogo), findsOneWidget);
+      expect(
+        find.text(
+          locale == 'zh' ? '每台 VPS，心里有数' : 'Know every VPS at a glance',
+        ),
+        findsOneWidget,
+      );
+      expect(tester.takeException(), isNull);
+    });
     testWidgets('$locale language choice dialog at 320px and 2x text', (
       tester,
     ) async {

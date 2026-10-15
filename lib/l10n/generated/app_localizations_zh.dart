@@ -585,7 +585,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get darkTheme => '深色';
 
   @override
-  String get appDescription => '个人 VPS 台账 · 本地优先';
+  String get appDescription => '到期、费用、连接，都在本机';
+
+  @override
+  String get r11AppSlogan => '每台 VPS，心里有数';
 
   @override
   String get organizationData => '组织与数据';
@@ -636,7 +639,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get about => '关于';
 
   @override
-  String get developmentVersion => '开发测试版 · 0.1.0';
+  String get developmentVersion => '0.1.0 · 开发版';
 
   @override
   String get appLocalDataHelp => '数据仅保存在本机，无需账号。归档不会取消服务或停止扣费。';

@@ -160,6 +160,7 @@ class _SettingsPageState extends State<SettingsPage> {
             ),
           _AppInfoCard(
             name: 'vps tell you',
+            slogan: l10n.r11AppSlogan,
             description: l10n.appDescription,
             version: l10n.developmentVersion,
           ),
@@ -274,55 +275,74 @@ class _SettingsPageState extends State<SettingsPage> {
 class _AppInfoCard extends StatelessWidget {
   const _AppInfoCard({
     required this.name,
+    required this.slogan,
     required this.description,
     required this.version,
   });
-  final String name, description, version;
+  final String name, slogan, description, version;
 
   @override
   Widget build(BuildContext context) {
     final p = context.palette;
     return AppCard(
       margin: const EdgeInsets.fromLTRB(16, 4, 16, 0),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            width: 58,
-            height: 58,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(14),
-              gradient: const LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [AppTints.blue, AppTints.indigo],
-              ),
-            ),
-            child: const Icon(
-              Icons.dns_outlined,
-              size: 30,
-              color: Colors.white,
-            ),
-          ),
+          const AppLogo(size: 64),
           const SizedBox(width: 14),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 4,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  children: [
+                    Text(
+                      name,
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: -0.4,
+                        color: p.text,
+                      ),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 7,
+                        vertical: 2,
+                      ),
+                      decoration: BoxDecoration(
+                        color: AppTints.indigo.withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Text(
+                        version,
+                        style: const TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                          color: AppTints.indigo,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 4),
                 Text(
-                  name,
-                  style: const TextStyle(
-                    fontSize: 19,
-                    fontWeight: FontWeight.w700,
+                  slogan,
+                  style: TextStyle(
+                    fontSize: 15,
+                    height: 1.3,
+                    fontWeight: FontWeight.w600,
+                    color: p.text,
                   ),
                 ),
                 const SizedBox(height: 2),
                 Text(
                   description,
-                  style: TextStyle(fontSize: 13, height: 1.35, color: p.text2),
-                ),
-                Text(
-                  version,
                   style: TextStyle(fontSize: 13, height: 1.35, color: p.text2),
                 ),
               ],
