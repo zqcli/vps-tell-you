@@ -50,18 +50,21 @@ catalog/
 - **可选**：找不到清晰的官方 Logo 时不要放 `logo.png`（不要用猜测或生成的图），应用显示首字母头像；
 - 方形 PNG，**256 × 256**，**≤ 64 KiB**；
 - 透明或白色背景（应用把它放在白色圆角底板上，深色模式也一样）；
-- 图形居中，四周留约 12 % 边距（约 30 px）；
+- 图形居中，四周默认留约 12 % 边距（约 30 px）；找不到可信紧凑官方标识的横向文字标可用约 4% 横向留白（左右各 10 px），完整保留文字并垂直居中；
 - 脚本检查 PNG 文件头、尺寸与大小，并写入 `sha256`；应用下载后逐一校验，不符的文件不会被使用。
 
 Logo 来源见 [SOURCES.md](SOURCES.md)。
 
-## 当前内容与取舍（2026-10-14 调研）
+## 当前内容与取舍（2026-10-15 调研）
 
-76 个提供商：云厂商 26（中国大陆为主 13、全球 13），VPS 主机商 50（大陆 2、全球 48）。`region` 表示目录面向的用户群，不是公司注册地。
+88 个提供商：云厂商 26（中国大陆为主 13、全球 13），VPS 主机商 62（大陆 2、全球 60）。86 个条目有 Logo，2 个无 Logo。`region` 表示目录面向的用户群，不是公司注册地。
 
 - **合并**：阿里云国内站 / 国际站共用 `aliyun`，腾讯云共用 `tencentcloud`（轻量应用服务器 / Lighthouse 只是别名）；OVH、Kimsufi、So You Start 共用 `ovhcloud`；`spartahost` 是 SpartanHost 的笔误别名；`nerdrack.com` 跳转 RackNerd，Nerdrack 是别名；Crunchbits 并入 `synteq`（保留别名）。BuyVM 官网仍在售卖，单独保留（属 Cloudzy，FranTech 为别名）。`zgovps` 现名 ZgoCloud，id 不变。
 - **未收录**：DediPath（2023-08 停止运营）、NexusBytes（已停运）、Inception Hosting（2025-01 并入 Clouvider）。没有使用未经证实的“跑路”指控作为排除理由。
-- **无 Logo（显示首字母）**：`greencloudvps`、`hostdare`、`hosteons`、`inmotionhosting`、`spartanhost`（官方站点拒绝自动访问，或只有无法在 40 px 下辨认的文字标）。
+- **本轮新增**：`rfchost`、`vmiss`、`vps-taxi`、`cloudsilk`、`vmsilo`、`bestvm`、`zouter`、`digitalvirt`、`hostishere`、`alice`（Alice Networks）、`ppflight`（官方拼写 PPFlight）、`lazycat`（懒猫云 / LazyCatCloud）。已分别检索并核对官网、产品或客户区，未发现无法确认而跳过的品牌。
+- **名称与别名**：Azure、Oracle Cloud、GreenCloudVPS、Google Cloud、Amazon Web Services、BandwagonHost 在中文界面使用品牌名；微软云、甲骨文云 / 甲骨文 / 龟壳、绿云、谷歌云、亚马逊云科技 / 亚马逊云 / AWS、搬瓦工等仍可搜索。Akile 的 `akile.io` 跳转同品牌 `akile.ai`，保留原 id，不重复收录。
+- **Logo 审核**：已查看全量 128 px 和白底 40 px 联系表；补齐 GreenCloudVPS、HostDare、HostEONS、InMotion Hosting、SpartanHost，新增品牌中 10 个有官方图片。纠正 BandwagonHost 黄色 B、百度智能云误用 GLM 图标、LiteServer 误用荷兰地图，并更新移动云、BuyVM、HostUS、Linode / Akamai、Liquid Web 的素材。来源和小尺寸限制详见 [SOURCES.md](SOURCES.md)。
+- **无 Logo（显示首字母）**：`rfchost`、`cloudsilk`（官网仅确认 HTML 文字品牌，未找到可核实的独立官方图片；不使用默认框架图标或生成图片）。40 px 复查后，BAGEVM、HostEONS、InMotion Hosting、Zouter、Time4VPS、netcup、Linode / Akamai、Hostinger 改用官方紧凑标识；BandwagonHost、BuyVM、SpartanHost 仍保留完整文字标，横向留白收紧为约 4%。保留原品牌比例，不拼接、重绘或截字杜撰方形图标，具体来源和检索限制见 [SOURCES.md](SOURCES.md)。
 
 ## 商标说明
 

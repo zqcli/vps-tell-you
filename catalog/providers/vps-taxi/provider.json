@@ -1,0 +1,18 @@
+{
+  "id": "vps-taxi",
+  "name": {
+    "zh": "VPS.Taxi",
+    "en": "VPS.Taxi"
+  },
+  "aliases": [
+    "VPS Taxi",
+    "VPSTaxi"
+  ],
+  "kind": "vps",
+  "region": "global",
+  "website": "https://vps.taxi",
+  "description": {
+    "zh": "提供洛杉矶节点及中国大陆优化线路的 KVM VPS。",
+    "en": "KVM VPS hosting in Los Angeles with routes optimized for mainland China."
+  }
+}

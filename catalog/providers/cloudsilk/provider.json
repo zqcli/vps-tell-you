@@ -1,0 +1,19 @@
+{
+  "id": "cloudsilk",
+  "name": {
+    "zh": "CloudSilk",
+    "en": "CloudSilk"
+  },
+  "aliases": [
+    "Cloud Silk",
+    "白丝云",
+    "idc.best"
+  ],
+  "kind": "vps",
+  "region": "global",
+  "website": "https://cloudsilk.io",
+  "description": {
+    "zh": "提供美国和德国节点及中国大陆优化线路的 VPS。",
+    "en": "VPS hosting in the US and Germany with network options optimized for mainland China."
+  }
+}

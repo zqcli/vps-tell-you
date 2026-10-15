@@ -1,0 +1,18 @@
+{
+  "id": "hostishere",
+  "name": {
+    "zh": "Hostishere",
+    "en": "Hostishere"
+  },
+  "aliases": [
+    "Host Is Here",
+    "Hostishere.com"
+  ],
+  "kind": "vps",
+  "region": "global",
+  "website": "https://hostishere.com",
+  "description": {
+    "zh": "提供德国法兰克福节点的 VPS 和独立服务器。",
+    "en": "VPS hosting and dedicated servers operating from datacenters in Frankfurt, Germany."
+  }
+}

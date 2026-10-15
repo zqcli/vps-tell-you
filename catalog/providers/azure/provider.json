@@ -1,12 +1,13 @@
 {
   "id": "azure",
   "name": {
-    "zh": "微软 Azure",
+    "zh": "Azure",
     "en": "Microsoft Azure"
   },
   "aliases": [
     "Azure",
     "微软云",
+    "微软 Azure",
     "Microsoft Cloud"
   ],
   "kind": "cloud",

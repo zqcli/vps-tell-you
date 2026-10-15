@@ -1,12 +1,13 @@
 {
   "id": "oci",
   "name": {
-    "zh": "甲骨文云",
+    "zh": "Oracle Cloud",
     "en": "Oracle Cloud"
   },
   "aliases": [
     "OCI",
     "Oracle Cloud Infrastructure",
+    "甲骨文云",
     "甲骨文",
     "乌龟壳",
     "龟壳"

@@ -1,0 +1,18 @@
+{
+  "id": "zouter",
+  "name": {
+    "zh": "Zouter",
+    "en": "Zouter"
+  },
+  "aliases": [
+    "Zouter.io",
+    "Zouterio"
+  ],
+  "kind": "vps",
+  "region": "global",
+  "website": "https://www.zouter.io",
+  "description": {
+    "zh": "提供多地区云服务器和大带宽网络服务的主机商。",
+    "en": "Hosting provider offering cloud servers and high-bandwidth networking across multiple regions."
+  }
+}

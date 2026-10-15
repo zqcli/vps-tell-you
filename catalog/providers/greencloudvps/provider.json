@@ -1,14 +1,15 @@
 {
   "id": "greencloudvps",
   "name": {
-    "zh": "绿云",
+    "zh": "GreenCloudVPS",
     "en": "GreenCloudVPS"
   },
   "aliases": [
     "GreenCloud",
     "Green Cloud",
     "GGS",
-    "绿云 VPS"
+    "绿云 VPS",
+    "绿云"
   ],
   "kind": "vps",
   "region": "global",

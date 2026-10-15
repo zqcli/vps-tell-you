@@ -1,0 +1,19 @@
+{
+  "id": "lazycat",
+  "name": {
+    "zh": "懒猫云",
+    "en": "LazyCatCloud"
+  },
+  "aliases": [
+    "LazyCat",
+    "Lazy Cat Cloud",
+    "懒猫"
+  ],
+  "kind": "vps",
+  "region": "global",
+  "website": "https://dash.lazycat.wiki",
+  "description": {
+    "zh": "提供多地区 Incus 容器和虚拟机服务的主机商。",
+    "en": "Hosting provider offering Incus containers and virtual machines across multiple regions."
+  }
+}

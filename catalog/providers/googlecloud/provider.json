@@ -1,14 +1,15 @@
 {
   "id": "googlecloud",
   "name": {
-    "zh": "谷歌云",
+    "zh": "Google Cloud",
     "en": "Google Cloud"
   },
   "aliases": [
     "GCP",
     "Google Cloud Platform",
     "Google Compute Engine",
-    "谷歌云平台"
+    "谷歌云平台",
+    "谷歌云"
   ],
   "kind": "cloud",
   "region": "global",

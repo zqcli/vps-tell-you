@@ -1,0 +1,18 @@
+{
+  "id": "ppflight",
+  "name": {
+    "zh": "PPFlight",
+    "en": "PPFlight"
+  },
+  "aliases": [
+    "PP Flight",
+    "PPF"
+  ],
+  "kind": "vps",
+  "region": "global",
+  "website": "https://www.ppflight.com",
+  "description": {
+    "zh": "提供 KVM VPS 和裸金属服务器的主机商。",
+    "en": "Hosting provider offering KVM cloud VPS and bare-metal servers."
+  }
+}

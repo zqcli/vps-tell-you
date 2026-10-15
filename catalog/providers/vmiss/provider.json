@@ -1,0 +1,18 @@
+{
+  "id": "vmiss",
+  "name": {
+    "zh": "VMISS",
+    "en": "VMISS"
+  },
+  "aliases": [
+    "V Miss",
+    "Virtual Machine Innovative Solutions"
+  ],
+  "kind": "vps",
+  "region": "global",
+  "website": "https://www.vmiss.com",
+  "description": {
+    "zh": "提供亚洲和北美节点的 VPS 及独立服务器。",
+    "en": "VPS hosting and dedicated servers with locations in Asia and North America."
+  }
+}

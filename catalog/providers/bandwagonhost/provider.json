@@ -1,13 +1,14 @@
 {
   "id": "bandwagonhost",
   "name": {
-    "zh": "搬瓦工",
+    "zh": "BandwagonHost",
     "en": "BandwagonHost"
   },
   "aliases": [
     "Bandwagon Host",
     "BWG",
     "BWH",
+    "搬瓦工",
     "搬瓦工 VPS",
     "瓦工"
   ],

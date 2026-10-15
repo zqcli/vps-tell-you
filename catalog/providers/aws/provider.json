@@ -1,12 +1,13 @@
 {
   "id": "aws",
   "name": {
-    "zh": "亚马逊云科技",
+    "zh": "Amazon Web Services",
     "en": "Amazon Web Services"
   },
   "aliases": [
     "AWS",
     "Amazon AWS",
+    "亚马逊云科技",
     "亚马逊云",
     "亚马逊 AWS"
   ],

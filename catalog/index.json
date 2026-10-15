@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
-  "catalogVersion": 2,
-  "generatedAt": "2026-10-14T00:00:00Z",
+  "catalogVersion": 4,
+  "generatedAt": "2026-10-15T12:57:09Z",
   "providers": [
     {
       "id": "advinservers",
@@ -49,6 +49,30 @@
         "path": "providers/akile/logo.png",
         "sha256": "14d6942184d7ebdac212655fc2d7b80d331bdd56ebaac9535f56bdda32a32441",
         "bytes": 11533
+      }
+    },
+    {
+      "id": "alice",
+      "name": {
+        "zh": "Alice Networks",
+        "en": "Alice Networks"
+      },
+      "aliases": [
+        "Alice",
+        "Alice Networks Ltd",
+        "爱丽丝"
+      ],
+      "kind": "vps",
+      "region": "global",
+      "website": "https://alice.sh",
+      "description": {
+        "zh": "提供云服务器和独立服务器的主机商。",
+        "en": "Hosting provider offering cloud virtual machines and dedicated servers."
+      },
+      "logo": {
+        "path": "providers/alice/logo.png",
+        "sha256": "82f07d5245f6c52933a9748bd8be876588311ddadbfa6ac29e7dc850ff274778",
+        "bytes": 15666
       }
     },
     {
@@ -104,12 +128,13 @@
     {
       "id": "aws",
       "name": {
-        "zh": "亚马逊云科技",
+        "zh": "Amazon Web Services",
         "en": "Amazon Web Services"
       },
       "aliases": [
         "AWS",
         "Amazon AWS",
+        "亚马逊云科技",
         "亚马逊云",
         "亚马逊 AWS"
       ],
@@ -129,12 +154,13 @@
     {
       "id": "azure",
       "name": {
-        "zh": "微软 Azure",
+        "zh": "Azure",
         "en": "Microsoft Azure"
       },
       "aliases": [
         "Azure",
         "微软云",
+        "微软 Azure",
         "Microsoft Cloud"
       ],
       "kind": "cloud",
@@ -171,8 +197,8 @@
       },
       "logo": {
         "path": "providers/bage/logo.png",
-        "sha256": "ee6ca732ba2fc645e9e56c1a92241124bd075d32fe3572cc6f1daaa729a8027b",
-        "bytes": 13361
+        "sha256": "3cae0fb48eeb8a1a9bc3c2f19fa82c73aeda3ebb5cbb83188a821065a824909a",
+        "bytes": 27118
       }
     },
     {
@@ -195,20 +221,21 @@
       },
       "logo": {
         "path": "providers/baiducloud/logo.png",
-        "sha256": "b54bcb02ce335ec34c484644217eeae66418b6e2917339e94a54e60b24465278",
-        "bytes": 30755
+        "sha256": "f5d66185d01b50eef26e0bcecf8a687f1330f62aac91c48d7284c09489f68997",
+        "bytes": 22034
       }
     },
     {
       "id": "bandwagonhost",
       "name": {
-        "zh": "搬瓦工",
+        "zh": "BandwagonHost",
         "en": "BandwagonHost"
       },
       "aliases": [
         "Bandwagon Host",
         "BWG",
         "BWH",
+        "搬瓦工",
         "搬瓦工 VPS",
         "瓦工"
       ],
@@ -221,8 +248,8 @@
       },
       "logo": {
         "path": "providers/bandwagonhost/logo.png",
-        "sha256": "fec64876e6bed86d38f96252845fe06aca8a0bd48a83ac3b5bb0e0386c3d95bc",
-        "bytes": 18519
+        "sha256": "8781e594d72352aef7abbb9f267176371d3bdf8fcb88c921c196a4fa56748517",
+        "bytes": 14065
       }
     },
     {
@@ -250,6 +277,30 @@
       }
     },
     {
+      "id": "bestvm",
+      "name": {
+        "zh": "BestVM",
+        "en": "BestVM"
+      },
+      "aliases": [
+        "Best VM",
+        "富婆",
+        "富婆云"
+      ],
+      "kind": "vps",
+      "region": "global",
+      "website": "https://bestvm.cloud",
+      "description": {
+        "zh": "提供多地区 VPS 及 IEPL 专线服务的主机商。",
+        "en": "Hosting provider offering VPS in multiple regions and IEPL private connectivity."
+      },
+      "logo": {
+        "path": "providers/bestvm/logo.png",
+        "sha256": "53356d26b891dac44bb6113349cd815252d3395efe26da501a661713430d0327",
+        "bytes": 10666
+      }
+    },
+    {
       "id": "buyvm",
       "name": {
         "zh": "BuyVM",
@@ -269,8 +320,8 @@
       },
       "logo": {
         "path": "providers/buyvm/logo.png",
-        "sha256": "ee985455d9daeefcae7e21f411ceb48825821cde973f51eeb66e345c03a4c90f",
-        "bytes": 10960
+        "sha256": "04e542f5f1511fa3dc4b11bd194e3de4d9a70649cc3ee837fa0d311a9c1a1aad",
+        "bytes": 18044
       }
     },
     {
@@ -322,6 +373,25 @@
       }
     },
     {
+      "id": "cloudsilk",
+      "name": {
+        "zh": "CloudSilk",
+        "en": "CloudSilk"
+      },
+      "aliases": [
+        "Cloud Silk",
+        "白丝云",
+        "idc.best"
+      ],
+      "kind": "vps",
+      "region": "global",
+      "website": "https://cloudsilk.io",
+      "description": {
+        "zh": "提供美国和德国节点及中国大陆优化线路的 VPS。",
+        "en": "VPS hosting in the US and Germany with network options optimized for mainland China."
+      }
+    },
+    {
       "id": "clouvider",
       "name": {
         "zh": "Clouvider",
@@ -363,8 +433,8 @@
       },
       "logo": {
         "path": "providers/cmcloud/logo.png",
-        "sha256": "e3e8292789a6c4794082a112f46d89e999a1dfa2eedb8592f587b004c3afa422",
-        "bytes": 18423
+        "sha256": "1b1844e941367ddd461ee213b1f97e9e44e35303239e6584653beb6423ff6fd1",
+        "bytes": 37702
       }
     },
     {
@@ -486,6 +556,29 @@
       }
     },
     {
+      "id": "digitalvirt",
+      "name": {
+        "zh": "DigitalVirt",
+        "en": "DigitalVirt"
+      },
+      "aliases": [
+        "Digital Virt",
+        "DV"
+      ],
+      "kind": "vps",
+      "region": "global",
+      "website": "https://digitalvirt.com",
+      "description": {
+        "zh": "提供亚洲、欧美节点的 VPS 和独立服务器。",
+        "en": "VPS hosting and dedicated servers with locations in Asia, Europe, and North America."
+      },
+      "logo": {
+        "path": "providers/digitalvirt/logo.png",
+        "sha256": "b068501baa05d393094b014a83ca23377950c90c37e22770470591913c5fd453",
+        "bytes": 16188
+      }
+    },
+    {
       "id": "dmit",
       "name": {
         "zh": "DMIT",
@@ -580,14 +673,15 @@
     {
       "id": "googlecloud",
       "name": {
-        "zh": "谷歌云",
+        "zh": "Google Cloud",
         "en": "Google Cloud"
       },
       "aliases": [
         "GCP",
         "Google Cloud Platform",
         "Google Compute Engine",
-        "谷歌云平台"
+        "谷歌云平台",
+        "谷歌云"
       ],
       "kind": "cloud",
       "region": "global",
@@ -605,14 +699,15 @@
     {
       "id": "greencloudvps",
       "name": {
-        "zh": "绿云",
+        "zh": "GreenCloudVPS",
         "en": "GreenCloudVPS"
       },
       "aliases": [
         "GreenCloud",
         "Green Cloud",
         "GGS",
-        "绿云 VPS"
+        "绿云 VPS",
+        "绿云"
       ],
       "kind": "vps",
       "region": "global",
@@ -620,6 +715,11 @@
       "description": {
         "zh": "VPS 主机商，节点覆盖美洲、欧洲及亚太。",
         "en": "VPS hosting provider with datacenters in the Americas, Europe, and Asia-Pacific."
+      },
+      "logo": {
+        "path": "providers/greencloudvps/logo.png",
+        "sha256": "403661fbf89065aa2a8fea83083547a656f3b74fd2c342dd8683ce0c36cd6a23",
+        "bytes": 5524
       }
     },
     {
@@ -708,6 +808,11 @@
       "description": {
         "zh": "VPS 主机商，提供美国及日本节点。",
         "en": "VPS hosting provider with US and Japan locations."
+      },
+      "logo": {
+        "path": "providers/hostdare/logo.png",
+        "sha256": "8afe0cab504399172cf6c5778323c870d4ec4b9624c53ccaef7b350b628ac33a",
+        "bytes": 30143
       }
     },
     {
@@ -749,6 +854,11 @@
       "description": {
         "zh": "VPS 主机商，提供美国及欧洲节点。",
         "en": "VPS hosting provider offering locations in the US and Europe."
+      },
+      "logo": {
+        "path": "providers/hosteons/logo.png",
+        "sha256": "4e89f5a104e85e5b38046b85dd859b21386e286ab2f245d7172dc9ffad204d5e",
+        "bytes": 25723
       }
     },
     {
@@ -794,8 +904,31 @@
       },
       "logo": {
         "path": "providers/hostinger/logo.png",
-        "sha256": "4a2378572e62a5f9e1add54c60a143822bfdec7b77165cd3d406d76e23f30280",
-        "bytes": 6901
+        "sha256": "a0a3a8dfa057f243ed5752510090c42653eca5b1f13071ba3278b7a93507407b",
+        "bytes": 13407
+      }
+    },
+    {
+      "id": "hostishere",
+      "name": {
+        "zh": "Hostishere",
+        "en": "Hostishere"
+      },
+      "aliases": [
+        "Host Is Here",
+        "Hostishere.com"
+      ],
+      "kind": "vps",
+      "region": "global",
+      "website": "https://hostishere.com",
+      "description": {
+        "zh": "提供德国法兰克福节点的 VPS 和独立服务器。",
+        "en": "VPS hosting and dedicated servers operating from datacenters in Frankfurt, Germany."
+      },
+      "logo": {
+        "path": "providers/hostishere/logo.png",
+        "sha256": "9cf06fef3bd1c0f8aabc3c713a04ae9948b6eaf52b8e217ee70cd420d26c0f8f",
+        "bytes": 27836
       }
     },
     {
@@ -817,8 +950,8 @@
       },
       "logo": {
         "path": "providers/hostus/logo.png",
-        "sha256": "8cddeeeb6cfebc6455f1b47fd431cdad99248e773a50a7b06bbee6266ec70a35",
-        "bytes": 24945
+        "sha256": "dab1125cefd5e1aaa587a75d954eccf67390f552e56340e5540433da02943a26",
+        "bytes": 13785
       }
     },
     {
@@ -930,6 +1063,11 @@
       "description": {
         "zh": "美国主机商，在美国和荷兰提供 VPS。",
         "en": "US hosting provider offering VPS in the US and the Netherlands."
+      },
+      "logo": {
+        "path": "providers/inmotionhosting/logo.png",
+        "sha256": "7506c01cc372e5f089cd886eb1be0c8472b61ecf4b9202b225a910789b378063",
+        "bytes": 6318
       }
     },
     {
@@ -1072,6 +1210,30 @@
       }
     },
     {
+      "id": "lazycat",
+      "name": {
+        "zh": "懒猫云",
+        "en": "LazyCatCloud"
+      },
+      "aliases": [
+        "LazyCat",
+        "Lazy Cat Cloud",
+        "懒猫"
+      ],
+      "kind": "vps",
+      "region": "global",
+      "website": "https://dash.lazycat.wiki",
+      "description": {
+        "zh": "提供多地区 Incus 容器和虚拟机服务的主机商。",
+        "en": "Hosting provider offering Incus containers and virtual machines across multiple regions."
+      },
+      "logo": {
+        "path": "providers/lazycat/logo.png",
+        "sha256": "b3e520af583c59c69fb552fd33d11e28e253c40008652f81f0cac4aa36aeae58",
+        "bytes": 48357
+      }
+    },
+    {
       "id": "leaseweb",
       "name": {
         "zh": "Leaseweb",
@@ -1115,8 +1277,8 @@
       },
       "logo": {
         "path": "providers/linode/logo.png",
-        "sha256": "cd1419f48c85e59baa3e6676fe83958120d57a4f9bb154ea10ce3bcfb3ee6110",
-        "bytes": 9635
+        "sha256": "e5f3858d963ee88738d5d9a1d56a2bebaffa5a048c9d1d92dcd1b8961cd615fe",
+        "bytes": 14896
       }
     },
     {
@@ -1138,8 +1300,8 @@
       },
       "logo": {
         "path": "providers/liquidweb/logo.png",
-        "sha256": "45e42f8dfbd5f13be8567725d52e80c3c56203b9f58b956f55baac0c594fe377",
-        "bytes": 9930
+        "sha256": "b04a345f03d17b8d5ba25c2b5cf0e41887f81a521fe946a0042ab1f1c11cfee0",
+        "bytes": 6937
       }
     },
     {
@@ -1185,8 +1347,8 @@
       },
       "logo": {
         "path": "providers/liteserver/logo.png",
-        "sha256": "e69391f7aaa0aea14b606c214181dd1a173dbc42e2e88f6af85125a154592606",
-        "bytes": 30432
+        "sha256": "4c3a51653079c5074117c9e8c82200876cf2243fcfb78fc8e650006c19f1585d",
+        "bytes": 10940
       }
     },
     {
@@ -1232,19 +1394,20 @@
       },
       "logo": {
         "path": "providers/netcup/logo.png",
-        "sha256": "e57a69afbaf36a681e584ff940539877f169dc04cbe05eb04799147a2ded568e",
-        "bytes": 6304
+        "sha256": "c7daf0cc5fc8bec33a8c760db230465eaea7b04500662a8929366f312c9adfc7",
+        "bytes": 14043
       }
     },
     {
       "id": "oci",
       "name": {
-        "zh": "甲骨文云",
+        "zh": "Oracle Cloud",
         "en": "Oracle Cloud"
       },
       "aliases": [
         "OCI",
         "Oracle Cloud Infrastructure",
+        "甲骨文云",
         "甲骨文",
         "乌龟壳",
         "龟壳"
@@ -1310,6 +1473,29 @@
         "path": "providers/ovhcloud/logo.png",
         "sha256": "2abf812b3a803f8ffa4281b9c1bc1f1cb8f2be27e784a6b62febe3493f039c77",
         "bytes": 7325
+      }
+    },
+    {
+      "id": "ppflight",
+      "name": {
+        "zh": "PPFlight",
+        "en": "PPFlight"
+      },
+      "aliases": [
+        "PP Flight",
+        "PPF"
+      ],
+      "kind": "vps",
+      "region": "global",
+      "website": "https://www.ppflight.com",
+      "description": {
+        "zh": "提供 KVM VPS 和裸金属服务器的主机商。",
+        "en": "Hosting provider offering KVM cloud VPS and bare-metal servers."
+      },
+      "logo": {
+        "path": "providers/ppflight/logo.png",
+        "sha256": "2c49526588f339e256e1d3017af277b05f9368745cee54c69d24b6190c888c8a",
+        "bytes": 34374
       }
     },
     {
@@ -1407,6 +1593,24 @@
       }
     },
     {
+      "id": "rfchost",
+      "name": {
+        "zh": "RFCHost",
+        "en": "RFCHost"
+      },
+      "aliases": [
+        "RFC Host",
+        "RFC"
+      ],
+      "kind": "vps",
+      "region": "global",
+      "website": "https://www.rfchost.com",
+      "description": {
+        "zh": "提供多地区 VPS 及面向中国大陆的优化网络。",
+        "en": "VPS hosting across multiple regions with network options optimized for mainland China."
+      }
+    },
+    {
       "id": "scaleway",
       "name": {
         "zh": "Scaleway",
@@ -1469,6 +1673,11 @@
       "description": {
         "zh": "VPS 及服务器商，节点位于美国西雅图和达拉斯。",
         "en": "VPS and dedicated server provider with locations in Seattle and Dallas, US."
+      },
+      "logo": {
+        "path": "providers/spartanhost/logo.png",
+        "sha256": "796111c3278124a2c40c93a31bcd3f051af1b16f1f8892aa7ee104b280b77e95",
+        "bytes": 24074
       }
     },
     {
@@ -1565,8 +1774,8 @@
       },
       "logo": {
         "path": "providers/time4vps/logo.png",
-        "sha256": "8f8e6b90fd7580c23e58bd8dcd23088aa4e3a8c374b42b0dfcdf60e9486e3af8",
-        "bytes": 8892
+        "sha256": "2ca9c1e0001d75e94a6df489058584df13ceab87581df77d112959c0f0f4031e",
+        "bytes": 11111
       }
     },
     {
@@ -1665,6 +1874,52 @@
       }
     },
     {
+      "id": "vmiss",
+      "name": {
+        "zh": "VMISS",
+        "en": "VMISS"
+      },
+      "aliases": [
+        "V Miss",
+        "Virtual Machine Innovative Solutions"
+      ],
+      "kind": "vps",
+      "region": "global",
+      "website": "https://www.vmiss.com",
+      "description": {
+        "zh": "提供亚洲和北美节点的 VPS 及独立服务器。",
+        "en": "VPS hosting and dedicated servers with locations in Asia and North America."
+      },
+      "logo": {
+        "path": "providers/vmiss/logo.png",
+        "sha256": "750ffca472db2fe08ac9fd291c21c60e7342ba6afdece31447c8a970c21c9947",
+        "bytes": 15197
+      }
+    },
+    {
+      "id": "vmsilo",
+      "name": {
+        "zh": "VMSilo",
+        "en": "VMSilo"
+      },
+      "aliases": [
+        "VM Silo",
+        "VMSILO HK"
+      ],
+      "kind": "vps",
+      "region": "global",
+      "website": "https://portal.vmsilo.com",
+      "description": {
+        "zh": "提供云服务器及 IEPL 专线服务的主机商。",
+        "en": "Hosting provider offering cloud servers and IEPL private connectivity."
+      },
+      "logo": {
+        "path": "providers/vmsilo/logo.png",
+        "sha256": "218730e45bb7f5094b396133d98591f6c158580b5cdc5664535c7dd7554c9636",
+        "bytes": 10867
+      }
+    },
+    {
       "id": "volcengine",
       "name": {
         "zh": "火山引擎",
@@ -1711,6 +1966,29 @@
         "path": "providers/vps/logo.png",
         "sha256": "080174684e81bd47146b5962447bd9cf0a861fcdb641c5883f4a51d37a77c4bc",
         "bytes": 8861
+      }
+    },
+    {
+      "id": "vps-taxi",
+      "name": {
+        "zh": "VPS.Taxi",
+        "en": "VPS.Taxi"
+      },
+      "aliases": [
+        "VPS Taxi",
+        "VPSTaxi"
+      ],
+      "kind": "vps",
+      "region": "global",
+      "website": "https://vps.taxi",
+      "description": {
+        "zh": "提供洛杉矶节点及中国大陆优化线路的 KVM VPS。",
+        "en": "KVM VPS hosting in Los Angeles with routes optimized for mainland China."
+      },
+      "logo": {
+        "path": "providers/vps-taxi/logo.png",
+        "sha256": "fa91f15b79fdaa16bef74903601d4065ec7c163572e56294091f12771a8ce45a",
+        "bytes": 15378
       }
     },
     {
@@ -1780,6 +2058,29 @@
         "path": "providers/zgovps/logo.png",
         "sha256": "80e736eca7f5d91fded5000a2dc44bfa5d9237f0187038e8e06ea285a39ed3cc",
         "bytes": 22362
+      }
+    },
+    {
+      "id": "zouter",
+      "name": {
+        "zh": "Zouter",
+        "en": "Zouter"
+      },
+      "aliases": [
+        "Zouter.io",
+        "Zouterio"
+      ],
+      "kind": "vps",
+      "region": "global",
+      "website": "https://www.zouter.io",
+      "description": {
+        "zh": "提供多地区云服务器和大带宽网络服务的主机商。",
+        "en": "Hosting provider offering cloud servers and high-bandwidth networking across multiple regions."
+      },
+      "logo": {
+        "path": "providers/zouter/logo.png",
+        "sha256": "d99d925b7484d540c9c284d92b3bc19f108beef3cfc2e7cb43f0c844e481f513",
+        "bytes": 12919
       }
     }
   ]

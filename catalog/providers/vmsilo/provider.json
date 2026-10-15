@@ -1,0 +1,18 @@
+{
+  "id": "vmsilo",
+  "name": {
+    "zh": "VMSilo",
+    "en": "VMSilo"
+  },
+  "aliases": [
+    "VM Silo",
+    "VMSILO HK"
+  ],
+  "kind": "vps",
+  "region": "global",
+  "website": "https://portal.vmsilo.com",
+  "description": {
+    "zh": "提供云服务器及 IEPL 专线服务的主机商。",
+    "en": "Hosting provider offering cloud servers and IEPL private connectivity."
+  }
+}

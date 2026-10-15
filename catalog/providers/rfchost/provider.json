@@ -1,0 +1,18 @@
+{
+  "id": "rfchost",
+  "name": {
+    "zh": "RFCHost",
+    "en": "RFCHost"
+  },
+  "aliases": [
+    "RFC Host",
+    "RFC"
+  ],
+  "kind": "vps",
+  "region": "global",
+  "website": "https://www.rfchost.com",
+  "description": {
+    "zh": "提供多地区 VPS 及面向中国大陆的优化网络。",
+    "en": "VPS hosting across multiple regions with network options optimized for mainland China."
+  }
+}

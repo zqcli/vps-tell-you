@@ -1,0 +1,19 @@
+{
+  "id": "alice",
+  "name": {
+    "zh": "Alice Networks",
+    "en": "Alice Networks"
+  },
+  "aliases": [
+    "Alice",
+    "Alice Networks Ltd",
+    "爱丽丝"
+  ],
+  "kind": "vps",
+  "region": "global",
+  "website": "https://alice.sh",
+  "description": {
+    "zh": "提供云服务器和独立服务器的主机商。",
+    "en": "Hosting provider offering cloud virtual machines and dedicated servers."
+  }
+}

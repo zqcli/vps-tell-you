@@ -1,0 +1,18 @@
+{
+  "id": "digitalvirt",
+  "name": {
+    "zh": "DigitalVirt",
+    "en": "DigitalVirt"
+  },
+  "aliases": [
+    "Digital Virt",
+    "DV"
+  ],
+  "kind": "vps",
+  "region": "global",
+  "website": "https://digitalvirt.com",
+  "description": {
+    "zh": "提供亚洲、欧美节点的 VPS 和独立服务器。",
+    "en": "VPS hosting and dedicated servers with locations in Asia, Europe, and North America."
+  }
+}
