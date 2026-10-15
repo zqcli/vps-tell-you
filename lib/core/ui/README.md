@@ -68,6 +68,7 @@ import '../core/ui/ui.dart';      // everything below + AppPalette / context.pal
 | `AppButton` | `AppButton(label: 'Add', icon: Icons.add, kind: AppButtonKind.tonal, compact: true, destructive: false, busy: saving, expand: true, onPressed: …)`. |
 | `AppProgressBar` | `AppProgressBar(value: .92, tone: AppTone.amber)`. |
 | `AppBanner` | `AppBanner(tone: AppTone.amber, icon: Icons.warning_amber_rounded, text: '…', onTap: …)`. |
+| `AppLogo` | `AppLogo(size: 64)`. The app mark (`AppLogoPainter`); decorative unless `semanticLabel` is set. Launcher icons are exported from the same painter: `flutter test tool/app_icon_test.dart && uv run --with pillow python tool/app_icons.py`. |
 | `AppEmptyState` | `AppEmptyState(icon: Icons.dns_outlined, title: '…', message: '…', actions: [AppButton(...)])`. |
 
 ## Overlays
