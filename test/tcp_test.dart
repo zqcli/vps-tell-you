@@ -105,7 +105,9 @@ void main() {
     ServerSocket server;
     try {
       server = await ServerSocket.bind(InternetAddress(scoped), 0);
-    } on Exception {
+      // Linux rejects the zone as an ArgumentError, macOS without the
+      // address throws a SocketException.
+    } on Object {
       markTestSkipped('No link-local loopback address (fe80::1%lo0) here');
       return;
     }

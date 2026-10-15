@@ -253,10 +253,15 @@ void main() {
         tester.widget<Text>(find.text('Overdue')).style!.color,
         colors.onErrorContainer,
       );
-      await expectLater(
-        find.byKey(const ValueKey('theme-sample')),
-        matchesGoldenFile('goldens/mobile_theme_$mode.png'),
-      );
+      // The goldens are recorded on macOS; Linux CI anti-aliases blurs and
+      // shadows differently, so pixels are compared only where they were
+      // recorded. The colour roles above are checked everywhere.
+      if (Platform.isMacOS) {
+        await expectLater(
+          find.byKey(const ValueKey('theme-sample')),
+          matchesGoldenFile('goldens/mobile_theme_$mode.png'),
+        );
+      }
     });
   }
 
