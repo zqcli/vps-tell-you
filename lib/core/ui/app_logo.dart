@@ -1,7 +1,10 @@
+import 'dart:math' as math;
+
 import 'package:flutter/widgets.dart';
 
-/// The vps tell you mark: a speech bubble listing three servers, each with a
-/// status dot — the ledger "telling you" about your VPSs.
+/// The VPS Tell You mark: a server stack inside a renewal countdown ring. The
+/// bright arc is the time left in the term; its amber head and the amber
+/// status dot are the app telling you one server is coming due.
 ///
 /// Drawn in a 1024-unit grid so the in-app logo and the exported launcher
 /// icons (`tool/app_icon_test.dart`) come from the same geometry.
@@ -45,17 +48,15 @@ class AppLogoPainter extends CustomPainter {
 
   static const gradientStart = Color(0xFF3B82F6);
   static const gradientEnd = Color(0xFF4F46E5);
-  static const _dots = [
-    Color(0xFF22C55E),
-    Color(0xFF3B82F6),
-    Color(0xFFF59E0B),
-  ];
+  static const _white = Color(0xFFFFFFFF);
+  static const _line = Color(0xFFC7D2FE);
+  static const _green = Color(0xFF22C55E);
+  static const _amber = Color(0xFFF59E0B);
 
   @override
   void paint(Canvas canvas, Size size) {
-    final unit = size.shortestSide / 1024;
     canvas.save();
-    canvas.scale(unit);
+    canvas.scale(size.shortestSide / 1024);
     const tile = Rect.fromLTWH(0, 0, 1024, 1024);
     if (shape != AppLogoShape.foreground) {
       final background = Paint()
@@ -73,45 +74,72 @@ class AppLogoPainter extends CustomPainter {
         canvas.drawRect(tile, background);
       }
     } else {
-      // Adaptive icons show the middle 66 % of a 108 dp layer.
+      // Adaptive icons show roughly the middle two thirds of the layer.
       canvas.translate(512, 512);
-      canvas.scale(0.75);
+      canvas.scale(0.74);
       canvas.translate(-512, -512);
     }
 
-    // Bubble with a tail at the lower left.
-    const body = Rect.fromLTRB(196, 228, 828, 724);
-    final tail = Path()
-      ..moveTo(296, 660)
-      ..cubicTo(300, 770, 276, 822, 224, 852)
-      ..cubicTo(332, 856, 410, 806, 470, 700)
-      ..close();
-    final bubble = Path.combine(
-      PathOperation.union,
-      Path()
-        ..addRRect(RRect.fromRectAndRadius(body, const Radius.circular(128))),
-      tail,
+    // Countdown ring: faint full track, bright 270° from 12 o'clock
+    // clockwise, amber head at 9 o'clock.
+    const center = Offset(512, 512);
+    const radius = 392.0;
+    const stroke = 60.0;
+    canvas.drawCircle(
+      center,
+      radius,
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = stroke
+        ..color = _white.withValues(alpha: 0.24),
     );
-    canvas.drawShadow(bubble, const Color(0xFF1E1B4B), 24, false);
-    canvas.drawPath(bubble, Paint()..color = const Color(0xFFFFFFFF));
+    canvas.drawArc(
+      Rect.fromCircle(center: center, radius: radius),
+      -math.pi / 2,
+      math.pi * 1.5,
+      false,
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeCap = StrokeCap.round
+        ..strokeWidth = stroke
+        ..color = _white,
+    );
+    canvas.drawCircle(
+      const Offset(512 - radius, 512),
+      54,
+      Paint()..color = _amber,
+    );
 
-    // Three server rows: status dot plus a text line.
+    // Three server units: status dot and a label line.
+    const width = 470.0, height = 120.0, gap = 30.0;
+    const top = 512 - (3 * height + 2 * gap) / 2;
     for (var i = 0; i < 3; i++) {
-      final top = 300.0 + i * 122;
-      canvas.drawRRect(
-        RRect.fromRectAndRadius(
-          Rect.fromLTWH(268, top, 488, 98),
-          const Radius.circular(49),
-        ),
-        Paint()..color = const Color(0xFFEEF0FF),
+      final unit = Rect.fromLTWH(
+        512 - width / 2,
+        top + i * (height + gap),
+        width,
+        height,
       );
-      canvas.drawCircle(Offset(317, top + 49), 25, Paint()..color = _dots[i]);
+      canvas.drawRRect(
+        RRect.fromRectAndRadius(unit, const Radius.circular(36)),
+        Paint()..color = _white,
+      );
+      canvas.drawCircle(
+        Offset(unit.left + 60, unit.center.dy),
+        24,
+        Paint()..color = i == 2 ? _amber : _green,
+      );
       canvas.drawRRect(
         RRect.fromRectAndRadius(
-          Rect.fromLTWH(372, top + 37, i == 1 ? 228 : 300, 24),
+          Rect.fromLTWH(
+            unit.left + 112,
+            unit.center.dy - 12,
+            i == 1 ? 170 : 230,
+            24,
+          ),
           const Radius.circular(12),
         ),
-        Paint()..color = const Color(0xFF6366F1).withValues(alpha: 0.55),
+        Paint()..color = _line,
       );
     }
     canvas.restore();
