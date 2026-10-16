@@ -113,8 +113,7 @@ class AboutPage extends StatelessWidget {
               icon: Icons.code,
               iconColor: AppTints.slate,
               title: l10n.r11AboutSourceCode,
-              value: kRepoDisplay,
-              valueMaxLines: 2,
+              subtitle: kRepoDisplay,
               onTap: () => _copyRepo(context),
             ),
             AppRow(
