@@ -452,7 +452,9 @@ void main() {
       expect(h.runPass(), isTrue);
       watch.stop();
       expect(h.processedRows, lessThanOrEqualTo(40 + 12 + 1));
-      expect(watch.elapsedMilliseconds, lessThan(150));
+      // processedRows is the real guard; the time bound only catches a
+      // gross regression and leaves room for slow shared CI runners.
+      expect(watch.elapsedMilliseconds, lessThan(1000));
       // unchanged viewport: the second pass tokenizes nothing
       final done = h.processedRows;
       h.runPass();

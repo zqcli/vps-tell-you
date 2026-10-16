@@ -23,7 +23,9 @@ void main() {
   late Directory directory;
   late LedgerStore store;
   late FakeReminderPlatform platform;
-  final now = DateTime.now();
+  // Fixed midday UTC: the overview groups by the reminder time zone's
+  // calendar day, so a wall clock near midnight would shift Today/Tomorrow.
+  final now = DateTime.utc(2026, 10, 14, 12);
 
   setUp(() async {
     directory = await Directory.systemTemp.createTemp('reminder-overview-');
@@ -57,7 +59,11 @@ void main() {
   );
 
   Future<LedgerController> controllerFor() async {
-    final controller = LedgerController(store, reminderPlatform: platform);
+    final controller = LedgerController(
+      store,
+      reminderPlatform: platform,
+      clock: () => now,
+    );
     await controller.refresh();
     await controller.reminders.reconcile();
     addTearDown(controller.dispose);
@@ -217,7 +223,11 @@ void main() {
           );
         }
       });
-      final controller = LedgerController(store, reminderPlatform: platform);
+      final controller = LedgerController(
+        store,
+        reminderPlatform: platform,
+        clock: () => now,
+      );
       await controller.refresh();
       await controller.reminders.reconcile();
       addTearDown(controller.dispose);
@@ -310,7 +320,11 @@ void main() {
         );
       }
     });
-    final controller = LedgerController(store, reminderPlatform: platform);
+    final controller = LedgerController(
+      store,
+      reminderPlatform: platform,
+      clock: () => now,
+    );
     await controller.refresh();
     await controller.reminders.reconcile();
     addTearDown(controller.dispose);
