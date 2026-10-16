@@ -1807,7 +1807,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get financeExportDisclaimer => '仅表示服务时长的价格折算，不代表退款承诺或成交价。';
 
   @override
-  String get financeExportHeading => 'vps tell you · 试算 · 不入账';
+  String get financeExportHeading => 'VPS Tell You · 试算 · 不入账';
 
   @override
   String get financeExportFooter => '独立试算 · 图片仅含计算信息';

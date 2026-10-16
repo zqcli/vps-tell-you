@@ -171,7 +171,7 @@ class _LedgerAppState extends State<LedgerApp> with WidgetsBindingObserver {
 
   @override
   Widget build(BuildContext context) => MaterialApp(
-    title: 'vps tell you',
+    title: 'VPS Tell You',
     navigatorKey: navigatorKey,
     navigatorObservers: [securityRouteObserver, _viewport, _titleObserver],
     scrollBehavior: const AppScrollBehavior(),

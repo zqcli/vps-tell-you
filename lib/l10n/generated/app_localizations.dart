@@ -3231,7 +3231,7 @@ abstract class AppLocalizations {
   /// No description provided for @financeExportHeading.
   ///
   /// In zh, this message translates to:
-  /// **'vps tell you · 试算 · 不入账'**
+  /// **'VPS Tell You · 试算 · 不入账'**
   String get financeExportHeading;
 
   /// No description provided for @financeExportFooter.

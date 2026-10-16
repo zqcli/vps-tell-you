@@ -41,7 +41,7 @@
 
 标点：按钮、标题、标签、胶囊不加句号；脚注和提示是完整句子时加句号；消息中自然使用缩写（`can’t`、`don’t`、`couldn’t`）。使用美式拼写（`canceled`）。占位符中的撇号一律用 `’`，因为 ASCII `'` 在 ICU 中是转义符。
 
-保持原样的名称：`vps tell you`（品牌小写）、SSH、SFTP、TCP、IP、IPv4/IPv6、vCPU、GiB/MiB/TiB、CNY/USD/EUR、JSON、PNG、Face ID、iOS、Android。
+保持原样的名称：`VPS Tell You`（产品名）、SSH、SFTP、TCP、IP、IPv4/IPv6、vCPU、GiB/MiB/TiB、CNY/USD/EUR、JSON、PNG、Face ID、iOS、Android。
 
 ### 英文术语表
 

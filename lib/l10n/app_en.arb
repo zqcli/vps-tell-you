@@ -1088,7 +1088,7 @@
   "financeInvalidRate": "Exchange rates must be positive, with at most 9 integer digits and 8 decimal places.",
   "financeMissingRateDate": "Enter the manual exchange rate date.",
   "financeExportDisclaimer": "A price-based estimate of unused service time, not a refund promise or sale price.",
-  "financeExportHeading": "vps tell you · Estimate · No ledger entry",
+  "financeExportHeading": "VPS Tell You · Estimate · No ledger entry",
   "financeExportFooter": "Independent estimate · Image contains calculation information only",
   "financeExportValue": "Remaining value: {amount} {currency}",
   "@financeExportValue": {

@@ -1,4 +1,4 @@
-# vps tell you · 移动端 UI 重设计方案（已确认 · 以 iOS 为基准）
+# VPS Tell You · 移动端 UI 重设计方案（已确认 · 以 iOS 为基准）
 
 Demo：`docs/ui-redesign/index.html`（浏览器直接打开；左侧切换设备外观、浅/深色与空台账）。
 旧版截图未入库（仅评审时在本机临时目录生成）。

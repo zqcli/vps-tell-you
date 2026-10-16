@@ -1250,7 +1250,7 @@
   "financeInvalidRate": "汇率需为正数，最多 9 位整数和 8 位小数",
   "financeMissingRateDate": "请填写手动汇率日期",
   "financeExportDisclaimer": "仅表示服务时长的价格折算，不代表退款承诺或成交价。",
-  "financeExportHeading": "vps tell you · 试算 · 不入账",
+  "financeExportHeading": "VPS Tell You · 试算 · 不入账",
   "financeExportFooter": "独立试算 · 图片仅含计算信息",
   "financeExportValue": "剩余价值：{amount} {currency}",
   "@financeExportValue": {

@@ -2093,7 +2093,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get financeExportHeading =>
-      'vps tell you · Estimate · No ledger entry';
+      'VPS Tell You · Estimate · No ledger entry';
 
   @override
   String get financeExportFooter =>

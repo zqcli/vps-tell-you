@@ -12,7 +12,7 @@
 		<string>zh-Hans</string>
 	</array>
 	<key>CFBundleDisplayName</key>
-	<string>vps tell you</string>
+	<string>VPS Tell You</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -35,7 +35,7 @@
 	<true/>
 	<!-- SFTP downloads are saved to Documents/SFTP Downloads. These two keys
 	     make the app's Documents folder visible in the Files app (On My
-	     iPhone > vps tell you) so downloaded files can be opened or moved
+	     iPhone > VPS Tell You) so downloaded files can be opened or moved
 	     without the share sheet. Documents holds only user exports; the ledger
 	     database lives in Application Support, which stays hidden. -->
 	<key>UIFileSharingEnabled</key>

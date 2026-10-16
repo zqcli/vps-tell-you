@@ -1,4 +1,4 @@
-/* vps tell you — mobile UI redesign interactive demo (static, no backend). */
+/* VPS Tell You — mobile UI redesign interactive demo (static, no backend). */
 (() => {
 'use strict';
 
@@ -771,7 +771,7 @@ PAGES.settings = () => ({
   body: () => {
     const r = (k, icon, color, t, v, s) => `<div class="row has-icon" data-s="${k}"><div class="icon-sq" style="background:${color}">${ic(icon)}</div><div class="label"><div class="t">${t}</div>${s ? `<div class="s">${s}</div>` : ''}</div><span class="value">${v}</span>${chev}</div>`;
     return `
-    <div class="group"><div class="profile"><div class="app-icon">${ic('server')}</div><div><div style="font-size:19px;font-weight:700">vps tell you</div><div class="muted" style="font-size:13px">本地优先的 VPS 台账 · 0.1.0 开发测试版</div></div></div></div>
+    <div class="group"><div class="profile"><div class="app-icon">${ic('server')}</div><div><div style="font-size:19px;font-weight:700">VPS Tell You</div><div class="muted" style="font-size:13px">本地优先的 VPS 台账 · 0.1.0 开发测试版</div></div></div></div>
     <div class="section-h small">台账</div>
     <div class="group">${r('groups', 'folder', '#F59E0B', '分组管理', '3')}${r('archived', 'archive', '#8B5CF6', '已归档记录', '0')}${r('providers', 'building', '#2F5BEA', '提供商与适配器', '5')}</div>
     <div class="section-h small">安全</div>

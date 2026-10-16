@@ -159,7 +159,7 @@ class _SettingsPageState extends State<SettingsPage> {
               child: RefreshFailureNotice(controller: controller),
             ),
           _AppInfoCard(
-            name: 'vps tell you',
+            name: 'VPS Tell You',
             slogan: l10n.r11AppSlogan,
             description: l10n.appDescription,
             version: l10n.developmentVersion,
