@@ -28,7 +28,7 @@ This comment is not shown.
 - **Host key verification**: confirm on first connect; a changed key blocks the connection
 - **TCP test**: check a single host and port, IPv6 included
 - **IPv6**: SSH, SFTP and TCP tests all work with IPv6 addresses
-- **Provider directory**: names, logos and descriptions of 76 cloud and VPS providers, searchable when you pick one; you can still create your own
+- **Provider directory**: names, logos and descriptions of 88 cloud and VPS providers, searchable when you pick one; you can still create your own
 - **Credential storage**: passwords and keys are kept in the system secure storage and need device authentication to view
 - **Local backup**: export the ledger as JSON (with a preview of what is included) and restore it into an empty ledger; credentials and host trust are never included
 - **Bilingual interface**: Simplified Chinese and English, or follow the system
@@ -38,6 +38,7 @@ This comment is not shown.
 ### Changed
 
 - The interface was redesigned in an iOS style, with the same components and interactions on iOS and Android
+- New name styling, VPS Tell You, and a new app icon: a server stack inside a renewal countdown ring
 - The provider directory is downloaded from GitHub and cached, and the cache is used offline; the app never uploads your ledger
 - The project is open source under the MIT license, free to use and supported only by voluntary donations
 
