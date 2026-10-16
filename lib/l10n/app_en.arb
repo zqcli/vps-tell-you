@@ -245,7 +245,14 @@
   "notificationAccess": "Notification Access",
   "backupExclusionsSummary": "Excludes credentials and host trust · Unencrypted JSON",
   "about": "About",
-  "developmentVersion": "0.1.0 · Dev build",
+  "developmentVersion": "{version} · Dev build",
+  "@developmentVersion": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
   "appLocalDataHelp": "Your data stays on this device, and no account is needed. Archiving doesn’t cancel the service or stop billing.",
   "groupSaveFailed": "Couldn’t save the group. Check for a duplicate name, then try again.",
   "deleteGroupQuestion": "Delete “{p0}”?",
@@ -3158,5 +3165,49 @@
         "type": "int"
       }
     }
-  }
+  },
+  "r11AboutWhatsNew": "What’s New",
+  "r11AboutSourceCode": "Source Code",
+  "r11AboutLicense": "License",
+  "r11AboutOpenSource": "Open-Source Components",
+  "r11AboutRepoCopied": "Source code link copied",
+  "r11AboutFootnote": "Free and open source, supported only by voluntary donations. No ads and no account. Your ledger stays on this device; the app only downloads the public provider directory.",
+  "r11AboutTrademark": "Provider names and logos belong to their owners and are used for identification only.",
+  "r11ChangelogUnavailable": "Couldn’t load the changelog.",
+  "r11LicenseUnavailable": "Couldn’t load the license text.",
+  "r11OssBuiltWith": "Built with",
+  "r11OssBuiltWithFootnote": "Tap a component to read its full license.",
+  "r11OssAllLicensesTitle": "All Licenses",
+  "r11OssAllLicenses": "All Licenses ({n})",
+  "@r11OssAllLicenses": {
+    "placeholders": {
+      "n": {
+        "type": "String"
+      }
+    }
+  },
+  "r11OssSearch": "Search components",
+  "r11OssNoMatch": "No matching components.",
+  "r11OssLicenseMissing": "No license text was found for this component. Check All Licenses.",
+  "r11OssLoadFailed": "Couldn’t load the license list.",
+  "r11OssAboutFlutter": "Cross-platform UI framework",
+  "r11OssAboutLocalizations": "Localized text for built-in controls",
+  "r11OssAboutIntl": "Date, number and message formatting",
+  "r11OssAboutSqflite": "Local SQLite database",
+  "r11OssAboutSqfliteFfi": "SQLite for desktop and tests",
+  "r11OssAboutPath": "File path handling",
+  "r11OssAboutPathProvider": "App storage folders",
+  "r11OssAboutSecureStorage": "Keychain and Keystore storage",
+  "r11OssAboutLocalAuth": "Face ID, fingerprint and passcode checks",
+  "r11OssAboutDartssh2": "SSH and SFTP client",
+  "r11OssAboutXterm": "Terminal view",
+  "r11OssAboutCrypto": "Hashes and digests",
+  "r11OssAboutFileSelector": "System file open and save dialogs",
+  "r11OssAboutTimezone": "Time zone database",
+  "r11OssAboutFlutterTimezone": "Reads the device time zone",
+  "r11OssAboutSharePlus": "System share sheet",
+  "r11OssAboutHttp": "Downloads the provider directory",
+  "r11OssAboutXml": "XML parsing",
+  "r11OssAboutLocalNotifications": "Local notifications for expiry reminders",
+  "r11OssAboutDejaVu": "Terminal monospace font"
 }

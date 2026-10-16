@@ -44,6 +44,9 @@ flutter:
   uses-material-design: true
   assets:
     - assets/fonts/LICENSE-DejaVu.txt
+    - LICENSE
+    - CHANGELOG.md
+    - CHANGELOG.en.md
   fonts:
     - family: TerminalDejaVu
       fonts:

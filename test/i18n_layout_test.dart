@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'dart:ui' as ui;
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
@@ -28,7 +29,10 @@ import 'package:vps_tell_you/servers/server_detail.dart';
 import 'package:vps_tell_you/servers/server_form.dart';
 import 'package:vps_tell_you/servers/server_list.dart';
 import 'package:vps_tell_you/servers/server_record.dart';
+import 'package:vps_tell_you/settings/about_page.dart';
 import 'package:vps_tell_you/settings/backup_page.dart';
+import 'package:vps_tell_you/settings/changelog_page.dart';
+import 'package:vps_tell_you/settings/open_source_page.dart';
 import 'package:vps_tell_you/settings/reminder_page.dart';
 import 'package:vps_tell_you/settings/settings_page.dart';
 
@@ -51,6 +55,27 @@ void main() {
   late LedgerController ledger;
   late ServerRecord server;
   final now = DateTime(2026, 10, 7, 12);
+
+  // Synthetic license registry (the test binding has no NOTICES asset); one
+  // long name and one long paragraph exercise wrapping.
+  setUp(() {
+    LicenseRegistry.reset();
+    LicenseRegistry.addLicense(
+      () => Stream.fromIterable([
+        LicenseEntryWithLineBreaks(['intl'], 'Synthetic license text. ' * 40),
+        LicenseEntryWithLineBreaks([
+          'flutter_secure_storage_platform_interface',
+        ], 'Synthetic license text. ' * 40),
+        LicenseEntryWithLineBreaks(['xterm'], 'Synthetic license text.'),
+      ]),
+    );
+  });
+  tearDown(LicenseRegistry.reset);
+
+  /// Reads the repo file synchronously: the asset channel answers in real
+  /// time, which the fake-async test clock never waits for.
+  Future<String> repoFile(String path) =>
+      Future.value(File(path).readAsStringSync());
 
   setUp(() async {
     sqfliteFfiInit();
@@ -222,6 +247,15 @@ void main() {
     'host-trust': () => HostTrustPage(ledger: ledger),
     'snippets': () => SnippetListPage(store: store),
     'tcp': () => const TcpTestPage(),
+    'about': () => const AboutPage(),
+    'changelog': () => ChangelogPage(load: repoFile),
+    'license': () => LicenseTextPage(load: () => repoFile('LICENSE')),
+    'open-source': () => OpenSourcePage(index: LicenseIndex()),
+    'all-licenses': () => AllLicensesPage(index: LicenseIndex()),
+    'license-detail': () => ComponentLicensePage(
+      component: kOpenSourceComponents.firstWhere((c) => c.name == 'intl'),
+      index: LicenseIndex(),
+    ),
   };
   for (final locale in ['zh', 'en']) {
     for (final entry in pages.entries) {

@@ -692,7 +692,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get about => 'About';
 
   @override
-  String get developmentVersion => '0.1.0 · Dev build';
+  String developmentVersion(String version) {
+    return '$version · Dev build';
+  }
 
   @override
   String get appLocalDataHelp =>
@@ -5546,4 +5548,122 @@ class AppLocalizationsEn extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String get r11AboutWhatsNew => 'What’s New';
+
+  @override
+  String get r11AboutSourceCode => 'Source Code';
+
+  @override
+  String get r11AboutLicense => 'License';
+
+  @override
+  String get r11AboutOpenSource => 'Open-Source Components';
+
+  @override
+  String get r11AboutRepoCopied => 'Source code link copied';
+
+  @override
+  String get r11AboutFootnote =>
+      'Free and open source, supported only by voluntary donations. No ads and no account. Your ledger stays on this device; the app only downloads the public provider directory.';
+
+  @override
+  String get r11AboutTrademark =>
+      'Provider names and logos belong to their owners and are used for identification only.';
+
+  @override
+  String get r11ChangelogUnavailable => 'Couldn’t load the changelog.';
+
+  @override
+  String get r11LicenseUnavailable => 'Couldn’t load the license text.';
+
+  @override
+  String get r11OssBuiltWith => 'Built with';
+
+  @override
+  String get r11OssBuiltWithFootnote =>
+      'Tap a component to read its full license.';
+
+  @override
+  String get r11OssAllLicensesTitle => 'All Licenses';
+
+  @override
+  String r11OssAllLicenses(String n) {
+    return 'All Licenses ($n)';
+  }
+
+  @override
+  String get r11OssSearch => 'Search components';
+
+  @override
+  String get r11OssNoMatch => 'No matching components.';
+
+  @override
+  String get r11OssLicenseMissing =>
+      'No license text was found for this component. Check All Licenses.';
+
+  @override
+  String get r11OssLoadFailed => 'Couldn’t load the license list.';
+
+  @override
+  String get r11OssAboutFlutter => 'Cross-platform UI framework';
+
+  @override
+  String get r11OssAboutLocalizations => 'Localized text for built-in controls';
+
+  @override
+  String get r11OssAboutIntl => 'Date, number and message formatting';
+
+  @override
+  String get r11OssAboutSqflite => 'Local SQLite database';
+
+  @override
+  String get r11OssAboutSqfliteFfi => 'SQLite for desktop and tests';
+
+  @override
+  String get r11OssAboutPath => 'File path handling';
+
+  @override
+  String get r11OssAboutPathProvider => 'App storage folders';
+
+  @override
+  String get r11OssAboutSecureStorage => 'Keychain and Keystore storage';
+
+  @override
+  String get r11OssAboutLocalAuth => 'Face ID, fingerprint and passcode checks';
+
+  @override
+  String get r11OssAboutDartssh2 => 'SSH and SFTP client';
+
+  @override
+  String get r11OssAboutXterm => 'Terminal view';
+
+  @override
+  String get r11OssAboutCrypto => 'Hashes and digests';
+
+  @override
+  String get r11OssAboutFileSelector => 'System file open and save dialogs';
+
+  @override
+  String get r11OssAboutTimezone => 'Time zone database';
+
+  @override
+  String get r11OssAboutFlutterTimezone => 'Reads the device time zone';
+
+  @override
+  String get r11OssAboutSharePlus => 'System share sheet';
+
+  @override
+  String get r11OssAboutHttp => 'Downloads the provider directory';
+
+  @override
+  String get r11OssAboutXml => 'XML parsing';
+
+  @override
+  String get r11OssAboutLocalNotifications =>
+      'Local notifications for expiry reminders';
+
+  @override
+  String get r11OssAboutDejaVu => 'Terminal monospace font';
 }

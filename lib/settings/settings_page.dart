@@ -2,6 +2,7 @@ import '../l10n/localized_message.dart';
 
 import 'package:flutter/material.dart';
 
+import '../core/app_info.dart';
 import '../core/app_theme.dart';
 import '../core/ui/ui.dart';
 import '../data/ledger_store.dart';
@@ -12,6 +13,7 @@ import '../security/security_pages.dart';
 import '../servers/ledger_controller.dart';
 import '../servers/refresh_failure_notice.dart';
 import '../servers/server_record.dart';
+import 'about_page.dart';
 import 'backup_page.dart';
 import 'reminder_page.dart';
 import 'reminder_scheduler.dart';
@@ -159,10 +161,11 @@ class _SettingsPageState extends State<SettingsPage> {
               child: RefreshFailureNotice(controller: controller),
             ),
           _AppInfoCard(
-            name: 'VPS Tell You',
+            name: kAppName,
             slogan: l10n.r11AppSlogan,
             description: l10n.appDescription,
-            version: l10n.developmentVersion,
+            version: l10n.developmentVersion(kAppVersion),
+            onTap: () => push((_) => const AboutPage()),
           ),
           AppSection(
             header: l10n.uiTabsLedgerSection,
@@ -265,6 +268,18 @@ class _SettingsPageState extends State<SettingsPage> {
               ),
             ],
           ),
+          AppSection(
+            children: [
+              AppRow(
+                key: const ValueKey('settings-about'),
+                icon: Icons.info_outline,
+                iconColor: AppTints.blue,
+                title: l10n.about,
+                chevron: true,
+                onTap: () => push((_) => const AboutPage()),
+              ),
+            ],
+          ),
         ],
       );
     },
@@ -278,15 +293,18 @@ class _AppInfoCard extends StatelessWidget {
     required this.slogan,
     required this.description,
     required this.version,
+    required this.onTap,
   });
   final String name, slogan, description, version;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
     final p = context.palette;
     return AppCard(
       margin: const EdgeInsets.fromLTRB(16, 4, 16, 0),
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
+      padding: const EdgeInsets.fromLTRB(16, 16, 12, 16),
+      onTap: onTap,
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -310,24 +328,7 @@ class _AppInfoCard extends StatelessWidget {
                         color: p.text,
                       ),
                     ),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 7,
-                        vertical: 2,
-                      ),
-                      decoration: BoxDecoration(
-                        color: AppTints.indigo.withValues(alpha: 0.12),
-                        borderRadius: BorderRadius.circular(6),
-                      ),
-                      child: Text(
-                        version,
-                        style: const TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w600,
-                          color: AppTints.indigo,
-                        ),
-                      ),
-                    ),
+                    VersionPill(version),
                   ],
                 ),
                 const SizedBox(height: 4),
@@ -348,6 +349,8 @@ class _AppInfoCard extends StatelessWidget {
               ],
             ),
           ),
+          const SizedBox(width: 4),
+          const Padding(padding: EdgeInsets.only(top: 22), child: AppChevron()),
         ],
       ),
     );

@@ -3,6 +3,7 @@ import 'dart:ui' show ImageFilter;
 
 import 'package:flutter/material.dart';
 
+import 'core/app_info.dart';
 import 'core/app_theme.dart';
 import 'core/app_viewport.dart';
 import 'core/ui/ui.dart';
@@ -171,7 +172,7 @@ class _LedgerAppState extends State<LedgerApp> with WidgetsBindingObserver {
 
   @override
   Widget build(BuildContext context) => MaterialApp(
-    title: 'VPS Tell You',
+    title: kAppName,
     navigatorKey: navigatorKey,
     navigatorObservers: [securityRouteObserver, _viewport, _titleObserver],
     scrollBehavior: const AppScrollBehavior(),

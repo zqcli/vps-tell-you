@@ -1247,8 +1247,8 @@ abstract class AppLocalizations {
   /// No description provided for @developmentVersion.
   ///
   /// In zh, this message translates to:
-  /// **'0.1.0 · 开发版'**
-  String get developmentVersion;
+  /// **'{version} · 开发版'**
+  String developmentVersion(String version);
 
   /// No description provided for @appLocalDataHelp.
   ///
@@ -8978,6 +8978,228 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'{count, plural, =0{将从你的台账中移除这个提供商。} other{将从你的台账中移除这个提供商。它的 {count} 台服务器会保留，显示为未指定提供商。}}'**
   String r9ProviderDeleteMessage(int count);
+
+  /// No description provided for @r11AboutWhatsNew.
+  ///
+  /// In zh, this message translates to:
+  /// **'更新记录'**
+  String get r11AboutWhatsNew;
+
+  /// No description provided for @r11AboutSourceCode.
+  ///
+  /// In zh, this message translates to:
+  /// **'源代码'**
+  String get r11AboutSourceCode;
+
+  /// No description provided for @r11AboutLicense.
+  ///
+  /// In zh, this message translates to:
+  /// **'许可证'**
+  String get r11AboutLicense;
+
+  /// No description provided for @r11AboutOpenSource.
+  ///
+  /// In zh, this message translates to:
+  /// **'开源组件'**
+  String get r11AboutOpenSource;
+
+  /// No description provided for @r11AboutRepoCopied.
+  ///
+  /// In zh, this message translates to:
+  /// **'已复制源代码地址'**
+  String get r11AboutRepoCopied;
+
+  /// No description provided for @r11AboutFootnote.
+  ///
+  /// In zh, this message translates to:
+  /// **'免费开源，仅靠自愿捐赠维持。没有广告，无需账号；台账只保存在本机，应用只会下载公开的提供商目录。'**
+  String get r11AboutFootnote;
+
+  /// No description provided for @r11AboutTrademark.
+  ///
+  /// In zh, this message translates to:
+  /// **'提供商的名称和 Logo 归各自所有者所有，仅用于识别。'**
+  String get r11AboutTrademark;
+
+  /// No description provided for @r11ChangelogUnavailable.
+  ///
+  /// In zh, this message translates to:
+  /// **'无法读取更新记录。'**
+  String get r11ChangelogUnavailable;
+
+  /// No description provided for @r11LicenseUnavailable.
+  ///
+  /// In zh, this message translates to:
+  /// **'无法读取许可证文本。'**
+  String get r11LicenseUnavailable;
+
+  /// No description provided for @r11OssBuiltWith.
+  ///
+  /// In zh, this message translates to:
+  /// **'构建于'**
+  String get r11OssBuiltWith;
+
+  /// No description provided for @r11OssBuiltWithFootnote.
+  ///
+  /// In zh, this message translates to:
+  /// **'点按组件查看许可证全文。'**
+  String get r11OssBuiltWithFootnote;
+
+  /// No description provided for @r11OssAllLicensesTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'全部许可证'**
+  String get r11OssAllLicensesTitle;
+
+  /// No description provided for @r11OssAllLicenses.
+  ///
+  /// In zh, this message translates to:
+  /// **'全部许可证（{n}）'**
+  String r11OssAllLicenses(String n);
+
+  /// No description provided for @r11OssSearch.
+  ///
+  /// In zh, this message translates to:
+  /// **'搜索组件'**
+  String get r11OssSearch;
+
+  /// No description provided for @r11OssNoMatch.
+  ///
+  /// In zh, this message translates to:
+  /// **'没有匹配的组件。'**
+  String get r11OssNoMatch;
+
+  /// No description provided for @r11OssLicenseMissing.
+  ///
+  /// In zh, this message translates to:
+  /// **'没有找到这个组件的许可证文本，请在“全部许可证”中查看。'**
+  String get r11OssLicenseMissing;
+
+  /// No description provided for @r11OssLoadFailed.
+  ///
+  /// In zh, this message translates to:
+  /// **'无法读取许可证列表。'**
+  String get r11OssLoadFailed;
+
+  /// No description provided for @r11OssAboutFlutter.
+  ///
+  /// In zh, this message translates to:
+  /// **'跨平台界面框架'**
+  String get r11OssAboutFlutter;
+
+  /// No description provided for @r11OssAboutLocalizations.
+  ///
+  /// In zh, this message translates to:
+  /// **'系统控件的本地化文字'**
+  String get r11OssAboutLocalizations;
+
+  /// No description provided for @r11OssAboutIntl.
+  ///
+  /// In zh, this message translates to:
+  /// **'日期、数字和消息格式化'**
+  String get r11OssAboutIntl;
+
+  /// No description provided for @r11OssAboutSqflite.
+  ///
+  /// In zh, this message translates to:
+  /// **'本地 SQLite 数据库'**
+  String get r11OssAboutSqflite;
+
+  /// No description provided for @r11OssAboutSqfliteFfi.
+  ///
+  /// In zh, this message translates to:
+  /// **'桌面端和测试用的 SQLite'**
+  String get r11OssAboutSqfliteFfi;
+
+  /// No description provided for @r11OssAboutPath.
+  ///
+  /// In zh, this message translates to:
+  /// **'文件路径处理'**
+  String get r11OssAboutPath;
+
+  /// No description provided for @r11OssAboutPathProvider.
+  ///
+  /// In zh, this message translates to:
+  /// **'查找应用的存储目录'**
+  String get r11OssAboutPathProvider;
+
+  /// No description provided for @r11OssAboutSecureStorage.
+  ///
+  /// In zh, this message translates to:
+  /// **'钥匙串 / Keystore 安全存储'**
+  String get r11OssAboutSecureStorage;
+
+  /// No description provided for @r11OssAboutLocalAuth.
+  ///
+  /// In zh, this message translates to:
+  /// **'Face ID、指纹和设备密码验证'**
+  String get r11OssAboutLocalAuth;
+
+  /// No description provided for @r11OssAboutDartssh2.
+  ///
+  /// In zh, this message translates to:
+  /// **'SSH 与 SFTP 客户端'**
+  String get r11OssAboutDartssh2;
+
+  /// No description provided for @r11OssAboutXterm.
+  ///
+  /// In zh, this message translates to:
+  /// **'终端界面'**
+  String get r11OssAboutXterm;
+
+  /// No description provided for @r11OssAboutCrypto.
+  ///
+  /// In zh, this message translates to:
+  /// **'哈希与摘要'**
+  String get r11OssAboutCrypto;
+
+  /// No description provided for @r11OssAboutFileSelector.
+  ///
+  /// In zh, this message translates to:
+  /// **'系统文件选择与保存'**
+  String get r11OssAboutFileSelector;
+
+  /// No description provided for @r11OssAboutTimezone.
+  ///
+  /// In zh, this message translates to:
+  /// **'时区数据库'**
+  String get r11OssAboutTimezone;
+
+  /// No description provided for @r11OssAboutFlutterTimezone.
+  ///
+  /// In zh, this message translates to:
+  /// **'读取设备时区'**
+  String get r11OssAboutFlutterTimezone;
+
+  /// No description provided for @r11OssAboutSharePlus.
+  ///
+  /// In zh, this message translates to:
+  /// **'系统分享面板'**
+  String get r11OssAboutSharePlus;
+
+  /// No description provided for @r11OssAboutHttp.
+  ///
+  /// In zh, this message translates to:
+  /// **'下载提供商目录'**
+  String get r11OssAboutHttp;
+
+  /// No description provided for @r11OssAboutXml.
+  ///
+  /// In zh, this message translates to:
+  /// **'解析 XML'**
+  String get r11OssAboutXml;
+
+  /// No description provided for @r11OssAboutLocalNotifications.
+  ///
+  /// In zh, this message translates to:
+  /// **'到期提醒的本地通知'**
+  String get r11OssAboutLocalNotifications;
+
+  /// No description provided for @r11OssAboutDejaVu.
+  ///
+  /// In zh, this message translates to:
+  /// **'终端等宽字体'**
+  String get r11OssAboutDejaVu;
 }
 
 class _AppLocalizationsDelegate

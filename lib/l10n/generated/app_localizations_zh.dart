@@ -639,7 +639,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get about => '关于';
 
   @override
-  String get developmentVersion => '0.1.0 · 开发版';
+  String developmentVersion(String version) {
+    return '$version · 开发版';
+  }
 
   @override
   String get appLocalDataHelp => '数据仅保存在本机，无需账号。归档不会取消服务或停止扣费。';
@@ -4900,4 +4902,118 @@ class AppLocalizationsZh extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String get r11AboutWhatsNew => '更新记录';
+
+  @override
+  String get r11AboutSourceCode => '源代码';
+
+  @override
+  String get r11AboutLicense => '许可证';
+
+  @override
+  String get r11AboutOpenSource => '开源组件';
+
+  @override
+  String get r11AboutRepoCopied => '已复制源代码地址';
+
+  @override
+  String get r11AboutFootnote =>
+      '免费开源，仅靠自愿捐赠维持。没有广告，无需账号；台账只保存在本机，应用只会下载公开的提供商目录。';
+
+  @override
+  String get r11AboutTrademark => '提供商的名称和 Logo 归各自所有者所有，仅用于识别。';
+
+  @override
+  String get r11ChangelogUnavailable => '无法读取更新记录。';
+
+  @override
+  String get r11LicenseUnavailable => '无法读取许可证文本。';
+
+  @override
+  String get r11OssBuiltWith => '构建于';
+
+  @override
+  String get r11OssBuiltWithFootnote => '点按组件查看许可证全文。';
+
+  @override
+  String get r11OssAllLicensesTitle => '全部许可证';
+
+  @override
+  String r11OssAllLicenses(String n) {
+    return '全部许可证（$n）';
+  }
+
+  @override
+  String get r11OssSearch => '搜索组件';
+
+  @override
+  String get r11OssNoMatch => '没有匹配的组件。';
+
+  @override
+  String get r11OssLicenseMissing => '没有找到这个组件的许可证文本，请在“全部许可证”中查看。';
+
+  @override
+  String get r11OssLoadFailed => '无法读取许可证列表。';
+
+  @override
+  String get r11OssAboutFlutter => '跨平台界面框架';
+
+  @override
+  String get r11OssAboutLocalizations => '系统控件的本地化文字';
+
+  @override
+  String get r11OssAboutIntl => '日期、数字和消息格式化';
+
+  @override
+  String get r11OssAboutSqflite => '本地 SQLite 数据库';
+
+  @override
+  String get r11OssAboutSqfliteFfi => '桌面端和测试用的 SQLite';
+
+  @override
+  String get r11OssAboutPath => '文件路径处理';
+
+  @override
+  String get r11OssAboutPathProvider => '查找应用的存储目录';
+
+  @override
+  String get r11OssAboutSecureStorage => '钥匙串 / Keystore 安全存储';
+
+  @override
+  String get r11OssAboutLocalAuth => 'Face ID、指纹和设备密码验证';
+
+  @override
+  String get r11OssAboutDartssh2 => 'SSH 与 SFTP 客户端';
+
+  @override
+  String get r11OssAboutXterm => '终端界面';
+
+  @override
+  String get r11OssAboutCrypto => '哈希与摘要';
+
+  @override
+  String get r11OssAboutFileSelector => '系统文件选择与保存';
+
+  @override
+  String get r11OssAboutTimezone => '时区数据库';
+
+  @override
+  String get r11OssAboutFlutterTimezone => '读取设备时区';
+
+  @override
+  String get r11OssAboutSharePlus => '系统分享面板';
+
+  @override
+  String get r11OssAboutHttp => '下载提供商目录';
+
+  @override
+  String get r11OssAboutXml => '解析 XML';
+
+  @override
+  String get r11OssAboutLocalNotifications => '到期提醒的本地通知';
+
+  @override
+  String get r11OssAboutDejaVu => '终端等宽字体';
 }
