@@ -1,187 +1,197 @@
+简体中文 | [English](README.en.md)
+
+<div align="center">
+
+<img src="docs/images/icon.png" width="112" alt="VPS Tell You">
+
 # VPS Tell You
 
-本地优先的个人 VPS 台账，Flutter 原生应用。当前版本 **0.5.0**。界面采用 iOS 风格的统一移动端设计，iOS 与 Android 共用同一套组件和交互，规范见 [MOBILE_UI_REDESIGN](docs/MOBILE_UI_REDESIGN.md)。Android / iOS 工程已生成，Linux 用于原生开发与验证。
+**本地优先的个人 VPS 台账：记账、到期提醒，顺手 SSH / SFTP。**
 
-## 当前可以做什么
+[![版本](https://img.shields.io/badge/version-0.5.0-blue)](CHANGELOG.md)
+[![Release](https://img.shields.io/github/v/release/zqcli/vps-tell-you)](https://github.com/zqcli/vps-tell-you/releases)
+[![CI](https://img.shields.io/github/actions/workflow/status/zqcli/vps-tell-you/ci.yml?branch=dev&label=CI)](https://github.com/zqcli/vps-tell-you/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
+[![Flutter](https://img.shields.io/badge/Flutter-3.47.6-02569B?logo=flutter&logoColor=white)](https://flutter.dev)
+[![Platforms](https://img.shields.io/badge/platform-iOS%20%7C%20Android-lightgrey)](#安装)
 
-- 默认空台账；用户确认后才载入 4 条明确标注的演示数据
-- 手动新增、编辑、查看服务器，六项硬件未知可留空，保存厂商、用途、规格、备注与原币费用资料
-- 搜索、常用、分组、到期筛选及排序；复制地址
-- IPv4、IPv6、主机名分别独立记录（均可选），SSH / SFTP / TCP 检测均可用 IPv6，详见 [IPV6](docs/IPV6.md)
-- 分组重命名、排序与删除，删除分组后记录进入“未分组”
-- 归档与撤销、归档列表恢复；服务器 ID 不变，不销毁云资源、不停止扣费
-- SQLite 持久化、错误重试；数据库打不开时绝不自动删库重建
+<img src="docs/images/zh/hero.png" alt="VPS Tell You 预览" width="800">
 
-- 费用总览、原币小计、已知 / 未知 / 不适用 / 缺汇率覆盖率、厂商与分组分布、未来 30 天及六个自然月预测和明细
-- 已付款记录、1–3 个周期续期、重复提交保护与安全撤销；保留历史独立账户账单；只记账，不向厂商支付
-- 带日期的手动 USD / EUR 对 CNY 参考汇率；变更不重写历史原币金额
-- 独立 / 引用资料的剩余价值计算器（费用汇总下方和工具页均可打开）、可选报价及手续费结算、只含计算信息的复制与 PNG 预览 / 本地保存
+</div>
 
-- 密码 / SSH 私钥导入、编辑、搜索、关联查看、替换 / 解除及删除影响确认
-- 原生 SecretStore；SQLite 仅保存元数据与不透明引用，失败不降级到明文
-- 每台独立 SSH 地址 / 端口 / 用户名，凭据默认用户名须显式采用
-- 完整主机公钥的首次核验 / 拒绝 / 变化阻断 / 重新核实，接入真实 SSH 握手
-- 支持设备认证的平台可短时查看密码，离开 / 后台 / 超时立即隐藏；Linux 无设备认证时拒绝查看
+## 为什么做它
 
-- 原生 SSH 密码 / 私钥认证、全屏 xterm PTY、点按键盘与单行特殊键、按需命令抽屉、离线开源等宽字体、连接取消 / 超时 / 断线 / 手动重连
-- 加密私钥优先支持：导入时用口令本地校验，默认不保存口令；每次连接可临时输入，错误或取消不打开 SSH 连接。可明确选择把口令存入设备安全存储
-- 单目标 TCP 检测，标明本机来源 / 结束时间；连通不等于业务健康
-- 命令片段增改查删、完整转义预览；只插入独立草稿，就地编辑并选择“发送”或“发送并执行”
-- SFTP 文件管理（服务器详情“SFTP 文件”或终端 ⋯ 菜单的整页面板）：浏览 / 新建 / 重命名移动 / 删除（含显式递归确认）/ 文本编辑 / 上传 / 下载，复用 SSH 凭据与主机核验；终端内打开不中断 shell。详见 [SSH_TERMINAL_UX](docs/SSH_TERMINAL_UX.md)
-- 单机 SSH 重启 / 关机，经影响确认和完整目标二次核对；不开机、无 API 电源，不自动重试不确定结果
+手里的 VPS 越来越多：谁家的、什么时候到期、花了多少钱、登录方式是什么，散落在备忘录、表格和邮件里。VPS Tell You 把这些放在一个应用里，并且只放在你的手机上。
 
-- 提供商（我的提供商 + 提供商目录）：新增服务器时全屏搜索选择提供商（也可不选或新建）；服务器列表、详情、选择页和提供商页统一显示目录里的 Logo，自建或不在目录里的提供商显示首字母头像。提供商页显示简介、官网（点按复制）和它的全部服务器，本地提供商可重命名 / 删除（服务器保留）
-- 提供商目录（名称、Logo、简介）放在仓库 `catalog/`，**不随应用打包**：应用启动时（距上次成功检查 ≥ 12 小时，可在“设置 / 提供商”关闭）和手动“检查更新”时从 GitHub（含 jsDelivr 镜像）下载公开的目录并缓存，离线时继续用缓存；只下载公开文件，台账不会离开设备
+- **本地优先**：数据保存在设备上的 SQLite，默认空台账，离线可用。
+- **无需账号**：不用注册，没有云同步。
+- **无遥测**：没有统计、没有广告，不上传台账。
+- **完全开源**：MIT 许可证，代码、提供商目录和构建脚本都在这个仓库里。
 
-每台到期提醒 / 使用计划、原生通知权限接线、PNG 系统分享、台账 JSON 导出 / 空台账恢复、深浅色与跟随系统外观已实现。手机实际投递 / 分享与安装持久化仍须真机验证，不以云端测试代替。没有系统快照、最近使用或费用“接下来需要做什么”。
+## 功能亮点
 
-简体中文 / English 界面与「设置 / 语言」已接入；默认保留中文，另可选择跟随系统。切换保留草稿和当前连接，规则与数据边界见 [LOCALIZATION](docs/LOCALIZATION.md)。中文界面用语与行为边界见 [UI_COPY_REVIEW](docs/UI_COPY_REVIEW.md)。
+### 服务器台账与提供商
 
-提供商模型、目录格式与下载 / 缓存 / 更新流程、隐私说明、迁移与备份见 [PROVIDERS](docs/PROVIDERS.md)；如何添加目录条目见 [catalog/README.md](catalog/README.md)（`python3 tool/build_catalog.py` 校验并生成 `index.json`）。
+- 记录名称、IPv4 / IPv6 / 主机名、用途、规格和备注；搜索、分组、常用、到期筛选与排序
+- 内置 88 家云厂商与 VPS 商家的名称、Logo 和简介，新增时可搜索选择，也可以自建
+- 归档后可恢复；IPv4、IPv6、主机名各自独立可选
+- 简体中文 / English 界面，浅色 / 深色 / 跟随系统
 
-最新服务器资料交互与兼容规则见 [SERVER_MANAGEMENT_UX](docs/SERVER_MANAGEMENT_UX.md)，全屏终端、快捷输入与字体说明见 [SSH_TERMINAL_UX](docs/SSH_TERMINAL_UX.md)。
+<table>
+  <tr>
+    <td align="center"><img src="docs/images/zh/servers.png" width="260" alt="服务器列表"><br>服务器列表</td>
+    <td align="center"><img src="docs/images/zh/servers-dark.png" width="260" alt="深色主题"><br>深色主题</td>
+    <td align="center"><img src="docs/images/zh/detail.png" width="260" alt="服务器详情"><br>服务器详情</td>
+  </tr>
+  <tr>
+    <td align="center"><img src="docs/images/zh/form.png" width="260" alt="添加服务器"><br>添加服务器</td>
+    <td align="center"><img src="docs/images/zh/provider-picker.png" width="260" alt="选择提供商"><br>选择提供商</td>
+    <td></td>
+  </tr>
+</table>
 
-## 环境与运行
+### 费用、续期与提醒
 
-验证 SDK：**Flutter 3.47.6 stable**，framework `5fc346839b`，**Dart 3.13.5**。
+- 费用总览：原币小计、已知 / 未知覆盖率、提供商与分组分布，未来 30 天和六个月预测
+- 记录付款并续期 1–3 个周期，防重复提交，可安全撤销；只记账，不向厂商付款
+- 手动 USD / EUR 对 CNY 参考汇率；剩余价值计算器支持报价与手续费，可复制文字或保存 PNG
+- 每台服务器独立设置到期提醒，本地通知，内容不含名称、地址和金额
+
+<table>
+  <tr>
+    <td align="center"><img src="docs/images/zh/costs.png" width="260" alt="费用总览"><br>费用总览</td>
+    <td align="center"><img src="docs/images/zh/calculator.png" width="260" alt="剩余价值计算器"><br>剩余价值计算</td>
+    <td align="center"><img src="docs/images/zh/reminders.png" width="260" alt="提醒总览"><br>到期提醒</td>
+  </tr>
+</table>
+
+### SSH 终端、SFTP 与 TCP 检测
+
+- 全屏 xterm 终端：密码或私钥登录（含加密私钥）、特殊键行、命令片段、手动重连
+- 4 套终端配色，提示符、IP、路径、错误等自动着色，不改动文字内容
+- SFTP 文件管理：浏览、上传、下载、重命名、移动、删除，以及带语法高亮的文本编辑器
+- 单目标 TCP 检测；SSH、SFTP、TCP 都支持 IPv6
+- 主机公钥首次连接需确认，公钥变化时阻止连接
+
+<table>
+  <tr>
+    <td align="center"><img src="docs/images/zh/terminal.png" width="260" alt="SSH 终端"><br>SSH 终端</td>
+    <td align="center"><img src="docs/images/zh/sftp.png" width="260" alt="SFTP 文件"><br>SFTP 文件</td>
+    <td align="center"><img src="docs/images/zh/sftp-editor.png" width="260" alt="SFTP 文本编辑器"><br>文本编辑器</td>
+  </tr>
+  <tr>
+    <td align="center"><img src="docs/images/zh/tcp.png" width="260" alt="TCP 检测"><br>TCP 检测</td>
+    <td></td>
+    <td></td>
+  </tr>
+</table>
+
+### 设置、备份与关于
+
+- JSON 台账导出（先预览范围）与空台账恢复
+- 提供商页、语言、外观、提醒权限集中在设置；关于页含更新记录、许可证和开源组件
+
+<table>
+  <tr>
+    <td align="center"><img src="docs/images/zh/providers.png" width="260" alt="提供商"><br>设置 › 提供商</td>
+    <td align="center"><img src="docs/images/zh/settings.png" width="260" alt="设置"><br>设置</td>
+    <td align="center"><img src="docs/images/zh/about.png" width="260" alt="关于"><br>关于</td>
+  </tr>
+</table>
+
+## 动图演示
+
+<table>
+  <tr>
+    <td align="center"><img src="docs/images/zh/add-server.gif" width="260" alt="添加服务器"><br>添加服务器：搜索并选择提供商</td>
+    <td align="center"><img src="docs/images/zh/terminal.gif" width="260" alt="SSH 终端"><br>SSH：确认主机公钥、运行命令、切换配色</td>
+    <td align="center"><img src="docs/images/zh/renew.gif" width="260" alt="记录续期"><br>记录续期，查看新的到期日</td>
+  </tr>
+</table>
+
+## 隐私与安全
+
+- **没有账号，没有遥测。** 除你主动发起的 SSH / SFTP / TCP 连接外，应用唯一的网络请求是下载公开的提供商目录（本仓库的 `catalog/`，经 GitHub raw，jsDelivr 作镜像），请求不含任何台账数据。启动时更新可在「设置 / 提供商」关闭。
+- **SSH 密码和私钥只存放在设备的安全存储中**（iOS Keychain / Android Keystore），查看需要设备验证，永远不会被导出。
+- **主机公钥变化会阻止连接**，必须重新核实后才能继续。
+- **JSON 备份没有加密，但也不含任何凭据。** 其中的名称、地址、费用等是明文，请妥善保存。
+- **归档不等于取消。** 在应用里归档服务器，不会取消厂商的服务，也不会停止扣费。
+- **付款只是记账。** 应用不会向任何人付款。
+- **估值与汇率仅供参考。** 剩余价值和汇率由你手动填写的数据计算，不是报价。
+
+完整边界见 [开发者指南](docs/DEVELOPMENT.md) 与 Wiki 的「安全与隐私」页。
+
+## 安装
+
+目前**没有预编译安装包**；v0.5.0 发布是仅源码的。需要从源码构建，使用 Flutter 3.47.6（stable）。
 
 ```sh
+git clone https://github.com/zqcli/vps-tell-you.git
+cd vps-tell-you
 flutter pub get --enforce-lockfile
-flutter run -d linux
 ```
 
-Linux 需要 clang、CMake、Ninja、pkg-config、GTK 3 开发包、OpenSSL CLI（本地 TLS 测试）、SQLite 运行环境及 `libsecret-1-dev`。凭据读写还需要可用且已解锁的 Secret Service（如 GNOME Keyring）；无服务 / 被锁 / 失败时明确报错，台账仍可使用。默认窗口 430×900，可缩放；界面最大宽度 760。首次打开空数据，演示日期相对于当前设备日期生成，演示 IP 使用文档保留地址，不进行真实网络请求。
+- **iOS**（最低 iOS 15）：需要 macOS 和 Xcode。用 Xcode 打开 `ios/Runner.xcworkspace`，在 Signing & Capabilities 选择你的 Apple ID 对应的 Team（必要时把 Bundle Identifier 改成你自己的），连接 iPhone 后运行 Release。免费的 Personal Team 签名**7 天后过期**，到期需要重新签名安装；付费开发者账号不受此限制。
+- **Android**（最低 Android 7.0，API 24）：安装 Android SDK 和 JDK 17，然后
+  ```sh
+  flutter build apk --release --target-platform android-arm64,android-x64
+  ```
+  生成的 APK 使用调试密钥签名，适合自用安装，不是商店发布包。
+
+详细步骤见 Wiki 的 [Install](https://github.com/zqcli/vps-tell-you/wiki/Install) 页。
+
+## 快速开始
+
+1. 打开应用，台账默认是空的。
+2. 点 **+**，填写名称，搜索并选择提供商，保存。
+3. 补全到期日与费用；需要提醒时为这台服务器设置到期提醒。
+4. 为服务器添加 SSH 密码或私钥，首次连接时核对并确认主机公钥，然后打开终端。
+5. 续费后在服务器详情记录付款，到期日会随之顺延。
+
+更多说明见 Wiki 的 [Quick-Start](https://github.com/zqcli/vps-tell-you/wiki/Quick-Start)。
+
+## 提供商目录
+
+提供商的名称、Logo 和简介保存在仓库的 [`catalog/`](catalog/)，不随应用打包，由应用下载并缓存；离线时使用缓存。目录里没有你的提供商？
+
+1. 在 `catalog/providers/<id>/` 新增 `provider.json`（可选 `logo.png`）。
+2. 运行 `python3 tool/build_catalog.py` 校验并生成 `index.json`。
+3. 提交 Pull Request。
+
+字段规则和 Logo 要求见 [catalog/README.md](catalog/README.md)，欢迎 PR。目录中的名称和 Logo 属于各自所有者的商标或版权，仅用于识别，与其所有者没有隶属或背书关系。
+
+## 路线图
+
+以下是计划，不是承诺：
+
+- 预编译发布与 TestFlight，免去自行构建
+- 终端配色与高亮开关的持久化（目前仅本次运行有效）
+- 通过 Pull Request 持续扩充远程提供商目录
+
+## 参与贡献
+
+欢迎提 Issue 和 Pull Request。开发前请先阅读 [开发者指南](docs/DEVELOPMENT.md) 与 Wiki 的 [Contributing](https://github.com/zqcli/vps-tell-you/wiki/Contributing) 页。提交前请运行：
 
 ```sh
 dart format --output=none --set-exit-if-changed lib test
 flutter analyze
-VPS_SSH_FIXTURE_PYTHON="$PWD/.ssh-test-venv/bin/python" flutter test
-flutter build linux --release
+flutter test
+python3 tool/build_catalog.py --check
 ```
 
-Linux 可执行文件：`build/linux/x64/release/bundle/vps_tell_you`。运行时需保留整个 bundle。
+完整的 SSH 协议测试需要 Python 依赖，安装方式见开发者指南。请不要提交真实密码、私钥、API Token 或用户数据库。
 
-Android / iOS 是真实 Flutter 工程，不是 Web 包装。2026-10-08（UTC+8）已在 macOS / Xcode 26.2 编译、安装并启动 iOS Debug 模拟器版，实际确认 iPhone 17 Pro / iOS 26.2 的中文空台账首页。此前宿主 GPU / Metal 初始化故障在用户重启 Mac 后恢复，无需降级 Xcode 或切换渲染模式；尚未验收全部交互或真机能力。Android 测试 APK 与其他平台验收记录见 `docs/STATUS.md` / `docs/ACCEPTANCE.md`，不能以模拟器结果替代真机结果。当前无生产 Web 数据库适配。
+## 文档
 
-Mac 上需使用符合上述约束的 Flutter SDK；本次单独安装在 `/Users/zzq/Develops/flutter/3.47.6`，未覆盖原有 SDK。运行方式：
+- [Wiki 首页](https://github.com/zqcli/vps-tell-you/wiki)：安装、使用说明、FAQ
+- [更新记录](CHANGELOG.md)（[English](CHANGELOG.en.md)）
+- [开发者指南](docs/DEVELOPMENT.md)：代码结构、数据规则、迁移、安全边界、测试
+- [`docs/`](docs/)：[提供商](docs/PROVIDERS.md)、[IPv6](docs/IPV6.md)、[SSH 终端](docs/SSH_TERMINAL_UX.md)、[本地化](docs/LOCALIZATION.md)、[状态](docs/STATUS.md)
 
-```sh
-export PATH="/Users/zzq/Develops/flutter/3.47.6/bin:$PATH"
-flutter pub get --enforce-lockfile
-flutter build ios --simulator --debug --no-codesign
-open -a Simulator
-flutter devices
-# 使用 flutter devices 列出的 iOS 模拟器 ID
-flutter run -d <simulator-id>
-```
+## 许可证
 
-模拟器产物：`build/ios/iphonesimulator/Runner.app`；不用于真机安装。本次构建、宿主故障及重启后启动验证的准确范围见 [ACCEPTANCE](docs/ACCEPTANCE.md#macos-ios-模拟器编译2026-10-07-utc)。
+以 [MIT 许可证](LICENSE) 发布，Copyright (c) 2026 zqcli and contributors。第三方组件保留各自的许可证，逐项核对见 [docs/LICENSES.md](docs/LICENSES.md)，应用内「设置 / 关于 / 开源组件」可查看全文。提供商名称和 Logo 属于各自所有者，仅用于识别。
 
-## 代码结构与数据规则
+## 支持
 
-- `lib/core`：主题色板与 `lib/core/ui` 设计组件（用法见 `lib/core/ui/README.md`）、纯 Dart 日期 / Money 值类型
-- `lib/data`：schema v13、真实旧版本的事务迁移、SQLite 事务与平台打开方式
-- `lib/servers`：本地字段模型、ChangeNotifier 控制器、列表 / 表单 / 详情
-- `lib/finance`：纯 Dart 财务 / FX、付款、计算器、白名单 PNG 导出
-- `lib/security`：凭据元数据与原生存储、密钥校验、设备认证、SSH 配置、完整主机信任
-- `lib/connections`：SSH 服务 / xterm、临时连接、单目标 TCP、片段 / 待发送区与电源确认
-- `lib/providers`：提供商目录（`ProviderDirectory`：HTTP 来源、缓存、检查更新）、`ProviderLogo`、提供商页面与提供商选择流程
-- `catalog/`、`tool/build_catalog.py`：提供商目录数据与生成 / 校验脚本
-- `lib/settings`：分组、归档、币种与手动汇率、提醒纯逻辑 / 原生调度、权限、外观与备份
-- `lib/l10n`：官方 ARB / gen-l10n、简体中文与英文、稳定语言偏好和显示时本地化消息
-- `lib/app.dart`：启动恢复状态和四 Tab；使用 Flutter Navigator
-
-只有一个本地数据库，无后端或额外状态/路由框架；仅使用 Flutter 官方 gen-l10n 生成本地化访问代码。依赖来自 pub.dev 维护者，直接版本固定，传递版本保存于 `pubspec.lock`。
-
-服务器和分组使用稳定本地 ID。归档不删除服务器。服务器资料全部由用户维护。财务表保存服务期间、付款与手动 FX。安全表保存凭据元数据、SSH 引用、公开主机公钥与未引用秘密清理队列；没有明文秘密表。provider_id 表示当前业务归属，原 vendor 文字为历史资料；providers.catalog_id 关联提供商目录条目。
-
-USD / CNY / EUR 金额使用整数分，0 是免费、null 是未知，不跨币种直接相加。比例与 FX 使用 BigInt 精确分数，合计后四舍五入到分，中点远离 0；缺汇率明确显示可转换部分与覆盖率。日期是日历日期，服务期 `[start, due)`；UTC 仅作日序数，避免 DST 午夜毫秒差。缺日期保持未知。未来 30 天为今天起 `[0, 30)`，不含第 30 天。显示的“未检测”不代表运行状态。
-
-剩余价值逐个已知服务期间按当前续费价折算，未来完整期计整价，历史实付独立。续期以原日期锚点加月，保留月底 / 闰日语义；付款、追加期间与新到期日在同一 SQLite 事务。账户账单只计一次，不分摊至实例。付款记录可随时编辑金额 / 币种 / 日期 / 备注（不改服务期与到期日），带整行版本检查；删除为软删除（保留幂等键，不计入统计）：仅当服务器仍停在该次续费之后才可同时回退到期日与服务期，否则只删记录并保留服务期。后续编辑 / 续期不会被旧回退覆盖新资料。多期记录不允许普通编辑直接更改期限或计费类型。
-
-独立计算器明确假设到期日前连续服务，最多反推 100 年；引用计算器复制已知期间，改变估值日 / 金额不回写台账。手续费折算为显示币种后分摊，奇数分余数归买方。PNG 白名单排除名称、IP、用户、账户、备注、秘密及可选报价。保存优先 Downloads，其次 Documents；平台无法提供这两个目录时保存至应用支持目录并显示实际路径。Android / iOS 可把该白名单 PNG 交给系统分享；选择分享操作不代表对方已收到，取消与未知结果分别显示。Linux 仅本地保存。
-
-编辑使用版本检查。归档撤销只恢复归档标记；分组删除不会把旧分组复活。写入成功但读取失败会保留成功结果；当前页面显示重读提示，并暂停后续修改直到重读成功，避免重复提交或把已提交写入误判为失败。
-
-## 数据与恢复
-
-数据库 `ledger.sqlite3` 位于平台的 application-support 目录，Linux 通常是 `$XDG_DATA_HOME/com.vpstellyou.vps_tell_you/`。应用没有遥测、自动上传或云同步；除用户主动发起的 SSH / SFTP / TCP 之外，唯一的网络请求是下载公开的提供商目录（只读 GET，不含任何台账数据），可在“设置 / 提供商”关闭启动时更新。
-
-可在“设置 / 台账备份与恢复”导出未加密 JSON，范围见下节；凭据不在其中。不要清除应用数据、卸载重装或删除数据库来“修复”。打不开时先检查磁盘空间、权限与应用版本，再点“重试打开”。较新 schema 会阻止旧应用打开，不执行破坏性降级。旧版本事务迁移保留 ID、分组、归档及费用字段，只为可推断的预付资料建立初始服务期；不虚构历史实付或汇率。v2 → v3 只添加安全资料表，不读取或创建钥匙环；v3 → v4 只添加命令片段表；v4 → v5 曾添加面板适配器表（v12 已移除）。v5 → v6 仅添加提醒规则、服务器创建触发器与外观设置。v6 → v7 仅添加可空的本地资源配置 JSON，保留全部既有资料。v7 → v8 为可空硬件字段与独立流量周期提供版本围栏，不重写旧数据。v8 → v9 只添加默认中文的界面语言偏好。v12 → **v13**：套餐功能移除，同一事务内清除服务器的套餐关联（两列保留但不再使用）、解除第 6 轮示例目录 id，并添加 `app_settings.provider_directory_auto`（默认开）；失败整体回滚。
-
-v11 → **v12**：面板适配器功能整体移除。同一事务内把全部适配器秘密引用写入已有的清理队列（由“重试清理”从设备安全存储删除），删除 cloud_accounts / cloud_observations / cloud_bindings 与相关触发器，把适配器产生的“待确认”提供商转为普通提供商（无服务器的占位提供商删除、重名追加序号），新增 providers.catalog_id（与随后在 v13 退役的 servers.package_id / package_snapshot），并清除资源 JSON 中的 API 来源标记（数值保留）。不删除服务器、付款、SSH 配置或凭据；失败整体回滚。JSON 备份见下文 v2。细节见 [PROVIDERS](docs/PROVIDERS.md)。后续 schema 变更仍须增加事务迁移并验证旧数据。
-
-恢复开发：先读本文件、`docs/STATUS.md`、`docs/ACCEPTANCE.md` → 检查 `git status`、当前分支与远端 → 核对远端 SHA/CI → 执行分析与最小测试 → 从首个未通过项继续。不要自动 tag、强推或改变其他分支。
-
-不得提交真实密码、私钥、API Token、用户数据库或凭据文件。当前备注也不应存秘密。
-
-## 凭据安全与 SSH 连接
-
-直接依赖固定为 flutter_secure_storage 11.2.0、local_auth 3.0.2、dartssh2 4.1.0、xterm 4.0.0、crypto 3.0.7、file_selector 1.1.0。支持单个 OpenSSH / PEM RSA、Ed25519、NIST P-256 / 384 / 521 私钥；格式、口令和私钥 / 公钥一致性均校验。限制文件大小和 bcrypt KDF 轮数（最多 256），解析放入 isolate；不支持的格式应先在用户设备上重新导出。
-
-更换秘密采用可恢复顺序：先持久化未引用清理记录，再用新引用写入原生存储并读回验证，再事务提交元数据 / 引用，最后清理无引用旧秘密。跨 SQLite 与 OS 存储不是原子事务；故障时保留旧连接，遗留秘密可显式重试清理。原生操作超时后仍保持同引用串行，迟到写入不会越过清理。重读失败会保留已提交结果并阻止后续修改。
-
-查看密码需要设备验证，最多显示 20 秒。没有秘密复制 / 导出入口，私钥详情只展示公开指纹。设备认证是应用级查看门禁，不宣称把每项秘密与生物认证加密绑定；Dart 也不保证全内存安全擦除。Linux 已在隔离合成钥匙环验证实际插件读写、覆盖、应用进程重启后读回、删除与缺失，以及无服务时失败；Linux 不支持设备认证查看。
-
-主机信任按规范化 host + port 保存公钥类型、完整公钥和 SHA-256 指纹。变化不能直接继续认证；重新核实带版本 / generation 检查，旧弹窗不能覆盖删除后重建的信任。SSH 连接使用 beginHostVerification → 首次 / 变化时显式 attempt.confirm → attempt.authenticate，并在取消、离开或目标变化时取消 attempt；不能只查一次指纹后绕过该门禁。协议级回归使用仅监听 loopback 的独立 AsyncSSH fixture；只在内存中核验合成身份、回显输入，从不执行 shell / exec。
-
-Android 源码关闭数据备份 / 设备迁移、禁止秘密存储错误自动 reset，并配置设备认证和 FLAG_SECURE。iOS 使用解锁时可用、仅本机、不同步的 Keychain 选项，配置 entitlements 和 Face ID 文案。上述手机能力仅完成源码接线；签名、Keystore / Keychain、屏幕锁、Face ID / PIN、取消 / 锁定 / 后台和备份恢复均未做真机验证。不要把 Linux 通过当成手机通过。
-
-
-## SSH / TCP 使用边界与测试
-
-进入“工具 / SSH 快速连接”或服务器详情，明确选择单台配置并点连接。演示记录不能连接。主机信任未确认前发送零认证字节，私钥及其解密口令永不发到远端；私钥签名认证由 dartssh2 执行。秘密可在用户点连接后于本机读取 / 解密；本机读取不等于已向服务器认证。没有 SSH agent、批量连接、端口转发或自动重连；SFTP 仅限单台、用户明确打开的文件管理（见 SSH_TERMINAL_UX）。
-
-加密私钥和登录密码是两种不同资料。导入时的私钥口令仅用于校验，默认不存储；只有勾选“在设备安全存储中保存私钥口令”才保存。未保存时连接弹出独立的隐藏输入框，本次口令取消 / 后台 / 离开 / 换目标即清空，重连重新输入。错误口令不发起网络连接；不会自动重试。已有保存口令的凭据仍兼容，重新导入可改变口令保存选择。完整 PEM 粘贴使用专门按钮保留换行，秘密字段始终隐藏；不把秘密放进终端草稿。
-
-dartssh2 的公开核验回调只返回 SHA-256 指纹。本应用仅观察首次 NEWKEYS 前的报文边界与完整公钥字段，以完整公钥 SHA-256 严格匹配库已验证握手签名的指纹；不改写报文、不自制加密、不禁用签名核验。观察器有 256 KiB 总量 / 64 KiB 报文 / 32 KiB 公钥 / 8 候选上限，不支持或无法绑定就拒绝。后续加密与 rekey 均由库处理并保持同一 pin。xterm 4.0.0 的 DECCKM 箭头映射有一处上游状态字段问题；小型公共 input handler 按 cursorKeysMode 处理无修饰箭头，其他输入全交回 xterm，不自写 ANSI 解析。
-
-终端键盘与特殊键直接发送；常用命令、片段和按需打开的草稿完全独立。快捷栏 Ctrl V、菜单粘贴与硬件 Ctrl+V/Cmd+V 按需读取系统剪贴板，按选区插入可编辑的本地草稿，不直接发送 0x16 或剪贴板内容。发送区就地显示完整目标；含 CR / LF / 控制字符 / bidi 时显示转义原文和提示。“发送”保持原文全部字节；“发送并执行”只在原文后追加一个 CR，不再弹出发送确认或要求勾选。原文已有换行或控制字符时，即使不追加 CR，也可能立即执行。插入、取消、切换目标、断线或重连均不会自动发送草稿。写入失败保留草稿并提示核实远端结果，不自动重试；本地写入成功不代表远端命令已执行成功。电源只派发固定 `sudo -n shutdown -r now` 或 `sudo -n shutdown -h now`，需要服务器权限和命令存在；每次会话最多派发一次，测试只使用 spy，不实际重启或关闭机器。
-
-应用后台 / 退出会清理连接；后台常驻不受保证，长任务建议远端 tmux / screen。浏览器没有原生 TCP，不提供 SSH 中转后端。Android / iOS 键盘、IME、旋转、切网、后台与真实 VPS 兼容性仍须设备验证。
-
-完整自动测试需要独立本地 SSH fixture 的 Python 3.10+ 依赖。它不创建 OS 账户、authorized_keys 或实际访问权限：
-
-```sh
-python3 -m venv .ssh-test-venv
-.ssh-test-venv/bin/python -m pip install -r test/support/ssh_fixture/requirements.txt
-VPS_SSH_FIXTURE_PYTHON="$PWD/.ssh-test-venv/bin/python" flutter test
-```
-
-fixture 只绑定 loopback 临时端口，从不执行 shell / exec；依赖缺失会明确失败，不把跳过当通过。CI 安装同一固定 AsyncSSH 版本。所有 `.fixture` 私钥均为合成测试资料，不得用于真实访问。
-
-## 到期提醒与外观
-
-每台规则默认提前 7 / 3 / 1 天、09:00；可选 30 / 14 / 7 / 3 / 1 / 当天，显式保存才生效。未知日期、非预付、已归档、关闭或演示记录不排程。“到期不再使用”仍保留取消续费核对提醒，不会取消厂商续费、归档服务器或改变付款记录。
-
-日期按日历计算，再使用实际设备 IANA 时区生成时刻。夏令时缺失时间向后顺延，跨午夜的短跳变仍处理；重复时间使用时区库的一次确定性选择，错过后不补第二次，整天被跳过的日期省略。通知用绝对到期日期，避免系统延迟后“今天 / N 天后”失真。
-
-只有用户点击按钮才申请系统通知权限；启动不会弹授权。权限/通知渠道关闭时保留本地规则并取消旧任务。修改规则、到期日期、续期、归档、恢复及回到前台会重新核对，异步排程串行执行，失败不会把已经提交的台账操作说成未保存。当前只提交未来 366 天内的已知提醒，iOS 最近 64 条、Android 最近 256 条，其余显示未覆盖。请定期打开应用补排；旅行后需打开应用核对时区，未打开期间可能按旧时区触发。系统节电、专注模式、设备厂商限制会影响投递，系统待排程列表不是送达证明。
-
-Android 使用非精确闹钟，不申请精确闹钟、全屏通知、后台服务或免打扰豁免。Linux 不支持定时排程，不会显示伪成功；Web 没有生产适配。通知内容不含名称、IP、账户、用户名或金额。外观有跟随系统 / 浅色 / 深色，保存在同一 SQLite 中。
-
-## JSON 台账备份（写出 v2，读取 v1 / v2）
-
-这是**未加密、部分范围**的可携带台账文件。包括提供商（名称与目录关联）、分组、服务器公开台账字段（含所属提供商）（含可选本地六项资源）、费用 / 服务期间、付款及撤销标记、手动汇率；保留稳定 ID。名称、地址、用途、规格和费用均为明文，用户在这些字段手动填写的敏感内容也可能在文件中，请妥善保存。
-
-不包含服务器/付款备注、命令片段、SSH 配置、凭据及秘密引用、主机信任、通知权限、提醒规则、外观偏好和提供商目录缓存（Logo、简介）；不是密钥保险库、整库镜像或云同步。恢复后的提醒默认关闭；SSH 授权和主机信任需独立重新建立。旧版本（第 6–8 轮）写出的 v2 文件里的套餐字段会被忽略。未指定提供商的空文字只在导出时投影为旧格式占位，本机原文保持。
-
-导出先预览范围，随后用户自行保存或通过系统分享。导入要求格式 v1 或 v2、10 MiB 以内、每个集合不超过 20,000 行；校验类型、日期、金额、重复 ID、引用和财务关系。先预览再明确确认，且**只向空台账恢复**；不覆盖、不自动合并已有数据。写入事务内再次检查空台账，途中失败全部回滚。异常包不损伤现有资料，未来格式版本明确拒绝。移动端文件选择 / 分享与实际新设备恢复仍需设备验证。
-
-## 移动端交接
-
-Android 工程 minSdk 24、compile/targetSdk 36；Java 17、AGP 9.1.0、Gradle 9.3.1、NDK 28.2.13676358。通知使用 core-library desugaring 2.1.4。iOS 工程最低 15.0，Linux 环境无法编译/签名 iOS。
-
-```sh
-flutter build apk --release --target-platform android-arm64,android-x64
-```
-
-该命令生成包含 arm64-v8a 与 x86_64 的单个通用 APK，不支持 32 位 x86。当前 release build type 使用测试 debug key，属于可安装测试候选，不是生产签名或商店发布。具体构建结果、哈希和未运行项以 `docs/STATUS.md` / `docs/ACCEPTANCE.md` 为准。
-
-接手设备后逐项核对：安装与重启持久化；屏幕锁/Keystore/Keychain/设备验证；合成凭据 SSH 的键盘、IME、旋转、后台及切网；通知允许/拒绝/渠道关闭、重启、时区及省电限制；PNG/JSON 分享与取消、文件选择；空台账导入后重新授权与重新核实主机；iOS 签名安装。不要把 Linux 通过、APK 生成或模拟器安装当作这些项目全部通过。
-
-## 许可证 / License
-
-本项目以 [MIT 许可证](LICENSE) 发布（Copyright (c) 2026 zqcli and contributors），免费、开源，仅接受自愿捐赠。第三方组件保留各自的许可证（逐项核对见 [LICENSES](docs/LICENSES.md)，应用内「设置 / 关于 / 开源组件」可查看全文）。`catalog/` 中的提供商名称和 Logo 属于各自所有者的商标或版权，仅用于识别。
-
-Released under the [MIT License](LICENSE). Third-party components keep their own licenses. Provider names and logos in `catalog/` are trademarks of their respective owners and are used for identification only.
+VPS Tell You 免费、开源，只接受自愿捐赠。捐赠链接稍后会添加到这里。
