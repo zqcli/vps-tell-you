@@ -179,3 +179,9 @@ flutter build apk --release --target-platform android-arm64,android-x64
 该命令生成包含 arm64-v8a 与 x86_64 的单个通用 APK，不支持 32 位 x86。当前 release build type 使用测试 debug key，属于可安装测试候选，不是生产签名或商店发布。具体构建结果、哈希和未运行项以 `docs/STATUS.md` / `docs/ACCEPTANCE.md` 为准。
 
 接手设备后逐项核对：安装与重启持久化；屏幕锁/Keystore/Keychain/设备验证；合成凭据 SSH 的键盘、IME、旋转、后台及切网；通知允许/拒绝/渠道关闭、重启、时区及省电限制；PNG/JSON 分享与取消、文件选择；空台账导入后重新授权与重新核实主机；iOS 签名安装。不要把 Linux 通过、APK 生成或模拟器安装当作这些项目全部通过。
+
+## 许可证 / License
+
+本项目以 [MIT 许可证](LICENSE) 发布（Copyright (c) 2026 zqcli and contributors），免费、开源，仅接受自愿捐赠。第三方组件保留各自的许可证（逐项核对见 [LICENSES](docs/LICENSES.md)，应用内「设置 / 关于 / 开源组件」可查看全文）。`catalog/` 中的提供商名称和 Logo 属于各自所有者的商标或版权，仅用于识别。
+
+Released under the [MIT License](LICENSE). Third-party components keep their own licenses. Provider names and logos in `catalog/` are trademarks of their respective owners and are used for identification only.
