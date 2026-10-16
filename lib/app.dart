@@ -73,6 +73,9 @@ class _LedgerAppState extends State<LedgerApp> with WidgetsBindingObserver {
       // The directory is independent of the ledger: reading its cache and the
       // background refresh never delay or block opening it.
       unawaited(ready.startDirectory());
+      // Metadata only (no keychain access): lets every page know which servers
+      // have SSH configured without first visiting a connection page.
+      unawaited(ready.security.initialize());
       if (!mounted) {
         ready.dispose();
         await store.close();

@@ -63,6 +63,9 @@ class SecurityController extends ChangeNotifier {
     if (busy || _disposed) return false;
     _working = true;
     _error = null;
+    // Pages call this from initState; notifying synchronously would rebuild
+    // listeners in the middle of a build.
+    await Future<void>.value();
     _notify();
     try {
       await readMetadata();
