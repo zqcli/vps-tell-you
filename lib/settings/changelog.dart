@@ -2,7 +2,7 @@
 /// `CHANGELOG.en.md`:
 ///
 /// * `# Title` – ignored (the page has its own title)
-/// * `## 0.1.0 — Unreleased` – a release
+/// * `## 0.5.0 — 2026-10-16` – a release
 /// * `### Added` – a section of a release
 /// * `- item` – a bullet (indented lines continue it)
 /// * other text – a paragraph of the current section / release

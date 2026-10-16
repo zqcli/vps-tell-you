@@ -142,7 +142,7 @@ over two lines.
       ('CHANGELOG.md', ['新增', '变更', '移除']),
       ('CHANGELOG.en.md', ['Added', 'Changed', 'Removed']),
     ]) {
-      test('$file is one 0.1.0 release with 15–25 bullets', () {
+      test('$file is one 0.5.0 release with 15–25 bullets', () {
         final releases = parseChangelog(File(file).readAsStringSync());
         expect(releases, hasLength(1));
         expect(releases.single.title, startsWith('$kAppVersion — '));
@@ -165,7 +165,7 @@ over two lines.
     testWidgets('zh', (tester) async {
       await mount(tester, const ChangelogPage(), locale: 'zh');
       expect(find.text('更新记录'), findsOneWidget);
-      expect(find.text('0.1.0 — 未发布'), findsOneWidget);
+      expect(find.text('0.5.0 — 2026-10-16'), findsOneWidget);
       expect(find.text('新增'), findsOneWidget);
       expect(find.textContaining('服务器台账', findRichText: true), findsOneWidget);
       expect(tester.takeException(), isNull);
@@ -174,7 +174,7 @@ over two lines.
     testWidgets('en', (tester) async {
       await mount(tester, const ChangelogPage(), locale: 'en');
       expect(find.text('What’s New'), findsOneWidget);
-      expect(find.text('0.1.0 — Unreleased'), findsOneWidget);
+      expect(find.text('0.5.0 — 2026-10-16'), findsOneWidget);
       expect(find.text('Added'), findsOneWidget);
       expect(
         find.textContaining('Server ledger', findRichText: true),
@@ -202,7 +202,7 @@ over two lines.
       await mount(tester, const AboutPage());
       expect(find.byType(AppLogo), findsOneWidget);
       expect(find.text('VPS Tell You'), findsOneWidget);
-      expect(find.text('0.1.0 · Dev build'), findsOneWidget);
+      expect(find.text('Version 0.5.0'), findsOneWidget);
       expect(find.text('Know every VPS at a glance'), findsOneWidget);
       expect(find.text('What’s New'), findsOneWidget);
       expect(find.text('Source Code'), findsOneWidget);
@@ -435,7 +435,7 @@ over two lines.
     ) async {
       await mount(tester, Scaffold(body: SettingsPage(controller: ledger)));
       expect(find.text(kAppName), findsOneWidget);
-      expect(find.text('$kAppVersion · Dev build'), findsOneWidget);
+      expect(find.text('Version $kAppVersion'), findsOneWidget);
       expect(find.byType(AppChevron), findsWidgets);
       await tester.tap(find.text(kAppName));
       await settle(tester);

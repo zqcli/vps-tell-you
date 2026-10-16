@@ -1247,7 +1247,7 @@ abstract class AppLocalizations {
   /// No description provided for @developmentVersion.
   ///
   /// In zh, this message translates to:
-  /// **'{version} · 开发版'**
+  /// **'版本 {version}'**
   String developmentVersion(String version);
 
   /// No description provided for @appLocalDataHelp.

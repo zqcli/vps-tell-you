@@ -1,6 +1,6 @@
 # VPS Tell You
 
-本地优先的个人 VPS 台账，Flutter 原生应用。当前为 **开发测试版 0.1.0**。界面采用 iOS 风格的统一移动端设计，iOS 与 Android 共用同一套组件和交互，规范见 [MOBILE_UI_REDESIGN](docs/MOBILE_UI_REDESIGN.md)。Android / iOS 工程已生成，Linux 用于原生开发与验证。
+本地优先的个人 VPS 台账，Flutter 原生应用。当前版本 **0.5.0**。界面采用 iOS 风格的统一移动端设计，iOS 与 Android 共用同一套组件和交互，规范见 [MOBILE_UI_REDESIGN](docs/MOBILE_UI_REDESIGN.md)。Android / iOS 工程已生成，Linux 用于原生开发与验证。
 
 ## 当前可以做什么
 

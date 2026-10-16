@@ -245,7 +245,7 @@
   "notificationAccess": "Notification Access",
   "backupExclusionsSummary": "Excludes credentials and host trust · Unencrypted JSON",
   "about": "About",
-  "developmentVersion": "{version} · Dev build",
+  "developmentVersion": "Version {version}",
   "@developmentVersion": {
     "placeholders": {
       "version": {

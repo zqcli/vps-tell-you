@@ -640,7 +640,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String developmentVersion(String version) {
-    return '$version · 开发版';
+    return '版本 $version';
   }
 
   @override

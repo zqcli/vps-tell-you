@@ -3,7 +3,7 @@
 library;
 
 const kAppName = 'VPS Tell You';
-const kAppVersion = '0.1.0';
+const kAppVersion = '0.5.0';
 const kRepoUrl = 'https://github.com/zqcli/vps-tell-you';
 
 /// [kRepoUrl] without the scheme, for display.

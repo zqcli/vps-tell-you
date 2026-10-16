@@ -693,7 +693,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String developmentVersion(String version) {
-    return '$version · Dev build';
+    return 'Version $version';
   }
 
   @override

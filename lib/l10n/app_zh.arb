@@ -379,7 +379,7 @@
   "notificationAccess": "通知权限",
   "backupExclusionsSummary": "不含凭据与主机信任 · 未加密 JSON",
   "about": "关于",
-  "developmentVersion": "{version} · 开发版",
+  "developmentVersion": "版本 {version}",
   "@developmentVersion": {
     "placeholders": {
       "version": {
