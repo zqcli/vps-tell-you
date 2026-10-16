@@ -2565,8 +2565,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get resourceHardware => 'Hardware details';
 
   @override
-  String get resourceLocalHelp =>
-      'Capacities use 1024 units. Choosing a package fills these in, and you can still edit them.';
+  String get resourceLocalHelp => 'Capacities use 1024-based units.';
 
   @override
   String get resourceIpAddress => 'IP address';
@@ -2588,7 +2587,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get resourceUnlimitedHelp =>
-      'Turn on only if the plan is explicitly unlimited.';
+      'Turn on only if the provider states unlimited traffic.';
 
   @override
   String get resourceMemoryCapacity => 'Memory capacity';
@@ -2805,7 +2804,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get resourceCardHelp =>
-      'Local data only; a package only pre-fills it.';
+      'Local data only; nothing is read from the provider.';
 
   @override
   String get serverSavedDisplayStale =>

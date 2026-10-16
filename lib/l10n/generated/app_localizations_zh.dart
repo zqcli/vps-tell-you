@@ -2215,7 +2215,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get resourceHardware => '硬件信息';
 
   @override
-  String get resourceLocalHelp => '容量按 1024 进制。选择套餐会预填这些项，之后仍可修改。';
+  String get resourceLocalHelp => '容量按 1024 进制，可选单位。';
 
   @override
   String get resourceIpAddress => 'IP 地址';
@@ -2236,7 +2236,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get resourceTrafficQuotaLabel => '流量额度';
 
   @override
-  String get resourceUnlimitedHelp => '仅套餐明确不限量时开启。';
+  String get resourceUnlimitedHelp => '仅在商家明确不限流量时开启。';
 
   @override
   String get resourceMemoryCapacity => '内存容量';
@@ -2425,7 +2425,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get resourceUnlimitedConfirmed => '不限量（已确认）';
 
   @override
-  String get resourceCardHelp => '仅本地资料；套餐只用于预填。';
+  String get resourceCardHelp => '仅本地资料，不会从商家读取。';
 
   @override
   String get serverSavedDisplayStale => '写入已保存，显示内容暂未更新';

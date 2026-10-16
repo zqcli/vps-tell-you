@@ -67,7 +67,7 @@ As the number of VPS grows, the details scatter: which provider, when it expires
 
 ### SSH terminal, SFTP and TCP test
 
-- Full-screen xterm terminal: password or key login (including encrypted keys), a special-keys row, command snippets, manual reconnect
+- Full-screen xterm terminal: password or key login (including encrypted keys), a special-keys row, command snippets
 - 4 terminal color schemes; prompts, IPs, paths and errors are colored automatically and the text is left untouched
 - SFTP file manager: browse, upload, download, rename, move and delete, plus a text editor with syntax highlighting
 - Single-target TCP test; SSH, SFTP and TCP all work with IPv6

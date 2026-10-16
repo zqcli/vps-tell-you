@@ -3962,7 +3962,7 @@ abstract class AppLocalizations {
   /// No description provided for @resourceLocalHelp.
   ///
   /// In zh, this message translates to:
-  /// **'容量按 1024 进制。选择套餐会预填这些项，之后仍可修改。'**
+  /// **'容量按 1024 进制，可选单位。'**
   String get resourceLocalHelp;
 
   /// No description provided for @resourceIpAddress.
@@ -4004,7 +4004,7 @@ abstract class AppLocalizations {
   /// No description provided for @resourceUnlimitedHelp.
   ///
   /// In zh, this message translates to:
-  /// **'仅套餐明确不限量时开启。'**
+  /// **'仅在商家明确不限流量时开启。'**
   String get resourceUnlimitedHelp;
 
   /// No description provided for @resourceMemoryCapacity.
@@ -4358,7 +4358,7 @@ abstract class AppLocalizations {
   /// No description provided for @resourceCardHelp.
   ///
   /// In zh, this message translates to:
-  /// **'仅本地资料；套餐只用于预填。'**
+  /// **'仅本地资料，不会从商家读取。'**
   String get resourceCardHelp;
 
   /// No description provided for @serverSavedDisplayStale.

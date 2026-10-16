@@ -22,7 +22,7 @@ This comment is not shown.
 - **Payments and renewals**: record payments and renew 1–3 cycles with duplicate-submit protection and safe undo; it only keeps records and never pays a provider
 - **Exchange rates and calculator**: manual USD / EUR to CNY reference rates; the remaining-value calculator supports quotes and fees, and can copy text or save a PNG
 - **Expiry reminders**: choose how many days ahead each server reminds you; local notifications that never include names, addresses or amounts
-- **SSH terminal**: full-screen xterm with password or key login (including encrypted keys), a special-keys row, command snippets and manual reconnect
+- **SSH terminal**: full-screen xterm with password or key login (including encrypted keys), a special-keys row, command snippets; the terminal closes when the session ends
 - **Terminal schemes and smart highlighting**: 4 color schemes, with prompts, IPs, paths and errors colored automatically and the text left untouched
 - **SFTP file manager**: browse, upload, download, rename, move and delete, plus a text editor with syntax highlighting
 - **Host key verification**: confirm on first connect; a changed key blocks the connection
