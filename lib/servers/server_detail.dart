@@ -30,6 +30,7 @@ import 'hardware_information_card.dart';
 import 'ledger_controller.dart';
 import 'refresh_failure_notice.dart';
 import 'server_archive.dart';
+import 'server_detail_widgets.dart';
 import 'server_form.dart';
 import 'server_record.dart';
 
@@ -277,7 +278,7 @@ class ServerDetail extends StatelessWidget {
     }
 
     return [
-      _RowFrame(
+      DetailRowFrame(
         dimmed: blocked || noSsh,
         child: AppRow(
           key: const ValueKey('server-quick-ssh'),
@@ -288,7 +289,7 @@ class ServerDetail extends StatelessWidget {
           onTap: () => connect(power: false),
         ),
       ),
-      _RowFrame(
+      DetailRowFrame(
         dimmed: blocked || noSsh,
         child: AppRow(
           key: const ValueKey('server-sftp'),
@@ -313,7 +314,7 @@ class ServerDetail extends StatelessWidget {
           },
         ),
       ),
-      _RowFrame(
+      DetailRowFrame(
         dimmed: blocked,
         child: AppRow(
           key: const ValueKey('server-quick-tcp'),
@@ -334,7 +335,7 @@ class ServerDetail extends StatelessWidget {
           },
         ),
       ),
-      _RowFrame(
+      DetailRowFrame(
         dimmed: blocked || noSsh,
         child: AppRow(
           key: const ValueKey('server-quick-power'),
@@ -605,10 +606,10 @@ class ServerDetail extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        _SectionHeader(l10n.serverCostExpiry),
+        DetailSectionHeader(l10n.serverCostExpiry),
         card,
         if (footnotes.isNotEmpty)
-          _Footnote(footnotes.join('\n'), top: 7, padding: 32),
+          DetailFootnote(footnotes.join('\n'), top: 7, padding: 32),
         OrphanTermBanner(controller: controller, server: s),
         ?rows,
       ],
@@ -841,7 +842,7 @@ class ServerDetail extends StatelessWidget {
                 },
               ),
             ),
-          _SectionHeader(
+          DetailSectionHeader(
             l10n.resourceHardware,
             action: AppLinkButton(
               label: l10n.serverEditHardware,
@@ -873,10 +874,10 @@ class ServerDetail extends StatelessWidget {
               ),
             ],
           ),
-          _ServerProviderCard(controller: controller, server: s),
+          ServerProviderCard(controller: controller, server: s),
           _connectionSection(context, s),
           if (s.notes.isNotEmpty) ...[
-            _SectionHeader(l10n.serverNotes),
+            DetailSectionHeader(l10n.serverNotes),
             AppCard(
               child: SelectableText(
                 s.notes,
@@ -899,119 +900,4 @@ class ServerDetail extends StatelessWidget {
       );
     },
   );
-}
-
-/// Small grey caption above a free-form card (same metrics as the
-/// [AppSection] header).
-class _SectionHeader extends StatelessWidget {
-  const _SectionHeader(this.title, {this.action});
-  final String title;
-  final Widget? action;
-
-  @override
-  Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.fromLTRB(32, 22, 32, 7),
-    child: Wrap(
-      alignment: WrapAlignment.spaceBetween,
-      crossAxisAlignment: WrapCrossAlignment.center,
-      runSpacing: 4,
-      children: [
-        Text(
-          title,
-          style: TextStyle(fontSize: 13, color: context.palette.text2),
-        ),
-        ?action,
-      ],
-    ),
-  );
-}
-
-/// Wraps an [AppRow] to indent it under its parent row or dim it while keeping
-/// taps alive (unavailable action rows that explain themselves when tapped).
-class _RowFrame extends StatelessWidget implements AppSectionItem {
-  const _RowFrame({required this.child, this.dimmed = false});
-  final AppRow child;
-  final bool dimmed;
-
-  @override
-  double get separatorInset => child.separatorInset;
-
-  @override
-  Widget build(BuildContext context) =>
-      Opacity(opacity: dimmed ? .45 : 1, child: child);
-}
-
-class _Footnote extends StatelessWidget {
-  const _Footnote(this.text, {this.top = 7, this.padding = 16});
-  final String text;
-  final double top, padding;
-
-  @override
-  Widget build(BuildContext context) => Padding(
-    padding: EdgeInsets.fromLTRB(padding, top, padding, 0),
-    child: Text(text, style: context.footnoteStyle),
-  );
-}
-
-class _ServerProviderCard extends StatefulWidget {
-  const _ServerProviderCard({required this.controller, required this.server});
-  final LedgerController controller;
-  final ServerRecord server;
-  @override
-  State<_ServerProviderCard> createState() => _ServerProviderCardState();
-}
-
-class _ServerProviderCardState extends State<_ServerProviderCard> {
-  bool opening = false;
-
-  Future<void> open(Future<void> Function() action) async {
-    if (opening) return;
-    setState(() => opening = true);
-    try {
-      await action();
-    } finally {
-      if (mounted) setState(() => opening = false);
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final controller = widget.controller;
-    final server = widget.server;
-    final l10n = context.l10n;
-    final provider = controller.providerFor(server);
-    return AppSection(
-      header: l10n.r6CatServerSection,
-      footer: l10n.r6CatServerFooter,
-      children: [
-        AppRow(
-          key: const ValueKey('server-provider-link'),
-          leading: ProviderLogo(
-            ledger: controller,
-            provider: provider,
-            mark: provider == null
-                ? null
-                : serverProviderMark(controller, server),
-            size: 30,
-          ),
-          title: provider?.name ?? l10n.providerUiUnspecified,
-          subtitle: l10n.providerUiOpenProvider,
-          chevron: true,
-          onTap: provider == null || opening
-              ? null
-              : () => open(() async {
-                  await Navigator.push<void>(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => ProviderDetailsPage(
-                        ledger: controller,
-                        providerId: provider.id,
-                      ),
-                    ),
-                  );
-                }),
-        ),
-      ],
-    );
-  }
 }

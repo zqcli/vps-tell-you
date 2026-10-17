@@ -11,7 +11,7 @@ Future<void> addServer(
   LedgerController controller, {
   ServerRecord? template,
 }) async {
-  // Straight to the form: the provider and package are rows inside it.
+  // Straight to the form: the provider is a row inside it.
   final id = await showAppModal<String>(
     context,
     builder: (_) => ServerForm(controller: controller, template: template),
