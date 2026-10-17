@@ -142,19 +142,24 @@ over two lines.
       ('CHANGELOG.md', ['新增', '变更', '移除']),
       ('CHANGELOG.en.md', ['Added', 'Changed', 'Removed']),
     ]) {
-      test('$file is one 0.5.0 release with 15–25 bullets', () {
+      test('$file lists 0.6.0 first and keeps the 0.5.0 release intact', () {
         final releases = parseChangelog(File(file).readAsStringSync());
-        expect(releases, hasLength(1));
-        expect(releases.single.title, startsWith('$kAppVersion — '));
-        expect(releases.single.sections.map((s) => s.title), titles);
-        final bullets = releases.single.sections.fold<int>(
+        expect(releases.length, greaterThanOrEqualTo(2));
+        expect(releases.first.title, startsWith('0.6.0 — '));
+        final shipped = releases.last;
+        expect(shipped.title, startsWith('$kAppVersion — '));
+        expect(shipped.sections.map((s) => s.title), titles);
+        final bullets = shipped.sections.fold<int>(
           0,
           (n, s) => n + s.items.where((i) => i.bullet).length,
         );
         expect(bullets, inInclusiveRange(15, 25));
         // The how-to comment never leaks into the content.
         expect(
-          releases.single.sections.expand((s) => s.items).map((i) => i.text),
+          releases
+              .expand((r) => r.sections)
+              .expand((s) => s.items)
+              .map((i) => i.text),
           everyElement(isNot(contains('<!--'))),
         );
       });

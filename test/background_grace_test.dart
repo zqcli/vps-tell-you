@@ -243,6 +243,28 @@ void main() {
       expect(session.ends, [true]);
     });
 
+    testWidgets(
+      'a foreground-looking value at begin is re-read shortly after',
+      (tester) async {
+        native
+          ..remainingAtBegin = double.maxFinite
+          ..remaining = 10;
+        final grace = make();
+        final session = _Session();
+        grace.register(session);
+        addTearDown(() => grace.unregister(session));
+        background();
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 250));
+        expect(native.calls.map((c) => c.method), contains('remaining'));
+        // 10 s budget: closes after 7 s, not after the 27 s of the fallback.
+        await tester.pump(const Duration(seconds: 6));
+        expect(session.ends, isEmpty);
+        await tester.pump(const Duration(seconds: 2));
+        expect(session.ends, [true]);
+      },
+    );
+
     testWidgets('the task is given back early when the last session ends', (
       tester,
     ) async {

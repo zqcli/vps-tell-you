@@ -12,6 +12,12 @@ How to add entries (the app shows this file under Settings / About / What’s Ne
 This comment is not shown.
 -->
 
+## 0.6.0 — Unreleased
+
+### Changed
+
+- **Going to the background no longer disconnects SSH at once**: iOS asks the system for background time (the system decides, typically about 30 s) and Android keeps the session for a fixed 30 s. Coming back in time continues the terminal untouched; otherwise the session is closed cleanly and you see “SSH session to … ended because the app stayed in the background”. SFTP behaves the same, and a running transfer is cancelled when the time runs out
+
 ## 0.5.0 — 2026-10-16
 
 ### Added

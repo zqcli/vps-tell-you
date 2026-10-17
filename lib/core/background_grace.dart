@@ -167,18 +167,33 @@ class BackgroundGrace with WidgetsBindingObserver {
       return;
     }
     _token = token;
-    final seconds = (reply?['remainingSeconds'] as num?)?.toDouble();
-    final measured =
-        seconds != null &&
-        seconds.isFinite &&
-        seconds < _plausibleRemaining.inSeconds;
+    var seconds = (reply?['remainingSeconds'] as num?)?.toDouble();
+    if (token != null && !_isMeasured(seconds)) {
+      // Observed on iOS 26: right inside the lifecycle callback the value is
+      // still "foreground" (DBL_MAX); it becomes real a moment later.
+      for (var attempt = 0; attempt < 5 && !_isMeasured(seconds); attempt++) {
+        await Future<void>.delayed(const Duration(milliseconds: 200));
+        if (epoch != _epoch) return;
+        try {
+          seconds = (await _channel.invokeMethod<num>('remaining'))?.toDouble();
+        } on PlatformException {
+          break;
+        } on MissingPluginException {
+          break;
+        }
+        if (epoch != _epoch) return;
+      }
+    }
+    final measured = _isMeasured(seconds);
     // Without a task (refused) nothing protects the app: use the fixed window.
     // With a task but no usable number, assume the typical budget.
     final delay = token == null
         ? grace
         : _closeDelay(
             measured
-                ? Duration(milliseconds: (seconds.clamp(0, 600) * 1000).round())
+                ? Duration(
+                    milliseconds: (seconds!.clamp(0, 600) * 1000).round(),
+                  )
                 : grace,
           );
     if (kDebugMode) {
@@ -190,6 +205,11 @@ class BackgroundGrace with WidgetsBindingObserver {
     }
     _arm(delay, epoch);
   }
+
+  bool _isMeasured(double? seconds) =>
+      seconds != null &&
+      seconds.isFinite &&
+      seconds < _plausibleRemaining.inSeconds;
 
   Duration _closeDelay(Duration window) => window > backgroundCloseMargin * 2
       ? window - backgroundCloseMargin

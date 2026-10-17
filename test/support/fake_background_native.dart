@@ -11,6 +11,10 @@ class FakeBackgroundNative {
   /// What `backgroundTimeRemaining` reports right after `begin`.
   double remaining;
 
+  /// What `begin` itself reports when that differs (iOS answers DBL_MAX inside
+  /// the lifecycle callback and the real number only a moment later).
+  double? remainingAtBegin;
+
   /// `begin` fails like a refused `beginBackgroundTask`.
   bool refuse = false;
 
@@ -45,7 +49,10 @@ class FakeBackgroundNative {
         }
         final token = _next++;
         live.add(token);
-        return {'token': token, 'remainingSeconds': remaining};
+        return {
+          'token': token,
+          'remainingSeconds': remainingAtBegin ?? remaining,
+        };
       case 'end':
         live.remove((call.arguments as Map)['token']);
         return null;
