@@ -13,6 +13,7 @@ import '../l10n/locale_preference.dart';
 import 'sftp_session.dart';
 import 'sftp_support.dart';
 import 'syntax_highlight.dart';
+import 'syntax_highlight_controller.dart';
 import 'terminal_scheme.dart';
 
 /// Plain-text editor for one remote file (UTF-8, up to 512 KiB).
