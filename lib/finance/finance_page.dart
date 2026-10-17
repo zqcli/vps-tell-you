@@ -7,7 +7,6 @@ import '../core/value_types.dart';
 import '../servers/ledger_controller.dart';
 import '../servers/refresh_failure_notice.dart';
 import '../servers/server_detail.dart';
-import '../servers/server_record.dart';
 import 'calculator_page.dart';
 import 'finance_cards.dart';
 import 'finance_detail_pages.dart';
@@ -16,12 +15,6 @@ import 'finance_snapshot.dart';
 import 'finance_widgets.dart';
 import 'fx_page.dart';
 import 'payment_pages.dart';
-
-List<ServerRecord> financeScope(
-  LedgerController c,
-  String? groupId, {
-  String? vendor,
-}) => FinanceScope.of(c, groupId).servers(vendor: vendor);
 
 /// The ⓘ sheet of the Costs pages: how the numbers are calculated.
 void showFinanceRules(BuildContext context, {bool groupScoped = false}) =>

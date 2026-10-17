@@ -5,7 +5,7 @@ import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:vps_tell_you/providers/provider_record.dart';
 import 'package:vps_tell_you/core/value_types.dart';
 import 'package:vps_tell_you/data/ledger_store.dart';
-import 'package:vps_tell_you/finance/finance_page.dart';
+import 'package:vps_tell_you/finance/finance_snapshot.dart';
 import 'package:vps_tell_you/l10n/generated/app_localizations_en.dart';
 import 'package:vps_tell_you/servers/ledger_controller.dart';
 import 'package:vps_tell_you/servers/server_record.dart';
@@ -60,10 +60,13 @@ void main() {
       await ledger.refresh();
       final one = ledger.byId('a')!;
       final key = ledger.providerGroupKey(one);
-      expect(financeScope(ledger, null, vendor: key).map((s) => s.id).toSet(), {
-        'a',
-        'b',
-      });
+      expect(
+        FinanceScope.of(
+          ledger,
+          null,
+        ).servers(vendor: key).map((s) => s.id).toSet(),
+        {'a', 'b'},
+      );
       expect(
         ledger.providerNameFor(one, l10n: AppLocalizationsEn()),
         'Provider one',
@@ -93,10 +96,13 @@ void main() {
       );
       await ledger.refresh();
       expect(ledger.providerGroupKey(ledger.byId('a')!), key);
-      expect(financeScope(ledger, null, vendor: key).map((s) => s.id).toSet(), {
-        'a',
-        'b',
-      });
+      expect(
+        FinanceScope.of(
+          ledger,
+          null,
+        ).servers(vendor: key).map((s) => s.id).toSet(),
+        {'a', 'b'},
+      );
       expect(
         ledger.providerNameFor(ledger.byId('a')!, l10n: AppLocalizationsEn()),
         'Renamed provider',

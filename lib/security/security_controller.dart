@@ -57,10 +57,7 @@ class SecurityController extends ChangeNotifier {
 
   /// Startup is metadata-only. A user-initiated retry performs orphan recovery;
   /// opening a page never creates, unlocks or writes a native keyring.
-  Future<bool> initialize({bool recoverSecrets = false}) async {
-    if (recoverSecrets) return retryCleanup();
-    return reload();
-  }
+  Future<bool> initialize() => reload();
 
   Future<bool> reload() async {
     if (busy || _disposed) return false;
@@ -545,7 +542,6 @@ class SecurityController extends ChangeNotifier {
     }
   }
 
-  Future<bool> recoverPendingSecrets() => retryCleanup();
   Future<bool> retryCleanup() async {
     if (busy || _disposed) return false;
     _working = true;
@@ -745,7 +741,6 @@ class SecurityController extends ChangeNotifier {
     }
   }
 
-  void hideDisplayedSensitive() => hideSensitive(cancelAuthentication: false);
   void hideSensitive({bool cancelAuthentication = true}) {
     _revealTimer?.cancel();
     _revealTimer = null;

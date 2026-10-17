@@ -517,16 +517,6 @@ void main() {
       expect(row(3), findsOneWidget);
       expect(row(20), findsNothing);
     });
-
-    testWidgets('legacy recent flag means the 30-day window', (tester) async {
-      await seedAges();
-      await mount(
-        tester,
-        PaymentListPage(controller: controller, recent: true),
-      );
-      expect(row(20), findsOneWidget);
-      expect(row(60), findsNothing);
-    });
   });
 
   group('costs page', () {

@@ -25,7 +25,6 @@ class ProxyChoice {
   const ProxyChoice.temporary(ProxyEndpoint this.temporary) : savedId = null;
   final String? savedId;
   final ProxyEndpoint? temporary;
-  bool get isDirect => savedId == null && temporary == null;
 }
 
 const _directValue = '';

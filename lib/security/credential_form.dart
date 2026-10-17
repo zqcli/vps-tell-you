@@ -87,10 +87,6 @@ class _CredentialFormState extends State<CredentialForm>
     super.dispose();
   }
 
-  void markDirty() {
-    if (!dirty) setState(() => dirty = true);
-  }
-
   String? nameError(AppLocalizations l10n) =>
       validationAttempted && name.text.trim().isEmpty
       ? l10n.securityCredentialNameRequired

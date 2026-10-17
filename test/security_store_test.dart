@@ -651,7 +651,7 @@ void main() {
     auth.pending = Completer<bool>();
     final pending = controller.reveal(record);
     await Future<void>.delayed(Duration.zero);
-    controller.hideDisplayedSensitive();
+    controller.hideSensitive(cancelAuthentication: false);
     auth.pending!.complete(true);
     expect(await pending, isTrue);
     expect(controller.revealedSecret, 'synthetic-password');

@@ -299,7 +299,6 @@ class FinanceTotal {
   String get formatted => covered == 0 && total > 0
       ? '—'
       : formatMinor(convertedMinor.round(), currency: currency);
-  String get coverageLabel => '$covered / $total';
   bool get complete => covered == total;
 }
 
