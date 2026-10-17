@@ -506,7 +506,7 @@ class _ProxyFormState extends State<ProxyForm> with WidgetsBindingObserver {
                     enabled: !saving,
                     autocorrect: false,
                     keyboardType: TextInputType.url,
-                    hint: l10n.securityHostHint,
+                    hint: 'proxy.example.com',
                     label: l10n.r13ProxyHost,
                     onChanged: (_) => _changed(),
                   ),
