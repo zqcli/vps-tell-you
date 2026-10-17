@@ -14,7 +14,7 @@ import 'l10n/locale_preference.dart';
 import 'providers/provider_directory.dart';
 import 'servers/ledger_controller.dart';
 import 'servers/server_detail.dart';
-import 'security/security_pages.dart';
+import 'security/credential_pages.dart' show securityRouteObserver;
 import 'settings/reminder_scheduler.dart';
 
 export 'home_shell.dart';

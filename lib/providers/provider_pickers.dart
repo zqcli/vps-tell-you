@@ -140,15 +140,14 @@ class _ProviderPickerPageState extends State<ProviderPickerPage> {
       final showDraft = draft != null && matches(draft.name);
       final searching = tokens.isNotEmpty;
       // Offer the typed text as a new provider unless that name exists.
+      final typedFold = foldSearch(typed);
       final exact =
           searching &&
-          (ledger.providers.any((x) => _fold(x.name) == foldSearch(typed)) ||
+          (ledger.providers.any((x) => _fold(x.name) == typedFold) ||
               ledger.directory.providers.any(
-                (x) => x.searchNames.any(
-                  (n) => foldSearch(n) == foldSearch(typed),
-                ),
+                (x) => x.searchNames.any((n) => foldSearch(n) == typedFold),
               ) ||
-              (draft != null && _fold(draft.name) == foldSearch(typed)));
+              (draft != null && _fold(draft.name) == typedFold));
       final canOfferTyped =
           searching && !exact && typed.length <= 80 && ledger.canMutate;
       Widget? check(bool on) =>

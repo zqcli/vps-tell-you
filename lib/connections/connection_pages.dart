@@ -10,6 +10,7 @@ import '../core/ui/ui.dart';
 import '../security/host_trust.dart';
 import '../security/proxy_pages.dart';
 import '../security/security_pages.dart';
+import '../security/security_widgets.dart' show credentialKind;
 import '../security/ssh_configuration_page.dart';
 import '../servers/ledger_controller.dart';
 import 'connection_form.dart';

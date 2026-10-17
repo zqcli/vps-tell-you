@@ -11,8 +11,6 @@ import 'security_models.dart';
 import 'security_widgets.dart';
 
 // Re-exported for app.dart and the connection pages (other areas).
-export 'credential_pages.dart' show securityRouteObserver;
-export 'security_widgets.dart' show credentialKind;
 
 class SecurityPage extends StatefulWidget {
   const SecurityPage({super.key, required this.ledger});
