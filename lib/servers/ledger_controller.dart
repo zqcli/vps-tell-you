@@ -125,9 +125,6 @@ class LedgerController extends ChangeNotifier {
   FxSettings fx = const FxSettings();
   List<ServicePeriod> periodsFor(String serverId) =>
       periods.where((p) => p.serverId == serverId).toList(growable: false);
-  List<PaymentRecord> paymentsFor(String serverId) => payments
-      .where((p) => p.serverId == serverId && !p.voided)
-      .toList(growable: false);
   bool hasPaymentPeriods(String serverId) =>
       periods.any((p) => p.serverId == serverId && p.paymentId != null);
 

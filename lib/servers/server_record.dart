@@ -80,7 +80,6 @@ class ServerRecord {
   String get mark => vendor.isEmpty
       ? 'VPS'
       : vendor.runes.take(2).map(String.fromCharCode).join().toUpperCase();
-  String get billingLabel => billingLabelFor(defaultLocalizations);
   String billingLabelFor(AppLocalizations l10n) {
     final amount = money == null
         ? (l10n.localeName.startsWith('zh') ? '—' : '— $currency')
