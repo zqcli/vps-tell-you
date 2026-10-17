@@ -102,6 +102,7 @@ class TcpTestResult {
   final NetHostKind? remoteFamily;
   String get source => sourceFor(defaultLocalizations);
   String sourceFor(AppLocalizations l10n) => l10n.tcpSource;
+  String get label => labelFor(defaultLocalizations);
   String labelFor(AppLocalizations l10n) => switch (outcome) {
     TcpOutcome.connected => l10n.tcpConnected,
     TcpOutcome.refused => l10n.tcpRefused,
