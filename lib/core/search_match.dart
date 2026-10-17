@@ -39,6 +39,7 @@ final _foldMap = <int, String>{
 
 /// Lower-cased, accent-free, width-folded copy of [input].
 String foldSearch(String input) {
+  if (_isAscii(input)) return input.toLowerCase();
   final out = StringBuffer();
   for (final rune in input.toLowerCase().runes) {
     if (rune >= 0xff01 && rune <= 0xff5e) {
@@ -50,6 +51,13 @@ String foldSearch(String input) {
     }
   }
   return out.toString();
+}
+
+bool _isAscii(String input) {
+  for (var i = 0; i < input.length; i++) {
+    if (input.codeUnitAt(i) > 0x7f) return false;
+  }
+  return true;
 }
 
 final _numberUnit = RegExp(r'(\d)\s+(?=[a-z])');
@@ -93,28 +101,51 @@ bool matchesTokens(String haystack, List<String> tokens) {
   return true;
 }
 
-final _digitRun = RegExp(r'\d+');
+int _digitRunEnd(String s, int from) {
+  var end = from;
+  while (end < s.length && _isDigit(s.codeUnitAt(end))) {
+    end++;
+  }
+  return end;
+}
+
+// A sort compares every name O(log n) times; folding non-ASCII text (CJK,
+// accents) each time dominates, so remember recent results.
+final _nameFolds = <String, String>{};
+
+String _foldedName(String name) {
+  if (_nameFolds.length >= 4096) _nameFolds.clear();
+  return _nameFolds[name] ??= foldSearch(name);
+}
 
 /// Orders names by folded text with digit runs compared by value, so
 /// "Plan 2" sorts before "Plan 10". Ties fall back to the raw strings.
 int compareNames(String a, String b) {
-  final x = foldSearch(a), y = foldSearch(b);
+  final x = _foldedName(a), y = _foldedName(b);
   var i = 0, j = 0;
   while (i < x.length && j < y.length) {
-    final mx = _digitRun.matchAsPrefix(x, i);
-    final my = _digitRun.matchAsPrefix(y, j);
-    if (mx != null && my != null) {
-      final dx = mx[0]!.replaceFirst(RegExp(r'^0+(?=\d)'), '');
-      final dy = my[0]!.replaceFirst(RegExp(r'^0+(?=\d)'), '');
-      final c = dx.length != dy.length
-          ? dx.length.compareTo(dy.length)
-          : dx.compareTo(dy);
+    final cx = x.codeUnitAt(i), cy = y.codeUnitAt(j);
+    if (_isDigit(cx) && _isDigit(cy)) {
+      final endX = _digitRunEnd(x, i), endY = _digitRunEnd(y, j);
+      // Compare by value: skip leading zeros (keeping the last digit), then
+      // the longer run is larger.
+      var startX = i, startY = j;
+      while (startX < endX - 1 && x.codeUnitAt(startX) == 0x30) {
+        startX++;
+      }
+      while (startY < endY - 1 && y.codeUnitAt(startY) == 0x30) {
+        startY++;
+      }
+      final lengthX = endX - startX, lengthY = endY - startY;
+      final c = lengthX != lengthY
+          ? lengthX.compareTo(lengthY)
+          : x.substring(startX, endX).compareTo(y.substring(startY, endY));
       if (c != 0) return c;
-      i = mx.end;
-      j = my.end;
+      i = endX;
+      j = endY;
       continue;
     }
-    final c = x.codeUnitAt(i).compareTo(y.codeUnitAt(j));
+    final c = cx.compareTo(cy);
     if (c != 0) return c;
     i++;
     j++;

@@ -59,4 +59,13 @@ void main() {
       'Plan 10',
     ]);
   });
+
+  test('digit runs compare by value, then shorter text first', () {
+    expect(compareNames('007', '8'), lessThan(0));
+    expect(compareNames('a9', 'a10'), lessThan(0));
+    expect(compareNames('a10', 'a9'), greaterThan(0));
+    expect(compareNames('a7', 'a007'), isNot(0)); // equal value: raw order
+    expect(compareNames('a1', 'a1b'), lessThan(0));
+    expect(compareNames('x', 'x'), 0);
+  });
 }
