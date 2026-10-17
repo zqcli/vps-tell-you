@@ -11,6 +11,7 @@ import '../servers/server_record.dart';
 import 'calculation_share.dart';
 import 'finance_math.dart';
 import 'finance_models.dart';
+import 'calculation_widgets.dart';
 import 'finance_widgets.dart';
 
 class CalculatorPage extends StatefulWidget {
