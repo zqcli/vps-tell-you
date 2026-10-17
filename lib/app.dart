@@ -48,6 +48,10 @@ class _LedgerAppState extends State<LedgerApp> with WidgetsBindingObserver {
   String? pendingReminder;
   bool reminderFrameQueued = false;
   bool loading = true;
+  // What the MaterialApp currently shows; the rest of the ledger is rendered
+  // by pages that listen to the controller themselves.
+  String? _themeMode;
+  LocalePreference? _language;
   @override
   void initState() {
     super.initState();
@@ -83,6 +87,8 @@ class _LedgerAppState extends State<LedgerApp> with WidgetsBindingObserver {
       setState(() {
         controller = ready;
         loading = false;
+        _themeMode = ready!.themeMode;
+        _language = ready.languagePreference;
       });
       ready.addListener(ledgerChanged);
       queuePendingReminder();
@@ -94,7 +100,18 @@ class _LedgerAppState extends State<LedgerApp> with WidgetsBindingObserver {
   }
 
   void ledgerChanged() {
-    if (mounted) setState(() {});
+    final ledger = controller;
+    // Rebuilding the MaterialApp re-evaluates every theme-dependent widget, so
+    // only do it when the theme or language actually changed.
+    if (mounted &&
+        ledger != null &&
+        (ledger.themeMode != _themeMode ||
+            ledger.languagePreference != _language)) {
+      setState(() {
+        _themeMode = ledger.themeMode;
+        _language = ledger.languagePreference;
+      });
+    }
     queuePendingReminder();
   }
 
@@ -181,13 +198,14 @@ class _LedgerAppState extends State<LedgerApp> with WidgetsBindingObserver {
     debugShowCheckedModeBanner: false,
     theme: appTheme(),
     darkTheme: appTheme(brightness: Brightness.dark),
-    themeMode: switch (controller?.themeMode) {
+    themeMode: switch (_themeMode) {
       'light' => ThemeMode.light,
       'dark' => ThemeMode.dark,
       _ => ThemeMode.system,
     },
-    locale: (controller?.languagePreference ?? LocalePreference.chinese)
-        .resolve(WidgetsBinding.instance.platformDispatcher.locales),
+    locale: (_language ?? LocalePreference.chinese).resolve(
+      WidgetsBinding.instance.platformDispatcher.locales,
+    ),
     localizationsDelegates: AppLocalizations.localizationsDelegates,
     supportedLocales: AppLocalizations.supportedLocales,
     builder: (context, child) => ColoredBox(
@@ -302,32 +320,29 @@ class _HomeShellState extends State<HomeShell> {
   };
 
   @override
-  Widget build(BuildContext context) => ListenableBuilder(
-    listenable: widget.controller,
-    builder: (context, _) => Scaffold(
-      // Every tab page is an [AppScaffold], which pads its end by the inset
-      // this adds, so content can scroll under the translucent tab bar.
-      extendBody: true,
-      body: Stack(
-        fit: StackFit.expand,
-        children: [
-          for (var i = 0; i < 4; i++)
-            if (_visited.contains(i))
-              Offstage(
-                key: ValueKey('tab-page-$i'),
-                offstage: tab != i,
-                child: TickerMode(
-                  enabled: tab == i,
-                  child: PrimaryScrollController(
-                    controller: _scrollControllers[i],
-                    child: _page(i),
-                  ),
+  Widget build(BuildContext context) => Scaffold(
+    // Every tab page is an [AppScaffold], which pads its end by the inset
+    // this adds, so content can scroll under the translucent tab bar.
+    extendBody: true,
+    body: Stack(
+      fit: StackFit.expand,
+      children: [
+        for (var i = 0; i < 4; i++)
+          if (_visited.contains(i))
+            Offstage(
+              key: ValueKey('tab-page-$i'),
+              offstage: tab != i,
+              child: TickerMode(
+                enabled: tab == i,
+                child: PrimaryScrollController(
+                  controller: _scrollControllers[i],
+                  child: _page(i),
                 ),
               ),
-        ],
-      ),
-      bottomNavigationBar: _AppTabBar(selected: tab, onSelect: _select),
+            ),
+      ],
     ),
+    bottomNavigationBar: _AppTabBar(selected: tab, onSelect: _select),
   );
 }
 

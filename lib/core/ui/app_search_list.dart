@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import '../app_palette.dart';
 import 'app_glass.dart';
 import 'app_list.dart';
-import 'app_widgets.dart';
+import 'app_controls.dart';
 
 /// Search field pinned under the navigation bar of an [AppScaffold] whose body
 /// is given as `slivers`. Put it first in the list:
