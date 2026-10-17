@@ -4,6 +4,7 @@ import '../l10n/generated/app_localizations.dart';
 
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io' show SecurityContext;
 
 import 'package:dartssh2/dartssh2.dart';
 import 'package:flutter/foundation.dart';
@@ -11,8 +12,10 @@ import 'package:flutter/foundation.dart';
 import '../core/net_address.dart';
 import '../security/host_trust.dart';
 import '../security/key_import.dart';
+import '../security/proxy_models.dart';
 import '../security/security_controller.dart';
 import '../security/security_models.dart';
+import 'proxy_connector.dart';
 import 'sftp_session.dart';
 import 'ssh_host_key_capture.dart';
 import 'ssh_session_output.dart';
@@ -48,8 +51,13 @@ class SshTarget {
     this.port = 22,
     this.serverId,
     this.isTemporary = false,
+    this.proxyId,
   });
   final String name, host, username, credentialId;
+
+  /// Saved proxy to tunnel through (SSH and any SFTP on it); null is direct.
+  /// A set but unavailable proxy fails the connection, never goes direct.
+  final String? proxyId;
   final bool isTemporary;
   String displayNameFor(AppLocalizations l10n) =>
       isTemporary ? l10n.connectionTemporary : name;
@@ -74,6 +82,7 @@ class SshTarget {
       credentialId: credentialId,
       serverId: serverId,
       isTemporary: isTemporary,
+      proxyId: proxyId,
     );
   }
 }
@@ -151,8 +160,12 @@ class NativeSshService extends SshService {
     this.authTimeout = const Duration(seconds: 20),
     this.verificationTimeout = const Duration(minutes: 2),
     this.sessionTimeout = const Duration(seconds: 15),
+    this.proxyTlsContext,
   });
   final SecurityController security;
+
+  /// Replaces the trust roots used for an HTTPS proxy (tests only).
+  final SecurityContext? proxyTlsContext;
   final Duration connectTimeout,
       handshakeTimeout,
       authTimeout,
@@ -371,12 +384,34 @@ class NativeSshService extends SshService {
         passphrase = null;
       }
       _guard(epoch);
+      final proxyId = next.proxyId;
+      if (proxyId != null) {
+        _deadline(
+          epoch,
+          authTimeout,
+          LocalizedText((l10n) => l10n.sshCredentialReadTimeout),
+        );
+      }
+      final ProxyEndpoint? proxy = proxyId == null
+          ? null
+          : await security.loadProxyEndpoint(
+              proxyId,
+              isCancelled: () => !_active(epoch),
+            );
+      _guard(epoch);
       _deadline(
         epoch,
         connectTimeout,
-        LocalizedText((l10n) => l10n.sshTcpTimeout),
+        LocalizedText(
+          (l10n) => proxyId == null ? l10n.sshTcpTimeout : l10n.r13ProxyTimeout,
+        ),
       );
-      final connection = SshSocketConnection(next.host, next.port);
+      final connection = SshSocketConnection(
+        next.host,
+        next.port,
+        proxy: proxy,
+        proxyTls: proxyTlsContext,
+      );
       _connection = connection;
       final native = await connection.socket;
       if (!_active(epoch)) {
@@ -520,6 +555,8 @@ class NativeSshService extends SshService {
         _fail(
           problem is SecurityFailure
               ? problem
+              : problem is ProxyException
+              ? LocalizedText((l10n) => problem.messageFor(l10n))
               : status == SshStatus.authenticating
               ? LocalizedText((l10n) => l10n.sshAuthenticationFailed)
               : status == SshStatus.verifying

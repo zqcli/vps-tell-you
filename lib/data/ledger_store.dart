@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:sqflite/sqflite.dart';
 
+import '../core/net_address.dart';
 import '../core/value_types.dart';
 import '../l10n/locale_preference.dart';
 import '../l10n/generated/app_localizations.dart';
@@ -11,6 +12,7 @@ import '../connections/snippet.dart';
 import '../servers/server_record.dart';
 import '../finance/finance_models.dart';
 import '../finance/finance_math.dart';
+import '../security/proxy_models.dart';
 import '../security/security_models.dart';
 import '../settings/reminder_rule.dart';
 
@@ -43,7 +45,7 @@ class LedgerStore {
   LedgerStore._(this._db, this.clock);
   final Database _db;
   final DateTime Function() clock;
-  static const schemaVersion = 13;
+  static const schemaVersion = 14;
   // Shared by both credential controllers using this store. A durable journal
   // reservation is not an orphan while its native write/DB commit is active.
   final Set<String> _activeSecretReservations = {};
@@ -95,6 +97,11 @@ class LedgerStore {
           if (oldVersion < 13) {
             await _migrateToProviderDirectorySchema(db);
           }
+          // v14 adds saved proxies and ssh_configurations.proxy_id. sqflite
+          // runs onUpgrade in one transaction, so a failure rolls both back.
+          if (oldVersion < 14) {
+            await _addProxySchema(db);
+          }
         },
         onDowngrade: (db, oldVersion, newVersion) async {
           throw StateError('Newer ledger version; upgrade the app');
@@ -134,6 +141,7 @@ class LedgerStore {
     await _createProviderTables(db);
     await _addCatalogLink(db);
     await _addDirectorySettings(db);
+    await _addProxySchema(db);
   }
 
   /// Nullable by design: old/manual records are not populated with fabricated
@@ -1072,6 +1080,25 @@ class LedgerStore {
       PRIMARY KEY(host, port))''');
   }
 
+  /// Saved proxies. The password lives only in secure storage ([secret_ref]);
+  /// deleting a referenced proxy is refused (RESTRICT), so a connection can
+  /// never silently turn into a direct one.
+  static Future<void> _addProxySchema(DatabaseExecutor db) async {
+    await db.execute('''CREATE TABLE proxies (
+      id TEXT PRIMARY KEY, name TEXT NOT NULL,
+      kind TEXT NOT NULL CHECK(kind IN ('socks5','http','https')),
+      host TEXT NOT NULL, port INTEGER NOT NULL CHECK(port BETWEEN 1 AND 65535),
+      username TEXT, secret_ref TEXT UNIQUE,
+      created_at TEXT NOT NULL, updated_at TEXT NOT NULL,
+      revision INTEGER NOT NULL DEFAULT 0,
+      CHECK(secret_ref IS NULL OR username IS NOT NULL))''');
+    await db.execute(
+      'ALTER TABLE ssh_configurations ADD COLUMN proxy_id TEXT '
+      'REFERENCES proxies(id) ON DELETE RESTRICT',
+    );
+    await db.execute('CREATE INDEX ssh_proxy ON ssh_configurations(proxy_id)');
+  }
+
   Future<List<CredentialMetadata>> credentials() async => (await _db.query(
     'credentials',
     orderBy: 'name COLLATE NOCASE, id',
@@ -1135,11 +1162,17 @@ class LedgerStore {
     String ref,
   ) async {
     return (await db.query(
-      'credentials',
-      where: 'secret_ref = ?',
-      whereArgs: [ref],
-      limit: 1,
-    )).isNotEmpty;
+          'credentials',
+          where: 'secret_ref = ?',
+          whereArgs: [ref],
+          limit: 1,
+        )).isNotEmpty ||
+        (await db.query(
+          'proxies',
+          where: 'secret_ref = ?',
+          whereArgs: [ref],
+          limit: 1,
+        )).isNotEmpty;
   }
 
   Future<void> finishSecretCleanup(String ref) async {
@@ -1292,6 +1325,12 @@ class LedgerStore {
                 'credentials',
                 where: 'id = ?',
                 whereArgs: [config.credentialId],
+              )).isEmpty) ||
+          (config.proxyId != null &&
+              (await txn.query(
+                'proxies',
+                where: 'id = ?',
+                whereArgs: [config.proxyId],
               )).isEmpty)) {
         throw const LedgerConflict();
       }
@@ -1317,6 +1356,137 @@ class LedgerStore {
         if (count != 1) {
           throw const LedgerConflict();
         }
+      }
+    });
+  }
+
+  Future<List<ProxyRecord>> proxies() async => (await _db.query(
+    'proxies',
+    orderBy: 'name COLLATE NOCASE, id',
+  )).map(ProxyRecord.fromMap).toList(growable: false);
+
+  static bool validProxyRecord(ProxyRecord record) {
+    final host = NetAddress.tryParse(record.host, allowBrackets: false);
+    return record.name.trim().isNotEmpty &&
+        record.name.length <= 80 &&
+        host != null &&
+        host.host == record.host &&
+        host.zone == null &&
+        record.port >= 1 &&
+        record.port <= 65535 &&
+        (record.username == null
+            ? record.secretRef == null
+            : validProxyCredential(
+                    record.username!,
+                    allowColon: record.kind == ProxyKind.socks5,
+                  ) &&
+                  record.secretRef != null);
+  }
+
+  /// Same contract as [saveCredential]: a changed [ProxyRecord.secretRef] must
+  /// have been reserved first; the superseded reference is queued for cleanup
+  /// in the same transaction.
+  Future<void> saveProxy(
+    ProxyRecord record, {
+    required int? expectedRevision,
+  }) async {
+    if (!validProxyRecord(record)) {
+      throw SecurityFailure(LocalizedText((l10n) => l10n.r13ProxyInvalid));
+    }
+    await _db.transaction((txn) async {
+      final rows = await txn.query(
+        'proxies',
+        where: 'id = ?',
+        whereArgs: [record.id],
+      );
+      final previous = rows.isEmpty ? null : ProxyRecord.fromMap(rows.single);
+      if ((expectedRevision == null && previous != null) ||
+          (expectedRevision != null &&
+              previous?.revision != expectedRevision)) {
+        throw const LedgerConflict();
+      }
+      final newRef = record.secretRef;
+      final changedRef = previous?.secretRef != newRef;
+      if (changedRef &&
+          newRef != null &&
+          (await txn.query(
+            'secret_cleanup',
+            where: 'secret_ref = ?',
+            whereArgs: [newRef],
+          )).isEmpty) {
+        throw SecurityFailure(
+          LocalizedText((l10n) => l10n.secretWriteNotPrepared),
+        );
+      }
+      final map = record.toMap();
+      map['revision'] = expectedRevision == null ? 0 : expectedRevision + 1;
+      map['updated_at'] = clock().toUtc().toIso8601String();
+      if (previous == null) {
+        await txn.insert('proxies', map);
+      } else {
+        map.remove('id');
+        map.remove('created_at');
+        final count = await txn.update(
+          'proxies',
+          map,
+          where: 'id = ? AND revision = ?',
+          whereArgs: [record.id, expectedRevision],
+        );
+        if (count != 1) {
+          throw const LedgerConflict();
+        }
+      }
+      if (changedRef) {
+        if (newRef != null) {
+          await txn.delete(
+            'secret_cleanup',
+            where: 'secret_ref = ?',
+            whereArgs: [newRef],
+          );
+        }
+        final old = previous?.secretRef;
+        if (old != null) {
+          await txn.insert('secret_cleanup', {
+            'secret_ref': old,
+            'created_at': clock().toUtc().toIso8601String(),
+          }, conflictAlgorithm: ConflictAlgorithm.ignore);
+        }
+      }
+    });
+  }
+
+  /// Refused while any SSH configuration uses the proxy. The password
+  /// reference is queued for cleanup in the same transaction.
+  Future<void> deleteProxy(ProxyRecord record) async {
+    await _db.transaction((txn) async {
+      final rows = await txn.query(
+        'proxies',
+        where: 'id = ? AND revision = ?',
+        whereArgs: [record.id, record.revision],
+      );
+      if (rows.length != 1) {
+        throw const LedgerConflict();
+      }
+      if ((await txn.query(
+        'ssh_configurations',
+        where: 'proxy_id = ?',
+        whereArgs: [record.id],
+        limit: 1,
+      )).isNotEmpty) {
+        throw SecurityFailure(LocalizedText((l10n) => l10n.r13ProxyInUse));
+      }
+      final current = ProxyRecord.fromMap(rows.single);
+      await txn.delete(
+        'proxies',
+        where: 'id = ? AND revision = ?',
+        whereArgs: [record.id, record.revision],
+      );
+      final ref = current.secretRef;
+      if (ref != null) {
+        await txn.insert('secret_cleanup', {
+          'secret_ref': ref,
+          'created_at': clock().toUtc().toIso8601String(),
+        }, conflictAlgorithm: ConflictAlgorithm.ignore);
       }
     });
   }

@@ -8,6 +8,8 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 
 import '../core/net_address.dart';
+import '../security/proxy_models.dart';
+import 'proxy_connector.dart';
 
 typedef TcpConnector = Future<ConnectionTask<Socket>> Function(
   String host,
@@ -69,8 +71,20 @@ class TcpTestResult {
     required this.elapsed,
     this.remoteAddress,
     this.remoteFamily,
+    this.proxy,
+    this.proxyName,
+    this.proxyFailure,
   });
   final TcpTarget target;
+
+  /// Set when the test went through a proxy (never carries credentials in
+  /// anything shown). Then [remoteAddress] is the proxy's, not the target's.
+  final ProxyEndpoint? proxy;
+
+  /// Name of the saved proxy, null for a temporary one.
+  final String? proxyName;
+  final ProxyException? proxyFailure;
+  bool get viaProxy => proxy != null;
   final TcpOutcome outcome;
   final DateTime finishedAt;
   final Duration elapsed;
@@ -91,8 +105,11 @@ class TcpTestResult {
 }
 
 class _TcpAttempt {
-  _TcpAttempt(this.target);
+  _TcpAttempt(this.target, {this.proxy, this.proxyName});
   final TcpTarget target;
+  final ProxyEndpoint? proxy;
+  final String? proxyName;
+  ProxyDial? dial;
   final watch = Stopwatch()..start();
   final done = Completer<void>();
   ConnectionTask<Socket>? task;
@@ -108,6 +125,7 @@ class TcpTestController extends ChangeNotifier {
     TcpConnector? connector,
     this.timeout = const Duration(seconds: 10),
     DateTime Function()? clock,
+    this.proxyTlsContext,
   }) : _connector =
            connector ?? ((host, port) => Socket.startConnect(host, port)),
        _clock = clock ?? DateTime.now {
@@ -117,6 +135,9 @@ class TcpTestController extends ChangeNotifier {
   }
   final TcpConnector _connector;
   final DateTime Function() _clock;
+
+  /// Replaces the TLS trust roots for an HTTPS proxy (tests only).
+  final SecurityContext? proxyTlsContext;
   final Duration timeout;
   _TcpAttempt? _attempt;
   bool _disposed = false;
@@ -124,12 +145,15 @@ class TcpTestController extends ChangeNotifier {
   TcpTestResult? result;
   bool get running => _attempt != null && !_attempt!.ended;
 
-  Future<void> test(TcpTarget next) {
+  /// With [proxy] the target is dialled through it (SOCKS5/HTTP CONNECT); the
+  /// result then only says whether the proxy could reach the target. [proxy]
+  /// is used for this attempt only and never stored.
+  Future<void> test(TcpTarget next, {ProxyEndpoint? proxy, String? proxyName}) {
     if (_disposed) {
       throw StateError('TCP controller disposed');
     }
     _stopCurrent(publish: false);
-    final attempt = _TcpAttempt(next);
+    final attempt = _TcpAttempt(next, proxy: proxy, proxyName: proxyName);
     _attempt = attempt;
     target = next;
     result = null;
@@ -139,7 +163,55 @@ class TcpTestController extends ChangeNotifier {
     return attempt.done.future;
   }
 
+  void _connectViaProxy(_TcpAttempt attempt) {
+    final dial = attempt.dial = ProxyDial(
+      proxy: attempt.proxy!,
+      host: attempt.target.host,
+      port: attempt.target.port,
+      tlsContext: proxyTlsContext,
+    );
+    dial.tunnel.then<void>(
+      (tunnel) {
+        try {
+          if (!attempt.ended) {
+            _finish(
+              attempt,
+              TcpOutcome.connected,
+              remoteAddress: tunnel.proxyAddress.address,
+              remoteFamily: switch (tunnel.proxyAddress.type) {
+                InternetAddressType.IPv6 => NetHostKind.ipv6,
+                InternetAddressType.IPv4 => NetHostKind.ipv4,
+                _ => null,
+              },
+            );
+          }
+        } finally {
+          tunnel.destroy();
+        }
+      },
+      onError: (Object error, StackTrace stack) {
+        if (attempt.ended) return;
+        final problem = error is ProxyException
+            ? error
+            : const ProxyException(ProxyFailure.closed);
+        _finish(
+          attempt,
+          problem.failure == ProxyFailure.timeout
+              ? TcpOutcome.timedOut
+              : problem.targetRefused
+              ? TcpOutcome.refused
+              : TcpOutcome.failed,
+          proxyFailure: problem,
+        );
+      },
+    );
+  }
+
   Future<void> _connect(_TcpAttempt attempt) async {
+    if (attempt.proxy != null) {
+      _connectViaProxy(attempt);
+      return;
+    }
     try {
       final task = await _connector(attempt.target.host, attempt.target.port);
       attempt.task = task;
@@ -193,6 +265,7 @@ class TcpTestController extends ChangeNotifier {
     TcpOutcome outcome, {
     String? remoteAddress,
     NetHostKind? remoteFamily,
+    ProxyException? proxyFailure,
     bool publish = true,
   }) {
     if (attempt.ended) {
@@ -203,6 +276,7 @@ class TcpTestController extends ChangeNotifier {
     attempt.watch.stop();
     if (outcome != TcpOutcome.connected) {
       attempt.task?.cancel();
+      attempt.dial?.cancel();
     }
     if (!_disposed && identical(attempt, _attempt) && publish) {
       result = TcpTestResult(
@@ -212,6 +286,9 @@ class TcpTestController extends ChangeNotifier {
         elapsed: attempt.watch.elapsed,
         remoteAddress: remoteAddress,
         remoteFamily: remoteFamily,
+        proxy: attempt.proxy,
+        proxyName: attempt.proxyName,
+        proxyFailure: proxyFailure,
       );
       notifyListeners();
     }
