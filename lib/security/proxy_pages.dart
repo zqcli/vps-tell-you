@@ -9,7 +9,7 @@ import '../l10n/localized_message.dart';
 import '../servers/ledger_controller.dart';
 import 'proxy_models.dart';
 import 'security_controller.dart';
-import 'security_pages.dart';
+import 'security_widgets.dart';
 
 const proxyTint = AppTints.indigo;
 const proxyIcon = Icons.alt_route_rounded;

@@ -7,6 +7,7 @@ import '../servers/ledger_controller.dart';
 import 'proxy_pages.dart';
 import 'security_models.dart';
 import 'security_pages.dart';
+import 'security_widgets.dart';
 import '../l10n/generated/app_localizations.dart';
 import '../l10n/locale_preference.dart';
 import '../l10n/localized_message.dart';
