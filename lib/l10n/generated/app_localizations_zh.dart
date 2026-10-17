@@ -1896,7 +1896,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get backupExcludedSecrets => '密码、私钥、口令、Token、凭据元数据及安全存储引用';
 
   @override
-  String get backupExcludedConnections => 'SSH 配置与主机信任';
+  String get backupExcludedConnections => 'SSH 配置、已保存代理与主机信任';
 
   @override
   String get backupExcludedNotes => '命令片段、服务器备注和付款备注';

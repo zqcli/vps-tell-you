@@ -1214,7 +1214,7 @@
   "billingAnnualAmount": "{amount}/year",
   "billingMonthlyAmount": "{amount}/{months, plural, one{1 month} other{{months} months}}",
   "backupExcludedSecrets": "Passwords, private keys, passphrases, tokens, credential metadata, and secure-storage references",
-  "backupExcludedConnections": "SSH settings and host trust",
+  "backupExcludedConnections": "SSH settings, saved proxies, and host trust",
   "backupExcludedNotes": "Command snippets, server notes, and payment notes",
   "backupExcludedPreferences": "Reminder rules, notification schedules, and app preferences",
   "backupInvalidJson": "The backup isn’t valid JSON",

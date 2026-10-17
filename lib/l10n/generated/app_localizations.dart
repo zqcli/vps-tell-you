@@ -3344,7 +3344,7 @@ abstract class AppLocalizations {
   /// No description provided for @backupExcludedConnections.
   ///
   /// In zh, this message translates to:
-  /// **'SSH 配置与主机信任'**
+  /// **'SSH 配置、已保存代理与主机信任'**
   String get backupExcludedConnections;
 
   /// No description provided for @backupExcludedNotes.

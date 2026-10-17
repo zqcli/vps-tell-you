@@ -2196,7 +2196,8 @@ class AppLocalizationsEn extends AppLocalizations {
       'Passwords, private keys, passphrases, tokens, credential metadata, and secure-storage references';
 
   @override
-  String get backupExcludedConnections => 'SSH settings and host trust';
+  String get backupExcludedConnections =>
+      'SSH settings, saved proxies, and host trust';
 
   @override
   String get backupExcludedNotes =>
