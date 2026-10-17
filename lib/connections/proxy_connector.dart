@@ -109,6 +109,7 @@ class ProxyDial {
     this.tlsContext,
     this.timeout,
   }) {
+    _abortSignal.future.ignore();
     tunnel = _run();
     // The owner decides how to report; never an unhandled async error.
     tunnel.ignore();
@@ -125,12 +126,14 @@ class ProxyDial {
   _Reader? _reader;
   Timer? _timer;
   ProxyException? _abortError;
+  final _abortSignal = Completer<Never>();
   var _phase = _Phase.connect;
 
   void cancel() => _abort(const ProxyException(ProxyFailure.cancelled));
 
   void _abort(ProxyException error) {
     _abortError ??= error;
+    if (!_abortSignal.isCompleted) _abortSignal.completeError(error);
     _timer?.cancel();
     _task?.cancel();
     _reader?.fail(error);
@@ -167,16 +170,28 @@ class ProxyDial {
       if (_abortError != null) task.cancel();
       final raw = await task.socket;
       _raw = raw;
+      // Write failures on a reset socket surface here; the handshake already
+      // reports them as a failed read, so they must not escape unhandled.
+      raw.done.ignore();
       _check();
       var transport = raw;
       if (proxy.kind == ProxyKind.https) {
         _phase = _Phase.tls;
-        transport = await SecureSocket.secure(
+        // A destroyed raw socket may never complete the handshake future, so
+        // the abort signal races it; a socket it yields late is destroyed.
+        final handshake = SecureSocket.secure(
           raw,
           host: proxy.host,
           context: tlsContext,
         );
+        unawaited(
+          handshake.then((socket) {
+            if (_abortError != null) socket.destroy();
+          }, onError: (Object _) {}),
+        );
+        transport = await Future.any([handshake, _abortSignal.future]);
         _transport = transport;
+        transport.done.ignore();
         _check();
       }
       _phase = _Phase.protocol;
