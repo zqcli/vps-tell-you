@@ -250,7 +250,7 @@ void main() {
       expect(box.height, greaterThanOrEqualTo(44));
       expect(
         tester.getSemantics(button()),
-        containsSemantics(
+        isSemantics(
           label: 'Error Details',
           isButton: true,
           hasTapAction: true,
