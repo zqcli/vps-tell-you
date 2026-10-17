@@ -14,6 +14,7 @@ import 'package:vps_tell_you/core/app_theme.dart';
 import 'package:vps_tell_you/core/ui/ui.dart';
 import 'package:vps_tell_you/data/ledger_store.dart';
 import 'package:vps_tell_you/providers/provider_pages.dart';
+import 'package:vps_tell_you/finance/finance_detail_pages.dart';
 import 'package:vps_tell_you/finance/finance_page.dart';
 import 'package:vps_tell_you/finance/payment_pages.dart';
 import 'package:vps_tell_you/security/host_trust_pages.dart';

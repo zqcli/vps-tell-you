@@ -11,6 +11,7 @@ import 'package:vps_tell_you/finance/calculation_share.dart';
 import 'package:vps_tell_you/finance/calculator_page.dart';
 import 'package:vps_tell_you/finance/finance_math.dart';
 import 'package:vps_tell_you/finance/finance_models.dart';
+import 'package:vps_tell_you/finance/finance_detail_pages.dart';
 import 'package:vps_tell_you/finance/finance_page.dart';
 import 'package:vps_tell_you/finance/finance_widgets.dart';
 import 'package:vps_tell_you/finance/fx_page.dart';
