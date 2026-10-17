@@ -22,6 +22,8 @@ import '../providers/directory_widgets.dart';
 import '../providers/provider_pages.dart';
 import '../security/host_trust.dart' show normalizedHost;
 import '../security/host_trust_pages.dart';
+import '../security/security_models.dart' show SshConfiguration;
+import '../l10n/generated/app_localizations.dart';
 import '../security/ssh_configuration_page.dart';
 import '../settings/reminder_page.dart';
 import 'hardware_information_card.dart';
@@ -386,6 +388,7 @@ class ServerDetail extends StatelessWidget {
             _push(
               context,
               TcpTestPage(
+                ledger: controller,
                 initialHost: s.primaryAddress,
                 initialPort: config?.port ?? 22,
               ),
@@ -683,6 +686,12 @@ class ServerDetail extends StatelessWidget {
     }
   }
 
+  String _sshSubtitle(AppLocalizations l10n, SshConfiguration config) {
+    final base = formatUserHostPort(config.username, config.host, config.port);
+    final proxy = controller.security.proxyById(config.proxyId);
+    return proxy == null ? base : '$base · ${l10n.r13ProxyVia(proxy.name)}';
+  }
+
   Widget _connectionSection(BuildContext context, ServerRecord s) {
     final l10n = context.l10n;
     final config = controller.security.configFor(s.id);
@@ -702,7 +711,7 @@ class ServerDetail extends StatelessWidget {
           title: l10n.serverSshSettings,
           subtitle: config == null
               ? l10n.serverSshSettingsDescription
-              : formatUserHostPort(config.username, config.host, config.port),
+              : _sshSubtitle(l10n, config),
           value: config == null ? l10n.uiDetailNotConfigured : null,
           chevron: true,
           onTap: s.archived ? null : () => _openSshConfiguration(context, s),

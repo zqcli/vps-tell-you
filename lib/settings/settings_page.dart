@@ -9,6 +9,7 @@ import '../data/ledger_store.dart';
 import '../finance/fx_page.dart';
 import '../l10n/locale_preference.dart';
 import '../providers/provider_pages.dart';
+import '../security/proxy_pages.dart';
 import '../security/security_pages.dart';
 import '../servers/ledger_controller.dart';
 import '../servers/refresh_failure_notice.dart';
@@ -207,6 +208,15 @@ class _SettingsPageState extends State<SettingsPage> {
                 subtitle: l10n.keysSecurityDescription,
                 chevron: true,
                 onTap: () => push((_) => SecurityPage(ledger: controller)),
+              ),
+              AppRow(
+                key: const ValueKey('settings-proxies'),
+                icon: proxyIcon,
+                iconColor: proxyTint,
+                title: l10n.r13ProxiesTitle,
+                subtitle: l10n.r13ProxiesSubtitle,
+                chevron: true,
+                onTap: () => push((_) => ProxyListPage(ledger: controller)),
               ),
             ],
           ),
