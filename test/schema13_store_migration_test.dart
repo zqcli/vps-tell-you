@@ -168,7 +168,12 @@ Future<Map<String, List<Map<String, Object?>>>> _rows(
   Database db,
   Iterable<String> tables,
 ) async => {
-  for (final table in tables) table: await db.query(table, orderBy: '1'),
+  // v14 adds the nullable proxy_id; every other value must be unchanged.
+  for (final table in tables)
+    table: [
+      for (final row in await db.query(table, orderBy: '1'))
+        {...row}..removeWhere((k, v) => k == 'proxy_id' && v == null),
+    ],
 };
 
 Future<Set<String>> _columns(Database db, String table) async =>
@@ -218,8 +223,8 @@ void main() {
         clock: () => fixtureTime,
       );
       db = await openRawLedger(path);
-      expect(await db!.getVersion(), 13);
-      expect(LedgerStore.schemaVersion, 13);
+      expect(await db!.getVersion(), LedgerStore.schemaVersion);
+      expect(LedgerStore.schemaVersion, 14);
       expect(await db!.rawQuery('PRAGMA foreign_key_check'), isEmpty);
 
       // Package links are gone; the retired columns stay but are never used.
@@ -331,13 +336,13 @@ void main() {
     expect(await _columns(db!, 'app_settings'), settingsColumns);
   });
 
-  test('a fresh database is v13 without retired columns', () async {
+  test('a fresh database has no retired columns', () async {
     store = await LedgerStore.open(
       factory: databaseFactoryFfiNoIsolate,
       path: path,
     );
     db = await openRawLedger(path);
-    expect(await db!.getVersion(), 13);
+    expect(await db!.getVersion(), LedgerStore.schemaVersion);
     final serverColumns = await _columns(db!, 'servers');
     expect(serverColumns, contains('provider_id'));
     expect(serverColumns, isNot(contains('package_id')));
