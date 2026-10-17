@@ -188,6 +188,10 @@ class FinanceTotalView extends StatelessWidget {
   final bool emphasize, compact;
   final FinanceTotalLayout layout;
 
+  String get _originals => total.originals.entries
+      .map((e) => '${e.key} ${formatRational(e.value)}')
+      .join(' · ');
+
   @override
   Widget build(BuildContext context) => switch (layout) {
     FinanceTotalLayout.hero => _hero(context),
@@ -234,14 +238,7 @@ class FinanceTotalView extends StatelessWidget {
             style: white,
           ),
         if (showOriginals)
-          Text(
-            l10n.financeOriginalSubtotals(
-              total.originals.entries
-                  .map((e) => '${e.key} ${formatRational(e.value)}')
-                  .join(' · '),
-            ),
-            style: white,
-          ),
+          Text(l10n.financeOriginalSubtotals(_originals), style: white),
       ],
     );
   }
@@ -330,11 +327,7 @@ class FinanceTotalView extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.only(top: 8),
             child: Text(
-              context.l10n.financeOriginalSubtotals(
-                total.originals.entries
-                    .map((e) => '${e.key} ${formatRational(e.value)}')
-                    .join(' · '),
-              ),
+              context.l10n.financeOriginalSubtotals(_originals),
               style: secondary,
             ),
           ),
