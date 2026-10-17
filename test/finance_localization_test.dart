@@ -16,6 +16,7 @@ import 'package:vps_tell_you/finance/finance_detail_pages.dart';
 import 'package:vps_tell_you/finance/finance_page.dart';
 import 'package:vps_tell_you/finance/finance_widgets.dart';
 import 'package:vps_tell_you/finance/fx_page.dart';
+import 'package:vps_tell_you/finance/payment_detail_page.dart';
 import 'package:vps_tell_you/finance/payment_pages.dart';
 import 'package:vps_tell_you/finance/valuation_copy.dart';
 import 'package:vps_tell_you/l10n/generated/app_localizations.dart';
