@@ -267,12 +267,8 @@ class DartSshSftpSession implements SftpSession {
       final name = item.filename;
       if (name == '.' || name == '..' || !SftpPath.isValidName(name)) continue;
       final full = SftpPath.join(path, name);
-      if (item.attr.isSymbolicLink) {
-        links.add((entries.length, full, item));
-        entries.add(_entry(full, name, item.attr));
-      } else {
-        entries.add(_entry(full, name, item.attr));
-      }
+      if (item.attr.isSymbolicLink) links.add((entries.length, full, item));
+      entries.add(_entry(full, name, item.attr));
     }
     for (var start = 0; start < links.length; start += 16) {
       final batch = links.skip(start).take(16).toList();

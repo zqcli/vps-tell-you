@@ -267,20 +267,14 @@ class _SftpBrowserPageState extends State<SftpBrowserPage>
 
     list.sort((a, b) {
       if (a.isDir != b.isDir) return a.isDir ? -1 : 1;
-      return switch (_sort) {
-        SftpSort.name => byName(a, b),
-        SftpSort.size =>
-          (b.size ?? -1) != (a.size ?? -1)
-              ? (b.size ?? -1).compareTo(a.size ?? -1)
-              : byName(a, b),
-        SftpSort.time =>
-          (b.mtime?.millisecondsSinceEpoch ?? 0) !=
-                  (a.mtime?.millisecondsSinceEpoch ?? 0)
-              ? (b.mtime?.millisecondsSinceEpoch ?? 0).compareTo(
-                  a.mtime?.millisecondsSinceEpoch ?? 0,
-                )
-              : byName(a, b),
+      final order = switch (_sort) {
+        SftpSort.name => 0,
+        SftpSort.size => (b.size ?? -1).compareTo(a.size ?? -1),
+        SftpSort.time => (b.mtime?.millisecondsSinceEpoch ?? 0).compareTo(
+          a.mtime?.millisecondsSinceEpoch ?? 0,
+        ),
       };
+      return order != 0 ? order : byName(a, b);
     });
     return list;
   }
