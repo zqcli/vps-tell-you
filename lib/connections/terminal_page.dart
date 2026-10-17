@@ -23,7 +23,9 @@ import 'sftp_support.dart';
 import 'snippet_pages.dart';
 import 'ssh_prompts.dart';
 import 'ssh_service.dart';
+import 'terminal_chrome.dart';
 import 'terminal_highlighter.dart';
+import 'terminal_input.dart';
 import 'terminal_widgets.dart';
 import 'terminal_font.dart';
 
@@ -76,10 +78,12 @@ class _TerminalPageState extends State<TerminalPage>
   double? _lastViewportTextSize;
   int _viewportEpoch = 0;
   bool _cursorRevealQueued = false;
-  int? _touchPointer;
-  Offset? _touchStart;
-  Duration? _touchStartedAt;
-  bool _touchMoved = false, _touchHadSelection = false;
+  late final _taps = TerminalTapTracker(
+    hasSelection: () => _terminalController.selection != null,
+    onTap: () {
+      if (MediaQuery.viewInsetsOf(context).bottom == 0) _requestKeyboard();
+    },
+  );
   StreamSubscription<String>? _output;
   bool _sendBusy = false,
       _powerBusy = false,
@@ -106,7 +110,6 @@ class _TerminalPageState extends State<TerminalPage>
     BackgroundGrace.instance.register(this);
     _draft = TextEditingController(text: widget.initialDraft);
     _terminalScroll.addListener(_scrollChanged);
-    _terminalController.addListener(_selectionChanged);
     _service =
         widget.serviceFactory?.call(widget.ledger.security) ??
         NativeSshService(security: widget.ledger.security);
@@ -166,10 +169,10 @@ class _TerminalPageState extends State<TerminalPage>
     _viewportEpoch++;
     _terminalViewKey = GlobalKey<TerminalViewState>();
     _hasOutput = false;
-    _terminal = _MobileTerminal(
+    _terminal = MobileTerminal(
       maxLines: 3000,
       consumeControl: _consumeControl,
-      inputHandler: _MobileTerminalKeys(
+      inputHandler: MobileTerminalKeys(
         controlArmed: () => _ctrlArmed,
         consumeControl: _consumeControl,
       ),
@@ -270,12 +273,6 @@ class _TerminalPageState extends State<TerminalPage>
       _leave(failure: TerminalFailure(error ?? l10n.terminalFailed, details));
     } else {
       _leave();
-    }
-  }
-
-  void _selectionChanged() {
-    if (mounted) {
-      setState(() {});
     }
   }
 
@@ -453,42 +450,6 @@ class _TerminalPageState extends State<TerminalPage>
       _scrollToBottom();
       _queueCursorReveal();
     });
-  }
-
-  void _terminalPointerDown(PointerDownEvent event) {
-    if (event.buttons != 1 || _touchPointer != null) {
-      _touchPointer = null;
-      return;
-    }
-    _touchPointer = event.pointer;
-    _touchStart = event.position;
-    _touchStartedAt = event.timeStamp;
-    _touchMoved = false;
-    _touchHadSelection = _terminalController.selection != null;
-  }
-
-  void _terminalPointerMove(PointerMoveEvent event) {
-    if (event.pointer == _touchPointer &&
-        _touchStart != null &&
-        (event.position - _touchStart!).distance > 18) {
-      _touchMoved = true;
-    }
-  }
-
-  void _terminalPointerUp(PointerUpEvent event) {
-    final tap =
-        event.pointer == _touchPointer &&
-        !_touchMoved &&
-        !_touchHadSelection &&
-        _terminalController.selection == null &&
-        _touchStartedAt != null &&
-        event.timeStamp - _touchStartedAt! < const Duration(milliseconds: 300);
-    _touchPointer = null;
-    // xterm 4.0.0 declares onTapUp but its recognizer never invokes it. A raw
-    // pointer observer does not compete with its history/selection gestures.
-    if (tap && MediaQuery.viewInsetsOf(context).bottom == 0) {
-      _requestKeyboard();
-    }
   }
 
   void _closeKeyboard() {
@@ -762,50 +723,13 @@ class _TerminalPageState extends State<TerminalPage>
 
   Future<void> _connectionDetails() async {
     _closeKeyboard();
-    await showDialog<void>(
-      context: _dialogContext,
-      builder: (context) => AlertDialog(
-        scrollable: true,
-        title: Text(context.l10n.terminalCurrentSession),
-        content: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            SelectableText(
-              escapedCommandPreview(widget.target.displayNameFor(context.l10n)),
-            ),
-            const SizedBox(height: 8),
-            SelectableText(
-              escapedCommandPreview(widget.target.label),
-              textDirection: TextDirection.ltr,
-            ),
-            const SizedBox(height: 12),
-            Text(
-              context.l10n.terminalDimensions(
-                (_statusLabel).toString(),
-                (_terminal.viewWidth).toString(),
-                (_terminal.viewHeight).toString(),
-              ),
-            ),
-            const SizedBox(height: 12),
-            Text(context.l10n.terminalSelectionHelp),
-            const SizedBox(height: 12),
-            Text(context.l10n.terminalInputHelp),
-            const SizedBox(height: 12),
-            Text(context.l10n.terminalBackgroundHelp),
-            const SizedBox(height: 12),
-            Text(context.l10n.terminalOfflineFont),
-            TextButton(
-              onPressed: () => showLicensePage(context: context),
-              child: Text(context.l10n.terminalLicenses),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(context.l10n.connectionClose),
-          ),
-        ],
+    await showTerminalSessionDetails(
+      _dialogContext,
+      target: widget.target,
+      dimensions: (l10n) => l10n.terminalDimensions(
+        terminalStatusLabel(l10n, _service.status),
+        _terminal.viewWidth.toString(),
+        _terminal.viewHeight.toString(),
       ),
     );
   }
@@ -934,7 +858,6 @@ class _TerminalPageState extends State<TerminalPage>
     _service.dispose();
     _draft.dispose();
     _terminalFocus.dispose();
-    _terminalController.removeListener(_selectionChanged);
     _terminalController.dispose();
     _terminalScroll.removeListener(_scrollChanged);
     _terminalScroll.dispose();
@@ -1072,72 +995,14 @@ class _TerminalPageState extends State<TerminalPage>
     }
   }
 
-  String get _statusLabel => switch (_service.status) {
-    SshStatus.idle => context.l10n.terminalNotConnected,
-    SshStatus.connecting => context.l10n.terminalConnecting,
-    SshStatus.verifying => context.l10n.terminalVerifying,
-    SshStatus.authenticating => context.l10n.terminalAuthenticating,
-    SshStatus.connected => context.l10n.terminalConnected,
-    SshStatus.disconnected => context.l10n.terminalDisconnected,
-    SshStatus.failed => context.l10n.terminalFailed,
-  };
-
-  /// Status chip under the title: green when connected, amber while
-  /// connecting, red when failed, grey otherwise.
-  Widget _statusPill(BuildContext context) {
-    final (Color fg, Color bg) = switch (_service.status) {
-      SshStatus.connected => (
-        _scheme.theme.green,
-        _scheme.theme.green.withValues(alpha: .15),
-      ),
-      SshStatus.connecting || SshStatus.verifying || SshStatus.authenticating =>
-        (_scheme.theme.yellow, _scheme.theme.yellow.withValues(alpha: .15)),
-      SshStatus.failed => (
-        _scheme.theme.red,
-        _scheme.theme.red.withValues(alpha: .15),
-      ),
-      _ => (_scheme.muted, _scheme.muted.withValues(alpha: .12)),
-    };
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 1),
-      decoration: BoxDecoration(
-        color: bg,
-        borderRadius: BorderRadius.circular(10),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            width: 5,
-            height: 5,
-            decoration: BoxDecoration(color: fg, shape: BoxShape.circle),
-          ),
-          const SizedBox(width: 4),
-          Flexible(
-            child: Text(
-              _statusLabel,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: Theme.of(context).textTheme.bodySmall!.copyWith(
-                fontSize: 11,
-                height: 1.15,
-                fontWeight: FontWeight.w600,
-                color: fg,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final keyboardVisible = MediaQuery.viewInsetsOf(context).bottom > 0;
     final scale = MediaQuery.textScalerOf(context);
-    final media = MediaQuery.of(context);
     final usableHeight =
-        media.size.height - media.viewInsets.bottom - media.padding.top;
+        MediaQuery.sizeOf(context).height -
+        MediaQuery.viewInsetsOf(context).bottom -
+        MediaQuery.paddingOf(context).top;
     final compactChrome = keyboardVisible && usableHeight < 260;
     final headerHeight = compactChrome
         ? 48.0
@@ -1184,58 +1049,12 @@ class _TerminalPageState extends State<TerminalPage>
                 color: scheme.link,
                 icon: const Icon(Icons.close),
               ),
-              title: Semantics(
-                button: true,
-                label: context.l10n.terminalSessionSemantics(
-                  (escapedCommandPreview(widget.target.label)).toString(),
-                  (_statusLabel).toString(),
-                ),
-                excludeSemantics: true,
-                child: InkWell(
-                  onTap: _connectionDetails,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        escapedCommandPreview(
-                          widget.target.displayNameFor(context.l10n),
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: Theme.of(context).textTheme.titleMedium!
-                            .copyWith(
-                              color: scheme.theme.foreground,
-                              fontSize: compactChrome ? 14 : 17,
-                              height: 1.15,
-                              fontWeight: FontWeight.w600,
-                            ),
-                      ),
-                      if (!compactChrome)
-                        Row(
-                          key: const ValueKey('terminal-status'),
-                          children: [
-                            Flexible(flex: 2, child: _statusPill(context)),
-                            const SizedBox(width: 6),
-                            Expanded(
-                              child: Text(
-                                escapedCommandPreview(widget.target.label),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                textDirection: TextDirection.ltr,
-                                style: TextStyle(
-                                  fontFamily: terminalFontFamily,
-                                  fontSize: 11,
-                                  height: 1.15,
-                                  color: scheme.muted,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                    ],
-                  ),
-                ),
+              title: TerminalTitle(
+                scheme: scheme,
+                target: widget.target,
+                status: _service.status,
+                compact: compactChrome,
+                onTap: _connectionDetails,
               ),
               actions: [
                 if (hideKeyBar)
@@ -1257,82 +1076,30 @@ class _TerminalPageState extends State<TerminalPage>
                         : Icons.keyboard_outlined,
                   ),
                 ),
-                PopupMenuButton<String>(
-                  tooltip: context.l10n.terminalMenu,
-                  color: scheme.key,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
+                TerminalMenuButton(
+                  scheme: scheme,
+                  sftpEnabled: _connected && !_sftpOpening,
+                  powerEnabled:
+                      _connected &&
+                      !_powerBusy &&
+                      _powerIssuedGeneration != _service.generation,
                   onOpened: () => setState(_closeKeyboard),
                   onSelected: (action) {
                     switch (action) {
-                      case 'details':
+                      case TerminalMenuAction.details:
                         unawaited(_connectionDetails());
-                      case 'paste':
+                      case TerminalMenuAction.paste:
                         unawaited(_pasteToDraft().then((_) {}));
-                      case 'sftp':
+                      case TerminalMenuAction.sftp:
                         unawaited(_openSftp());
-                      case 'scheme':
+                      case TerminalMenuAction.scheme:
                         unawaited(showTerminalSchemePicker(_dialogContext));
-                      case 'reboot':
+                      case TerminalMenuAction.reboot:
                         unawaited(_power(SshPowerAction.reboot));
-                      case 'shutdown':
+                      case TerminalMenuAction.shutdown:
                         unawaited(_power(SshPowerAction.shutdown));
                     }
                   },
-                  itemBuilder: (_) => [
-                    PopupMenuItem(
-                      value: 'details',
-                      child: Builder(
-                        builder: (context) =>
-                            Text(context.l10n.terminalSessionDetails),
-                      ),
-                    ),
-                    PopupMenuItem(
-                      value: 'paste',
-                      child: Builder(
-                        builder: (context) =>
-                            Text(context.l10n.terminalPasteIntoDraft),
-                      ),
-                    ),
-                    PopupMenuItem(
-                      value: 'sftp',
-                      enabled: _connected && !_sftpOpening,
-                      child: Builder(
-                        builder: (context) => Text(context.l10n.r3SftpTitle),
-                      ),
-                    ),
-                    PopupMenuItem(
-                      value: 'scheme',
-                      child: Builder(
-                        builder: (context) =>
-                            Text(context.l10n.r3TermColorScheme),
-                      ),
-                    ),
-                    const PopupMenuDivider(),
-                    PopupMenuItem(
-                      value: 'reboot',
-                      enabled:
-                          _connected &&
-                          !_powerBusy &&
-                          _powerIssuedGeneration != _service.generation,
-                      child: Builder(
-                        builder: (context) =>
-                            Text(context.l10n.terminalSshRestart),
-                      ),
-                    ),
-                    PopupMenuItem(
-                      value: 'shutdown',
-                      enabled:
-                          _connected &&
-                          !_powerBusy &&
-                          _powerIssuedGeneration != _service.generation,
-                      child: Builder(
-                        builder: (context) =>
-                            Text(context.l10n.terminalSshShutdown),
-                      ),
-                    ),
-                  ],
                 ),
               ],
             ),
@@ -1348,10 +1115,10 @@ class _TerminalPageState extends State<TerminalPage>
                           children: [
                             Positioned.fill(
                               child: Listener(
-                                onPointerDown: _terminalPointerDown,
-                                onPointerMove: _terminalPointerMove,
-                                onPointerUp: _terminalPointerUp,
-                                onPointerCancel: (_) => _touchPointer = null,
+                                onPointerDown: _taps.down,
+                                onPointerMove: _taps.move,
+                                onPointerUp: _taps.up,
+                                onPointerCancel: (_) => _taps.cancel(),
                                 child: KeyedSubtree(
                                   key: ValueKey('terminal-input-$_inputEpoch'),
                                   child: TerminalView(
@@ -1421,47 +1188,43 @@ class _TerminalPageState extends State<TerminalPage>
                                       mainAxisSize: MainAxisSize.min,
                                       children: [
                                         if (_showBanner)
-                                          _connectionBanner(context),
+                                          TerminalConnectionBanner(
+                                            scheme: scheme,
+                                            connecting: _connecting,
+                                            onCancel: _service.disconnect,
+                                            onConnect: _connect,
+                                          ),
                                         if (_notice != null)
-                                          _noticeBanner(context),
+                                          TerminalNoticeBanner(
+                                            scheme: scheme,
+                                            text: localizedText(
+                                              _notice!,
+                                              context.l10n,
+                                            ),
+                                            onDismiss: () =>
+                                                setState(() => _notice = null),
+                                          ),
                                       ],
                                     ),
                                   ),
                                 ),
                               ),
-                            if (_terminalController.selection != null)
-                              Positioned(
+                            // Always positioned: a plain child would size the Stack.
+                            ListenableBuilder(
+                              listenable: _terminalController,
+                              builder: (context, _) => Positioned(
                                 top: 8,
                                 right: 8,
-                                child: Material(
-                                  color: scheme.chrome,
-                                  elevation: 4,
-                                  borderRadius: BorderRadius.circular(12),
-                                  child: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      TextButton.icon(
-                                        key: const ValueKey(
-                                          'terminal-copy-selection',
-                                        ),
-                                        onPressed: _copySelection,
-                                        icon: const Icon(
-                                          Icons.copy_outlined,
-                                          size: 18,
-                                        ),
-                                        label: Text(context.l10n.terminalCopy),
-                                      ),
-                                      IconButton(
-                                        tooltip:
-                                            context.l10n.terminalClearSelection,
-                                        onPressed:
+                                child: _terminalController.selection == null
+                                    ? const SizedBox.shrink()
+                                    : TerminalSelectionBar(
+                                        scheme: scheme,
+                                        onCopy: _copySelection,
+                                        onClear:
                                             _terminalController.clearSelection,
-                                        icon: const Icon(Icons.close, size: 18),
                                       ),
-                                    ],
-                                  ),
-                                ),
                               ),
+                            ),
                             if (_scrolledBack)
                               Positioned(
                                 bottom: 12,
@@ -1509,138 +1272,5 @@ class _TerminalPageState extends State<TerminalPage>
         ),
       ),
     );
-  }
-
-  /// Only before a session exists: connecting (with cancel) or the idle
-  /// "connect" prompt. Once a session has ended the page closes instead.
-  Widget _connectionBanner(BuildContext context) => Container(
-    key: const ValueKey('terminal-connection-banner'),
-    width: double.infinity,
-    color: _scheme.chrome,
-    child: ConstrainedBox(
-      constraints: BoxConstraints(
-        maxHeight: MediaQuery.sizeOf(context).height * .25,
-      ),
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(16, 4, 12, 8),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Wrap(
-              alignment: WrapAlignment.spaceBetween,
-              crossAxisAlignment: WrapCrossAlignment.center,
-              spacing: 8,
-              children: [
-                Text(
-                  _connecting
-                      ? context.l10n.terminalEstablishingSecure
-                      : context.l10n.terminalOffline,
-                  style: Theme.of(context).textTheme.bodyMedium,
-                ),
-                if (_connecting)
-                  TextButton(
-                    key: const ValueKey('terminal-disconnect'),
-                    onPressed: _service.disconnect,
-                    child: Text(context.l10n.terminalCancelConnection),
-                  )
-                else
-                  TextButton(
-                    key: const ValueKey('terminal-connect'),
-                    onPressed: kIsWeb ? null : _connect,
-                    child: Text(context.l10n.terminalConnect),
-                  ),
-              ],
-            ),
-            if (kIsWeb) Text(context.l10n.terminalBrowserUnsupported),
-          ],
-        ),
-      ),
-    ),
-  );
-
-  Widget _noticeBanner(BuildContext context) => Container(
-    color: _scheme.chrome,
-    padding: const EdgeInsets.only(left: 16, right: 4),
-    child: Row(
-      children: [
-        Expanded(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxHeight: 80),
-            child: SingleChildScrollView(
-              child: Text(
-                localizedText(_notice!, context.l10n),
-                style: Theme.of(context).textTheme.bodySmall,
-              ),
-            ),
-          ),
-        ),
-        IconButton(
-          tooltip: context.l10n.terminalDismissNotice,
-          onPressed: () => setState(() => _notice = null),
-          icon: const Icon(Icons.close, size: 18),
-        ),
-      ],
-    ),
-  );
-}
-
-/// Text committed by an IME may contain several characters and bypass xterm's
-/// key handler. It must still consume a one-shot Ctrl modifier, so that the
-/// modifier cannot unexpectedly affect a later ASCII key. Protocol replies
-/// use onOutput directly and are not changed by this input-only hook.
-class _MobileTerminal extends Terminal {
-  _MobileTerminal({
-    required super.maxLines,
-    required super.inputHandler,
-    required this.consumeControl,
-  });
-  final VoidCallback consumeControl;
-  @override
-  void textInput(String text) {
-    if (text.isNotEmpty) {
-      consumeControl();
-    }
-    super.textInput(text);
-  }
-}
-
-class _MobileTerminalKeys implements TerminalInputHandler {
-  const _MobileTerminalKeys({
-    required this.controlArmed,
-    required this.consumeControl,
-  });
-  final bool Function() controlArmed;
-  final VoidCallback consumeControl;
-  @override
-  String? call(TerminalKeyboardEvent event) {
-    if (controlArmed()) {
-      consumeControl();
-      event = event.copyWith(ctrl: true);
-    }
-    return const _CursorKeysHandler()(event) ?? defaultInputHandler(event);
-  }
-}
-
-/// xterm 4.0.0's public default keytab handler mistakenly consults keypad mode
-/// for AppCuKeys. Correct only unmodified arrows using xterm's parsed DECCKM
-/// state; all ANSI parsing, modified keys, and other input stay with xterm.
-class _CursorKeysHandler implements TerminalInputHandler {
-  const _CursorKeysHandler();
-  @override
-  String? call(TerminalKeyboardEvent event) {
-    if (event.ctrl || event.alt || event.shift) {
-      return null;
-    }
-    final suffix = switch (event.key) {
-      TerminalKey.arrowUp => 'A',
-      TerminalKey.arrowDown => 'B',
-      TerminalKey.arrowRight => 'C',
-      TerminalKey.arrowLeft => 'D',
-      _ => null,
-    };
-    if (suffix == null) {
-      return null;
-    }
-    return '${event.state.cursorKeysMode ? '\x1bO' : '\x1b['}$suffix';
   }
 }

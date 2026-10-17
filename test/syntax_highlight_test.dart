@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:vps_tell_you/connections/sftp_editor_page.dart';
 import 'package:vps_tell_you/connections/syntax_highlight.dart';
+import 'package:vps_tell_you/connections/syntax_highlight_controller.dart';
 import 'package:vps_tell_you/connections/terminal_scheme.dart';
 import 'package:vps_tell_you/core/app_theme.dart';
 import 'package:vps_tell_you/l10n/generated/app_localizations.dart';
@@ -557,6 +558,23 @@ void main() {
       final span = await build(tester, c);
       expect(c.lexedLines, lessThanOrEqualTo(1));
       expect(span.toPlainText(), lines.join('\n'));
+    });
+
+    testWidgets('a selection move reuses the identical span', (tester) async {
+      final c = SyntaxHighlightController(
+        text: 'a = 1\nb = 2',
+        language: SynLang.python,
+        theme: theme,
+      );
+      final first = await build(tester, c);
+      c.selection = const TextSelection.collapsed(offset: 3);
+      expect(await build(tester, c), same(first));
+      expect(c.lexedLines, 0);
+      c.language = SynLang.plain;
+      c.language = SynLang.python;
+      expect(await build(tester, c), isNot(same(first)));
+      c.text = 'a = 1\nb = 3';
+      expect((await build(tester, c)).toPlainText(), 'a = 1\nb = 3');
     });
 
     testWidgets('a carried state re-lexes until it converges again', (

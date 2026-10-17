@@ -379,26 +379,8 @@ class SnippetEditorPage extends StatefulWidget {
   State<SnippetEditorPage> createState() => _SnippetEditorPageState();
 }
 
-class _SnippetEditorPageState extends State<SnippetEditorPage> {
-  final form = GlobalKey<FormState>();
-  bool _hasValidated = false;
-  String? _validationLocale;
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    final next = context.l10n.localeName;
-    if (_validationLocale != null &&
-        _validationLocale != next &&
-        _hasValidated) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) {
-          form.currentState?.validate();
-        }
-      });
-    }
-    _validationLocale = next;
-  }
-
+class _SnippetEditorPageState extends State<SnippetEditorPage>
+    with LocaleRevalidatingForm<SnippetEditorPage> {
   late final TextEditingController name, content;
   late final String id;
   bool saving = false, dirty = false, allowPop = false;
@@ -449,8 +431,7 @@ class _SnippetEditorPageState extends State<SnippetEditorPage> {
     if (saving) {
       return;
     }
-    _hasValidated = true;
-    if (!form.currentState!.validate()) {
+    if (!validateForm()) {
       return;
     }
     setState(() => saving = true);
@@ -493,7 +474,7 @@ class _SnippetEditorPageState extends State<SnippetEditorPage> {
         actionBusy: saving,
         children: [
           Form(
-            key: form,
+            key: formKey,
             onChanged: () {
               if (!dirty) {
                 setState(() => dirty = true);

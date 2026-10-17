@@ -13,6 +13,7 @@ import '../l10n/locale_preference.dart';
 import 'sftp_session.dart';
 import 'sftp_support.dart';
 import 'syntax_highlight.dart';
+import 'syntax_highlight_controller.dart';
 import 'terminal_scheme.dart';
 
 /// Plain-text editor for one remote file (UTF-8, up to 512 KiB).
@@ -65,6 +66,7 @@ class _SftpTextEditorPageState extends State<SftpTextEditorPage> {
 
   // Derived from the text only when it changes (selection moves are frequent).
   late _TextShape _shape = _TextShape.of(_text.text);
+  late int _bytes = utf8.encode(_text.text).length;
   String _shapeOf = '';
   _EditorMetrics? _metrics;
   ({_TextShape shape, _EditorMetrics metrics, double width})? _widest;
@@ -90,6 +92,7 @@ class _SftpTextEditorPageState extends State<SftpTextEditorPage> {
     if (text != _shapeOf) {
       _shapeOf = text;
       _shape = _TextShape.of(text);
+      _bytes = utf8.encode(text).length;
     }
     setState(() {});
   }
@@ -273,8 +276,9 @@ class _SftpTextEditorPageState extends State<SftpTextEditorPage> {
     final metrics = _metricsFor(context, textStyle);
     final shown = _keyboardShown(context);
     final caretLine = _caretLine();
+    final dirty = _dirty;
     return PopScope(
-      canPop: !_dirty,
+      canPop: !dirty,
       onPopInvokedWithResult: (didPop, _) {
         if (didPop) return;
         unawaited(_close());
@@ -301,7 +305,7 @@ class _SftpTextEditorPageState extends State<SftpTextEditorPage> {
                   title: widget.name,
                   subtitle:
                       '${_text.tooLarge ? l10n.r4HlTooLarge : language} · '
-                      '${l10n.r3SftpEditorSize(formatBytes(utf8.encode(_text.text).length))}',
+                      '${l10n.r3SftpEditorSize(formatBytes(_bytes))}',
                   leading: AppNavButton.text(
                     l10n.r3SftpClose,
                     key: const ValueKey('sftp-editor-close'),
@@ -337,7 +341,7 @@ class _SftpTextEditorPageState extends State<SftpTextEditorPage> {
                             l10n.save,
                             key: const ValueKey('sftp-editor-save'),
                             bold: true,
-                            onPressed: _dirty ? _save : null,
+                            onPressed: dirty ? _save : null,
                           ),
                   ],
                 ),

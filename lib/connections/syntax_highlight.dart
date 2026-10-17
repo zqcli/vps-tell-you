@@ -1,244 +1,6 @@
-import 'package:flutter/material.dart';
+import 'syntax_language.dart';
 
-import 'terminal_scheme.dart';
-
-/// Small, dependency-free syntax highlighter for the SFTP text editor.
-///
-/// Line-oriented lexers with a tiny carried state (block comment, triple
-/// quote, markdown fence, …) so edits only re-lex the changed lines. Colours
-/// come from the terminal scheme palette ([CodeTheme]); the highlighter only
-/// styles text, it never alters it.
-
-/// Files above this many UTF-16 units stay plain (a note is shown instead).
-const syntaxHighlightMaxChars = 256 * 1024;
-
-enum SynLang {
-  plain,
-  generic,
-  shell,
-  yaml,
-  json,
-  ini,
-  nginx,
-  dockerfile,
-  python,
-  javascript,
-  markdown,
-  markup,
-  sql,
-}
-
-/// Proper names that need no translation; `null` for [SynLang.plain] and
-/// [SynLang.generic], which the UI labels with localized text.
-String? synLangName(SynLang lang) => switch (lang) {
-  SynLang.plain || SynLang.generic => null,
-  SynLang.shell => 'Shell',
-  SynLang.yaml => 'YAML',
-  SynLang.json => 'JSON',
-  SynLang.ini => 'INI / conf',
-  SynLang.nginx => 'nginx',
-  SynLang.dockerfile => 'Dockerfile',
-  SynLang.python => 'Python',
-  SynLang.javascript => 'JavaScript / TypeScript',
-  SynLang.markdown => 'Markdown',
-  SynLang.markup => 'XML / HTML',
-  SynLang.sql => 'SQL',
-};
-
-enum SynKind {
-  keyword,
-  string,
-  number,
-  constant,
-  comment,
-  builtin,
-  variable,
-  key,
-  type,
-  operator,
-  tag,
-  attribute,
-  heading,
-  meta,
-}
-
-class SynTok {
-  const SynTok(this.start, this.end, this.kind);
-  final int start, end;
-  final SynKind kind;
-}
-
-/// Colours for [SynKind], taken from one terminal scheme's ANSI palette.
-class CodeTheme {
-  const CodeTheme(this.scheme);
-  final TerminalScheme scheme;
-
-  /// The scheme to use in an app of [appBrightness]: the user's terminal
-  /// scheme when it matches the app's light/dark mode, otherwise the first
-  /// curated scheme of the matching mode.
-  factory CodeTheme.forApp(TerminalScheme chosen, Brightness appBrightness) {
-    if (chosen.brightness == appBrightness) return CodeTheme(chosen);
-    return CodeTheme(
-      TerminalScheme.all.firstWhere((s) => s.brightness == appBrightness),
-    );
-  }
-
-  Color get background => scheme.theme.background;
-  Color get foreground => scheme.theme.foreground;
-  Color get cursor => scheme.theme.cursor;
-
-  Color color(SynKind kind) {
-    final t = scheme.theme;
-    return switch (kind) {
-      SynKind.keyword => t.magenta,
-      SynKind.string => t.green,
-      SynKind.number => t.yellow,
-      SynKind.constant => t.yellow,
-      SynKind.comment => t.brightBlack,
-      SynKind.builtin => t.blue,
-      SynKind.variable => t.cyan,
-      SynKind.key => t.blue,
-      SynKind.type => t.cyan,
-      SynKind.operator => t.cyan,
-      SynKind.tag => t.red,
-      SynKind.attribute => t.yellow,
-      SynKind.heading => t.red,
-      SynKind.meta => t.brightBlue,
-    };
-  }
-
-  @override
-  bool operator ==(Object other) =>
-      other is CodeTheme && other.scheme == scheme;
-  @override
-  int get hashCode => scheme.hashCode;
-}
-
-// ---------------------------------------------------------------------------
-// Language detection
-
-SynLang detectLanguage({required String name, String? path, String text = ''}) {
-  final lower = name.toLowerCase();
-  final dot = lower.lastIndexOf('.');
-  final ext = dot >= 0 ? lower.substring(dot + 1) : '';
-  final lowerPath = (path ?? name).toLowerCase();
-  if (lower == 'dockerfile' ||
-      lower.startsWith('dockerfile.') ||
-      lower == 'containerfile' ||
-      ext == 'dockerfile') {
-    return SynLang.dockerfile;
-  }
-  const shellNames = {
-    '.bashrc',
-    '.bash_profile',
-    '.bash_aliases',
-    '.bash_logout',
-    '.profile',
-    '.zshrc',
-    '.zprofile',
-    '.zshenv',
-    '.shrc',
-    '.envrc',
-    'bashrc',
-    'profile',
-  };
-  if (shellNames.contains(lower)) return SynLang.shell;
-  if (lower == '.env' || lower.startsWith('.env.') || ext == 'env') {
-    return SynLang.ini;
-  }
-  switch (ext) {
-    case 'sh' || 'bash' || 'zsh' || 'ksh' || 'ash' || 'dash' || 'fish':
-      return SynLang.shell;
-    case 'yml' || 'yaml':
-      return SynLang.yaml;
-    case 'json' || 'jsonc' || 'json5' || 'webmanifest' || 'geojson':
-      return SynLang.json;
-    case 'py' || 'pyw' || 'pyi':
-      return SynLang.python;
-    case 'js' || 'mjs' || 'cjs' || 'jsx' || 'ts' || 'tsx' || 'mts' || 'cts':
-      return SynLang.javascript;
-    case 'md' || 'markdown':
-      return SynLang.markdown;
-    case 'xml' || 'html' || 'htm' || 'xhtml' || 'svg' || 'plist' || 'xsl':
-      return SynLang.markup;
-    case 'sql':
-      return SynLang.sql;
-    case 'nginx':
-      return SynLang.nginx;
-    case 'conf' || 'cfg':
-      if (lowerPath.contains('nginx') ||
-          lowerPath.contains('sites-available') ||
-          lowerPath.contains('sites-enabled') ||
-          _looksNginx(text)) {
-        return SynLang.nginx;
-      }
-      return SynLang.ini;
-    case 'ini' ||
-        'properties' ||
-        'toml' ||
-        'service' ||
-        'timer' ||
-        'socket' ||
-        'mount' ||
-        'target' ||
-        'path' ||
-        'desktop' ||
-        'repo' ||
-        'rules' ||
-        'container':
-      return SynLang.ini;
-  }
-  if (lower == 'nginx.conf' || lowerPath.contains('/nginx/')) {
-    return SynLang.nginx;
-  }
-  if (const {
-    'sshd_config',
-    'ssh_config',
-    'fstab',
-    'crontab',
-    'hosts',
-    'resolv.conf',
-    'sudoers',
-  }.contains(lower)) {
-    return SynLang.ini;
-  }
-  // Shebang, then a cheap content sniff for files without a telling name.
-  final head = text.length > 2048 ? text.substring(0, 2048) : text;
-  if (head.startsWith('#!')) {
-    final eol = head.indexOf('\n');
-    final line = (eol < 0 ? head : head.substring(0, eol)).toLowerCase();
-    if (RegExp(r'(\bba|z|k|da|a)?sh\b|fish').hasMatch(line)) {
-      return SynLang.shell;
-    }
-    if (line.contains('python')) return SynLang.python;
-    if (line.contains('node') ||
-        line.contains('deno') ||
-        line.contains('bun')) {
-      return SynLang.javascript;
-    }
-    return SynLang.generic;
-  }
-  final trimmed = head.trimLeft();
-  if (ext.isEmpty) {
-    if (trimmed.startsWith('<?xml') || trimmed.startsWith('<!DOCTYPE')) {
-      return SynLang.markup;
-    }
-    if ((trimmed.startsWith('{') || trimmed.startsWith('[')) &&
-        trimmed.contains('"')) {
-      return SynLang.json;
-    }
-    if (_looksNginx(head)) return SynLang.nginx;
-  }
-  return SynLang.generic;
-}
-
-bool _looksNginx(String head) =>
-    RegExp(
-      r'^\s*(server|location|upstream)\s[^;]*\{',
-      multiLine: true,
-    ).hasMatch(head) ||
-    head.contains('proxy_pass') ||
-    head.contains('worker_processes');
+export 'syntax_language.dart';
 
 // ---------------------------------------------------------------------------
 // Lexers
@@ -250,7 +12,7 @@ class LexResult {
 }
 
 // Carried states (`inState` of the next line).
-const _sNormal = 0;
+const lexNormal = 0;
 const _sBlock = 1; // /* … */
 const _sTripleSingle = 2;
 const _sTripleDouble = 3;
@@ -459,7 +221,7 @@ bool _isSpace(int c) => c == 0x20 || c == 0x09 || c == 0x0d;
 LexResult lexLine(SynLang lang, String line, int state) {
   final out = <SynTok>[];
   final end = switch (lang) {
-    SynLang.plain => _sNormal,
+    SynLang.plain => lexNormal,
     SynLang.generic => _scan(line, 0, line.length, _genericSpec, state, out),
     SynLang.shell => _lexShell(line, state, out),
     SynLang.python => _lexPython(line, state, out),
@@ -479,15 +241,15 @@ LexResult lexLine(SynLang lang, String line, int state) {
 int _lexShell(String s, int state, List<SynTok> out) {
   if (s.startsWith('#!')) {
     out.add(SynTok(0, s.length, SynKind.meta));
-    return _sNormal;
+    return lexNormal;
   }
   return _scan(s, 0, s.length, _shellSpec, state, out);
 }
 
 int _lexPython(String s, int state, List<SynTok> out) {
-  if (s.startsWith('#!') && state == _sNormal) {
+  if (s.startsWith('#!') && state == lexNormal) {
     out.add(SynTok(0, s.length, SynKind.meta));
-    return _sNormal;
+    return lexNormal;
   }
   return _scan(s, 0, s.length, _pythonSpec, state, out);
 }
@@ -502,8 +264,8 @@ int _lexDocker(String s, int state, List<SynTok> out) {
     out,
     stmtStart: state != _sContinued,
   );
-  if (next != _sNormal) return next;
-  return s.trimRight().endsWith('\\') ? _sContinued : _sNormal;
+  if (next != lexNormal) return next;
+  return s.trimRight().endsWith('\\') ? _sContinued : lexNormal;
 }
 
 /// Scans [s] between [from] and [to]; returns the state to carry.
@@ -576,7 +338,7 @@ int _scan(
     }
     if (commented) {
       out.add(SynTok(i, to, SynKind.comment));
-      return _sNormal;
+      return lexNormal;
     }
     // Strings
     if (sp.quotes.contains(String.fromCharCode(c)) &&
@@ -777,7 +539,7 @@ int _scan(
     }
     i++;
   }
-  return _sNormal;
+  return lexNormal;
 }
 
 const _declarers = {'export', 'local', 'readonly', 'declare'};
@@ -888,15 +650,15 @@ int _lexYaml(String s, int state, List<SynTok> out) {
       return state;
     }
   }
-  if (blank) return _sNormal;
+  if (blank) return lexNormal;
   if (s.codeUnitAt(indent) == 0x23) {
     out.add(SynTok(indent, n, SynKind.comment));
-    return _sNormal;
+    return lexNormal;
   }
   if (indent == 0 && (s.startsWith('---') || s.startsWith('...'))) {
     out.add(SynTok(0, 3, SynKind.meta));
-    if (n > 3) _scan(s, 3, n, _yamlValueSpec, _sNormal, out);
-    return _sNormal;
+    if (n > 3) _scan(s, 3, n, _yamlValueSpec, lexNormal, out);
+    return lexNormal;
   }
   var i = indent;
   // sequence dashes: "- ", "- - "
@@ -909,7 +671,7 @@ int _lexYaml(String s, int state, List<SynTok> out) {
       i++;
     }
   }
-  if (i >= n) return _sNormal;
+  if (i >= n) return lexNormal;
   // key
   var keyEnd = -1;
   final c = s.codeUnitAt(i);
@@ -935,7 +697,7 @@ int _lexYaml(String s, int state, List<SynTok> out) {
   }
   if (keyEnd < 0) {
     _yamlValue(s, i, n, out);
-    return _sNormal;
+    return lexNormal;
   }
   var kEnd = keyEnd;
   while (kEnd > i && s.codeUnitAt(kEnd - 1) == 0x20) {
@@ -946,14 +708,14 @@ int _lexYaml(String s, int state, List<SynTok> out) {
   while (v < n && s.codeUnitAt(v) == 0x20) {
     v++;
   }
-  if (v >= n) return _sNormal;
+  if (v >= n) return lexNormal;
   if (s.codeUnitAt(v) == 0x7c || s.codeUnitAt(v) == 0x3e) {
     out.add(SynTok(v, v + 1, SynKind.operator));
-    if (v + 1 < n) _scan(s, v + 1, n, _yamlValueSpec, _sNormal, out);
+    if (v + 1 < n) _scan(s, v + 1, n, _yamlValueSpec, lexNormal, out);
     return _sBlockScalar + indent;
   }
   _yamlValue(s, v, n, out);
-  return _sNormal;
+  return lexNormal;
 }
 
 bool _colonAfter(String s, int from) {
@@ -985,7 +747,7 @@ void _yamlValue(String s, int from, int n, List<SynTok> out) {
       c == 0x23 ||
       c == 0x7c ||
       c == 0x3e) {
-    _scan(s, from, n, _yamlValueSpec, _sNormal, out);
+    _scan(s, from, n, _yamlValueSpec, lexNormal, out);
     return;
   }
   // plain scalar up to an inline comment
@@ -1002,18 +764,19 @@ void _yamlValue(String s, int from, int n, List<SynTok> out) {
   }
   final text = s.substring(from, e);
   if (text.contains(r'${')) {
-    _scan(s, from, e, _yamlValueSpec, _sNormal, out);
+    _scan(s, from, e, _yamlValueSpec, lexNormal, out);
   } else if (_yamlValueSpec.constants.contains(text)) {
     out.add(SynTok(from, e, SynKind.constant));
-  } else if (RegExp(r'^[-+]?(\d[\d_]*)(\.\d+)?([eE][-+]?\d+)?$')
-          .hasMatch(text) ||
-      RegExp(r'^0x[0-9a-fA-F]+$').hasMatch(text)) {
+  } else if (_yamlNumber.hasMatch(text) || _hexNumber.hasMatch(text)) {
     out.add(SynTok(from, e, SynKind.number));
   } else {
     out.add(SynTok(from, e, SynKind.string));
   }
   if (end < n) out.add(SynTok(end, n, SynKind.comment));
 }
+
+final _yamlNumber = RegExp(r'^[-+]?(\d[\d_]*)(\.\d+)?([eE][-+]?\d+)?$');
+final _hexNumber = RegExp(r'^0x[0-9a-fA-F]+$');
 
 void _yamlValue2(String s, int from, int n, List<SynTok> out) {
   var i = from;
@@ -1031,18 +794,18 @@ int _lexIni(String s, List<SynTok> out) {
   while (i < n && _isSpace(s.codeUnitAt(i))) {
     i++;
   }
-  if (i >= n) return _sNormal;
+  if (i >= n) return lexNormal;
   final c = s.codeUnitAt(i);
   if (c == 0x23 || c == 0x3b) {
     out.add(SynTok(i, n, SynKind.comment));
-    return _sNormal;
+    return lexNormal;
   }
   if (c == 0x5b) {
     var e = s.indexOf(']', i);
     e = e < 0 ? n : e + 1;
     out.add(SynTok(i, e, SynKind.heading));
-    if (e < n) _scan(s, e, n, _iniValueSpec, _sNormal, out);
-    return _sNormal;
+    if (e < n) _scan(s, e, n, _iniValueSpec, lexNormal, out);
+    return lexNormal;
   }
   if (s.startsWith('export ', i)) {
     out.add(SynTok(i, i + 6, SynKind.keyword));
@@ -1072,11 +835,15 @@ int _lexIni(String s, List<SynTok> out) {
   }
   if (kEnd > i) out.add(SynTok(i, kEnd, SynKind.key));
   if (eq > 0) out.add(SynTok(eq, eq + 1, SynKind.operator));
-  if (valueFrom < n) _scan(s, valueFrom, n, _iniValueSpec, _sNormal, out);
-  return _sNormal;
+  if (valueFrom < n) _scan(s, valueFrom, n, _iniValueSpec, lexNormal, out);
+  return lexNormal;
 }
 
 // --- Markdown ----------------------------------------------------------------
+
+final _mdHeading = RegExp(r'^#{1,6}(\s|$)');
+final _mdBullet = RegExp(r'^([-*+]|\d+[.)])\s+');
+final _mdRule = RegExp(r'^([-*_])(\s*\1){2,}\s*$');
 
 int _lexMarkdown(String s, int state, List<SynTok> out) {
   final n = s.length;
@@ -1084,31 +851,31 @@ int _lexMarkdown(String s, int state, List<SynTok> out) {
   final lead = n - t.length;
   if (t.startsWith('```') || t.startsWith('~~~')) {
     out.add(SynTok(lead, n, SynKind.meta));
-    return state == _sFence ? _sNormal : _sFence;
+    return state == _sFence ? lexNormal : _sFence;
   }
   if (state == _sFence) {
     if (n > 0) out.add(SynTok(0, n, SynKind.string));
     return _sFence;
   }
-  if (t.isEmpty) return _sNormal;
-  if (RegExp(r'^#{1,6}(\s|$)').hasMatch(t)) {
+  if (t.isEmpty) return lexNormal;
+  if (_mdHeading.hasMatch(t)) {
     out.add(SynTok(lead, n, SynKind.heading));
-    return _sNormal;
+    return lexNormal;
   }
   var i = lead;
-  final bullet = RegExp(r'^([-*+]|\d+[.)])\s+').firstMatch(t);
+  final bullet = _mdBullet.firstMatch(t);
   if (bullet != null) {
     out.add(SynTok(i, i + bullet.group(1)!.length, SynKind.operator));
     i += bullet.end;
   } else if (t.startsWith('>')) {
     out.add(SynTok(i, i + 1, SynKind.operator));
     i++;
-  } else if (RegExp(r'^([-*_])(\s*\1){2,}\s*$').hasMatch(t)) {
+  } else if (_mdRule.hasMatch(t)) {
     out.add(SynTok(lead, n, SynKind.operator));
-    return _sNormal;
+    return lexNormal;
   }
   _mdInline(s, i, n, out);
-  return _sNormal;
+  return lexNormal;
 }
 
 void _mdInline(String s, int from, int n, List<SynTok> out) {
@@ -1173,19 +940,19 @@ int _lexMarkup(String s, int state, List<SynTok> out) {
       }
       out.add(SynTok(i, e + 3, SynKind.comment));
       i = e + 3;
-      state = _sNormal;
+      state = lexNormal;
       continue;
     }
     if (state == _sXmlTag) {
       i = _markupAttrs(s, i, n, out);
       if (i < 0) return _sXmlTag;
-      state = _sNormal;
+      state = lexNormal;
       continue;
     }
     final lt = s.indexOf('<', i);
     final textEnd = lt < 0 ? n : lt;
     _markupEntities(s, i, textEnd, out);
-    if (lt < 0) return _sNormal;
+    if (lt < 0) return lexNormal;
     i = lt;
     if (s.startsWith('<!--', i)) {
       state = _sXmlComment;
@@ -1196,7 +963,7 @@ int _lexMarkup(String s, int state, List<SynTok> out) {
       }
       out.add(SynTok(i, e + 3, SynKind.comment));
       i = e + 3;
-      state = _sNormal;
+      state = lexNormal;
       continue;
     }
     if (s.startsWith('<?', i) || s.startsWith('<!', i)) {
@@ -1224,7 +991,7 @@ int _lexMarkup(String s, int state, List<SynTok> out) {
     i = _markupAttrs(s, j, n, out);
     if (i < 0) return _sXmlTag;
   }
-  return _sNormal;
+  return lexNormal;
 }
 
 /// Attributes up to and including `>`; returns the index after it, or -1 if
@@ -1285,172 +1052,5 @@ void _markupEntities(String s, int from, int to, List<SynTok> out) {
       }
     }
     i++;
-  }
-}
-
-// ---------------------------------------------------------------------------
-// Controller
-
-/// [TextEditingController] that colours its text. The visible text is exactly
-/// [text]; only [TextSpan] styles differ.
-class SyntaxHighlightController extends TextEditingController {
-  SyntaxHighlightController({
-    super.text,
-    SynLang language = SynLang.generic,
-    CodeTheme? theme,
-  }) {
-    _language = language;
-    _theme = theme;
-  }
-
-  SynLang _language = SynLang.generic;
-  CodeTheme? _theme;
-
-  _LineCache? _cache;
-  int _lexedLines = 0;
-
-  /// Number of lines lexed by the last [buildTextSpan] (for tests).
-  int get lexedLines => _lexedLines;
-
-  SynLang get language => _language;
-  set language(SynLang value) {
-    if (value == _language) return;
-    _language = value;
-    _cache = null;
-    notifyListeners();
-  }
-
-  /// Sets the colours without notifying, for use while a widget is building
-  /// (the surrounding TextField rebuilds in the same frame anyway).
-  void applyThemeQuietly(CodeTheme value) {
-    if (value == _theme) return;
-    _theme = value;
-    _cache = null;
-  }
-
-  CodeTheme? get theme => _theme;
-  set theme(CodeTheme? value) {
-    if (value == _theme) return;
-    _theme = value;
-    _cache = null;
-    notifyListeners();
-  }
-
-  /// Whether the current text is being coloured.
-  bool get highlighting =>
-      _language != SynLang.plain &&
-      _theme != null &&
-      text.length <= syntaxHighlightMaxChars;
-
-  bool get tooLarge => text.length > syntaxHighlightMaxChars;
-
-  @override
-  TextSpan buildTextSpan({
-    required BuildContext context,
-    TextStyle? style,
-    required bool withComposing,
-  }) {
-    if (!highlighting || (withComposing && value.isComposingRangeValid)) {
-      // IME composition keeps the framework's underline behaviour.
-      return super.buildTextSpan(
-        context: context,
-        style: style,
-        withComposing: withComposing,
-      );
-    }
-    final cache = _cache ??= _LineCache(_language, _theme!);
-    final lines = text.split('\n');
-    _lexedLines = cache.update(lines);
-    return TextSpan(
-      style: style,
-      children: [
-        for (var i = 0; i < cache.lines.length; i++) ...[
-          cache.lines[i].span!,
-          if (i < cache.lines.length - 1) _newline,
-        ],
-      ],
-    );
-  }
-}
-
-const _newline = TextSpan(text: '\n');
-
-class _Line {
-  _Line(this.text, this.inState);
-  final String text;
-  final int inState;
-  int outState = 0;
-  TextSpan? span;
-}
-
-class _LineCache {
-  _LineCache(this.language, this.theme);
-  final SynLang language;
-  final CodeTheme theme;
-  List<_Line> lines = [];
-
-  /// Re-lexes only what changed; returns how many lines were lexed.
-  int update(List<String> next) {
-    final old = lines;
-    final out = <_Line>[];
-    var lexed = 0;
-    var state = _sNormal;
-    var prefix = 0;
-    while (prefix < next.length &&
-        prefix < old.length &&
-        old[prefix].text == next[prefix] &&
-        old[prefix].inState == state) {
-      state = old[prefix].outState;
-      out.add(old[prefix]);
-      prefix++;
-    }
-    // Unchanged trailing lines that do not overlap the reused prefix.
-    var suffix = 0;
-    while (suffix < next.length - prefix &&
-        suffix < old.length - prefix &&
-        old[old.length - 1 - suffix].text == next[next.length - 1 - suffix]) {
-      suffix++;
-    }
-    for (var i = prefix; i < next.length; i++) {
-      final remaining = next.length - i;
-      if (remaining <= suffix) {
-        final oldIndex = old.length - remaining;
-        if (old[oldIndex].inState == state) {
-          // Same text and same carried state: the rest is already lexed.
-          out.addAll(old.sublist(oldIndex));
-          lines = out;
-          return lexed;
-        }
-      }
-      final line = _Line(next[i], state);
-      final result = lexLine(language, next[i], state);
-      line.outState = result.state;
-      line.span = _spanFor(next[i], result.toks);
-      out.add(line);
-      state = result.state;
-      lexed++;
-    }
-    lines = out;
-    return lexed;
-  }
-
-  TextSpan _spanFor(String text, List<SynTok> toks) {
-    final children = <TextSpan>[];
-    var pos = 0;
-    for (final t in toks) {
-      if (t.start < pos || t.end <= t.start) continue;
-      if (t.start > pos) {
-        children.add(TextSpan(text: text.substring(pos, t.start)));
-      }
-      children.add(
-        TextSpan(
-          text: text.substring(t.start, t.end),
-          style: TextStyle(color: theme.color(t.kind)),
-        ),
-      );
-      pos = t.end;
-    }
-    if (pos < text.length) children.add(TextSpan(text: text.substring(pos)));
-    return TextSpan(children: children);
   }
 }
