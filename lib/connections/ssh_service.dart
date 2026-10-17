@@ -44,6 +44,8 @@ String powerCommand(SshPowerAction action) => switch (action) {
   SshPowerAction.shutdown => 'sudo -n shutdown -h now',
 };
 
+final _controlOrSpace = RegExp(r'[\x00-\x20\x7f]');
+
 class SshTarget {
   const SshTarget({
     required this.name,
@@ -72,7 +74,7 @@ class SshTarget {
         port > 65535 ||
         username.isEmpty ||
         username.length > 128 ||
-        RegExp(r'[\x00-\x20\x7f]').hasMatch(username) ||
+        _controlOrSpace.hasMatch(username) ||
         credentialId.isEmpty) {
       throw SecurityFailure(LocalizedText((l10n) => l10n.sshCheckTarget));
     }
@@ -600,15 +602,7 @@ class NativeSshService extends SshService {
               },
       );
       _client = client;
-      unawaited(
-        client.done.then(
-          (_) => _finishRemoteClose(epoch),
-          onError: (Object problem) {
-            _closeCause ??= problem;
-            return _finishRemoteClose(epoch);
-          },
-        ),
-      );
+      _watchClose(client.done, epoch);
       await client.authenticated;
       _guard(epoch);
       return await openChannel(epoch, client);
@@ -672,8 +666,16 @@ class NativeSshService extends SshService {
         }
       },
     );
+    _watchClose(session.done, epoch);
+    _stage = ErrorStage.session;
+    _setStatus(SshStatus.connected);
+    // A resize may have arrived while the PTY request was awaiting its reply.
+    session.resizeTerminal(_columns, _rows);
+  }
+
+  void _watchClose(Future<void> done, int epoch) {
     unawaited(
-      session.done.then(
+      done.then(
         (_) => _finishRemoteClose(epoch),
         onError: (Object problem) {
           _closeCause ??= problem;
@@ -681,10 +683,6 @@ class NativeSshService extends SshService {
         },
       ),
     );
-    _stage = ErrorStage.session;
-    _setStatus(SshStatus.connected);
-    // A resize may have arrived while the PTY request was awaiting its reply.
-    session.resizeTerminal(_columns, _rows);
   }
 
   Future<void> _finishRemoteClose(int epoch) async {
@@ -726,6 +724,12 @@ class NativeSshService extends SshService {
     _setStatus(SshStatus.disconnected);
   }
 
+  /// Fails an established session because [problem] hit while using it.
+  void _failSession(LocalizedMessage message, Object problem) => _fail(
+    message,
+    details: _detail(describeError(problem), ErrorStage.session),
+  );
+
   void _fail(LocalizedMessage message, {ErrorDetails? details}) {
     _release();
     generation++;
@@ -750,10 +754,7 @@ class NativeSshService extends SshService {
     try {
       _session?.write(Uint8List.fromList(utf8.encode(value)));
     } catch (problem) {
-      _fail(
-        LocalizedText((l10n) => l10n.sshInputUnconfirmed),
-        details: _detail(describeError(problem), ErrorStage.session),
-      );
+      _failSession(LocalizedText((l10n) => l10n.sshInputUnconfirmed), problem);
     }
   }
 
@@ -765,10 +766,7 @@ class NativeSshService extends SshService {
       try {
         _session?.resizeTerminal(_columns, _rows);
       } catch (problem) {
-        _fail(
-          LocalizedText((l10n) => l10n.sshResizeFailed),
-          details: _detail(describeError(problem), ErrorStage.session),
-        );
+        _failSession(LocalizedText((l10n) => l10n.sshResizeFailed), problem);
       }
     }
   }
