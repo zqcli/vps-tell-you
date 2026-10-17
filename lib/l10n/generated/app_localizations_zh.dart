@@ -4814,6 +4814,23 @@ class AppLocalizationsZh extends AppLocalizations {
   String get r15Details => '详情';
 
   @override
+  String r17ChangelogCount(int count) {
+    return '$count 项更新';
+  }
+
+  @override
+  String get r17CurrentVersion => '当前版本';
+
+  @override
+  String get r17GithubRelease => 'GitHub 发布';
+
+  @override
+  String get r17ReleaseLinkCopied => '已复制发布页链接';
+
+  @override
+  String get r17ChangelogFooter => '每个版本的内容与 GitHub 上同名标签的发布说明一致。';
+
+  @override
   String get r17SessionExited => '已退出 SSH 会话';
 
   @override

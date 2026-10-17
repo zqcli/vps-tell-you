@@ -27,8 +27,46 @@ class ChangelogItem {
 
 class ChangelogRelease {
   ChangelogRelease(this.title);
+
+  /// The heading after `## `, e.g. `0.5.0 — 2026-10-16`.
   final String title;
   final List<ChangelogSection> sections = [];
+
+  static final _heading = RegExp(r'^(\d+)\.(\d+)\.(\d+)\s*[—-]\s*(.*)$');
+  static final _date = RegExp(r'^\d{4}-\d{2}-\d{2}$');
+
+  /// `0.5.0`, or the whole title when it is not `version — label`.
+  String get version => _heading.firstMatch(title) == null
+      ? title
+      : title.substring(0, title.indexOf(RegExp(r'\s*[—-]'))).trim();
+
+  /// What follows the version: a release date, or "Unreleased".
+  String get label => _heading.firstMatch(title)?[4]?.trim() ?? '';
+
+  /// Released versions carry a date and have a `v<version>` tag on GitHub.
+  bool get released => _date.hasMatch(label);
+  String get tag => 'v$version';
+
+  int get bulletCount =>
+      sections.fold(0, (n, s) => n + s.items.where((i) => i.bullet).length);
+
+  /// Newest first by semantic version; unparsable titles keep file order
+  /// after the parsable ones.
+  static int compare(ChangelogRelease a, ChangelogRelease b) {
+    List<int>? parts(ChangelogRelease r) {
+      final m = _heading.firstMatch(r.title);
+      return m == null ? null : [for (var i = 1; i <= 3; i++) int.parse(m[i]!)];
+    }
+
+    final x = parts(a), y = parts(b);
+    if (x == null || y == null) {
+      return (x == null ? 1 : 0) - (y == null ? 1 : 0);
+    }
+    for (var i = 0; i < 3; i++) {
+      if (x[i] != y[i]) return y[i].compareTo(x[i]);
+    }
+    return 0;
+  }
 }
 
 List<ChangelogRelease> parseChangelog(String source) {
@@ -107,7 +145,12 @@ List<ChangelogRelease> parseChangelog(String source) {
     }
   }
   flush();
-  return releases;
+  // Newest version first, whatever order the file uses (stable for ties).
+  final order = {for (var i = 0; i < releases.length; i++) releases[i]: i};
+  return releases..sort((a, b) {
+    final c = ChangelogRelease.compare(a, b);
+    return c != 0 ? c : order[a]!.compareTo(order[b]!);
+  });
 }
 
 /// Splits [text] into `(segment, bold)` pairs at `**…**` markers. An

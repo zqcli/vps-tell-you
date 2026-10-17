@@ -178,24 +178,56 @@ over two lines.
     }
   });
 
+  test('releases sort by version and expose tag, label and counts', () {
+    final releases = parseChangelog(
+      '## 0.9.0 — 2026-01-01\n- a\n## 0.10.0 — Unreleased\n### Added\n- b\n- c\n'
+      '## 0.2.0 — 2025-01-01\n- d\n',
+    );
+    expect(releases.map((r) => r.version), ['0.10.0', '0.9.0', '0.2.0']);
+    expect(releases.first.label, 'Unreleased');
+    expect(releases.first.released, isFalse);
+    expect(releases.first.bulletCount, 2);
+    expect(releases[1].released, isTrue);
+    expect(releases[1].tag, 'v0.9.0');
+  });
+
   group('changelog page (real assets)', () {
-    testWidgets('zh', (tester) async {
+    testWidgets('zh: versions newest first, a version opens its details', (
+      tester,
+    ) async {
       await mount(tester, const ChangelogPage(), locale: 'zh');
       expect(find.text('更新记录'), findsOneWidget);
-      expect(find.text('0.5.0 — 2026-10-16'), findsOneWidget);
+      double top(String v) =>
+          tester.getTopLeft(find.byKey(ValueKey('changelog-$v'))).dy;
+      expect(top('0.6.0'), lessThan(top('0.5.0')));
+      expect(find.text('2026-10-16'), findsOneWidget);
+      expect(find.text('当前版本'), findsOneWidget); // kAppVersion's row
+      await tester.tap(find.byKey(const ValueKey('changelog-0.5.0')));
+      await tester.pumpAndSettle();
+      expect(find.byType(ChangelogReleasePage), findsOneWidget);
       expect(find.text('新增'), findsWidgets);
       expect(find.textContaining('服务器台账', findRichText: true), findsOneWidget);
+      // Released versions point at their GitHub tag (last row of the page).
+      await tester.scrollUntilVisible(
+        find.byKey(const ValueKey('changelog-github-release')),
+        300,
+        scrollable: find.byType(Scrollable).first,
+      );
+      expect(find.text('v0.5.0'), findsOneWidget);
       expect(tester.takeException(), isNull);
     });
 
-    testWidgets('en', (tester) async {
+    testWidgets('en: an unreleased version has no GitHub release row', (
+      tester,
+    ) async {
       await mount(tester, const ChangelogPage(), locale: 'en');
       expect(find.text('What’s New'), findsOneWidget);
-      expect(find.text('0.5.0 — 2026-10-16'), findsOneWidget);
-      expect(find.text('Added'), findsWidgets);
+      await tester.tap(find.byKey(const ValueKey('changelog-0.6.0')));
+      await tester.pumpAndSettle();
+      expect(find.text('Unreleased'), findsOneWidget);
       expect(
-        find.textContaining('Server ledger', findRichText: true),
-        findsOneWidget,
+        find.byKey(const ValueKey('changelog-github-release')),
+        findsNothing,
       );
       expect(tester.takeException(), isNull);
     });

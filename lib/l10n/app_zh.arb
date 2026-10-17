@@ -3484,6 +3484,18 @@
   },
   "r14ErrorDetails": "错误详情",
   "r15Details": "详情",
+  "r17ChangelogCount": "{count} 项更新",
+  "@r17ChangelogCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "r17CurrentVersion": "当前版本",
+  "r17GithubRelease": "GitHub 发布",
+  "r17ReleaseLinkCopied": "已复制发布页链接",
+  "r17ChangelogFooter": "每个版本的内容与 GitHub 上同名标签的发布说明一致。",
   "r17SessionExited": "已退出 SSH 会话",
   "r17SessionExitedStatus": "已退出 SSH 会话（退出码 {status}）",
   "@r17SessionExitedStatus": {

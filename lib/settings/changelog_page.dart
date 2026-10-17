@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 
 import '../core/ui/ui.dart';
 import '../l10n/locale_preference.dart';
+import '../core/app_info.dart';
 import 'about_common.dart';
 import 'changelog.dart';
 
@@ -53,9 +54,27 @@ class _ChangelogPageState extends State<ChangelogPage> {
             }
             final data = snapshot.data;
             if (data == null) return const AboutLoading();
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [for (final release in data) _Release(release)],
+            return AppSection(
+              topSpacing: 12,
+              footer: l10n.r17ChangelogFooter,
+              children: [
+                for (final release in data)
+                  AppRow(
+                    key: ValueKey('changelog-${release.version}'),
+                    title: release.version,
+                    subtitle: release.label.isEmpty ? null : release.label,
+                    value: release.version == kAppVersion
+                        ? l10n.r17CurrentVersion
+                        : l10n.r17ChangelogCount(release.bulletCount),
+                    chevron: true,
+                    onTap: () => Navigator.push<void>(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => ChangelogReleasePage(release: release),
+                      ),
+                    ),
+                  ),
+              ],
             );
           },
         ),
@@ -64,30 +83,46 @@ class _ChangelogPageState extends State<ChangelogPage> {
   }
 }
 
-class _Release extends StatelessWidget {
-  const _Release(this.release);
+/// One version: its sections, and the matching GitHub release when tagged.
+class ChangelogReleasePage extends StatelessWidget {
+  const ChangelogReleasePage({super.key, required this.release});
   final ChangelogRelease release;
+
+  String get releaseUrl => '$kRepoUrl/releases/tag/${release.tag}';
+
+  Future<void> _copyLink(BuildContext context) async {
+    await Clipboard.setData(ClipboardData(text: releaseUrl));
+    if (context.mounted) {
+      showAppToast(context, context.l10n.r17ReleaseLinkCopied);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    final p = context.palette;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
+    final l10n = context.l10n;
+    return AppScaffold(
+      title: release.version,
+      largeTitle: false,
       children: [
-        if (release.title.isNotEmpty)
+        if (release.label.isNotEmpty)
           Padding(
-            padding: const EdgeInsets.fromLTRB(32, 20, 32, 0),
-            child: Text(
-              release.title,
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.w800,
-                letterSpacing: -0.3,
-                color: p.text,
-              ),
-            ),
+            padding: const EdgeInsets.fromLTRB(32, 16, 32, 0),
+            child: Text(release.label, style: context.footnoteStyle),
           ),
         for (final section in release.sections) _Section(section),
+        if (release.released)
+          AppSection(
+            children: [
+              AppRow(
+                key: const ValueKey('changelog-github-release'),
+                icon: Icons.sell_outlined,
+                iconColor: AppTints.slate,
+                title: l10n.r17GithubRelease,
+                subtitle: release.tag,
+                onTap: () => _copyLink(context),
+              ),
+            ],
+          ),
       ],
     );
   }

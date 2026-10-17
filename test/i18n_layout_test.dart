@@ -34,6 +34,7 @@ import 'package:vps_tell_you/servers/server_list.dart';
 import 'package:vps_tell_you/servers/server_record.dart';
 import 'package:vps_tell_you/settings/about_page.dart';
 import 'package:vps_tell_you/settings/backup_page.dart';
+import 'package:vps_tell_you/settings/changelog.dart';
 import 'package:vps_tell_you/settings/changelog_page.dart';
 import 'package:vps_tell_you/settings/open_source_page.dart';
 import 'package:vps_tell_you/settings/reminder_page.dart';
@@ -282,6 +283,9 @@ void main() {
     'proxy-temporary': () => ProxyForm(ledger: ledger, temporary: true),
     'about': () => const AboutPage(),
     'changelog': () => ChangelogPage(load: repoFile),
+    'changelog-release': () => ChangelogReleasePage(
+      release: parseChangelog(File('CHANGELOG.md').readAsStringSync()).last,
+    ),
     'license': () => LicenseTextPage(load: () => repoFile('LICENSE')),
     'open-source': () => OpenSourcePage(index: LicenseIndex()),
     'all-licenses': () => AllLicensesPage(index: LicenseIndex()),

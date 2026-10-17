@@ -3107,6 +3107,18 @@
   },
   "r14ErrorDetails": "Error Details",
   "r15Details": "Details",
+  "r17ChangelogCount": "{count, plural, =1{1 change} other{{count} changes}}",
+  "@r17ChangelogCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "r17CurrentVersion": "Current",
+  "r17GithubRelease": "GitHub Release",
+  "r17ReleaseLinkCopied": "Release link copied",
+  "r17ChangelogFooter": "Each version matches the release notes of the GitHub tag with the same name.",
   "r17SessionExited": "You left the SSH session",
   "r17SessionExitedStatus": "You left the SSH session (exit status {status})",
   "@r17SessionExitedStatus": {

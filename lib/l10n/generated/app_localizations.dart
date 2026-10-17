@@ -8884,6 +8884,36 @@ abstract class AppLocalizations {
   /// **'详情'**
   String get r15Details;
 
+  /// No description provided for @r17ChangelogCount.
+  ///
+  /// In zh, this message translates to:
+  /// **'{count} 项更新'**
+  String r17ChangelogCount(int count);
+
+  /// No description provided for @r17CurrentVersion.
+  ///
+  /// In zh, this message translates to:
+  /// **'当前版本'**
+  String get r17CurrentVersion;
+
+  /// No description provided for @r17GithubRelease.
+  ///
+  /// In zh, this message translates to:
+  /// **'GitHub 发布'**
+  String get r17GithubRelease;
+
+  /// No description provided for @r17ReleaseLinkCopied.
+  ///
+  /// In zh, this message translates to:
+  /// **'已复制发布页链接'**
+  String get r17ReleaseLinkCopied;
+
+  /// No description provided for @r17ChangelogFooter.
+  ///
+  /// In zh, this message translates to:
+  /// **'每个版本的内容与 GitHub 上同名标签的发布说明一致。'**
+  String get r17ChangelogFooter;
+
   /// No description provided for @r17SessionExited.
   ///
   /// In zh, this message translates to:

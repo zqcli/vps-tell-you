@@ -5448,6 +5448,30 @@ class AppLocalizationsEn extends AppLocalizations {
   String get r15Details => 'Details';
 
   @override
+  String r17ChangelogCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count changes',
+      one: '1 change',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get r17CurrentVersion => 'Current';
+
+  @override
+  String get r17GithubRelease => 'GitHub Release';
+
+  @override
+  String get r17ReleaseLinkCopied => 'Release link copied';
+
+  @override
+  String get r17ChangelogFooter =>
+      'Each version matches the release notes of the GitHub tag with the same name.';
+
+  @override
   String get r17SessionExited => 'You left the SSH session';
 
   @override
