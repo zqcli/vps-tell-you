@@ -171,7 +171,12 @@ Future<Map<String, List<Map<String, Object?>>>> _rows(
   Database db,
   Iterable<String> tables,
 ) async => {
-  for (final table in tables) table: await db.query(table, orderBy: '1'),
+  // v14 adds the nullable proxy_id; every other value must be unchanged.
+  for (final table in tables)
+    table: [
+      for (final row in await db.query(table, orderBy: '1'))
+        {...row}..removeWhere((k, v) => k == 'proxy_id' && v == null),
+    ],
 };
 
 const _keptTables = [
