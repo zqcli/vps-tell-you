@@ -47,16 +47,6 @@ String serverProviderMark(LedgerController ledger, ServerRecord server) {
       : name.runes.take(2).map(String.fromCharCode).join().toUpperCase();
 }
 
-bool _canEdit(LedgerController ledger) => ledger.canMutate;
-
-String _providerSummary(
-  BuildContext context,
-  LedgerController ledger,
-  ProviderRecord provider,
-) => context.l10n.r6CatProviderSummary(
-  ledger.providerUsage[provider.id]?.servers.length ?? 0,
-);
-
 /// Shared status for all provider routes. A successful write followed by a
 /// failed reload stays committed, and cannot be submitted a second time.
 class ProviderNotices extends StatelessWidget {
@@ -120,7 +110,7 @@ class _ProviderNameDialogState extends State<_ProviderNameDialog> {
   }
 
   Future<void> save() async {
-    if (saving || !_canEdit(widget.ledger)) return;
+    if (saving || !widget.ledger.canMutate) return;
     final value = name.text.trim();
     if (value.isEmpty || value.length > 80) {
       setState(() => error = LocalizedText((l10n) => l10n.providerNameRange));
@@ -372,7 +362,7 @@ class _ProviderDetailsPageState extends State<ProviderDetailsPage> {
       final servers = local == null
           ? const <ServerRecord>[]
           : ledger.providerUsage[local.id]?.servers ?? const <ServerRecord>[];
-      final editable = !opening && _canEdit(ledger);
+      final editable = !opening && ledger.canMutate;
       final selection = ProviderSelection(local, catalog: catalog?.refIn(l10n));
       return AppScaffold(
         title: l10n.providerUiDetails,
@@ -415,9 +405,9 @@ class _ProviderDetailsPageState extends State<ProviderDetailsPage> {
                       ),
                       const SizedBox(height: 3),
                       Text(
-                        local == null
-                            ? l10n.r6CatProviderSummary(0)
-                            : _providerSummary(context, ledger, local),
+                        l10n.r6CatProviderSummary(
+                          ledger.providerUsage[local?.id]?.servers.length ?? 0,
+                        ),
                         style: TextStyle(
                           fontSize: 14,
                           color: context.palette.text2,
