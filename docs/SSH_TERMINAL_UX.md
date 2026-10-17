@@ -98,7 +98,7 @@ SSH（终端与 SFTP）和 TCP 检测可以经代理服务器连接；留空即�
   - HTTPS 代理：先与代理做 TLS（**正常证书校验，没有“忽略证书”选项**；主机名按代理主机核对），再发 CONNECT。
   - 取消与超时与直连一致：一个对象持有连接任务和迟到的 socket，取消后迟到的 socket 被销毁；SSH 阶段计时器到期时提示“通过代理连接超时”。用户名/密码字节数 1–255，HTTP 用户名不能含冒号。区域 ID（`%en0`）的链路本地地址不能经代理。
 - **主机公钥信任仍以目标 `主机:端口` 为键**，与是否使用代理无关；日志和错误不含代理主机、用户名或密码。
-- 验证：`test/proxy_connector_test.dart`（回环假代理：SOCKS5 有/无认证、错误密码、全部应答码、域名/IPv6、早到数据、分片应答；HTTP 200/407/502、分片头、超大头、IPv6 括号；HTTPS 测试 CA / 他人 CA / 系统信任库，`test/fixtures/proxy_tls/`）、`test/proxy_ssh_e2e_test.dart`（对 AsyncSSH 回环夹具：SSH 经四种代理、SFTP 经 SOCKS5、终端上的 SFTP、失败不回退直连、TCP 检测经代理）、`test/proxy_store_test.dart`、`test/schema14_store_migration_test.dart`、`test/proxy_widget_test.dart`。真实代理软件与 iOS 上的 HTTPS 证书链（Apple 对服务器证书有效期的限制）仍需设备验证。
+- 验证：`test/proxy_connector_test.dart`（回环假代理：SOCKS5 有/无认证、错误密码、全部应答码、域名/IPv6、早到数据、分片应答；HTTP 200/407/502、分片头、超大头、IPv6 括号；HTTPS 测试 CA / 他人 CA / 系统信任库，证书在测试时用 openssl 临时生成，不入库）、`test/proxy_ssh_e2e_test.dart`（对 AsyncSSH 回环夹具：SSH 经四种代理、SFTP 经 SOCKS5、终端上的 SFTP、失败不回退直连、TCP 检测经代理）、`test/proxy_store_test.dart`、`test/schema14_store_migration_test.dart`、`test/proxy_widget_test.dart`。真实代理软件与 iOS 上的 HTTPS 证书链（Apple 对服务器证书有效期的限制）仍需设备验证。
 
 ## 离线开源字体
 
