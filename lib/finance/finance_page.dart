@@ -11,6 +11,7 @@ import '../servers/server_record.dart';
 import 'calculator_page.dart';
 import 'finance_math.dart';
 import 'finance_models.dart';
+import 'finance_snapshot.dart';
 import 'finance_widgets.dart';
 import 'fx_page.dart';
 import 'payment_pages.dart';
@@ -19,25 +20,7 @@ List<ServerRecord> financeScope(
   LedgerController c,
   String? groupId, {
   String? vendor,
-}) => c.active
-    .where(
-      (s) =>
-          (groupId == null || (s.groupId ?? '') == groupId) &&
-          (vendor == null || c.providerGroupKey(s) == vendor),
-    )
-    .toList();
-FinanceAmount remainingAmount(LedgerController c, ServerRecord s) =>
-    s.billing == BillingKind.metered
-    ? FinanceAmount.notApplicable(s.currency)
-    : serverValuation(s, c.periodsFor(s.id), c.today)?.amount ??
-          FinanceAmount.unknown(s.currency);
-bool incompleteFinance(LedgerController c, ServerRecord s) =>
-    s.billing == BillingKind.unknown ||
-    s.amountMinor == null ||
-    (s.billing == BillingKind.prepaid &&
-        (s.dueDate == null ||
-            s.dueDate!.compareTo(c.today) <= 0 ||
-            c.periodsFor(s.id).isEmpty));
+}) => FinanceScope.of(c, groupId).servers(vendor: vendor);
 
 /// The ⓘ sheet of the Costs pages: how the numbers are calculated.
 void showFinanceRules(BuildContext context, {bool groupScoped = false}) =>
@@ -216,29 +199,9 @@ class _FinancePageState extends State<FinancePage> {
           !c.groups.any((g) => g.id == groupId)) {
         groupId = null;
       }
-      final records = financeScope(c, groupId);
-      final monthly = aggregateAmounts(
-        records.map((s) => monthlyAmount(s, c.today)),
-        c.fx,
-      );
-      final values = aggregateAmounts(
-        records.map((s) => remainingAmount(c, s)),
-        c.fx,
-      );
-      final events = renewalEvents(records, c.today, c.today.addDays(30));
-      final renewals = aggregateAmounts(events.map((e) => e.amount), c.fx);
-      final payments = recentPayments(
-        c.payments,
-        c.today,
-        records: c.records,
-        groupId: groupId,
-      );
-      final paid = aggregateAmounts(
-        payments.map((p) => FinanceAmount.money(p.amount)),
-        c.fx,
-      );
-      final forecast = sixMonthForecast(records, c.today, c.fx);
-      final incomplete = records.where((s) => incompleteFinance(c, s)).length;
+      final scope = FinanceScope.of(c, groupId);
+      final monthly = scope.monthly;
+      final incomplete = scope.incomplete.length;
       final scopeLabel = groupId == null
           ? l10n.financeAllGroups
           : groupId == ''
@@ -283,8 +246,8 @@ class _FinancePageState extends State<FinancePage> {
           ),
           _SummaryCard(
             monthly: monthly,
-            values: values,
-            renewals: renewals,
+            values: scope.value,
+            renewals: scope.renewals,
             fx: c.fx,
             onMonthly: () => detail(FinanceMetric.monthly),
             onValue: () => detail(FinanceMetric.value),
@@ -306,10 +269,10 @@ class _FinancePageState extends State<FinancePage> {
                   ? () => detail(FinanceMetric.incomplete)
                   : openFx,
             ),
-          _upcoming(context, c, events),
-          _distribution(context, c, records, monthly),
-          _forecast(context, c, forecast),
-          _tools(context, c, payments.length, paid),
+          _upcoming(context, c, scope.events),
+          _distribution(context, c, scope),
+          _forecast(context, c, scope.forecast),
+          _tools(context, c, scope.payments.length, scope.paid),
           FinanceNote(
             l10n.uiFinanceFootnote,
             padding: const EdgeInsets.fromLTRB(32, 16, 32, 0),
@@ -344,30 +307,12 @@ class _FinancePageState extends State<FinancePage> {
   Widget _distribution(
     BuildContext context,
     LedgerController c,
-    List<ServerRecord> records,
-    FinanceTotal monthly,
+    FinanceScope scope,
   ) {
     final l10n = context.l10n;
     final p = context.palette;
-    final slices = <String, List<ServerRecord>>{};
-    for (final s in records) {
-      slices
-          .putIfAbsent(
-            byVendor ? c.providerGroupKey(s) : s.groupId ?? '',
-            () => [],
-          )
-          .add(s);
-    }
-    final entries = [
-      for (final slice in slices.entries)
-        (
-          slice,
-          aggregateAmounts(
-            slice.value.map((s) => monthlyAmount(s, c.today)),
-            c.fx,
-          ),
-        ),
-    ]..sort((a, b) => b.$2.convertedMinor.compareTo(a.$2.convertedMinor));
+    final monthly = scope.monthly;
+    final entries = scope.slices(byVendor: byVendor);
     double ratioOf(FinanceTotal total) => monthly.convertedMinor.isZero
         ? 0.0
         : (total.convertedMinor / monthly.convertedMinor)
@@ -400,12 +345,12 @@ class _FinancePageState extends State<FinancePage> {
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
             child: _StackBar(
-              ratios: [for (final e in entries) ratioOf(e.$2)],
+              ratios: [for (final e in entries) ratioOf(e.total)],
               colors: [for (var i = 0; i < entries.length; i++) _sliceColor(i)],
             ),
           ),
           for (var i = 0; i < entries.length; i++)
-            _sliceRow(context, c, i, entries[i].$1, entries[i].$2, ratioOf),
+            _sliceRow(context, c, i, entries[i], ratioOf),
           const SizedBox(height: 4),
         ],
       ],
@@ -429,14 +374,14 @@ class _FinancePageState extends State<FinancePage> {
     BuildContext context,
     LedgerController c,
     int index,
-    MapEntry<String, List<ServerRecord>> slice,
-    FinanceTotal total,
+    FinanceSlice slice,
     double Function(FinanceTotal) ratioOf,
   ) {
+    final total = slice.total;
     final l10n = context.l10n;
     final p = context.palette;
     final label = byVendor
-        ? c.providerNameFor(slice.value.first, l10n: l10n)
+        ? c.providerNameFor(slice.servers.first, l10n: l10n)
         : c.groupName(slice.key, l10n: l10n);
     final ratio = ratioOf(total);
     final partial = total.covered < total.total;
@@ -477,7 +422,7 @@ class _FinancePageState extends State<FinancePage> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          l10n.financeSliceLabel(label, slice.value.length),
+                          l10n.financeSliceLabel(label, slice.servers.length),
                           style: TextStyle(
                             fontSize: 15,
                             height: 1.3,
@@ -1227,10 +1172,12 @@ class FinanceDetailPage extends StatelessWidget {
     builder: (context, _) {
       final c = controller;
       final l10n = context.l10n;
-      var records = financeScope(c, groupId, vendor: vendor);
-      if (metric == FinanceMetric.incomplete) {
-        records = records.where((s) => incompleteFinance(c, s)).toList();
-      }
+      final scope = FinanceScope.of(c, groupId);
+      final records = metric == FinanceMetric.incomplete
+          ? scope.incomplete
+                .where((s) => vendor == null || c.providerGroupKey(s) == vendor)
+                .toList()
+          : scope.servers(vendor: vendor);
       return AppScaffold(
         largeTitle: false,
         title: switch (metric) {
@@ -1265,7 +1212,7 @@ class FinanceDetailPage extends StatelessWidget {
           AppSection(
             children: [
               if (records.isEmpty) AppRow(title: l10n.financeNoServersInRange),
-              for (final s in records) _detailRow(context, c, s),
+              for (final s in records) _detailRow(context, c, scope, s),
             ],
           ),
           FinanceNote(
@@ -1277,11 +1224,16 @@ class FinanceDetailPage extends StatelessWidget {
     },
   );
 
-  Widget _detailRow(BuildContext context, LedgerController c, ServerRecord s) {
+  Widget _detailRow(
+    BuildContext context,
+    LedgerController c,
+    FinanceScope scope,
+    ServerRecord s,
+  ) {
     final l10n = context.l10n;
     final p = context.palette;
     final amount = metric == FinanceMetric.value
-        ? remainingAmount(c, s)
+        ? scope.remaining(s)
         : monthlyAmount(s, c.today);
     final secondary = TextStyle(fontSize: 13, height: 1.4, color: p.text2);
     return AppRow.custom(
@@ -1367,15 +1319,14 @@ class RenewalsPage extends StatelessWidget {
       final c = controller;
       final l10n = context.l10n;
       final p = context.palette;
-      final records = financeScope(c, groupId);
-      final forecast = sixMonthForecast(records, c.today, c.fx);
+      final scope = FinanceScope.of(c, groupId);
       final events = month == null
-          ? renewalEvents(records, c.today, c.today.addDays(30))
-          : forecast.where((f) => f.month == month).firstOrNull?.events ??
+          ? scope.events
+          : scope.forecast.where((f) => f.month == month).firstOrNull?.events ??
                 <RenewalEvent>[];
       final total = aggregateAmounts(events.map((e) => e.amount), c.fx);
       final expired = month == null
-          ? records.where(
+          ? scope.records.where(
               (s) =>
                   s.billing == BillingKind.prepaid &&
                   s.dueDate != null &&
