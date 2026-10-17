@@ -9,6 +9,7 @@ import 'package:flutter/services.dart';
 import 'package:xterm/xterm.dart';
 
 import '../core/app_theme.dart';
+import '../core/background_grace.dart';
 import '../core/ui/ui.dart';
 import '../security/security_controller.dart';
 import '../servers/ledger_controller.dart';
@@ -46,7 +47,8 @@ class TerminalPage extends StatefulWidget {
 }
 
 class _TerminalPageState extends State<TerminalPage>
-    with WidgetsBindingObserver {
+    with WidgetsBindingObserver
+    implements BackgroundSession {
   late final SshService _service;
   late Terminal _terminal;
   TerminalHighlighter? _highlighter;
@@ -76,6 +78,8 @@ class _TerminalPageState extends State<TerminalPage>
       _targetInvalidated = false;
   int _targetEpoch = 0;
   bool _endQueued = false;
+  // While the app is in the background nothing may be sent from the draft.
+  bool _backgrounded = false;
   // Why the local side ends the session (background, target change); shown as
   // a toast on the previous page. Remote/network ends use the service error.
   LocalizedMessage? _endReason;
@@ -89,6 +93,7 @@ class _TerminalPageState extends State<TerminalPage>
     terminalSchemeChoice.addListener(_schemeChanged);
     terminalSmartHighlight.addListener(_highlightToggled);
     WidgetsBinding.instance.addObserver(this);
+    BackgroundGrace.instance.register(this);
     _draft = TextEditingController(text: widget.initialDraft);
     _terminalScroll.addListener(_scrollChanged);
     _terminalController.addListener(_selectionChanged);
@@ -199,6 +204,7 @@ class _TerminalPageState extends State<TerminalPage>
     }
     setState(() {});
     _queueSessionEnd();
+    BackgroundGrace.instance.refresh();
   }
 
   /// A session that ended (remote close, network drop, cancel, failure) closes
@@ -815,13 +821,30 @@ class _TerminalPageState extends State<TerminalPage>
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
+    // The session itself is kept or closed by BackgroundGrace (a short system
+    // grace period, then endInBackground); here only local input is stopped.
     if (state == AppLifecycleState.paused ||
         state == AppLifecycleState.hidden ||
         state == AppLifecycleState.detached) {
-      _endReason = LocalizedText((l10n) => l10n.terminalBackgroundDisconnected);
-      _service.disconnect();
+      _backgrounded = true;
       _closeKeyboard();
+    } else if (state == AppLifecycleState.resumed) {
+      _backgrounded = false;
     }
+  }
+
+  @override
+  bool get isLive => _connected;
+
+  @override
+  void endInBackground({required bool graceExpired}) {
+    _endReason = graceExpired
+        ? LocalizedText(
+            (l10n) => l10n.r13BackgroundSshEnded(widget.target.label),
+          )
+        : LocalizedText((l10n) => l10n.terminalBackgroundDisconnected);
+    _service.disconnect();
+    _closeKeyboard();
   }
 
   @override
@@ -881,6 +904,7 @@ class _TerminalPageState extends State<TerminalPage>
     terminalSmartHighlight.removeListener(_highlightToggled);
     _highlighter?.dispose();
     WidgetsBinding.instance.removeObserver(this);
+    BackgroundGrace.instance.unregister(this);
     _service.removeListener(_changed);
     _terminal.onOutput = null;
     _terminal.onResize = null;
@@ -966,6 +990,7 @@ class _TerminalPageState extends State<TerminalPage>
     bool appendEnter,
   ) async {
     if (_sendBusy ||
+        _backgrounded ||
         !_connected ||
         !_service.acceptsInput ||
         exact.isEmpty ||

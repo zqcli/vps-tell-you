@@ -166,6 +166,7 @@ class _SftpConnectPageState extends State<SftpConnectPage> {
                 builder: (_) => SftpBrowserPage(
                   session: session,
                   localFiles: widget.localFiles,
+                  label: target.label,
                   onClosed: service.dispose,
                 ),
               ),

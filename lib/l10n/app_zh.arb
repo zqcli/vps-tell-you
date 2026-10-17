@@ -3677,5 +3677,21 @@
   "r11OssAboutHttp": "下载提供商目录",
   "r11OssAboutXml": "解析 XML",
   "r11OssAboutLocalNotifications": "到期提醒的本地通知",
-  "r11OssAboutDejaVu": "终端等宽字体"
+  "r11OssAboutDejaVu": "终端等宽字体",
+  "r13BackgroundSshEnded": "应用在后台停留过久，与 {p0} 的 SSH 会话已结束",
+  "@r13BackgroundSshEnded": {
+    "placeholders": {
+      "p0": {
+        "type": "String"
+      }
+    }
+  },
+  "r13BackgroundSftpEnded": "应用在后台停留过久，与 {p0} 的 SFTP 会话已结束",
+  "@r13BackgroundSftpEnded": {
+    "placeholders": {
+      "p0": {
+        "type": "String"
+      }
+    }
+  }
 }

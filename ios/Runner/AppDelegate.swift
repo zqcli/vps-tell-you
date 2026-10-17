@@ -12,7 +12,11 @@ import UserNotifications
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)
   }
 
+  private var backgroundTime: BackgroundTimeChannel?
+
   func didInitializeImplicitFlutterEngine(_ engineBridge: FlutterImplicitEngineBridge) {
     GeneratedPluginRegistrant.register(with: engineBridge.pluginRegistry)
+    backgroundTime = BackgroundTimeChannel(
+      messenger: engineBridge.applicationRegistrar.messenger())
   }
 }
