@@ -17,6 +17,7 @@ import '../security/security_controller.dart';
 import '../security/security_models.dart';
 import 'error_details.dart';
 import 'proxy_connector.dart';
+import 'sftp_dartssh_session.dart';
 import 'sftp_session.dart';
 import 'ssh_host_key_capture.dart';
 import 'ssh_session_output.dart';
