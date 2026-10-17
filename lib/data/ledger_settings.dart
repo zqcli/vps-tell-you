@@ -1,41 +1,5 @@
 part of 'ledger_store.dart';
 
-/// A non-destructive preference migration. Existing ledgers stay in Chinese;
-/// billing data, IDs, user text, backup v1 and all other defaults are unchanged.
-Future<void> _addLanguageSchema(DatabaseExecutor db) => db.execute(
-  "ALTER TABLE app_settings ADD COLUMN language TEXT NOT NULL DEFAULT 'zh' "
-  "CHECK(language IN ('zh','en','system'))",
-);
-
-/// Whether the provider directory refreshes itself on launch (default on).
-Future<void> _addDirectorySettings(DatabaseExecutor db) => db.execute(
-  'ALTER TABLE app_settings ADD COLUMN provider_directory_auto '
-  'INTEGER NOT NULL DEFAULT 1',
-);
-
-Future<void> _addSettingsSchema(DatabaseExecutor db) async {
-  await db.execute('''CREATE TABLE app_settings (
-    id INTEGER PRIMARY KEY CHECK(id=1),
-    theme_mode TEXT NOT NULL CHECK(theme_mode IN ('system','light','dark')))
-  ''');
-  await db.insert('app_settings', {'id': 1, 'theme_mode': 'system'});
-  await db.execute('''CREATE TABLE reminder_rules (
-    id INTEGER PRIMARY KEY AUTOINCREMENT CHECK(id BETWEEN 1 AND 268435455),
-    server_id TEXT NOT NULL UNIQUE REFERENCES servers(id) ON DELETE CASCADE,
-    enabled INTEGER NOT NULL DEFAULT 1 CHECK(enabled IN (0,1)),
-    lead_days TEXT NOT NULL DEFAULT '[7,3,1]',
-    minute_of_day INTEGER NOT NULL DEFAULT 540 CHECK(minute_of_day BETWEEN 0 AND 1439),
-    usage_plan TEXT NOT NULL DEFAULT 'continueUsing'
-      CHECK(usage_plan IN ('continueUsing','undecided','stopAtExpiry')),
-    revision INTEGER NOT NULL DEFAULT 0 CHECK(revision >= 0))''');
-  await db.execute('''INSERT INTO reminder_rules (server_id)
-    SELECT id FROM servers ORDER BY id''');
-  // Covers manual creation, cloud import and backup restore in their existing
-  // transactions, without teaching each feature about reminder implementation.
-  await db.execute('''CREATE TRIGGER server_reminder AFTER INSERT ON servers
-    BEGIN INSERT INTO reminder_rules (server_id) VALUES (NEW.id); END''');
-}
-
 extension LedgerSettings on LedgerStore {
   Future<LocalePreference> languagePreference() async =>
       LocalePreference.fromStorage(

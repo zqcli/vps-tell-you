@@ -80,9 +80,6 @@ class ServerResources {
   /// Bare IPv6 (any spelling, no brackets or zone), not `::` or its mapped form.
   static bool validIpv6(String value) => _validAddress(value, NetHostKind.ipv6);
 
-  /// Either family.
-  static bool validIp(String value) => validIpv4(value) || validIpv6(value);
-
   static bool validHostname(String value) {
     final name = value.endsWith('.')
         ? value.substring(0, value.length - 1)
