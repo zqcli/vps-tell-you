@@ -32,26 +32,8 @@ class TcpTestPage extends StatefulWidget {
   State<TcpTestPage> createState() => _TcpTestPageState();
 }
 
-class _TcpTestPageState extends State<TcpTestPage> with WidgetsBindingObserver {
-  final form = GlobalKey<FormState>();
-  bool _hasValidated = false;
-  String? _validationLocale;
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    final next = context.l10n.localeName;
-    if (_validationLocale != null &&
-        _validationLocale != next &&
-        _hasValidated) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) {
-          form.currentState?.validate();
-        }
-      });
-    }
-    _validationLocale = next;
-  }
-
+class _TcpTestPageState extends State<TcpTestPage>
+    with LocaleRevalidatingForm<TcpTestPage>, WidgetsBindingObserver {
   late final TextEditingController host;
   late final TextEditingController port;
   late final TcpTestController controller;
@@ -115,7 +97,6 @@ class _TcpTestPageState extends State<TcpTestPage> with WidgetsBindingObserver {
     if (controller.running || _loadingProxy) {
       return;
     }
-    _hasValidated = true;
     // `host:port` / `[v6]:port` in the address field wins over the port field
     // and is split back into the two fields so the tested target is visible.
     final split = splitHostPort(host.text.trim());
@@ -123,7 +104,7 @@ class _TcpTestPageState extends State<TcpTestPage> with WidgetsBindingObserver {
       host.text = split.host;
       port.text = split.port!;
     }
-    if (!form.currentState!.validate()) {
+    if (!validateForm()) {
       return;
     }
     final target = TcpTarget(
@@ -242,7 +223,7 @@ class _TcpTestPageState extends State<TcpTestPage> with WidgetsBindingObserver {
               ),
         children: [
           Form(
-            key: form,
+            key: formKey,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [

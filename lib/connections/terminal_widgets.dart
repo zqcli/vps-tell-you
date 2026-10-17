@@ -13,11 +13,6 @@ import 'terminal_scheme.dart';
 
 export 'terminal_scheme.dart';
 
-// The look lives in terminal_scheme.dart; these are the default (Tokyo Night)
-// values for code that has no scheme in scope.
-final mobileTerminalTheme = TerminalScheme.defaultScheme.theme;
-final terminalChromeColor = TerminalScheme.defaultScheme.chrome;
-
 /// Built-in suggestions use the same local draft and exact-send review as
 /// user snippets. They are never persisted or executed by selecting them.
 List<CommandSnippet> get terminalQuickCommands =>

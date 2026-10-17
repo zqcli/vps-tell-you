@@ -182,7 +182,7 @@ void main() {
                 key: const ValueKey('open-review-panel'),
                 onPressed: () => showModalBottomSheet<bool>(
                   context: context,
-                  backgroundColor: terminalChromeColor,
+                  backgroundColor: TerminalScheme.defaultScheme.chrome,
                   clipBehavior: Clip.antiAlias,
                   shape: const RoundedRectangleBorder(
                     borderRadius: BorderRadius.vertical(

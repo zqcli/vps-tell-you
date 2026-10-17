@@ -38,26 +38,8 @@ class SshConnectPage extends StatefulWidget {
   State<SshConnectPage> createState() => _SshConnectPageState();
 }
 
-class _SshConnectPageState extends State<SshConnectPage> {
-  final _form = GlobalKey<FormState>();
-  bool _hasValidated = false;
-  String? _validationLocale;
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    final next = context.l10n.localeName;
-    if (_validationLocale != null &&
-        _validationLocale != next &&
-        _hasValidated) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) {
-          _form.currentState?.validate();
-        }
-      });
-    }
-    _validationLocale = next;
-  }
-
+class _SshConnectPageState extends State<SshConnectPage>
+    with LocaleRevalidatingForm<SshConnectPage> {
   final _host = TextEditingController();
   final _port = TextEditingController(text: '22');
   final _username = TextEditingController();
@@ -112,8 +94,7 @@ class _SshConnectPageState extends State<SshConnectPage> {
     if (_opening || kIsWeb) {
       return;
     }
-    _hasValidated = true;
-    if (!_form.currentState!.validate()) {
+    if (!validateForm()) {
       return;
     }
     final server = widget.ledger.byId(_serverId ?? '');
@@ -320,7 +301,7 @@ class _SshConnectPageState extends State<SshConnectPage> {
           )
         else
           Form(
-            key: _form,
+            key: formKey,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [

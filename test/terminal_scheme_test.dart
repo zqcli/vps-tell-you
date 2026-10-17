@@ -36,7 +36,6 @@ void main() {
         {for (final s in TerminalScheme.all) s.id}.length,
         TerminalScheme.all.length,
       );
-      expect(mobileTerminalTheme, same(TerminalScheme.defaultScheme.theme));
       expect(TerminalScheme.byId('nope'), same(TerminalScheme.defaultScheme));
     });
 

@@ -19,6 +19,8 @@ typedef TcpConnector = Future<ConnectionTask<Socket>> Function(
 
 enum TcpOutcome { connected, refused, timedOut, cancelled, failed }
 
+final _digits = RegExp(r'^[0-9]+$');
+
 class TcpTarget {
   const TcpTarget._(this.host, this.port, this.kind);
 
@@ -50,7 +52,7 @@ class TcpTarget {
       throw LocalizedArgumentError((l10n) => l10n.tcpValidHost);
     }
     final text = split.port;
-    if (text != null && !RegExp(r'^[0-9]+$').hasMatch(text)) {
+    if (text != null && !_digits.hasMatch(text)) {
       // `https://host`, `host:` ... are not a host with a port.
       throw LocalizedArgumentError((l10n) => l10n.tcpValidHost);
     }
@@ -186,18 +188,7 @@ class TcpTestController extends ChangeNotifier {
     dial.tunnel.then<void>(
       (tunnel) {
         try {
-          if (!attempt.ended) {
-            _finish(
-              attempt,
-              TcpOutcome.connected,
-              remoteAddress: tunnel.proxyAddress.address,
-              remoteFamily: switch (tunnel.proxyAddress.type) {
-                InternetAddressType.IPv6 => NetHostKind.ipv6,
-                InternetAddressType.IPv4 => NetHostKind.ipv4,
-                _ => null,
-              },
-            );
-          }
+          _reached(attempt, tunnel.proxyAddress);
         } finally {
           tunnel.destroy();
         }
@@ -233,18 +224,7 @@ class TcpTestController extends ChangeNotifier {
       final socketResult = task.socket.then<void>(
         (socket) {
           try {
-            if (!attempt.ended) {
-              _finish(
-                attempt,
-                TcpOutcome.connected,
-                remoteAddress: socket.remoteAddress.address,
-                remoteFamily: switch (socket.remoteAddress.type) {
-                  InternetAddressType.IPv6 => NetHostKind.ipv6,
-                  InternetAddressType.IPv4 => NetHostKind.ipv4,
-                  _ => null,
-                },
-              );
-            }
+            _reached(attempt, socket.remoteAddress);
           } finally {
             socket.destroy();
           }
@@ -264,6 +244,20 @@ class TcpTestController extends ChangeNotifier {
         _finish(attempt, _failureOutcome(error), cause: error);
       }
     }
+  }
+
+  void _reached(_TcpAttempt attempt, InternetAddress address) {
+    if (attempt.ended) return;
+    _finish(
+      attempt,
+      TcpOutcome.connected,
+      remoteAddress: address.address,
+      remoteFamily: switch (address.type) {
+        InternetAddressType.IPv6 => NetHostKind.ipv6,
+        InternetAddressType.IPv4 => NetHostKind.ipv4,
+        _ => null,
+      },
+    );
   }
 
   TcpOutcome _failureOutcome(Object error) {

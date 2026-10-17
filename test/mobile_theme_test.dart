@@ -359,7 +359,7 @@ void main() {
                 final terminal = tester.widget<TerminalView>(
                   find.byType(TerminalView),
                 );
-                expect(terminal.theme, mobileTerminalTheme);
+                expect(terminal.theme, TerminalScheme.defaultScheme.theme);
                 expect(
                   terminal.theme.background.computeLuminance(),
                   lessThan(.1),
