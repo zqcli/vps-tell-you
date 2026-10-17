@@ -32,12 +32,18 @@ class ServerForm extends StatefulWidget {
     super.key,
     required this.controller,
     this.record,
+    this.template,
     this.businessProvider,
     this.catalogProvider,
     this.focusHardware = false,
   });
   final LedgerController controller;
   final ServerRecord? record;
+
+  /// Prefill for a NEW server (see `duplicateServerTemplate`). Only the fields
+  /// carried by the template are shown; the form still creates a new record
+  /// with a new id, and nothing is written before Save.
+  final ServerRecord? template;
 
   /// Preselected provider for a new server (an existing local provider)...
   final ProviderRecord? businessProvider;
@@ -96,7 +102,8 @@ class _ServerFormState extends State<ServerForm> {
   @override
   void initState() {
     super.initState();
-    final s = widget.record;
+    assert(widget.record == null || widget.template == null);
+    final s = widget.record ?? widget.template;
     selectedProvider =
         widget.businessProvider ??
         (s == null ? null : widget.controller.providerFor(s));
@@ -695,6 +702,7 @@ class _ServerFormState extends State<ServerForm> {
           selectedProvider?.name ??
           pendingCatalog?.name ??
           pendingNew?.name ??
+          widget.template?.vendor ??
           '',
       providerId: selectedProvider?.id,
       host: _hostAfterSave(old, resources),

@@ -15,17 +15,19 @@ import '../providers/provider_pages.dart';
 import 'ledger_controller.dart';
 import 'refresh_failure_notice.dart';
 import 'server_detail.dart';
+import 'server_duplicate.dart';
 import 'server_form.dart';
 import 'server_record.dart';
 
 Future<void> addServer(
   BuildContext context,
-  LedgerController controller,
-) async {
+  LedgerController controller, {
+  ServerRecord? template,
+}) async {
   // Straight to the form: the provider and package are rows inside it.
   final id = await showAppModal<String>(
     context,
-    builder: (_) => ServerForm(controller: controller),
+    builder: (_) => ServerForm(controller: controller, template: template),
   );
   if (id != null && context.mounted && controller.byId(id) != null) {
     Navigator.push<void>(
@@ -671,8 +673,10 @@ class _FilterSheetState extends State<_FilterSheet> {
   }
 }
 
-/// A ledger row with swipe-to-reveal actions (SSH, favourite, archive) and a
-/// long-press action menu.
+/// A ledger row with swipe-to-reveal actions and a long-press action menu.
+/// Swiping towards the leading edge reveals SSH and favourite on the trailing
+/// side; swiping towards the trailing edge reveals Duplicate on the leading
+/// side. Archive is only in the menu (it needs a confirmation).
 class ServerRow extends StatefulWidget {
   const ServerRow({super.key, required this.record, required this.controller});
   final ServerRecord record;
@@ -683,13 +687,19 @@ class ServerRow extends StatefulWidget {
 
 class _ServerRowState extends State<ServerRow> {
   static const _buttonWidth = 76.0;
-  static const _actionsWidth = _buttonWidth * 3;
+  static const _trailingWidth = _buttonWidth * 2;
+  static const _leadingWidth = _buttonWidth;
 
   /// Only one row stays swiped open.
   static _ServerRowState? _open;
 
-  /// How far the content is pushed towards the leading edge.
+  /// Signed distance the content is pushed: positive towards the leading edge
+  /// (revealing the trailing SSH / favourite buttons), negative towards the
+  /// trailing edge (revealing the leading Duplicate button).
   double extent = 0;
+
+  /// Which side's buttons are built while the row settles back to zero.
+  bool _trailingSide = true;
   bool dragging = false;
 
   /// The action buttons are only built while swiped or animating, so their
@@ -700,6 +710,9 @@ class _ServerRowState extends State<ServerRow> {
   LedgerController get c => widget.controller;
   bool get canSsh => !s.isDemo && !s.archived;
 
+  /// A demo row must not seed real data, and nothing is written read-only.
+  bool get canDuplicate => c.canMutate && !s.isDemo && !s.archived;
+
   @override
   void dispose() {
     if (_open == this) _open = null;
@@ -709,7 +722,8 @@ class _ServerRowState extends State<ServerRow> {
   void _setExtent(double value, {bool drag = false}) {
     if (!mounted) return;
     setState(() {
-      if (value > 0 || drag) {
+      if (value != 0) _trailingSide = value > 0;
+      if (value != 0 || drag) {
         actionsVisible = true;
       } else if (extent == 0) {
         actionsVisible = false;
@@ -717,7 +731,7 @@ class _ServerRowState extends State<ServerRow> {
       extent = value;
       dragging = drag;
     });
-    if (value > 0) {
+    if (value != 0) {
       if (_open != this) {
         final previous = _open;
         _open = this;
@@ -731,7 +745,7 @@ class _ServerRowState extends State<ServerRow> {
   void close() => _setExtent(0);
 
   void openDetail() {
-    if (extent > 0) return close();
+    if (extent != 0) return close();
     Navigator.push<void>(
       context,
       MaterialPageRoute(
@@ -770,6 +784,16 @@ class _ServerRowState extends State<ServerRow> {
     }
   }
 
+  void duplicate() =>
+      addServer(context, c, template: duplicateServerTemplate(s, context.l10n));
+
+  /// Where a released drag settles: fully open on that side, or closed.
+  double get _settled => extent > 70
+      ? _trailingWidth
+      : extent < -40
+      ? -_leadingWidth
+      : 0;
+
   void recordPayment() => showAppModal<bool>(
     context,
     builder: (_) => PaymentForm(controller: c, server: s),
@@ -801,6 +825,8 @@ class _ServerRowState extends State<ServerRow> {
                 : l10n.serverSetFavorite,
             onPressed: toggleFavorite,
           ),
+        if (canDuplicate)
+          AppMenuAction(label: l10n.r14ServerDuplicate, onPressed: duplicate),
         if (c.canMutate)
           AppMenuAction(
             label: l10n.uiServersArchive,
@@ -857,11 +883,12 @@ class _ServerRowState extends State<ServerRow> {
     ),
   );
 
-  Widget _actions(BuildContext context) {
+  Widget _trailingActions(BuildContext context) {
     final l10n = context.l10n;
     final p = context.palette;
     return SizedBox(
-      width: _actionsWidth,
+      key: const ValueKey('server-swipe-trailing'),
+      width: _trailingWidth,
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -879,18 +906,46 @@ class _ServerRowState extends State<ServerRow> {
                 : l10n.serverFavorites,
             onTap: c.canMutate ? toggleFavorite : null,
           ),
-          _actionButton(
-            color: p.red,
-            icon: Icons.archive_outlined,
-            label: l10n.uiServersArchive,
-            onTap: c.canMutate
-                ? () => confirmAndArchiveServer(context, c, s)
-                : null,
-          ),
         ],
       ),
     );
   }
+
+  Widget _leadingActions(BuildContext context) => SizedBox(
+    key: const ValueKey('server-swipe-leading'),
+    width: _leadingWidth,
+    child: Row(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        _actionButton(
+          color: context.palette.green,
+          icon: Icons.copy_rounded,
+          label: context.l10n.r14ServerDuplicate,
+          onTap: canDuplicate ? duplicate : null,
+        ),
+      ],
+    ),
+  );
+
+  Widget _actionsLayer(
+    BuildContext context, {
+    required AlignmentGeometry alignment,
+    required bool side,
+    required Widget Function(BuildContext) build,
+  }) => Positioned.fill(
+    child: Align(
+      alignment: alignment,
+      child: !actionsVisible || _trailingSide != side
+          ? const SizedBox.shrink()
+          : ExcludeSemantics(
+              excluding: extent == 0,
+              child: IgnorePointer(
+                ignoring: extent == 0,
+                child: build(context),
+              ),
+            ),
+    ),
+  );
 
   Widget _price(BuildContext context) {
     final p = context.palette;
@@ -1071,31 +1126,30 @@ class _ServerRowState extends State<ServerRow> {
     return ClipRect(
       child: Stack(
         children: [
-          Positioned.fill(
-            child: Align(
-              alignment: AlignmentDirectional.centerEnd,
-              child: !actionsVisible
-                  ? const SizedBox.shrink()
-                  : ExcludeSemantics(
-                      excluding: extent == 0,
-                      child: IgnorePointer(
-                        ignoring: extent == 0,
-                        child: _actions(context),
-                      ),
-                    ),
-            ),
+          _actionsLayer(
+            context,
+            alignment: AlignmentDirectional.centerEnd,
+            side: true,
+            build: _trailingActions,
+          ),
+          _actionsLayer(
+            context,
+            alignment: AlignmentDirectional.centerStart,
+            side: false,
+            build: _leadingActions,
           ),
           GestureDetector(
             behavior: HitTestBehavior.translucent,
             onHorizontalDragStart: (_) => _setExtent(extent, drag: true),
             onHorizontalDragUpdate: (details) => _setExtent(
-              (extent + details.delta.dx * sign).clamp(0.0, _actionsWidth + 30),
+              (extent + details.delta.dx * sign).clamp(
+                -_leadingWidth - 30,
+                _trailingWidth + 30,
+              ),
               drag: true,
             ),
-            onHorizontalDragEnd: (_) =>
-                _setExtent(extent > 70 ? _actionsWidth : 0),
-            onHorizontalDragCancel: () =>
-                _setExtent(extent > 70 ? _actionsWidth : 0),
+            onHorizontalDragEnd: (_) => _setExtent(_settled),
+            onHorizontalDragCancel: () => _setExtent(_settled),
             child: AnimatedContainer(
               duration: dragging
                   ? Duration.zero

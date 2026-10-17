@@ -17,12 +17,14 @@ This comment is not shown.
 ### Added
 
 - **SSH, SFTP and TCP tests can go through a proxy**: SOCKS5, HTTP and HTTPS proxies are saved under Settings › Proxies (the password stays in secure storage and is never exported or backed up) and chosen in the SSH connection settings; the terminal and SFTP share that connection. The TCP test can use a saved proxy or a temporary one, and empty means direct; a success through a proxy only shows the proxy can reach the target
+- **Duplicate a server**: swipe a server row to the right (or use the long-press menu) and choose Duplicate to open a new Add Server form named “… copy”, prefilled with the provider, group, region, purpose, OS, hardware and price. IP addresses and hostname, dates, notes, payments and SSH settings are not copied, and nothing is saved until you tap Save
 
 ### Changed
 
 - **Restrained iOS 26 "Liquid Glass" look**: on iOS 26 and later the tab bar floats as a capsule, and navigation buttons, the search field, and the top and close button of bottom sheets use glass — light blur and saturation, a thin specular rim, a barely visible inner highlight. Lists, cards and other content are unchanged
 - iOS 18 and earlier, Android and other platforms keep the classic frosted look; with Increase Contrast on, surfaces turn opaque
 - **Going to the background no longer disconnects SSH at once**: iOS asks the system for background time (the system decides, typically about 30 s) and Android keeps the session for a fixed 30 s. Coming back in time continues the terminal untouched; otherwise the session is closed cleanly and you see “SSH session to … ended because the app stayed in the background”. SFTP behaves the same, and a running transfer is cancelled when the time runs out
+- Swiping a server row to the left now offers only SSH and Favorite; Archive moved to the long-press menu (still with its confirmation)
 
 ## 0.5.0 — 2026-10-16
 

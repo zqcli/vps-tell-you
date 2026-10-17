@@ -5922,4 +5922,12 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get r13TcpSourceProxy =>
       'TCP connection test from this device through a proxy';
+
+  @override
+  String get r14ServerDuplicate => 'Duplicate';
+
+  @override
+  String r14ServerCopyName(String name) {
+    return '$name copy';
+  }
 }

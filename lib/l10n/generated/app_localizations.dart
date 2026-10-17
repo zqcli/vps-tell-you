@@ -9626,6 +9626,18 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'本机经代理发起的 TCP 连接测试'**
   String get r13TcpSourceProxy;
+
+  /// No description provided for @r14ServerDuplicate.
+  ///
+  /// In zh, this message translates to:
+  /// **'复制'**
+  String get r14ServerDuplicate;
+
+  /// No description provided for @r14ServerCopyName.
+  ///
+  /// In zh, this message translates to:
+  /// **'{name} 副本'**
+  String r14ServerCopyName(String name);
 }
 
 class _AppLocalizationsDelegate

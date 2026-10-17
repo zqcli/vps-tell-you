@@ -5246,4 +5246,12 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get r13TcpSourceProxy => '本机经代理发起的 TCP 连接测试';
+
+  @override
+  String get r14ServerDuplicate => '复制';
+
+  @override
+  String r14ServerCopyName(String name) {
+    return '$name 副本';
+  }
 }

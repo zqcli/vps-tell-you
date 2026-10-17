@@ -3334,5 +3334,14 @@
   "r13TcpProxyAddress": "Proxy address",
   "r13TcpProxyReason": "Reason",
   "r13TcpProxiedNote": "The proxy reached the target. This only proves the proxy can reach it, not that this device can reach it directly.",
-  "r13TcpSourceProxy": "TCP connection test from this device through a proxy"
+  "r13TcpSourceProxy": "TCP connection test from this device through a proxy",
+  "r14ServerDuplicate": "Duplicate",
+  "r14ServerCopyName": "{name} copy",
+  "@r14ServerCopyName": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  }
 }
