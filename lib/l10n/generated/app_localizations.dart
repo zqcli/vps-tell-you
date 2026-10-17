@@ -9200,6 +9200,18 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'终端等宽字体'**
   String get r11OssAboutDejaVu;
+
+  /// No description provided for @r13BackgroundSshEnded.
+  ///
+  /// In zh, this message translates to:
+  /// **'应用在后台停留过久，与 {p0} 的 SSH 会话已结束'**
+  String r13BackgroundSshEnded(String p0);
+
+  /// No description provided for @r13BackgroundSftpEnded.
+  ///
+  /// In zh, this message translates to:
+  /// **'应用在后台停留过久，与 {p0} 的 SFTP 会话已结束'**
+  String r13BackgroundSftpEnded(String p0);
 }
 
 class _AppLocalizationsDelegate

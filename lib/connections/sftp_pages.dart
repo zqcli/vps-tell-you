@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:path/path.dart' as p;
 
+import '../core/background_grace.dart';
 import '../core/ui/ui.dart';
 import '../l10n/locale_preference.dart';
 import 'sftp_editor_page.dart';
@@ -31,11 +32,16 @@ class SftpBrowserPage extends StatefulWidget {
     this.initialPath,
     this.localFiles = const SystemSftpLocalFiles(),
     this.onClosed,
+    this.label,
   });
   final SftpSession session;
   final bool ownsSession, sheet;
   final String? initialPath;
   final SftpLocalFiles localFiles;
+
+  /// `user@host:port`, named in the message when the app stayed too long in
+  /// the background.
+  final String? label;
 
   /// Runs once after the session was closed because this page went away.
   final FutureOr<void> Function()? onClosed;
@@ -45,7 +51,8 @@ class SftpBrowserPage extends StatefulWidget {
 }
 
 class _SftpBrowserPageState extends State<SftpBrowserPage>
-    with WidgetsBindingObserver {
+    with WidgetsBindingObserver
+    implements BackgroundSession {
   late final SftpTransferQueue _queue;
   final _search = TextEditingController();
   String _path = '/';
@@ -67,6 +74,11 @@ class _SftpBrowserPageState extends State<SftpBrowserPage>
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    // A sheet over a terminal shares the terminal's connection, which the
+    // terminal page keeps or closes itself.
+    if (!widget.sheet && widget.ownsSession) {
+      BackgroundGrace.instance.register(this);
+    }
     _queue = SftpTransferQueue(
       session: _session,
       local: widget.localFiles,
@@ -92,6 +104,7 @@ class _SftpBrowserPageState extends State<SftpBrowserPage>
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    BackgroundGrace.instance.unregister(this);
     _queue.removeListener(_queueChanged);
     final owns = widget.ownsSession;
     final onClosed = widget.onClosed;
@@ -113,13 +126,25 @@ class _SftpBrowserPageState extends State<SftpBrowserPage>
   }
 
   @override
-  void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (widget.sheet || !widget.ownsSession || _externalUi) return;
-    if (state == AppLifecycleState.paused ||
-        state == AppLifecycleState.hidden ||
-        state == AppLifecycleState.detached) {
-      _exit(context.l10n.r3SftpBackgroundClosed);
-    }
+  void didChangeAppLifecycleState(AppLifecycleState state) {}
+
+  // Kept for the short background grace period (running transfers continue);
+  // when it ends the page closes, which cancels transfers and removes their
+  // partial files. A picker or share sheet that backgrounds the app on Android
+  // is not "leaving the app".
+  @override
+  bool get isLive => !_closing && !_ended && _session.isAlive;
+
+  @override
+  void endInBackground({required bool graceExpired}) {
+    if (_externalUi || !mounted || (!graceExpired && !isLive)) return;
+    final l10n = context.l10n;
+    final label = widget.label;
+    _exit(
+      label == null
+          ? l10n.r3SftpBackgroundClosed
+          : l10n.r13BackgroundSftpEnded(label),
+    );
   }
 
   void _queueChanged() {
@@ -130,7 +155,10 @@ class _SftpBrowserPageState extends State<SftpBrowserPage>
       problem.kind == SftpErrorKind.connectionLost || !_session.isAlive;
 
   void _markEnded() {
-    if (mounted && !_ended) setState(() => _ended = true);
+    if (mounted && !_ended) {
+      setState(() => _ended = true);
+      BackgroundGrace.instance.refresh();
+    }
   }
 
   /// Leaves the page, handing [reason] to whoever pushed it.

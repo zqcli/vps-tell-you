@@ -5665,4 +5665,14 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get r11OssAboutDejaVu => 'Terminal monospace font';
+
+  @override
+  String r13BackgroundSshEnded(String p0) {
+    return 'SSH session to $p0 ended because the app stayed in the background';
+  }
+
+  @override
+  String r13BackgroundSftpEnded(String p0) {
+    return 'SFTP session to $p0 ended because the app stayed in the background';
+  }
 }

@@ -5016,4 +5016,14 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get r11OssAboutDejaVu => '终端等宽字体';
+
+  @override
+  String r13BackgroundSshEnded(String p0) {
+    return '应用在后台停留过久，与 $p0 的 SSH 会话已结束';
+  }
+
+  @override
+  String r13BackgroundSftpEnded(String p0) {
+    return '应用在后台停留过久，与 $p0 的 SFTP 会话已结束';
+  }
 }

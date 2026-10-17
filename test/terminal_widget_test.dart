@@ -11,6 +11,7 @@ import 'package:vps_tell_you/connections/snippet.dart';
 import 'package:vps_tell_you/connections/ssh_service.dart';
 import 'package:vps_tell_you/connections/terminal_page.dart';
 import 'package:vps_tell_you/core/app_theme.dart';
+import 'package:vps_tell_you/core/background_grace.dart';
 import 'package:vps_tell_you/core/ui/ui.dart';
 import 'package:vps_tell_you/data/ledger_store.dart';
 import 'package:vps_tell_you/security/host_trust.dart';
@@ -19,6 +20,7 @@ import 'package:vps_tell_you/security/security_models.dart';
 import 'package:vps_tell_you/servers/ledger_controller.dart';
 import 'package:vps_tell_you/servers/server_record.dart';
 
+import 'support/fake_background_native.dart';
 import 'security_store_test.dart' show FakeSecretStore, FakeDeviceAuth, hostKey;
 
 /// Never opens a socket or executes a real command, including power commands.
@@ -125,6 +127,14 @@ class SpySshService extends SshService {
   }
 }
 
+class _FakeBackgroundSession implements BackgroundSession {
+  final ends = <bool>[];
+  @override
+  bool get isLive => ends.isEmpty;
+  @override
+  void endInBackground({required bool graceExpired}) => ends.add(graceExpired);
+}
+
 void main() {
   late Directory directory;
   late LedgerStore store;
@@ -218,6 +228,26 @@ void main() {
     ssh = SpySshService()..needsPassphrase = needsPassphrase;
     await tester.tap(find.text('Open terminal fixture'));
     await tester.pumpAndSettle();
+  }
+
+  void goBackground(WidgetTester tester) {
+    for (final state in [
+      AppLifecycleState.inactive,
+      AppLifecycleState.hidden,
+      AppLifecycleState.paused,
+    ]) {
+      tester.binding.handleAppLifecycleStateChanged(state);
+    }
+  }
+
+  void comeBack(WidgetTester tester) {
+    for (final state in [
+      AppLifecycleState.hidden,
+      AppLifecycleState.inactive,
+      AppLifecycleState.resumed,
+    ]) {
+      tester.binding.handleAppLifecycleStateChanged(state);
+    }
   }
 
   void expectClosed(WidgetTester tester) {
@@ -537,22 +567,133 @@ void main() {
       await reopen(tester);
       expect(ssh.connected, isTrue);
       await draft(tester, 'still unsent\n');
-      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.inactive);
-      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.hidden);
-      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.paused);
-      expect(ssh.connected, isFalse);
+      goBackground(tester);
+      // Contract since 0.6.0: the session survives the grace period, and
+      // nothing from the draft is sent meanwhile.
+      expect(ssh.connected, isTrue);
       expect(ssh.writes, isEmpty);
-      // Frames are suspended in the background; the page closes on resume.
-      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.hidden);
-      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.inactive);
-      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+      await tester.pump(fixedBackgroundGrace + const Duration(seconds: 1));
+      expect(ssh.connected, isFalse);
+      // (The test pumps frames while "backgrounded", so the page may already
+      // have run its own leave; on a device frames resume with the app.)
+      expect(ssh.disconnections, greaterThanOrEqualTo(1));
+      expect(ssh.writes, isEmpty);
+      // The page is closed by the time the app is back.
+      comeBack(tester);
       await tester.pumpAndSettle();
       expectClosed(tester);
-      expect(find.text('应用进入后台，连接已断开'), findsOneWidget);
-      // Nothing reconnects by itself.
+      expect(
+        find.text('应用在后台停留过久，与 ${target.label} 的 SSH 会话已结束'),
+        findsOneWidget,
+      );
+      // Nothing reconnects by itself and nothing was replayed.
       expect(ssh.connections, 1);
+      expect(ssh.writes, isEmpty);
     },
   );
+
+  testWidgets('pause and resume inside the grace period keep the session', (
+    tester,
+  ) async {
+    await mount(tester);
+    expect(ssh.connected, isTrue);
+    goBackground(tester);
+    await tester.pump(const Duration(seconds: 10));
+    comeBack(tester);
+    await tester.pumpAndSettle();
+    // Seamless: same page, same service, no disconnect, no new connection,
+    // nothing written.
+    expect(find.byType(TerminalPage), findsOneWidget);
+    expect(ssh.connected, isTrue);
+    expect(ssh.disconnections, 0);
+    expect(ssh.connections, 1);
+    expect(ssh.writes, isEmpty);
+    // The grace timer died with the return: a later pause starts a new window.
+    await tester.pump(const Duration(minutes: 2));
+    expect(ssh.connected, isTrue);
+  });
+
+  testWidgets('a draft cannot be sent while the app is in the background', (
+    tester,
+  ) async {
+    await mount(tester, draft: 'echo hi');
+    await openCommands(tester);
+    goBackground(tester);
+    await tester.pump();
+    await tester.tap(find.byKey(const ValueKey('terminal-send')));
+    await tester.pump();
+    expect(ssh.writes, isEmpty);
+    comeBack(tester);
+    await tester.pumpAndSettle();
+    expect(ssh.connected, isTrue);
+    expect(ssh.writes, isEmpty);
+    expect(await currentDraft(tester), 'echo hi');
+  });
+
+  group('iOS background task', () {
+    late FakeBackgroundNative native;
+    setUp(() {
+      native = FakeBackgroundNative()..install();
+      BackgroundGrace.instance = BackgroundGrace(native: true);
+      addTearDown(() => BackgroundGrace.instance = BackgroundGrace());
+    });
+
+    testWidgets('pause then resume ends the task and keeps the session', (
+      tester,
+    ) async {
+      await mount(tester);
+      goBackground(tester);
+      await tester.pump();
+      expect(native.begins, 1);
+      expect(native.live, hasLength(1));
+      comeBack(tester);
+      await tester.pumpAndSettle();
+      expect(native.live, isEmpty);
+      expect(native.ends, 1);
+      expect(find.byType(TerminalPage), findsOneWidget);
+      expect(ssh.connected, isTrue);
+      expect(ssh.disconnections, 0);
+    });
+
+    testWidgets(
+      'expiring closes without replay and the message shows on return',
+      (tester) async {
+        await mount(tester, draft: 'unsent\r');
+        goBackground(tester);
+        await tester.pump();
+        expect(await native.expire(native.live.single), isTrue);
+        expect(ssh.connected, isFalse);
+        expect(ssh.disconnections, 1);
+        comeBack(tester);
+        await tester.pumpAndSettle();
+        expectClosed(tester);
+        expect(
+          find.text('应用在后台停留过久，与 ${target.label} 的 SSH 会话已结束'),
+          findsOneWidget,
+        );
+        expect(ssh.writes, isEmpty);
+        expect(ssh.connections, 1);
+        expect(native.live, isEmpty);
+      },
+    );
+
+    testWidgets('a terminal and an SFTP-style session share one task', (
+      tester,
+    ) async {
+      await mount(tester);
+      final other = _FakeBackgroundSession();
+      BackgroundGrace.instance.register(other);
+      addTearDown(() => BackgroundGrace.instance.unregister(other));
+      goBackground(tester);
+      await tester.pump();
+      expect(native.begins, 1);
+      await native.expire(native.live.single);
+      expect(ssh.connected, isFalse);
+      expect(other.ends, [true]);
+      comeBack(tester);
+      await tester.pumpAndSettle();
+    });
+  });
 
   testWidgets(
     'power is spy-only, two-stage typed-target confirmation sends once',

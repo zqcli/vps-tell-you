@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:vps_tell_you/core/background_grace.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:vps_tell_you/connections/sftp_pages.dart';
 import 'package:vps_tell_you/connections/sftp_session.dart';
@@ -458,6 +459,15 @@ void main() {
         AppLifecycleState.inactive,
         AppLifecycleState.hidden,
         AppLifecycleState.paused,
+      ]) {
+        tester.binding.handleAppLifecycleStateChanged(state);
+      }
+      // The session is kept for the grace period first.
+      await tester.pump(const Duration(seconds: 10));
+      expect(find.byType(SftpBrowserPage), findsOneWidget);
+      expect(fake.closed, isFalse);
+      await tester.pump(fixedBackgroundGrace);
+      for (final state in [
         AppLifecycleState.hidden,
         AppLifecycleState.inactive,
         AppLifecycleState.resumed,
@@ -466,7 +476,8 @@ void main() {
       }
       await tester.pumpAndSettle();
       expect(find.byType(SftpBrowserPage), findsNothing);
-      expect(find.text('应用进入后台，SFTP 已关闭'), findsOneWidget);
+      expect(find.textContaining('应用在后台停留过久，与 '), findsOneWidget);
+      expect(find.textContaining('的 SFTP 会话已结束'), findsOneWidget);
       await tester.runAsync(
         () => Future<void>.delayed(const Duration(milliseconds: 50)),
       );

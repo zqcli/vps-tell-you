@@ -8,6 +8,7 @@ import 'package:vps_tell_you/connections/sftp_editor_page.dart';
 import 'package:vps_tell_you/connections/sftp_pages.dart';
 import 'package:vps_tell_you/connections/sftp_session.dart';
 import 'package:vps_tell_you/core/app_theme.dart';
+import 'package:vps_tell_you/core/background_grace.dart';
 import 'package:vps_tell_you/l10n/generated/app_localizations.dart';
 
 import 'support/fake_sftp_session.dart';
@@ -100,7 +101,13 @@ void main() {
   }
 
   Finder entry(String name) => find.byKey(ValueKey('sftp-entry-$name'));
-  void background(WidgetTester tester) {
+
+  /// Pause, stay away for [stay] (fake time), come back. Since 0.6.0 the
+  /// session is kept for a grace period, so the length of the stay matters.
+  Future<void> background(
+    WidgetTester tester, {
+    Duration stay = Duration.zero,
+  }) async {
     for (final state in [
       AppLifecycleState.inactive,
       AppLifecycleState.hidden,
@@ -108,6 +115,7 @@ void main() {
     ]) {
       tester.binding.handleAppLifecycleStateChanged(state);
     }
+    await tester.pump(stay);
     // Frames only run again once the app is back.
     for (final state in [
       AppLifecycleState.hidden,
@@ -1028,9 +1036,27 @@ void main() {
       expect(fake.closed, isTrue);
     });
 
-    testWidgets('backgrounding closes a standalone session', (tester) async {
+    testWidgets('a short trip to the background keeps the session', (
+      tester,
+    ) async {
       await open(tester);
-      background(tester);
+      await background(tester, stay: const Duration(seconds: 10));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const ValueKey('sftp-add')), findsOneWidget);
+      await tester.runAsync(
+        () => Future<void>.delayed(const Duration(milliseconds: 50)),
+      );
+      expect(fake.closed, isFalse);
+    });
+
+    testWidgets('staying past the grace period closes a standalone session', (
+      tester,
+    ) async {
+      await open(tester);
+      await background(
+        tester,
+        stay: fixedBackgroundGrace + const Duration(seconds: 1),
+      );
       await tester.pumpAndSettle();
       expect(find.text('launcher'), findsOneWidget);
       expect(
@@ -1043,6 +1069,33 @@ void main() {
       expect(fake.closed, isTrue);
     });
 
+    testWidgets(
+      'a running transfer continues in the grace period, then is cancelled',
+      (tester) async {
+        local.picks = [File('${work.path}/slow.bin')..writeAsStringSync('x')];
+        fake.hold = Completer<void>();
+        await open(tester);
+        await tapKey(tester, 'sftp-add');
+        await tapKey(tester, 'sftp-upload');
+        await _settle(tester);
+        await background(tester, stay: const Duration(seconds: 10));
+        await tester.pump();
+        expect(find.byKey(const ValueKey('sftp-add')), findsOneWidget);
+        expect(fake.closed, isFalse);
+        await background(
+          tester,
+          stay: fixedBackgroundGrace + const Duration(seconds: 1),
+        );
+        await _settle(tester);
+        expect(find.text('launcher'), findsOneWidget);
+        await tester.runAsync(
+          () => Future<void>.delayed(const Duration(milliseconds: 50)),
+        );
+        expect(fake.closed, isTrue);
+        expect(fake.exists('/home/user/slow.bin'), isFalse);
+      },
+    );
+
     testWidgets('backgrounding while a picker is open does not close it', (
       tester,
     ) async {
@@ -1052,7 +1105,7 @@ void main() {
       await open(tester);
       await tapKey(tester, 'sftp-add');
       await tapKey(tester, 'sftp-upload');
-      background(tester);
+      await background(tester);
       await tester.pump();
       expect(find.byKey(const ValueKey('sftp-add')), findsOneWidget);
       gate.complete([]);
@@ -1064,7 +1117,7 @@ void main() {
       tester,
     ) async {
       await open(tester, sheet: true);
-      background(tester);
+      await background(tester);
       await tester.pumpAndSettle();
       expect(find.byKey(const ValueKey('sftp-close')), findsOneWidget);
       expect(fake.closed, isFalse);

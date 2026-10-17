@@ -3209,5 +3209,21 @@
   "r11OssAboutHttp": "Downloads the provider directory",
   "r11OssAboutXml": "XML parsing",
   "r11OssAboutLocalNotifications": "Local notifications for expiry reminders",
-  "r11OssAboutDejaVu": "Terminal monospace font"
+  "r11OssAboutDejaVu": "Terminal monospace font",
+  "r13BackgroundSshEnded": "SSH session to {p0} ended because the app stayed in the background",
+  "@r13BackgroundSshEnded": {
+    "placeholders": {
+      "p0": {
+        "type": "String"
+      }
+    }
+  },
+  "r13BackgroundSftpEnded": "SFTP session to {p0} ended because the app stayed in the background",
+  "@r13BackgroundSftpEnded": {
+    "placeholders": {
+      "p0": {
+        "type": "String"
+      }
+    }
+  }
 }
