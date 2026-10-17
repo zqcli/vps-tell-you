@@ -252,11 +252,19 @@ class _TerminalPageState extends State<TerminalPage>
       // toast outlives this page, so its details action opens from the
       // navigator, which stays.
       final navigator = Navigator.of(context).context;
+      final exit = _service.exitStatus;
       showAppToast(
         context,
         error ??
             localizedText(
-              _endReason ?? LocalizedText((l) => l.terminalDisconnected),
+              _endReason ??
+                  (exit == null
+                      ? LocalizedText((l) => l.terminalDisconnected)
+                      : LocalizedText(
+                          (l) => exit == 0
+                              ? l.r17SessionExited
+                              : l.r17SessionExitedStatus(exit),
+                        )),
               l10n,
             ),
         actionLabel: details == null ? null : l10n.r14ErrorDetails,

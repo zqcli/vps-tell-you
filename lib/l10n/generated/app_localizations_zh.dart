@@ -4814,6 +4814,14 @@ class AppLocalizationsZh extends AppLocalizations {
   String get r15Details => '详情';
 
   @override
+  String get r17SessionExited => '已退出 SSH 会话';
+
+  @override
+  String r17SessionExitedStatus(int status) {
+    return '已退出 SSH 会话（退出码 $status）';
+  }
+
+  @override
   String get r14ErrorStage => '失败环节';
 
   @override

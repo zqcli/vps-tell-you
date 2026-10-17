@@ -8884,6 +8884,18 @@ abstract class AppLocalizations {
   /// **'详情'**
   String get r15Details;
 
+  /// No description provided for @r17SessionExited.
+  ///
+  /// In zh, this message translates to:
+  /// **'已退出 SSH 会话'**
+  String get r17SessionExited;
+
+  /// No description provided for @r17SessionExitedStatus.
+  ///
+  /// In zh, this message translates to:
+  /// **'已退出 SSH 会话（退出码 {status}）'**
+  String r17SessionExitedStatus(int status);
+
   /// No description provided for @r14ErrorStage.
   ///
   /// In zh, this message translates to:

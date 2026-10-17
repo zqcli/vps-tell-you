@@ -3107,6 +3107,15 @@
   },
   "r14ErrorDetails": "Error Details",
   "r15Details": "Details",
+  "r17SessionExited": "You left the SSH session",
+  "r17SessionExitedStatus": "You left the SSH session (exit status {status})",
+  "@r17SessionExitedStatus": {
+    "placeholders": {
+      "status": {
+        "type": "int"
+      }
+    }
+  },
   "r14ErrorStage": "What failed",
   "r14ErrorTarget": "Target",
   "r14ErrorProxy": "Proxy",

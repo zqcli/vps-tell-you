@@ -3484,6 +3484,15 @@
   },
   "r14ErrorDetails": "错误详情",
   "r15Details": "详情",
+  "r17SessionExited": "已退出 SSH 会话",
+  "r17SessionExitedStatus": "已退出 SSH 会话（退出码 {status}）",
+  "@r17SessionExitedStatus": {
+    "placeholders": {
+      "status": {
+        "type": "int"
+      }
+    }
+  },
   "r14ErrorStage": "失败环节",
   "r14ErrorTarget": "目标",
   "r14ErrorProxy": "代理",

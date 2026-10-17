@@ -371,6 +371,23 @@ void main() {
     });
   });
 
+  for (final status in [0, 1]) {
+    test(
+      'the shell exiting by itself (status $status) is not an error',
+      () async {
+        final remote = await ssh();
+        final svc = make();
+        await svc.connect(target(remote.port), verifyHost: accept);
+        expect(svc.connected, isTrue, reason: svc.error);
+        await remote.finishWithOutput(status: status);
+        await _eventually(() => svc.status == SshStatus.disconnected);
+        expect(svc.exitStatus, status);
+        expect(svc.errorFor(en), isNull);
+        expect(svc.errorDetails, isNull);
+      },
+    );
+  }
+
   test('remote close reports the server side, not an error to hide', () async {
     final remote = await ssh();
     final svc = make();
@@ -382,6 +399,7 @@ void main() {
     expect(d.stage, ErrorStage.session);
     expect(d.technical, anyOf(contains('closed'), contains('Exit status')));
     expect(svc.errorFor(en), en.sshSessionEnded);
+    expect(svc.exitStatus, isNull);
     // A deliberate disconnect later clears it.
     svc.disconnect();
     expect(svc.errorDetails, isNull);

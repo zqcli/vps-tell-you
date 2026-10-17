@@ -118,6 +118,12 @@ abstract class SshService extends ChangeNotifier {
   /// The original (redacted) error behind [error], in memory only. Null when
   /// there is none, and for cancellations.
   ErrorDetails? get errorDetails => null;
+
+  /// The shell's exit status when the session ended normally (the user ran
+  /// `exit`, `logout`, Ctrl-D…). Such an end is not an error: [error] and
+  /// [errorDetails] stay null. Any status counts, because `exit` reports the
+  /// last command's status.
+  int? get exitStatus => null;
   SshTarget? get target;
   int get generation;
   bool get connected => status == SshStatus.connected;
@@ -191,6 +197,8 @@ class NativeSshService extends SshService {
   String? errorFor(AppLocalizations l10n) => localizedError?.messageFor(l10n);
   @override
   ErrorDetails? errorDetails;
+  @override
+  int? exitStatus;
 
   // What the next failure's details are built from (all cleared on release).
   ErrorStage _stage = ErrorStage.setup;
@@ -366,6 +374,7 @@ class NativeSshService extends SshService {
     final epoch = ++generation;
     localizedError = null;
     errorDetails = null;
+    exitStatus = null;
     target = null;
     _stage = ErrorStage.setup;
     _targetLabel = requested.label;
@@ -703,17 +712,30 @@ class NativeSshService extends SshService {
     final exitCode = _session?.exitCode;
     final signal = _session?.exitSignal;
     final cause = _closeCause;
+    if (exitCode != null && signal == null) {
+      // The shell exited by itself. A transport close that follows is just
+      // the server hanging up after it; neither is an error.
+      _release();
+      generation++;
+      localizedError = null;
+      errorDetails = null;
+      exitStatus = exitCode;
+      _setStatus(SshStatus.disconnected);
+      return;
+    }
+    // Killed by a signal, dropped by the server without an exit status, or
+    // a transport error: the user did not end it, so explain and keep the
+    // original reason.
     final reason = [
       if (cause != null)
         'Connection closed with an error: ${describeError(cause)}'
       else
         'The server closed the session.',
-      if (exitCode != null) 'Exit status: $exitCode',
       if (signal != null)
         'Exit signal: SIG${signal.signalName}'
             '${signal.coreDumped ? ' (core dumped)' : ''}'
-            '${signal.errorMessage.isEmpty ? '' : ' - ${signal.errorMessage}'}',
-      if (exitCode == null && signal == null)
+            '${signal.errorMessage.isEmpty ? '' : ' - ${signal.errorMessage}'}'
+      else
         'No exit status was reported by the server.',
     ].join('\n');
     final details = _detail(reason, ErrorStage.session);
@@ -721,6 +743,7 @@ class NativeSshService extends SshService {
     generation++;
     localizedError = LocalizedText((l10n) => l10n.sshSessionEnded);
     errorDetails = details;
+    exitStatus = null;
     _setStatus(SshStatus.disconnected);
   }
 
@@ -848,6 +871,7 @@ class NativeSshService extends SshService {
     generation++;
     localizedError = null;
     errorDetails = null;
+    exitStatus = null;
     _setStatus(SshStatus.disconnected);
   }
 

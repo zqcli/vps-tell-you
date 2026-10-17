@@ -5448,6 +5448,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get r15Details => 'Details';
 
   @override
+  String get r17SessionExited => 'You left the SSH session';
+
+  @override
+  String r17SessionExitedStatus(int status) {
+    return 'You left the SSH session (exit status $status)';
+  }
+
+  @override
   String get r14ErrorStage => 'What failed';
 
   @override

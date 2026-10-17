@@ -33,6 +33,8 @@ class SpySshService extends SshService {
   SshTarget? target;
   @override
   int generation = 0;
+  @override
+  int? exitStatus;
   final writes = <String>[];
   final sizes = <(int, int)>[];
   final powers = <SshPowerAction>[];
@@ -1393,6 +1395,24 @@ void main() {
       expect(ssh.disposed, isTrue);
     },
   );
+
+  for (final (status, text) in [(0, '已退出 SSH 会话'), (1, '已退出 SSH 会话（退出码 1）')]) {
+    testWidgets(
+      'typing exit (status $status) closes quietly, no error details',
+      (tester) async {
+        await mount(tester);
+        ssh
+          ..exitStatus = status
+          ..status = SshStatus.disconnected
+          ..notifyListeners();
+        await tester.pumpAndSettle();
+        expectClosed(tester);
+        expect(find.text(text), findsOneWidget);
+        expect(find.text('错误详情'), findsNothing);
+        expect(find.text('已断开'), findsNothing);
+      },
+    );
+  }
 
   testWidgets(
     'closing a live session asks once and discards the draft; connecting closes without asking',

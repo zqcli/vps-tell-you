@@ -118,8 +118,9 @@ class SshFixture {
     await process.stdin.flush();
   }
 
-  Future<void> finishWithOutput() async {
-    process.stdin.writeln(jsonEncode({'action': 'finish'}));
+  /// The shell exits with [status] after final output, like a user's `exit`.
+  Future<void> finishWithOutput({int status = 0}) async {
+    process.stdin.writeln(jsonEncode({'action': 'finish', 'status': status}));
     await process.stdin.flush();
   }
 
