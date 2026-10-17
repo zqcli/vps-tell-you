@@ -1,6 +1,6 @@
 # `lib/core/ui` – design-system components
 
-iOS look on both platforms, no `Platform` / `TargetPlatform` branching. Visual
+iOS look on both platforms, no `Platform` / `TargetPlatform` branching (the one exception is `app_glass.dart`, which reads the iOS version to pick the glass style). Visual
 source of truth: `docs/ui-redesign/{style.css,app.js}`.
 
 ```dart
@@ -135,3 +135,17 @@ finders keep working until a page switches to `showAppConfirm`
   label), empty states, "nothing here" placeholder rows inside a group, sheet
   and dialog titles / messages. Left-aligned: row titles, form labels,
   footnotes, banners.
+
+## Glass (`AppGlass`)
+
+Translucent chrome comes in two looks selected by `AppGlassStyle` (one code path, same sizes):
+`frosted` (blur + palette tint + hairline; iOS < 26, Android, other) and `liquid` (iOS ≥ 26: blur + saturation,
+lighter tint, 1 px specular rim, faint inner highlight – an emulation, Flutter has no Liquid Glass widget).
+Resolution: `AppGlassScope` → `AppGlassConfig.debugOverride` → `--dart-define=APP_GLASS=liquid|frosted` → OS
+detection (`AppGlassConfig.styleFor`, `osVersionReader` is injectable). `MediaQuery.highContrast` turns every
+`AppGlass` into an opaque outlined surface.
+
+Use `AppGlass(kind: bar | floating | control, …)` only for chrome over content (bars, nav buttons, search,
+sheet top) – never for rows, cards or content. `context.glassStyle.isLiquid` for the few look differences
+(floating tab bar, glass nav buttons).
+

@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:ui' show ImageFilter;
 
 import 'package:flutter/material.dart';
 
@@ -354,69 +353,88 @@ class _AppTabBar extends StatelessWidget {
       context.l10n.settings,
     ];
     final idle = p.isDark ? p.text3 : const Color(0xFF8E939E);
-    return ClipRect(
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
-        child: DecoratedBox(
-          decoration: BoxDecoration(
-            color: p.barBg,
-            border: Border(top: BorderSide(color: p.separator, width: .5)),
-          ),
-          child: SafeArea(
-            top: false,
-            child: MediaQuery.withClampedTextScaling(
-              maxScaleFactor: 1.3,
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(4, 6, 4, 4),
-                child: Row(
-                  children: [
-                    for (var i = 0; i < 4; i++)
-                      Expanded(
-                        child: Semantics(
-                          selected: selected == i,
-                          button: true,
-                          enabled: true,
-                          child: GestureDetector(
-                            key: ValueKey('tab-$i'),
-                            behavior: HitTestBehavior.opaque,
-                            onTap: () => onSelect(i),
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(
-                                vertical: 2,
-                                horizontal: 2,
-                              ),
-                              child: Column(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Icon(
-                                    selected == i ? _icons[i].$2 : _icons[i].$1,
-                                    size: 26,
-                                    color: selected == i ? p.primary : idle,
-                                  ),
-                                  const SizedBox(height: 2),
-                                  Text(
-                                    labels[i],
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                    textAlign: TextAlign.center,
-                                    style: TextStyle(
-                                      fontSize: 10.5,
-                                      height: 1.2,
-                                      fontWeight: FontWeight.w500,
-                                      color: selected == i ? p.primary : idle,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
+    final liquid = context.glassStyle.isLiquid;
+    final items = Row(
+      children: [
+        for (var i = 0; i < 4; i++)
+          Expanded(
+            child: Semantics(
+              selected: selected == i,
+              button: true,
+              enabled: true,
+              child: GestureDetector(
+                key: ValueKey('tab-$i'),
+                behavior: HitTestBehavior.opaque,
+                onTap: () => onSelect(i),
+                // iOS 26: the selected tab sits in a soft lozenge.
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    color: liquid && selected == i
+                        ? p.primary.withValues(alpha: p.isDark ? .20 : .11)
+                        : null,
+                    borderRadius: AppGlass.capsule,
+                  ),
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(
+                      vertical: liquid ? 4 : 2,
+                      horizontal: 2,
+                    ),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          selected == i ? _icons[i].$2 : _icons[i].$1,
+                          size: 26,
+                          color: selected == i ? p.primary : idle,
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          labels[i],
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontSize: 10.5,
+                            height: 1.2,
+                            fontWeight: FontWeight.w500,
+                            color: selected == i ? p.primary : idle,
                           ),
                         ),
-                      ),
-                  ],
+                      ],
+                    ),
+                  ),
                 ),
               ),
             ),
           ),
+      ],
+    );
+    final scaled = MediaQuery.withClampedTextScaling(
+      maxScaleFactor: 1.3,
+      child: items,
+    );
+    if (liquid) {
+      // iOS 26: a capsule floating above the home indicator, inset from the
+      // edges. The transparent margin is part of this widget, so the
+      // Scaffold's `extendBody` inset still covers it and nothing scrolls
+      // out of reach beneath the bar.
+      final bottom = MediaQuery.paddingOf(context).bottom;
+      return Padding(
+        padding: EdgeInsets.fromLTRB(16, 4, 16, bottom > 12 ? bottom - 12 : 8),
+        child: AppGlass(
+          kind: AppGlassKind.floating,
+          borderRadius: AppGlass.capsule,
+          child: Padding(padding: const EdgeInsets.all(4), child: scaled),
+        ),
+      );
+    }
+    return AppGlass(
+      edge: AppGlassEdge.top,
+      child: SafeArea(
+        top: false,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(4, 6, 4, 4),
+          child: scaled,
         ),
       ),
     );

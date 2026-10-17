@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../app_palette.dart';
+import 'app_glass.dart';
 import 'app_list.dart';
 import 'app_widgets.dart';
 
@@ -42,6 +43,7 @@ class AppPinnedSearch extends StatelessWidget {
       delegate: _SearchDelegate(
         extent: extent,
         background: context.palette.bg,
+        fade: context.glassStyle.isLiquid,
         field: AppSearchField(
           key: const ValueKey('list-search'),
           controller: controller,
@@ -59,10 +61,15 @@ class _SearchDelegate extends SliverPersistentHeaderDelegate {
   _SearchDelegate({
     required this.extent,
     required this.background,
+    required this.fade,
     required this.field,
   });
   final double extent;
   final Color background;
+
+  /// iOS 26: the page colour fades out under the glass field, so rows slide
+  /// under it instead of being cut off by an opaque band.
+  final bool fade;
   final Widget field;
 
   @override
@@ -75,13 +82,28 @@ class _SearchDelegate extends SliverPersistentHeaderDelegate {
     BuildContext context,
     double shrinkOffset,
     bool overlapsContent,
-  ) => ColoredBox(
-    color: background,
-    child: Padding(
+  ) {
+    final padded = Padding(
       padding: const EdgeInsets.only(top: 6, bottom: 6),
       child: Align(alignment: Alignment.center, child: field),
-    ),
-  );
+    );
+    if (!fade) return ColoredBox(color: background, child: padded);
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [
+            background.withValues(alpha: .96),
+            background.withValues(alpha: .7),
+            background.withValues(alpha: 0),
+          ],
+          stops: const [0, .6, 1],
+        ),
+      ),
+      child: padded,
+    );
+  }
 
   // The field keeps its state (focus, text) in its controller.
   @override

@@ -1,5 +1,3 @@
-import 'dart:ui' show ImageFilter;
-
 import 'package:flutter/cupertino.dart'
     show
         CupertinoButton,
@@ -12,6 +10,7 @@ import 'package:flutter/services.dart' show SystemUiOverlayStyle;
 
 import '../../l10n/locale_preference.dart';
 import '../app_palette.dart';
+import 'app_glass.dart';
 
 /// Remembers the title of each page so that a pushed page can label its back
 /// button with the previous page's title ("‹ Servers"), like iOS.
@@ -112,11 +111,28 @@ class AppNavButton extends StatelessWidget {
               color: fg,
             ),
           );
+    // iOS 26: the control floats as a small glass capsule / circle.
+    final liquid = context.glassStyle.isLiquid;
     final button = CupertinoButton(
-      padding: const EdgeInsets.symmetric(horizontal: 8),
+      padding: EdgeInsets.symmetric(horizontal: liquid ? 2 : 8),
       minimumSize: const Size(40, 40),
       onPressed: onPressed,
-      child: child,
+      child: liquid
+          ? AppGlass(
+              kind: AppGlassKind.control,
+              borderRadius: AppGlass.capsule,
+              blur: false,
+              child: icon != null
+                  ? SizedBox(width: 36, height: 36, child: Center(child: child))
+                  : Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 6,
+                      ),
+                      child: child,
+                    ),
+            )
+          : child,
     );
     return tooltip == null ? button : Tooltip(message: tooltip!, child: button);
   }
@@ -131,6 +147,18 @@ class _BackButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final p = context.palette;
     final tooltip = MaterialLocalizations.of(context).backButtonTooltip;
+    final liquid = context.glassStyle.isLiquid;
+    Widget wrap(Widget row) => liquid
+        ? AppGlass(
+            kind: AppGlassKind.control,
+            borderRadius: AppGlass.capsule,
+            blur: false,
+            child: Padding(
+              padding: const EdgeInsetsDirectional.fromSTEB(10, 7, 12, 7),
+              child: row,
+            ),
+          )
+        : row;
     return Tooltip(
       message: tooltip,
       child: Semantics(
@@ -140,29 +168,33 @@ class _BackButton extends StatelessWidget {
         onTap: () => Navigator.maybePop(context),
         child: CupertinoButton(
           key: const ValueKey('app-nav-back'),
-          padding: const EdgeInsetsDirectional.only(end: 8),
+          padding: liquid
+              ? const EdgeInsets.symmetric(horizontal: 2)
+              : const EdgeInsetsDirectional.only(end: 8),
           minimumSize: const Size(44, 44),
           onPressed: () => Navigator.maybePop(context),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                Icons.arrow_back_ios_new_rounded,
-                size: 20,
-                color: p.primary,
-                textDirection: Directionality.of(context),
-              ),
-              const SizedBox(width: 2),
-              ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 110),
-                child: Text(
-                  label,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(fontSize: 17, color: p.primary),
+          child: wrap(
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  Icons.arrow_back_ios_new_rounded,
+                  size: 20,
+                  color: p.primary,
+                  textDirection: Directionality.of(context),
                 ),
-              ),
-            ],
+                const SizedBox(width: 2),
+                ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 110),
+                  child: Text(
+                    label,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(fontSize: 17, color: p.primary),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -339,6 +371,7 @@ class _AppScaffoldState extends State<AppScaffold> {
     final l10n = context.l10n;
     final canPop = Navigator.of(context).canPop();
     final bottomInset = MediaQuery.paddingOf(context).bottom;
+    final liquid = context.glassStyle.isLiquid;
 
     Widget? leading = widget.leading;
     if (widget.modal) {
@@ -392,9 +425,11 @@ class _AppScaffoldState extends State<AppScaffold> {
             automaticallyImplyLeading: false,
             automaticallyImplyTitle: false,
             transitionBetweenRoutes: false,
-            backgroundColor: p.barBg,
+            backgroundColor: liquid ? AppGlass.liquidBarTint(p) : p.barBg,
             padding: const EdgeInsetsDirectional.only(start: 4, end: 4),
-            border: Border(bottom: BorderSide(color: p.separator, width: .5)),
+            border: liquid
+                ? null
+                : Border(bottom: BorderSide(color: p.separator, width: .5)),
           )
         : SliverPersistentHeader(
             pinned: true,
@@ -463,27 +498,16 @@ class _BottomBar extends StatelessWidget {
   final Widget child;
 
   @override
-  Widget build(BuildContext context) {
-    final p = context.palette;
-    return ClipRect(
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
-        child: DecoratedBox(
-          decoration: BoxDecoration(
-            color: p.barBg,
-            border: Border(top: BorderSide(color: p.separator, width: .5)),
-          ),
-          child: SafeArea(
-            top: false,
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(16, 10, 16, 10),
-              child: child,
-            ),
-          ),
-        ),
+  Widget build(BuildContext context) => AppGlass(
+    edge: AppGlassEdge.top,
+    child: SafeArea(
+      top: false,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 10, 16, 10),
+        child: child,
       ),
-    );
-  }
+    ),
+  );
 }
 
 /// Pinned small centred navigation bar. Transparent over the page background
@@ -557,20 +581,7 @@ class _SmallBarDelegate extends SliverPersistentHeaderDelegate {
     if (!scrolled) {
       return ColoredBox(color: palette.bg, child: bar);
     }
-    return ClipRect(
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
-        child: DecoratedBox(
-          decoration: BoxDecoration(
-            color: palette.barBg,
-            border: Border(
-              bottom: BorderSide(color: palette.separator, width: .5),
-            ),
-          ),
-          child: bar,
-        ),
-      ),
-    );
+    return AppGlass(edge: AppGlassEdge.bottom, child: bar);
   }
 
   @override
