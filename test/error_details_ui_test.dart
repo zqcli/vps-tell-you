@@ -229,9 +229,8 @@ void main() {
 
     Finder button() => find.byKey(const ValueKey('error-details-button'));
 
-    testWidgets('the banner shows the headline and a 44 pt ⓘ with a label', (
-      tester,
-    ) async {
+    testWidgets('the banner has one error icon and opens details from '
+        'anywhere, with a trailing Details link', (tester) async {
       await mount(
         tester,
         Scaffold(
@@ -242,19 +241,36 @@ void main() {
         ),
       );
       expect(find.text('Connection could not be completed.'), findsOneWidget);
+      expect(find.byIcon(Icons.error_outline_rounded), findsOneWidget);
+      expect(find.byIcon(Icons.info_outline_rounded), findsNothing);
       expect(button(), findsOneWidget);
-      final box = tester.getSize(
-        find.descendant(of: button(), matching: find.byType(SizedBox)).first,
+      expect(find.text('Details'), findsOneWidget);
+      expect(tester.getSize(button()).height, greaterThanOrEqualTo(44));
+      // The message itself is part of the tap target.
+      await tester.tap(find.text('Connection could not be completed.'));
+      await tester.pumpAndSettle();
+      expect(find.text('Error Details'), findsWidgets);
+    });
+
+    testWidgets('the standalone link is a 44 pt labelled button', (
+      tester,
+    ) async {
+      await mount(
+        tester,
+        Scaffold(
+          body: Center(child: ErrorDetailsButton(details: details)),
+        ),
       );
-      expect(box.width, greaterThanOrEqualTo(44));
-      expect(box.height, greaterThanOrEqualTo(44));
+      final size = tester.getSize(button());
+      expect(size.width, greaterThanOrEqualTo(44));
+      expect(size.height, greaterThanOrEqualTo(44));
       expect(
         tester.getSemantics(button()),
         isSemantics(label: 'Error Details', isButton: true, hasTapAction: true),
       );
     });
 
-    testWidgets('no ⓘ without details', (tester) async {
+    testWidgets('no Details link without details', (tester) async {
       await mount(
         tester,
         const Scaffold(body: ErrorBanner(text: 'Cancelled.')),

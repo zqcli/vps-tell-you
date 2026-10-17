@@ -5,8 +5,9 @@ import '../core/ui/ui.dart';
 import '../l10n/locale_preference.dart';
 import 'error_details.dart';
 
-/// The ⓘ next to a friendly error message: opens [showErrorDetails].
-/// 44 pt hit target, secondary colour unless [color] is given.
+/// "Details ›" link after a friendly error message: opens [showErrorDetails].
+/// Text rather than a second ⓘ, so it never repeats the error icon that
+/// usually sits before the message. 44 pt tall hit target.
 class ErrorDetailsButton extends StatelessWidget {
   const ErrorDetailsButton({super.key, required this.details, this.color});
   final ErrorDetails details;
@@ -14,49 +15,88 @@ class ErrorDetailsButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final label = context.l10n.r14ErrorDetails;
+    final l10n = context.l10n;
     return Semantics(
       container: true,
       button: true,
-      label: label,
+      label: l10n.r14ErrorDetails,
       onTap: () => showErrorDetails(context, details),
       excludeSemantics: true,
-      child: Material(
-        type: MaterialType.transparency,
-        child: InkResponse(
-          key: const ValueKey('error-details-button'),
-          radius: 22,
-          onTap: () => showErrorDetails(context, details),
-          child: SizedBox(
-            width: 44,
-            height: 44,
-            child: Center(
-              child: Icon(
-                Icons.info_outline_rounded,
-                size: 22,
-                color: color ?? context.palette.text2,
-              ),
-            ),
-          ),
+      child: GestureDetector(
+        key: const ValueKey('error-details-button'),
+        behavior: HitTestBehavior.opaque,
+        onTap: () => showErrorDetails(context, details),
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(minHeight: 44, minWidth: 44),
+          child: _DetailsLabel(color: color ?? context.palette.primary),
         ),
       ),
     );
   }
 }
 
-/// A red banner with the message and the ⓘ button when [details] exist.
+class _DetailsLabel extends StatelessWidget {
+  const _DetailsLabel({required this.color});
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsetsDirectional.only(start: 8, end: 4),
+    child: Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(
+          context.l10n.r15Details,
+          style: TextStyle(
+            fontSize: 13.5,
+            fontWeight: FontWeight.w600,
+            color: color,
+          ),
+        ),
+        const SizedBox(width: 3),
+        AppChevron(color: color.withValues(alpha: .8), size: 12),
+      ],
+    ),
+  );
+}
+
+/// A red banner: error icon, message and, when [details] exist, the whole
+/// banner opens them with a trailing "Details ›" (one icon, one target).
 class ErrorBanner extends StatelessWidget {
   const ErrorBanner({super.key, required this.text, this.details});
   final String text;
   final ErrorDetails? details;
 
   @override
-  Widget build(BuildContext context) => AppBanner(
-    tone: AppTone.red,
-    icon: Icons.error_outline_rounded,
-    text: text,
-    action: details == null ? null : ErrorDetailsButton(details: details!),
-  );
+  Widget build(BuildContext context) {
+    final d = details;
+    final banner = AppBanner(
+      tone: AppTone.red,
+      icon: Icons.error_outline_rounded,
+      text: text,
+      onTap: d == null ? null : () => showErrorDetails(context, d),
+      action: d == null
+          ? null
+          : KeyedSubtree(
+              key: const ValueKey('error-details-button'),
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(minHeight: 44),
+                child: Center(
+                  widthFactor: 1,
+                  child: _DetailsLabel(
+                    color: context.palette.tone(AppTone.red).$1,
+                  ),
+                ),
+              ),
+            ),
+    );
+    if (d == null) return banner;
+    return Semantics(
+      button: true,
+      hint: context.l10n.r14ErrorDetails,
+      child: banner,
+    );
+  }
 }
 
 /// "Error Details" sheet: stage, target, proxy, time and the redacted
