@@ -1,4 +1,3 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 import '../core/net_address.dart';
@@ -9,7 +8,7 @@ import '../l10n/localized_message.dart';
 import '../servers/ledger_controller.dart';
 import 'proxy_models.dart';
 import 'security_controller.dart';
-import 'security_pages.dart';
+import 'security_widgets.dart';
 
 const proxyTint = AppTints.indigo;
 const proxyIcon = Icons.alt_route_rounded;
@@ -26,7 +25,6 @@ class ProxyChoice {
   const ProxyChoice.temporary(ProxyEndpoint this.temporary) : savedId = null;
   final String? savedId;
   final ProxyEndpoint? temporary;
-  bool get isDirect => savedId == null && temporary == null;
 }
 
 const _directValue = '';
@@ -149,6 +147,7 @@ class _ProxyListPageState extends State<ProxyListPage> {
     listenable: security,
     builder: (context, _) {
       final l10n = context.l10n;
+      final linked = referenceCounts(security, (s) => s.proxyId);
       return AppScaffold(
         title: l10n.r13ProxiesTitle,
         actions: [
@@ -160,12 +159,7 @@ class _ProxyListPageState extends State<ProxyListPage> {
           ),
         ],
         children: loading
-            ? const [
-                Padding(
-                  padding: EdgeInsets.only(top: 80),
-                  child: Center(child: CupertinoActivityIndicator()),
-                ),
-              ]
+            ? securityLoadingChildren
             : [
                 SecurityNotice(controller: security),
                 AppSection(
@@ -173,16 +167,7 @@ class _ProxyListPageState extends State<ProxyListPage> {
                   footer: l10n.r13ProxyListFooter,
                   children: [
                     if (security.proxies.isEmpty)
-                      AppRow.custom(
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 12),
-                          child: Text(
-                            l10n.r13ProxyEmpty,
-                            textAlign: TextAlign.center,
-                            style: context.footnoteStyle.copyWith(fontSize: 14),
-                          ),
-                        ),
-                      ),
+                      securityEmptyRow(context, l10n.r13ProxyEmpty),
                     for (final proxy in security.proxies)
                       AppRow(
                         key: ValueKey('proxy-${proxy.id}'),
@@ -191,9 +176,7 @@ class _ProxyListPageState extends State<ProxyListPage> {
                         title: proxy.name,
                         subtitle: proxySummary(proxy),
                         trailing: StatusPill(
-                          l10n.securityLinkedServerCount(
-                            security.proxyReferences(proxy.id).length,
-                          ),
+                          l10n.securityLinkedServerCount(linked[proxy.id] ?? 0),
                         ),
                         chevron: true,
                         onTap: () => _open(proxy),
@@ -257,9 +240,7 @@ class _ProxyFormState extends State<ProxyForm> with WidgetsBindingObserver {
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.paused ||
-        state == AppLifecycleState.hidden ||
-        state == AppLifecycleState.detached) {
+    if (leftForeground(state)) {
       password.clear();
       security.hideSensitive();
     }
@@ -424,7 +405,6 @@ class _ProxyFormState extends State<ProxyForm> with WidgetsBindingObserver {
     listenable: security,
     builder: (context, _) {
       final l10n = context.l10n;
-      final p = context.palette;
       final existing = widget.existing;
       final references = existing == null
           ? 0
@@ -564,28 +544,9 @@ class _ProxyFormState extends State<ProxyForm> with WidgetsBindingObserver {
             ),
             if (!widget.temporary) SecurityFootnote(l10n.r13ProxyListFooter),
             if (existing != null && existing.hasCredentials) ...[
-              AppSection(
-                header: l10n.securityProtectedPassword,
-                footer: revealed
-                    ? l10n.securityPasswordRevealNotice
-                    : l10n.securityPasswordHiddenNotice,
-                children: [
-                  AppRow.custom(
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      child: Text(
-                        revealed
-                            ? security.revealedProxyPassword!
-                            : '••••••••••••••••',
-                        key: const ValueKey('revealed-proxy-password'),
-                        style: kMonoTextStyle.copyWith(
-                          fontSize: 16,
-                          color: p.text,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
+              SecretRevealSection(
+                secret: revealed ? security.revealedProxyPassword : null,
+                textKey: const ValueKey('revealed-proxy-password'),
               ),
               SecurityAction(
                 child: AppButton(

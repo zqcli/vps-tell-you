@@ -5,7 +5,7 @@ import '../core/ui/ui.dart';
 import '../servers/ledger_controller.dart';
 import 'host_trust.dart';
 import 'security_models.dart';
-import 'security_pages.dart';
+import 'security_widgets.dart';
 import '../l10n/locale_preference.dart';
 import '../l10n/localized_message.dart';
 

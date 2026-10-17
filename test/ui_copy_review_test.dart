@@ -15,10 +15,10 @@ import 'package:vps_tell_you/core/app_theme.dart';
 import 'package:vps_tell_you/core/value_types.dart';
 import 'package:vps_tell_you/data/ledger_store.dart';
 import 'package:vps_tell_you/finance/calculation_share.dart';
+import 'package:vps_tell_you/finance/calculation_widgets.dart';
 import 'package:vps_tell_you/finance/calculator_page.dart';
 import 'package:vps_tell_you/finance/finance_math.dart';
 import 'package:vps_tell_you/finance/finance_page.dart';
-import 'package:vps_tell_you/finance/finance_widgets.dart';
 import 'package:vps_tell_you/finance/fx_page.dart';
 import 'package:vps_tell_you/finance/payment_pages.dart';
 import 'package:vps_tell_you/finance/valuation_copy.dart';
@@ -276,13 +276,14 @@ void main() {
           body: ListView(
             padding: const EdgeInsets.all(20),
             children: [
-              ValuationCard(
+              CalculationHero(value: value, fx: ledger.fx, asOf: asOf),
+              const SizedBox(height: 16),
+              CalculationDetails(
                 value: value,
                 renewal: server.money!,
                 cycleMonths: 12,
                 due: server.dueDate!,
                 asOf: asOf,
-                fx: ledger.fx,
               ),
             ],
           ),

@@ -12,6 +12,8 @@ import 'package:vps_tell_you/data/ledger_store.dart';
 import 'package:vps_tell_you/security/host_trust_pages.dart';
 import 'package:vps_tell_you/security/security_controller.dart';
 import 'package:vps_tell_you/security/security_models.dart';
+import 'package:vps_tell_you/security/credential_form.dart';
+import 'package:vps_tell_you/security/credential_pages.dart';
 import 'package:vps_tell_you/security/security_pages.dart';
 import 'package:vps_tell_you/security/ssh_configuration_page.dart';
 import 'package:vps_tell_you/servers/ledger_controller.dart';

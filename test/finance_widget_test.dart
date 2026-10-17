@@ -13,12 +13,15 @@ import 'package:vps_tell_you/core/value_types.dart';
 import 'package:vps_tell_you/data/ledger_store.dart';
 import 'package:vps_tell_you/l10n/generated/app_localizations_zh.dart';
 import 'package:vps_tell_you/finance/calculation_share.dart';
+import 'package:vps_tell_you/finance/calculation_result_page.dart';
 import 'package:vps_tell_you/finance/calculator_page.dart';
+import 'package:vps_tell_you/finance/finance_detail_pages.dart';
 import 'package:vps_tell_you/finance/finance_page.dart';
 import 'package:vps_tell_you/finance/finance_widgets.dart';
 import 'package:vps_tell_you/finance/finance_math.dart';
 import 'package:vps_tell_you/finance/finance_models.dart';
 import 'package:vps_tell_you/finance/fx_page.dart';
+import 'package:vps_tell_you/finance/payment_detail_page.dart';
 import 'package:vps_tell_you/finance/payment_pages.dart';
 import 'package:vps_tell_you/servers/ledger_controller.dart';
 import 'package:vps_tell_you/servers/server_detail.dart';
@@ -513,16 +516,6 @@ void main() {
       await tester.pumpAndSettle();
       expect(row(3), findsOneWidget);
       expect(row(20), findsNothing);
-    });
-
-    testWidgets('legacy recent flag means the 30-day window', (tester) async {
-      await seedAges();
-      await mount(
-        tester,
-        PaymentListPage(controller: controller, recent: true),
-      );
-      expect(row(20), findsOneWidget);
-      expect(row(60), findsNothing);
     });
   });
 

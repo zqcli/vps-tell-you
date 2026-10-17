@@ -1,4 +1,3 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 import '../core/net_address.dart';
@@ -7,6 +6,7 @@ import '../servers/ledger_controller.dart';
 import 'proxy_pages.dart';
 import 'security_models.dart';
 import 'security_pages.dart';
+import 'security_widgets.dart';
 import '../l10n/generated/app_localizations.dart';
 import '../l10n/locale_preference.dart';
 import '../l10n/localized_message.dart';
@@ -236,12 +236,7 @@ class _SshConfigurationPageState extends State<SshConfigurationPage> {
                       : save,
                 ),
           children: loading
-              ? const [
-                  Padding(
-                    padding: EdgeInsets.only(top: 80),
-                    child: Center(child: CupertinoActivityIndicator()),
-                  ),
-                ]
+              ? securityLoadingChildren
               : [
                   SecurityNotice(controller: security),
                   AppSection(

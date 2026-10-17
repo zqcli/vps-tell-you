@@ -422,34 +422,15 @@ Future<Uint8List> renderCalculationPng(CalculationShareData data) async {
   y += tile(l10n.financeRenewalCycle, data.renewal, contentX, contentW, y) + 20;
 
   // ---- notes ----
+  // Draws one muted 12 px line at [contentX] and returns its height + [gap].
+  double note(String text, double gap) =>
+      put(painter(text, size: 12, color: AppColors.muted), contentX, y) + gap;
   if (data.futurePeriods > 0) {
-    y +=
-        put(
-          painter(
-            l10n.financeExportFuturePeriods(data.futurePeriods),
-            size: 12,
-            color: AppColors.muted,
-          ),
-          contentX,
-          y,
-        ) +
-        4;
+    y += note(l10n.financeExportFuturePeriods(data.futurePeriods), 4);
   }
-  y +=
-      put(
-        painter(data.periodBasis, size: 12, color: AppColors.muted),
-        contentX,
-        y,
-      ) +
-      4;
-  y += put(painter(data.fx, size: 12, color: AppColors.muted), contentX, y);
-  y +=
-      put(
-        painter(data.fxSource, size: 12, color: AppColors.muted),
-        contentX,
-        y,
-      ) +
-      14;
+  y += note(data.periodBasis, 4);
+  y += note(data.fx, 0);
+  y += note(data.fxSource, 14);
   final ruleY = y;
   ops.add((canvas) {
     canvas.drawLine(
@@ -473,11 +454,7 @@ Future<Uint8List> renderCalculationPng(CalculationShareData data) async {
         y,
       ) +
       4;
-  y += put(
-    painter(l10n.financeExportFooter, size: 12, color: AppColors.muted),
-    contentX,
-    y,
-  );
+  y += note(l10n.financeExportFooter, 0);
   final cardBottom = y + 24;
   final height = (cardBottom + cardX).ceil();
 
@@ -672,26 +649,16 @@ class _CalculationPreviewState extends State<CalculationPreview> {
       );
       if (!mounted || ticket != generation) return;
       setState(
-        () => status = switch (result) {
-          PngShareOutcome.selected => LocalizedText(
-            (l10n) => l10n.financePngShareSelected,
-          ),
-          PngShareOutcome.dismissed => LocalizedText(
-            (l10n) => l10n.financePngShareDismissed,
-          ),
-          PngShareOutcome.unknown => LocalizedText(
-            (l10n) => l10n.financePngShareUnknown,
-          ),
-          PngShareOutcome.unsupported => LocalizedText(
-            (l10n) => l10n.financePngShareUnsupported,
-          ),
-          PngShareOutcome.busy => LocalizedText(
-            (l10n) => l10n.financePngShareBusy,
-          ),
-          PngShareOutcome.failed => LocalizedText(
-            (l10n) => l10n.financePngShareFailed,
-          ),
-        },
+        () => status = LocalizedText(
+          (l10n) => switch (result) {
+            PngShareOutcome.selected => l10n.financePngShareSelected,
+            PngShareOutcome.dismissed => l10n.financePngShareDismissed,
+            PngShareOutcome.unknown => l10n.financePngShareUnknown,
+            PngShareOutcome.unsupported => l10n.financePngShareUnsupported,
+            PngShareOutcome.busy => l10n.financePngShareBusy,
+            PngShareOutcome.failed => l10n.financePngShareFailed,
+          },
+        ),
       );
     } catch (_) {
       if (mounted && ticket == generation) {

@@ -11,7 +11,7 @@ import 'package:vps_tell_you/app.dart';
 import 'package:vps_tell_you/core/app_theme.dart';
 import 'package:vps_tell_you/core/value_types.dart';
 import 'package:vps_tell_you/data/ledger_store.dart';
-import 'package:vps_tell_you/finance/finance_page.dart';
+import 'package:vps_tell_you/finance/finance_detail_pages.dart';
 import 'package:vps_tell_you/finance/finance_widgets.dart';
 import 'package:vps_tell_you/l10n/generated/app_localizations.dart';
 import 'package:vps_tell_you/servers/ledger_controller.dart';
