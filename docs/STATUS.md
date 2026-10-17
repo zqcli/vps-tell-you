@@ -2,7 +2,28 @@
 
 更新：2026-10-10 UTC
 
-## 当前增量：液态玻璃、代理、后台宽限（`dev`，0.6.0 未发布）
+## 当前增量：整体代码审查——性能与结构（`dev`，0.6.0 未发布）
+
+- **性能**（实测）：
+  - 服务器列表改为懒加载，`LedgerController` 每次刷新建一次索引并缓存 `visible`，`refresh()` 的 10 次读取并发执行。1000 台时打开列表 3.4 s → 0.73 s，5 次搜索输入 3.77 s → 0.39 s。
+  - 标签页切换不再重建其他页面，16 次切换的组件重建次数从 197k 降到 3.7k；`MaterialApp` 只在主题或语言变化时重建；`appTheme` 做了记忆化。
+  - `compareNames` 改掉了逐字符正则，3000 个名称排序 157 ms → 6 ms。
+  - 费用页新增 `FinanceScope`，按台账版本缓存统计：1000 台服务器、5000 条付款时，每次无关通知的处理时间 228 ms → 58 ms。
+  - SFTP 编辑器移动光标时复用同一个 `TextSpan`；字节数每次文本变化才计算一次；SFTP 浏览器的传输进度不再重建整页。
+  - 语法高亮的正则改为一次编译。
+- **结构**：
+  - 拆分超大文件：`ledger_schema.dart`（迁移链原样搬出）、`server_row` / `server_add` / `server_archive` / `server_detail_widgets`、`terminal_chrome` / `terminal_input`、`sftp_dartssh_session` / `sftp_row_widgets`，以及 finance 和 security 的多个页面。现在除了 `ledger_store`、`terminal_page`、`syntax_highlight` 之外，其余手写文件都不超过 1000 行。
+  - 抽出共享组件 `AppSwipeRow`（服务器列表和 SFTP 共用）、`AppGroupedRow` 和 `LocaleRevalidatingForm`（原来有 7 处拷贝）。安全模块的显示、存储流程合并为 `_authenticatedReveal` 和 `_storeSecret`，原有的执行顺序不变。
+- **减量**：
+  - 删除死代码（未用到的组件、控制器方法、兼容别名）和 126 个没有代码使用的文案键（两份 ARB 共 −562 行，生成的代码 −1692 行）。
+  - 手写的 `lib` 代码 46036 → 45777 行。
+- **行为差异**（无用户可见文案变化）：
+  - 滑开的行在滚出屏幕后会关闭。
+  - 行处于滑开状态时，长按不再弹出菜单，点一下会把它关上。
+  - 滑动松手的阈值统一为露出宽度的 45%。
+- **验证**：全量测试 **1388/1388 通过**，analyze 零问题。
+
+## 前一增量：液态玻璃、代理、后台宽限（`dev`，0.6.0 未发布）
 
 - **液态玻璃**（`lib/core/ui/app_glass.dart`）：仅在 iOS 26 及以上启用。标签栏悬浮成胶囊；导航按钮、搜索框、底部弹窗的顶部和关闭按钮做成玻璃质感：轻度模糊加饱和度、1px 高光边、极淡的内高光，不做折射和动画。列表、卡片等内容区域不改。iOS 18 及以下、Android 保持原来的毛玻璃；开启「增强对比度」时改为不透明。可以用 `--dart-define=APP_GLASS=liquid|frosted` 强制指定样式。
 - **代理**：

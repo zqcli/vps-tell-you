@@ -26,8 +26,7 @@ This comment is not shown.
 - iOS 18 and earlier, Android and other platforms keep the classic frosted look; with Increase Contrast on, surfaces turn opaque
 - **Going to the background no longer disconnects SSH at once**: iOS asks the system for background time (the system decides, typically about 30 s) and Android keeps the session for a fixed 30 s. Coming back in time continues the terminal untouched; otherwise the session is closed cleanly and you see “SSH session to … ended because the app stayed in the background”. SFTP behaves the same, and a running transfer is cancelled when the time runs out
 - Swiping a server row to the left now offers only SSH and Favorite; Archive moved to the long-press menu (still with its confirmation)
-- Switching bottom tabs no longer rebuilds the other opened pages (about 98 % fewer widget rebuilds per switch with 300 servers); searching / sorting many names is faster
-- The server list builds only the rows on screen, so opening and searching a ledger with thousands of servers stays smooth
+- **Performance**: the server list builds only the rows on screen (1,000 servers open in 0.7 s instead of 3.4 s; search is about 10× faster); switching tabs no longer rebuilds the other open pages; Costs caches its figures per ledger revision; moving the caret in the SFTP editor no longer re-lays out the whole file, and transfer progress no longer rebuilds the page
 
 ## 0.5.0 — 2026-10-16
 
