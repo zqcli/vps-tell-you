@@ -9,6 +9,8 @@ import 'package:vps_tell_you/connections/sftp_pages.dart';
 import 'package:vps_tell_you/connections/sftp_session.dart';
 import 'package:vps_tell_you/connections/ssh_service.dart';
 import 'package:vps_tell_you/connections/terminal_page.dart';
+import 'package:vps_tell_you/connections/terminal_chrome.dart'
+    show TerminalMenuAction;
 import 'package:vps_tell_you/core/app_theme.dart';
 import 'package:vps_tell_you/data/ledger_store.dart';
 import 'package:vps_tell_you/l10n/generated/app_localizations.dart';
@@ -635,8 +637,8 @@ void main() {
       expect(ssh.connected, isFalse);
       await tester.tap(find.byTooltip('终端菜单'));
       await tester.pumpAndSettle();
-      final item = tester.widget<PopupMenuItem<String>>(
-        find.widgetWithText(PopupMenuItem<String>, 'SFTP 文件'),
+      final item = tester.widget<PopupMenuItem<TerminalMenuAction>>(
+        find.widgetWithText(PopupMenuItem<TerminalMenuAction>, 'SFTP 文件'),
       );
       expect(item.enabled, isFalse);
       await tester.tap(find.text('SFTP 文件'), warnIfMissed: false);
