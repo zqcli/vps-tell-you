@@ -92,75 +92,92 @@ class FinanceDetailPage extends StatelessWidget {
     ServerRecord s,
   ) {
     final l10n = context.l10n;
-    final p = context.palette;
     final amount = metric == FinanceMetric.value
         ? scope.remaining(s)
         : monthlyAmount(s, c.today);
-    final secondary = TextStyle(fontSize: 13, height: 1.4, color: p.text2);
-    return AppRow.custom(
+    return _financeRow(
+      context,
+      name: s.name,
+      captions: [
+        '${c.providerNameFor(s, l10n: l10n)} · ${c.groupName(s.groupId, l10n: l10n)}',
+        l10n.localeName.startsWith('zh') && s.billing != BillingKind.unknown
+            ? '${s.billingLabelFor(l10n)} ${s.currency}'
+            : s.billingLabelFor(l10n),
+      ],
+      gap: 6,
+      figure: amount.known
+          ? l10n.financeAmountMetric(
+              amount.formatted,
+              amount.currency,
+              metric == FinanceMetric.value ? 'value' : 'monthly',
+            )
+          : s.billing == BillingKind.metered && metric == FinanceMetric.value
+          ? l10n.financeMeteredValueNa
+          : amount.status == AmountStatus.notApplicable
+          ? l10n.financeExpiredMonthlyExcluded
+          : l10n.financeUnknownAmount,
+      converted: convertedAmount(amount, c.fx, l10n: l10n),
+      trailing: s.dueDate == null
+          ? null
+          : l10n.financeDueDateValue(s.dueDate.toString()),
       onTap: () => Navigator.push<void>(
         context,
         MaterialPageRoute(
           builder: (_) => ServerDetail(controller: c, id: s.id),
         ),
       ),
-      chevron: true,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              s.name,
-              style: TextStyle(
-                fontSize: 17,
-                fontWeight: FontWeight.w600,
-                color: p.text,
-              ),
-            ),
-            Text(
-              '${c.providerNameFor(s, l10n: l10n)} · ${c.groupName(s.groupId, l10n: l10n)}',
-              style: secondary,
-            ),
-            Text(
-              l10n.localeName.startsWith('zh') &&
-                      s.billing != BillingKind.unknown
-                  ? '${s.billingLabelFor(l10n)} ${s.currency}'
-                  : s.billingLabelFor(l10n),
-              style: secondary,
-            ),
-            const SizedBox(height: 6),
-            Text(
-              amount.known
-                  ? l10n.financeAmountMetric(
-                      amount.formatted,
-                      amount.currency,
-                      metric == FinanceMetric.value ? 'value' : 'monthly',
-                    )
-                  : s.billing == BillingKind.metered &&
-                        metric == FinanceMetric.value
-                  ? l10n.financeMeteredValueNa
-                  : amount.status == AmountStatus.notApplicable
-                  ? l10n.financeExpiredMonthlyExcluded
-                  : l10n.financeUnknownAmount,
-              style: TextStyle(
-                fontSize: 15,
-                fontWeight: FontWeight.w600,
-                color: p.text,
-                fontFeatures: kTabularFigures,
-              ),
-            ),
-            Text(convertedAmount(amount, c.fx, l10n: l10n), style: secondary),
-            if (s.dueDate != null)
-              Text(
-                l10n.financeDueDateValue(s.dueDate.toString()),
-                style: secondary,
-              ),
-          ],
-        ),
-      ),
     );
   }
+}
+
+/// A tappable server row of the Costs detail pages: bold name, then caption
+/// lines; [figure] and [converted] are the bold amount and its conversion.
+/// [gap] (between the captions and the figure) is only used by the detail row.
+Widget _financeRow(
+  BuildContext context, {
+  required String name,
+  required List<String> captions,
+  required String figure,
+  required String converted,
+  String? trailing,
+  double gap = 0,
+  required VoidCallback onTap,
+}) {
+  final p = context.palette;
+  final secondary = TextStyle(fontSize: 13, height: 1.4, color: p.text2);
+  return AppRow.custom(
+    onTap: onTap,
+    chevron: true,
+    child: Padding(
+      padding: const EdgeInsets.symmetric(vertical: 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            name,
+            style: TextStyle(
+              fontSize: 17,
+              fontWeight: FontWeight.w600,
+              color: p.text,
+            ),
+          ),
+          for (final caption in captions) Text(caption, style: secondary),
+          if (gap > 0) SizedBox(height: gap),
+          Text(
+            figure,
+            style: TextStyle(
+              fontSize: 15,
+              fontWeight: FontWeight.w600,
+              color: p.text,
+              fontFeatures: kTabularFigures,
+            ),
+          ),
+          Text(converted, style: secondary),
+          if (trailing != null) Text(trailing, style: secondary),
+        ],
+      ),
+    ),
+  );
 }
 
 class RenewalsPage extends StatelessWidget {
@@ -179,7 +196,6 @@ class RenewalsPage extends StatelessWidget {
     builder: (context, _) {
       final c = controller;
       final l10n = context.l10n;
-      final p = context.palette;
       final scope = FinanceScope.of(c, groupId);
       final events = month == null
           ? scope.events
@@ -200,7 +216,6 @@ class RenewalsPage extends StatelessWidget {
           builder: (_) => ServerDetail(controller: c, id: id),
         ),
       );
-      final secondary = TextStyle(fontSize: 13, height: 1.4, color: p.text2);
       return AppScaffold(
         largeTitle: false,
         title: month == null
@@ -226,45 +241,18 @@ class RenewalsPage extends StatelessWidget {
             children: [
               if (events.isEmpty) AppRow(title: l10n.financeNoKnownRenewals),
               for (final e in events)
-                AppRow.custom(
-                  onTap: () => openServer(e.server.id),
-                  chevron: true,
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          e.server.name,
-                          style: TextStyle(
-                            fontSize: 17,
-                            fontWeight: FontWeight.w600,
-                            color: p.text,
-                          ),
-                        ),
-                        Text(
-                          l10n.financeRenewalEventDate(
-                            e.date.toString(),
-                            e.server.cycleMonths,
-                          ),
-                          style: secondary,
-                        ),
-                        Text(
-                          '${e.amount.formatted} ${e.amount.currency}',
-                          style: TextStyle(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w600,
-                            color: p.text,
-                            fontFeatures: kTabularFigures,
-                          ),
-                        ),
-                        Text(
-                          convertedAmount(e.amount, c.fx, l10n: l10n),
-                          style: secondary,
-                        ),
-                      ],
+                _financeRow(
+                  context,
+                  name: e.server.name,
+                  captions: [
+                    l10n.financeRenewalEventDate(
+                      e.date.toString(),
+                      e.server.cycleMonths,
                     ),
-                  ),
+                  ],
+                  figure: '${e.amount.formatted} ${e.amount.currency}',
+                  converted: convertedAmount(e.amount, c.fx, l10n: l10n),
+                  onTap: () => openServer(e.server.id),
                 ),
             ],
           ),

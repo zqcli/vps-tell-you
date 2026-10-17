@@ -70,22 +70,20 @@ class _CredentialDetailPageState extends State<CredentialDetailPage>
   }
 
   Future<void> copyFingerprint(BuildContext context, String fingerprint) async {
+    var copied = true;
     try {
       await Clipboard.setData(ClipboardData(text: fingerprint));
-      if (context.mounted) {
-        securityMessage(
-          context,
-          LocalizedText((l10n) => l10n.securityFingerprintCopied),
-        );
-      }
     } catch (_) {
-      if (context.mounted) {
-        securityMessage(
-          context,
-          LocalizedText((l10n) => l10n.securityCopyFailed),
-        );
-      }
+      copied = false;
     }
+    if (!context.mounted) return;
+    securityMessage(
+      context,
+      LocalizedText(
+        (l10n) =>
+            copied ? l10n.securityFingerprintCopied : l10n.securityCopyFailed,
+      ),
+    );
   }
 
   @override
