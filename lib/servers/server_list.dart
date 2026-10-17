@@ -264,13 +264,21 @@ class _ServerListState extends State<ServerList> {
             onPressed: c.canMutate ? openAdd : null,
           ),
         ],
-        children: [
-          if (c.refreshFailed) RefreshFailureNotice(controller: c),
-          if (empty) ..._emptyLedger(context) else ..._ledger(context, all),
+        slivers: [
+          if (empty)
+            _sliverOf([
+              if (c.refreshFailed) RefreshFailureNotice(controller: c),
+              ..._emptyLedger(context),
+            ])
+          else
+            ..._ledger(context, all),
         ],
       );
     },
   );
+
+  static Widget _sliverOf(List<Widget> children) =>
+      SliverList(delegate: SliverChildListDelegate(children));
 
   List<Widget> _emptyLedger(BuildContext context) {
     final l10n = context.l10n;
@@ -303,6 +311,8 @@ class _ServerListState extends State<ServerList> {
     ];
   }
 
+  /// The ledger as slivers: the controls and stats above the list, then the
+  /// rows (built lazily, only those on screen), then the hint.
   List<Widget> _ledger(BuildContext context, List<ServerRecord> all) {
     final l10n = context.l10n;
     final p = context.palette;
@@ -370,7 +380,8 @@ class _ServerListState extends State<ServerList> {
         ),
       ),
     );
-    return [
+    final top = [
+      if (c.refreshFailed) RefreshFailureNotice(controller: c),
       const SizedBox(height: 4),
       AppSearchField(
         key: const ValueKey('server-search'),
@@ -477,42 +488,75 @@ class _ServerListState extends State<ServerList> {
               ),
             ],
           ),
-        )
-      else
-        AppSection(
-          topSpacing: 0,
-          dividers: false,
-          children: [
-            for (var i = 0; i < visible.length; i++) ...[
-              if (i > 0)
-                Padding(
-                  padding: EdgeInsetsDirectional.only(start: big ? 16 : 70),
-                  child: SizedBox(
-                    height: .5,
-                    child: ColoredBox(color: p.separator),
-                  ),
-                ),
-              ServerRow(
-                key: ValueKey('server-row:${visible[i].id}'),
-                record: visible[i],
-                controller: c,
-              ),
-            ],
-          ],
         ),
-      Padding(
-        padding: const EdgeInsets.fromLTRB(32, 10, 32, 0),
+    ];
+    return [
+      _sliverOf(top),
+      if (visible.isNotEmpty)
+        SliverList.builder(
+          itemCount: visible.length,
+          itemBuilder: (context, i) => _groupedRow(
+            context,
+            visible[i],
+            first: i == 0,
+            last: i == visible.length - 1,
+            inset: big ? 16 : 70,
+          ),
+        ),
+      SliverToBoxAdapter(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(32, 10, 32, 0),
+          child: Text(
+            l10n.uiServersRowHint,
+            textAlign: TextAlign.center,
+            style: context.footnoteStyle,
+          ),
+        ),
+      ),
+    ];
+  }
+
+  /// One row of the rounded group (the look of an [AppSection], but each row
+  /// is its own sliver child so only the visible ones are built).
+  Widget _groupedRow(
+    BuildContext context,
+    ServerRecord record, {
+    required bool first,
+    required bool last,
+    required double inset,
+  }) {
+    final p = context.palette;
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Material(
+        color: p.surface,
+        clipBehavior: Clip.antiAlias,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(
+            top: Radius.circular(first ? 14 : 0),
+            bottom: Radius.circular(last ? 14 : 0),
+          ),
+        ),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text(
-              l10n.uiServersRowHint,
-              textAlign: TextAlign.center,
-              style: context.footnoteStyle,
+            if (!first)
+              Padding(
+                padding: EdgeInsetsDirectional.only(start: inset),
+                child: SizedBox(
+                  height: .5,
+                  child: ColoredBox(color: p.separator),
+                ),
+              ),
+            ServerRow(
+              key: ValueKey('server-row:${record.id}'),
+              record: record,
+              controller: c,
             ),
           ],
         ),
       ),
-    ];
+    );
   }
 }
 
