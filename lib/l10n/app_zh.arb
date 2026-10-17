@@ -1566,7 +1566,6 @@
     }
   },
   "serverReloadLocal": "重新读取本地台账",
-  "serverReloadedLocal": "已重新读取本地台账，未查询远端状态",
   "serverAdd": "添加服务器",
   "serverFirstTitle": "你的第一台 VPS，\n从这里开始",
   "serverFirstDescription": "到期、费用和连接，一处记录。",
@@ -2006,7 +2005,7 @@
   },
   "connectionManageCredentials": "管理凭据",
   "connectionEditSavedSettings": "编辑并保存此服务器的 SSH 配置",
-  "connectionTemporaryChangesHelp": "本页改动只用于本次连接。密码或私钥从已保存的凭据中读取，不在这里输入或另存。进入后台会断开连接；长任务建议在远端使用 tmux / screen。",
+  "connectionTemporaryChangesHelp": "本页改动只用于本次连接。密码或私钥从已保存的凭据中读取，不在这里输入或另存。进入后台后会话只保留系统允许的短暂时间（通常约 30 秒）；长任务建议在远端使用 tmux / screen。",
   "connectionSnippetDraftOnly": "片段将放入独立待发送区。连接、核验、认证都不会发送片段。",
   "connectionPowerAfterConnect": "连接后选择重启 / 关机，需完成两次确认；不支持开机。",
   "connectionReviewConnect": "核对并连接",
@@ -2094,7 +2093,7 @@
   },
   "terminalSelectionHelp": "点按终端输入；长按并拖动选择，使用“复制”复制。向上滚动查看历史，向下箭头回到最新输出。",
   "terminalInputHelp": "键盘和特殊键直接发送到 SSH。常用命令、片段和粘贴先进入独立草稿；“发送”不追加回车，“发送并执行”追加回车，由当前终端程序处理。正文原有换行仍可能执行。Ctrl 作用于下一个按键，再点可取消。",
-  "terminalBackgroundHelp": "会话结束、离开或进入后台都会关闭此页，不会自动重连或重放输入。长任务建议在远端使用 tmux / screen。",
+  "terminalBackgroundHelp": "会话结束或离开会关闭此页。进入后台后会话只保留系统允许的短暂时间（通常约 30 秒），超时即断开，不会自动重连或重放输入。长任务建议在远端使用 tmux / screen。",
   "r2ConnDisconnectHelp": "{p0}\n未放入 tmux / screen 的远端任务可能中断；未发送的草稿将丢弃。",
   "@r2ConnDisconnectHelp": {
     "placeholders": {
@@ -3808,6 +3807,7 @@
     }
   },
   "r14ErrorDetails": "错误详情",
+  "r15Details": "详情",
   "r14ErrorStage": "失败环节",
   "r14ErrorTarget": "目标",
   "r14ErrorProxy": "代理",

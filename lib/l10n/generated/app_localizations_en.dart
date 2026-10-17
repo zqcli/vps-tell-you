@@ -2632,10 +2632,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get serverReloadLocal => 'Reload local ledger';
 
   @override
-  String get serverReloadedLocal =>
-      'Local ledger reloaded. Remote status wasn’t checked.';
-
-  @override
   String get serverAdd => 'Add Server';
 
   @override
@@ -3585,7 +3581,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get connectionTemporaryChangesHelp =>
-      'Changes on this page apply only to this connection. Passwords or private keys come from saved credentials and aren’t entered or saved again here. The connection ends when the app enters the background. Use tmux / screen on the remote server for long-running tasks.';
+      'Changes on this page apply only to this connection. Passwords or private keys come from saved credentials and aren’t entered or saved again here. In the background the session lasts only as long as the system allows (usually about 30 seconds). Use tmux / screen on the remote server for long-running tasks.';
 
   @override
   String get connectionSnippetDraftOnly =>
@@ -3796,7 +3792,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get terminalBackgroundHelp =>
-      'Ending the session, leaving, or backgrounding the app closes this page. Nothing reconnects or replays input automatically. Use tmux / screen on the remote server for long-running tasks.';
+      'Ending the session or leaving closes this page. In the background the session lasts only as long as the system allows (usually about 30 seconds), then disconnects. Nothing reconnects or replays input automatically. Use tmux / screen on the remote server for long-running tasks.';
 
   @override
   String r2ConnDisconnectHelp(String p0) {
@@ -5933,6 +5929,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get r14ErrorDetails => 'Error Details';
+
+  @override
+  String get r15Details => 'Details';
 
   @override
   String get r14ErrorStage => 'What failed';

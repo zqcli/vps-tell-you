@@ -1,3 +1,5 @@
+import 'package:flutter/cupertino.dart';
+
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -51,6 +53,12 @@ void main() {
     );
     await tester.pumpAndSettle();
   }
+
+  testWidgets('the local ledger list has no pull-to-refresh', (tester) async {
+    // The list follows the ledger live; there is no remote state to pull.
+    await mount(tester);
+    expect(find.byType(CupertinoSliverRefreshControl), findsNothing);
+  });
 
   testWidgets('filter sheet applies group, due status and sort together', (
     tester,

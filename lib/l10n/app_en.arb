@@ -1338,7 +1338,6 @@
   "serverApplyFilters": "Apply filters",
   "serverLedgerCount": "Servers: {p0} · Local ledger",
   "serverReloadLocal": "Reload local ledger",
-  "serverReloadedLocal": "Local ledger reloaded. Remote status wasn’t checked.",
   "serverAdd": "Add Server",
   "serverFirstTitle": "Your first VPS\nstarts here",
   "serverFirstDescription": "Due dates, costs, and connections in one place.",
@@ -1646,7 +1645,7 @@
   "connectionUseDefaultUsername": "Use Default Username: {p0}",
   "connectionManageCredentials": "Manage Credentials",
   "connectionEditSavedSettings": "Edit and Save SSH Settings for This Server",
-  "connectionTemporaryChangesHelp": "Changes on this page apply only to this connection. Passwords or private keys come from saved credentials and aren’t entered or saved again here. The connection ends when the app enters the background. Use tmux / screen on the remote server for long-running tasks.",
+  "connectionTemporaryChangesHelp": "Changes on this page apply only to this connection. Passwords or private keys come from saved credentials and aren’t entered or saved again here. In the background the session lasts only as long as the system allows (usually about 30 seconds). Use tmux / screen on the remote server for long-running tasks.",
   "connectionSnippetDraftOnly": "The snippet goes into a separate draft. Connecting, verification, and authentication never send it.",
   "connectionPowerAfterConnect": "After connecting, choose restart or shutdown and complete both confirmations. Powering on isn’t supported.",
   "connectionReviewConnect": "Review and Connect",
@@ -1707,7 +1706,7 @@
   "terminalDimensions": "{p0} · {p1} columns × {p2} rows",
   "terminalSelectionHelp": "Tap the terminal to type. Touch and hold, then drag to select, and use Copy. Scroll up for history; the down arrow returns to the latest output.",
   "terminalInputHelp": "Keyboard input and special keys go straight to SSH. Quick commands, snippets, and pasted text go into a separate draft first. Send doesn’t add Enter; Send and Execute does, and the current terminal program handles it. Newlines already in the text may still run. Ctrl applies to the next key; tap it again to cancel.",
-  "terminalBackgroundHelp": "Ending the session, leaving, or backgrounding the app closes this page. Nothing reconnects or replays input automatically. Use tmux / screen on the remote server for long-running tasks.",
+  "terminalBackgroundHelp": "Ending the session or leaving closes this page. In the background the session lasts only as long as the system allows (usually about 30 seconds), then disconnects. Nothing reconnects or replays input automatically. Use tmux / screen on the remote server for long-running tasks.",
   "r2ConnDisconnectHelp": "{p0}\nRemote tasks outside tmux / screen may be interrupted; the unsent draft is discarded.",
   "@r2ConnDisconnectHelp": {
     "placeholders": {
@@ -3345,6 +3344,7 @@
     }
   },
   "r14ErrorDetails": "Error Details",
+  "r15Details": "Details",
   "r14ErrorStage": "What failed",
   "r14ErrorTarget": "Target",
   "r14ErrorProxy": "Proxy",

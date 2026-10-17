@@ -4085,12 +4085,6 @@ abstract class AppLocalizations {
   /// **'重新读取本地台账'**
   String get serverReloadLocal;
 
-  /// No description provided for @serverReloadedLocal.
-  ///
-  /// In zh, this message translates to:
-  /// **'已重新读取本地台账，未查询远端状态'**
-  String get serverReloadedLocal;
-
   /// No description provided for @serverAdd.
   ///
   /// In zh, this message translates to:
@@ -5714,7 +5708,7 @@ abstract class AppLocalizations {
   /// No description provided for @connectionTemporaryChangesHelp.
   ///
   /// In zh, this message translates to:
-  /// **'本页改动只用于本次连接。密码或私钥从已保存的凭据中读取，不在这里输入或另存。进入后台会断开连接；长任务建议在远端使用 tmux / screen。'**
+  /// **'本页改动只用于本次连接。密码或私钥从已保存的凭据中读取，不在这里输入或另存。进入后台后会话只保留系统允许的短暂时间（通常约 30 秒）；长任务建议在远端使用 tmux / screen。'**
   String get connectionTemporaryChangesHelp;
 
   /// No description provided for @connectionSnippetDraftOnly.
@@ -6080,7 +6074,7 @@ abstract class AppLocalizations {
   /// No description provided for @terminalBackgroundHelp.
   ///
   /// In zh, this message translates to:
-  /// **'会话结束、离开或进入后台都会关闭此页，不会自动重连或重放输入。长任务建议在远端使用 tmux / screen。'**
+  /// **'会话结束或离开会关闭此页。进入后台后会话只保留系统允许的短暂时间（通常约 30 秒），超时即断开，不会自动重连或重放输入。长任务建议在远端使用 tmux / screen。'**
   String get terminalBackgroundHelp;
 
   /// No description provided for @r2ConnDisconnectHelp.
@@ -9644,6 +9638,12 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'错误详情'**
   String get r14ErrorDetails;
+
+  /// No description provided for @r15Details.
+  ///
+  /// In zh, this message translates to:
+  /// **'详情'**
+  String get r15Details;
 
   /// No description provided for @r14ErrorStage.
   ///

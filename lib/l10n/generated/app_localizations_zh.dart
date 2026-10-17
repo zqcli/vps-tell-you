@@ -2280,9 +2280,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get serverReloadLocal => '重新读取本地台账';
 
   @override
-  String get serverReloadedLocal => '已重新读取本地台账，未查询远端状态';
-
-  @override
   String get serverAdd => '添加服务器';
 
   @override
@@ -3139,7 +3136,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get connectionTemporaryChangesHelp =>
-      '本页改动只用于本次连接。密码或私钥从已保存的凭据中读取，不在这里输入或另存。进入后台会断开连接；长任务建议在远端使用 tmux / screen。';
+      '本页改动只用于本次连接。密码或私钥从已保存的凭据中读取，不在这里输入或另存。进入后台后会话只保留系统允许的短暂时间（通常约 30 秒）；长任务建议在远端使用 tmux / screen。';
 
   @override
   String get connectionSnippetDraftOnly => '片段将放入独立待发送区。连接、核验、认证都不会发送片段。';
@@ -3334,7 +3331,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get terminalBackgroundHelp =>
-      '会话结束、离开或进入后台都会关闭此页，不会自动重连或重放输入。长任务建议在远端使用 tmux / screen。';
+      '会话结束或离开会关闭此页。进入后台后会话只保留系统允许的短暂时间（通常约 30 秒），超时即断开，不会自动重连或重放输入。长任务建议在远端使用 tmux / screen。';
 
   @override
   String r2ConnDisconnectHelp(String p0) {
@@ -5257,6 +5254,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get r14ErrorDetails => '错误详情';
+
+  @override
+  String get r15Details => '详情';
 
   @override
   String get r14ErrorStage => '失败环节';

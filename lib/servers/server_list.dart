@@ -172,20 +172,6 @@ class _ServerListState extends State<ServerList> {
     super.dispose();
   }
 
-  Future<void> reload() async {
-    if (c.busy) return;
-    try {
-      await c.refresh();
-      if (mounted) {
-        showAppToast(context, context.l10n.serverReloadedLocal);
-      }
-    } catch (error) {
-      if (mounted) {
-        showFailure(context, error);
-      }
-    }
-  }
-
   Future<void> loadDemo() async {
     final ok = await showAppConfirm(
       context,
@@ -278,7 +264,6 @@ class _ServerListState extends State<ServerList> {
             onPressed: c.canMutate ? openAdd : null,
           ),
         ],
-        onRefresh: reload,
         children: [
           if (c.refreshFailed) RefreshFailureNotice(controller: c),
           if (empty) ..._emptyLedger(context) else ..._ledger(context, all),
