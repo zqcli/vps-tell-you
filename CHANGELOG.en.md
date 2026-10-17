@@ -12,6 +12,12 @@ How to add entries (the app shows this file under Settings / About / What’s Ne
 This comment is not shown.
 -->
 
+## 0.6.0 — Unreleased
+
+### Added
+
+- **SSH, SFTP and TCP tests can go through a proxy**: SOCKS5, HTTP and HTTPS proxies are saved under Settings › Proxies (the password stays in secure storage and is never exported or backed up) and chosen in the SSH connection settings; the terminal and SFTP share that connection. The TCP test can use a saved proxy or a temporary one, and empty means direct; a success through a proxy only shows the proxy can reach the target
+
 ## 0.5.0 — 2026-10-16
 
 ### Added
