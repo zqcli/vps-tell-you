@@ -1,7 +1,6 @@
 {
   "@@locale": "en",
   "language": "Language",
-  "languageDescription": "Changes apply right away. Drafts and open connections stay as they are.",
   "languageSystem": "Follow system",
   "languageSystemDescription": "If your device language isn’t Chinese or English, the app uses English.",
   "languageChinese": "简体中文",
@@ -15,19 +14,12 @@
   "costs": "Costs",
   "tools": "Tools",
   "settings": "Settings",
-  "toolsDescription": "Calculate costs, connect to servers, or manage saved commands.",
   "remainingValueCalculator": "Remaining Value Calculator",
   "calculatorDescription": "Start from scratch or use a server’s details. Export as an image.",
-  "connectionsTroubleshooting": "Connections and troubleshooting",
   "sshQuickConnect": "SSH Quick Connect",
-  "sshQuickConnectDescription": "Pick a saved server or a one-off target. Verify the host before signing in.",
   "tcpConnectionTest": "TCP Connection Test",
-  "tcpConnectionDescription": "Check one address and port from this device.",
   "commandSnippets": "Command Snippets",
-  "commandSnippetsDescription": "Save commands and add them to the terminal draft before sending.",
-  "singleServerMaintenance": "Server maintenance",
   "powerControl": "Power Control",
-  "powerControlDescription": "Restart or shut down over SSH. Double-check the target first.",
   "powerControlWarning": "SSH can’t power a stopped server back on, so use the provider’s panel after a shutdown. Restarting or shutting down doesn’t stop provider billing.",
   "uiTabsCalculatorTile": "Estimate on its own or from a server; export a privacy-safe image",
   "uiTabsSshTile": "Choose a saved server",
@@ -52,10 +44,8 @@
   "reminderDaysBefore": "{p0, plural, one{1 day before} other{{p0} days before}}",
   "notificationStatus": "Notification Access & Reminder Status",
   "reminderLastTimezone": "Time zone last used to schedule reminders: {p0}",
-  "reminderEnableHelp": "Turn on system notifications and each server’s reminders. Set reminder days, time, and usage plan in server details. You can save rules even without notification permission.",
   "requestingPermission": "Requesting…",
   "requestNotificationPermission": "Allow Notifications",
-  "notificationPermissionHelp": "If you denied permission or turned notifications off, change it in device settings. Then come back and check reminder status again.",
   "checkReminderStatus": "Check Again",
   "reminderCoverage": "Reminder coverage",
   "r2TabsMetricScheduled": "Scheduled",
@@ -127,8 +117,6 @@
   "back": "Back",
   "recordMissingReload": "This record no longer exists. Go back and reload.",
   "dueDateNotEntered": "No due date entered",
-  "reminderSaveHelp": "Tap Save Reminder Rules to apply changes. If reminders are on and you choose Stop using at expiry, you’ll still be reminded to check renewal settings with your provider.",
-  "uiTabsReminderSaveHelp": "Tap Save at the top right to apply.",
   "uiTabsReminderDue": "{name} expires on {date}.",
   "@uiTabsReminderDue": {
     "placeholders": {
@@ -163,12 +151,10 @@
   "sameDay": "Same day",
   "dayCount": "{p0, plural, one{1 day} other{{p0} days}}",
   "reminderTime": "Reminder time",
-  "selectReminderTime": "Set Reminder Time",
   "cancel": "Cancel",
   "confirm": "OK",
   "hour": "Hour",
   "minute": "Minute",
-  "invalidTime": "Enter a valid time",
   "reminderDstHelp": "Uses the device time zone. Times skipped by daylight saving time move forward, and repeated times fire once.",
   "myUsagePlan": "My usage plan",
   "usagePlanWarning": "A usage plan is only a local note and doesn’t stop provider billing. Cancel renewal with the provider separately.",
@@ -176,7 +162,6 @@
   "serverScheduledCount": "Scheduled for this server: {p0}",
   "viewReminderCoverage": "View notification access and coverage",
   "saving": "Saving…",
-  "saveReminderRules": "Save reminder rules",
   "expiryNotificationTitle": "Check VPS expiry",
   "notificationDueDate": "expires on {p0}",
   "notificationStopBody": "A service {p0}. Make sure you’ve canceled renewal with your provider. A local plan doesn’t stop billing.",
@@ -231,16 +216,11 @@
   "darkTheme": "Dark",
   "appDescription": "Renewals, costs and access, on device",
   "r11AppSlogan": "Know every VPS at a glance",
-  "organizationData": "Organization and data",
   "manageGroups": "Manage Groups",
-  "groupCountHelp": "Groups: {p0} · Deleting a group keeps its records",
   "archivedRecords": "Archived Records",
-  "archiveCountHelp": "Records: {p0} · Can be restored to the server list",
-  "accountsPreferences": "Accounts and preferences",
   "keysSecurity": "Keys & Security",
   "keysSecurityDescription": "Credentials, SSH settings, and host trust",
   "currenciesReferenceRates": "Currencies & Reference Rates",
-  "currencyRateSummary": "{p0} · Manual rates: {p1}",
   "notSet": "Not set",
   "notificationAccess": "Notification Access",
   "backupExclusionsSummary": "Excludes credentials and host trust · Unencrypted JSON",
@@ -295,7 +275,6 @@
   "financeDataUnknown": "Information unknown",
   "financeMissingFxPreserved": "Exchange rate missing · Original currency retained",
   "financeMissingFxExcluded": "Only amounts with an exchange rate are totaled. Missing amounts aren’t counted as zero.",
-  "financeValuationAndDue": "Valuation date / service due date",
   "financeRemainingDays": "Remaining service days",
   "financeRenewalCycle": "Renewal price / cycle",
   "financeDailyShown": "Daily average for the shown period",
@@ -362,7 +341,6 @@
   "financeSplitFee": "Split equally",
   "financeSplitFeeNote": "The fee is split in minor units; any odd 0.01 goes to the buyer.",
   "financeCalculateQuote": "Calculate Quote and Fees",
-  "financePremiumLabel": "Quote minus reference value (premium / discount)",
   "financeBuyerSellerFee": "Buyer / seller fee",
   "financeBuyerEstimate": "Estimated buyer outlay",
   "financeSellerEstimate": "Estimated seller net proceeds",
@@ -398,18 +376,12 @@
   "financeNotReceipt": "This isn’t a payment receipt from the provider, and it doesn’t change auto-renewal settings.",
   "financePaymentTarget": "Payment target",
   "financeAllPayments": "All payment records",
-  "financeRecent30": "Last 30 days",
   "financeShowVoided": "Show deleted",
   "financeRecordedPaidTotal": "Total recorded payments",
   "financeNoPayments": "— No payment records yet",
   "financePaymentDetails": "Payment breakdown",
   "financeArchivedPayment": "Server archived · Past payments kept",
   "financeNoPaymentsInRange": "No payments in this range. Record completed renewal payments from a server’s details.",
-  "financeVoidTitle": "Void this local record?",
-  "financeVoidAccountNote": "Marks this bill as voided. It doesn’t request a refund from the provider.",
-  "financeVoidServerNote": "Undoes only the service periods and due date this record added, and marks the payment as voided. It doesn’t request a provider refund or cancel service.",
-  "financeVoidRecord": "Void Record",
-  "financePaymentVoided": "This local payment record was voided",
   "financePaymentDetail": "Payment Details",
   "financePaymentUnavailable": "This record is unavailable. Go back and reload.",
   "financePaymentDateLabel": "Payment date",
@@ -419,7 +391,6 @@
   "financeVoidedStatus": "Deleted, excluded from payment totals",
   "financeRecordedStatus": "Recorded",
   "financePaymentHistoryNote": "Original-currency history. It doesn’t follow renewal prices or exchange rates.",
-  "financeVoidThisRecord": "Void This Record",
   "r2FinanceEdit": "Edit",
   "r2FinanceEditTitle": "Edit Payment",
   "r2FinanceEditHint": "Edits bookkeeping details only. Service periods, due date, and cycles stay as they are.",
@@ -486,13 +457,10 @@
   },
   "r2FinanceDeleted": "Payment record deleted",
   "r2FinanceUpdated": "Payment record updated",
-  "financeVoidBlocked": "Details have changed. Review them first. After later edits, payments, or archiving, an old record can’t overwrite the current details.",
   "financeRulesTitle": "How these figures are calculated",
   "financeTitle": "Costs",
-  "financeOverview": "View monthly cost references, remaining value, and recorded payments.",
   "financeScope": "Scope",
   "financeMonthlyReference": "Monthly cost reference",
-  "financeTotalRemaining": "Total remaining value  ›",
   "financeMonthlyNotPaid": "Renewal prices spread monthly, plus metered estimates. Not what you paid this month.",
   "financeUpcomingRenewals": "Expected renewals in the next 30 days",
   "financeRecentPayments": "Payment Records",
@@ -507,7 +475,6 @@
   "financeForecastNote": "Forecast at current renewal prices, assuming renewal continues. Excludes metered bills and expired services.",
   "financeMonthlyDetail": "Monthly Cost Details",
   "financeValueDetail": "Remaining Value Details",
-  "financeInventoryDetail": "Server breakdown",
   "financeIncompleteDetail": "Check Costs & Due Dates",
   "financeMeteredValueNa": "Metered billing · Remaining value doesn’t apply",
   "financeExpiredMonthlyExcluded": "Expired · Not in the monthly cost reference",
@@ -740,7 +707,6 @@
   "r3FinanceQuoteSettlement": "Settlement",
   "r3FinanceQuoteRef": "Remaining value",
   "r3FinanceQuoteDeal": "Suggested price",
-  "r3FinanceQuoteFeesRow": "Total fee",
   "financeRoundingNote": "{rate}\n{source}. Conversions are for reference only.",
   "@financeRoundingNote": {
     "placeholders": {
@@ -817,17 +783,6 @@
       }
     }
   },
-  "financeVoidedName": "{voided, select, yes{{name} · Voided} other{{name}}}",
-  "@financeVoidedName": {
-    "placeholders": {
-      "name": {
-        "type": "String"
-      },
-      "voided": {
-        "type": "String"
-      }
-    }
-  },
   "financePaymentSummary": "{account, select, yes{{date} · Past account bill, counted once} other{{date} · Due date: {due}}}",
   "@financePaymentSummary": {
     "placeholders": {
@@ -872,24 +827,8 @@
       }
     }
   },
-  "financeManagedCount": "Unarchived servers: {count}  ›",
-  "@financeManagedCount": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
   "financeRenewalEventNote": "{count, plural, one{1 prepaid renewal} other{{count} prepaid renewals}} · Today and the next 29 days",
   "@financeRenewalEventNote": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "financeRecentPaymentNote": "{count, plural, one{1 payment} other{{count} payments}} · Today and the previous 29 days",
-  "@financeRecentPaymentNote": {
     "placeholders": {
       "count": {
         "type": "int"
@@ -960,14 +899,6 @@
   },
   "uiFinanceForecastBasis": "At current renewal prices",
   "uiFinanceToolsHeader": "Records & tools",
-  "uiFinanceServerCount": "{count, plural, one{1 server} other{{count} servers}}",
-  "@uiFinanceServerCount": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
   "uiFinanceFootnote": "Uses renewal prices and manual rates. For reference only; not actual bills.",
   "uiFinanceVoidedPill": "Deleted",
   "uiFinanceArchivedPill": "Archived",
@@ -982,23 +913,6 @@
         "type": "int"
       },
       "count": {
-        "type": "int"
-      }
-    }
-  },
-  "financeForecastTotal": "{amount} {currency}{missing, plural, =0{} one{ · 1 item missing an exchange rate} other{ · {missing} items missing exchange rates}}{unknown, plural, =0{} one{ · 1 unknown amount} other{ · {unknown} unknown amounts}}",
-  "@financeForecastTotal": {
-    "placeholders": {
-      "amount": {
-        "type": "String"
-      },
-      "currency": {
-        "type": "String"
-      },
-      "missing": {
-        "type": "int"
-      },
-      "unknown": {
         "type": "int"
       }
     }
@@ -1177,38 +1091,6 @@
       }
     }
   },
-  "financeExportDue": "Service due date: {date}",
-  "@financeExportDue": {
-    "placeholders": {
-      "date": {
-        "type": "String"
-      }
-    }
-  },
-  "financeExportRemainingDays": "Remaining service days: {days}",
-  "@financeExportRemainingDays": {
-    "placeholders": {
-      "days": {
-        "type": "int"
-      }
-    }
-  },
-  "financeExportRenewal": "Renewal price / cycle: {renewal}",
-  "@financeExportRenewal": {
-    "placeholders": {
-      "renewal": {
-        "type": "String"
-      }
-    }
-  },
-  "financeExportDaily": "Daily average for the shown period: {daily}",
-  "@financeExportDaily": {
-    "placeholders": {
-      "daily": {
-        "type": "String"
-      }
-    }
-  },
   "billingCostUnknown": "Cost unknown",
   "billingMeteredAmount": "{amount}/mo est.",
   "billingAnnualAmount": "{amount}/year",
@@ -1276,7 +1158,6 @@
   "chooseOtherCredential": "Choose a different credential",
   "invalidSshConfiguration": "Enter a valid host, port, and explicit username",
   "verificationCancelled": "Verification canceled",
-  "completeLocalResources": "Complete and confirm all six local resource fields first",
   "securityOperationIncomplete": "The security operation didn’t complete. Try again.",
   "serverNameRange": "Use 1–80 characters for the name",
   "serverVendorRange": "Use 1–80 characters for the provider",
@@ -1289,7 +1170,6 @@
   "resourceMonth": "Month",
   "resourceQuarter": "Quarter",
   "resourceYear": "Year",
-  "resourceValidIp": "Enter a valid IPv4 or IPv6 address. Unspecified addresses aren’t allowed.",
   "resourceValidHostname": "Enter a valid hostname without a protocol, port, or path",
   "resourceValidVcpu": "Enter a whole number of vCPUs from 1 to 65,536",
   "resourceValidRam": "Enter a valid positive memory capacity",
@@ -1304,21 +1184,16 @@
   "resourcePeriodNotSet": "Period not set",
   "resourceEveryPeriod": "Per {p0}",
   "resourceDiskQuota": "{p0} disk",
-  "resourceFieldValidIp": "Enter a valid IPv4 or IPv6 address, not an all-zero address",
   "r6IpValidIpv4": "Enter a valid IPv4 address such as 192.0.2.1. All-zero addresses aren’t allowed.",
   "r6IpValidIpv6": "Enter a valid IPv6 address such as 2001:db8::1, without brackets or a zone.",
   "resourceFieldValidVcpu": "Enter a whole-number core count from 1 to 65,536",
   "resourceFieldValidBytes": "Enter a positive capacity that resolves to a whole number of bytes",
-  "resourceCapacity": "Capacity",
   "resourceUnitSemantics": "{p0} unit, base 1024",
-  "resourceUnit": "Unit",
   "resourceTrafficPeriod": "Traffic period",
-  "resourcePeriod": "Period",
   "resourceNewPeriodHelp": "New records default to monthly; you can change it.",
   "resourcePeriodHelp": "The period is separate from the capacity unit. Choose Not set if unknown.",
   "resourceHardware": "Hardware details",
   "resourceLocalHelp": "Capacities use 1024-based units.",
-  "resourceIpAddress": "IP address",
   "r6IpIpv4": "IPv4",
   "r6IpIpv6": "IPv6",
   "resourceHostname": "Hostname",
@@ -1335,9 +1210,7 @@
   "serverExpired": "Expired",
   "serverDueNext30": "Due in the next 30 days",
   "serverCostDateUnknown": "Cost / due date unknown",
-  "serverApplyFilters": "Apply filters",
   "serverLedgerCount": "Servers: {p0} · Local ledger",
-  "serverReloadLocal": "Reload local ledger",
   "serverAdd": "Add Server",
   "serverFirstTitle": "Your first VPS\nstarts here",
   "serverFirstDescription": "Due dates, costs, and connections in one place.",
@@ -1348,13 +1221,11 @@
   "serverViewDemo": "View Demo Data First",
   "serverManualStartHelp": "Already have servers? Start by recording them manually.",
   "serverSearchHint": "Search name, address, provider, purpose, or region",
-  "serverClearSearch": "Clear search",
   "serverAll": "All",
   "serverFavorites": "Favorites",
   "serverFilterLabel": "Filters{p0}",
   "serverFilterSelectedSuffix": " · Applied",
   "serverExpiryNeedsCheck": "Due dates need checking",
-  "serverExpiryCounts": "Expired: {p0} · Due within 30 days: {p1}",
   "serverFavoriteServers": "Favorite servers",
   "serverAllServers": "All servers",
   "serverSort": "Sort",
@@ -1378,7 +1249,6 @@
   },
   "uiServersRowHint": "Swipe or long-press a server for quick actions",
   "serverClearFilters": "Clear Filters",
-  "serverListObservationHelp": "Servers aren’t monitored. Days left use the device date.",
   "serverCostsMissing": "Add cost details",
   "serverMeteredBilling": "Metered billing",
   "serverDueUnknown": "Due date unknown",
@@ -1386,7 +1256,6 @@
   "serverDueToday": "Expires today",
   "serverDueInDays": "{p0, plural, one{Expires in 1 day} other{Expires in {p0} days}}",
   "serverDemo": "Demo",
-  "serverLocalUnqueried": "Local record · Runtime status not checked",
   "serverNotEntered": "Not entered",
   "resourceUnlimitedConfirmed": "Unlimited (confirmed)",
   "resourceCardHelp": "Local data only; nothing is read from the provider.",
@@ -1400,7 +1269,6 @@
   "serverArchived": "Archived. Remote resources and billing are unchanged.",
   "serverUndo": "Undo",
   "serverUndoArchiveFailed": "Couldn’t undo. Check Archived Records in Settings.",
-  "serverMissingDetails": "Not yet added",
   "serverDetails": "Server Details",
   "serverRecordUnavailable": "This record is unavailable. Go back and try again.",
   "serverRemoveFavorite": "Remove from Favorites",
@@ -1418,7 +1286,6 @@
   "serverHostCopied": "Address copied",
   "serverCopyHostFailed": "Couldn’t copy the address. Try again.",
   "serverOperatingSystem": "Operating system",
-  "serverGroupPurpose": "Group / purpose",
   "serverSpecifications": "Specifications",
   "serverEditHardware": "Edit Hardware",
   "serverCostExpiry": "Costs and due date",
@@ -1426,25 +1293,19 @@
   "serverRenewalAmount": "Renewal amount",
   "serverRenewalCycle": "Renewal cycle",
   "serverMonths": "{p0, plural, one{1 month} other{{p0} months}}",
-  "serverServiceStart": "Service start date",
   "serverUnknown": "Unknown",
-  "serverServiceDue": "Service due date",
   "serverUnknownCostHelp": "An amount left blank is never counted as 0.",
   "serverMeteredValueHelp": "Metered billing is a monthly estimate; no remaining value is calculated.",
   "serverRenewalValueHelp": "Remaining value is a reference at the renewal price, not a refund or resale price.",
   "serverReminderPlan": "Reminders & Usage Plan",
   "serverRemindersOff": "Reminders off",
-  "serverRemainingValue": "Remaining value",
   "serverUnknownValueHelp": "Dates or cost details are incomplete. Remaining value is unknown, not 0.",
   "serverRecordPayment": "Record Payment",
-  "serverUseForCalculation": "Calculate using these details",
-  "serverViewPayments": "View payment records",
   "serverConnectionsControl": "Connections and controls",
   "serverSshSettings": "SSH Connection Settings",
   "serverSshSettingsDescription": "Connection address, port, username, and credentials",
   "serverConnectSsh": "Connect with SSH",
   "serverTcpTest": "TCP Test",
-  "serverPower": "Server power",
   "serverConnectionSafety": "Verify the host fingerprint the first time you connect. Shutting down or restarting doesn’t stop billing.",
   "serverNotes": "Notes",
   "serverSavedMetadata": "Saved locally: {p0}\nServer ID: {p1}",
@@ -1460,16 +1321,6 @@
       }
     }
   },
-  "uiDetailConverted": "In {currency}",
-  "@uiDetailConverted": {
-    "placeholders": {
-      "currency": {
-        "type": "String"
-      }
-    }
-  },
-  "uiDetailDaily": "Daily",
-  "uiDetailRemainingDays": "Days left",
   "uiDetailPayments": "Payments",
   "uiDetailValuation": "Estimate",
   "uiDetailFillIn": "Fill In",
@@ -1503,12 +1354,7 @@
   "serverBillingType": "Billing type",
   "serverEveryYear": "Every year",
   "serverEveryMonths": "{p0, plural, one{Every month} other{Every {p0} months}}",
-  "serverHalfYear": "6 mo",
-  "serverTwoYears": "2 yr",
-  "serverThreeYears": "3 yr",
-  "serverAmount": "Amount",
   "serverOriginalCurrency": "Original currency",
-  "serverCurrency": "Currency",
   "serverMonthlyCostEstimate": "Monthly cost estimate",
   "serverRenewalPriceHelp": "Renewal amount: {p0}. Record actual payments separately.",
   "serverStartDate": "Start date",
@@ -1516,30 +1362,17 @@
   "serverOptionalStart": "Service start date (optional)",
   "serverOptionalDue": "Service due date (optional)",
   "serverEditTitle": "Edit Server",
-  "serverFormHelp": "Saved on this device only; remote servers are unchanged.",
   "serverBasicData": "Basic details",
   "serverName": "Server name",
-  "serverProvider": "Provider",
-  "serverProviderExample": "For example: BandwagonHost / Your provider",
-  "serverNewHostHelp": "For new records, leaving this blank uses the IP or hostname from hardware details. Set the SSH connection address separately.",
-  "serverSavedHostHelp": "This address is saved separately. Editing hardware doesn’t change it. Set the SSH connection address separately.",
   "serverOptionalPurpose": "Purpose (optional)",
   "serverOptionalRegion": "Region (optional)",
   "serverOptionalOs": "Operating system (optional)",
-  "serverOptionalSpec": "Additional specifications (optional)",
-  "serverSpecExample": "For example: CPU model, network bandwidth",
   "serverCostDetails": "Cost details",
   "serverPaymentLockHelp": "Billing type, cycle, and dates are locked because payments exist.",
-  "serverCostUnknownOption": "Cost unknown · Add later",
-  "serverPrepaidOption": "Prepaid · Renew by cycle",
-  "serverMeteredOption": "Metered · Monthly estimate",
-  "serverPrepaid": "Prepaid",
-  "serverMetered": "Metered",
   "serverDatesHelp": "Due date defaults to start date plus cycle; you can change it.",
   "serverAmountHelp": "0 means free; choose Unknown if unsure. No payment is recorded.",
   "serverOptionalNotes": "Notes (optional)",
   "serverNotesSafety": "Notes aren’t encrypted. Don’t store passwords, keys, or tokens.",
-  "serverSave": "Save Server",
   "uiFormProvider": "Provider",
   "r7FormProviderNone": "None",
   "@r7FormProviderNone": {
@@ -1551,12 +1384,10 @@
   },
   "uiFormPurpose": "Purpose",
   "uiFormRegion": "Region",
-  "uiFormSpec": "Spec note",
   "uiFormOptional": "Optional",
   "uiFormNameHint": "e.g. HK-01",
   "uiFormDone": "Done",
   "uiFormSetUnknown": "Set Unknown",
-  "uiFormPickDate": "Choose date",
   "uiFormUnknownCostFootnote": "Unknown cost is left out of totals.",
   "uiFormVcpuDecrease": "Decrease vCPU",
   "uiFormVcpuIncrease": "Increase vCPU",
@@ -1590,11 +1421,6 @@
   "tcpCancel": "Cancel Test",
   "tcpStart": "Start Test",
   "tcpTimeoutHelp": "Each test lasts up to {p0, plural, one{1 second} other{{p0} seconds}}. Changing the target, leaving this page, or putting the app in the background cancels it.",
-  "tcpTarget": "Target: {p0}",
-  "tcpActualAddress": "Actual address: {p0}",
-  "tcpResultSource": "Source: {p0}",
-  "tcpFinished": "Finished: {p0} (device time)",
-  "tcpElapsed": "Elapsed: {p0} ms",
   "tcpOneObservation": "This result reflects only this test, not ongoing status.",
   "terminalCurrentDirectory": "Current directory",
   "terminalListFiles": "List files",
@@ -1685,14 +1511,11 @@
   "snippetDiscardHelp": "Unsaved changes won’t be saved to the snippet.",
   "connectionDiscardChanges": "Discard Changes",
   "snippetEdit": "Edit Snippet",
-  "snippetCancelEdit": "Cancel Snippet Editing",
   "snippetSaveSafety": "Snippets are stored as plain text. Don’t enter passwords, keys or tokens.",
   "snippetName": "Snippet name",
   "snippetFullContent": "Full content (preserves original newlines and control characters)",
   "snippetContentRange": "Content is required and can contain up to 16,384 characters",
   "snippetExactContentHelp": "Content is saved exactly, including whitespace and control characters. Check the full preview.",
-  "connectionSaving": "Saving…",
-  "snippetSave": "Save Snippet",
   "terminalCopyFailed": "Couldn’t copy terminal content. Try again.",
   "terminalSelectionCopied": "Selected terminal content copied",
   "terminalDraftChangedPaste": "The draft has changed. Tap Paste again.",
@@ -1718,14 +1541,7 @@
   "terminalOfflineFont": "Offline font: DejaVu Sans Mono · Chinese uses device font fallback",
   "terminalLicenses": "Open-Source Licenses",
   "terminalDisconnectQuestion": "Disconnect the SSH session?",
-  "terminalDiscardExitQuestion": "Discard the draft and exit?",
-  "terminalDisconnectHelp": "{p0}\nRemote tasks outside tmux / screen may be interrupted. {p1}",
-  "terminalDraftKeptUntilReconnect": "The draft is kept for now and cleared on reconnect.",
-  "terminalDraftWillClear": "The unsent draft will be cleared.",
-  "terminalUnsentDraftExit": "The draft hasn’t been sent. It will be cleared when you exit.",
-  "terminalDisconnect": "Disconnect",
   "terminalDisconnectExit": "Disconnect and Exit",
-  "terminalDiscardExit": "Discard and Exit",
   "terminalBackgroundDisconnected": "Disconnected because the app went to the background",
   "terminalTargetChanged": "Disconnected because the target changed",
   "terminalPowerMenuHelp": "After connecting, choose SSH Restart or SSH Shutdown in the Terminal Menu and complete both confirmations.",
@@ -1763,7 +1579,6 @@
   "r4HlPlain": "Off (plain text)",
   "r4HlGeneric": "Generic",
   "r4HlTooLarge": "Over 256 KiB: highlighting is off",
-  "terminalReconnectClear": "Reconnect and Clear Draft",
   "terminalCancelConnection": "Cancel Connection",
   "terminalSshRestart": "SSH Restart",
   "terminalSshShutdown": "SSH Shutdown",
@@ -1774,10 +1589,7 @@
   "terminalEstablishingSecure": "Establishing a secure connection…",
   "terminalOffline": "Terminal disconnected",
   "terminalConnect": "Connect",
-  "terminalReconnectShort": "Reconnect · Clear Draft",
   "terminalBrowserUnsupported": "Browsers don’t support native SSH. Use the native app.",
-  "terminalConnectedInputHelp": "After connecting, tap the terminal to type. Keys are sent directly to the server.",
-  "terminalRetainedOutputHelp": "Output is kept. Reconnecting clears the terminal and draft without replaying input.",
   "terminalDismissNotice": "Dismiss Notice",
   "terminalVerifyNewHost": "Verify New Host Key",
   "terminalFirstHostVerification": "First Connection · Verify Host Identity",
@@ -1827,7 +1639,6 @@
   "r3SftpOpenTimeout": "Opening SFTP timed out",
   "r3SftpUnavailable": "The server didn’t open SFTP. It may be turned off for this account.",
   "r3SftpTitle": "SFTP Files",
-  "r3SftpRowSubtitle": "Browse and transfer files",
   "r3SftpUp": "Parent folder",
   "r3SftpRoot": "Root",
   "r3SftpNewFolder": "New Folder",
@@ -1897,8 +1708,6 @@
       }
     }
   },
-  "r3SftpCreated": "Created",
-  "r3SftpRenamed": "Renamed",
   "r3SftpErrPermission": "Permission denied",
   "r3SftpErrNotFound": "Not found. It may have been moved or deleted.",
   "r3SftpErrExists": "Already exists",
@@ -1936,7 +1745,6 @@
   "r3SftpConflictTitle": "File Changed on the Server",
   "r3SftpConflictMessage": "It was modified after you opened it. Overwrite the server’s version with yours?",
   "r3SftpOverwrite": "Overwrite",
-  "r3SftpSkip": "Skip",
   "r3SftpExistsTitle": "“{name}” already exists",
   "@r3SftpExistsTitle": {
     "placeholders": {
@@ -1989,7 +1797,6 @@
   },
   "r3SftpStateQueued": "Waiting",
   "r3SftpStateDone": "Done",
-  "r3SftpStateFailed": "Failed",
   "r3SftpStateCancelled": "Canceled",
   "r3SftpStateSkipped": "Skipped",
   "r3SftpCancelAll": "Cancel All",
@@ -2807,10 +2614,6 @@
   "@securitySshConfiguration": {
     "description": "Security: SshConfiguration. App-authored UI text; do not translate user data or protocol tokens."
   },
-  "securityCancelSshConfiguration": "Cancel Connection Settings",
-  "@securityCancelSshConfiguration": {
-    "description": "Security: CancelSshConfiguration. App-authored UI text; do not translate user data or protocol tokens."
-  },
   "securitySshConfigurationNotice": "Connection settings and the ledger address are stored separately. Cloud server settings aren’t changed.",
   "@securitySshConfigurationNotice": {
     "description": "Security: SshConfigurationNotice. App-authored UI text; do not translate user data or protocol tokens."
@@ -2888,47 +2691,6 @@
   "@securityAuthBiometricHint": {
     "description": "Security: AuthBiometricHint. App-authored UI text; do not translate user data or protocol tokens."
   },
-  "securityAuthBiometricNotRecognized": "Not recognized. Try again.",
-  "@securityAuthBiometricNotRecognized": {
-    "description": "Security: AuthBiometricNotRecognized. App-authored UI text; do not translate user data or protocol tokens."
-  },
-  "securityAuthBiometricSuccess": "Verified",
-  "@securityAuthBiometricSuccess": {
-    "description": "Security: AuthBiometricSuccess. App-authored UI text; do not translate user data or protocol tokens."
-  },
-  "securityAuthRequiredTitle": "Biometric Verification Required",
-  "@securityAuthRequiredTitle": {
-    "description": "Security: AuthRequiredTitle. App-authored UI text; do not translate user data or protocol tokens."
-  },
-  "securityAuthSetupDescription": "Enable biometric verification in your device settings.",
-  "@securityAuthSetupDescription": {
-    "description": "Security: AuthSetupDescription. App-authored UI text; do not translate user data or protocol tokens."
-  },
-  "securityAuthGoToSettings": "Go to Settings",
-  "@securityAuthGoToSettings": {
-    "description": "Security: AuthGoToSettings. App-authored UI text; do not translate user data or protocol tokens."
-  },
-  "securityAuthDeviceSetupDescription": "Enable device authentication in your device settings.",
-  "@securityAuthDeviceSetupDescription": {
-    "description": "Security: AuthDeviceSetupDescription. App-authored UI text; do not translate user data or protocol tokens."
-  },
-  "securityAuthDeviceRequiredTitle": "Device Verification Required",
-  "@securityAuthDeviceRequiredTitle": {
-    "description": "Security: AuthDeviceRequiredTitle. App-authored UI text; do not translate user data or protocol tokens."
-  },
-  "securityAuthIosLockout": "Biometric verification is locked. Lock and unlock your device, then try again.",
-  "@securityAuthIosLockout": {
-    "description": "Security: AuthIosLockout. App-authored UI text; do not translate user data or protocol tokens."
-  },
-  "securityAuthIosSetupDescription": "Enable Face ID or Touch ID in your device settings.",
-  "@securityAuthIosSetupDescription": {
-    "description": "Security: AuthIosSetupDescription. App-authored UI text; do not translate user data or protocol tokens."
-  },
-  "serverCompactMonths": "{months} mo",
-  "resourceTrafficPeriodUnsetShort": "—",
-  "resourceTrafficPeriodMonthShort": "M",
-  "resourceTrafficPeriodQuarterShort": "Q",
-  "resourceTrafficPeriodYearShort": "Y",
   "providerNameRange": "Use 1–80 characters for the provider name.",
   "@providerNameRange": {
     "description": "Provider and adapter relationship validation."

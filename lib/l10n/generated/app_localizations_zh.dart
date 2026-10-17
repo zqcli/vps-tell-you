@@ -13,9 +13,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get language => '语言';
 
   @override
-  String get languageDescription => '立即切换界面语言，保留当前草稿和连接。';
-
-  @override
   String get languageSystem => '跟随系统';
 
   @override
@@ -55,43 +52,22 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settings => '设置';
 
   @override
-  String get toolsDescription => '计算费用、连接服务器或管理常用命令。';
-
-  @override
   String get remainingValueCalculator => '剩余价值计算器';
 
   @override
   String get calculatorDescription => '独立试算或引用服务器资料 · 可导出图片';
 
   @override
-  String get connectionsTroubleshooting => '连接与排障';
-
-  @override
   String get sshQuickConnect => 'SSH 快速连接';
-
-  @override
-  String get sshQuickConnectDescription => '选择服务器或临时目标 · 核验主机后登录';
 
   @override
   String get tcpConnectionTest => 'TCP 连接测试';
 
   @override
-  String get tcpConnectionDescription => '从当前设备检查单个地址和端口';
-
-  @override
   String get commandSnippets => '命令片段';
 
   @override
-  String get commandSnippetsDescription => '保存常用命令 · 插入终端草稿后发送';
-
-  @override
-  String get singleServerMaintenance => '单机维护';
-
-  @override
   String get powerControl => '电源控制';
-
-  @override
-  String get powerControlDescription => '通过 SSH 重启或关机 · 操作前核对目标';
 
   @override
   String get powerControlWarning => '关机后无法通过 SSH 开机，需使用厂商面板。重启或关机不会停止厂商计费。';
@@ -170,18 +146,10 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String get reminderEnableHelp =>
-      '需同时开启系统通知和服务器提醒。各服务器的提前天数、时间和使用计划可在详情中编辑；未允许通知时仍可保存规则。';
-
-  @override
   String get requestingPermission => '正在申请…';
 
   @override
   String get requestNotificationPermission => '申请系统通知权限';
-
-  @override
-  String get notificationPermissionHelp =>
-      '已拒绝或关闭通知渠道时，请到设备系统设置中调整；修改后返回应用，重新核对提醒状态。';
 
   @override
   String get checkReminderStatus => '重新核对提醒状态';
@@ -307,13 +275,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get dueDateNotEntered => '未填写到期日';
 
   @override
-  String get reminderSaveHelp =>
-      '修改后点“保存提醒规则”生效。若启用提醒并选择“到期不再使用”，仍会提醒核对厂商的续费设置。';
-
-  @override
-  String get uiTabsReminderSaveHelp => '点右上角“保存”后生效。';
-
-  @override
   String uiTabsReminderDue(String name, String date) {
     return '$name 将于 $date 到期。';
   }
@@ -362,9 +323,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get reminderTime => '提醒时间';
 
   @override
-  String get selectReminderTime => '选择提醒时间';
-
-  @override
   String get cancel => '取消';
 
   @override
@@ -375,9 +333,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get minute => '分';
-
-  @override
-  String get invalidTime => '请输入有效时间';
 
   @override
   String get reminderDstHelp => '按设备当前时区；夏令时缺失的时间顺延，重复的只提醒一次。';
@@ -401,9 +356,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get saving => '正在保存…';
-
-  @override
-  String get saveReminderRules => '保存提醒规则';
 
   @override
   String get expiryNotificationTitle => 'VPS 到期核对';
@@ -591,26 +543,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get r11AppSlogan => '每台 VPS，心里有数';
 
   @override
-  String get organizationData => '组织与数据';
-
-  @override
   String get manageGroups => '分组管理';
 
   @override
-  String groupCountHelp(String p0) {
-    return '$p0 个分组 · 删除分组保留记录';
-  }
-
-  @override
   String get archivedRecords => '已归档记录';
-
-  @override
-  String archiveCountHelp(String p0) {
-    return '$p0 条 · 可恢复到服务器列表';
-  }
-
-  @override
-  String get accountsPreferences => '账户与偏好';
 
   @override
   String get keysSecurity => '密钥与安全';
@@ -620,11 +556,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get currenciesReferenceRates => '币种与参考汇率';
-
-  @override
-  String currencyRateSummary(String p0, String p1) {
-    return '$p0 · 手动汇率 $p1';
-  }
 
   @override
   String get notSet => '未设置';
@@ -776,9 +707,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get financeMissingFxExcluded => '仅合计有汇率的部分，缺失部分未按 0 计算';
-
-  @override
-  String get financeValuationAndDue => '估值日 / 服务到期日';
 
   @override
   String get financeRemainingDays => '剩余服务天数';
@@ -981,9 +909,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get financeCalculateQuote => '计算报价与费用';
 
   @override
-  String get financePremiumLabel => '报价与参考价值差额（溢价 / 折价）';
-
-  @override
   String get financeBuyerSellerFee => '买方 / 卖方手续费';
 
   @override
@@ -1089,9 +1014,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get financeAllPayments => '全部付款记录';
 
   @override
-  String get financeRecent30 => '近 30 天';
-
-  @override
   String get financeShowVoided => '显示已删除';
 
   @override
@@ -1108,22 +1030,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get financeNoPaymentsInRange => '此范围暂无付款记录。可从服务器详情记录已完成的续费付款。';
-
-  @override
-  String get financeVoidTitle => '撤销此次本地记录？';
-
-  @override
-  String get financeVoidAccountNote => '将此账单标记为已撤销，不向厂商申请退款。';
-
-  @override
-  String get financeVoidServerNote =>
-      '仅还原本次增加的服务期间与到期日，并将实付标记为已撤销。不会向厂商退款或取消服务。';
-
-  @override
-  String get financeVoidRecord => '撤销记录';
-
-  @override
-  String get financePaymentVoided => '本次本地付款记录已撤销';
 
   @override
   String get financePaymentDetail => '付款详情';
@@ -1151,9 +1057,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get financePaymentHistoryNote => '原币历史实付，不随续费价或汇率变化。';
-
-  @override
-  String get financeVoidThisRecord => '撤销此次记录';
 
   @override
   String get r2FinanceEdit => '编辑';
@@ -1223,25 +1126,16 @@ class AppLocalizationsZh extends AppLocalizations {
   String get r2FinanceUpdated => '付款记录已更新';
 
   @override
-  String get financeVoidBlocked => '资料已改变，请核对。后续编辑、付款或归档后不能用旧记录覆盖现有资料。';
-
-  @override
   String get financeRulesTitle => '这些数字如何计算';
 
   @override
   String get financeTitle => '费用';
 
   @override
-  String get financeOverview => '查看月费用参考、剩余价值和已记录付款。';
-
-  @override
   String get financeScope => '统计范围';
 
   @override
   String get financeMonthlyReference => '月费用参考';
-
-  @override
-  String get financeTotalRemaining => '总体剩余价值  ›';
 
   @override
   String get financeMonthlyNotPaid => '续费价摊月 + 按量估算，不等于本月实付。';
@@ -1284,9 +1178,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get financeValueDetail => '剩余价值明细';
-
-  @override
-  String get financeInventoryDetail => '服务器构成';
 
   @override
   String get financeIncompleteDetail => '费用与到期核对';
@@ -1546,9 +1437,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get r3FinanceQuoteDeal => '建议成交价';
 
   @override
-  String get r3FinanceQuoteFeesRow => '手续费合计';
-
-  @override
   String financeRoundingNote(String rate, String source) {
     return '$rate\n$source。折算结果仅供参考。';
   }
@@ -1593,15 +1481,6 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String financeVoidedName(String name, String voided) {
-    String _temp0 = intl.Intl.selectLogic(voided, {
-      'yes': '$name · 已撤销',
-      'other': '$name',
-    });
-    return '$_temp0';
-  }
-
-  @override
   String financePaymentSummary(String date, String account, String due) {
     String _temp0 = intl.Intl.selectLogic(account, {
       'yes': '$date · 历史账户账单，只计一次',
@@ -1626,18 +1505,8 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String financeManagedCount(int count) {
-    return '在管服务器：$count 台  ›';
-  }
-
-  @override
   String financeRenewalEventNote(int count) {
     return '$count 笔预付续费 · 今天及后 29 天';
-  }
-
-  @override
-  String financeRecentPaymentNote(int count) {
-    return '$count 笔 · 今天及前 29 天';
   }
 
   @override
@@ -1691,11 +1560,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get uiFinanceToolsHeader => '记录与工具';
 
   @override
-  String uiFinanceServerCount(int count) {
-    return '$count 台';
-  }
-
-  @override
   String get uiFinanceFootnote => '按续费价和手动汇率折算，仅供参考，非实际账单。';
 
   @override
@@ -1710,28 +1574,6 @@ class AppLocalizationsZh extends AppLocalizations {
   @override
   String financeForecastMonth(int year, int month, int count) {
     return '$year 年 $month 月 · $count 笔';
-  }
-
-  @override
-  String financeForecastTotal(
-    String amount,
-    String currency,
-    int missing,
-    int unknown,
-  ) {
-    String _temp0 = intl.Intl.pluralLogic(
-      missing,
-      locale: localeName,
-      other: ' · 缺汇率 $missing 项',
-      zero: '',
-    );
-    String _temp1 = intl.Intl.pluralLogic(
-      unknown,
-      locale: localeName,
-      other: ' · 金额未知 $unknown 项',
-      zero: '',
-    );
-    return '$amount $currency$_temp0$_temp1';
   }
 
   @override
@@ -1852,26 +1694,6 @@ class AppLocalizationsZh extends AppLocalizations {
   @override
   String financeExportFuturePeriods(int count) {
     return '含 $count 个尚未开始的周期，进度仅显示上述周期。';
-  }
-
-  @override
-  String financeExportDue(String date) {
-    return '服务到期日：$date';
-  }
-
-  @override
-  String financeExportRemainingDays(int days) {
-    return '剩余服务天数：$days 天';
-  }
-
-  @override
-  String financeExportRenewal(String renewal) {
-    return '续费 / 周期：$renewal';
-  }
-
-  @override
-  String financeExportDaily(String daily) {
-    return '所示周期日均：$daily';
   }
 
   @override
@@ -2084,9 +1906,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get verificationCancelled => '核验已取消';
 
   @override
-  String get completeLocalResources => '请先补全并确认六项本地资源配置';
-
-  @override
   String get securityOperationIncomplete => '安全操作未完成，请重试';
 
   @override
@@ -2121,9 +1940,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get resourceYear => '年';
-
-  @override
-  String get resourceValidIp => '请填写有效的 IPv4 或 IPv6 地址，不能使用未指定地址';
 
   @override
   String get resourceValidHostname => '请填写有效主机名，不含协议、端口或路径';
@@ -2174,9 +1990,6 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String get resourceFieldValidIp => '请填写有效 IPv4 或 IPv6，不能为全零地址';
-
-  @override
   String get r6IpValidIpv4 => '请填写有效的 IPv4 地址，如 192.0.2.1，不能为全零地址';
 
   @override
@@ -2189,21 +2002,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get resourceFieldValidBytes => '请填写大于 0 的容量，精确到整字节';
 
   @override
-  String get resourceCapacity => '容量';
-
-  @override
   String resourceUnitSemantics(String p0) {
     return '$p0单位，1024 进制';
   }
 
   @override
-  String get resourceUnit => '单位';
-
-  @override
   String get resourceTrafficPeriod => '流量周期';
-
-  @override
-  String get resourcePeriod => '周期';
 
   @override
   String get resourceNewPeriodHelp => '新建默认按月，可改。';
@@ -2216,9 +2020,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get resourceLocalHelp => '容量按 1024 进制，可选单位。';
-
-  @override
-  String get resourceIpAddress => 'IP 地址';
 
   @override
   String get r6IpIpv4 => 'IPv4';
@@ -2269,15 +2070,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get serverCostDateUnknown => '费用 / 到期日未知';
 
   @override
-  String get serverApplyFilters => '应用筛选';
-
-  @override
   String serverLedgerCount(String p0) {
     return '$p0 台服务器 · 本地台账';
   }
-
-  @override
-  String get serverReloadLocal => '重新读取本地台账';
 
   @override
   String get serverAdd => '添加服务器';
@@ -2310,9 +2105,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get serverSearchHint => '搜索名称、地址、厂商、用途或地区';
 
   @override
-  String get serverClearSearch => '清除搜索';
-
-  @override
   String get serverAll => '全部';
 
   @override
@@ -2328,11 +2120,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get serverExpiryNeedsCheck => '到期待核对';
-
-  @override
-  String serverExpiryCounts(String p0, String p1) {
-    return '$p0 台已过期 · $p1 台 30 天内到期';
-  }
 
   @override
   String get serverFavoriteServers => '常用服务器';
@@ -2385,9 +2172,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get serverClearFilters => '清除筛选';
 
   @override
-  String get serverListObservationHelp => '不持续监控运行状态；到期天数按设备日期计算。';
-
-  @override
   String get serverCostsMissing => '费用待补充';
 
   @override
@@ -2411,9 +2195,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get serverDemo => '演示';
-
-  @override
-  String get serverLocalUnqueried => '本地记录 · 未查询运行状态';
 
   @override
   String get serverNotEntered => '未填写';
@@ -2455,9 +2236,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get serverUndoArchiveFailed => '无法撤销，请在设置的归档记录中检查';
-
-  @override
-  String get serverMissingDetails => '待补充';
 
   @override
   String get serverDetails => '服务器详情';
@@ -2502,9 +2280,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get serverOperatingSystem => '操作系统';
 
   @override
-  String get serverGroupPurpose => '分组 / 用途';
-
-  @override
   String get serverSpecifications => '规格';
 
   @override
@@ -2528,13 +2303,7 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String get serverServiceStart => '服务开始日';
-
-  @override
   String get serverUnknown => '未知';
-
-  @override
-  String get serverServiceDue => '服务到期日';
 
   @override
   String get serverUnknownCostHelp => '未填写的金额不会按 0 计算。';
@@ -2552,19 +2321,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get serverRemindersOff => '提醒已关闭';
 
   @override
-  String get serverRemainingValue => '剩余价值';
-
-  @override
   String get serverUnknownValueHelp => '日期或费用资料不足，剩余价值未知，不按 0 计算。';
 
   @override
   String get serverRecordPayment => '记录已付款';
-
-  @override
-  String get serverUseForCalculation => '引用资料试算';
-
-  @override
-  String get serverViewPayments => '查看付款记录';
 
   @override
   String get serverConnectionsControl => '连接与控制';
@@ -2580,9 +2340,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get serverTcpTest => 'TCP 测试';
-
-  @override
-  String get serverPower => '单机电源';
 
   @override
   String get serverConnectionSafety => '首次连接需核对主机指纹；关机或重启不会停止计费。';
@@ -2611,17 +2368,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String uiDetailDueOn(String date) {
     return '到期 $date';
   }
-
-  @override
-  String uiDetailConverted(String currency) {
-    return '折合 $currency';
-  }
-
-  @override
-  String get uiDetailDaily => '日均';
-
-  @override
-  String get uiDetailRemainingDays => '剩余天数';
 
   @override
   String get uiDetailPayments => '付款记录';
@@ -2708,22 +2454,7 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String get serverHalfYear => '半年';
-
-  @override
-  String get serverTwoYears => '2年';
-
-  @override
-  String get serverThreeYears => '3年';
-
-  @override
-  String get serverAmount => '金额';
-
-  @override
   String get serverOriginalCurrency => '原币种';
-
-  @override
-  String get serverCurrency => '币种';
 
   @override
   String get serverMonthlyCostEstimate => '每月费用估算';
@@ -2749,25 +2480,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get serverEditTitle => '编辑服务器';
 
   @override
-  String get serverFormHelp => '仅保存在本机，不会修改远端。';
-
-  @override
   String get serverBasicData => '基本资料';
 
   @override
   String get serverName => '服务器名称';
-
-  @override
-  String get serverProvider => '厂商';
-
-  @override
-  String get serverProviderExample => '例如：搬瓦工 / 自定义厂商';
-
-  @override
-  String get serverNewHostHelp => '新建时留空会采用硬件信息中的 IP 或主机名；SSH 连接地址另行设置。';
-
-  @override
-  String get serverSavedHostHelp => '此地址独立保存，修改硬件不会更改它；SSH 连接地址另行设置。';
 
   @override
   String get serverOptionalPurpose => '用途（选填）';
@@ -2779,31 +2495,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get serverOptionalOs => '操作系统（选填）';
 
   @override
-  String get serverOptionalSpec => '规格补充（选填）';
-
-  @override
-  String get serverSpecExample => '例如：CPU 型号、网络带宽';
-
-  @override
   String get serverCostDetails => '费用资料';
 
   @override
   String get serverPaymentLockHelp => '已有续费付款：计费方式、周期和日期已锁定。';
-
-  @override
-  String get serverCostUnknownOption => '费用未知 · 稍后补充';
-
-  @override
-  String get serverPrepaidOption => '预付费 · 按周期续费';
-
-  @override
-  String get serverMeteredOption => '按量付费 · 月估算';
-
-  @override
-  String get serverPrepaid => '预付费';
-
-  @override
-  String get serverMetered => '按量付费';
 
   @override
   String get serverDatesHelp => '到期日默认按开始日加周期计算，可手动修改。';
@@ -2816,9 +2511,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get serverNotesSafety => '备注不加密，请勿存放密码、私钥或令牌。';
-
-  @override
-  String get serverSave => '保存服务器';
 
   @override
   String get uiFormProvider => '提供商';
@@ -2836,9 +2528,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get uiFormRegion => '地区';
 
   @override
-  String get uiFormSpec => '规格补充';
-
-  @override
   String get uiFormOptional => '选填';
 
   @override
@@ -2849,9 +2538,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get uiFormSetUnknown => '设为未知';
-
-  @override
-  String get uiFormPickDate => '选择日期';
 
   @override
   String get uiFormUnknownCostFootnote => '费用未知时不计入合计。';
@@ -2954,31 +2640,6 @@ class AppLocalizationsZh extends AppLocalizations {
   @override
   String tcpTimeoutHelp(int p0) {
     return '单次最多 $p0 秒；修改目标、离开页面或进入后台会取消测试。';
-  }
-
-  @override
-  String tcpTarget(String p0) {
-    return '目标：$p0';
-  }
-
-  @override
-  String tcpActualAddress(String p0) {
-    return '实际地址：$p0';
-  }
-
-  @override
-  String tcpResultSource(String p0) {
-    return '来源：$p0';
-  }
-
-  @override
-  String tcpFinished(String p0) {
-    return '结束时间：$p0（本机时间）';
-  }
-
-  @override
-  String tcpElapsed(String p0) {
-    return '耗时：$p0 ms';
   }
 
   @override
@@ -3263,9 +2924,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get snippetEdit => '编辑片段';
 
   @override
-  String get snippetCancelEdit => '取消片段编辑';
-
-  @override
   String get snippetSaveSafety => '片段以明文保存，请勿填写密码、私钥或令牌。';
 
   @override
@@ -3279,12 +2937,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get snippetExactContentHelp => '内容原样保存，含空白和控制字符；请用完整预览核对。';
-
-  @override
-  String get connectionSaving => '保存中…';
-
-  @override
-  String get snippetSave => '保存片段';
 
   @override
   String get terminalCopyFailed => '未能复制终端内容，请重试。';
@@ -3348,30 +3000,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get terminalDisconnectQuestion => '断开 SSH 会话？';
 
   @override
-  String get terminalDiscardExitQuestion => '丢弃草稿并退出？';
-
-  @override
-  String terminalDisconnectHelp(String p0, String p1) {
-    return '$p0\n未放入 tmux / screen 的远端任务可能中断。$p1';
-  }
-
-  @override
-  String get terminalDraftKeptUntilReconnect => '草稿暂时保留，重连时清空。';
-
-  @override
-  String get terminalDraftWillClear => '未发送草稿将清空。';
-
-  @override
-  String get terminalUnsentDraftExit => '当前草稿尚未发送，退出后将清空。';
-
-  @override
-  String get terminalDisconnect => '断开连接';
-
-  @override
   String get terminalDisconnectExit => '断开并退出';
-
-  @override
-  String get terminalDiscardExit => '丢弃并退出';
 
   @override
   String get terminalBackgroundDisconnected => '应用进入后台，连接已断开';
@@ -3490,9 +3119,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get r4HlTooLarge => '文件超过 256 KiB，未做语法高亮';
 
   @override
-  String get terminalReconnectClear => '重新连接并清空草稿';
-
-  @override
   String get terminalCancelConnection => '取消连接';
 
   @override
@@ -3523,16 +3149,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get terminalConnect => '连接';
 
   @override
-  String get terminalReconnectShort => '重连 · 清空草稿';
-
-  @override
   String get terminalBrowserUnsupported => '浏览器不支持原生 SSH，请使用原生应用。';
-
-  @override
-  String get terminalConnectedInputHelp => '连接后点按终端输入，按键会直接发送到服务器。';
-
-  @override
-  String get terminalRetainedOutputHelp => '输出已保留。重连会清空终端和草稿，不重放输入。';
 
   @override
   String get terminalDismissNotice => '关闭提示';
@@ -3695,9 +3312,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get r3SftpTitle => 'SFTP 文件';
 
   @override
-  String get r3SftpRowSubtitle => '浏览与传输文件';
-
-  @override
   String get r3SftpUp => '上级目录';
 
   @override
@@ -3820,12 +3434,6 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String get r3SftpCreated => '已创建';
-
-  @override
-  String get r3SftpRenamed => '已重命名';
-
-  @override
   String get r3SftpErrPermission => '没有权限';
 
   @override
@@ -3899,9 +3507,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get r3SftpOverwrite => '覆盖';
 
   @override
-  String get r3SftpSkip => '跳过';
-
-  @override
   String r3SftpExistsTitle(String name) {
     return '“$name”已存在';
   }
@@ -3943,9 +3548,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get r3SftpStateDone => '完成';
-
-  @override
-  String get r3SftpStateFailed => '失败';
 
   @override
   String get r3SftpStateCancelled => '已取消';
@@ -4604,9 +4206,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get securitySshConfiguration => 'SSH 连接配置';
 
   @override
-  String get securityCancelSshConfiguration => '取消连接配置';
-
-  @override
   String get securitySshConfigurationNotice => '连接配置和台账地址分别保存。不会修改云主机设置。';
 
   @override
@@ -4662,50 +4261,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get securityAuthBiometricHint => '验证身份';
-
-  @override
-  String get securityAuthBiometricNotRecognized => '未能识别，请重试。';
-
-  @override
-  String get securityAuthBiometricSuccess => '验证成功';
-
-  @override
-  String get securityAuthRequiredTitle => '需要生物识别验证';
-
-  @override
-  String get securityAuthSetupDescription => '请在设备设置中启用生物识别验证。';
-
-  @override
-  String get securityAuthGoToSettings => '前往设置';
-
-  @override
-  String get securityAuthDeviceSetupDescription => '请在设备设置中启用设备验证。';
-
-  @override
-  String get securityAuthDeviceRequiredTitle => '需要设备验证';
-
-  @override
-  String get securityAuthIosLockout => '生物识别验证已锁定。请锁定并解锁设备，再重新尝试。';
-
-  @override
-  String get securityAuthIosSetupDescription => '请在设备设置中启用 Face ID 或 Touch ID。';
-
-  @override
-  String serverCompactMonths(int months) {
-    return '$months个月';
-  }
-
-  @override
-  String get resourceTrafficPeriodUnsetShort => '未设置';
-
-  @override
-  String get resourceTrafficPeriodMonthShort => '月';
-
-  @override
-  String get resourceTrafficPeriodQuarterShort => '季';
-
-  @override
-  String get resourceTrafficPeriodYearShort => '年';
 
   @override
   String get providerNameRange => '提供商名称需为 1–80 个字符。';

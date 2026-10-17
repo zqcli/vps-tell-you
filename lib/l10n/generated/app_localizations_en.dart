@@ -13,10 +13,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get language => 'Language';
 
   @override
-  String get languageDescription =>
-      'Changes apply right away. Drafts and open connections stay as they are.';
-
-  @override
   String get languageSystem => 'Follow system';
 
   @override
@@ -60,10 +56,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settings => 'Settings';
 
   @override
-  String get toolsDescription =>
-      'Calculate costs, connect to servers, or manage saved commands.';
-
-  @override
   String get remainingValueCalculator => 'Remaining Value Calculator';
 
   @override
@@ -71,38 +63,16 @@ class AppLocalizationsEn extends AppLocalizations {
       'Start from scratch or use a server’s details. Export as an image.';
 
   @override
-  String get connectionsTroubleshooting => 'Connections and troubleshooting';
-
-  @override
   String get sshQuickConnect => 'SSH Quick Connect';
-
-  @override
-  String get sshQuickConnectDescription =>
-      'Pick a saved server or a one-off target. Verify the host before signing in.';
 
   @override
   String get tcpConnectionTest => 'TCP Connection Test';
 
   @override
-  String get tcpConnectionDescription =>
-      'Check one address and port from this device.';
-
-  @override
   String get commandSnippets => 'Command Snippets';
 
   @override
-  String get commandSnippetsDescription =>
-      'Save commands and add them to the terminal draft before sending.';
-
-  @override
-  String get singleServerMaintenance => 'Server maintenance';
-
-  @override
   String get powerControl => 'Power Control';
-
-  @override
-  String get powerControlDescription =>
-      'Restart or shut down over SSH. Double-check the target first.';
 
   @override
   String get powerControlWarning =>
@@ -189,18 +159,10 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get reminderEnableHelp =>
-      'Turn on system notifications and each server’s reminders. Set reminder days, time, and usage plan in server details. You can save rules even without notification permission.';
-
-  @override
   String get requestingPermission => 'Requesting…';
 
   @override
   String get requestNotificationPermission => 'Allow Notifications';
-
-  @override
-  String get notificationPermissionHelp =>
-      'If you denied permission or turned notifications off, change it in device settings. Then come back and check reminder status again.';
 
   @override
   String get checkReminderStatus => 'Check Again';
@@ -330,13 +292,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get dueDateNotEntered => 'No due date entered';
 
   @override
-  String get reminderSaveHelp =>
-      'Tap Save Reminder Rules to apply changes. If reminders are on and you choose Stop using at expiry, you’ll still be reminded to check renewal settings with your provider.';
-
-  @override
-  String get uiTabsReminderSaveHelp => 'Tap Save at the top right to apply.';
-
-  @override
   String uiTabsReminderDue(String name, String date) {
     return '$name expires on $date.';
   }
@@ -396,9 +351,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get reminderTime => 'Reminder time';
 
   @override
-  String get selectReminderTime => 'Set Reminder Time';
-
-  @override
   String get cancel => 'Cancel';
 
   @override
@@ -409,9 +361,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get minute => 'Minute';
-
-  @override
-  String get invalidTime => 'Enter a valid time';
 
   @override
   String get reminderDstHelp =>
@@ -437,9 +386,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get saving => 'Saving…';
-
-  @override
-  String get saveReminderRules => 'Save reminder rules';
 
   @override
   String get expiryNotificationTitle => 'Check VPS expiry';
@@ -642,26 +588,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get r11AppSlogan => 'Know every VPS at a glance';
 
   @override
-  String get organizationData => 'Organization and data';
-
-  @override
   String get manageGroups => 'Manage Groups';
 
   @override
-  String groupCountHelp(String p0) {
-    return 'Groups: $p0 · Deleting a group keeps its records';
-  }
-
-  @override
   String get archivedRecords => 'Archived Records';
-
-  @override
-  String archiveCountHelp(String p0) {
-    return 'Records: $p0 · Can be restored to the server list';
-  }
-
-  @override
-  String get accountsPreferences => 'Accounts and preferences';
 
   @override
   String get keysSecurity => 'Keys & Security';
@@ -672,11 +602,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get currenciesReferenceRates => 'Currencies & Reference Rates';
-
-  @override
-  String currencyRateSummary(String p0, String p1) {
-    return '$p0 · Manual rates: $p1';
-  }
 
   @override
   String get notSet => 'Not set';
@@ -838,9 +763,6 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get financeMissingFxExcluded =>
       'Only amounts with an exchange rate are totaled. Missing amounts aren’t counted as zero.';
-
-  @override
-  String get financeValuationAndDue => 'Valuation date / service due date';
 
   @override
   String get financeRemainingDays => 'Remaining service days';
@@ -1063,10 +985,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get financeCalculateQuote => 'Calculate Quote and Fees';
 
   @override
-  String get financePremiumLabel =>
-      'Quote minus reference value (premium / discount)';
-
-  @override
   String get financeBuyerSellerFee => 'Buyer / seller fee';
 
   @override
@@ -1188,9 +1106,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get financeAllPayments => 'All payment records';
 
   @override
-  String get financeRecent30 => 'Last 30 days';
-
-  @override
   String get financeShowVoided => 'Show deleted';
 
   @override
@@ -1208,23 +1123,6 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get financeNoPaymentsInRange =>
       'No payments in this range. Record completed renewal payments from a server’s details.';
-
-  @override
-  String get financeVoidTitle => 'Void this local record?';
-
-  @override
-  String get financeVoidAccountNote =>
-      'Marks this bill as voided. It doesn’t request a refund from the provider.';
-
-  @override
-  String get financeVoidServerNote =>
-      'Undoes only the service periods and due date this record added, and marks the payment as voided. It doesn’t request a provider refund or cancel service.';
-
-  @override
-  String get financeVoidRecord => 'Void Record';
-
-  @override
-  String get financePaymentVoided => 'This local payment record was voided';
 
   @override
   String get financePaymentDetail => 'Payment Details';
@@ -1254,9 +1152,6 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get financePaymentHistoryNote =>
       'Original-currency history. It doesn’t follow renewal prices or exchange rates.';
-
-  @override
-  String get financeVoidThisRecord => 'Void This Record';
 
   @override
   String get r2FinanceEdit => 'Edit';
@@ -1328,27 +1223,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get r2FinanceUpdated => 'Payment record updated';
 
   @override
-  String get financeVoidBlocked =>
-      'Details have changed. Review them first. After later edits, payments, or archiving, an old record can’t overwrite the current details.';
-
-  @override
   String get financeRulesTitle => 'How these figures are calculated';
 
   @override
   String get financeTitle => 'Costs';
 
   @override
-  String get financeOverview =>
-      'View monthly cost references, remaining value, and recorded payments.';
-
-  @override
   String get financeScope => 'Scope';
 
   @override
   String get financeMonthlyReference => 'Monthly cost reference';
-
-  @override
-  String get financeTotalRemaining => 'Total remaining value  ›';
 
   @override
   String get financeMonthlyNotPaid =>
@@ -1397,9 +1281,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get financeValueDetail => 'Remaining Value Details';
-
-  @override
-  String get financeInventoryDetail => 'Server breakdown';
 
   @override
   String get financeIncompleteDetail => 'Check Costs & Due Dates';
@@ -1707,9 +1588,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get r3FinanceQuoteDeal => 'Suggested price';
 
   @override
-  String get r3FinanceQuoteFeesRow => 'Total fee';
-
-  @override
   String financeRoundingNote(String rate, String source) {
     return '$rate\n$source. Conversions are for reference only.';
   }
@@ -1772,15 +1650,6 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String financeVoidedName(String name, String voided) {
-    String _temp0 = intl.Intl.selectLogic(voided, {
-      'yes': '$name · Voided',
-      'other': '$name',
-    });
-    return '$_temp0';
-  }
-
-  @override
   String financePaymentSummary(String date, String account, String due) {
     String _temp0 = intl.Intl.selectLogic(account, {
       'yes': '$date · Past account bill, counted once',
@@ -1811,11 +1680,6 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String financeManagedCount(int count) {
-    return 'Unarchived servers: $count  ›';
-  }
-
-  @override
   String financeRenewalEventNote(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
@@ -1824,17 +1688,6 @@ class AppLocalizationsEn extends AppLocalizations {
       one: '1 prepaid renewal',
     );
     return '$_temp0 · Today and the next 29 days';
-  }
-
-  @override
-  String financeRecentPaymentNote(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count payments',
-      one: '1 payment',
-    );
-    return '$_temp0 · Today and the previous 29 days';
   }
 
   @override
@@ -1934,17 +1787,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get uiFinanceToolsHeader => 'Records & tools';
 
   @override
-  String uiFinanceServerCount(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count servers',
-      one: '1 server',
-    );
-    return '$_temp0';
-  }
-
-  @override
   String get uiFinanceFootnote =>
       'Uses renewal prices and manual rates. For reference only; not actual bills.';
 
@@ -1966,30 +1808,6 @@ class AppLocalizationsEn extends AppLocalizations {
       one: '1 renewal',
     );
     return '$year-$month · $_temp0';
-  }
-
-  @override
-  String financeForecastTotal(
-    String amount,
-    String currency,
-    int missing,
-    int unknown,
-  ) {
-    String _temp0 = intl.Intl.pluralLogic(
-      missing,
-      locale: localeName,
-      other: ' · $missing items missing exchange rates',
-      one: ' · 1 item missing an exchange rate',
-      zero: '',
-    );
-    String _temp1 = intl.Intl.pluralLogic(
-      unknown,
-      locale: localeName,
-      other: ' · $unknown unknown amounts',
-      one: ' · 1 unknown amount',
-      zero: '',
-    );
-    return '$amount $currency$_temp0$_temp1';
   }
 
   @override
@@ -2145,26 +1963,6 @@ class AppLocalizationsEn extends AppLocalizations {
       one: '1 future period',
     );
     return 'Includes $_temp0. Progress shows only the period above.';
-  }
-
-  @override
-  String financeExportDue(String date) {
-    return 'Service due date: $date';
-  }
-
-  @override
-  String financeExportRemainingDays(int days) {
-    return 'Remaining service days: $days';
-  }
-
-  @override
-  String financeExportRenewal(String renewal) {
-    return 'Renewal price / cycle: $renewal';
-  }
-
-  @override
-  String financeExportDaily(String daily) {
-    return 'Daily average for the shown period: $daily';
   }
 
   @override
@@ -2420,10 +2218,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get verificationCancelled => 'Verification canceled';
 
   @override
-  String get completeLocalResources =>
-      'Complete and confirm all six local resource fields first';
-
-  @override
   String get securityOperationIncomplete =>
       'The security operation didn’t complete. Try again.';
 
@@ -2460,10 +2254,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get resourceYear => 'Year';
-
-  @override
-  String get resourceValidIp =>
-      'Enter a valid IPv4 or IPv6 address. Unspecified addresses aren’t allowed.';
 
   @override
   String get resourceValidHostname =>
@@ -2518,10 +2308,6 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get resourceFieldValidIp =>
-      'Enter a valid IPv4 or IPv6 address, not an all-zero address';
-
-  @override
   String get r6IpValidIpv4 =>
       'Enter a valid IPv4 address such as 192.0.2.1. All-zero addresses aren’t allowed.';
 
@@ -2538,21 +2324,12 @@ class AppLocalizationsEn extends AppLocalizations {
       'Enter a positive capacity that resolves to a whole number of bytes';
 
   @override
-  String get resourceCapacity => 'Capacity';
-
-  @override
   String resourceUnitSemantics(String p0) {
     return '$p0 unit, base 1024';
   }
 
   @override
-  String get resourceUnit => 'Unit';
-
-  @override
   String get resourceTrafficPeriod => 'Traffic period';
-
-  @override
-  String get resourcePeriod => 'Period';
 
   @override
   String get resourceNewPeriodHelp =>
@@ -2567,9 +2344,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get resourceLocalHelp => 'Capacities use 1024-based units.';
-
-  @override
-  String get resourceIpAddress => 'IP address';
 
   @override
   String get r6IpIpv4 => 'IPv4';
@@ -2621,15 +2395,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get serverCostDateUnknown => 'Cost / due date unknown';
 
   @override
-  String get serverApplyFilters => 'Apply filters';
-
-  @override
   String serverLedgerCount(String p0) {
     return 'Servers: $p0 · Local ledger';
   }
-
-  @override
-  String get serverReloadLocal => 'Reload local ledger';
 
   @override
   String get serverAdd => 'Add Server';
@@ -2666,9 +2434,6 @@ class AppLocalizationsEn extends AppLocalizations {
       'Search name, address, provider, purpose, or region';
 
   @override
-  String get serverClearSearch => 'Clear search';
-
-  @override
   String get serverAll => 'All';
 
   @override
@@ -2684,11 +2449,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get serverExpiryNeedsCheck => 'Due dates need checking';
-
-  @override
-  String serverExpiryCounts(String p0, String p1) {
-    return 'Expired: $p0 · Due within 30 days: $p1';
-  }
 
   @override
   String get serverFavoriteServers => 'Favorite servers';
@@ -2749,10 +2509,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get serverClearFilters => 'Clear Filters';
 
   @override
-  String get serverListObservationHelp =>
-      'Servers aren’t monitored. Days left use the device date.';
-
-  @override
   String get serverCostsMissing => 'Add cost details';
 
   @override
@@ -2788,10 +2544,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get serverDemo => 'Demo';
-
-  @override
-  String get serverLocalUnqueried =>
-      'Local record · Runtime status not checked';
 
   @override
   String get serverNotEntered => 'Not entered';
@@ -2841,9 +2593,6 @@ class AppLocalizationsEn extends AppLocalizations {
       'Couldn’t undo. Check Archived Records in Settings.';
 
   @override
-  String get serverMissingDetails => 'Not yet added';
-
-  @override
   String get serverDetails => 'Server Details';
 
   @override
@@ -2888,9 +2637,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get serverOperatingSystem => 'Operating system';
 
   @override
-  String get serverGroupPurpose => 'Group / purpose';
-
-  @override
   String get serverSpecifications => 'Specifications';
 
   @override
@@ -2920,13 +2666,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get serverServiceStart => 'Service start date';
-
-  @override
   String get serverUnknown => 'Unknown';
-
-  @override
-  String get serverServiceDue => 'Service due date';
 
   @override
   String get serverUnknownCostHelp =>
@@ -2947,20 +2687,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get serverRemindersOff => 'Reminders off';
 
   @override
-  String get serverRemainingValue => 'Remaining value';
-
-  @override
   String get serverUnknownValueHelp =>
       'Dates or cost details are incomplete. Remaining value is unknown, not 0.';
 
   @override
   String get serverRecordPayment => 'Record Payment';
-
-  @override
-  String get serverUseForCalculation => 'Calculate using these details';
-
-  @override
-  String get serverViewPayments => 'View payment records';
 
   @override
   String get serverConnectionsControl => 'Connections and controls';
@@ -2977,9 +2708,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get serverTcpTest => 'TCP Test';
-
-  @override
-  String get serverPower => 'Server power';
 
   @override
   String get serverConnectionSafety =>
@@ -3009,17 +2737,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String uiDetailDueOn(String date) {
     return 'Due $date';
   }
-
-  @override
-  String uiDetailConverted(String currency) {
-    return 'In $currency';
-  }
-
-  @override
-  String get uiDetailDaily => 'Daily';
-
-  @override
-  String get uiDetailRemainingDays => 'Days left';
 
   @override
   String get uiDetailPayments => 'Payments';
@@ -3117,22 +2834,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get serverHalfYear => '6 mo';
-
-  @override
-  String get serverTwoYears => '2 yr';
-
-  @override
-  String get serverThreeYears => '3 yr';
-
-  @override
-  String get serverAmount => 'Amount';
-
-  @override
   String get serverOriginalCurrency => 'Original currency';
-
-  @override
-  String get serverCurrency => 'Currency';
 
   @override
   String get serverMonthlyCostEstimate => 'Monthly cost estimate';
@@ -3158,29 +2860,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get serverEditTitle => 'Edit Server';
 
   @override
-  String get serverFormHelp =>
-      'Saved on this device only; remote servers are unchanged.';
-
-  @override
   String get serverBasicData => 'Basic details';
 
   @override
   String get serverName => 'Server name';
-
-  @override
-  String get serverProvider => 'Provider';
-
-  @override
-  String get serverProviderExample =>
-      'For example: BandwagonHost / Your provider';
-
-  @override
-  String get serverNewHostHelp =>
-      'For new records, leaving this blank uses the IP or hostname from hardware details. Set the SSH connection address separately.';
-
-  @override
-  String get serverSavedHostHelp =>
-      'This address is saved separately. Editing hardware doesn’t change it. Set the SSH connection address separately.';
 
   @override
   String get serverOptionalPurpose => 'Purpose (optional)';
@@ -3192,32 +2875,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get serverOptionalOs => 'Operating system (optional)';
 
   @override
-  String get serverOptionalSpec => 'Additional specifications (optional)';
-
-  @override
-  String get serverSpecExample => 'For example: CPU model, network bandwidth';
-
-  @override
   String get serverCostDetails => 'Cost details';
 
   @override
   String get serverPaymentLockHelp =>
       'Billing type, cycle, and dates are locked because payments exist.';
-
-  @override
-  String get serverCostUnknownOption => 'Cost unknown · Add later';
-
-  @override
-  String get serverPrepaidOption => 'Prepaid · Renew by cycle';
-
-  @override
-  String get serverMeteredOption => 'Metered · Monthly estimate';
-
-  @override
-  String get serverPrepaid => 'Prepaid';
-
-  @override
-  String get serverMetered => 'Metered';
 
   @override
   String get serverDatesHelp =>
@@ -3235,9 +2897,6 @@ class AppLocalizationsEn extends AppLocalizations {
       'Notes aren’t encrypted. Don’t store passwords, keys, or tokens.';
 
   @override
-  String get serverSave => 'Save Server';
-
-  @override
   String get uiFormProvider => 'Provider';
 
   @override
@@ -3253,9 +2912,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get uiFormRegion => 'Region';
 
   @override
-  String get uiFormSpec => 'Spec note';
-
-  @override
   String get uiFormOptional => 'Optional';
 
   @override
@@ -3266,9 +2922,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get uiFormSetUnknown => 'Set Unknown';
-
-  @override
-  String get uiFormPickDate => 'Choose date';
 
   @override
   String get uiFormUnknownCostFootnote => 'Unknown cost is left out of totals.';
@@ -3383,31 +3036,6 @@ class AppLocalizationsEn extends AppLocalizations {
       one: '1 second',
     );
     return 'Each test lasts up to $_temp0. Changing the target, leaving this page, or putting the app in the background cancels it.';
-  }
-
-  @override
-  String tcpTarget(String p0) {
-    return 'Target: $p0';
-  }
-
-  @override
-  String tcpActualAddress(String p0) {
-    return 'Actual address: $p0';
-  }
-
-  @override
-  String tcpResultSource(String p0) {
-    return 'Source: $p0';
-  }
-
-  @override
-  String tcpFinished(String p0) {
-    return 'Finished: $p0 (device time)';
-  }
-
-  @override
-  String tcpElapsed(String p0) {
-    return 'Elapsed: $p0 ms';
   }
 
   @override
@@ -3716,9 +3344,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get snippetEdit => 'Edit Snippet';
 
   @override
-  String get snippetCancelEdit => 'Cancel Snippet Editing';
-
-  @override
   String get snippetSaveSafety =>
       'Snippets are stored as plain text. Don’t enter passwords, keys or tokens.';
 
@@ -3736,12 +3361,6 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get snippetExactContentHelp =>
       'Content is saved exactly, including whitespace and control characters. Check the full preview.';
-
-  @override
-  String get connectionSaving => 'Saving…';
-
-  @override
-  String get snippetSave => 'Save Snippet';
 
   @override
   String get terminalCopyFailed => 'Couldn’t copy terminal content. Try again.';
@@ -3810,32 +3429,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get terminalDisconnectQuestion => 'Disconnect the SSH session?';
 
   @override
-  String get terminalDiscardExitQuestion => 'Discard the draft and exit?';
-
-  @override
-  String terminalDisconnectHelp(String p0, String p1) {
-    return '$p0\nRemote tasks outside tmux / screen may be interrupted. $p1';
-  }
-
-  @override
-  String get terminalDraftKeptUntilReconnect =>
-      'The draft is kept for now and cleared on reconnect.';
-
-  @override
-  String get terminalDraftWillClear => 'The unsent draft will be cleared.';
-
-  @override
-  String get terminalUnsentDraftExit =>
-      'The draft hasn’t been sent. It will be cleared when you exit.';
-
-  @override
-  String get terminalDisconnect => 'Disconnect';
-
-  @override
   String get terminalDisconnectExit => 'Disconnect and Exit';
-
-  @override
-  String get terminalDiscardExit => 'Discard and Exit';
 
   @override
   String get terminalBackgroundDisconnected =>
@@ -3958,9 +3552,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get r4HlTooLarge => 'Over 256 KiB: highlighting is off';
 
   @override
-  String get terminalReconnectClear => 'Reconnect and Clear Draft';
-
-  @override
   String get terminalCancelConnection => 'Cancel Connection';
 
   @override
@@ -3991,19 +3582,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get terminalConnect => 'Connect';
 
   @override
-  String get terminalReconnectShort => 'Reconnect · Clear Draft';
-
-  @override
   String get terminalBrowserUnsupported =>
       'Browsers don’t support native SSH. Use the native app.';
-
-  @override
-  String get terminalConnectedInputHelp =>
-      'After connecting, tap the terminal to type. Keys are sent directly to the server.';
-
-  @override
-  String get terminalRetainedOutputHelp =>
-      'Output is kept. Reconnecting clears the terminal and draft without replaying input.';
 
   @override
   String get terminalDismissNotice => 'Dismiss Notice';
@@ -4185,9 +3765,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get r3SftpTitle => 'SFTP Files';
 
   @override
-  String get r3SftpRowSubtitle => 'Browse and transfer files';
-
-  @override
   String get r3SftpUp => 'Parent folder';
 
   @override
@@ -4314,12 +3891,6 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get r3SftpCreated => 'Created';
-
-  @override
-  String get r3SftpRenamed => 'Renamed';
-
-  @override
   String get r3SftpErrPermission => 'Permission denied';
 
   @override
@@ -4397,9 +3968,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get r3SftpOverwrite => 'Overwrite';
 
   @override
-  String get r3SftpSkip => 'Skip';
-
-  @override
   String r3SftpExistsTitle(String name) {
     return '“$name” already exists';
   }
@@ -4442,9 +4010,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get r3SftpStateDone => 'Done';
-
-  @override
-  String get r3SftpStateFailed => 'Failed';
 
   @override
   String get r3SftpStateCancelled => 'Canceled';
@@ -5200,9 +4765,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get securitySshConfiguration => 'SSH Connection Settings';
 
   @override
-  String get securityCancelSshConfiguration => 'Cancel Connection Settings';
-
-  @override
   String get securitySshConfigurationNotice =>
       'Connection settings and the ledger address are stored separately. Cloud server settings aren’t changed.';
 
@@ -5262,54 +4824,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get securityAuthBiometricHint => 'Verify your identity';
-
-  @override
-  String get securityAuthBiometricNotRecognized => 'Not recognized. Try again.';
-
-  @override
-  String get securityAuthBiometricSuccess => 'Verified';
-
-  @override
-  String get securityAuthRequiredTitle => 'Biometric Verification Required';
-
-  @override
-  String get securityAuthSetupDescription =>
-      'Enable biometric verification in your device settings.';
-
-  @override
-  String get securityAuthGoToSettings => 'Go to Settings';
-
-  @override
-  String get securityAuthDeviceSetupDescription =>
-      'Enable device authentication in your device settings.';
-
-  @override
-  String get securityAuthDeviceRequiredTitle => 'Device Verification Required';
-
-  @override
-  String get securityAuthIosLockout =>
-      'Biometric verification is locked. Lock and unlock your device, then try again.';
-
-  @override
-  String get securityAuthIosSetupDescription =>
-      'Enable Face ID or Touch ID in your device settings.';
-
-  @override
-  String serverCompactMonths(int months) {
-    return '$months mo';
-  }
-
-  @override
-  String get resourceTrafficPeriodUnsetShort => '—';
-
-  @override
-  String get resourceTrafficPeriodMonthShort => 'M';
-
-  @override
-  String get resourceTrafficPeriodQuarterShort => 'Q';
-
-  @override
-  String get resourceTrafficPeriodYearShort => 'Y';
 
   @override
   String get providerNameRange => 'Use 1–80 characters for the provider name.';

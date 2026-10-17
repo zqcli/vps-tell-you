@@ -1,7 +1,6 @@
 {
   "@@locale": "zh",
   "language": "语言",
-  "languageDescription": "立即切换界面语言，保留当前草稿和连接。",
   "languageSystem": "跟随系统",
   "languageSystemDescription": "其他系统语言使用 English。",
   "languageChinese": "简体中文",
@@ -15,19 +14,12 @@
   "costs": "费用",
   "tools": "工具",
   "settings": "设置",
-  "toolsDescription": "计算费用、连接服务器或管理常用命令。",
   "remainingValueCalculator": "剩余价值计算器",
   "calculatorDescription": "独立试算或引用服务器资料 · 可导出图片",
-  "connectionsTroubleshooting": "连接与排障",
   "sshQuickConnect": "SSH 快速连接",
-  "sshQuickConnectDescription": "选择服务器或临时目标 · 核验主机后登录",
   "tcpConnectionTest": "TCP 连接测试",
-  "tcpConnectionDescription": "从当前设备检查单个地址和端口",
   "commandSnippets": "命令片段",
-  "commandSnippetsDescription": "保存常用命令 · 插入终端草稿后发送",
-  "singleServerMaintenance": "单机维护",
   "powerControl": "电源控制",
-  "powerControlDescription": "通过 SSH 重启或关机 · 操作前核对目标",
   "powerControlWarning": "关机后无法通过 SSH 开机，需使用厂商面板。重启或关机不会停止厂商计费。",
   "uiTabsCalculatorTile": "独立试算或引用服务器，可导出不含隐私的图片",
   "uiTabsSshTile": "选择已配置的服务器",
@@ -66,10 +58,8 @@
       }
     }
   },
-  "reminderEnableHelp": "需同时开启系统通知和服务器提醒。各服务器的提前天数、时间和使用计划可在详情中编辑；未允许通知时仍可保存规则。",
   "requestingPermission": "正在申请…",
   "requestNotificationPermission": "申请系统通知权限",
-  "notificationPermissionHelp": "已拒绝或关闭通知渠道时，请到设备系统设置中调整；修改后返回应用，重新核对提醒状态。",
   "checkReminderStatus": "重新核对提醒状态",
   "reminderCoverage": "提醒范围",
   "r2TabsMetricScheduled": "已安排",
@@ -141,8 +131,6 @@
   "back": "返回",
   "recordMissingReload": "记录不存在，请返回重新读取。",
   "dueDateNotEntered": "未填写到期日",
-  "reminderSaveHelp": "修改后点“保存提醒规则”生效。若启用提醒并选择“到期不再使用”，仍会提醒核对厂商的续费设置。",
-  "uiTabsReminderSaveHelp": "点右上角“保存”后生效。",
   "uiTabsReminderDue": "{name} 将于 {date} 到期。",
   "@uiTabsReminderDue": {
     "placeholders": {
@@ -184,12 +172,10 @@
     }
   },
   "reminderTime": "提醒时间",
-  "selectReminderTime": "选择提醒时间",
   "cancel": "取消",
   "confirm": "确定",
   "hour": "时",
   "minute": "分",
-  "invalidTime": "请输入有效时间",
   "reminderDstHelp": "按设备当前时区；夏令时缺失的时间顺延，重复的只提醒一次。",
   "myUsagePlan": "我的使用计划",
   "usagePlanWarning": "使用计划仅为本地记录，不会停止厂商扣费；请另行向厂商取消续费。",
@@ -204,7 +190,6 @@
   },
   "viewReminderCoverage": "查看通知权限与覆盖范围",
   "saving": "正在保存…",
-  "saveReminderRules": "保存提醒规则",
   "expiryNotificationTitle": "VPS 到期核对",
   "notificationDueDate": "到期日为 {p0}",
   "@notificationDueDate": {
@@ -341,40 +326,11 @@
   "darkTheme": "深色",
   "appDescription": "到期、费用、连接，都在本机",
   "r11AppSlogan": "每台 VPS，心里有数",
-  "organizationData": "组织与数据",
   "manageGroups": "分组管理",
-  "groupCountHelp": "{p0} 个分组 · 删除分组保留记录",
-  "@groupCountHelp": {
-    "placeholders": {
-      "p0": {
-        "type": "String"
-      }
-    }
-  },
   "archivedRecords": "已归档记录",
-  "archiveCountHelp": "{p0} 条 · 可恢复到服务器列表",
-  "@archiveCountHelp": {
-    "placeholders": {
-      "p0": {
-        "type": "String"
-      }
-    }
-  },
-  "accountsPreferences": "账户与偏好",
   "keysSecurity": "密钥与安全",
   "keysSecurityDescription": "凭据、SSH 配置与主机信任",
   "currenciesReferenceRates": "币种与参考汇率",
-  "currencyRateSummary": "{p0} · 手动汇率 {p1}",
-  "@currencyRateSummary": {
-    "placeholders": {
-      "p0": {
-        "type": "String"
-      },
-      "p1": {
-        "type": "String"
-      }
-    }
-  },
   "notSet": "未设置",
   "notificationAccess": "通知权限",
   "backupExclusionsSummary": "不含凭据与主机信任 · 未加密 JSON",
@@ -457,7 +413,6 @@
   "financeDataUnknown": "资料未知",
   "financeMissingFxPreserved": "缺少汇率 · 原币仍保留",
   "financeMissingFxExcluded": "仅合计有汇率的部分，缺失部分未按 0 计算",
-  "financeValuationAndDue": "估值日 / 服务到期日",
   "financeRemainingDays": "剩余服务天数",
   "financeRenewalCycle": "续费 / 周期",
   "financeDailyShown": "所示周期日均",
@@ -524,7 +479,6 @@
   "financeSplitFee": "各承担一半",
   "financeSplitFeeNote": "手续费先折算到分再均摊，不能均分的 0.01 由买方承担。",
   "financeCalculateQuote": "计算报价与费用",
-  "financePremiumLabel": "报价与参考价值差额（溢价 / 折价）",
   "financeBuyerSellerFee": "买方 / 卖方手续费",
   "financeBuyerEstimate": "买方预计支出",
   "financeSellerEstimate": "卖方预计净收款",
@@ -560,18 +514,12 @@
   "financeNotReceipt": "这不是厂商支付回执，不改变自动续费设置。",
   "financePaymentTarget": "付款对象",
   "financeAllPayments": "全部付款记录",
-  "financeRecent30": "近 30 天",
   "financeShowVoided": "显示已删除",
   "financeRecordedPaidTotal": "已记录实付合计",
   "financeNoPayments": "— 尚无付款记录",
   "financePaymentDetails": "付款明细",
   "financeArchivedPayment": "服务器已归档 · 历史实付保留",
   "financeNoPaymentsInRange": "此范围暂无付款记录。可从服务器详情记录已完成的续费付款。",
-  "financeVoidTitle": "撤销此次本地记录？",
-  "financeVoidAccountNote": "将此账单标记为已撤销，不向厂商申请退款。",
-  "financeVoidServerNote": "仅还原本次增加的服务期间与到期日，并将实付标记为已撤销。不会向厂商退款或取消服务。",
-  "financeVoidRecord": "撤销记录",
-  "financePaymentVoided": "本次本地付款记录已撤销",
   "financePaymentDetail": "付款详情",
   "financePaymentUnavailable": "记录暂不可用，请返回重新读取",
   "financePaymentDateLabel": "付款日",
@@ -581,7 +529,6 @@
   "financeVoidedStatus": "已删除，不计入实付统计",
   "financeRecordedStatus": "已记录",
   "financePaymentHistoryNote": "原币历史实付，不随续费价或汇率变化。",
-  "financeVoidThisRecord": "撤销此次记录",
   "r2FinanceEdit": "编辑",
   "r2FinanceEditTitle": "编辑付款记录",
   "r2FinanceEditHint": "只修改记账信息，不改变服务期、到期日或周期数。",
@@ -648,13 +595,10 @@
   },
   "r2FinanceDeleted": "付款记录已删除",
   "r2FinanceUpdated": "付款记录已更新",
-  "financeVoidBlocked": "资料已改变，请核对。后续编辑、付款或归档后不能用旧记录覆盖现有资料。",
   "financeRulesTitle": "这些数字如何计算",
   "financeTitle": "费用",
-  "financeOverview": "查看月费用参考、剩余价值和已记录付款。",
   "financeScope": "统计范围",
   "financeMonthlyReference": "月费用参考",
-  "financeTotalRemaining": "总体剩余价值  ›",
   "financeMonthlyNotPaid": "续费价摊月 + 按量估算，不等于本月实付。",
   "financeUpcomingRenewals": "未来 30 天预计续费",
   "financeRecentPayments": "付款记录",
@@ -669,7 +613,6 @@
   "financeForecastNote": "按当前续费价预测，假设继续续费；不含按量账单和已过期项目。",
   "financeMonthlyDetail": "月费用明细",
   "financeValueDetail": "剩余价值明细",
-  "financeInventoryDetail": "服务器构成",
   "financeIncompleteDetail": "费用与到期核对",
   "financeMeteredValueNa": "按量计费 · 剩余价值不适用",
   "financeExpiredMonthlyExcluded": "已到期，未计入月费用参考",
@@ -902,7 +845,6 @@
   "r3FinanceQuoteSettlement": "结算明细",
   "r3FinanceQuoteRef": "剩余价值",
   "r3FinanceQuoteDeal": "建议成交价",
-  "r3FinanceQuoteFeesRow": "手续费合计",
   "financeRoundingNote": "{rate}\n{source}。折算结果仅供参考。",
   "@financeRoundingNote": {
     "placeholders": {
@@ -979,17 +921,6 @@
       }
     }
   },
-  "financeVoidedName": "{voided, select, yes{{name} · 已撤销} other{{name}}}",
-  "@financeVoidedName": {
-    "placeholders": {
-      "name": {
-        "type": "String"
-      },
-      "voided": {
-        "type": "String"
-      }
-    }
-  },
   "financePaymentSummary": "{account, select, yes{{date} · 历史账户账单，只计一次} other{{date} · 到期日：{due}}}",
   "@financePaymentSummary": {
     "placeholders": {
@@ -1034,24 +965,8 @@
       }
     }
   },
-  "financeManagedCount": "在管服务器：{count} 台  ›",
-  "@financeManagedCount": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
   "financeRenewalEventNote": "{count} 笔预付续费 · 今天及后 29 天",
   "@financeRenewalEventNote": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "financeRecentPaymentNote": "{count} 笔 · 今天及前 29 天",
-  "@financeRecentPaymentNote": {
     "placeholders": {
       "count": {
         "type": "int"
@@ -1122,14 +1037,6 @@
   },
   "uiFinanceForecastBasis": "按当前续费价",
   "uiFinanceToolsHeader": "记录与工具",
-  "uiFinanceServerCount": "{count} 台",
-  "@uiFinanceServerCount": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
   "uiFinanceFootnote": "按续费价和手动汇率折算，仅供参考，非实际账单。",
   "uiFinanceVoidedPill": "已删除",
   "uiFinanceArchivedPill": "已归档",
@@ -1144,23 +1051,6 @@
         "type": "int"
       },
       "count": {
-        "type": "int"
-      }
-    }
-  },
-  "financeForecastTotal": "{amount} {currency}{missing, plural, =0{} other{ · 缺汇率 {missing} 项}}{unknown, plural, =0{} other{ · 金额未知 {unknown} 项}}",
-  "@financeForecastTotal": {
-    "placeholders": {
-      "amount": {
-        "type": "String"
-      },
-      "currency": {
-        "type": "String"
-      },
-      "missing": {
-        "type": "int"
-      },
-      "unknown": {
         "type": "int"
       }
     }
@@ -1339,38 +1229,6 @@
       }
     }
   },
-  "financeExportDue": "服务到期日：{date}",
-  "@financeExportDue": {
-    "placeholders": {
-      "date": {
-        "type": "String"
-      }
-    }
-  },
-  "financeExportRemainingDays": "剩余服务天数：{days} 天",
-  "@financeExportRemainingDays": {
-    "placeholders": {
-      "days": {
-        "type": "int"
-      }
-    }
-  },
-  "financeExportRenewal": "续费 / 周期：{renewal}",
-  "@financeExportRenewal": {
-    "placeholders": {
-      "renewal": {
-        "type": "String"
-      }
-    }
-  },
-  "financeExportDaily": "所示周期日均：{daily}",
-  "@financeExportDaily": {
-    "placeholders": {
-      "daily": {
-        "type": "String"
-      }
-    }
-  },
   "billingCostUnknown": "费用未知",
   "billingMeteredAmount": "{amount}/月估",
   "billingAnnualAmount": "{amount}/年",
@@ -1469,7 +1327,6 @@
   "chooseOtherCredential": "请选择另一份凭据",
   "invalidSshConfiguration": "请填写有效主机、端口和明确用户名",
   "verificationCancelled": "核验已取消",
-  "completeLocalResources": "请先补全并确认六项本地资源配置",
   "securityOperationIncomplete": "安全操作未完成，请重试",
   "serverNameRange": "名称需为 1–80 个字符",
   "serverVendorRange": "厂商需为 1–80 个字符",
@@ -1482,7 +1339,6 @@
   "resourceMonth": "月",
   "resourceQuarter": "季",
   "resourceYear": "年",
-  "resourceValidIp": "请填写有效的 IPv4 或 IPv6 地址，不能使用未指定地址",
   "resourceValidHostname": "请填写有效主机名，不含协议、端口或路径",
   "resourceValidVcpu": "vCPU 需为 1–65536 的整数",
   "resourceValidRam": "内存配额需为有效正数",
@@ -1518,12 +1374,10 @@
       }
     }
   },
-  "resourceFieldValidIp": "请填写有效 IPv4 或 IPv6，不能为全零地址",
   "r6IpValidIpv4": "请填写有效的 IPv4 地址，如 192.0.2.1，不能为全零地址",
   "r6IpValidIpv6": "请填写有效的 IPv6 地址，如 2001:db8::1，不含方括号或区域标识",
   "resourceFieldValidVcpu": "请填写 1–65536 的整数核数",
   "resourceFieldValidBytes": "请填写大于 0 的容量，精确到整字节",
-  "resourceCapacity": "容量",
   "resourceUnitSemantics": "{p0}单位，1024 进制",
   "@resourceUnitSemantics": {
     "placeholders": {
@@ -1532,14 +1386,11 @@
       }
     }
   },
-  "resourceUnit": "单位",
   "resourceTrafficPeriod": "流量周期",
-  "resourcePeriod": "周期",
   "resourceNewPeriodHelp": "新建默认按月，可改。",
   "resourcePeriodHelp": "周期独立于容量单位；未知选“未设置”。",
   "resourceHardware": "硬件信息",
   "resourceLocalHelp": "容量按 1024 进制，可选单位。",
-  "resourceIpAddress": "IP 地址",
   "r6IpIpv4": "IPv4",
   "r6IpIpv6": "IPv6",
   "resourceHostname": "主机名",
@@ -1556,7 +1407,6 @@
   "serverExpired": "已过期",
   "serverDueNext30": "未来 30 天到期",
   "serverCostDateUnknown": "费用 / 到期日未知",
-  "serverApplyFilters": "应用筛选",
   "serverLedgerCount": "{p0} 台服务器 · 本地台账",
   "@serverLedgerCount": {
     "placeholders": {
@@ -1565,7 +1415,6 @@
       }
     }
   },
-  "serverReloadLocal": "重新读取本地台账",
   "serverAdd": "添加服务器",
   "serverFirstTitle": "你的第一台 VPS，\n从这里开始",
   "serverFirstDescription": "到期、费用和连接，一处记录。",
@@ -1576,7 +1425,6 @@
   "serverViewDemo": "先看看演示数据",
   "serverManualStartHelp": "已经有机器？手动记录就能开始。",
   "serverSearchHint": "搜索名称、地址、厂商、用途或地区",
-  "serverClearSearch": "清除搜索",
   "serverAll": "全部",
   "serverFavorites": "常用",
   "serverFilterLabel": "筛选{p0}",
@@ -1589,17 +1437,6 @@
   },
   "serverFilterSelectedSuffix": " · 已选",
   "serverExpiryNeedsCheck": "到期待核对",
-  "serverExpiryCounts": "{p0} 台已过期 · {p1} 台 30 天内到期",
-  "@serverExpiryCounts": {
-    "placeholders": {
-      "p0": {
-        "type": "String"
-      },
-      "p1": {
-        "type": "String"
-      }
-    }
-  },
   "serverFavoriteServers": "常用服务器",
   "serverAllServers": "所有服务器",
   "serverSort": "排序",
@@ -1623,7 +1460,6 @@
   },
   "uiServersRowHint": "左右滑动或长按服务器查看快捷操作",
   "serverClearFilters": "清除筛选",
-  "serverListObservationHelp": "不持续监控运行状态；到期天数按设备日期计算。",
   "serverCostsMissing": "费用待补充",
   "serverMeteredBilling": "按量计费",
   "serverDueUnknown": "到期日未知",
@@ -1645,7 +1481,6 @@
     }
   },
   "serverDemo": "演示",
-  "serverLocalUnqueried": "本地记录 · 未查询运行状态",
   "serverNotEntered": "未填写",
   "resourceUnlimitedConfirmed": "不限量（已确认）",
   "resourceCardHelp": "仅本地资料，不会从商家读取。",
@@ -1666,7 +1501,6 @@
   "serverArchived": "已归档，云端资源和扣费未改变",
   "serverUndo": "撤销",
   "serverUndoArchiveFailed": "无法撤销，请在设置的归档记录中检查",
-  "serverMissingDetails": "待补充",
   "serverDetails": "服务器详情",
   "serverRecordUnavailable": "记录暂不可用，请返回重试",
   "serverRemoveFavorite": "取消常用",
@@ -1684,7 +1518,6 @@
   "serverHostCopied": "地址已复制",
   "serverCopyHostFailed": "未能复制地址，请重试。",
   "serverOperatingSystem": "操作系统",
-  "serverGroupPurpose": "分组 / 用途",
   "serverSpecifications": "规格",
   "serverEditHardware": "编辑硬件",
   "serverCostExpiry": "费用与到期",
@@ -1699,25 +1532,19 @@
       }
     }
   },
-  "serverServiceStart": "服务开始日",
   "serverUnknown": "未知",
-  "serverServiceDue": "服务到期日",
   "serverUnknownCostHelp": "未填写的金额不会按 0 计算。",
   "serverMeteredValueHelp": "按量计费只作月估算，不计算剩余价值。",
   "serverRenewalValueHelp": "剩余价值仅为按续费价折算的参考，不是退款或成交价。",
   "serverReminderPlan": "到期提醒与使用计划",
   "serverRemindersOff": "提醒已关闭",
-  "serverRemainingValue": "剩余价值",
   "serverUnknownValueHelp": "日期或费用资料不足，剩余价值未知，不按 0 计算。",
   "serverRecordPayment": "记录已付款",
-  "serverUseForCalculation": "引用资料试算",
-  "serverViewPayments": "查看付款记录",
   "serverConnectionsControl": "连接与控制",
   "serverSshSettings": "SSH 连接配置",
   "serverSshSettingsDescription": "连接地址、端口、用户名和登录凭据",
   "serverConnectSsh": "连接 SSH",
   "serverTcpTest": "TCP 测试",
-  "serverPower": "单机电源",
   "serverConnectionSafety": "首次连接需核对主机指纹；关机或重启不会停止计费。",
   "serverNotes": "备注",
   "serverSavedMetadata": "本地保存于 {p0}\n服务器 ID：{p1}",
@@ -1733,16 +1560,6 @@
       }
     }
   },
-  "uiDetailConverted": "折合 {currency}",
-  "@uiDetailConverted": {
-    "placeholders": {
-      "currency": {
-        "type": "String"
-      }
-    }
-  },
-  "uiDetailDaily": "日均",
-  "uiDetailRemainingDays": "剩余天数",
   "uiDetailPayments": "付款记录",
   "uiDetailValuation": "价值试算",
   "uiDetailFillIn": "补填",
@@ -1800,12 +1617,7 @@
       }
     }
   },
-  "serverHalfYear": "半年",
-  "serverTwoYears": "2年",
-  "serverThreeYears": "3年",
-  "serverAmount": "金额",
   "serverOriginalCurrency": "原币种",
-  "serverCurrency": "币种",
   "serverMonthlyCostEstimate": "每月费用估算",
   "serverRenewalPriceHelp": "{p0}续费金额，实付另记",
   "@serverRenewalPriceHelp": {
@@ -1820,30 +1632,17 @@
   "serverOptionalStart": "服务开始日（选填）",
   "serverOptionalDue": "服务到期日（选填）",
   "serverEditTitle": "编辑服务器",
-  "serverFormHelp": "仅保存在本机，不会修改远端。",
   "serverBasicData": "基本资料",
   "serverName": "服务器名称",
-  "serverProvider": "厂商",
-  "serverProviderExample": "例如：搬瓦工 / 自定义厂商",
-  "serverNewHostHelp": "新建时留空会采用硬件信息中的 IP 或主机名；SSH 连接地址另行设置。",
-  "serverSavedHostHelp": "此地址独立保存，修改硬件不会更改它；SSH 连接地址另行设置。",
   "serverOptionalPurpose": "用途（选填）",
   "serverOptionalRegion": "地区（选填）",
   "serverOptionalOs": "操作系统（选填）",
-  "serverOptionalSpec": "规格补充（选填）",
-  "serverSpecExample": "例如：CPU 型号、网络带宽",
   "serverCostDetails": "费用资料",
   "serverPaymentLockHelp": "已有续费付款：计费方式、周期和日期已锁定。",
-  "serverCostUnknownOption": "费用未知 · 稍后补充",
-  "serverPrepaidOption": "预付费 · 按周期续费",
-  "serverMeteredOption": "按量付费 · 月估算",
-  "serverPrepaid": "预付费",
-  "serverMetered": "按量付费",
   "serverDatesHelp": "到期日默认按开始日加周期计算，可手动修改。",
   "serverAmountHelp": "0 表示免费；未知请选“未知”。不会记录付款。",
   "serverOptionalNotes": "备注（选填）",
   "serverNotesSafety": "备注不加密，请勿存放密码、私钥或令牌。",
-  "serverSave": "保存服务器",
   "uiFormProvider": "提供商",
   "r7FormProviderNone": "不指定",
   "@r7FormProviderNone": {
@@ -1855,12 +1654,10 @@
   },
   "uiFormPurpose": "用途",
   "uiFormRegion": "地区",
-  "uiFormSpec": "规格补充",
   "uiFormOptional": "选填",
   "uiFormNameHint": "例如 HK-01",
   "uiFormDone": "完成",
   "uiFormSetUnknown": "设为未知",
-  "uiFormPickDate": "选择日期",
   "uiFormUnknownCostFootnote": "费用未知时不计入合计。",
   "uiFormVcpuDecrease": "减少 vCPU",
   "uiFormVcpuIncrease": "增加 vCPU",
@@ -1905,46 +1702,6 @@
     "placeholders": {
       "p0": {
         "type": "int"
-      }
-    }
-  },
-  "tcpTarget": "目标：{p0}",
-  "@tcpTarget": {
-    "placeholders": {
-      "p0": {
-        "type": "String"
-      }
-    }
-  },
-  "tcpActualAddress": "实际地址：{p0}",
-  "@tcpActualAddress": {
-    "placeholders": {
-      "p0": {
-        "type": "String"
-      }
-    }
-  },
-  "tcpResultSource": "来源：{p0}",
-  "@tcpResultSource": {
-    "placeholders": {
-      "p0": {
-        "type": "String"
-      }
-    }
-  },
-  "tcpFinished": "结束时间：{p0}（本机时间）",
-  "@tcpFinished": {
-    "placeholders": {
-      "p0": {
-        "type": "String"
-      }
-    }
-  },
-  "tcpElapsed": "耗时：{p0} ms",
-  "@tcpElapsed": {
-    "placeholders": {
-      "p0": {
-        "type": "String"
       }
     }
   },
@@ -2059,14 +1816,11 @@
   "snippetDiscardHelp": "未保存的内容不会写入本地片段。",
   "connectionDiscardChanges": "放弃修改",
   "snippetEdit": "编辑片段",
-  "snippetCancelEdit": "取消片段编辑",
   "snippetSaveSafety": "片段以明文保存，请勿填写密码、私钥或令牌。",
   "snippetName": "片段名称",
   "snippetFullContent": "完整内容（保留原始换行与控制字符）",
   "snippetContentRange": "内容不能为空，最多 16384 个字符",
   "snippetExactContentHelp": "内容原样保存，含空白和控制字符；请用完整预览核对。",
-  "connectionSaving": "保存中…",
-  "snippetSave": "保存片段",
   "terminalCopyFailed": "未能复制终端内容，请重试。",
   "terminalSelectionCopied": "已复制所选终端内容",
   "terminalDraftChangedPaste": "草稿已变化，请再次点击粘贴。",
@@ -2105,24 +1859,7 @@
   "terminalOfflineFont": "离线字体：DejaVu Sans Mono · 中文使用设备字体回退",
   "terminalLicenses": "开源许可",
   "terminalDisconnectQuestion": "断开 SSH 会话？",
-  "terminalDiscardExitQuestion": "丢弃草稿并退出？",
-  "terminalDisconnectHelp": "{p0}\n未放入 tmux / screen 的远端任务可能中断。{p1}",
-  "@terminalDisconnectHelp": {
-    "placeholders": {
-      "p0": {
-        "type": "String"
-      },
-      "p1": {
-        "type": "String"
-      }
-    }
-  },
-  "terminalDraftKeptUntilReconnect": "草稿暂时保留，重连时清空。",
-  "terminalDraftWillClear": "未发送草稿将清空。",
-  "terminalUnsentDraftExit": "当前草稿尚未发送，退出后将清空。",
-  "terminalDisconnect": "断开连接",
   "terminalDisconnectExit": "断开并退出",
-  "terminalDiscardExit": "丢弃并退出",
   "terminalBackgroundDisconnected": "应用进入后台，连接已断开",
   "terminalTargetChanged": "目标已变化，连接已断开",
   "terminalPowerMenuHelp": "连接后在“终端菜单”选择 SSH 重启或关机，并完成两次确认。",
@@ -2170,7 +1907,6 @@
   "r4HlPlain": "关闭（纯文本）",
   "r4HlGeneric": "通用",
   "r4HlTooLarge": "文件超过 256 KiB，未做语法高亮",
-  "terminalReconnectClear": "重新连接并清空草稿",
   "terminalCancelConnection": "取消连接",
   "terminalSshRestart": "SSH 重启",
   "terminalSshShutdown": "SSH 关机",
@@ -2181,10 +1917,7 @@
   "terminalEstablishingSecure": "正在建立安全连接…",
   "terminalOffline": "终端未连接",
   "terminalConnect": "连接",
-  "terminalReconnectShort": "重连 · 清空草稿",
   "terminalBrowserUnsupported": "浏览器不支持原生 SSH，请使用原生应用。",
-  "terminalConnectedInputHelp": "连接后点按终端输入，按键会直接发送到服务器。",
-  "terminalRetainedOutputHelp": "输出已保留。重连会清空终端和草稿，不重放输入。",
   "terminalDismissNotice": "关闭提示",
   "terminalVerifyNewHost": "重新核实新的主机公钥",
   "terminalFirstHostVerification": "首次连接 · 核对主机身份",
@@ -2288,7 +2021,6 @@
   "r3SftpOpenTimeout": "SFTP 开启超时",
   "r3SftpUnavailable": "服务器未开启 SFTP，可能已对该账户禁用",
   "r3SftpTitle": "SFTP 文件",
-  "r3SftpRowSubtitle": "浏览与传输文件",
   "r3SftpUp": "上级目录",
   "r3SftpRoot": "根目录",
   "r3SftpNewFolder": "新建文件夹",
@@ -2358,8 +2090,6 @@
       }
     }
   },
-  "r3SftpCreated": "已创建",
-  "r3SftpRenamed": "已重命名",
   "r3SftpErrPermission": "没有权限",
   "r3SftpErrNotFound": "未找到，可能已被移动或删除",
   "r3SftpErrExists": "已存在同名项目",
@@ -2397,7 +2127,6 @@
   "r3SftpConflictTitle": "服务器上的文件已变化",
   "r3SftpConflictMessage": "它在你打开后被修改过。要用你的版本覆盖服务器上的版本吗？",
   "r3SftpOverwrite": "覆盖",
-  "r3SftpSkip": "跳过",
   "r3SftpExistsTitle": "“{name}”已存在",
   "@r3SftpExistsTitle": {
     "placeholders": {
@@ -2450,7 +2179,6 @@
   },
   "r3SftpStateQueued": "等待中",
   "r3SftpStateDone": "完成",
-  "r3SftpStateFailed": "失败",
   "r3SftpStateCancelled": "已取消",
   "r3SftpStateSkipped": "已跳过",
   "r3SftpCancelAll": "全部取消",
@@ -3268,10 +2996,6 @@
   "@securitySshConfiguration": {
     "description": "Security: SshConfiguration. App-authored UI text; do not translate user data or protocol tokens."
   },
-  "securityCancelSshConfiguration": "取消连接配置",
-  "@securityCancelSshConfiguration": {
-    "description": "Security: CancelSshConfiguration. App-authored UI text; do not translate user data or protocol tokens."
-  },
   "securitySshConfigurationNotice": "连接配置和台账地址分别保存。不会修改云主机设置。",
   "@securitySshConfigurationNotice": {
     "description": "Security: SshConfigurationNotice. App-authored UI text; do not translate user data or protocol tokens."
@@ -3349,54 +3073,6 @@
   "@securityAuthBiometricHint": {
     "description": "Security: AuthBiometricHint. App-authored UI text; do not translate user data or protocol tokens."
   },
-  "securityAuthBiometricNotRecognized": "未能识别，请重试。",
-  "@securityAuthBiometricNotRecognized": {
-    "description": "Security: AuthBiometricNotRecognized. App-authored UI text; do not translate user data or protocol tokens."
-  },
-  "securityAuthBiometricSuccess": "验证成功",
-  "@securityAuthBiometricSuccess": {
-    "description": "Security: AuthBiometricSuccess. App-authored UI text; do not translate user data or protocol tokens."
-  },
-  "securityAuthRequiredTitle": "需要生物识别验证",
-  "@securityAuthRequiredTitle": {
-    "description": "Security: AuthRequiredTitle. App-authored UI text; do not translate user data or protocol tokens."
-  },
-  "securityAuthSetupDescription": "请在设备设置中启用生物识别验证。",
-  "@securityAuthSetupDescription": {
-    "description": "Security: AuthSetupDescription. App-authored UI text; do not translate user data or protocol tokens."
-  },
-  "securityAuthGoToSettings": "前往设置",
-  "@securityAuthGoToSettings": {
-    "description": "Security: AuthGoToSettings. App-authored UI text; do not translate user data or protocol tokens."
-  },
-  "securityAuthDeviceSetupDescription": "请在设备设置中启用设备验证。",
-  "@securityAuthDeviceSetupDescription": {
-    "description": "Security: AuthDeviceSetupDescription. App-authored UI text; do not translate user data or protocol tokens."
-  },
-  "securityAuthDeviceRequiredTitle": "需要设备验证",
-  "@securityAuthDeviceRequiredTitle": {
-    "description": "Security: AuthDeviceRequiredTitle. App-authored UI text; do not translate user data or protocol tokens."
-  },
-  "securityAuthIosLockout": "生物识别验证已锁定。请锁定并解锁设备，再重新尝试。",
-  "@securityAuthIosLockout": {
-    "description": "Security: AuthIosLockout. App-authored UI text; do not translate user data or protocol tokens."
-  },
-  "securityAuthIosSetupDescription": "请在设备设置中启用 Face ID 或 Touch ID。",
-  "@securityAuthIosSetupDescription": {
-    "description": "Security: AuthIosSetupDescription. App-authored UI text; do not translate user data or protocol tokens."
-  },
-  "serverCompactMonths": "{months}个月",
-  "@serverCompactMonths": {
-    "placeholders": {
-      "months": {
-        "type": "int"
-      }
-    }
-  },
-  "resourceTrafficPeriodUnsetShort": "未设置",
-  "resourceTrafficPeriodMonthShort": "月",
-  "resourceTrafficPeriodQuarterShort": "季",
-  "resourceTrafficPeriodYearShort": "年",
   "providerNameRange": "提供商名称需为 1–80 个字符。",
   "@providerNameRange": {
     "description": "Provider and adapter relationship validation."

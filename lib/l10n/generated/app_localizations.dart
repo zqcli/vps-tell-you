@@ -104,12 +104,6 @@ abstract class AppLocalizations {
   /// **'语言'**
   String get language;
 
-  /// No description provided for @languageDescription.
-  ///
-  /// In zh, this message translates to:
-  /// **'立即切换界面语言，保留当前草稿和连接。'**
-  String get languageDescription;
-
   /// No description provided for @languageSystem.
   ///
   /// In zh, this message translates to:
@@ -188,12 +182,6 @@ abstract class AppLocalizations {
   /// **'设置'**
   String get settings;
 
-  /// No description provided for @toolsDescription.
-  ///
-  /// In zh, this message translates to:
-  /// **'计算费用、连接服务器或管理常用命令。'**
-  String get toolsDescription;
-
   /// No description provided for @remainingValueCalculator.
   ///
   /// In zh, this message translates to:
@@ -206,23 +194,11 @@ abstract class AppLocalizations {
   /// **'独立试算或引用服务器资料 · 可导出图片'**
   String get calculatorDescription;
 
-  /// No description provided for @connectionsTroubleshooting.
-  ///
-  /// In zh, this message translates to:
-  /// **'连接与排障'**
-  String get connectionsTroubleshooting;
-
   /// No description provided for @sshQuickConnect.
   ///
   /// In zh, this message translates to:
   /// **'SSH 快速连接'**
   String get sshQuickConnect;
-
-  /// No description provided for @sshQuickConnectDescription.
-  ///
-  /// In zh, this message translates to:
-  /// **'选择服务器或临时目标 · 核验主机后登录'**
-  String get sshQuickConnectDescription;
 
   /// No description provided for @tcpConnectionTest.
   ///
@@ -230,41 +206,17 @@ abstract class AppLocalizations {
   /// **'TCP 连接测试'**
   String get tcpConnectionTest;
 
-  /// No description provided for @tcpConnectionDescription.
-  ///
-  /// In zh, this message translates to:
-  /// **'从当前设备检查单个地址和端口'**
-  String get tcpConnectionDescription;
-
   /// No description provided for @commandSnippets.
   ///
   /// In zh, this message translates to:
   /// **'命令片段'**
   String get commandSnippets;
 
-  /// No description provided for @commandSnippetsDescription.
-  ///
-  /// In zh, this message translates to:
-  /// **'保存常用命令 · 插入终端草稿后发送'**
-  String get commandSnippetsDescription;
-
-  /// No description provided for @singleServerMaintenance.
-  ///
-  /// In zh, this message translates to:
-  /// **'单机维护'**
-  String get singleServerMaintenance;
-
   /// No description provided for @powerControl.
   ///
   /// In zh, this message translates to:
   /// **'电源控制'**
   String get powerControl;
-
-  /// No description provided for @powerControlDescription.
-  ///
-  /// In zh, this message translates to:
-  /// **'通过 SSH 重启或关机 · 操作前核对目标'**
-  String get powerControlDescription;
 
   /// No description provided for @powerControlWarning.
   ///
@@ -410,12 +362,6 @@ abstract class AppLocalizations {
   /// **'最近安排提醒时使用的时区：{p0}'**
   String reminderLastTimezone(String p0);
 
-  /// No description provided for @reminderEnableHelp.
-  ///
-  /// In zh, this message translates to:
-  /// **'需同时开启系统通知和服务器提醒。各服务器的提前天数、时间和使用计划可在详情中编辑；未允许通知时仍可保存规则。'**
-  String get reminderEnableHelp;
-
   /// No description provided for @requestingPermission.
   ///
   /// In zh, this message translates to:
@@ -427,12 +373,6 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'申请系统通知权限'**
   String get requestNotificationPermission;
-
-  /// No description provided for @notificationPermissionHelp.
-  ///
-  /// In zh, this message translates to:
-  /// **'已拒绝或关闭通知渠道时，请到设备系统设置中调整；修改后返回应用，重新核对提醒状态。'**
-  String get notificationPermissionHelp;
 
   /// No description provided for @checkReminderStatus.
   ///
@@ -656,18 +596,6 @@ abstract class AppLocalizations {
   /// **'未填写到期日'**
   String get dueDateNotEntered;
 
-  /// No description provided for @reminderSaveHelp.
-  ///
-  /// In zh, this message translates to:
-  /// **'修改后点“保存提醒规则”生效。若启用提醒并选择“到期不再使用”，仍会提醒核对厂商的续费设置。'**
-  String get reminderSaveHelp;
-
-  /// No description provided for @uiTabsReminderSaveHelp.
-  ///
-  /// In zh, this message translates to:
-  /// **'点右上角“保存”后生效。'**
-  String get uiTabsReminderSaveHelp;
-
   /// No description provided for @uiTabsReminderDue.
   ///
   /// In zh, this message translates to:
@@ -752,12 +680,6 @@ abstract class AppLocalizations {
   /// **'提醒时间'**
   String get reminderTime;
 
-  /// No description provided for @selectReminderTime.
-  ///
-  /// In zh, this message translates to:
-  /// **'选择提醒时间'**
-  String get selectReminderTime;
-
   /// No description provided for @cancel.
   ///
   /// In zh, this message translates to:
@@ -781,12 +703,6 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'分'**
   String get minute;
-
-  /// No description provided for @invalidTime.
-  ///
-  /// In zh, this message translates to:
-  /// **'请输入有效时间'**
-  String get invalidTime;
 
   /// No description provided for @reminderDstHelp.
   ///
@@ -829,12 +745,6 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'正在保存…'**
   String get saving;
-
-  /// No description provided for @saveReminderRules.
-  ///
-  /// In zh, this message translates to:
-  /// **'保存提醒规则'**
-  String get saveReminderRules;
 
   /// No description provided for @expiryNotificationTitle.
   ///
@@ -1160,41 +1070,17 @@ abstract class AppLocalizations {
   /// **'每台 VPS，心里有数'**
   String get r11AppSlogan;
 
-  /// No description provided for @organizationData.
-  ///
-  /// In zh, this message translates to:
-  /// **'组织与数据'**
-  String get organizationData;
-
   /// No description provided for @manageGroups.
   ///
   /// In zh, this message translates to:
   /// **'分组管理'**
   String get manageGroups;
 
-  /// No description provided for @groupCountHelp.
-  ///
-  /// In zh, this message translates to:
-  /// **'{p0} 个分组 · 删除分组保留记录'**
-  String groupCountHelp(String p0);
-
   /// No description provided for @archivedRecords.
   ///
   /// In zh, this message translates to:
   /// **'已归档记录'**
   String get archivedRecords;
-
-  /// No description provided for @archiveCountHelp.
-  ///
-  /// In zh, this message translates to:
-  /// **'{p0} 条 · 可恢复到服务器列表'**
-  String archiveCountHelp(String p0);
-
-  /// No description provided for @accountsPreferences.
-  ///
-  /// In zh, this message translates to:
-  /// **'账户与偏好'**
-  String get accountsPreferences;
 
   /// No description provided for @keysSecurity.
   ///
@@ -1213,12 +1099,6 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'币种与参考汇率'**
   String get currenciesReferenceRates;
-
-  /// No description provided for @currencyRateSummary.
-  ///
-  /// In zh, this message translates to:
-  /// **'{p0} · 手动汇率 {p1}'**
-  String currencyRateSummary(String p0, String p1);
 
   /// No description provided for @notSet.
   ///
@@ -1501,12 +1381,6 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'仅合计有汇率的部分，缺失部分未按 0 计算'**
   String get financeMissingFxExcluded;
-
-  /// No description provided for @financeValuationAndDue.
-  ///
-  /// In zh, this message translates to:
-  /// **'估值日 / 服务到期日'**
-  String get financeValuationAndDue;
 
   /// No description provided for @financeRemainingDays.
   ///
@@ -1904,12 +1778,6 @@ abstract class AppLocalizations {
   /// **'计算报价与费用'**
   String get financeCalculateQuote;
 
-  /// No description provided for @financePremiumLabel.
-  ///
-  /// In zh, this message translates to:
-  /// **'报价与参考价值差额（溢价 / 折价）'**
-  String get financePremiumLabel;
-
   /// No description provided for @financeBuyerSellerFee.
   ///
   /// In zh, this message translates to:
@@ -2120,12 +1988,6 @@ abstract class AppLocalizations {
   /// **'全部付款记录'**
   String get financeAllPayments;
 
-  /// No description provided for @financeRecent30.
-  ///
-  /// In zh, this message translates to:
-  /// **'近 30 天'**
-  String get financeRecent30;
-
   /// No description provided for @financeShowVoided.
   ///
   /// In zh, this message translates to:
@@ -2161,36 +2023,6 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'此范围暂无付款记录。可从服务器详情记录已完成的续费付款。'**
   String get financeNoPaymentsInRange;
-
-  /// No description provided for @financeVoidTitle.
-  ///
-  /// In zh, this message translates to:
-  /// **'撤销此次本地记录？'**
-  String get financeVoidTitle;
-
-  /// No description provided for @financeVoidAccountNote.
-  ///
-  /// In zh, this message translates to:
-  /// **'将此账单标记为已撤销，不向厂商申请退款。'**
-  String get financeVoidAccountNote;
-
-  /// No description provided for @financeVoidServerNote.
-  ///
-  /// In zh, this message translates to:
-  /// **'仅还原本次增加的服务期间与到期日，并将实付标记为已撤销。不会向厂商退款或取消服务。'**
-  String get financeVoidServerNote;
-
-  /// No description provided for @financeVoidRecord.
-  ///
-  /// In zh, this message translates to:
-  /// **'撤销记录'**
-  String get financeVoidRecord;
-
-  /// No description provided for @financePaymentVoided.
-  ///
-  /// In zh, this message translates to:
-  /// **'本次本地付款记录已撤销'**
-  String get financePaymentVoided;
 
   /// No description provided for @financePaymentDetail.
   ///
@@ -2245,12 +2077,6 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'原币历史实付，不随续费价或汇率变化。'**
   String get financePaymentHistoryNote;
-
-  /// No description provided for @financeVoidThisRecord.
-  ///
-  /// In zh, this message translates to:
-  /// **'撤销此次记录'**
-  String get financeVoidThisRecord;
 
   /// No description provided for @r2FinanceEdit.
   ///
@@ -2360,12 +2186,6 @@ abstract class AppLocalizations {
   /// **'付款记录已更新'**
   String get r2FinanceUpdated;
 
-  /// No description provided for @financeVoidBlocked.
-  ///
-  /// In zh, this message translates to:
-  /// **'资料已改变，请核对。后续编辑、付款或归档后不能用旧记录覆盖现有资料。'**
-  String get financeVoidBlocked;
-
   /// No description provided for @financeRulesTitle.
   ///
   /// In zh, this message translates to:
@@ -2378,12 +2198,6 @@ abstract class AppLocalizations {
   /// **'费用'**
   String get financeTitle;
 
-  /// No description provided for @financeOverview.
-  ///
-  /// In zh, this message translates to:
-  /// **'查看月费用参考、剩余价值和已记录付款。'**
-  String get financeOverview;
-
   /// No description provided for @financeScope.
   ///
   /// In zh, this message translates to:
@@ -2395,12 +2209,6 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'月费用参考'**
   String get financeMonthlyReference;
-
-  /// No description provided for @financeTotalRemaining.
-  ///
-  /// In zh, this message translates to:
-  /// **'总体剩余价值  ›'**
-  String get financeTotalRemaining;
 
   /// No description provided for @financeMonthlyNotPaid.
   ///
@@ -2485,12 +2293,6 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'剩余价值明细'**
   String get financeValueDetail;
-
-  /// No description provided for @financeInventoryDetail.
-  ///
-  /// In zh, this message translates to:
-  /// **'服务器构成'**
-  String get financeInventoryDetail;
 
   /// No description provided for @financeIncompleteDetail.
   ///
@@ -2899,12 +2701,6 @@ abstract class AppLocalizations {
   /// **'建议成交价'**
   String get r3FinanceQuoteDeal;
 
-  /// No description provided for @r3FinanceQuoteFeesRow.
-  ///
-  /// In zh, this message translates to:
-  /// **'手续费合计'**
-  String get r3FinanceQuoteFeesRow;
-
   /// No description provided for @financeRoundingNote.
   ///
   /// In zh, this message translates to:
@@ -2953,12 +2749,6 @@ abstract class AppLocalizations {
   /// **'当前分组：{group}，不含账户账单。'**
   String financePaymentGroupNote(String group);
 
-  /// No description provided for @financeVoidedName.
-  ///
-  /// In zh, this message translates to:
-  /// **'{voided, select, yes{{name} · 已撤销} other{{name}}}'**
-  String financeVoidedName(String name, String voided);
-
   /// No description provided for @financePaymentSummary.
   ///
   /// In zh, this message translates to:
@@ -2983,23 +2773,11 @@ abstract class AppLocalizations {
   /// **'{currency} 参考 · 手动汇率 {date}'**
   String financeFxOverview(String currency, String date);
 
-  /// No description provided for @financeManagedCount.
-  ///
-  /// In zh, this message translates to:
-  /// **'在管服务器：{count} 台  ›'**
-  String financeManagedCount(int count);
-
   /// No description provided for @financeRenewalEventNote.
   ///
   /// In zh, this message translates to:
   /// **'{count} 笔预付续费 · 今天及后 29 天'**
   String financeRenewalEventNote(int count);
-
-  /// No description provided for @financeRecentPaymentNote.
-  ///
-  /// In zh, this message translates to:
-  /// **'{count} 笔 · 今天及前 29 天'**
-  String financeRecentPaymentNote(int count);
 
   /// No description provided for @financeIncompleteCount.
   ///
@@ -3073,12 +2851,6 @@ abstract class AppLocalizations {
   /// **'记录与工具'**
   String get uiFinanceToolsHeader;
 
-  /// No description provided for @uiFinanceServerCount.
-  ///
-  /// In zh, this message translates to:
-  /// **'{count} 台'**
-  String uiFinanceServerCount(int count);
-
   /// No description provided for @uiFinanceFootnote.
   ///
   /// In zh, this message translates to:
@@ -3108,17 +2880,6 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'{year} 年 {month} 月 · {count} 笔'**
   String financeForecastMonth(int year, int month, int count);
-
-  /// No description provided for @financeForecastTotal.
-  ///
-  /// In zh, this message translates to:
-  /// **'{amount} {currency}{missing, plural, =0{} other{ · 缺汇率 {missing} 项}}{unknown, plural, =0{} other{ · 金额未知 {unknown} 项}}'**
-  String financeForecastTotal(
-    String amount,
-    String currency,
-    int missing,
-    int unknown,
-  );
 
   /// No description provided for @financeDetailScope.
   ///
@@ -3286,30 +3047,6 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'含 {count} 个尚未开始的周期，进度仅显示上述周期。'**
   String financeExportFuturePeriods(int count);
-
-  /// No description provided for @financeExportDue.
-  ///
-  /// In zh, this message translates to:
-  /// **'服务到期日：{date}'**
-  String financeExportDue(String date);
-
-  /// No description provided for @financeExportRemainingDays.
-  ///
-  /// In zh, this message translates to:
-  /// **'剩余服务天数：{days} 天'**
-  String financeExportRemainingDays(int days);
-
-  /// No description provided for @financeExportRenewal.
-  ///
-  /// In zh, this message translates to:
-  /// **'续费 / 周期：{renewal}'**
-  String financeExportRenewal(String renewal);
-
-  /// No description provided for @financeExportDaily.
-  ///
-  /// In zh, this message translates to:
-  /// **'所示周期日均：{daily}'**
-  String financeExportDaily(String daily);
 
   /// No description provided for @billingCostUnknown.
   ///
@@ -3713,12 +3450,6 @@ abstract class AppLocalizations {
   /// **'核验已取消'**
   String get verificationCancelled;
 
-  /// No description provided for @completeLocalResources.
-  ///
-  /// In zh, this message translates to:
-  /// **'请先补全并确认六项本地资源配置'**
-  String get completeLocalResources;
-
   /// No description provided for @securityOperationIncomplete.
   ///
   /// In zh, this message translates to:
@@ -3790,12 +3521,6 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'年'**
   String get resourceYear;
-
-  /// No description provided for @resourceValidIp.
-  ///
-  /// In zh, this message translates to:
-  /// **'请填写有效的 IPv4 或 IPv6 地址，不能使用未指定地址'**
-  String get resourceValidIp;
 
   /// No description provided for @resourceValidHostname.
   ///
@@ -3881,12 +3606,6 @@ abstract class AppLocalizations {
   /// **'{p0} 硬盘'**
   String resourceDiskQuota(String p0);
 
-  /// No description provided for @resourceFieldValidIp.
-  ///
-  /// In zh, this message translates to:
-  /// **'请填写有效 IPv4 或 IPv6，不能为全零地址'**
-  String get resourceFieldValidIp;
-
   /// No description provided for @r6IpValidIpv4.
   ///
   /// In zh, this message translates to:
@@ -3911,35 +3630,17 @@ abstract class AppLocalizations {
   /// **'请填写大于 0 的容量，精确到整字节'**
   String get resourceFieldValidBytes;
 
-  /// No description provided for @resourceCapacity.
-  ///
-  /// In zh, this message translates to:
-  /// **'容量'**
-  String get resourceCapacity;
-
   /// No description provided for @resourceUnitSemantics.
   ///
   /// In zh, this message translates to:
   /// **'{p0}单位，1024 进制'**
   String resourceUnitSemantics(String p0);
 
-  /// No description provided for @resourceUnit.
-  ///
-  /// In zh, this message translates to:
-  /// **'单位'**
-  String get resourceUnit;
-
   /// No description provided for @resourceTrafficPeriod.
   ///
   /// In zh, this message translates to:
   /// **'流量周期'**
   String get resourceTrafficPeriod;
-
-  /// No description provided for @resourcePeriod.
-  ///
-  /// In zh, this message translates to:
-  /// **'周期'**
-  String get resourcePeriod;
 
   /// No description provided for @resourceNewPeriodHelp.
   ///
@@ -3964,12 +3665,6 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'容量按 1024 进制，可选单位。'**
   String get resourceLocalHelp;
-
-  /// No description provided for @resourceIpAddress.
-  ///
-  /// In zh, this message translates to:
-  /// **'IP 地址'**
-  String get resourceIpAddress;
 
   /// No description provided for @r6IpIpv4.
   ///
@@ -4067,23 +3762,11 @@ abstract class AppLocalizations {
   /// **'费用 / 到期日未知'**
   String get serverCostDateUnknown;
 
-  /// No description provided for @serverApplyFilters.
-  ///
-  /// In zh, this message translates to:
-  /// **'应用筛选'**
-  String get serverApplyFilters;
-
   /// No description provided for @serverLedgerCount.
   ///
   /// In zh, this message translates to:
   /// **'{p0} 台服务器 · 本地台账'**
   String serverLedgerCount(String p0);
-
-  /// No description provided for @serverReloadLocal.
-  ///
-  /// In zh, this message translates to:
-  /// **'重新读取本地台账'**
-  String get serverReloadLocal;
 
   /// No description provided for @serverAdd.
   ///
@@ -4145,12 +3828,6 @@ abstract class AppLocalizations {
   /// **'搜索名称、地址、厂商、用途或地区'**
   String get serverSearchHint;
 
-  /// No description provided for @serverClearSearch.
-  ///
-  /// In zh, this message translates to:
-  /// **'清除搜索'**
-  String get serverClearSearch;
-
   /// No description provided for @serverAll.
   ///
   /// In zh, this message translates to:
@@ -4180,12 +3857,6 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'到期待核对'**
   String get serverExpiryNeedsCheck;
-
-  /// No description provided for @serverExpiryCounts.
-  ///
-  /// In zh, this message translates to:
-  /// **'{p0} 台已过期 · {p1} 台 30 天内到期'**
-  String serverExpiryCounts(String p0, String p1);
 
   /// No description provided for @serverFavoriteServers.
   ///
@@ -4283,12 +3954,6 @@ abstract class AppLocalizations {
   /// **'清除筛选'**
   String get serverClearFilters;
 
-  /// No description provided for @serverListObservationHelp.
-  ///
-  /// In zh, this message translates to:
-  /// **'不持续监控运行状态；到期天数按设备日期计算。'**
-  String get serverListObservationHelp;
-
   /// No description provided for @serverCostsMissing.
   ///
   /// In zh, this message translates to:
@@ -4330,12 +3995,6 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'演示'**
   String get serverDemo;
-
-  /// No description provided for @serverLocalUnqueried.
-  ///
-  /// In zh, this message translates to:
-  /// **'本地记录 · 未查询运行状态'**
-  String get serverLocalUnqueried;
 
   /// No description provided for @serverNotEntered.
   ///
@@ -4414,12 +4073,6 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'无法撤销，请在设置的归档记录中检查'**
   String get serverUndoArchiveFailed;
-
-  /// No description provided for @serverMissingDetails.
-  ///
-  /// In zh, this message translates to:
-  /// **'待补充'**
-  String get serverMissingDetails;
 
   /// No description provided for @serverDetails.
   ///
@@ -4505,12 +4158,6 @@ abstract class AppLocalizations {
   /// **'操作系统'**
   String get serverOperatingSystem;
 
-  /// No description provided for @serverGroupPurpose.
-  ///
-  /// In zh, this message translates to:
-  /// **'分组 / 用途'**
-  String get serverGroupPurpose;
-
   /// No description provided for @serverSpecifications.
   ///
   /// In zh, this message translates to:
@@ -4553,23 +4200,11 @@ abstract class AppLocalizations {
   /// **'{p0} 个月'**
   String serverMonths(int p0);
 
-  /// No description provided for @serverServiceStart.
-  ///
-  /// In zh, this message translates to:
-  /// **'服务开始日'**
-  String get serverServiceStart;
-
   /// No description provided for @serverUnknown.
   ///
   /// In zh, this message translates to:
   /// **'未知'**
   String get serverUnknown;
-
-  /// No description provided for @serverServiceDue.
-  ///
-  /// In zh, this message translates to:
-  /// **'服务到期日'**
-  String get serverServiceDue;
 
   /// No description provided for @serverUnknownCostHelp.
   ///
@@ -4601,12 +4236,6 @@ abstract class AppLocalizations {
   /// **'提醒已关闭'**
   String get serverRemindersOff;
 
-  /// No description provided for @serverRemainingValue.
-  ///
-  /// In zh, this message translates to:
-  /// **'剩余价值'**
-  String get serverRemainingValue;
-
   /// No description provided for @serverUnknownValueHelp.
   ///
   /// In zh, this message translates to:
@@ -4618,18 +4247,6 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'记录已付款'**
   String get serverRecordPayment;
-
-  /// No description provided for @serverUseForCalculation.
-  ///
-  /// In zh, this message translates to:
-  /// **'引用资料试算'**
-  String get serverUseForCalculation;
-
-  /// No description provided for @serverViewPayments.
-  ///
-  /// In zh, this message translates to:
-  /// **'查看付款记录'**
-  String get serverViewPayments;
 
   /// No description provided for @serverConnectionsControl.
   ///
@@ -4660,12 +4277,6 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'TCP 测试'**
   String get serverTcpTest;
-
-  /// No description provided for @serverPower.
-  ///
-  /// In zh, this message translates to:
-  /// **'单机电源'**
-  String get serverPower;
 
   /// No description provided for @serverConnectionSafety.
   ///
@@ -4714,24 +4325,6 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'到期 {date}'**
   String uiDetailDueOn(String date);
-
-  /// No description provided for @uiDetailConverted.
-  ///
-  /// In zh, this message translates to:
-  /// **'折合 {currency}'**
-  String uiDetailConverted(String currency);
-
-  /// No description provided for @uiDetailDaily.
-  ///
-  /// In zh, this message translates to:
-  /// **'日均'**
-  String get uiDetailDaily;
-
-  /// No description provided for @uiDetailRemainingDays.
-  ///
-  /// In zh, this message translates to:
-  /// **'剩余天数'**
-  String get uiDetailRemainingDays;
 
   /// No description provided for @uiDetailPayments.
   ///
@@ -4889,41 +4482,11 @@ abstract class AppLocalizations {
   /// **'每 {p0} 个月'**
   String serverEveryMonths(int p0);
 
-  /// No description provided for @serverHalfYear.
-  ///
-  /// In zh, this message translates to:
-  /// **'半年'**
-  String get serverHalfYear;
-
-  /// No description provided for @serverTwoYears.
-  ///
-  /// In zh, this message translates to:
-  /// **'2年'**
-  String get serverTwoYears;
-
-  /// No description provided for @serverThreeYears.
-  ///
-  /// In zh, this message translates to:
-  /// **'3年'**
-  String get serverThreeYears;
-
-  /// No description provided for @serverAmount.
-  ///
-  /// In zh, this message translates to:
-  /// **'金额'**
-  String get serverAmount;
-
   /// No description provided for @serverOriginalCurrency.
   ///
   /// In zh, this message translates to:
   /// **'原币种'**
   String get serverOriginalCurrency;
-
-  /// No description provided for @serverCurrency.
-  ///
-  /// In zh, this message translates to:
-  /// **'币种'**
-  String get serverCurrency;
 
   /// No description provided for @serverMonthlyCostEstimate.
   ///
@@ -4967,12 +4530,6 @@ abstract class AppLocalizations {
   /// **'编辑服务器'**
   String get serverEditTitle;
 
-  /// No description provided for @serverFormHelp.
-  ///
-  /// In zh, this message translates to:
-  /// **'仅保存在本机，不会修改远端。'**
-  String get serverFormHelp;
-
   /// No description provided for @serverBasicData.
   ///
   /// In zh, this message translates to:
@@ -4984,30 +4541,6 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'服务器名称'**
   String get serverName;
-
-  /// No description provided for @serverProvider.
-  ///
-  /// In zh, this message translates to:
-  /// **'厂商'**
-  String get serverProvider;
-
-  /// No description provided for @serverProviderExample.
-  ///
-  /// In zh, this message translates to:
-  /// **'例如：搬瓦工 / 自定义厂商'**
-  String get serverProviderExample;
-
-  /// No description provided for @serverNewHostHelp.
-  ///
-  /// In zh, this message translates to:
-  /// **'新建时留空会采用硬件信息中的 IP 或主机名；SSH 连接地址另行设置。'**
-  String get serverNewHostHelp;
-
-  /// No description provided for @serverSavedHostHelp.
-  ///
-  /// In zh, this message translates to:
-  /// **'此地址独立保存，修改硬件不会更改它；SSH 连接地址另行设置。'**
-  String get serverSavedHostHelp;
 
   /// No description provided for @serverOptionalPurpose.
   ///
@@ -5027,18 +4560,6 @@ abstract class AppLocalizations {
   /// **'操作系统（选填）'**
   String get serverOptionalOs;
 
-  /// No description provided for @serverOptionalSpec.
-  ///
-  /// In zh, this message translates to:
-  /// **'规格补充（选填）'**
-  String get serverOptionalSpec;
-
-  /// No description provided for @serverSpecExample.
-  ///
-  /// In zh, this message translates to:
-  /// **'例如：CPU 型号、网络带宽'**
-  String get serverSpecExample;
-
   /// No description provided for @serverCostDetails.
   ///
   /// In zh, this message translates to:
@@ -5050,36 +4571,6 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'已有续费付款：计费方式、周期和日期已锁定。'**
   String get serverPaymentLockHelp;
-
-  /// No description provided for @serverCostUnknownOption.
-  ///
-  /// In zh, this message translates to:
-  /// **'费用未知 · 稍后补充'**
-  String get serverCostUnknownOption;
-
-  /// No description provided for @serverPrepaidOption.
-  ///
-  /// In zh, this message translates to:
-  /// **'预付费 · 按周期续费'**
-  String get serverPrepaidOption;
-
-  /// No description provided for @serverMeteredOption.
-  ///
-  /// In zh, this message translates to:
-  /// **'按量付费 · 月估算'**
-  String get serverMeteredOption;
-
-  /// No description provided for @serverPrepaid.
-  ///
-  /// In zh, this message translates to:
-  /// **'预付费'**
-  String get serverPrepaid;
-
-  /// No description provided for @serverMetered.
-  ///
-  /// In zh, this message translates to:
-  /// **'按量付费'**
-  String get serverMetered;
 
   /// No description provided for @serverDatesHelp.
   ///
@@ -5104,12 +4595,6 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'备注不加密，请勿存放密码、私钥或令牌。'**
   String get serverNotesSafety;
-
-  /// No description provided for @serverSave.
-  ///
-  /// In zh, this message translates to:
-  /// **'保存服务器'**
-  String get serverSave;
 
   /// No description provided for @uiFormProvider.
   ///
@@ -5141,12 +4626,6 @@ abstract class AppLocalizations {
   /// **'地区'**
   String get uiFormRegion;
 
-  /// No description provided for @uiFormSpec.
-  ///
-  /// In zh, this message translates to:
-  /// **'规格补充'**
-  String get uiFormSpec;
-
   /// No description provided for @uiFormOptional.
   ///
   /// In zh, this message translates to:
@@ -5170,12 +4649,6 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'设为未知'**
   String get uiFormSetUnknown;
-
-  /// No description provided for @uiFormPickDate.
-  ///
-  /// In zh, this message translates to:
-  /// **'选择日期'**
-  String get uiFormPickDate;
 
   /// No description provided for @uiFormUnknownCostFootnote.
   ///
@@ -5374,36 +4847,6 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'单次最多 {p0} 秒；修改目标、离开页面或进入后台会取消测试。'**
   String tcpTimeoutHelp(int p0);
-
-  /// No description provided for @tcpTarget.
-  ///
-  /// In zh, this message translates to:
-  /// **'目标：{p0}'**
-  String tcpTarget(String p0);
-
-  /// No description provided for @tcpActualAddress.
-  ///
-  /// In zh, this message translates to:
-  /// **'实际地址：{p0}'**
-  String tcpActualAddress(String p0);
-
-  /// No description provided for @tcpResultSource.
-  ///
-  /// In zh, this message translates to:
-  /// **'来源：{p0}'**
-  String tcpResultSource(String p0);
-
-  /// No description provided for @tcpFinished.
-  ///
-  /// In zh, this message translates to:
-  /// **'结束时间：{p0}（本机时间）'**
-  String tcpFinished(String p0);
-
-  /// No description provided for @tcpElapsed.
-  ///
-  /// In zh, this message translates to:
-  /// **'耗时：{p0} ms'**
-  String tcpElapsed(String p0);
 
   /// No description provided for @tcpOneObservation.
   ///
@@ -5945,12 +5388,6 @@ abstract class AppLocalizations {
   /// **'编辑片段'**
   String get snippetEdit;
 
-  /// No description provided for @snippetCancelEdit.
-  ///
-  /// In zh, this message translates to:
-  /// **'取消片段编辑'**
-  String get snippetCancelEdit;
-
   /// No description provided for @snippetSaveSafety.
   ///
   /// In zh, this message translates to:
@@ -5980,18 +5417,6 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'内容原样保存，含空白和控制字符；请用完整预览核对。'**
   String get snippetExactContentHelp;
-
-  /// No description provided for @connectionSaving.
-  ///
-  /// In zh, this message translates to:
-  /// **'保存中…'**
-  String get connectionSaving;
-
-  /// No description provided for @snippetSave.
-  ///
-  /// In zh, this message translates to:
-  /// **'保存片段'**
-  String get snippetSave;
 
   /// No description provided for @terminalCopyFailed.
   ///
@@ -6101,53 +5526,11 @@ abstract class AppLocalizations {
   /// **'断开 SSH 会话？'**
   String get terminalDisconnectQuestion;
 
-  /// No description provided for @terminalDiscardExitQuestion.
-  ///
-  /// In zh, this message translates to:
-  /// **'丢弃草稿并退出？'**
-  String get terminalDiscardExitQuestion;
-
-  /// No description provided for @terminalDisconnectHelp.
-  ///
-  /// In zh, this message translates to:
-  /// **'{p0}\n未放入 tmux / screen 的远端任务可能中断。{p1}'**
-  String terminalDisconnectHelp(String p0, String p1);
-
-  /// No description provided for @terminalDraftKeptUntilReconnect.
-  ///
-  /// In zh, this message translates to:
-  /// **'草稿暂时保留，重连时清空。'**
-  String get terminalDraftKeptUntilReconnect;
-
-  /// No description provided for @terminalDraftWillClear.
-  ///
-  /// In zh, this message translates to:
-  /// **'未发送草稿将清空。'**
-  String get terminalDraftWillClear;
-
-  /// No description provided for @terminalUnsentDraftExit.
-  ///
-  /// In zh, this message translates to:
-  /// **'当前草稿尚未发送，退出后将清空。'**
-  String get terminalUnsentDraftExit;
-
-  /// No description provided for @terminalDisconnect.
-  ///
-  /// In zh, this message translates to:
-  /// **'断开连接'**
-  String get terminalDisconnect;
-
   /// No description provided for @terminalDisconnectExit.
   ///
   /// In zh, this message translates to:
   /// **'断开并退出'**
   String get terminalDisconnectExit;
-
-  /// No description provided for @terminalDiscardExit.
-  ///
-  /// In zh, this message translates to:
-  /// **'丢弃并退出'**
-  String get terminalDiscardExit;
 
   /// No description provided for @terminalBackgroundDisconnected.
   ///
@@ -6371,12 +5754,6 @@ abstract class AppLocalizations {
   /// **'文件超过 256 KiB，未做语法高亮'**
   String get r4HlTooLarge;
 
-  /// No description provided for @terminalReconnectClear.
-  ///
-  /// In zh, this message translates to:
-  /// **'重新连接并清空草稿'**
-  String get terminalReconnectClear;
-
   /// No description provided for @terminalCancelConnection.
   ///
   /// In zh, this message translates to:
@@ -6437,29 +5814,11 @@ abstract class AppLocalizations {
   /// **'连接'**
   String get terminalConnect;
 
-  /// No description provided for @terminalReconnectShort.
-  ///
-  /// In zh, this message translates to:
-  /// **'重连 · 清空草稿'**
-  String get terminalReconnectShort;
-
   /// No description provided for @terminalBrowserUnsupported.
   ///
   /// In zh, this message translates to:
   /// **'浏览器不支持原生 SSH，请使用原生应用。'**
   String get terminalBrowserUnsupported;
-
-  /// No description provided for @terminalConnectedInputHelp.
-  ///
-  /// In zh, this message translates to:
-  /// **'连接后点按终端输入，按键会直接发送到服务器。'**
-  String get terminalConnectedInputHelp;
-
-  /// No description provided for @terminalRetainedOutputHelp.
-  ///
-  /// In zh, this message translates to:
-  /// **'输出已保留。重连会清空终端和草稿，不重放输入。'**
-  String get terminalRetainedOutputHelp;
 
   /// No description provided for @terminalDismissNotice.
   ///
@@ -6755,12 +6114,6 @@ abstract class AppLocalizations {
   /// **'SFTP 文件'**
   String get r3SftpTitle;
 
-  /// No description provided for @r3SftpRowSubtitle.
-  ///
-  /// In zh, this message translates to:
-  /// **'浏览与传输文件'**
-  String get r3SftpRowSubtitle;
-
   /// No description provided for @r3SftpUp.
   ///
   /// In zh, this message translates to:
@@ -6989,18 +6342,6 @@ abstract class AppLocalizations {
   /// **'已删除 {count} 项'**
   String r3SftpDeletedCount(int count);
 
-  /// No description provided for @r3SftpCreated.
-  ///
-  /// In zh, this message translates to:
-  /// **'已创建'**
-  String get r3SftpCreated;
-
-  /// No description provided for @r3SftpRenamed.
-  ///
-  /// In zh, this message translates to:
-  /// **'已重命名'**
-  String get r3SftpRenamed;
-
   /// No description provided for @r3SftpErrPermission.
   ///
   /// In zh, this message translates to:
@@ -7139,12 +6480,6 @@ abstract class AppLocalizations {
   /// **'覆盖'**
   String get r3SftpOverwrite;
 
-  /// No description provided for @r3SftpSkip.
-  ///
-  /// In zh, this message translates to:
-  /// **'跳过'**
-  String get r3SftpSkip;
-
   /// No description provided for @r3SftpExistsTitle.
   ///
   /// In zh, this message translates to:
@@ -7210,12 +6545,6 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'完成'**
   String get r3SftpStateDone;
-
-  /// No description provided for @r3SftpStateFailed.
-  ///
-  /// In zh, this message translates to:
-  /// **'失败'**
-  String get r3SftpStateFailed;
 
   /// No description provided for @r3SftpStateCancelled.
   ///
@@ -8445,12 +7774,6 @@ abstract class AppLocalizations {
   /// **'SSH 连接配置'**
   String get securitySshConfiguration;
 
-  /// Security: CancelSshConfiguration. App-authored UI text; do not translate user data or protocol tokens.
-  ///
-  /// In zh, this message translates to:
-  /// **'取消连接配置'**
-  String get securityCancelSshConfiguration;
-
   /// Security: SshConfigurationNotice. App-authored UI text; do not translate user data or protocol tokens.
   ///
   /// In zh, this message translates to:
@@ -8558,90 +7881,6 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'验证身份'**
   String get securityAuthBiometricHint;
-
-  /// Security: AuthBiometricNotRecognized. App-authored UI text; do not translate user data or protocol tokens.
-  ///
-  /// In zh, this message translates to:
-  /// **'未能识别，请重试。'**
-  String get securityAuthBiometricNotRecognized;
-
-  /// Security: AuthBiometricSuccess. App-authored UI text; do not translate user data or protocol tokens.
-  ///
-  /// In zh, this message translates to:
-  /// **'验证成功'**
-  String get securityAuthBiometricSuccess;
-
-  /// Security: AuthRequiredTitle. App-authored UI text; do not translate user data or protocol tokens.
-  ///
-  /// In zh, this message translates to:
-  /// **'需要生物识别验证'**
-  String get securityAuthRequiredTitle;
-
-  /// Security: AuthSetupDescription. App-authored UI text; do not translate user data or protocol tokens.
-  ///
-  /// In zh, this message translates to:
-  /// **'请在设备设置中启用生物识别验证。'**
-  String get securityAuthSetupDescription;
-
-  /// Security: AuthGoToSettings. App-authored UI text; do not translate user data or protocol tokens.
-  ///
-  /// In zh, this message translates to:
-  /// **'前往设置'**
-  String get securityAuthGoToSettings;
-
-  /// Security: AuthDeviceSetupDescription. App-authored UI text; do not translate user data or protocol tokens.
-  ///
-  /// In zh, this message translates to:
-  /// **'请在设备设置中启用设备验证。'**
-  String get securityAuthDeviceSetupDescription;
-
-  /// Security: AuthDeviceRequiredTitle. App-authored UI text; do not translate user data or protocol tokens.
-  ///
-  /// In zh, this message translates to:
-  /// **'需要设备验证'**
-  String get securityAuthDeviceRequiredTitle;
-
-  /// Security: AuthIosLockout. App-authored UI text; do not translate user data or protocol tokens.
-  ///
-  /// In zh, this message translates to:
-  /// **'生物识别验证已锁定。请锁定并解锁设备，再重新尝试。'**
-  String get securityAuthIosLockout;
-
-  /// Security: AuthIosSetupDescription. App-authored UI text; do not translate user data or protocol tokens.
-  ///
-  /// In zh, this message translates to:
-  /// **'请在设备设置中启用 Face ID 或 Touch ID。'**
-  String get securityAuthIosSetupDescription;
-
-  /// No description provided for @serverCompactMonths.
-  ///
-  /// In zh, this message translates to:
-  /// **'{months}个月'**
-  String serverCompactMonths(int months);
-
-  /// No description provided for @resourceTrafficPeriodUnsetShort.
-  ///
-  /// In zh, this message translates to:
-  /// **'未设置'**
-  String get resourceTrafficPeriodUnsetShort;
-
-  /// No description provided for @resourceTrafficPeriodMonthShort.
-  ///
-  /// In zh, this message translates to:
-  /// **'月'**
-  String get resourceTrafficPeriodMonthShort;
-
-  /// No description provided for @resourceTrafficPeriodQuarterShort.
-  ///
-  /// In zh, this message translates to:
-  /// **'季'**
-  String get resourceTrafficPeriodQuarterShort;
-
-  /// No description provided for @resourceTrafficPeriodYearShort.
-  ///
-  /// In zh, this message translates to:
-  /// **'年'**
-  String get resourceTrafficPeriodYearShort;
 
   /// Provider and adapter relationship validation.
   ///
