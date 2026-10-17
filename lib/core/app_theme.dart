@@ -2,6 +2,8 @@ import '../l10n/locale_preference.dart';
 import '../l10n/localized_message.dart';
 
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/foundation.dart'
+    show TargetPlatform, defaultTargetPlatform;
 import 'package:flutter/gestures.dart' show PointerDeviceKind;
 import 'package:flutter/material.dart';
 
@@ -52,7 +54,15 @@ class AppScrollBehavior extends MaterialScrollBehavior {
 /// Colours come from [AppPalette] (available through `context.palette`);
 /// the Material [ColorScheme] is derived from it so unmigrated widgets stay
 /// consistent. The export renderer keeps using the fixed light [AppColors].
-ThemeData appTheme({Brightness brightness = Brightness.light}) {
+ThemeData appTheme({Brightness brightness = Brightness.light}) =>
+    _themes[(brightness, defaultTargetPlatform)] ??= _buildTheme(brightness);
+
+// Building a ThemeData (plus the derived ColorScheme) is not free and the
+// app asks for it on every MaterialApp rebuild; the platform is part of the
+// key because ThemeData captures it.
+final _themes = <(Brightness, TargetPlatform), ThemeData>{};
+
+ThemeData _buildTheme(Brightness brightness) {
   final dark = brightness == Brightness.dark;
   final p = AppPalette.of(brightness);
   final colors =
@@ -282,33 +292,6 @@ class LedgerCard extends StatelessWidget {
   );
 }
 
-/// Legacy section heading. Prefer `AppSection(header: …)`.
-///
-/// Renders as the small grey group header of the demo; [action] stays on the
-/// right.
-class SectionTitle extends StatelessWidget {
-  const SectionTitle(this.title, {super.key, this.action});
-  final String title;
-  final Widget? action;
-  @override
-  Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.fromLTRB(16, 22, 16, 7),
-    child: Wrap(
-      alignment: WrapAlignment.spaceBetween,
-      crossAxisAlignment: WrapCrossAlignment.center,
-      spacing: 12,
-      runSpacing: 4,
-      children: [
-        Text(
-          title,
-          style: TextStyle(fontSize: 13, color: context.palette.text2),
-        ),
-        ?action,
-      ],
-    ),
-  );
-}
-
 /// Legacy badge. Prefer [StatusPill]. Renders as a pill.
 class LedgerBadge extends StatelessWidget {
   const LedgerBadge(
@@ -471,66 +454,5 @@ void showFailure(
         },
       ),
     ),
-  );
-}
-
-/// Legacy informational alert with a single "Got it" button.
-void showStage(BuildContext context, Object title, Object detail) {
-  showDialog<void>(
-    context: context,
-    builder: (context) => AlertDialog(
-      scrollable: true,
-      titlePadding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
-      contentPadding: const EdgeInsets.fromLTRB(20, 8, 20, 18),
-      actionsPadding: EdgeInsets.zero,
-      buttonPadding: EdgeInsets.zero,
-      title: Text(
-        localizedText(title, context.l10n),
-        textAlign: TextAlign.center,
-      ),
-      content: Text(
-        localizedText(detail, context.l10n),
-        textAlign: TextAlign.center,
-      ),
-      actions: _alertActions(context, [
-        TextButton(
-          style: TextButton.styleFrom(
-            minimumSize: const Size(0, 46),
-            shape: _alertButtonShape,
-            textStyle: const TextStyle(
-              fontSize: 17,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          onPressed: () => Navigator.pop(context),
-          child: Text(context.l10n.gotIt),
-        ),
-      ]),
-    ),
-  );
-}
-
-/// Legacy navigation row. Prefer [AppRow].
-///
-/// Renders as an iOS row: coloured icon square, title, subtitle and chevron.
-class SettingRow extends StatelessWidget {
-  const SettingRow({
-    super.key,
-    required this.icon,
-    required this.title,
-    required this.subtitle,
-    required this.onTap,
-  });
-  final IconData icon;
-  final String title, subtitle;
-  final VoidCallback? onTap;
-  @override
-  Widget build(BuildContext context) => AppRow(
-    icon: icon,
-    iconColor: AppTints.blue,
-    title: title,
-    subtitle: subtitle,
-    chevron: true,
-    onTap: onTap,
   );
 }

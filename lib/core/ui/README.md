@@ -7,6 +7,11 @@ source of truth: `docs/ui-redesign/{style.css,app.js}`.
 import '../core/ui/ui.dart';      // everything below + AppPalette / context.palette
 ```
 
+Files: `app_scaffold` (page skeleton, nav bar, modal), `app_list` (sections, rows),
+`app_form` (form rows, text field, switch), `app_controls` (search field, segmented, stepper,
+chips, buttons), `app_widgets` (card, pill, banner, empty state, progress), `app_avatar`,
+`app_overlays` (sheets, pickers, confirm, toast), `app_metrics`, `app_search_list`, `app_glass`.
+
 ## Rules of thumb
 
 * **Colours**: never hardcode hex. `final p = context.palette;` →
@@ -17,7 +22,7 @@ import '../core/ui/ui.dart';      // everything below + AppPalette / context.pal
 * **Numbers** (money, days, counters): `TextStyle(fontFeatures: kTabularFigures)`.
   Monospace (host, fingerprint): `kMonoTextStyle`.
 * **Horizontal margin**: top-level blocks (`AppSection`, `AppCard`,
-  `AppSearchField`, `AppStatGrid`, `AppQuickActionRow`, `AppBanner`) already
+  `AppSearchField`, `AppMetricStrip`, `AppBanner`) already
   include the 16 px page margin. Do **not** pad the page body again.
   `AppChipRow` scrolls edge to edge with its own 16 px padding.
 * **No outlined buttons / text fields.** Fields live in `AppFormRow`; actions
@@ -62,9 +67,7 @@ import '../core/ui/ui.dart';      // everything below + AppPalette / context.pal
 | `AppStepper` | `AppStepper(value: vcpu, min: 1, max: 128, onChanged: set)`. |
 | `AppSwitch` | `AppSwitch(value: v, onChanged: set, semanticLabel: '…')`. |
 | `AppChip` / `AppChipRow` | `AppChipRow(children: [AppChip(label: 'All', count: 6, selected: true, onTap: …), AppChip(label: 'Filter', icon: Icons.tune_rounded, outlined: true)])` – selected = dark filled. |
-| `AppStatTile` / `AppStatGrid` | `AppStatGrid(children: [AppStatTile(value: '1', label: 'Expired', tone: AppTone.red, onTap: …), …])`. |
-| `AppQuickAction` / `AppQuickActionRow` | `AppQuickActionRow(children: [AppQuickAction(icon: Icons.terminal, label: 'SSH', onTap: …, dimmed: !available), AppQuickAction(..., tone: AppTone.red)])` – `dimmed` looks disabled but still taps (to explain why). |
-| `AppMetricStrip` | **The rule for any "several small KPIs in a row"** (remaining value / days left / daily rate, counters …): `AppCard(child: AppMetricStrip(metrics: [AppMetric(label: 'Value left', value: r'$12.40'), AppMetric(label: 'Days left', value: '7 days'), AppMetric(label: 'Daily', value: r'$0.1370')]))`. 2–4 equal-width columns split by 0.5 px hairlines, **caption and figure both centered** (caption 13 secondary above figure 17 semibold tabular). Keep captions to 1–2 short words and figures pre-formatted (unknown → `—`). It measures real text and falls back to rows of two columns, then to caption-left / figure-right lines, so nothing clips at 320 px / 2× text. Never build ad-hoc `Row`s of `Column`s for this. `AppMetric(onTap:)` makes a column tappable (filters / drill-down, e.g. the server list counters, reminder overview); `onGradient: true` is the white-on-gradient variant. Replaces `AppStatGrid`/`AppStatTile`, which stay only for legacy use. |
+| `AppMetricStrip` | **The rule for any "several small KPIs in a row"** (remaining value / days left / daily rate, counters …): `AppCard(child: AppMetricStrip(metrics: [AppMetric(label: 'Value left', value: r'$12.40'), AppMetric(label: 'Days left', value: '7 days'), AppMetric(label: 'Daily', value: r'$0.1370')]))`. 2–4 equal-width columns split by 0.5 px hairlines, **caption and figure both centered** (caption 13 secondary above figure 17 semibold tabular). Keep captions to 1–2 short words and figures pre-formatted (unknown → `—`). It measures real text and falls back to rows of two columns, then to caption-left / figure-right lines, so nothing clips at 320 px / 2× text. Never build ad-hoc `Row`s of `Column`s for this. `AppMetric(onTap:)` makes a column tappable (filters / drill-down, e.g. the server list counters, reminder overview); `onGradient: true` is the white-on-gradient variant. |
 | `AppButton` | `AppButton(label: 'Add', icon: Icons.add, kind: AppButtonKind.tonal, compact: true, destructive: false, busy: saving, expand: true, onPressed: …)`. |
 | `AppProgressBar` | `AppProgressBar(value: .92, tone: AppTone.amber)`. |
 | `AppBanner` | `AppBanner(tone: AppTone.amber, icon: Icons.warning_amber_rounded, text: '…', onTap: …)`; `action:` puts a control with its own tap target (44 pt) where the chevron would be – connection errors use `ErrorBanner(text:, details:)` (lib/connections/error_details_ui.dart), which adds the ⓘ "Error Details" button. |
@@ -89,22 +92,19 @@ import '../core/ui/ui.dart';      // everything below + AppPalette / context.pal
 | full-screen edit form route | `showAppModal` + `AppScaffold.modal` |
 | `LedgerCard(child: Column(...))` of rows | `AppSection(children: [AppRow, …])` |
 | `LedgerCard` for free content | `AppCard` |
-| `SettingRow(icon, title, subtitle, onTap)` | `AppRow(icon:, iconColor:, title:, subtitle:, chevron: true, onTap:)` |
-| `SectionTitle('x', action: …)` | `AppSection(header: 'x', headerAction: …)` |
 | `InfoNote('…')` under a group | `AppSection(footer: '…')` |
 | `LedgerBadge` | `StatusPill` |
 | `confirmAction(...)` | `showAppConfirm(...)` (same args) |
-| `showStage(...)` | `showAppConfirm` / `showAppSheet` |
 | `showDialog(AlertDialog(... DropdownButton ...))` filters | `showAppPicker` / `showAppSheet` |
 | `FilledButton` / `OutlinedButton` full width | `AppButton` (tonal / primary) or a centred `AppRow` |
-| `OutlinedButton` in `Wrap` actions | `AppSection` rows, `AppQuickAction`s or sheet items |
+| `OutlinedButton` in `Wrap` actions | `AppSection` rows or sheet items |
 | `SwitchListTile` / `Switch.adaptive` | `AppSwitchRow` / `AppSwitch` |
 | `SegmentedButton` / `ChoiceChip` row | `AppSegmented` / `AppChipRow` |
 | `TextField` with outline | `AppFormRow(child: AppTextField(...))` |
 | `ScaffoldMessenger…showSnackBar` | `showAppToast` (`showFailure` still works) |
 
-The legacy widgets (`LedgerCard`, `SectionTitle`, `LedgerBadge`, `InfoNote`,
-`SettingRow`, `confirmAction`, `showStage`, `showFailure`) stay and are
+The legacy widgets (`LedgerCard`, `LedgerBadge`, `InfoNote`,
+`confirmAction`, `showFailure`) stay and are
 restyled, so unmigrated pages already look close; `confirmAction` still shows a
 Material `AlertDialog` (iOS-styled) so existing `find.byType(AlertDialog)` test
 finders keep working until a page switches to `showAppConfirm`

@@ -31,7 +31,6 @@ class NetAddress {
   /// `Socket.connect`.
   String get host => zone == null ? address : '$address%$zone';
   bool get isIp => kind != NetHostKind.domain;
-  bool get isIpv4 => kind == NetHostKind.ipv4;
   bool get isIpv6 => kind == NetHostKind.ipv6;
 
   /// `0.0.0.0`, `::` and `::ffff:0.0.0.0`: never a real machine address.
@@ -49,9 +48,7 @@ class NetAddress {
   /// `fe80::/10`.
   bool get isLinkLocal {
     final bytes = _bytes;
-    return kind == NetHostKind.ipv6 &&
-        bytes![0] == 0xfe &&
-        (bytes[1] & 0xc0) == 0x80;
+    return kind == NetHostKind.ipv6 && _isLinkLocal(bytes!);
   }
 
   /// Display form: IPv6 in brackets, everything else unchanged.
@@ -80,8 +77,7 @@ class NetAddress {
           input.length < 4) {
         return null;
       }
-      final inner = _parseIpv6WithZone(input.substring(1, input.length - 1));
-      return inner;
+      return _parseIpv6WithZone(input.substring(1, input.length - 1));
     }
     if (input.contains(':')) return _parseIpv6WithZone(input);
     final v4 = _parseIpv4(input);
@@ -91,11 +87,8 @@ class NetAddress {
     return _parseDomain(input, lenientNames: lenientNames);
   }
 
-  /// Canonical bare host, or `null` when [input] is not a valid host.
-  static String? canonicalHost(String input) => tryParse(input)?.host;
-
   /// RFC 5952 text for [bytes] (16 bytes).
-  static String formatIpv6(List<int> bytes) {
+  static String _formatIpv6(List<int> bytes) {
     assert(bytes.length == 16);
     final groups = List<int>.generate(
       8,
@@ -169,12 +162,17 @@ String formatUserHostPort(String user, String host, int port) =>
 String bracketedHost(String host) =>
     host.contains(':') && !host.startsWith('[') ? '[$host]' : host;
 
+bool _isLinkLocal(List<int> bytes) =>
+    bytes[0] == 0xfe && (bytes[1] & 0xc0) == 0x80;
+
+final _ipv4Part = RegExp(r'^(?:0|[1-9][0-9]{0,2})$');
+
 List<int>? _parseIpv4(String text) {
   final parts = text.split('.');
   if (parts.length != 4) return null;
   final bytes = <int>[];
   for (final part in parts) {
-    if (!RegExp(r'^(?:0|[1-9][0-9]{0,2})$').hasMatch(part)) return null;
+    if (!_ipv4Part.hasMatch(part)) return null;
     final value = int.parse(part);
     if (value > 255) return null;
     bytes.add(value);
@@ -192,12 +190,11 @@ NetAddress? _parseIpv6WithZone(String text) {
   if (bytes == null) return null;
   if (zone != null) {
     // A scope id only means something for link-local addresses.
-    final linkLocal = bytes[0] == 0xfe && (bytes[1] & 0xc0) == 0x80;
-    if (!linkLocal || !_zonePattern.hasMatch(zone)) return null;
+    if (!_isLinkLocal(bytes) || !_zonePattern.hasMatch(zone)) return null;
   }
   return NetAddress._(
     NetHostKind.ipv6,
-    NetAddress.formatIpv6(bytes),
+    NetAddress._formatIpv6(bytes),
     zone,
     bytes,
   );

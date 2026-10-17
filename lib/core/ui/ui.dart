@@ -8,7 +8,10 @@
 library;
 
 export '../app_palette.dart';
+export 'app_avatar.dart';
+export 'app_controls.dart';
 export 'app_date_sheet.dart';
+export 'app_form.dart';
 export 'app_glass.dart';
 export 'app_list.dart';
 export 'app_logo.dart';

@@ -65,17 +65,6 @@ class _GalleryState extends State<Gallery> {
           ),
         ],
       ),
-      AppStatGrid(
-        children: [
-          AppStatTile(value: '1', label: 'Expired', tone: AppTone.red),
-          AppStatTile(value: '2', label: 'Due in 30 days', tone: AppTone.amber),
-          AppStatTile(
-            value: '¥1,184.50',
-            label: 'Monthly reference',
-            compactValue: true,
-          ),
-        ],
-      ),
       AppSection(
         header: 'All servers',
         headerAction: AppLinkButton(label: 'Edit', onPressed: () {}),
@@ -180,32 +169,6 @@ class _GalleryState extends State<Gallery> {
         },
         value: segment,
         onChanged: (v) => setState(() => segment = v),
-      ),
-      AppQuickActionRow(
-        children: [
-          AppQuickAction(
-            icon: Icons.terminal,
-            label: 'SSH connect',
-            onTap: () {},
-          ),
-          AppQuickAction(
-            icon: Icons.monitor_heart_outlined,
-            label: 'TCP test',
-            onTap: () {},
-          ),
-          AppQuickAction(
-            icon: Icons.credit_card,
-            label: 'Record payment',
-            dimmed: true,
-            onTap: () {},
-          ),
-          AppQuickAction(
-            icon: Icons.power_settings_new,
-            label: 'Power',
-            tone: AppTone.red,
-            onTap: () {},
-          ),
-        ],
       ),
       const SizedBox(height: 14),
       AppCard(
@@ -327,14 +290,7 @@ class _GalleryState extends State<Gallery> {
         ],
       ),
       InfoNote('Legacy info note in footnote style.'),
-      const SectionTitle('Legacy section title'),
       const LedgerCard(child: Text('Legacy ledger card')),
-      SettingRow(
-        icon: Icons.settings_outlined,
-        title: 'Legacy setting row',
-        subtitle: 'subtitle',
-        onTap: () {},
-      ),
       if (last != null) Text('last=$last'),
     ],
   );
