@@ -142,22 +142,39 @@ over two lines.
       ('CHANGELOG.md', ['新增', '变更', '移除']),
       ('CHANGELOG.en.md', ['Added', 'Changed', 'Removed']),
     ]) {
-      test('$file is one 0.5.0 release with 15–25 bullets', () {
-        final releases = parseChangelog(File(file).readAsStringSync());
-        expect(releases, hasLength(1));
-        expect(releases.single.title, startsWith('$kAppVersion — '));
-        expect(releases.single.sections.map((s) => s.title), titles);
-        final bullets = releases.single.sections.fold<int>(
-          0,
-          (n, s) => n + s.items.where((i) => i.bullet).length,
-        );
-        expect(bullets, inInclusiveRange(15, 25));
-        // The how-to comment never leaks into the content.
-        expect(
-          releases.single.sections.expand((s) => s.items).map((i) => i.text),
-          everyElement(isNot(contains('<!--'))),
-        );
-      });
+      test(
+        '$file: newest release is well formed, 0.5.0 keeps 15–25 bullets',
+        () {
+          final releases = parseChangelog(File(file).readAsStringSync());
+          expect(releases, isNotEmpty);
+          // Newest first; every release only uses the known section titles.
+          for (final release in releases) {
+            expect(
+              release.sections.map((s) => s.title),
+              everyElement(isIn(titles)),
+            );
+            expect(release.sections, isNotEmpty);
+          }
+          expect(releases.first.title, matches(RegExp(r'^\d+\.\d+\.\d+ — ')));
+          final v05 = releases.singleWhere(
+            (r) => r.title.startsWith('0.5.0 — '),
+          );
+          expect(v05.sections.map((s) => s.title), titles);
+          final bullets = v05.sections.fold<int>(
+            0,
+            (n, s) => n + s.items.where((i) => i.bullet).length,
+          );
+          expect(bullets, inInclusiveRange(15, 25));
+          // The how-to comment never leaks into the content.
+          expect(
+            releases
+                .expand((r) => r.sections)
+                .expand((s) => s.items)
+                .map((i) => i.text),
+            everyElement(isNot(contains('<!--'))),
+          );
+        },
+      );
     }
   });
 
@@ -166,7 +183,7 @@ over two lines.
       await mount(tester, const ChangelogPage(), locale: 'zh');
       expect(find.text('更新记录'), findsOneWidget);
       expect(find.text('0.5.0 — 2026-10-16'), findsOneWidget);
-      expect(find.text('新增'), findsOneWidget);
+      expect(find.text('新增'), findsWidgets);
       expect(find.textContaining('服务器台账', findRichText: true), findsOneWidget);
       expect(tester.takeException(), isNull);
     });
@@ -175,7 +192,7 @@ over two lines.
       await mount(tester, const ChangelogPage(), locale: 'en');
       expect(find.text('What’s New'), findsOneWidget);
       expect(find.text('0.5.0 — 2026-10-16'), findsOneWidget);
-      expect(find.text('Added'), findsOneWidget);
+      expect(find.text('Added'), findsWidgets);
       expect(
         find.textContaining('Server ledger', findRichText: true),
         findsOneWidget,

@@ -6,6 +6,7 @@ import 'package:flutter/cupertino.dart'
 import 'package:flutter/material.dart';
 
 import '../app_palette.dart';
+import 'app_glass.dart';
 import 'app_list.dart';
 import 'app_overlays.dart';
 
@@ -354,25 +355,34 @@ class AppSearchField extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final p = context.palette;
+    // iOS 26: the field is a glass capsule; before that a grey rounded fill.
+    final liquid = context.glassStyle.isLiquid;
+    final field = CupertinoSearchTextField(
+      controller: controller,
+      focusNode: focusNode,
+      autofocus: autofocus,
+      placeholder: placeholder,
+      onChanged: onChanged,
+      onSubmitted: onSubmitted,
+      backgroundColor: liquid ? Colors.transparent : p.fill,
+      borderRadius: liquid ? AppGlass.capsule : BorderRadius.circular(11),
+      itemColor: p.text2,
+      itemSize: 18,
+      prefixIcon: const Icon(Icons.search_rounded),
+      suffixIcon: const Icon(Icons.cancel_rounded),
+      padding: EdgeInsetsDirectional.fromSTEB(liquid ? 12 : 8, 9, 8, 9),
+      style: TextStyle(fontSize: 16, color: p.text),
+      placeholderStyle: TextStyle(fontSize: 16, color: p.text2),
+    );
     return Padding(
       padding: margin,
-      child: CupertinoSearchTextField(
-        controller: controller,
-        focusNode: focusNode,
-        autofocus: autofocus,
-        placeholder: placeholder,
-        onChanged: onChanged,
-        onSubmitted: onSubmitted,
-        backgroundColor: p.fill,
-        borderRadius: BorderRadius.circular(11),
-        itemColor: p.text2,
-        itemSize: 18,
-        prefixIcon: const Icon(Icons.search_rounded),
-        suffixIcon: const Icon(Icons.cancel_rounded),
-        padding: const EdgeInsetsDirectional.fromSTEB(8, 9, 8, 9),
-        style: TextStyle(fontSize: 16, color: p.text),
-        placeholderStyle: TextStyle(fontSize: 16, color: p.text2),
-      ),
+      child: liquid
+          ? AppGlass(
+              kind: AppGlassKind.control,
+              borderRadius: AppGlass.capsule,
+              child: field,
+            )
+          : field,
     );
   }
 }

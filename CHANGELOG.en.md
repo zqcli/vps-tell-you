@@ -12,6 +12,13 @@ How to add entries (the app shows this file under Settings / About / What’s Ne
 This comment is not shown.
 -->
 
+## 0.6.0 — Unreleased
+
+### Changed
+
+- **Restrained iOS 26 "Liquid Glass" look**: on iOS 26 and later the tab bar floats as a capsule, and navigation buttons, the search field, and the top and close button of bottom sheets use glass — light blur and saturation, a thin specular rim, a barely visible inner highlight. Lists, cards and other content are unchanged
+- iOS 18 and earlier, Android and other platforms keep the classic frosted look; with Increase Contrast on, surfaces turn opaque
+
 ## 0.5.0 — 2026-10-16
 
 ### Added

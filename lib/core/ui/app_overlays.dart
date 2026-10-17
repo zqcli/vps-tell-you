@@ -11,6 +11,7 @@ import 'package:flutter/material.dart';
 import '../../l10n/locale_preference.dart';
 import '../../l10n/localized_message.dart';
 import '../app_palette.dart';
+import 'app_glass.dart';
 import 'app_list.dart';
 
 /// Modal bottom sheet in the app style: grabber, centred title, ✕ button,
@@ -47,7 +48,15 @@ Future<T?> showAppSheet<T>(
   useSafeArea: true,
   isDismissible: isDismissible,
   enableDrag: isDismissible,
-  backgroundColor: context.palette.bg,
+  // iOS 26: the sheet itself is a glass pane with larger corners (the frame
+  // paints it); otherwise the plain page colour.
+  backgroundColor: context.glassStyle.isLiquid
+      ? Colors.transparent
+      : context.palette.bg,
+  elevation: context.glassStyle.isLiquid ? 0 : null,
+  shape: context.glassStyle.isLiquid
+      ? const RoundedRectangleBorder(borderRadius: _liquidSheetRadius)
+      : null,
   builder: (sheetContext) => _AppSheetFrame(
     title: title,
     showClose: showClose,
@@ -56,6 +65,8 @@ Future<T?> showAppSheet<T>(
     child: Builder(builder: builder),
   ),
 );
+
+const _liquidSheetRadius = BorderRadius.vertical(top: Radius.circular(26));
 
 class _AppSheetFrame extends StatelessWidget {
   const _AppSheetFrame({
@@ -77,6 +88,14 @@ class _AppSheetFrame extends StatelessWidget {
     final media = MediaQuery.of(context);
     final hasHeader = title != null || showClose;
     final closeLabel = MaterialLocalizations.of(context).closeButtonTooltip;
+    final liquid = context.glassStyle.isLiquid;
+    Widget frame(Widget content) => liquid
+        ? AppGlass(
+            borderRadius: _liquidSheetRadius,
+            tint: p.bg.withValues(alpha: p.isDark ? .90 : .94),
+            child: content,
+          )
+        : content;
     return AnimatedPadding(
       duration: const Duration(milliseconds: 100),
       padding: EdgeInsets.only(bottom: media.viewInsets.bottom),
@@ -84,96 +103,113 @@ class _AppSheetFrame extends StatelessWidget {
         constraints: BoxConstraints(
           maxHeight: (media.size.height - media.padding.top) * maxHeightFactor,
         ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Center(
-              child: Container(
-                width: 36,
-                height: 5,
-                margin: const EdgeInsets.only(top: 6, bottom: 6),
-                decoration: BoxDecoration(
-                  color: p.text3.withValues(alpha: .5),
-                  borderRadius: BorderRadius.circular(3),
+        child: frame(
+          Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Center(
+                child: Container(
+                  width: 36,
+                  height: 5,
+                  margin: const EdgeInsets.only(top: 6, bottom: 6),
+                  decoration: BoxDecoration(
+                    color: p.text3.withValues(alpha: .5),
+                    borderRadius: BorderRadius.circular(3),
+                  ),
                 ),
               ),
-            ),
-            if (hasHeader)
-              Padding(
-                padding: const EdgeInsets.only(top: 6, bottom: 12),
-                child: Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 56),
-                      child: title == null
-                          ? const SizedBox(height: 30)
-                          : Semantics(
-                              header: true,
-                              child: Text(
-                                title!,
-                                textAlign: TextAlign.center,
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
-                                style: TextStyle(
-                                  fontSize: 17,
-                                  height: 1.3,
-                                  fontWeight: FontWeight.w600,
-                                  color: p.text,
+              if (hasHeader)
+                Padding(
+                  padding: const EdgeInsets.only(top: 6, bottom: 12),
+                  child: Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 56),
+                        child: title == null
+                            ? const SizedBox(height: 30)
+                            : Semantics(
+                                header: true,
+                                child: Text(
+                                  title!,
+                                  textAlign: TextAlign.center,
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(
+                                    fontSize: 17,
+                                    height: 1.3,
+                                    fontWeight: FontWeight.w600,
+                                    color: p.text,
+                                  ),
                                 ),
                               ),
-                            ),
-                    ),
-                    if (showClose)
-                      PositionedDirectional(
-                        end: 14,
-                        top: 0,
-                        child: Tooltip(
-                          message: closeLabel,
-                          child: Semantics(
-                            button: true,
-                            label: closeLabel,
-                            excludeSemantics: true,
-                            onTap: () => Navigator.maybePop(context),
-                            child: InkResponse(
-                              key: const ValueKey('app-sheet-close'),
+                      ),
+                      if (showClose)
+                        PositionedDirectional(
+                          end: 14,
+                          top: 0,
+                          child: Tooltip(
+                            message: closeLabel,
+                            child: Semantics(
+                              button: true,
+                              label: closeLabel,
+                              excludeSemantics: true,
                               onTap: () => Navigator.maybePop(context),
-                              radius: 20,
-                              child: Container(
-                                width: 30,
-                                height: 30,
-                                decoration: BoxDecoration(
-                                  color: p.fill,
-                                  shape: BoxShape.circle,
-                                ),
-                                child: Icon(
-                                  Icons.close_rounded,
-                                  size: 16,
-                                  color: p.text2,
-                                ),
+                              child: InkResponse(
+                                key: const ValueKey('app-sheet-close'),
+                                onTap: () => Navigator.maybePop(context),
+                                radius: 20,
+                                child: liquid
+                                    ? AppGlass(
+                                        kind: AppGlassKind.control,
+                                        borderRadius: AppGlass.capsule,
+                                        blur: false,
+                                        child: SizedBox(
+                                          width: 30,
+                                          height: 30,
+                                          child: Icon(
+                                            Icons.close_rounded,
+                                            size: 16,
+                                            color: p.text2,
+                                          ),
+                                        ),
+                                      )
+                                    : Container(
+                                        width: 30,
+                                        height: 30,
+                                        decoration: BoxDecoration(
+                                          color: p.fill,
+                                          shape: BoxShape.circle,
+                                        ),
+                                        child: Icon(
+                                          Icons.close_rounded,
+                                          size: 16,
+                                          color: p.text2,
+                                        ),
+                                      ),
                               ),
                             ),
                           ),
                         ),
-                      ),
-                  ],
+                    ],
+                  ),
                 ),
+              Flexible(
+                child: scrollable
+                    ? SingleChildScrollView(
+                        physics: const BouncingScrollPhysics(
+                          parent: AlwaysScrollableScrollPhysics(),
+                        ),
+                        padding: EdgeInsets.only(
+                          bottom: media.padding.bottom + 16,
+                        ),
+                        child: child,
+                      )
+                    : child,
               ),
-            Flexible(
-              child: scrollable
-                  ? SingleChildScrollView(
-                      physics: const BouncingScrollPhysics(
-                        parent: AlwaysScrollableScrollPhysics(),
-                      ),
-                      padding: EdgeInsets.only(
-                        bottom: media.padding.bottom + 16,
-                      ),
-                      child: child,
-                    )
-                  : child,
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
