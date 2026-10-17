@@ -195,42 +195,40 @@ class LedgerController extends ChangeNotifier {
   bool busy = false;
   bool refreshFailed = false;
   bool get canMutate => !busy && !refreshFailed;
-  List<ServerRecord> get active => records.where((s) => !s.archived).toList();
-  List<ServerRecord> get archived => records.where((s) => s.archived).toList();
+  List<ServerRecord> get active => _index.active;
+  List<ServerRecord> get archived => _index.archived;
   LedgerDate get today => LedgerDate.today(clock());
-  int? dueIn(ServerRecord s) =>
+  int? dueIn(ServerRecord s) => _dueIn(s, today);
+  static int? _dueIn(ServerRecord s, LedgerDate today) =>
       s.billing == BillingKind.prepaid && s.dueDate != null
       ? today.daysUntil(s.dueDate!)
       : null;
-  bool isPending(ServerRecord s) => dueIn(s) != null && dueIn(s)! < 30;
+  bool isPending(ServerRecord s) => (dueIn(s) ?? 30) < 30;
   String groupName(String? id, {AppLocalizations? l10n}) =>
       groups.where((g) => g.id == id).firstOrNull?.name ??
       (l10n ?? defaultLocalizations).ungrouped;
-  List<ServerRecord>? _usageSource;
-  Map<String, ProviderUsage> _usage = const {};
+
+  _LedgerIndex? _indexCache;
+
+  /// Lookup tables over [records] and [providers], rebuilt only when either
+  /// list is replaced (every refresh), never per access.
+  _LedgerIndex get _index {
+    final cached = _indexCache;
+    if (cached != null &&
+        identical(cached.records, records) &&
+        identical(cached.providers, providers)) {
+      return cached;
+    }
+    return _indexCache = _LedgerIndex(records, providers);
+  }
 
   /// Servers (active and archived) per local provider id.
   /// Providers without servers are absent. Rebuilt only when [records] change,
   /// so lists of hundreds of providers stay cheap.
-  Map<String, ProviderUsage> get providerUsage {
-    _ensureUsage();
-    return _usage;
-  }
-
-  void _ensureUsage() {
-    if (identical(_usageSource, records)) return;
-    final servers = <String, List<ServerRecord>>{};
-    for (final s in records) {
-      if (s.providerId != null) {
-        (servers[s.providerId!] ??= []).add(s);
-      }
-    }
-    _usage = {for (final e in servers.entries) e.key: ProviderUsage(e.value)};
-    _usageSource = records;
-  }
+  Map<String, ProviderUsage> get providerUsage => _index.usage;
 
   ProviderRecord? providerFor(ServerRecord server) =>
-      providers.where((p) => p.id == server.providerId).firstOrNull;
+      _index.providerById[server.providerId];
 
   ProviderRecord? localProviderForCatalog(String catalogId) =>
       providers.where((p) => p.catalogId == catalogId).firstOrNull;
@@ -241,13 +239,7 @@ class LedgerController extends ChangeNotifier {
       : directory.provider(provider.catalogId!);
 
   String providerNameFor(ServerRecord server, {AppLocalizations? l10n}) {
-    final strings = l10n ?? defaultLocalizations;
-    final provider = providerFor(server);
-    if (provider != null) return provider.name;
-    return server.vendor.trim().isNotEmpty &&
-            server.vendor.trim() != legacyUnknownVendor
-        ? server.vendor
-        : strings.providerUiUnspecified;
+    return _providerName(providerFor(server), server, l10n);
   }
 
   // Separate actual provider identity from legacy labels and the unassigned
@@ -256,25 +248,59 @@ class LedgerController extends ChangeNotifier {
       ? 'legacy:${server.vendor.trim().isEmpty || server.vendor.trim() == legacyUnknownVendor ? '' : server.vendor}'
       : 'provider:${server.providerId}';
 
-  ServerRecord? byId(String id) => records.where((s) => s.id == id).firstOrNull;
+  ServerRecord? byId(String id) => _index.byId[id];
+
+  (Object, String, ServerFilter, DueFilter, ServerSort, String?, LedgerDate)?
+  _visibleKey;
+  List<ServerRecord> _visible = const [];
+
+  /// Active servers matching the search, filters and group, in the chosen
+  /// order. Cached until the ledger, a filter or the date changes, so the many
+  /// reads of one frame (and filter-sheet previews) filter and sort once.
   List<ServerRecord> get visible {
+    final key = (_index, search, filter, dueFilter, sort, groupFilter, today);
+    if (key != _visibleKey) {
+      _visible = _filtered(
+        filter: filter,
+        dueFilter: dueFilter,
+        groupFilter: groupFilter,
+      );
+      _visibleKey = key;
+    }
+    return _visible;
+  }
+
+  /// How many servers would be listed with another group / due selection
+  /// (the filter sheet's "Show N"), without touching the live filters.
+  int countMatching({required String? group, required DueFilter due}) =>
+      _filtered(
+        filter: ServerFilter.all,
+        dueFilter: due,
+        groupFilter: group,
+      ).length;
+
+  List<ServerRecord> _filtered({
+    required ServerFilter filter,
+    required DueFilter dueFilter,
+    required String? groupFilter,
+  }) {
     final query = search.trim().toLowerCase();
     // A pasted IPv6 in any spelling also finds its canonical stored form.
     final canonicalQuery = NetAddress.tryParse(query)?.isIpv6 == true
         ? NetAddress.tryParse(query)!.host
         : null;
-    final result = active.where((s) {
-      final days = dueIn(s);
-      final text =
-          '${s.name} ${s.host} ${s.resources?.ip ?? ''} ${s.resources?.ipv6 ?? ''} '
-                  '${s.resources?.hostname ?? ''} '
-                  '${s.vendor} ${providerNameFor(s)} ${s.purpose} ${s.region}'
-              .toLowerCase();
-      return (query.isEmpty ||
-              text.contains(query) ||
-              (canonicalQuery != null && text.contains(canonicalQuery))) &&
+    final today = this.today;
+    final index = _index;
+    final result = <ServerRecord>[];
+    for (var i = 0; i < index.active.length; i++) {
+      final s = index.active[i];
+      final days = _dueIn(s, today);
+      if ((query.isEmpty ||
+              index.searchText[i].contains(query) ||
+              (canonicalQuery != null &&
+                  index.searchText[i].contains(canonicalQuery))) &&
           (filter != ServerFilter.favorites || s.favorite) &&
-          (filter != ServerFilter.pending || isPending(s)) &&
+          (filter != ServerFilter.pending || (days ?? 30) < 30) &&
           (groupFilter == null || (s.groupId ?? '') == groupFilter) &&
           switch (dueFilter) {
             DueFilter.all => true,
@@ -283,14 +309,18 @@ class LedgerController extends ChangeNotifier {
             DueFilter.unknown =>
               s.billing == BillingKind.unknown ||
                   (s.billing == BillingKind.prepaid && s.dueDate == null),
-          };
-    }).toList();
+          }) {
+        result.add(s);
+      }
+    }
     result.sort((a, b) {
       final result = switch (sort) {
         ServerSort.favorites => (b.favorite ? 1 : 0).compareTo(
           a.favorite ? 1 : 0,
         ),
-        ServerSort.due => (dueIn(a) ?? 1 << 30).compareTo(dueIn(b) ?? 1 << 30),
+        ServerSort.due => (_dueIn(a, today) ?? 1 << 30).compareTo(
+          _dueIn(b, today) ?? 1 << 30,
+        ),
         ServerSort.name => a.name.toLowerCase().compareTo(b.name.toLowerCase()),
         ServerSort.updated => b.updatedAt.compareTo(a.updatedAt),
       };
@@ -302,16 +332,27 @@ class LedgerController extends ChangeNotifier {
   Future<void> refresh() async {
     final languageRevision = _languageRevision;
     // Publish the complete loaded ledger only after every read succeeds.
-    final loadedRecords = await store.servers();
-    final loadedGroups = await store.groups();
-    final loadedPeriods = await store.servicePeriods();
-    final loadedPayments = await store.payments();
-    final loadedFx = await store.fxSettings();
-    final loadedRules = await store.reminderRules();
-    final loadedTheme = await store.themeMode();
-    final loadedLanguage = await store.languagePreference();
-    final loadedProviders = await store.providers();
-    final loadedDirectoryAuto = await store.providerDirectoryAuto();
+    final (
+      loadedRecords,
+      loadedGroups,
+      loadedPeriods,
+      loadedPayments,
+      loadedFx,
+      loadedRules,
+      (loadedTheme, loadedDirectoryAuto),
+      loadedLanguage,
+      loadedProviders,
+    ) = await (
+      store.servers(),
+      store.groups(),
+      store.servicePeriods(),
+      store.payments(),
+      store.fxSettings(),
+      store.reminderRules(),
+      (store.themeMode(), store.providerDirectoryAuto()).wait,
+      store.languagePreference(),
+      store.providers(),
+    ).wait;
     refreshFailed = false;
     providers = List.unmodifiable(loadedProviders);
     directoryAuto = loadedDirectoryAuto;
@@ -397,6 +438,50 @@ class LedgerController extends ChangeNotifier {
     groupFilter = null;
     notifyListeners();
   }
+}
+
+/// Lookup tables over one snapshot of the records and providers.
+class _LedgerIndex {
+  _LedgerIndex(this.records, this.providers)
+    : active = List.unmodifiable(records.where((s) => !s.archived)),
+      archived = List.unmodifiable(records.where((s) => s.archived)),
+      byId = {for (final s in records) s.id: s},
+      providerById = {for (final p in providers) p.id: p} {
+    final servers = <String, List<ServerRecord>>{};
+    for (final s in records) {
+      if (s.providerId != null) (servers[s.providerId!] ??= []).add(s);
+    }
+    usage = {for (final e in servers.entries) e.key: ProviderUsage(e.value)};
+  }
+  final List<ServerRecord> records;
+  final List<ProviderRecord> providers;
+  final List<ServerRecord> active;
+  final List<ServerRecord> archived;
+  final Map<String, ServerRecord> byId;
+  final Map<String, ProviderRecord> providerById;
+  late final Map<String, ProviderUsage> usage;
+
+  /// Lower-cased search haystack per active server, parallel to [active].
+  late final List<String> searchText = [
+    for (final s in active)
+      '${s.name} ${s.host} ${s.resources?.ip ?? ''} '
+              '${s.resources?.ipv6 ?? ''} ${s.resources?.hostname ?? ''} '
+              '${s.vendor} ${_providerName(providerById[s.providerId], s, null)} '
+              '${s.purpose} ${s.region}'
+          .toLowerCase(),
+  ];
+}
+
+String _providerName(
+  ProviderRecord? provider,
+  ServerRecord server,
+  AppLocalizations? l10n,
+) {
+  if (provider != null) return provider.name;
+  final vendor = server.vendor.trim();
+  return vendor.isNotEmpty && vendor != legacyUnknownVendor
+      ? server.vendor
+      : (l10n ?? defaultLocalizations).providerUiUnspecified;
 }
 
 /// What a provider is used for: its servers (active and archived).

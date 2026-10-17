@@ -537,24 +537,8 @@ class _FilterSheetState extends State<_FilterSheet> {
   late DueFilter due = widget.controller.dueFilter;
   late ServerSort sort = widget.controller.sort;
 
-  /// Result count with the pending selection; the controller is restored
-  /// synchronously and never notifies.
-  int get count {
-    final c = widget.controller;
-    final savedGroup = c.groupFilter;
-    final savedDue = c.dueFilter;
-    final savedFilter = c.filter;
-    c.groupFilter = group;
-    c.dueFilter = due;
-    c.filter = ServerFilter.all;
-    try {
-      return c.visible.length;
-    } finally {
-      c.groupFilter = savedGroup;
-      c.dueFilter = savedDue;
-      c.filter = savedFilter;
-    }
-  }
+  /// Result count with the pending selection.
+  int get count => widget.controller.countMatching(group: group, due: due);
 
   Widget _label(String text) => Padding(
     padding: const EdgeInsets.fromLTRB(32, 12, 16, 8),
