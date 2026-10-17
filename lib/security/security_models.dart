@@ -74,11 +74,15 @@ class SshConfiguration {
     required this.username,
     this.port = 22,
     this.credentialId,
+    this.proxyId,
     this.revision = -1,
   });
   final String serverId, host, username;
   final int port, revision;
   final String? credentialId;
+
+  /// Saved proxy the SSH (and SFTP) connection goes through; null is direct.
+  final String? proxyId;
   factory SshConfiguration.fromMap(Map<String, Object?> row) =>
       SshConfiguration(
         serverId: row['server_id'] as String,
@@ -86,6 +90,7 @@ class SshConfiguration {
         port: row['port'] as int,
         username: row['username'] as String,
         credentialId: row['credential_id'] as String?,
+        proxyId: row['proxy_id'] as String?,
         revision: row['revision'] as int,
       );
   Map<String, Object?> toMap() => {
@@ -94,6 +99,7 @@ class SshConfiguration {
     'port': port,
     'username': username,
     'credential_id': credentialId,
+    'proxy_id': proxyId,
     'revision': revision,
   };
 }

@@ -1896,7 +1896,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get backupExcludedSecrets => '密码、私钥、口令、Token、凭据元数据及安全存储引用';
 
   @override
-  String get backupExcludedConnections => 'SSH 配置与主机信任';
+  String get backupExcludedConnections => 'SSH 配置、已保存代理与主机信任';
 
   @override
   String get backupExcludedNotes => '命令片段、服务器备注和付款备注';
@@ -5026,4 +5026,224 @@ class AppLocalizationsZh extends AppLocalizations {
   String r13BackgroundSftpEnded(String p0) {
     return '应用在后台停留过久，与 $p0 的 SFTP 会话已结束';
   }
+
+  @override
+  String get r13ProxyUnreachable => '无法连接代理服务器';
+
+  @override
+  String get r13ProxyTlsFailed => '无法验证代理的 TLS 证书，或 TLS 握手失败';
+
+  @override
+  String get r13ProxyTimeout => '通过代理连接超时';
+
+  @override
+  String get r13ProxyClosed => '代理服务器中途关闭了连接';
+
+  @override
+  String get r13ProxyProtocol => '代理返回了无法识别的响应';
+
+  @override
+  String get r13ProxyAuthRequired => '代理要求用户名和密码';
+
+  @override
+  String get r13ProxyAuthRejected => '代理拒绝了用户名或密码';
+
+  @override
+  String get r13ProxyInvalidTarget => '该目标地址无法通过代理连接';
+
+  @override
+  String get r13ProxyInvalidSettings => '代理设置无效';
+
+  @override
+  String get r13ProxySocksGeneral => 'SOCKS5 代理报告一般性失败';
+
+  @override
+  String get r13ProxySocksNotAllowed => '代理规则不允许连接该目标';
+
+  @override
+  String get r13ProxySocksNetwork => '代理无法到达目标所在网络';
+
+  @override
+  String get r13ProxySocksHost => '代理无法到达目标主机';
+
+  @override
+  String get r13ProxySocksRefused => '目标拒绝了来自代理的连接';
+
+  @override
+  String get r13ProxySocksTtl => '代理连接目标时 TTL 已过期';
+
+  @override
+  String get r13ProxySocksCommand => '代理不支持 CONNECT 命令';
+
+  @override
+  String get r13ProxySocksAddress => '代理不支持该类型的目标地址';
+
+  @override
+  String r13ProxyHttpStatus(int code) {
+    return '代理拒绝了 CONNECT 请求（HTTP $code）';
+  }
+
+  @override
+  String get r13ProxyInvalid => '请填写名称，以及有效的代理主机和端口';
+
+  @override
+  String get r13ProxyInUse => '仍有 SSH 配置在使用此代理。请先改用其他代理或直连。';
+
+  @override
+  String get r13ProxyPasswordRequired => '设置用户名时必须填写代理密码';
+
+  @override
+  String get r13ProxyUsernameRequired => '填写密码前请先填写用户名';
+
+  @override
+  String get r13ProxyCredentialInvalid =>
+      '用户名和密码需为 1–255 字节且不含控制字符；HTTP/HTTPS 代理的用户名不能含冒号。';
+
+  @override
+  String get r13ProxyMissing => '所选代理已不存在，请重新选择';
+
+  @override
+  String get r13ProxyPasswordMissing => '未找到已保存的代理密码，请重新输入';
+
+  @override
+  String get r13ProxyChanged => '代理在连接前被修改，请重试';
+
+  @override
+  String get r13ProxyReadFailed => '无法读取代理设置';
+
+  @override
+  String get r13ProxiesTitle => '代理';
+
+  @override
+  String get r13ProxiesSubtitle => 'SOCKS5、HTTP、HTTPS';
+
+  @override
+  String r13ProxyCount(int count) {
+    return '已保存的代理 · $count';
+  }
+
+  @override
+  String get r13ProxyListFooter =>
+      '代理只用于您主动发起的 SSH、SFTP 和 TCP 测试，不是系统代理。SOCKS5 由代理解析目标域名（远程 DNS）；HTTP/HTTPS 通过 CONNECT 向代理发送“主机:端口”。密码只保存在设备安全存储中，不会导出或备份。';
+
+  @override
+  String get r13ProxyEmpty => '还没有代理';
+
+  @override
+  String get r13ProxyAdd => '添加代理';
+
+  @override
+  String get r13ProxyEdit => '编辑代理';
+
+  @override
+  String get r13ProxyName => '名称';
+
+  @override
+  String get r13ProxyNameHint => '例如：办公室出口';
+
+  @override
+  String get r13ProxyType => '类型';
+
+  @override
+  String get r13ProxyHost => '主机';
+
+  @override
+  String get r13ProxyUsername => '用户名（可选）';
+
+  @override
+  String get r13ProxyPassword => '密码';
+
+  @override
+  String get r13ProxyKeepPassword => '留空则保留已保存的密码。清空用户名会同时删除已保存的密码。';
+
+  @override
+  String get r13ProxyNameRequired => '请填写名称';
+
+  @override
+  String get r13ProxySave => '保存代理';
+
+  @override
+  String get r13ProxySaved => '代理已保存';
+
+  @override
+  String get r13ProxyDelete => '删除代理';
+
+  @override
+  String get r13ProxyDeleteTitle => '删除此代理？';
+
+  @override
+  String get r13ProxyDeleteMessage => '代理及其已保存的密码将被删除。';
+
+  @override
+  String get r13ProxyDeleted => '代理已删除';
+
+  @override
+  String r13ProxyDeleteBlocked(int count) {
+    return '$count 台服务器的 SSH 配置正在使用此代理。请先改用其他代理或直连，才能删除。';
+  }
+
+  @override
+  String get r13ProxyDiscardTitle => '放弃代理修改？';
+
+  @override
+  String get r13ProxyDiscardMessage => '未保存的内容将丢失。';
+
+  @override
+  String get r13ProxyShowPassword => '设备验证后查看已保存的密码';
+
+  @override
+  String get r13ProxyDirect => '直连';
+
+  @override
+  String get r13ProxyDirectSubtitle => '不使用代理';
+
+  @override
+  String get r13ProxyNew => '新建代理…';
+
+  @override
+  String get r13ProxyChoose => '选择代理';
+
+  @override
+  String get r13ProxyRow => '代理';
+
+  @override
+  String get r13ProxyRowFooter =>
+      '终端和 SFTP 共用同一条 SSH 连接，因此都会经过所选代理。主机公钥仍按目标主机和端口核对。';
+
+  @override
+  String r13ProxyVia(String name) {
+    return '经 $name';
+  }
+
+  @override
+  String get r13TcpEnterProxy => '输入代理…';
+
+  @override
+  String get r13TcpProxyFooter => '临时代理只用于本次测试，不会保存，密码也不会写入存储。';
+
+  @override
+  String get r13ProxyTemporaryTitle => '临时代理';
+
+  @override
+  String get r13ProxyUse => '使用此代理';
+
+  @override
+  String get r13TcpRoute => '路径';
+
+  @override
+  String r13TcpRouteVia(String name) {
+    return '经代理 $name';
+  }
+
+  @override
+  String get r13TcpProxyAddress => '代理地址';
+
+  @override
+  String get r13TcpProxyReason => '原因';
+
+  @override
+  String get r13TcpProxiedNote => '代理已连接到目标。这只说明代理能到达目标，不说明本机能直接到达。';
+
+  @override
+  String get r13TcpSourceProxy => '本机经代理发起的 TCP 连接测试';
 }

@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import '../core/app_viewport.dart';
 import '../core/ui/ui.dart';
 import '../security/host_trust.dart';
+import '../security/proxy_pages.dart';
 import '../security/security_pages.dart';
 import '../security/ssh_configuration_page.dart';
 import '../servers/ledger_controller.dart';
@@ -59,7 +60,7 @@ class _SshConnectPageState extends State<SshConnectPage> {
   final _host = TextEditingController();
   final _port = TextEditingController(text: '22');
   final _username = TextEditingController();
-  String? _serverId, _credentialId;
+  String? _serverId, _credentialId, _proxyId;
   LocalizedMessage? _error;
   // Why the last attempt never became a session (auth, host key, timeout).
   String? _sessionError;
@@ -95,6 +96,7 @@ class _SshConnectPageState extends State<SshConnectPage> {
     _port.text = '${config?.port ?? 22}';
     _username.text = config?.username ?? '';
     _credentialId = config?.credentialId;
+    _proxyId = config?.proxyId;
   }
 
   @override
@@ -130,6 +132,7 @@ class _SshConnectPageState extends State<SshConnectPage> {
         username: _username.text.trim(),
         credentialId: _credentialId!,
         serverId: _serverId,
+        proxyId: _proxyId,
       );
       final failure = await Navigator.push<String>(
         context,
@@ -247,6 +250,15 @@ class _SshConnectPageState extends State<SshConnectPage> {
     if (field.hasError) {
       field.validate();
     }
+  }
+
+  Future<void> _pickProxy() async {
+    final choice = await chooseProxy(
+      context,
+      widget.ledger,
+      selectedId: _proxyId,
+    );
+    if (choice != null && mounted) setState(() => _proxyId = choice.savedId);
   }
 
   Future<void> _editSavedSettings() async {
@@ -449,6 +461,20 @@ class _SshConnectPageState extends State<SshConnectPage> {
                         chevron: true,
                         onTap: _editSavedSettings,
                       ),
+                  ],
+                ),
+                AppSection(
+                  header: l10n.r13ProxyRow,
+                  footer: l10n.r13ProxyRowFooter,
+                  children: [
+                    AppFormRow.pick(
+                      key: const ValueKey('connect-proxy'),
+                      label: l10n.r13ProxyRow,
+                      value:
+                          security.proxyById(_proxyId)?.name ??
+                          l10n.r13ProxyDirect,
+                      onTap: _pickProxy,
+                    ),
                   ],
                 ),
                 AppSection(

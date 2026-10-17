@@ -3344,7 +3344,7 @@ abstract class AppLocalizations {
   /// No description provided for @backupExcludedConnections.
   ///
   /// In zh, this message translates to:
-  /// **'SSH 配置与主机信任'**
+  /// **'SSH 配置、已保存代理与主机信任'**
   String get backupExcludedConnections;
 
   /// No description provided for @backupExcludedNotes.
@@ -9212,6 +9212,420 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'应用在后台停留过久，与 {p0} 的 SFTP 会话已结束'**
   String r13BackgroundSftpEnded(String p0);
+
+  /// No description provided for @r13ProxyUnreachable.
+  ///
+  /// In zh, this message translates to:
+  /// **'无法连接代理服务器'**
+  String get r13ProxyUnreachable;
+
+  /// No description provided for @r13ProxyTlsFailed.
+  ///
+  /// In zh, this message translates to:
+  /// **'无法验证代理的 TLS 证书，或 TLS 握手失败'**
+  String get r13ProxyTlsFailed;
+
+  /// No description provided for @r13ProxyTimeout.
+  ///
+  /// In zh, this message translates to:
+  /// **'通过代理连接超时'**
+  String get r13ProxyTimeout;
+
+  /// No description provided for @r13ProxyClosed.
+  ///
+  /// In zh, this message translates to:
+  /// **'代理服务器中途关闭了连接'**
+  String get r13ProxyClosed;
+
+  /// No description provided for @r13ProxyProtocol.
+  ///
+  /// In zh, this message translates to:
+  /// **'代理返回了无法识别的响应'**
+  String get r13ProxyProtocol;
+
+  /// No description provided for @r13ProxyAuthRequired.
+  ///
+  /// In zh, this message translates to:
+  /// **'代理要求用户名和密码'**
+  String get r13ProxyAuthRequired;
+
+  /// No description provided for @r13ProxyAuthRejected.
+  ///
+  /// In zh, this message translates to:
+  /// **'代理拒绝了用户名或密码'**
+  String get r13ProxyAuthRejected;
+
+  /// No description provided for @r13ProxyInvalidTarget.
+  ///
+  /// In zh, this message translates to:
+  /// **'该目标地址无法通过代理连接'**
+  String get r13ProxyInvalidTarget;
+
+  /// No description provided for @r13ProxyInvalidSettings.
+  ///
+  /// In zh, this message translates to:
+  /// **'代理设置无效'**
+  String get r13ProxyInvalidSettings;
+
+  /// No description provided for @r13ProxySocksGeneral.
+  ///
+  /// In zh, this message translates to:
+  /// **'SOCKS5 代理报告一般性失败'**
+  String get r13ProxySocksGeneral;
+
+  /// No description provided for @r13ProxySocksNotAllowed.
+  ///
+  /// In zh, this message translates to:
+  /// **'代理规则不允许连接该目标'**
+  String get r13ProxySocksNotAllowed;
+
+  /// No description provided for @r13ProxySocksNetwork.
+  ///
+  /// In zh, this message translates to:
+  /// **'代理无法到达目标所在网络'**
+  String get r13ProxySocksNetwork;
+
+  /// No description provided for @r13ProxySocksHost.
+  ///
+  /// In zh, this message translates to:
+  /// **'代理无法到达目标主机'**
+  String get r13ProxySocksHost;
+
+  /// No description provided for @r13ProxySocksRefused.
+  ///
+  /// In zh, this message translates to:
+  /// **'目标拒绝了来自代理的连接'**
+  String get r13ProxySocksRefused;
+
+  /// No description provided for @r13ProxySocksTtl.
+  ///
+  /// In zh, this message translates to:
+  /// **'代理连接目标时 TTL 已过期'**
+  String get r13ProxySocksTtl;
+
+  /// No description provided for @r13ProxySocksCommand.
+  ///
+  /// In zh, this message translates to:
+  /// **'代理不支持 CONNECT 命令'**
+  String get r13ProxySocksCommand;
+
+  /// No description provided for @r13ProxySocksAddress.
+  ///
+  /// In zh, this message translates to:
+  /// **'代理不支持该类型的目标地址'**
+  String get r13ProxySocksAddress;
+
+  /// No description provided for @r13ProxyHttpStatus.
+  ///
+  /// In zh, this message translates to:
+  /// **'代理拒绝了 CONNECT 请求（HTTP {code}）'**
+  String r13ProxyHttpStatus(int code);
+
+  /// No description provided for @r13ProxyInvalid.
+  ///
+  /// In zh, this message translates to:
+  /// **'请填写名称，以及有效的代理主机和端口'**
+  String get r13ProxyInvalid;
+
+  /// No description provided for @r13ProxyInUse.
+  ///
+  /// In zh, this message translates to:
+  /// **'仍有 SSH 配置在使用此代理。请先改用其他代理或直连。'**
+  String get r13ProxyInUse;
+
+  /// No description provided for @r13ProxyPasswordRequired.
+  ///
+  /// In zh, this message translates to:
+  /// **'设置用户名时必须填写代理密码'**
+  String get r13ProxyPasswordRequired;
+
+  /// No description provided for @r13ProxyUsernameRequired.
+  ///
+  /// In zh, this message translates to:
+  /// **'填写密码前请先填写用户名'**
+  String get r13ProxyUsernameRequired;
+
+  /// No description provided for @r13ProxyCredentialInvalid.
+  ///
+  /// In zh, this message translates to:
+  /// **'用户名和密码需为 1–255 字节且不含控制字符；HTTP/HTTPS 代理的用户名不能含冒号。'**
+  String get r13ProxyCredentialInvalid;
+
+  /// No description provided for @r13ProxyMissing.
+  ///
+  /// In zh, this message translates to:
+  /// **'所选代理已不存在，请重新选择'**
+  String get r13ProxyMissing;
+
+  /// No description provided for @r13ProxyPasswordMissing.
+  ///
+  /// In zh, this message translates to:
+  /// **'未找到已保存的代理密码，请重新输入'**
+  String get r13ProxyPasswordMissing;
+
+  /// No description provided for @r13ProxyChanged.
+  ///
+  /// In zh, this message translates to:
+  /// **'代理在连接前被修改，请重试'**
+  String get r13ProxyChanged;
+
+  /// No description provided for @r13ProxyReadFailed.
+  ///
+  /// In zh, this message translates to:
+  /// **'无法读取代理设置'**
+  String get r13ProxyReadFailed;
+
+  /// No description provided for @r13ProxiesTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'代理'**
+  String get r13ProxiesTitle;
+
+  /// No description provided for @r13ProxiesSubtitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'SOCKS5、HTTP、HTTPS'**
+  String get r13ProxiesSubtitle;
+
+  /// No description provided for @r13ProxyCount.
+  ///
+  /// In zh, this message translates to:
+  /// **'已保存的代理 · {count}'**
+  String r13ProxyCount(int count);
+
+  /// No description provided for @r13ProxyListFooter.
+  ///
+  /// In zh, this message translates to:
+  /// **'代理只用于您主动发起的 SSH、SFTP 和 TCP 测试，不是系统代理。SOCKS5 由代理解析目标域名（远程 DNS）；HTTP/HTTPS 通过 CONNECT 向代理发送“主机:端口”。密码只保存在设备安全存储中，不会导出或备份。'**
+  String get r13ProxyListFooter;
+
+  /// No description provided for @r13ProxyEmpty.
+  ///
+  /// In zh, this message translates to:
+  /// **'还没有代理'**
+  String get r13ProxyEmpty;
+
+  /// No description provided for @r13ProxyAdd.
+  ///
+  /// In zh, this message translates to:
+  /// **'添加代理'**
+  String get r13ProxyAdd;
+
+  /// No description provided for @r13ProxyEdit.
+  ///
+  /// In zh, this message translates to:
+  /// **'编辑代理'**
+  String get r13ProxyEdit;
+
+  /// No description provided for @r13ProxyName.
+  ///
+  /// In zh, this message translates to:
+  /// **'名称'**
+  String get r13ProxyName;
+
+  /// No description provided for @r13ProxyNameHint.
+  ///
+  /// In zh, this message translates to:
+  /// **'例如：办公室出口'**
+  String get r13ProxyNameHint;
+
+  /// No description provided for @r13ProxyType.
+  ///
+  /// In zh, this message translates to:
+  /// **'类型'**
+  String get r13ProxyType;
+
+  /// No description provided for @r13ProxyHost.
+  ///
+  /// In zh, this message translates to:
+  /// **'主机'**
+  String get r13ProxyHost;
+
+  /// No description provided for @r13ProxyUsername.
+  ///
+  /// In zh, this message translates to:
+  /// **'用户名（可选）'**
+  String get r13ProxyUsername;
+
+  /// No description provided for @r13ProxyPassword.
+  ///
+  /// In zh, this message translates to:
+  /// **'密码'**
+  String get r13ProxyPassword;
+
+  /// No description provided for @r13ProxyKeepPassword.
+  ///
+  /// In zh, this message translates to:
+  /// **'留空则保留已保存的密码。清空用户名会同时删除已保存的密码。'**
+  String get r13ProxyKeepPassword;
+
+  /// No description provided for @r13ProxyNameRequired.
+  ///
+  /// In zh, this message translates to:
+  /// **'请填写名称'**
+  String get r13ProxyNameRequired;
+
+  /// No description provided for @r13ProxySave.
+  ///
+  /// In zh, this message translates to:
+  /// **'保存代理'**
+  String get r13ProxySave;
+
+  /// No description provided for @r13ProxySaved.
+  ///
+  /// In zh, this message translates to:
+  /// **'代理已保存'**
+  String get r13ProxySaved;
+
+  /// No description provided for @r13ProxyDelete.
+  ///
+  /// In zh, this message translates to:
+  /// **'删除代理'**
+  String get r13ProxyDelete;
+
+  /// No description provided for @r13ProxyDeleteTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'删除此代理？'**
+  String get r13ProxyDeleteTitle;
+
+  /// No description provided for @r13ProxyDeleteMessage.
+  ///
+  /// In zh, this message translates to:
+  /// **'代理及其已保存的密码将被删除。'**
+  String get r13ProxyDeleteMessage;
+
+  /// No description provided for @r13ProxyDeleted.
+  ///
+  /// In zh, this message translates to:
+  /// **'代理已删除'**
+  String get r13ProxyDeleted;
+
+  /// No description provided for @r13ProxyDeleteBlocked.
+  ///
+  /// In zh, this message translates to:
+  /// **'{count} 台服务器的 SSH 配置正在使用此代理。请先改用其他代理或直连，才能删除。'**
+  String r13ProxyDeleteBlocked(int count);
+
+  /// No description provided for @r13ProxyDiscardTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'放弃代理修改？'**
+  String get r13ProxyDiscardTitle;
+
+  /// No description provided for @r13ProxyDiscardMessage.
+  ///
+  /// In zh, this message translates to:
+  /// **'未保存的内容将丢失。'**
+  String get r13ProxyDiscardMessage;
+
+  /// No description provided for @r13ProxyShowPassword.
+  ///
+  /// In zh, this message translates to:
+  /// **'设备验证后查看已保存的密码'**
+  String get r13ProxyShowPassword;
+
+  /// No description provided for @r13ProxyDirect.
+  ///
+  /// In zh, this message translates to:
+  /// **'直连'**
+  String get r13ProxyDirect;
+
+  /// No description provided for @r13ProxyDirectSubtitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'不使用代理'**
+  String get r13ProxyDirectSubtitle;
+
+  /// No description provided for @r13ProxyNew.
+  ///
+  /// In zh, this message translates to:
+  /// **'新建代理…'**
+  String get r13ProxyNew;
+
+  /// No description provided for @r13ProxyChoose.
+  ///
+  /// In zh, this message translates to:
+  /// **'选择代理'**
+  String get r13ProxyChoose;
+
+  /// No description provided for @r13ProxyRow.
+  ///
+  /// In zh, this message translates to:
+  /// **'代理'**
+  String get r13ProxyRow;
+
+  /// No description provided for @r13ProxyRowFooter.
+  ///
+  /// In zh, this message translates to:
+  /// **'终端和 SFTP 共用同一条 SSH 连接，因此都会经过所选代理。主机公钥仍按目标主机和端口核对。'**
+  String get r13ProxyRowFooter;
+
+  /// No description provided for @r13ProxyVia.
+  ///
+  /// In zh, this message translates to:
+  /// **'经 {name}'**
+  String r13ProxyVia(String name);
+
+  /// No description provided for @r13TcpEnterProxy.
+  ///
+  /// In zh, this message translates to:
+  /// **'输入代理…'**
+  String get r13TcpEnterProxy;
+
+  /// No description provided for @r13TcpProxyFooter.
+  ///
+  /// In zh, this message translates to:
+  /// **'临时代理只用于本次测试，不会保存，密码也不会写入存储。'**
+  String get r13TcpProxyFooter;
+
+  /// No description provided for @r13ProxyTemporaryTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'临时代理'**
+  String get r13ProxyTemporaryTitle;
+
+  /// No description provided for @r13ProxyUse.
+  ///
+  /// In zh, this message translates to:
+  /// **'使用此代理'**
+  String get r13ProxyUse;
+
+  /// No description provided for @r13TcpRoute.
+  ///
+  /// In zh, this message translates to:
+  /// **'路径'**
+  String get r13TcpRoute;
+
+  /// No description provided for @r13TcpRouteVia.
+  ///
+  /// In zh, this message translates to:
+  /// **'经代理 {name}'**
+  String r13TcpRouteVia(String name);
+
+  /// No description provided for @r13TcpProxyAddress.
+  ///
+  /// In zh, this message translates to:
+  /// **'代理地址'**
+  String get r13TcpProxyAddress;
+
+  /// No description provided for @r13TcpProxyReason.
+  ///
+  /// In zh, this message translates to:
+  /// **'原因'**
+  String get r13TcpProxyReason;
+
+  /// No description provided for @r13TcpProxiedNote.
+  ///
+  /// In zh, this message translates to:
+  /// **'代理已连接到目标。这只说明代理能到达目标，不说明本机能直接到达。'**
+  String get r13TcpProxiedNote;
+
+  /// No description provided for @r13TcpSourceProxy.
+  ///
+  /// In zh, this message translates to:
+  /// **'本机经代理发起的 TCP 连接测试'**
+  String get r13TcpSourceProxy;
 }
 
 class _AppLocalizationsDelegate

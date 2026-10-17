@@ -2196,7 +2196,8 @@ class AppLocalizationsEn extends AppLocalizations {
       'Passwords, private keys, passphrases, tokens, credential metadata, and secure-storage references';
 
   @override
-  String get backupExcludedConnections => 'SSH settings and host trust';
+  String get backupExcludedConnections =>
+      'SSH settings, saved proxies, and host trust';
 
   @override
   String get backupExcludedNotes =>
@@ -5675,4 +5676,250 @@ class AppLocalizationsEn extends AppLocalizations {
   String r13BackgroundSftpEnded(String p0) {
     return 'SFTP session to $p0 ended because the app stayed in the background';
   }
+
+  @override
+  String get r13ProxyUnreachable => 'Couldn’t connect to the proxy';
+
+  @override
+  String get r13ProxyTlsFailed =>
+      'The proxy’s TLS certificate couldn’t be verified';
+
+  @override
+  String get r13ProxyTimeout => 'Connecting through the proxy timed out';
+
+  @override
+  String get r13ProxyClosed => 'The proxy closed the connection';
+
+  @override
+  String get r13ProxyProtocol => 'The proxy sent an unexpected response';
+
+  @override
+  String get r13ProxyAuthRequired =>
+      'The proxy requires a username and password';
+
+  @override
+  String get r13ProxyAuthRejected =>
+      'The proxy rejected the username or password';
+
+  @override
+  String get r13ProxyInvalidTarget =>
+      'This target can’t be reached through a proxy';
+
+  @override
+  String get r13ProxyInvalidSettings => 'The proxy settings are invalid';
+
+  @override
+  String get r13ProxySocksGeneral =>
+      'The SOCKS5 proxy reported a general failure';
+
+  @override
+  String get r13ProxySocksNotAllowed =>
+      'The proxy’s rules don’t allow this connection';
+
+  @override
+  String get r13ProxySocksNetwork =>
+      'The proxy can’t reach the target’s network';
+
+  @override
+  String get r13ProxySocksHost => 'The proxy can’t reach the target host';
+
+  @override
+  String get r13ProxySocksRefused =>
+      'The target refused the connection from the proxy';
+
+  @override
+  String get r13ProxySocksTtl =>
+      'The proxy’s connection to the target expired (TTL)';
+
+  @override
+  String get r13ProxySocksCommand => 'The proxy doesn’t support CONNECT';
+
+  @override
+  String get r13ProxySocksAddress =>
+      'The proxy doesn’t support this address type';
+
+  @override
+  String r13ProxyHttpStatus(int code) {
+    return 'The proxy refused CONNECT (HTTP $code)';
+  }
+
+  @override
+  String get r13ProxyInvalid => 'Enter a name and a valid proxy host and port';
+
+  @override
+  String get r13ProxyInUse =>
+      'SSH settings still use this proxy. Switch them to another proxy or Direct first.';
+
+  @override
+  String get r13ProxyPasswordRequired =>
+      'Enter the proxy password for this username';
+
+  @override
+  String get r13ProxyUsernameRequired => 'Enter a username to use a password';
+
+  @override
+  String get r13ProxyCredentialInvalid =>
+      'Username and password must be 1–255 bytes with no control characters. HTTP and HTTPS proxy usernames can’t contain a colon.';
+
+  @override
+  String get r13ProxyMissing =>
+      'The selected proxy no longer exists. Choose another.';
+
+  @override
+  String get r13ProxyPasswordMissing =>
+      'The saved proxy password wasn’t found. Enter it again.';
+
+  @override
+  String get r13ProxyChanged =>
+      'The proxy changed before connecting. Try again.';
+
+  @override
+  String get r13ProxyReadFailed => 'Couldn’t read the proxy settings';
+
+  @override
+  String get r13ProxiesTitle => 'Proxies';
+
+  @override
+  String get r13ProxiesSubtitle => 'SOCKS5, HTTP and HTTPS';
+
+  @override
+  String r13ProxyCount(int count) {
+    return 'Saved proxies · $count';
+  }
+
+  @override
+  String get r13ProxyListFooter =>
+      'Proxies only route the SSH, SFTP and TCP tests you start. They aren’t a system proxy. SOCKS5 resolves the target at the proxy (remote DNS); HTTP and HTTPS send host:port in a CONNECT request. Passwords stay in secure storage and are never exported or backed up.';
+
+  @override
+  String get r13ProxyEmpty => 'No proxies yet';
+
+  @override
+  String get r13ProxyAdd => 'Add Proxy';
+
+  @override
+  String get r13ProxyEdit => 'Edit Proxy';
+
+  @override
+  String get r13ProxyName => 'Name';
+
+  @override
+  String get r13ProxyNameHint => 'e.g. Office exit';
+
+  @override
+  String get r13ProxyType => 'Type';
+
+  @override
+  String get r13ProxyHost => 'Host';
+
+  @override
+  String get r13ProxyUsername => 'Username (optional)';
+
+  @override
+  String get r13ProxyPassword => 'Password';
+
+  @override
+  String get r13ProxyKeepPassword =>
+      'Leave blank to keep the saved password. Clearing the username also removes it.';
+
+  @override
+  String get r13ProxyNameRequired => 'Enter a name';
+
+  @override
+  String get r13ProxySave => 'Save Proxy';
+
+  @override
+  String get r13ProxySaved => 'Proxy saved';
+
+  @override
+  String get r13ProxyDelete => 'Delete Proxy';
+
+  @override
+  String get r13ProxyDeleteTitle => 'Delete this proxy?';
+
+  @override
+  String get r13ProxyDeleteMessage =>
+      'The proxy and its saved password will be deleted.';
+
+  @override
+  String get r13ProxyDeleted => 'Proxy deleted';
+
+  @override
+  String r13ProxyDeleteBlocked(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count servers use',
+      one: '1 server uses',
+    );
+    return '$_temp0 this proxy in its SSH settings. Switch to another proxy or Direct before deleting.';
+  }
+
+  @override
+  String get r13ProxyDiscardTitle => 'Discard proxy changes?';
+
+  @override
+  String get r13ProxyDiscardMessage => 'Your changes won’t be saved.';
+
+  @override
+  String get r13ProxyShowPassword => 'Verify Device to View Saved Password';
+
+  @override
+  String get r13ProxyDirect => 'Direct';
+
+  @override
+  String get r13ProxyDirectSubtitle => 'Connect without a proxy';
+
+  @override
+  String get r13ProxyNew => 'New Proxy…';
+
+  @override
+  String get r13ProxyChoose => 'Choose Proxy';
+
+  @override
+  String get r13ProxyRow => 'Proxy';
+
+  @override
+  String get r13ProxyRowFooter =>
+      'The terminal and SFTP share one SSH connection, so both go through the proxy. Host keys are still checked against the target host and port.';
+
+  @override
+  String r13ProxyVia(String name) {
+    return 'via $name';
+  }
+
+  @override
+  String get r13TcpEnterProxy => 'Enter Proxy…';
+
+  @override
+  String get r13TcpProxyFooter =>
+      'A temporary proxy is used for this test only. It isn’t saved, and its password isn’t stored.';
+
+  @override
+  String get r13ProxyTemporaryTitle => 'Temporary Proxy';
+
+  @override
+  String get r13ProxyUse => 'Use This Proxy';
+
+  @override
+  String get r13TcpRoute => 'Route';
+
+  @override
+  String r13TcpRouteVia(String name) {
+    return 'Via proxy $name';
+  }
+
+  @override
+  String get r13TcpProxyAddress => 'Proxy address';
+
+  @override
+  String get r13TcpProxyReason => 'Reason';
+
+  @override
+  String get r13TcpProxiedNote =>
+      'The proxy reached the target. This only proves the proxy can reach it, not that this device can reach it directly.';
+
+  @override
+  String get r13TcpSourceProxy =>
+      'TCP connection test from this device through a proxy';
 }

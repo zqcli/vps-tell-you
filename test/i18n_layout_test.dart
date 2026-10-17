@@ -21,6 +21,9 @@ import 'package:vps_tell_you/finance/finance_page.dart';
 import 'package:vps_tell_you/finance/fx_page.dart';
 import 'package:vps_tell_you/finance/payment_pages.dart';
 import 'package:vps_tell_you/security/host_trust_pages.dart';
+import 'package:vps_tell_you/security/proxy_models.dart';
+import 'package:vps_tell_you/security/proxy_pages.dart';
+import 'package:vps_tell_you/security/security_models.dart';
 import 'package:vps_tell_you/security/security_controller.dart';
 import 'package:vps_tell_you/security/security_pages.dart';
 import 'package:vps_tell_you/security/ssh_configuration_page.dart';
@@ -113,6 +116,29 @@ void main() {
     );
     await store.saveServer(server, isNew: true);
     await ledger.refresh();
+    // A saved proxy with a password, used by the SSH settings of the fixture.
+    final proxyId = await ledger.security.saveProxy(
+      name: '办公室出口 Office exit',
+      kind: ProxyKind.http,
+      host: 'proxy.office.example.com',
+      port: 8080,
+      username: 'proxy-user',
+      password: 'proxy-password',
+    );
+    await ledger.security.saveProxy(
+      name: 'SOCKS5 · [2001:db8::1]',
+      kind: ProxyKind.socks5,
+      host: '2001:db8::1',
+      port: 1080,
+    );
+    await ledger.security.saveSshConfiguration(
+      SshConfiguration(
+        serverId: server.id,
+        host: '192.0.2.10',
+        username: 'root',
+        proxyId: proxyId,
+      ),
+    );
   });
   tearDown(() async {
     ledger.dispose();
@@ -246,7 +272,14 @@ void main() {
     'ssh-connect': () => SshConnectPage(ledger: ledger),
     'host-trust': () => HostTrustPage(ledger: ledger),
     'snippets': () => SnippetListPage(store: store),
-    'tcp': () => const TcpTestPage(),
+    'tcp': () => TcpTestPage(ledger: ledger),
+    'proxies': () => ProxyListPage(ledger: ledger),
+    'proxy-form': () => ProxyForm(
+      ledger: ledger,
+      existing: ledger.security.proxies.firstWhere((p) => p.hasCredentials),
+    ),
+    'proxy-new': () => ProxyForm(ledger: ledger),
+    'proxy-temporary': () => ProxyForm(ledger: ledger, temporary: true),
     'about': () => const AboutPage(),
     'changelog': () => ChangelogPage(load: repoFile),
     'license': () => LicenseTextPage(load: () => repoFile('LICENSE')),

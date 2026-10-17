@@ -133,7 +133,19 @@ void main() {
         'created_at': now,
         'updated_at': now,
       });
+      await db.insert('proxies', {
+        'id': 'excluded-proxy',
+        'name': 'excluded-proxy-name',
+        'kind': 'socks5',
+        'host': 'excluded-proxy.invalid',
+        'port': 1080,
+        'username': 'excluded-proxy-user',
+        'secret_ref': 'excluded-proxy-secret-ref',
+        'created_at': now,
+        'updated_at': now,
+      });
       await db.insert('ssh_configurations', {
+        'proxy_id': 'excluded-proxy',
         'server_id': 'server',
         'host': 'excluded-ssh.invalid',
         'port': 22,

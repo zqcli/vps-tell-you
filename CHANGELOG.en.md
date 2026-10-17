@@ -14,6 +14,10 @@ This comment is not shown.
 
 ## 0.6.0 — Unreleased
 
+### Added
+
+- **SSH, SFTP and TCP tests can go through a proxy**: SOCKS5, HTTP and HTTPS proxies are saved under Settings › Proxies (the password stays in secure storage and is never exported or backed up) and chosen in the SSH connection settings; the terminal and SFTP share that connection. The TCP test can use a saved proxy or a temporary one, and empty means direct; a success through a proxy only shows the proxy can reach the target
+
 ### Changed
 
 - **Restrained iOS 26 "Liquid Glass" look**: on iOS 26 and later the tab bar floats as a capsule, and navigation buttons, the search field, and the top and close button of bottom sheets use glass — light blur and saturation, a thin specular rim, a barely visible inner highlight. Lists, cards and other content are unchanged

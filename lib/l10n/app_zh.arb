@@ -1400,7 +1400,7 @@
     }
   },
   "backupExcludedSecrets": "密码、私钥、口令、Token、凭据元数据及安全存储引用",
-  "backupExcludedConnections": "SSH 配置与主机信任",
+  "backupExcludedConnections": "SSH 配置、已保存代理与主机信任",
   "backupExcludedNotes": "命令片段、服务器备注和付款备注",
   "backupExcludedPreferences": "提醒规则、通知排程及应用偏好",
   "backupInvalidJson": "备份不是有效 JSON",
@@ -3693,5 +3693,109 @@
         "type": "String"
       }
     }
-  }
+  },
+  "r13ProxyUnreachable": "无法连接代理服务器",
+  "r13ProxyTlsFailed": "无法验证代理的 TLS 证书，或 TLS 握手失败",
+  "r13ProxyTimeout": "通过代理连接超时",
+  "r13ProxyClosed": "代理服务器中途关闭了连接",
+  "r13ProxyProtocol": "代理返回了无法识别的响应",
+  "r13ProxyAuthRequired": "代理要求用户名和密码",
+  "r13ProxyAuthRejected": "代理拒绝了用户名或密码",
+  "r13ProxyInvalidTarget": "该目标地址无法通过代理连接",
+  "r13ProxyInvalidSettings": "代理设置无效",
+  "r13ProxySocksGeneral": "SOCKS5 代理报告一般性失败",
+  "r13ProxySocksNotAllowed": "代理规则不允许连接该目标",
+  "r13ProxySocksNetwork": "代理无法到达目标所在网络",
+  "r13ProxySocksHost": "代理无法到达目标主机",
+  "r13ProxySocksRefused": "目标拒绝了来自代理的连接",
+  "r13ProxySocksTtl": "代理连接目标时 TTL 已过期",
+  "r13ProxySocksCommand": "代理不支持 CONNECT 命令",
+  "r13ProxySocksAddress": "代理不支持该类型的目标地址",
+  "r13ProxyHttpStatus": "代理拒绝了 CONNECT 请求（HTTP {code}）",
+  "@r13ProxyHttpStatus": {
+    "placeholders": {
+      "code": {
+        "type": "int"
+      }
+    }
+  },
+  "r13ProxyInvalid": "请填写名称，以及有效的代理主机和端口",
+  "r13ProxyInUse": "仍有 SSH 配置在使用此代理。请先改用其他代理或直连。",
+  "r13ProxyPasswordRequired": "设置用户名时必须填写代理密码",
+  "r13ProxyUsernameRequired": "填写密码前请先填写用户名",
+  "r13ProxyCredentialInvalid": "用户名和密码需为 1–255 字节且不含控制字符；HTTP/HTTPS 代理的用户名不能含冒号。",
+  "r13ProxyMissing": "所选代理已不存在，请重新选择",
+  "r13ProxyPasswordMissing": "未找到已保存的代理密码，请重新输入",
+  "r13ProxyChanged": "代理在连接前被修改，请重试",
+  "r13ProxyReadFailed": "无法读取代理设置",
+  "r13ProxiesTitle": "代理",
+  "r13ProxiesSubtitle": "SOCKS5、HTTP、HTTPS",
+  "r13ProxyCount": "已保存的代理 · {count}",
+  "@r13ProxyCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "r13ProxyListFooter": "代理只用于您主动发起的 SSH、SFTP 和 TCP 测试，不是系统代理。SOCKS5 由代理解析目标域名（远程 DNS）；HTTP/HTTPS 通过 CONNECT 向代理发送“主机:端口”。密码只保存在设备安全存储中，不会导出或备份。",
+  "r13ProxyEmpty": "还没有代理",
+  "r13ProxyAdd": "添加代理",
+  "r13ProxyEdit": "编辑代理",
+  "r13ProxyName": "名称",
+  "r13ProxyNameHint": "例如：办公室出口",
+  "r13ProxyType": "类型",
+  "r13ProxyHost": "主机",
+  "r13ProxyUsername": "用户名（可选）",
+  "r13ProxyPassword": "密码",
+  "r13ProxyKeepPassword": "留空则保留已保存的密码。清空用户名会同时删除已保存的密码。",
+  "r13ProxyNameRequired": "请填写名称",
+  "r13ProxySave": "保存代理",
+  "r13ProxySaved": "代理已保存",
+  "r13ProxyDelete": "删除代理",
+  "r13ProxyDeleteTitle": "删除此代理？",
+  "r13ProxyDeleteMessage": "代理及其已保存的密码将被删除。",
+  "r13ProxyDeleted": "代理已删除",
+  "r13ProxyDeleteBlocked": "{count} 台服务器的 SSH 配置正在使用此代理。请先改用其他代理或直连，才能删除。",
+  "@r13ProxyDeleteBlocked": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "r13ProxyDiscardTitle": "放弃代理修改？",
+  "r13ProxyDiscardMessage": "未保存的内容将丢失。",
+  "r13ProxyShowPassword": "设备验证后查看已保存的密码",
+  "r13ProxyDirect": "直连",
+  "r13ProxyDirectSubtitle": "不使用代理",
+  "r13ProxyNew": "新建代理…",
+  "r13ProxyChoose": "选择代理",
+  "r13ProxyRow": "代理",
+  "r13ProxyRowFooter": "终端和 SFTP 共用同一条 SSH 连接，因此都会经过所选代理。主机公钥仍按目标主机和端口核对。",
+  "r13ProxyVia": "经 {name}",
+  "@r13ProxyVia": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "r13TcpEnterProxy": "输入代理…",
+  "r13TcpProxyFooter": "临时代理只用于本次测试，不会保存，密码也不会写入存储。",
+  "r13ProxyTemporaryTitle": "临时代理",
+  "r13ProxyUse": "使用此代理",
+  "r13TcpRoute": "路径",
+  "r13TcpRouteVia": "经代理 {name}",
+  "@r13TcpRouteVia": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "r13TcpProxyAddress": "代理地址",
+  "r13TcpProxyReason": "原因",
+  "r13TcpProxiedNote": "代理已连接到目标。这只说明代理能到达目标，不说明本机能直接到达。",
+  "r13TcpSourceProxy": "本机经代理发起的 TCP 连接测试"
 }

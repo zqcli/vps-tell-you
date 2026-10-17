@@ -73,6 +73,7 @@ As the number of VPS grows, the details scatter: which provider, when it expires
 - SFTP file manager: browse, upload, download, rename, move and delete, plus a text editor with syntax highlighting
 - Single-target TCP test; SSH, SFTP and TCP all work with IPv6
 - Host keys must be confirmed on first connect, and a changed key blocks the connection
+- SSH, SFTP and TCP tests can go through a SOCKS5, HTTP or HTTPS proxy (Settings › Proxies; the password stays in secure storage and is never exported)
 
 <table>
   <tr>

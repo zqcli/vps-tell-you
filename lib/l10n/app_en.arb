@@ -1214,7 +1214,7 @@
   "billingAnnualAmount": "{amount}/year",
   "billingMonthlyAmount": "{amount}/{months, plural, one{1 month} other{{months} months}}",
   "backupExcludedSecrets": "Passwords, private keys, passphrases, tokens, credential metadata, and secure-storage references",
-  "backupExcludedConnections": "SSH settings and host trust",
+  "backupExcludedConnections": "SSH settings, saved proxies, and host trust",
   "backupExcludedNotes": "Command snippets, server notes, and payment notes",
   "backupExcludedPreferences": "Reminder rules, notification schedules, and app preferences",
   "backupInvalidJson": "The backup isn’t valid JSON",
@@ -3225,5 +3225,114 @@
         "type": "String"
       }
     }
-  }
+  },
+  "r13ProxyUnreachable": "Couldn’t connect to the proxy",
+  "r13ProxyTlsFailed": "The proxy’s TLS certificate couldn’t be verified",
+  "r13ProxyTimeout": "Connecting through the proxy timed out",
+  "r13ProxyClosed": "The proxy closed the connection",
+  "r13ProxyProtocol": "The proxy sent an unexpected response",
+  "r13ProxyAuthRequired": "The proxy requires a username and password",
+  "r13ProxyAuthRejected": "The proxy rejected the username or password",
+  "r13ProxyInvalidTarget": "This target can’t be reached through a proxy",
+  "r13ProxyInvalidSettings": "The proxy settings are invalid",
+  "r13ProxySocksGeneral": "The SOCKS5 proxy reported a general failure",
+  "r13ProxySocksNotAllowed": "The proxy’s rules don’t allow this connection",
+  "r13ProxySocksNetwork": "The proxy can’t reach the target’s network",
+  "r13ProxySocksHost": "The proxy can’t reach the target host",
+  "r13ProxySocksRefused": "The target refused the connection from the proxy",
+  "r13ProxySocksTtl": "The proxy’s connection to the target expired (TTL)",
+  "r13ProxySocksCommand": "The proxy doesn’t support CONNECT",
+  "r13ProxySocksAddress": "The proxy doesn’t support this address type",
+  "r13ProxyHttpStatus": "The proxy refused CONNECT (HTTP {code})",
+  "@r13ProxyHttpStatus": {
+    "description": "Round 13 proxies: r13ProxyHttpStatus.",
+    "placeholders": {
+      "code": {
+        "type": "int"
+      }
+    }
+  },
+  "r13ProxyInvalid": "Enter a name and a valid proxy host and port",
+  "r13ProxyInUse": "SSH settings still use this proxy. Switch them to another proxy or Direct first.",
+  "r13ProxyPasswordRequired": "Enter the proxy password for this username",
+  "r13ProxyUsernameRequired": "Enter a username to use a password",
+  "r13ProxyCredentialInvalid": "Username and password must be 1–255 bytes with no control characters. HTTP and HTTPS proxy usernames can’t contain a colon.",
+  "r13ProxyMissing": "The selected proxy no longer exists. Choose another.",
+  "r13ProxyPasswordMissing": "The saved proxy password wasn’t found. Enter it again.",
+  "r13ProxyChanged": "The proxy changed before connecting. Try again.",
+  "r13ProxyReadFailed": "Couldn’t read the proxy settings",
+  "r13ProxiesTitle": "Proxies",
+  "r13ProxiesSubtitle": "SOCKS5, HTTP and HTTPS",
+  "r13ProxyCount": "Saved proxies · {count}",
+  "@r13ProxyCount": {
+    "description": "Round 13 proxies: r13ProxyCount.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "r13ProxyListFooter": "Proxies only route the SSH, SFTP and TCP tests you start. They aren’t a system proxy. SOCKS5 resolves the target at the proxy (remote DNS); HTTP and HTTPS send host:port in a CONNECT request. Passwords stay in secure storage and are never exported or backed up.",
+  "r13ProxyEmpty": "No proxies yet",
+  "r13ProxyAdd": "Add Proxy",
+  "r13ProxyEdit": "Edit Proxy",
+  "r13ProxyName": "Name",
+  "r13ProxyNameHint": "e.g. Office exit",
+  "r13ProxyType": "Type",
+  "r13ProxyHost": "Host",
+  "r13ProxyUsername": "Username (optional)",
+  "r13ProxyPassword": "Password",
+  "r13ProxyKeepPassword": "Leave blank to keep the saved password. Clearing the username also removes it.",
+  "r13ProxyNameRequired": "Enter a name",
+  "r13ProxySave": "Save Proxy",
+  "r13ProxySaved": "Proxy saved",
+  "r13ProxyDelete": "Delete Proxy",
+  "r13ProxyDeleteTitle": "Delete this proxy?",
+  "r13ProxyDeleteMessage": "The proxy and its saved password will be deleted.",
+  "r13ProxyDeleted": "Proxy deleted",
+  "r13ProxyDeleteBlocked": "{count, plural, =1{1 server uses} other{{count} servers use}} this proxy in its SSH settings. Switch to another proxy or Direct before deleting.",
+  "@r13ProxyDeleteBlocked": {
+    "description": "Round 13 proxies: r13ProxyDeleteBlocked.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "r13ProxyDiscardTitle": "Discard proxy changes?",
+  "r13ProxyDiscardMessage": "Your changes won’t be saved.",
+  "r13ProxyShowPassword": "Verify Device to View Saved Password",
+  "r13ProxyDirect": "Direct",
+  "r13ProxyDirectSubtitle": "Connect without a proxy",
+  "r13ProxyNew": "New Proxy…",
+  "r13ProxyChoose": "Choose Proxy",
+  "r13ProxyRow": "Proxy",
+  "r13ProxyRowFooter": "The terminal and SFTP share one SSH connection, so both go through the proxy. Host keys are still checked against the target host and port.",
+  "r13ProxyVia": "via {name}",
+  "@r13ProxyVia": {
+    "description": "Round 13 proxies: r13ProxyVia.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "r13TcpEnterProxy": "Enter Proxy…",
+  "r13TcpProxyFooter": "A temporary proxy is used for this test only. It isn’t saved, and its password isn’t stored.",
+  "r13ProxyTemporaryTitle": "Temporary Proxy",
+  "r13ProxyUse": "Use This Proxy",
+  "r13TcpRoute": "Route",
+  "r13TcpRouteVia": "Via proxy {name}",
+  "@r13TcpRouteVia": {
+    "description": "Round 13 proxies: r13TcpRouteVia.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "r13TcpProxyAddress": "Proxy address",
+  "r13TcpProxyReason": "Reason",
+  "r13TcpProxiedNote": "The proxy reached the target. This only proves the proxy can reach it, not that this device can reach it directly.",
+  "r13TcpSourceProxy": "TCP connection test from this device through a proxy"
 }

@@ -131,6 +131,7 @@ class _SftpConnectPageState extends State<SftpConnectPage> {
       username: config.username,
       credentialId: credentialId,
       serverId: widget.serverId,
+      proxyId: config.proxyId,
     );
     _service?.removeListener(_changed);
     _service?.dispose();

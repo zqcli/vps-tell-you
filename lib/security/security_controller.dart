@@ -3,10 +3,12 @@ import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
 
+import '../core/net_address.dart';
 import '../data/ledger_store.dart';
 import '../servers/server_record.dart';
 import 'host_trust.dart';
 import 'key_import.dart';
+import 'proxy_models.dart';
 import 'secret_store.dart';
 import 'security_models.dart';
 import '../l10n/generated/app_localizations.dart';
@@ -27,6 +29,7 @@ class SecurityController extends ChangeNotifier {
   final Duration revealDuration;
   List<CredentialMetadata> credentials = const [];
   List<SshConfiguration> sshConfigurations = const [];
+  List<ProxyRecord> proxies = const [];
   List<HostTrustRecord> hostTrusts = const [];
   bool _working = false, _disposed = false, _authenticating = false;
   bool get busy => _working || _authenticating;
@@ -43,6 +46,7 @@ class SecurityController extends ChangeNotifier {
   /// Compatibility for contextless callers; intentionally fixed Chinese.
   String? get error => errorFor(defaultLocalizations);
   String? revealedSecret, revealedPassphrase, revealedCredentialId;
+  String? revealedProxyPassword, revealedProxyId;
   int _sensitiveEpoch = 0;
   Timer? _revealTimer;
   Future<void> _cancelAuthentication = Future<void>.value();
@@ -84,11 +88,13 @@ class SecurityController extends ChangeNotifier {
   Future<void> readMetadata() async {
     final nextCredentials = await store.credentials();
     final nextConfigurations = await store.sshConfigurations();
+    final nextProxies = await store.proxies();
     final nextTrusts = await store.hostTrusts();
     final cleanup = await store.pendingSecretCleanup();
     if (_disposed) return;
     credentials = List.unmodifiable(nextCredentials);
     sshConfigurations = List.unmodifiable(nextConfigurations);
+    proxies = List.unmodifiable(nextProxies);
     hostTrusts = List.unmodifiable(nextTrusts);
     cleanupCount = cleanup.length;
     needsReload = false;
@@ -100,6 +106,18 @@ class SecurityController extends ChangeNotifier {
     }
     return null;
   }
+
+  ProxyRecord? proxyById(String? id) {
+    if (id == null) return null;
+    for (final proxy in proxies) {
+      if (proxy.id == id) return proxy;
+    }
+    return null;
+  }
+
+  List<SshConfiguration> proxyReferences(String proxyId) => sshConfigurations
+      .where((c) => c.proxyId == proxyId)
+      .toList(growable: false);
 
   List<SshConfiguration> referencesTo(String credentialId) => sshConfigurations
       .where((c) => c.credentialId == credentialId)
@@ -296,6 +314,7 @@ class SecurityController extends ChangeNotifier {
           port: config.port,
           username: config.username.trim(),
           credentialId: config.credentialId,
+          proxyId: config.proxyId,
           revision: config.revision,
         ),
       );
@@ -306,6 +325,244 @@ class SecurityController extends ChangeNotifier {
       return false;
     } finally {
       _finish();
+    }
+  }
+
+  /// Creates or edits a saved proxy; returns its id, or null on failure.
+  ///
+  /// [password] replaces the stored one; null keeps it. It is only meaningful
+  /// with a [username]; clearing the user name drops the stored password
+  /// (queued for cleanup like every superseded secret).
+  Future<String?> saveProxy({
+    ProxyRecord? existing,
+    required String name,
+    required ProxyKind kind,
+    required String host,
+    required int port,
+    String? username,
+    String? password,
+  }) async {
+    if (!_startMutation()) return null;
+    String? reservedRef;
+    try {
+      final user = (username ?? '').trim();
+      final now = store.clock().toUtc();
+      final address = NetAddress.tryParse(host.trim(), allowBrackets: true);
+      if (address == null || address.zone != null) {
+        throw SecurityFailure(LocalizedText((l10n) => l10n.r13ProxyInvalid));
+      }
+      final keepsPassword = user.isNotEmpty && existing?.hasCredentials == true;
+      if (user.isNotEmpty && password == null && !keepsPassword) {
+        throw SecurityFailure(
+          LocalizedText((l10n) => l10n.r13ProxyPasswordRequired),
+        );
+      }
+      if (user.isEmpty && (password?.isNotEmpty ?? false)) {
+        throw SecurityFailure(
+          LocalizedText((l10n) => l10n.r13ProxyUsernameRequired),
+        );
+      }
+      if (user.isNotEmpty &&
+          (!validProxyCredential(user, allowColon: kind == ProxyKind.socks5) ||
+              (password != null &&
+                  !validProxyCredential(password, allowColon: true)))) {
+        throw SecurityFailure(
+          LocalizedText((l10n) => l10n.r13ProxyCredentialInvalid),
+        );
+      }
+      String? ref = user.isEmpty ? null : existing?.secretRef;
+      if (user.isNotEmpty && password != null) {
+        ref = 'vps_proxy_${newLocalId()}';
+        reservedRef = ref;
+        await store.reserveSecret(ref, active: true);
+        final encoded = jsonEncode({'version': 1, 'password': password});
+        await secrets.write(ref, encoded);
+        if (await secrets.read(ref) != encoded) {
+          throw SecurityFailure(
+            LocalizedText((l10n) => l10n.securitySecretWriteUnverified),
+          );
+        }
+      }
+      final id = existing?.id ?? newLocalId();
+      await store.saveProxy(
+        ProxyRecord(
+          id: id,
+          name: name.trim(),
+          kind: kind,
+          host: address.host,
+          port: port,
+          username: user.isEmpty ? null : user,
+          secretRef: ref,
+          createdAt: existing?.createdAt ?? now,
+          updatedAt: now,
+          revision: existing?.revision ?? 0,
+        ),
+        expectedRevision: existing?.revision,
+      );
+      final old = existing?.secretRef;
+      if (old != null && old != ref) await _cleanup([old]);
+      await _afterCommit();
+      return id;
+    } catch (problem) {
+      _failed(problem);
+      if (reservedRef != null) store.releaseSecretReservation(reservedRef);
+      try {
+        cleanupCount = (await store.pendingSecretCleanup()).length;
+      } catch (_) {}
+      return null;
+    } finally {
+      if (reservedRef != null) store.releaseSecretReservation(reservedRef);
+      _finish();
+    }
+  }
+
+  /// Refused while a connection setting uses the proxy (see the store).
+  Future<bool> deleteProxy(ProxyRecord record) async {
+    if (!_startMutation()) return false;
+    try {
+      await store.deleteProxy(record);
+      final ref = record.secretRef;
+      if (ref != null) await _cleanup([ref]);
+      await _afterCommit();
+      return true;
+    } catch (problem) {
+      _failed(problem);
+      return false;
+    } finally {
+      _finish();
+    }
+  }
+
+  /// Connection-only read of a saved proxy and its password. Fails closed:
+  /// a missing proxy or secret is an error, never a silent direct connection.
+  Future<ProxyEndpoint> loadProxyEndpoint(
+    String id, {
+    required bool Function() isCancelled,
+  }) async {
+    void guard() {
+      if (_disposed || needsReload || isCancelled()) {
+        throw SecurityFailure(
+          LocalizedText((l10n) => l10n.securitySshCancelled),
+        );
+      }
+    }
+
+    try {
+      guard();
+      final record = (await store.proxies())
+          .where((p) => p.id == id)
+          .firstOrNull;
+      guard();
+      if (record == null) {
+        throw SecurityFailure(LocalizedText((l10n) => l10n.r13ProxyMissing));
+      }
+      String? password;
+      if (record.hasCredentials) {
+        password = await _readProxyPassword(record);
+        guard();
+        if (password == null) {
+          throw SecurityFailure(
+            LocalizedText((l10n) => l10n.r13ProxyPasswordMissing),
+          );
+        }
+        final current = (await store.proxies())
+            .where((p) => p.id == id)
+            .firstOrNull;
+        guard();
+        if (current == null ||
+            current.revision != record.revision ||
+            current.secretRef != record.secretRef) {
+          throw SecurityFailure(LocalizedText((l10n) => l10n.r13ProxyChanged));
+        }
+      }
+      return ProxyEndpoint(
+        kind: record.kind,
+        host: record.host,
+        port: record.port,
+        username: record.username,
+        password: password,
+      );
+    } on SecurityFailure {
+      rethrow;
+    } catch (_) {
+      throw SecurityFailure(LocalizedText((l10n) => l10n.r13ProxyReadFailed));
+    }
+  }
+
+  Future<String?> _readProxyPassword(ProxyRecord record) async {
+    final ref = record.secretRef;
+    if (ref == null) return null;
+    final encoded = await secrets.read(ref);
+    if (encoded == null) return null;
+    final envelope = jsonDecode(encoded);
+    if (envelope is! Map<String, dynamic> ||
+        envelope['version'] != 1 ||
+        envelope['password'] is! String ||
+        (envelope['password'] as String).isEmpty) {
+      throw SecurityFailure(
+        LocalizedText((l10n) => l10n.securityStoredSecretUnreadable),
+      );
+    }
+    return envelope['password'] as String;
+  }
+
+  /// Shows a saved proxy password for [revealDuration] after device
+  /// authentication, exactly like [reveal] for credentials.
+  Future<bool> revealProxy(ProxyRecord record, {AppLocalizations? l10n}) async {
+    if (busy || needsReload || _disposed || !record.hasCredentials) {
+      return false;
+    }
+    hideSensitive();
+    final epoch = _sensitiveEpoch;
+    _authenticating = true;
+    _error = null;
+    _notify();
+    try {
+      await _cancelAuthentication;
+      if (_disposed || epoch != _sensitiveEpoch) return false;
+      final attemptLocalizations = l10n ?? defaultLocalizations;
+      final deviceAuth = authenticator;
+      final authenticated = deviceAuth is LocalizedDeviceAuthenticator
+          ? await (deviceAuth as LocalizedDeviceAuthenticator)
+                .authenticateWithLocalizations(attemptLocalizations)
+          : await deviceAuth.authenticate();
+      if (!authenticated) {
+        if (epoch == _sensitiveEpoch) {
+          _error = LocalizedText((l10n) => l10n.securityAuthenticationHidden);
+        }
+        return false;
+      }
+      if (_disposed || epoch != _sensitiveEpoch) return false;
+      final current = (await store.proxies())
+          .where((p) => p.id == record.id)
+          .firstOrNull;
+      if (_disposed || epoch != _sensitiveEpoch) return false;
+      if (current == null ||
+          current.revision != record.revision ||
+          current.secretRef != record.secretRef) {
+        throw SecurityFailure(LocalizedText((l10n) => l10n.r13ProxyChanged));
+      }
+      final password = await _readProxyPassword(record);
+      if (_disposed || epoch != _sensitiveEpoch) return false;
+      if (password == null) {
+        throw SecurityFailure(
+          LocalizedText((l10n) => l10n.r13ProxyPasswordMissing),
+        );
+      }
+      revealedProxyPassword = password;
+      revealedProxyId = record.id;
+      _revealTimer = Timer(revealDuration, hideSensitive);
+      return true;
+    } catch (problem) {
+      if (!_disposed && epoch == _sensitiveEpoch) {
+        _error = problem is SecurityFailure
+            ? problem
+            : LocalizedText((l10n) => l10n.securityRevealFailed);
+      }
+      return false;
+    } finally {
+      if (epoch == _sensitiveEpoch) _authenticating = false;
+      _notify();
     }
   }
 
@@ -522,6 +779,8 @@ class SecurityController extends ChangeNotifier {
     revealedSecret = null;
     revealedPassphrase = null;
     revealedCredentialId = null;
+    revealedProxyPassword = null;
+    revealedProxyId = null;
     if (cancelAuthentication) {
       _sensitiveEpoch++;
       if (_authenticating) {

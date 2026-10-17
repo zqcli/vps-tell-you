@@ -6,6 +6,9 @@ import 'package:flutter/material.dart';
 
 import '../core/net_address.dart';
 import '../core/ui/ui.dart';
+import '../security/proxy_models.dart';
+import '../security/proxy_pages.dart';
+import '../servers/ledger_controller.dart';
 import 'connection_form.dart';
 import 'tcp_test.dart';
 
@@ -15,7 +18,11 @@ class TcpTestPage extends StatefulWidget {
     this.initialHost = '',
     this.initialPort = 22,
     this.controller,
+    this.ledger,
   });
+
+  /// Source of the saved proxies. Without it the page has no Proxy row.
+  final LedgerController? ledger;
   final String initialHost;
   final int initialPort;
   final TcpTestController? controller;
@@ -48,6 +55,13 @@ class _TcpTestPageState extends State<TcpTestPage> with WidgetsBindingObserver {
   late final TextEditingController port;
   late final TcpTestController controller;
 
+  // The route for the next test: saved proxy id, a one-off endpoint (kept in
+  // memory only, never persisted), or neither (direct).
+  String? _proxyId;
+  ProxyEndpoint? _temporaryProxy;
+  LocalizedMessage? _proxyError;
+  bool _loadingProxy = false;
+
   @override
   void initState() {
     super.initState();
@@ -77,8 +91,27 @@ class _TcpTestPageState extends State<TcpTestPage> with WidgetsBindingObserver {
     super.dispose();
   }
 
-  void start() {
-    if (controller.running) {
+  Future<void> _chooseProxy() async {
+    final ledger = widget.ledger!;
+    final choice = await chooseProxy(
+      context,
+      ledger,
+      selectedId: _proxyId,
+      temporarySelected: _temporaryProxy != null,
+      allowTemporary: true,
+      previousTemporary: _temporaryProxy,
+    );
+    if (!mounted || choice == null) return;
+    controller.clearTarget();
+    setState(() {
+      _proxyId = choice.savedId;
+      _temporaryProxy = choice.temporary;
+      _proxyError = null;
+    });
+  }
+
+  Future<void> start() async {
+    if (controller.running || _loadingProxy) {
       return;
     }
     _hasValidated = true;
@@ -92,9 +125,34 @@ class _TcpTestPageState extends State<TcpTestPage> with WidgetsBindingObserver {
     if (!form.currentState!.validate()) {
       return;
     }
-    controller.test(
-      TcpTarget(host: host.text, port: int.parse(port.text.trim())),
+    final target = TcpTarget(
+      host: host.text,
+      port: int.parse(port.text.trim()),
     );
+    ProxyEndpoint? proxy = _temporaryProxy;
+    String? proxyName;
+    if (_proxyId != null) {
+      final security = widget.ledger!.security;
+      setState(() {
+        _loadingProxy = true;
+        _proxyError = null;
+      });
+      try {
+        proxy = await security.loadProxyEndpoint(
+          _proxyId!,
+          isCancelled: () => !mounted,
+        );
+        proxyName = security.proxyById(_proxyId)?.name;
+      } on LocalizedMessage catch (problem) {
+        // Never falls back to a direct test.
+        if (mounted) setState(() => _proxyError = problem);
+        return;
+      } finally {
+        if (mounted && _loadingProxy) setState(() => _loadingProxy = false);
+      }
+      if (!mounted) return;
+    }
+    controller.test(target, proxy: proxy, proxyName: proxyName);
   }
 
   String _clock(DateTime t) {
@@ -149,6 +207,17 @@ class _TcpTestPageState extends State<TcpTestPage> with WidgetsBindingObserver {
       final l10n = context.l10n;
       final result = controller.result;
       final running = controller.running;
+      final savedProxy = widget.ledger?.security.proxyById(_proxyId);
+      final routeName = savedProxy?.name;
+      final routeProxy =
+          _temporaryProxy ??
+          (savedProxy == null
+              ? null
+              : ProxyEndpoint(
+                  kind: savedProxy.kind,
+                  host: savedProxy.host,
+                  port: savedProxy.port,
+                ));
       return AppScaffold(
         title: l10n.tcpSingleTarget,
         largeTitle: false,
@@ -220,6 +289,41 @@ class _TcpTestPageState extends State<TcpTestPage> with WidgetsBindingObserver {
                     ),
                   ],
                 ),
+                if (widget.ledger != null)
+                  AppSection(
+                    header: l10n.r13ProxyRow,
+                    footer: _temporaryProxy != null
+                        ? l10n.r13TcpProxyFooter
+                        : null,
+                    children: [
+                      AppRow(
+                        key: const ValueKey('tcp-proxy-row'),
+                        icon: routeProxy == null
+                            ? Icons.arrow_outward_rounded
+                            : proxyIcon,
+                        iconColor: routeProxy == null
+                            ? AppTints.slate
+                            : proxyTint,
+                        title: routeProxy == null
+                            ? l10n.r13ProxyDirect
+                            : _proxyId != null
+                            ? routeName!
+                            : l10n.r13ProxyTemporaryTitle,
+                        subtitle: routeProxy == null
+                            ? l10n.r13ProxyDirectSubtitle
+                            : routeProxy.label,
+                        chevron: true,
+                        enabled: !running && !_loadingProxy,
+                        onTap: _chooseProxy,
+                      ),
+                    ],
+                  ),
+                if (_proxyError != null)
+                  AppBanner(
+                    tone: AppTone.red,
+                    icon: Icons.error_outline_rounded,
+                    text: _proxyError!.messageFor(l10n),
+                  ),
                 if (running)
                   AppSection(
                     header: l10n.uiConnResult,
@@ -236,7 +340,24 @@ class _TcpTestPageState extends State<TcpTestPage> with WidgetsBindingObserver {
                 else if (result != null)
                   AppSection(
                     header: l10n.uiConnResult,
-                    footer: l10n.tcpOneObservation,
+                    footerWidget: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          l10n.tcpOneObservation,
+                          style: context.footnoteStyle,
+                        ),
+                        if (result.viaProxy &&
+                            result.outcome == TcpOutcome.connected) ...[
+                          const SizedBox(height: 6),
+                          Text(
+                            l10n.r13TcpProxiedNote,
+                            key: const ValueKey('tcp-proxied-note'),
+                            style: context.footnoteStyle,
+                          ),
+                        ],
+                      ],
+                    ),
                     children: [
                       _resultRow(
                         context,
@@ -251,9 +372,27 @@ class _TcpTestPageState extends State<TcpTestPage> with WidgetsBindingObserver {
                         value: result.target.label,
                         mono: true,
                       ),
+                      AppKeyValueRow(
+                        label: l10n.r13TcpRoute,
+                        value: result.viaProxy
+                            ? l10n.r13TcpRouteVia(
+                                result.proxyName == null
+                                    ? result.proxy!.label
+                                    : '${result.proxyName} · ${result.proxy!.label}',
+                              )
+                            : l10n.r13ProxyDirect,
+                      ),
+                      if (result.proxyFailure != null)
+                        AppKeyValueRow(
+                          key: const ValueKey('tcp-proxy-reason'),
+                          label: l10n.r13TcpProxyReason,
+                          value: result.proxyFailure!.messageFor(l10n),
+                        ),
                       if (result.remoteAddress != null)
                         AppKeyValueRow(
-                          label: l10n.uiConnActualAddress,
+                          label: result.viaProxy
+                              ? l10n.r13TcpProxyAddress
+                              : l10n.uiConnActualAddress,
                           value: result.remoteFamily == null
                               ? result.remoteAddress
                               : '${result.remoteAddress} · '
@@ -262,7 +401,9 @@ class _TcpTestPageState extends State<TcpTestPage> with WidgetsBindingObserver {
                         ),
                       AppKeyValueRow(
                         label: l10n.uiConnSource,
-                        value: result.sourceFor(l10n),
+                        value: result.viaProxy
+                            ? l10n.r13TcpSourceProxy
+                            : result.sourceFor(l10n),
                       ),
                       AppKeyValueRow(
                         label: l10n.uiConnFinished,

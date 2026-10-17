@@ -478,7 +478,7 @@ class ToolsPage extends StatelessWidget {
             color: AppTints.green,
             title: l10n.tcpConnectionTest,
             subtitle: l10n.uiTabsTcpTile,
-            onTap: () => _open(context, (_) => const TcpTestPage()),
+            onTap: () => _open(context, (_) => TcpTestPage(ledger: controller)),
           ),
         ),
         _ToolRow(

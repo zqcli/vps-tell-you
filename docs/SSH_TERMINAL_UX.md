@@ -85,6 +85,21 @@ SFTP 文本编辑器按文件名/扩展名/shebang 做语法高亮（Shell、YAM
 - 下载位置：iOS 为应用 Documents 下的 `SFTP Downloads/`，`Info.plist` 已开启 `UIFileSharingEnabled` 与 `LSSupportsOpeningDocumentsInPlace`，因此在“文件”App 的“我的 iPhone / 本应用”中可见（Documents 只存放用户导出，账本数据库在不可见的 Application Support）；Android 为应用私有文档目录，需通过“分享”另存；桌面为系统“下载”目录。
 - 验证：`test/sftp_session_test.dart`（会话层 loopback）、`test/sftp_ui_test.dart`（浏览器 / 编辑器 / 传输 / 320px×2 倍字号）、`test/sftp_entry_test.dart`（详情入口、连接页、终端面板且 shell 零字节）、`test/sftp_loopback_ui_test.dart`（浏览器对真实 loopback SFTP）。真机的文件选择器、分享面板与“文件”App 可见性仍须设备验证。
 
+## 代理（SOCKS5 / HTTP / HTTPS）
+
+SSH（终端与 SFTP）和 TCP 检测可以经代理服务器连接；留空即直连。代理只作用于**你主动发起**的这三类连接，不是系统代理，应用的其他网络请求（提供商目录下载）不受影响。
+
+- **保存的代理**：设置 → 密钥与安全 → “代理”。名称、类型（SOCKS5 / HTTP / HTTPS，默认端口 1080 / 8080 / 443）、主机、端口、可选用户名与密码。元数据在 SQLite 表 `proxies`（schema v14），**密码只在设备安全存储**（引用 `vps_proxy_…`，与凭据相同的“先预留、写入、校验、提交；被替换/删除的引用进入 `secret_cleanup` 重试清理”流程）；不进入 JSON 备份。编辑时密码留空表示保留；清空用户名同时删除密码。查看已保存密码需要设备验证（与凭据相同，20 秒后隐藏）。
+- **SSH 连接配置**的“代理”行：直连 / 已保存代理 / “新建代理…”。服务器详情的 SSH 行副标题显示“经 <代理名>”。`ssh_configurations.proxy_id` 外键为 `ON DELETE RESTRICT`：**仍被引用的代理不能删除**（界面禁用并说明有几台服务器在用），不会让连接悄悄变成直连。连接时代理缺失、密码缺失或被改动一律**失败**，不回退直连。
+- **TCP 检测页**的“代理”行：直连（默认）/ 已保存代理 / “输入代理…”（临时：只用于本次，不保存，密码不写入任何存储）。结果显示路径（直连 / 经代理）；经代理时“实际地址”是**代理的**地址，成功只证明代理能到达目标，不证明本机能直接到达。
+- **传输**（`lib/connections/proxy_connector.dart`，纯 `dart:io`）：
+  - SOCKS5（RFC 1928）：无认证或用户名/密码（RFC 1929）；CONNECT 的目标地址类型按输入选择 IPv4 / IPv6 / **域名**——域名原样发给代理，由代理解析（远程 DNS），本机不解析目标。应答码 1–8 分别对应本地化错误。
+  - HTTP：`CONNECT host:port`，IPv6 字面量加方括号；配置了用户名时发送 `Proxy-Authorization: Basic`；响应头（含状态行）最大 16 KiB，2xx 成功，407 区分“需要凭据 / 凭据被拒”，其他状态显示状态码；头之后的字节原样交给隧道。
+  - HTTPS 代理：先与代理做 TLS（**正常证书校验，没有“忽略证书”选项**；主机名按代理主机核对），再发 CONNECT。
+  - 取消与超时与直连一致：一个对象持有连接任务和迟到的 socket，取消后迟到的 socket 被销毁；SSH 阶段计时器到期时提示“通过代理连接超时”。用户名/密码字节数 1–255，HTTP 用户名不能含冒号。区域 ID（`%en0`）的链路本地地址不能经代理。
+- **主机公钥信任仍以目标 `主机:端口` 为键**，与是否使用代理无关；日志和错误不含代理主机、用户名或密码。
+- 验证：`test/proxy_connector_test.dart`（回环假代理：SOCKS5 有/无认证、错误密码、全部应答码、域名/IPv6、早到数据、分片应答；HTTP 200/407/502、分片头、超大头、IPv6 括号；HTTPS 测试 CA / 他人 CA / 系统信任库，`test/fixtures/proxy_tls/`）、`test/proxy_ssh_e2e_test.dart`（对 AsyncSSH 回环夹具：SSH 经四种代理、SFTP 经 SOCKS5、终端上的 SFTP、失败不回退直连、TCP 检测经代理）、`test/proxy_store_test.dart`、`test/schema14_store_migration_test.dart`、`test/proxy_widget_test.dart`。真实代理软件与 iOS 上的 HTTPS 证书链（Apple 对服务器证书有效期的限制）仍需设备验证。
+
 ## 离线开源字体
 
 默认单一 DejaVu Sans Mono 2.37，常规 + 真粗体合计 677,408 字节（压缩前）；来源、SHA-256 和完整许可见 `assets/fonts/README.md` / `LICENSE-DejaVu.txt`，App 的会话详情可打开许可列表。无运行时字体下载。

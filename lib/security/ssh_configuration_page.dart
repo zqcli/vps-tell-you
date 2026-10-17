@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import '../core/net_address.dart';
 import '../core/ui/ui.dart';
 import '../servers/ledger_controller.dart';
+import 'proxy_pages.dart';
 import 'security_models.dart';
 import 'security_pages.dart';
 import '../l10n/generated/app_localizations.dart';
@@ -26,7 +27,7 @@ class _SshConfigurationPageState extends State<SshConfigurationPage> {
   final host = TextEditingController(),
       port = TextEditingController(),
       username = TextEditingController();
-  String? credentialId;
+  String? credentialId, proxyId;
   int revision = -1;
 
   /// Errors are derived while building, so they follow the app language and
@@ -50,6 +51,7 @@ class _SshConfigurationPageState extends State<SshConfigurationPage> {
     port.text = '${config?.port ?? 22}';
     username.text = config?.username ?? '';
     credentialId = config?.credentialId;
+    proxyId = config?.proxyId;
     revision = config?.revision ?? -1;
     setState(() => loading = false);
   }
@@ -138,6 +140,19 @@ class _SshConfigurationPageState extends State<SshConfigurationPage> {
     if (mounted && adopt) username.text = credential.defaultUsername;
   }
 
+  Future<void> chooseProxyRow() async {
+    final choice = await chooseProxy(
+      context,
+      widget.ledger,
+      selectedId: proxyId,
+    );
+    if (!mounted || choice == null) return;
+    setState(() {
+      proxyId = choice.savedId;
+      dirty = true;
+    });
+  }
+
   String? hostError(AppLocalizations l10n) {
     if (!validationAttempted) return null;
     final text = host.text.trim();
@@ -175,6 +190,7 @@ class _SshConfigurationPageState extends State<SshConfigurationPage> {
         port: int.parse(port.text),
         username: username.text,
         credentialId: credentialId,
+        proxyId: proxyId,
         revision: revision,
       ),
     );
@@ -199,6 +215,7 @@ class _SshConfigurationPageState extends State<SshConfigurationPage> {
       final credential = security.credentials
           .where((c) => c.id == credentialId)
           .firstOrNull;
+      final proxy = security.proxyById(proxyId);
       return PopScope(
         canPop: allowPop || (!dirty && !saving),
         onPopInvokedWithResult: (didPop, result) {
@@ -329,6 +346,26 @@ class _SshConfigurationPageState extends State<SshConfigurationPage> {
                           );
                           if (mounted) setState(() {});
                         },
+                      ),
+                    ],
+                  ),
+                  AppSection(
+                    header: l10n.r13ProxyRow,
+                    footer: l10n.r13ProxyRowFooter,
+                    children: [
+                      AppRow(
+                        key: const ValueKey('ssh-proxy-row'),
+                        icon: proxy == null
+                            ? Icons.arrow_outward_rounded
+                            : proxyIcon,
+                        iconColor: proxy == null ? AppTints.slate : proxyTint,
+                        title: proxy?.name ?? l10n.r13ProxyDirect,
+                        subtitle: proxy == null
+                            ? l10n.r13ProxyDirectSubtitle
+                            : proxySummary(proxy),
+                        chevron: true,
+                        enabled: !(saving || security.needsReload),
+                        onTap: chooseProxyRow,
                       ),
                     ],
                   ),
