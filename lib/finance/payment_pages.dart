@@ -24,25 +24,8 @@ class PaymentForm extends StatefulWidget {
   State<PaymentForm> createState() => _PaymentFormState();
 }
 
-class _PaymentFormState extends State<PaymentForm> {
-  bool validationAttempted = false;
-  String? validationLocale;
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    final locale = context.l10n.localeName;
-    if (validationLocale != null &&
-        validationLocale != locale &&
-        validationAttempted) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) form.currentState?.validate();
-      });
-    }
-    validationLocale = locale;
-  }
-
-  final form = GlobalKey<FormState>();
+class _PaymentFormState extends State<PaymentForm>
+    with LocaleRevalidatingForm<PaymentForm> {
   final requestId = newLocalId();
   late final Map<String, TextEditingController> fields;
   late String currency;
@@ -150,8 +133,7 @@ class _PaymentFormState extends State<PaymentForm> {
 
   Future<void> save() async {
     if (saving) return;
-    validationAttempted = true;
-    final valid = form.currentState!.validate();
+    final valid = validateForm();
     setState(
       () => confirmationError = confirmed
           ? null
@@ -241,7 +223,7 @@ class _PaymentFormState extends State<PaymentForm> {
           canPop: !saving,
           child: FinanceModalFrame(
             child: Form(
-              key: form,
+              key: formKey,
               child: AppScaffold.modal(
                 title: account
                     ? l10n.financeRecordAccountBill

@@ -2,6 +2,7 @@ import 'package:flutter/cupertino.dart' show CupertinoSwitch;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show TextInputAction, TextInputFormatter;
 
+import '../../l10n/locale_preference.dart';
 import '../app_palette.dart';
 import 'app_list.dart';
 
@@ -323,4 +324,31 @@ class AppTextField extends StatelessWidget {
 extension on Widget {
   Widget withLabel(String? label) =>
       label == null ? this : Semantics(label: label, child: this);
+}
+
+/// A [Form] page whose shown validation errors follow a live language change:
+/// once validated, switching the locale validates again so the messages are
+/// re-translated. Put [formKey] on the [Form] and validate with [validateForm]
+/// (or set [validationAttempted] when validating another way).
+mixin LocaleRevalidatingForm<T extends StatefulWidget> on State<T> {
+  final formKey = GlobalKey<FormState>();
+  bool validationAttempted = false;
+  String? _locale;
+
+  bool validateForm() {
+    validationAttempted = true;
+    return formKey.currentState!.validate();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final next = context.l10n.localeName;
+    if (_locale != null && _locale != next && validationAttempted) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) formKey.currentState?.validate();
+      });
+    }
+    _locale = next;
+  }
 }

@@ -56,26 +56,8 @@ class ServerForm extends StatefulWidget {
   State<ServerForm> createState() => _ServerFormState();
 }
 
-class _ServerFormState extends State<ServerForm> {
-  final _form = GlobalKey<FormState>();
-  bool _hasValidated = false;
-  String? _validationLocale;
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    final next = context.l10n.localeName;
-    if (_validationLocale != null &&
-        _validationLocale != next &&
-        _hasValidated) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) {
-          _form.currentState?.validate();
-        }
-      });
-    }
-    _validationLocale = next;
-  }
-
+class _ServerFormState extends State<ServerForm>
+    with LocaleRevalidatingForm<ServerForm> {
   final _resources = GlobalKey<ServerResourceFieldsState>();
   late final Map<String, TextEditingController> fields;
   late BillingKind billing;
@@ -665,8 +647,8 @@ class _ServerFormState extends State<ServerForm> {
 
   Future<void> save() async {
     if (saving || !widget.controller.canMutate) return;
-    _hasValidated = true;
-    final invalid = _form.currentState!.validateGranularly();
+    validationAttempted = true;
+    final invalid = formKey.currentState!.validateGranularly();
     final resources = _resources.currentState?.validateAndRead(
       invalidFields: invalid,
     );
@@ -797,7 +779,7 @@ class _ServerFormState extends State<ServerForm> {
             // neither discard edits nor prevent validation of off-screen rows.
             SliverToBoxAdapter(
               child: Form(
-                key: _form,
+                key: formKey,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [

@@ -20,25 +20,8 @@ class CalculatorPage extends StatefulWidget {
   State<CalculatorPage> createState() => _CalculatorPageState();
 }
 
-class _CalculatorPageState extends State<CalculatorPage> {
-  bool validationAttempted = false;
-  String? validationLocale;
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    final locale = context.l10n.localeName;
-    if (validationLocale != null &&
-        validationLocale != locale &&
-        validationAttempted) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) form.currentState?.validate();
-      });
-    }
-    validationLocale = locale;
-  }
-
-  final form = GlobalKey<FormState>();
+class _CalculatorPageState extends State<CalculatorPage>
+    with LocaleRevalidatingForm<CalculatorPage> {
   late final TextEditingController price, start, asOf, due;
   late String currency;
   late int cycle;
@@ -191,7 +174,7 @@ class _CalculatorPageState extends State<CalculatorPage> {
     // Clear a shown error once the field has a valid date.
     if (validationAttempted) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) form.currentState?.validate();
+        if (mounted) formKey.currentState?.validate();
       });
     }
   }
@@ -218,8 +201,7 @@ class _CalculatorPageState extends State<CalculatorPage> {
   }
 
   void calculate() {
-    validationAttempted = true;
-    if (!form.currentState!.validate()) return;
+    if (!validateForm()) return;
     final estimateDate = LedgerDate.tryParse(asOf.text.trim())!;
     final end = LedgerDate.tryParse(due.text.trim())!;
     if (estimateDate.daysUntil(end).abs() > 36600) {
@@ -281,7 +263,7 @@ class _CalculatorPageState extends State<CalculatorPage> {
       ),
       children: [
         Form(
-          key: form,
+          key: formKey,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [

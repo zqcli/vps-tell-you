@@ -112,26 +112,9 @@ class ServerResourceFields extends StatefulWidget {
   State<ServerResourceFields> createState() => ServerResourceFieldsState();
 }
 
-class ServerResourceFieldsState extends State<ServerResourceFields> {
-  final _form = GlobalKey<FormState>();
-  bool _hasValidated = false;
-  String? _validationLocale;
+class ServerResourceFieldsState extends State<ServerResourceFields>
+    with LocaleRevalidatingForm<ServerResourceFields> {
   late bool _expanded = widget.initiallyExpanded || !widget.collapsible;
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    final next = context.l10n.localeName;
-    if (_validationLocale != null &&
-        _validationLocale != next &&
-        _hasValidated) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) {
-          _form.currentState?.validate();
-        }
-      });
-    }
-    _validationLocale = next;
-  }
 
   final _fields = <String, TextEditingController>{};
   final _units = <String, int>{};
@@ -246,8 +229,8 @@ class ServerResourceFieldsState extends State<ServerResourceFields> {
   ServerResources? validateAndRead({
     Set<FormFieldState<Object?>>? invalidFields,
   }) {
-    _hasValidated = true;
-    final invalid = _form.currentState!.validateGranularly();
+    validationAttempted = true;
+    final invalid = formKey.currentState!.validateGranularly();
     if (invalid.isNotEmpty) {
       // A collapsed group would hide the message the user must fix.
       if (!_expanded) setState(() => _expanded = true);
@@ -581,7 +564,7 @@ class ServerResourceFieldsState extends State<ServerResourceFields> {
     final l10n = context.l10n;
     final footnote = l10n.resourceLocalHelp;
     return Form(
-      key: _form,
+      key: formKey,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [

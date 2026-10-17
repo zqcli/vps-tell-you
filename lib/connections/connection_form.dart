@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../core/ui/ui.dart';
-import '../l10n/locale_preference.dart';
 
 /// Validated text row for the connection forms: an [AppFormRow] whose error
 /// text is shown under the row, wired into the surrounding [Form] so that
@@ -88,30 +87,4 @@ class ValidatedTextRow extends StatelessWidget implements AppSectionItem {
       onChanged?.call(value);
     },
   );
-}
-
-/// A [Form] page whose shown validation errors follow a live language change:
-/// once validated, switching the locale validates again so the messages are
-/// re-translated. Put [formKey] on the [Form] and validate with [validateForm].
-mixin LocaleRevalidatingForm<T extends StatefulWidget> on State<T> {
-  final formKey = GlobalKey<FormState>();
-  bool _validated = false;
-  String? _locale;
-
-  bool validateForm() {
-    _validated = true;
-    return formKey.currentState!.validate();
-  }
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    final next = context.l10n.localeName;
-    if (_locale != null && _locale != next && _validated) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) formKey.currentState?.validate();
-      });
-    }
-    _locale = next;
-  }
 }

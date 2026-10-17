@@ -16,25 +16,7 @@ class FxPage extends StatefulWidget {
   State<FxPage> createState() => _FxPageState();
 }
 
-class _FxPageState extends State<FxPage> {
-  bool validationAttempted = false;
-  String? validationLocale;
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    final locale = context.l10n.localeName;
-    if (validationLocale != null &&
-        validationLocale != locale &&
-        validationAttempted) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) form.currentState?.validate();
-      });
-    }
-    validationLocale = locale;
-  }
-
-  final form = GlobalKey<FormState>();
+class _FxPageState extends State<FxPage> with LocaleRevalidatingForm<FxPage> {
   late final TextEditingController usd, eur, date;
   late String currency;
   bool saving = false;
@@ -60,8 +42,7 @@ class _FxPageState extends State<FxPage> {
 
   Future<void> save() async {
     if (saving) return;
-    validationAttempted = true;
-    if (!form.currentState!.validate()) return;
+    if (!validateForm()) return;
     final fx = FxSettings(
       displayCurrency: currency,
       usdToCny: usd.text.trim().isEmpty ? null : usd.text.trim(),
@@ -90,7 +71,7 @@ class _FxPageState extends State<FxPage> {
         canPop: !saving,
         child: FinanceModalFrame(
           child: Form(
-            key: form,
+            key: formKey,
             child: AppScaffold.modal(
               title: l10n.financeFxTitle,
               cancelLabel: l10n.financeCancel,
