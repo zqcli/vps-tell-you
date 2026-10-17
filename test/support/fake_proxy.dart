@@ -86,7 +86,16 @@ class FakeProxy {
     }
   }
 
+  /// A peer that hangs up while we still write (the TCP test closes right
+  /// after connecting) fails the socket's `done` with a broken pipe; without
+  /// a listener that becomes an uncaught error and fails an unrelated test.
+  static Socket _quiet(Socket socket) {
+    unawaited(socket.done.then<void>((_) {}, onError: (Object _) {}));
+    return socket;
+  }
+
   void _handle(Socket client) {
+    _quiet(client);
     accepted++;
     connections.add(client);
     final conn = _Conn(client, () => eofs++);
@@ -103,7 +112,7 @@ class FakeProxy {
     final mapped = _opts.hosts[host];
     final target = mapped == null ? (host, port) : _split(mapped);
     try {
-      return await Socket.connect(target.$1, target.$2);
+      return _quiet(await Socket.connect(target.$1, target.$2));
     } catch (_) {
       return null;
     }
