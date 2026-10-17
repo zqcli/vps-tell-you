@@ -65,7 +65,6 @@ void main() {
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
-    final mountWatch = Stopwatch()..start();
     await tester.pumpWidget(
       MaterialApp(
         theme: appTheme(),
@@ -76,23 +75,16 @@ void main() {
       ),
     );
     await tester.pump();
-    mountWatch.stop();
-    final built = find.byType(ServerRow).evaluate().length;
-    debugPrint('SCALE mount ${mountWatch.elapsedMilliseconds} ms, rows $built');
-    expect(built, lessThan(60));
+    expect(find.byType(ServerRow).evaluate().length, lessThan(60));
 
-    final typeWatch = Stopwatch()..start();
-    for (final q in ['s', 'sr', 'srv', 'srv-1', 'srv-12']) {
-      await tester.enterText(find.byKey(const ValueKey('server-search')), q);
-      await tester.pump();
-    }
-    typeWatch.stop();
-    debugPrint('SCALE 5 keystrokes ${typeWatch.elapsedMilliseconds} ms');
-
-    final visibleWatch = Stopwatch()..start();
-    ledger.updateFilters(query: '10.0.1');
-    final n = ledger.visible.length;
-    visibleWatch.stop();
-    debugPrint('SCALE visible($n) ${visibleWatch.elapsedMicroseconds} us');
+    await tester.enterText(
+      find.byKey(const ValueKey('server-search')),
+      'srv-12',
+    );
+    await tester.pump();
+    expect(ledger.visible.length, 11); // srv-12 and srv-120 .. srv-129
+    expect(find.byType(ServerRow).evaluate().length, lessThan(60));
+    // One filtered list per state, shared by every read of a frame.
+    expect(identical(ledger.visible, ledger.visible), isTrue);
   });
 }
