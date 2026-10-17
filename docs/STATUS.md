@@ -2,7 +2,22 @@
 
 更新：2026-10-10 UTC
 
-## 当前版本：0.5.0（2026-10-16，分支 `dev`，标签 `v0.5.0`）
+## 当前增量：液态玻璃、代理、后台宽限（`dev`，0.6.0 未发布）
+
+- **液态玻璃**（`lib/core/ui/app_glass.dart`）：仅在 iOS 26 及以上启用。标签栏悬浮成胶囊；导航按钮、搜索框、底部弹窗的顶部和关闭按钮做成玻璃质感：轻度模糊加饱和度、1px 高光边、极淡的内高光，不做折射和动画。列表、卡片等内容区域不改。iOS 18 及以下、Android 保持原来的毛玻璃；开启「增强对比度」时改为不透明。可以用 `--dart-define=APP_GLASS=liquid|frosted` 强制指定样式。
+- **代理**：
+  - SSH、SFTP 和 TCP 测试支持 SOCKS5（远端解析 DNS，支持用户名密码认证）、HTTP CONNECT 和 HTTPS（证书正常校验）代理。
+  - 数据库升到 schema v14：新增 `proxies` 表，`ssh_configurations` 新增 `proxy_id` 列（外键 RESTRICT，仍有 SSH 配置在用的代理不能删除）。代理密码只存在安全存储里，不进备份。
+  - 代理不可用时直接报错，不会退回直连。TCP 测试页可以临时输入代理，不保存。
+  - HTTPS 代理测试用的证书在测试运行时用 openssl 临时生成，不提交到仓库。
+- **后台宽限**（`lib/core/background_grace.dart`，iOS 端 `BackgroundTimeChannel.swift` 用 `beginBackgroundTask`）：
+  - App 进入后台后，SSH 和 SFTP 会话先保留，在系统给的时间内回到前台就能无缝继续。
+  - 模拟器实测系统给约 30 秒，约 26 秒时干净断开。Android 固定保留 30 秒。
+  - 超时断开后，回到前台会提示会话已结束；正在进行的传输会被取消。
+  - 没有使用 `BGContinuedProcessingTask`。
+- **验证**：全量测试 **1335/1335 通过**，analyze 零问题。
+
+## 上一版本：0.5.0（2026-10-16，分支 `dev`，标签 `v0.5.0`）
 
 - **版本**：`pubspec.yaml` 改为 0.5.0+5，同时更新 `kAppVersion`；设置横幅显示「版本 0.5.0」；更新记录的版本标题为 `0.5.0 — 2026-10-16`。
 - **品牌**：App 图标改为服务器叠放在续期倒计时圆环中（无阴影）；名称写作 VPS Tell You；采用 MIT 许可证；关于页包含更新记录、许可证和开源组件。
