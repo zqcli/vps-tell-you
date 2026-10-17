@@ -35,7 +35,9 @@ As the number of VPS grows, the details scatter: which provider, when it expires
 - Record name, IPv4 / IPv6 / hostname, purpose, specs and notes; search, groups, favorites, due-date filters and sorting
 - Names, logos and descriptions of 88 cloud and VPS providers, searchable when you add a server; you can still create your own
 - Archived servers can be restored; IPv4, IPv6 and hostname are independent and optional
-- Simplified Chinese and English interface; light, dark or follow the system
+- Swipe a server row right, or long-press it, and choose Duplicate to get a new form prefilled with the provider, group, hardware and price (addresses, dates, payments and SSH settings are not copied, and nothing is saved until you tap Save); swiping left gives SSH / Favorite, and Archive is in the long-press menu (still with its confirmation)
+- Simplified Chinese and English interface; light, dark or follow the system; on iOS 26 and later a restrained “Liquid Glass” look (tab bar, navigation buttons, search field and sheet buttons), while other systems keep the frosted look
+- The server list builds only the rows on screen, so thousands of servers open quickly
 
 <table>
   <tr>
@@ -68,12 +70,13 @@ As the number of VPS grows, the details scatter: which provider, when it expires
 ### SSH terminal, SFTP and TCP test
 
 - Full-screen xterm terminal: password or key login (including encrypted keys), a special-keys row, command snippets
-- SSH survives a short trip to the background for the time the system allows (about 30 s on iOS, a fixed 30 s on Android); coming back continues the session, a longer absence closes it
+- SSH / SFTP survive a short trip to the background (the system decides on iOS, typically about 30 s; a fixed 30 s on Android); coming back continues the session and a longer absence closes it cleanly. For long-running work use tmux / screen on the server
 - 4 terminal color schemes; prompts, IPs, paths and errors are colored automatically and the text is left untouched
 - SFTP file manager: browse, upload, download, rename, move and delete, plus a text editor with syntax highlighting
 - Single-target TCP test; SSH, SFTP and TCP all work with IPv6
 - Host keys must be confirmed on first connect, and a changed key blocks the connection
-- SSH, SFTP and TCP tests can go through a SOCKS5, HTTP or HTTPS proxy (Settings › Proxies; the password stays in secure storage and is never exported)
+- SSH, SFTP and TCP tests can go through a SOCKS5, HTTP or HTTPS proxy (saved under Settings › Proxies (Security section); the password stays in secure storage and is never backed up); if the proxy fails you get an error, never a silent fallback to a direct connection
+- When a connection fails, tap the red banner or “Details ›” to open Error Details: the failing stage, the target, the proxy used and the original error with passwords and keys removed, with a Copy button; typing `exit` to leave a session is not an error
 
 <table>
   <tr>
@@ -91,7 +94,8 @@ As the number of VPS grows, the details scatter: which provider, when it expires
 ### Settings, backup and About
 
 - JSON ledger export (with a preview of what is included) and restore into an empty ledger
-- Providers, language, appearance and reminder permission live in Settings; About has the changelog, license and open-source components
+- Providers, language, appearance and reminder permission live in Settings
+- Settings › About › What's New lists versions newest first; opening one shows the notes of the GitHub release with the same tag, plus the license and open-source components
 
 <table>
   <tr>
@@ -116,7 +120,9 @@ As the number of VPS grows, the details scatter: which provider, when it expires
 - **No account, no telemetry.** Apart from the SSH / SFTP / TCP connections you start yourself, the only network request is downloading the public provider directory (`catalog/` in this repository, from GitHub raw with a jsDelivr mirror). The request carries no ledger data. Update-on-launch can be turned off in Settings › Providers.
 - **SSH passwords and keys live only in the device's secure storage** (iOS Keychain / Android Keystore). Viewing them needs device authentication, and they are never exported.
 - **A changed host key blocks the connection** until you verify it again.
-- **JSON backups are not encrypted, and they contain no credentials.** Names, addresses and costs are plain text, so store the file carefully.
+- **Proxy passwords are kept the same way**, in secure storage and never in backups. Proxies apply only to the SSH / SFTP / TCP connections you start, and never fall back to direct.
+- **Error Details live in memory only**, with passwords, passphrases, keys and proxy credentials removed before you copy them; they are never saved, logged or exported.
+- **JSON backups are not encrypted, and they contain no credentials or proxies.** Names, addresses and costs are plain text, so store the file carefully.
 - **Archiving is not cancelling.** Archiving a server in the app does not cancel the service with the provider or stop billing.
 - **Payments are bookkeeping.** The app never pays anyone.
 - **Valuations and FX rates are for reference only.** They are computed from the figures you enter and are not quotes.
@@ -125,7 +131,7 @@ For the full boundaries see the [developer guide](docs/DEVELOPMENT.md) (Chinese)
 
 ## Install
 
-There are **no prebuilt binaries yet**; the v0.5.0 release is source-only. You build the app from source with Flutter 3.47.6 (stable).
+There are **no prebuilt binaries yet**; the latest release is 0.5.0 (source-only), and `dev` contains the upcoming 0.6.0 (see the [changelog](CHANGELOG.en.md)). You build the app from source with Flutter 3.47.6 (stable).
 
 ```sh
 git clone https://github.com/zqcli/vps-tell-you.git
@@ -177,11 +183,11 @@ Issues and pull requests are welcome. Please read the [developer guide](docs/DEV
 ```sh
 dart format --output=none --set-exit-if-changed lib test
 flutter analyze
-flutter test
+VPS_SSH_FIXTURE_PYTHON="$PWD/.ssh-test-venv/bin/python" flutter test   # about 1390 tests
 python3 tool/build_catalog.py --check
 ```
 
-The full SSH protocol tests need Python dependencies; see the developer guide for setup. Never commit real passwords, private keys, API tokens or user databases.
+The full SSH protocol and proxy tests need Python dependencies (`.ssh-test-venv`); see the developer guide for setup. Never commit real passwords, private keys, API tokens or user databases.
 
 ## Documentation
 

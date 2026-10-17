@@ -27,6 +27,8 @@ This comment is not shown.
 - **Going to the background no longer disconnects SSH at once**: iOS asks the system for background time (the system decides, typically about 30 s) and Android keeps the session for a fixed 30 s. Coming back in time continues the terminal untouched; otherwise the session is closed cleanly and you see “SSH session to … ended because the app stayed in the background”. SFTP behaves the same, and a running transfer is cancelled when the time runs out
 - Swiping a server row to the left now offers only SSH and Favorite; Archive moved to the long-press menu (still with its confirmation)
 - **Performance**: the server list builds only the rows on screen (1,000 servers open in 0.7 s instead of 3.4 s; search is about 10× faster); switching tabs no longer rebuilds the other open pages; Costs caches its figures per ledger revision; moving the caret in the SFTP editor no longer re-lays out the whole file, and transfer progress no longer rebuilds the page
+- Typing `exit` / `logout` in the terminal no longer shows an error, just “You left the SSH session”; network drops, server-side closes and signals still show Error Details
+- About › What’s New lists versions (newest first); tap one to read its notes, which match the GitHub release of the same tag
 
 ## 0.5.0 — 2026-10-16
 

@@ -2,7 +2,7 @@
 
 > 面向使用者的介绍见根目录 [README](../README.md)（[English](../README.en.md)）。本文是从旧 README 迁移而来的开发、数据规则与安全边界说明，对应应用版本 0.5.0。
 
-VPS Tell You 是本地优先的个人 VPS 台账，Flutter 原生应用。当前版本 **0.5.0**。界面采用 iOS 风格的统一移动端设计，iOS 与 Android 共用同一套组件和交互，规范见 [MOBILE_UI_REDESIGN](MOBILE_UI_REDESIGN.md)。Android / iOS 工程已生成，Linux 用于原生开发与验证。
+VPS Tell You 是本地优先的个人 VPS 台账，Flutter 原生应用。最新发布版本 **0.5.0**（`pubspec.yaml` 仍为 0.5.0+5），`dev` 分支包含即将发布的 **0.6.0**（未发布，见 [CHANGELOG](../CHANGELOG.md)）。界面采用 iOS 风格的统一移动端设计，iOS 与 Android 共用同一套组件和交互，规范见 [MOBILE_UI_REDESIGN](MOBILE_UI_REDESIGN.md)。Android / iOS 工程已生成，Linux 用于原生开发与验证。
 
 ## 当前可以做什么
 
@@ -31,6 +31,13 @@ VPS Tell You 是本地优先的个人 VPS 台账，Flutter 原生应用。当前
 - 命令片段增改查删、完整转义预览；只插入独立草稿，就地编辑并选择“发送”或“发送并执行”
 - SFTP 文件管理（服务器详情“SFTP 文件”或终端 ⋯ 菜单的整页面板）：浏览 / 新建 / 重命名移动 / 删除（含显式递归确认）/ 文本编辑 / 上传 / 下载，复用 SSH 凭据与主机核验；终端内打开不中断 shell。详见 [SSH_TERMINAL_UX](SSH_TERMINAL_UX.md)
 - 单机 SSH 重启 / 关机，经影响确认和完整目标二次核对；不开机、无 API 电源，不自动重试不确定结果
+- **代理（0.6.0）**：SSH（终端与 SFTP）和 TCP 检测可经 SOCKS5 / HTTP / HTTPS 代理。在“设置 / 安全 / 代理”保存，密码只在安全存储、不进备份；代理不可用一律失败，绝不回退直连。详见 [SSH_TERMINAL_UX](SSH_TERMINAL_UX.md) “代理”一节
+- **后台宽限（0.6.0）**：切到后台时 SSH / SFTP 会话先保留。iOS 用 `beginBackgroundTask`（时间由系统决定，通常约 30 秒），Android 固定 30 秒；超时干净关闭并提示，运行中的 SFTP 传输被取消。长任务仍建议远端 tmux / screen
+- **错误详情（0.6.0）**：点击 SSH / SFTP / TCP 失败提示条或“详情 ›”打开，显示失败环节、目标、所用代理、时间和已去除密码 / 口令 / 私钥 / 代理凭据 / Authorization 头的原始错误，可复制；只在内存中，不写库、不记日志、不导出。用户自己取消的连接不显示。shell 自行正常退出（如输入 `exit`）不算错误，终端页返回并提示“已退出 SSH 会话”（非 0 退出状态会附带退出码）
+- **服务器行手势（0.6.0）**：右滑 = 复制服务器（预填提供商 / 分组 / 地区 / 用途 / 系统 / 硬件 / 费用，不复制地址、日期、备注、付款和 SSH 配置，保存前不写入），左滑 = SSH / 常用，长按菜单含复制与归档（归档仍需确认）
+- **iOS 26 液态玻璃（0.6.0）**：仅 iOS 26 及以上使用克制的玻璃样式（`lib/core/ui/app_glass.dart`：标签栏、导航按钮、搜索框、弹窗按钮），其他平台保持毛玻璃，“增强对比度”时为不透明
+- **更新记录（0.6.0）**：“设置 / 关于 / 更新记录”按版本从新到旧列出，每个版本点开即该版本的说明，与同名 tag 的 GitHub Release 一致（`python3 tool/release_notes.py <版本>` 从 CHANGELOG 生成）
+- **性能（0.6.0）**：服务器列表懒加载、费用页按台账版本缓存（数据见 STATUS）
 
 - 提供商（我的提供商 + 提供商目录）：新增服务器时全屏搜索选择提供商（也可不选或新建）；服务器列表、详情、选择页和提供商页统一显示目录里的 Logo，自建或不在目录里的提供商显示首字母头像。提供商页显示简介、官网（点按复制）和它的全部服务器，本地提供商可重命名 / 删除（服务器保留）
 - 提供商目录（名称、Logo、简介）放在仓库 `catalog/`，**不随应用打包**：应用启动时（距上次成功检查 ≥ 12 小时，可在“设置 / 提供商”关闭）和手动“检查更新”时从 GitHub（含 jsDelivr 镜像）下载公开的目录并缓存，离线时继续用缓存；只下载公开文件，台账不会离开设备
@@ -82,7 +89,7 @@ flutter run -d <simulator-id>
 ## 代码结构与数据规则
 
 - `lib/core`：主题色板与 `lib/core/ui` 设计组件（用法见 `lib/core/ui/README.md`）、纯 Dart 日期 / Money 值类型
-- `lib/data`：schema v13、真实旧版本的事务迁移、SQLite 事务与平台打开方式
+- `lib/data`：schema v14、真实旧版本的事务迁移、SQLite 事务与平台打开方式
 - `lib/servers`：本地字段模型、ChangeNotifier 控制器、列表 / 表单 / 详情
 - `lib/finance`：纯 Dart 财务 / FX、付款、计算器、白名单 PNG 导出
 - `lib/security`：凭据元数据与原生存储、密钥校验、设备认证、SSH 配置、已保存代理（`proxy_models.dart` / `proxy_pages.dart`）、完整主机信任
@@ -111,7 +118,9 @@ USD / CNY / EUR 金额使用整数分，0 是免费、null 是未知，不跨币
 
 可在“设置 / 台账备份与恢复”导出未加密 JSON，范围见下节；凭据不在其中。不要清除应用数据、卸载重装或删除数据库来“修复”。打不开时先检查磁盘空间、权限与应用版本，再点“重试打开”。较新 schema 会阻止旧应用打开，不执行破坏性降级。旧版本事务迁移保留 ID、分组、归档及费用字段，只为可推断的预付资料建立初始服务期；不虚构历史实付或汇率。v2 → v3 只添加安全资料表，不读取或创建钥匙环；v3 → v4 只添加命令片段表；v4 → v5 曾添加面板适配器表（v12 已移除）。v5 → v6 仅添加提醒规则、服务器创建触发器与外观设置。v6 → v7 仅添加可空的本地资源配置 JSON，保留全部既有资料。v7 → v8 为可空硬件字段与独立流量周期提供版本围栏，不重写旧数据。v8 → v9 只添加默认中文的界面语言偏好。v12 → **v13**：套餐功能移除，同一事务内清除服务器的套餐关联（两列保留但不再使用）、解除第 6 轮示例目录 id，并添加 `app_settings.provider_directory_auto`（默认开）；失败整体回滚。
 
-v11 → **v12**：面板适配器功能整体移除。同一事务内把全部适配器秘密引用写入已有的清理队列（由“重试清理”从设备安全存储删除），删除 cloud_accounts / cloud_observations / cloud_bindings 与相关触发器，把适配器产生的“待确认”提供商转为普通提供商（无服务器的占位提供商删除、重名追加序号），新增 providers.catalog_id（与随后在 v13 退役的 servers.package_id / package_snapshot），并清除资源 JSON 中的 API 来源标记（数值保留）。不删除服务器、付款、SSH 配置或凭据；失败整体回滚。JSON 备份见下文 v2。细节见 [PROVIDERS](PROVIDERS.md)。v13 → **v14**：新增 `proxies` 表（id、名称、类型 socks5/http/https、主机、端口、可选用户名、可选 `secret_ref`、revision）与可空 `ssh_configurations.proxy_id`（`ON DELETE RESTRICT`）；代理密码只在安全存储，删除/替换时引用进入既有 `secret_cleanup`。迁移在 sqflite 的升级事务内，失败整体回滚（`test/schema14_store_migration_test.dart`）。后续 schema 变更仍须增加事务迁移并验证旧数据。
+v11 → **v12**：面板适配器功能整体移除。同一事务内把全部适配器秘密引用写入已有的清理队列（由“重试清理”从设备安全存储删除），删除 cloud_accounts / cloud_observations / cloud_bindings 与相关触发器，把适配器产生的“待确认”提供商转为普通提供商（无服务器的占位提供商删除、重名追加序号），新增 providers.catalog_id（与随后在 v13 退役的 servers.package_id / package_snapshot），并清除资源 JSON 中的 API 来源标记（数值保留）。不删除服务器、付款、SSH 配置或凭据；失败整体回滚。JSON 备份见下文 v2。细节见 [PROVIDERS](PROVIDERS.md)。
+
+v13 → **v14**（代理，0.6.0）：新增 `proxies` 表（id、名称、类型 socks5/http/https、主机、端口、可选用户名、可选 `secret_ref`、revision）与可空 `ssh_configurations.proxy_id`（`ON DELETE RESTRICT`）；代理密码只在安全存储，删除/替换时引用进入既有 `secret_cleanup`。迁移在 sqflite 的升级事务内，失败整体回滚（`test/schema14_store_migration_test.dart`）。JSON 备份格式仍是 v2，不包含代理（元数据和密码都不导出），恢复后需重新添加代理。后续 schema 变更仍须增加事务迁移并验证旧数据。
 
 恢复开发：先读本文件、`docs/STATUS.md`、`docs/ACCEPTANCE.md` → 检查 `git status`、当前分支与远端 → 核对远端 SHA/CI → 执行分析与最小测试 → 从首个未通过项继续。不要自动 tag、强推或改变其他分支。
 
@@ -140,9 +149,9 @@ dartssh2 的公开核验回调只返回 SHA-256 指纹。本应用仅观察首�
 
 终端键盘与特殊键直接发送；常用命令、片段和按需打开的草稿完全独立。快捷栏 Ctrl V、菜单粘贴与硬件 Ctrl+V/Cmd+V 按需读取系统剪贴板，按选区插入可编辑的本地草稿，不直接发送 0x16 或剪贴板内容。发送区就地显示完整目标；含 CR / LF / 控制字符 / bidi 时显示转义原文和提示。“发送”保持原文全部字节；“发送并执行”只在原文后追加一个 CR，不再弹出发送确认或要求勾选。原文已有换行或控制字符时，即使不追加 CR，也可能立即执行。插入、取消、切换目标、断线或重连均不会自动发送草稿。写入失败保留草稿并提示核实远端结果，不自动重试；本地写入成功不代表远端命令已执行成功。电源只派发固定 `sudo -n shutdown -r now` 或 `sudo -n shutdown -h now`，需要服务器权限和命令存在；每次会话最多派发一次，测试只使用 spy，不实际重启或关闭机器。
 
-应用后台 / 退出会清理连接；后台常驻不受保证，长任务建议远端 tmux / screen。浏览器没有原生 TCP，不提供 SSH 中转后端。Android / iOS 键盘、IME、旋转、切网、后台与真实 VPS 兼容性仍须设备验证。
+应用进入后台时先保留会话一小段宽限时间（iOS 由系统决定，通常约 30 秒；Android 固定 30 秒，实现见 `lib/core/background_grace.dart`），超时或退出应用则清理连接；后台常驻不受保证，长任务建议远端 tmux / screen。SSH / SFTP / TCP 检测的代理设置见 [SSH_TERMINAL_UX](SSH_TERMINAL_UX.md)。浏览器没有原生 TCP，不提供 SSH 中转后端。Android / iOS 键盘、IME、旋转、切网、后台与真实 VPS 兼容性仍须设备验证。
 
-完整自动测试需要独立本地 SSH fixture 的 Python 3.10+ 依赖。它不创建 OS 账户、authorized_keys 或实际访问权限：
+完整自动测试（约 1390 项，dev 上最近一次全量 1388/1388 通过）需要独立本地 SSH fixture 的 Python 3.10+ 依赖，代理端到端测试也用它；代理 HTTPS 测试需要 `openssl` 命令。它不创建 OS 账户、authorized_keys 或实际访问权限：
 
 ```sh
 python3 -m venv .ssh-test-venv
