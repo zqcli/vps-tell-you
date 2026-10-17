@@ -1,4 +1,3 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 import '../core/ui/ui.dart';
@@ -75,6 +74,7 @@ class _SecurityPageState extends State<SecurityPage> {
     builder: (context, _) {
       final l10n = context.l10n;
       final query = search.trim().toLowerCase();
+      final linked = referenceCounts(security, (s) => s.credentialId);
       final visible = security.credentials
           .where(
             (c) =>
@@ -92,12 +92,7 @@ class _SecurityPageState extends State<SecurityPage> {
           ),
         ],
         children: loading
-            ? const [
-                Padding(
-                  padding: EdgeInsets.only(top: 80),
-                  child: Center(child: CupertinoActivityIndicator()),
-                ),
-              ]
+            ? securityLoadingChildren
             : [
                 SecurityNotice(controller: security),
                 const SizedBox(height: 10),
@@ -128,15 +123,9 @@ class _SecurityPageState extends State<SecurityPage> {
                   footer: l10n.securityCredentialStorageNotice,
                   children: [
                     if (visible.isEmpty)
-                      AppRow.custom(
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 12),
-                          child: Text(
-                            l10n.securityNoMatchingCredentials,
-                            textAlign: TextAlign.center,
-                            style: context.footnoteStyle.copyWith(fontSize: 14),
-                          ),
-                        ),
+                      securityEmptyRow(
+                        context,
+                        l10n.securityNoMatchingCredentials,
                       ),
                     for (final c in visible)
                       AppRow(
@@ -146,11 +135,7 @@ class _SecurityPageState extends State<SecurityPage> {
                         subtitle:
                             '${credentialKind(c, l10n: l10n)}${c.defaultUsername.isEmpty ? '' : ' · ${c.defaultUsername}'}',
                         trailing: StatusPill(
-                          l10n.securityLinkedServerCount(
-                            security.sshConfigurations
-                                .where((s) => s.credentialId == c.id)
-                                .length,
-                          ),
+                          l10n.securityLinkedServerCount(linked[c.id] ?? 0),
                         ),
                         chevron: true,
                         onTap: () => credentialMenu(context, widget.ledger, c),

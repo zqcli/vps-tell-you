@@ -1,4 +1,3 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 import '../core/net_address.dart';
@@ -237,12 +236,7 @@ class _SshConfigurationPageState extends State<SshConfigurationPage> {
                       : save,
                 ),
           children: loading
-              ? const [
-                  Padding(
-                    padding: EdgeInsets.only(top: 80),
-                    child: Center(child: CupertinoActivityIndicator()),
-                  ),
-                ]
+              ? securityLoadingChildren
               : [
                   SecurityNotice(controller: security),
                   AppSection(

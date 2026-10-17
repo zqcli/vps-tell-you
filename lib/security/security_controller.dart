@@ -62,7 +62,6 @@ class SecurityController extends ChangeNotifier {
     return reload();
   }
 
-  Future<bool> refresh() => reload();
   Future<bool> reload() async {
     if (busy || _disposed) return false;
     _working = true;
@@ -122,19 +121,6 @@ class SecurityController extends ChangeNotifier {
   List<SshConfiguration> referencesTo(String credentialId) => sshConfigurations
       .where((c) => c.credentialId == credentialId)
       .toList(growable: false);
-  List<CredentialMetadata> searchCredentials(String query) {
-    final q = query.trim().toLowerCase();
-    return credentials
-        .where(
-          (c) => [
-            c.name,
-            c.defaultUsername,
-            c.keyAlgorithm ?? '',
-            c.fingerprint ?? '',
-          ].any((value) => value.toLowerCase().contains(q)),
-        )
-        .toList(growable: false);
-  }
 
   bool _startMutation() {
     if (busy || needsReload || _disposed) return false;

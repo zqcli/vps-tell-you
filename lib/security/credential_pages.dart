@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-import '../core/net_address.dart';
 import '../core/ui/ui.dart';
 import '../l10n/locale_preference.dart';
 import '../l10n/localized_message.dart';
@@ -94,7 +93,6 @@ class _CredentialDetailPageState extends State<CredentialDetailPage>
     listenable: security,
     builder: (context, _) {
       final l10n = context.l10n;
-      final p = context.palette;
       final c = security.credentials
           .where((c) => c.id == widget.credentialId)
           .firstOrNull;
@@ -151,28 +149,9 @@ class _CredentialDetailPageState extends State<CredentialDetailPage>
                       ],
                     ),
                   ] else ...[
-                    AppSection(
-                      header: l10n.securityProtectedPassword,
-                      footer: revealed
-                          ? l10n.securityPasswordRevealNotice
-                          : l10n.securityPasswordHiddenNotice,
-                      children: [
-                        AppRow.custom(
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 14),
-                            child: Text(
-                              revealed
-                                  ? security.revealedSecret!
-                                  : '••••••••••••••••',
-                              key: const ValueKey('revealed-secret'),
-                              style: kMonoTextStyle.copyWith(
-                                fontSize: 16,
-                                color: p.text,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
+                    SecretRevealSection(
+                      secret: revealed ? security.revealedSecret : null,
+                      textKey: const ValueKey('revealed-secret'),
                     ),
                     SecurityAction(
                       child: AppButton(
@@ -247,9 +226,7 @@ class CredentialReferencesPage extends StatelessWidget {
     listenable: ledger.security,
     builder: (context, _) {
       final l10n = context.l10n;
-      final configs = ledger.security.sshConfigurations
-          .where((s) => s.credentialId == credential.id)
-          .toList();
+      final configs = ledger.security.referencesTo(credential.id);
       return AppScaffold(
         title: l10n.securityLinkedServers,
         largeTitle: false,
@@ -259,26 +236,12 @@ class CredentialReferencesPage extends StatelessWidget {
             footer: l10n.securityCredentialReferenceCount(configs.length),
             children: [
               if (configs.isEmpty)
-                AppRow.custom(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                    child: Text(
-                      l10n.securityNoCredentialReferences,
-                      textAlign: TextAlign.center,
-                      style: context.footnoteStyle.copyWith(fontSize: 14),
-                    ),
-                  ),
-                ),
+                securityEmptyRow(context, l10n.securityNoCredentialReferences),
               for (final config in configs)
-                AppRow(
-                  icon: Icons.dns_outlined,
-                  iconColor: AppTints.teal,
-                  title:
-                      ledger.byId(config.serverId)?.name ??
-                      l10n.securityServerFallback,
-                  subtitle:
-                      '${config.username} @ ${formatHostPort(config.host, config.port)}',
-                  chevron: true,
+                sshReferenceRow(
+                  context,
+                  ledger,
+                  config,
                   onTap: () => Navigator.push<void>(
                     context,
                     MaterialPageRoute(
@@ -348,9 +311,7 @@ class _CredentialDeletePageState extends State<CredentialDeletePage> {
     builder: (context, _) {
       final l10n = context.l10n;
       final security = widget.ledger.security;
-      final references = security.sshConfigurations
-          .where((s) => s.credentialId == widget.credential.id)
-          .toList();
+      final references = security.referencesTo(widget.credential.id);
       final replacement = security.credentials
           .where((c) => c.id == replacementId)
           .firstOrNull;
@@ -373,15 +334,7 @@ class _CredentialDeletePageState extends State<CredentialDeletePage> {
             AppSection(
               children: [
                 for (final s in references)
-                  AppRow(
-                    icon: Icons.dns_outlined,
-                    iconColor: AppTints.teal,
-                    title:
-                        widget.ledger.byId(s.serverId)?.name ??
-                        l10n.securityServerFallback,
-                    subtitle:
-                        '${s.username} @ ${formatHostPort(s.host, s.port)}',
-                  ),
+                  sshReferenceRow(context, widget.ledger, s),
               ],
             ),
           if (references.isNotEmpty)

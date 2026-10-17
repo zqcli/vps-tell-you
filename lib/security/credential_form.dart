@@ -4,7 +4,6 @@ import 'package:file_selector/file_selector.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-import '../core/net_address.dart';
 import '../core/ui/ui.dart';
 import '../l10n/generated/app_localizations.dart';
 import '../l10n/locale_preference.dart';
@@ -70,9 +69,7 @@ class _CredentialFormState extends State<CredentialForm>
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.paused ||
-        state == AppLifecycleState.hidden ||
-        state == AppLifecycleState.detached) {
+    if (leftForeground(state)) {
       if (!picking) generation++;
       secret.clear();
       passphrase.clear();
@@ -236,9 +233,7 @@ class _CredentialFormState extends State<CredentialForm>
       final busy = saving || picking || pasting;
       final impacts = widget.existing == null
           ? const <SshConfiguration>[]
-          : security.sshConfigurations
-                .where((s) => s.credentialId == widget.existing!.id)
-                .toList();
+          : security.referencesTo(widget.existing!.id);
       return PopScope(
         canPop: allowPop || (!dirty && !saving),
         onPopInvokedWithResult: (didPop, result) {
@@ -398,26 +393,12 @@ class _CredentialFormState extends State<CredentialForm>
                 header: l10n.securityCurrentLinkImpact,
                 children: [
                   if (impacts.isEmpty)
-                    AppRow.custom(
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                        child: Text(
-                          l10n.securityNoCredentialReferences,
-                          textAlign: TextAlign.center,
-                          style: context.footnoteStyle.copyWith(fontSize: 14),
-                        ),
-                      ),
+                    securityEmptyRow(
+                      context,
+                      l10n.securityNoCredentialReferences,
                     ),
                   for (final config in impacts)
-                    AppRow(
-                      icon: Icons.dns_outlined,
-                      iconColor: AppTints.teal,
-                      title:
-                          widget.ledger.byId(config.serverId)?.name ??
-                          l10n.securityServerFallback,
-                      subtitle:
-                          '${config.username} @ ${formatHostPort(config.host, config.port)}',
-                    ),
+                    sshReferenceRow(context, widget.ledger, config),
                 ],
               ),
           ],

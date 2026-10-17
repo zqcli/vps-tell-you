@@ -325,12 +325,10 @@ void main() {
     },
   );
 
-  test('native-only metadata storage and search survive restart; SQLite has no secret payload', () async {
+  test('native-only metadata storage survives restart; SQLite has no secret payload', () async {
     expect(await save(), isTrue);
     final first = controller.credentials.single;
     expect(secrets.values[first.secretRef], contains('synthetic-password'));
-    expect(controller.searchCredentials('ROOT').single.id, first.id);
-    expect(controller.searchCredentials('synthetic-password'), isEmpty);
     expect(controller.cleanupPending, isFalse);
     await reopen();
     expect(controller.credentials.single.id, first.id);
