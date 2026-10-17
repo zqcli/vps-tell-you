@@ -669,17 +669,18 @@ class _SftpBrowserPageState extends State<SftpBrowserPage>
       if (detail.isNotEmpty) detail,
       if (e.mode.length > 1) e.mode.substring(1),
     ].join('\n');
-    return SftpSwipeRow(
+    return AppSwipeRow(
       key: ValueKey('sftp-entry-${e.name}'),
-      actions: [
-        SftpSwipeAction(
+      separatorInset: 58,
+      trailing: [
+        AppSwipeAction(
           key: ValueKey('sftp-swipe-rename-${e.name}'),
           color: context.palette.primary,
           icon: Icons.drive_file_rename_outline_rounded,
           label: l10n.rename,
           onTap: () => _rename(e),
         ),
-        SftpSwipeAction(
+        AppSwipeAction(
           key: ValueKey('sftp-swipe-delete-${e.name}'),
           color: context.palette.red,
           icon: Icons.delete_outline_rounded,

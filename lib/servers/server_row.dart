@@ -31,26 +31,6 @@ class ServerRow extends StatefulWidget {
 }
 
 class _ServerRowState extends State<ServerRow> {
-  static const _buttonWidth = 76.0;
-  static const _trailingWidth = _buttonWidth * 2;
-  static const _leadingWidth = _buttonWidth;
-
-  /// Only one row stays swiped open.
-  static _ServerRowState? _open;
-
-  /// Signed distance the content is pushed: positive towards the leading edge
-  /// (revealing the trailing SSH / favourite buttons), negative towards the
-  /// trailing edge (revealing the leading Duplicate button).
-  double extent = 0;
-
-  /// Which side's buttons are built while the row settles back to zero.
-  bool _trailingSide = true;
-  bool dragging = false;
-
-  /// The action buttons are only built while swiped or animating, so their
-  /// colours never bleed through the antialiased corners of the group.
-  bool actionsVisible = false;
-
   ServerRecord get s => widget.record;
   LedgerController get c => widget.controller;
   bool get canSsh => !s.isDemo && !s.archived;
@@ -58,46 +38,12 @@ class _ServerRowState extends State<ServerRow> {
   /// A demo row must not seed real data, and nothing is written read-only.
   bool get canDuplicate => c.canMutate && !s.isDemo && !s.archived;
 
-  @override
-  void dispose() {
-    if (_open == this) _open = null;
-    super.dispose();
-  }
-
-  void _setExtent(double value, {bool drag = false}) {
-    if (!mounted) return;
-    setState(() {
-      if (value != 0) _trailingSide = value > 0;
-      if (value != 0 || drag) {
-        actionsVisible = true;
-      } else if (extent == 0) {
-        actionsVisible = false;
-      }
-      extent = value;
-      dragging = drag;
-    });
-    if (value != 0) {
-      if (_open != this) {
-        final previous = _open;
-        _open = this;
-        previous?._setExtent(0);
-      }
-    } else if (_open == this) {
-      _open = null;
-    }
-  }
-
-  void close() => _setExtent(0);
-
-  void openDetail() {
-    if (extent != 0) return close();
-    Navigator.push<void>(
-      context,
-      MaterialPageRoute(
-        builder: (_) => ServerDetail(controller: c, id: s.id),
-      ),
-    );
-  }
+  void openDetail() => Navigator.push<void>(
+    context,
+    MaterialPageRoute(
+      builder: (_) => ServerDetail(controller: c, id: s.id),
+    ),
+  );
 
   void openSsh() => Navigator.push<void>(
     context,
@@ -131,13 +77,6 @@ class _ServerRowState extends State<ServerRow> {
 
   void duplicate() =>
       addServer(context, c, template: duplicateServerTemplate(s, context.l10n));
-
-  /// Where a released drag settles: fully open on that side, or closed.
-  double get _settled => extent > 70
-      ? _trailingWidth
-      : extent < -40
-      ? -_leadingWidth
-      : 0;
 
   void recordPayment() => showAppModal<bool>(
     context,
@@ -181,116 +120,6 @@ class _ServerRowState extends State<ServerRow> {
       ],
     );
   }
-
-  Widget _actionButton({
-    required Color color,
-    required IconData icon,
-    required String label,
-    required VoidCallback? onTap,
-  }) => SizedBox(
-    width: _buttonWidth,
-    child: Opacity(
-      opacity: onTap == null ? .45 : 1,
-      child: Material(
-        color: color,
-        child: InkWell(
-          onTap: onTap == null
-              ? null
-              : () {
-                  close();
-                  onTap();
-                },
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 4),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(icon, size: 22, color: Colors.white),
-                const SizedBox(height: 3),
-                FittedBox(
-                  fit: BoxFit.scaleDown,
-                  child: Text(
-                    label,
-                    maxLines: 1,
-                    textScaler: TextScaler.noScaling,
-                    style: const TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.white,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    ),
-  );
-
-  Widget _trailingActions(BuildContext context) {
-    final l10n = context.l10n;
-    final p = context.palette;
-    return SizedBox(
-      key: const ValueKey('server-swipe-trailing'),
-      width: _trailingWidth,
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          _actionButton(
-            color: p.primary,
-            icon: Icons.terminal_rounded,
-            label: 'SSH',
-            onTap: canSsh ? openSsh : null,
-          ),
-          _actionButton(
-            color: p.amberSolid,
-            icon: s.favorite ? Icons.star_rounded : Icons.star_outline_rounded,
-            label: s.favorite
-                ? l10n.serverRemoveFavorite
-                : l10n.serverFavorites,
-            onTap: c.canMutate ? toggleFavorite : null,
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _leadingActions(BuildContext context) => SizedBox(
-    key: const ValueKey('server-swipe-leading'),
-    width: _leadingWidth,
-    child: Row(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        _actionButton(
-          color: context.palette.green,
-          icon: Icons.copy_rounded,
-          label: context.l10n.r14ServerDuplicate,
-          onTap: canDuplicate ? duplicate : null,
-        ),
-      ],
-    ),
-  );
-
-  Widget _actionsLayer(
-    BuildContext context, {
-    required AlignmentGeometry alignment,
-    required bool side,
-    required Widget Function(BuildContext) build,
-  }) => Positioned.fill(
-    child: Align(
-      alignment: alignment,
-      child: !actionsVisible || _trailingSide != side
-          ? const SizedBox.shrink()
-          : ExcludeSemantics(
-              excluding: extent == 0,
-              child: IgnorePointer(
-                ignoring: extent == 0,
-                child: build(context),
-              ),
-            ),
-    ),
-  );
 
   Widget _price(BuildContext context) {
     final p = context.palette;
@@ -465,59 +294,38 @@ class _ServerRowState extends State<ServerRow> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final p = context.palette;
-    // Positive logical extent moves the content towards the leading edge.
-    final sign = Directionality.of(context) == TextDirection.rtl ? 1.0 : -1.0;
-    return ClipRect(
-      child: Stack(
-        children: [
-          _actionsLayer(
-            context,
-            alignment: AlignmentDirectional.centerEnd,
-            side: true,
-            build: _trailingActions,
-          ),
-          _actionsLayer(
-            context,
-            alignment: AlignmentDirectional.centerStart,
-            side: false,
-            build: _leadingActions,
-          ),
-          GestureDetector(
-            behavior: HitTestBehavior.translucent,
-            onHorizontalDragStart: (_) => _setExtent(extent, drag: true),
-            onHorizontalDragUpdate: (details) => _setExtent(
-              (extent + details.delta.dx * sign).clamp(
-                -_leadingWidth - 30,
-                _trailingWidth + 30,
-              ),
-              drag: true,
-            ),
-            onHorizontalDragEnd: (_) => _setExtent(_settled),
-            onHorizontalDragCancel: () => _setExtent(_settled),
-            child: AnimatedContainer(
-              duration: dragging
-                  ? Duration.zero
-                  : const Duration(milliseconds: 220),
-              curve: Curves.easeOutCubic,
-              onEnd: () {
-                if (extent == 0 && actionsVisible && mounted) {
-                  setState(() => actionsVisible = false);
-                }
-              },
-              transform: Matrix4.translationValues(extent * sign, 0, 0),
-              child: Material(
-                color: p.surface,
-                child: InkWell(
-                  key: ValueKey('server-${s.id}'),
-                  onTap: openDetail,
-                  onLongPress: openMenu,
-                  child: _content(context),
-                ),
-              ),
-            ),
-          ),
-        ],
+    return AppSwipeRow(
+      leadingKey: const ValueKey('server-swipe-leading'),
+      trailingKey: const ValueKey('server-swipe-trailing'),
+      leading: [
+        AppSwipeAction(
+          color: p.green,
+          icon: Icons.copy_rounded,
+          label: l10n.r14ServerDuplicate,
+          onTap: canDuplicate ? duplicate : null,
+        ),
+      ],
+      trailing: [
+        AppSwipeAction(
+          color: p.primary,
+          icon: Icons.terminal_rounded,
+          label: 'SSH',
+          onTap: canSsh ? openSsh : null,
+        ),
+        AppSwipeAction(
+          color: p.amberSolid,
+          icon: s.favorite ? Icons.star_rounded : Icons.star_outline_rounded,
+          label: s.favorite ? l10n.serverRemoveFavorite : l10n.serverFavorites,
+          onTap: c.canMutate ? toggleFavorite : null,
+        ),
+      ],
+      child: InkWell(
+        key: ValueKey('server-${s.id}'),
+        onTap: openDetail,
+        onLongPress: openMenu,
+        child: _content(context),
       ),
     );
   }
