@@ -1005,15 +1005,16 @@ void _yamlValue(String s, int from, int n, List<SynTok> out) {
     _scan(s, from, e, _yamlValueSpec, _sNormal, out);
   } else if (_yamlValueSpec.constants.contains(text)) {
     out.add(SynTok(from, e, SynKind.constant));
-  } else if (RegExp(r'^[-+]?(\d[\d_]*)(\.\d+)?([eE][-+]?\d+)?$')
-          .hasMatch(text) ||
-      RegExp(r'^0x[0-9a-fA-F]+$').hasMatch(text)) {
+  } else if (_yamlNumber.hasMatch(text) || _hexNumber.hasMatch(text)) {
     out.add(SynTok(from, e, SynKind.number));
   } else {
     out.add(SynTok(from, e, SynKind.string));
   }
   if (end < n) out.add(SynTok(end, n, SynKind.comment));
 }
+
+final _yamlNumber = RegExp(r'^[-+]?(\d[\d_]*)(\.\d+)?([eE][-+]?\d+)?$');
+final _hexNumber = RegExp(r'^0x[0-9a-fA-F]+$');
 
 void _yamlValue2(String s, int from, int n, List<SynTok> out) {
   var i = from;
@@ -1078,6 +1079,10 @@ int _lexIni(String s, List<SynTok> out) {
 
 // --- Markdown ----------------------------------------------------------------
 
+final _mdHeading = RegExp(r'^#{1,6}(\s|$)');
+final _mdBullet = RegExp(r'^([-*+]|\d+[.)])\s+');
+final _mdRule = RegExp(r'^([-*_])(\s*\1){2,}\s*$');
+
 int _lexMarkdown(String s, int state, List<SynTok> out) {
   final n = s.length;
   final t = s.trimLeft();
@@ -1091,19 +1096,19 @@ int _lexMarkdown(String s, int state, List<SynTok> out) {
     return _sFence;
   }
   if (t.isEmpty) return _sNormal;
-  if (RegExp(r'^#{1,6}(\s|$)').hasMatch(t)) {
+  if (_mdHeading.hasMatch(t)) {
     out.add(SynTok(lead, n, SynKind.heading));
     return _sNormal;
   }
   var i = lead;
-  final bullet = RegExp(r'^([-*+]|\d+[.)])\s+').firstMatch(t);
+  final bullet = _mdBullet.firstMatch(t);
   if (bullet != null) {
     out.add(SynTok(i, i + bullet.group(1)!.length, SynKind.operator));
     i += bullet.end;
   } else if (t.startsWith('>')) {
     out.add(SynTok(i, i + 1, SynKind.operator));
     i++;
-  } else if (RegExp(r'^([-*_])(\s*\1){2,}\s*$').hasMatch(t)) {
+  } else if (_mdRule.hasMatch(t)) {
     out.add(SynTok(lead, n, SynKind.operator));
     return _sNormal;
   }
@@ -1309,6 +1314,13 @@ class SyntaxHighlightController extends TextEditingController {
   _LineCache? _cache;
   int _lexedLines = 0;
 
+  // The span of the last build: a selection move or focus change rebuilds
+  // with the same text and style, and the identical span spares the field a
+  // re-layout of the whole file.
+  String? _spanText;
+  TextStyle? _spanStyle;
+  TextSpan? _span;
+
   /// Number of lines lexed by the last [buildTextSpan] (for tests).
   int get lexedLines => _lexedLines;
 
@@ -1316,7 +1328,7 @@ class SyntaxHighlightController extends TextEditingController {
   set language(SynLang value) {
     if (value == _language) return;
     _language = value;
-    _cache = null;
+    _cache = _span = null;
     notifyListeners();
   }
 
@@ -1325,14 +1337,14 @@ class SyntaxHighlightController extends TextEditingController {
   void applyThemeQuietly(CodeTheme value) {
     if (value == _theme) return;
     _theme = value;
-    _cache = null;
+    _cache = _span = null;
   }
 
   CodeTheme? get theme => _theme;
   set theme(CodeTheme? value) {
     if (value == _theme) return;
     _theme = value;
-    _cache = null;
+    _cache = _span = null;
     notifyListeners();
   }
 
@@ -1358,10 +1370,16 @@ class SyntaxHighlightController extends TextEditingController {
         withComposing: withComposing,
       );
     }
+    final known = _span;
+    if (known != null && identical(text, _spanText) && style == _spanStyle) {
+      _lexedLines = 0;
+      return known;
+    }
     final cache = _cache ??= _LineCache(_language, _theme!);
-    final lines = text.split('\n');
-    _lexedLines = cache.update(lines);
-    return TextSpan(
+    _lexedLines = cache.update(text.split('\n'));
+    _spanText = text;
+    _spanStyle = style;
+    return _span = TextSpan(
       style: style,
       children: [
         for (var i = 0; i < cache.lines.length; i++) ...[
