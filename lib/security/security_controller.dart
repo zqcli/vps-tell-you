@@ -154,6 +154,31 @@ class SecurityController extends ChangeNotifier {
     _notify();
   }
 
+  /// Durably reserves [ref], writes [encoded] to the native store and reads it
+  /// back; an unverified write fails. The caller owns the reservation.
+  Future<void> _storeSecret(String ref, String encoded) async {
+    await store.reserveSecret(ref, active: true);
+    await secrets.write(ref, encoded);
+    if (await secrets.read(ref) != encoded) {
+      throw SecurityFailure(
+        LocalizedText((l10n) => l10n.securitySecretWriteUnverified),
+      );
+    }
+  }
+
+  /// Reservations remain durable on every failure boundary, including a
+  /// plugin that partially wrote or has not returned after its timeout.
+  Future<void> _failedAfterSecretWrite(
+    Object problem,
+    String? reservedRef,
+  ) async {
+    _failed(problem);
+    if (reservedRef != null) store.releaseSecretReservation(reservedRef);
+    try {
+      cleanupCount = (await store.pendingSecretCleanup()).length;
+    } catch (_) {}
+  }
+
   Future<bool> saveCredential({
     CredentialMetadata? existing,
     required String name,
@@ -220,21 +245,17 @@ class SecurityController extends ChangeNotifier {
       if (secret != null) {
         // A durable reservation precedes the possibly partial/late native write.
         reservedRef = ref;
-        await store.reserveSecret(ref, active: true);
-        final encoded = jsonEncode({
-          'version': 1,
-          'kind': kind.name,
-          'secret': secret,
-          'passphrase': kind == CredentialKind.privateKey && savePassphrase
-              ? passphrase
-              : null,
-        });
-        await secrets.write(ref, encoded);
-        if (await secrets.read(ref) != encoded) {
-          throw SecurityFailure(
-            LocalizedText((l10n) => l10n.securitySecretWriteUnverified),
-          );
-        }
+        await _storeSecret(
+          ref,
+          jsonEncode({
+            'version': 1,
+            'kind': kind.name,
+            'secret': secret,
+            'passphrase': kind == CredentialKind.privateKey && savePassphrase
+                ? passphrase
+                : null,
+          }),
+        );
       }
       await store.saveCredential(
         CredentialMetadata(
@@ -257,13 +278,7 @@ class SecurityController extends ChangeNotifier {
       await _afterCommit();
       return true;
     } catch (problem) {
-      _failed(problem);
-      // Reservations remain durable on every failure boundary, including a
-      // plugin that partially wrote or has not returned after its timeout.
-      if (reservedRef != null) store.releaseSecretReservation(reservedRef);
-      try {
-        cleanupCount = (await store.pendingSecretCleanup()).length;
-      } catch (_) {}
+      await _failedAfterSecretWrite(problem, reservedRef);
       return false;
     } finally {
       if (reservedRef != null) store.releaseSecretReservation(reservedRef);
@@ -360,14 +375,10 @@ class SecurityController extends ChangeNotifier {
       if (user.isNotEmpty && password != null) {
         ref = 'vps_proxy_${newLocalId()}';
         reservedRef = ref;
-        await store.reserveSecret(ref, active: true);
-        final encoded = jsonEncode({'version': 1, 'password': password});
-        await secrets.write(ref, encoded);
-        if (await secrets.read(ref) != encoded) {
-          throw SecurityFailure(
-            LocalizedText((l10n) => l10n.securitySecretWriteUnverified),
-          );
-        }
+        await _storeSecret(
+          ref,
+          jsonEncode({'version': 1, 'password': password}),
+        );
       }
       final id = existing?.id ?? newLocalId();
       await store.saveProxy(
@@ -390,11 +401,7 @@ class SecurityController extends ChangeNotifier {
       await _afterCommit();
       return id;
     } catch (problem) {
-      _failed(problem);
-      if (reservedRef != null) store.releaseSecretReservation(reservedRef);
-      try {
-        cleanupCount = (await store.pendingSecretCleanup()).length;
-      } catch (_) {}
+      await _failedAfterSecretWrite(problem, reservedRef);
       return null;
     } finally {
       if (reservedRef != null) store.releaseSecretReservation(reservedRef);
@@ -498,38 +505,18 @@ class SecurityController extends ChangeNotifier {
     if (busy || needsReload || _disposed || !record.hasCredentials) {
       return false;
     }
-    hideSensitive();
-    final epoch = _sensitiveEpoch;
-    _authenticating = true;
-    _error = null;
-    _notify();
-    try {
-      await _cancelAuthentication;
-      if (_disposed || epoch != _sensitiveEpoch) return false;
-      final attemptLocalizations = l10n ?? defaultLocalizations;
-      final deviceAuth = authenticator;
-      final authenticated = deviceAuth is LocalizedDeviceAuthenticator
-          ? await (deviceAuth as LocalizedDeviceAuthenticator)
-                .authenticateWithLocalizations(attemptLocalizations)
-          : await deviceAuth.authenticate();
-      if (!authenticated) {
-        if (epoch == _sensitiveEpoch) {
-          _error = LocalizedText((l10n) => l10n.securityAuthenticationHidden);
-        }
-        return false;
-      }
-      if (_disposed || epoch != _sensitiveEpoch) return false;
+    return _authenticatedReveal(l10n, (stale) async {
       final current = (await store.proxies())
           .where((p) => p.id == record.id)
           .firstOrNull;
-      if (_disposed || epoch != _sensitiveEpoch) return false;
+      if (stale()) return false;
       if (current == null ||
           current.revision != record.revision ||
           current.secretRef != record.secretRef) {
         throw SecurityFailure(LocalizedText((l10n) => l10n.r13ProxyChanged));
       }
       final password = await _readProxyPassword(record);
-      if (_disposed || epoch != _sensitiveEpoch) return false;
+      if (stale()) return false;
       if (password == null) {
         throw SecurityFailure(
           LocalizedText((l10n) => l10n.r13ProxyPasswordMissing),
@@ -537,19 +524,8 @@ class SecurityController extends ChangeNotifier {
       }
       revealedProxyPassword = password;
       revealedProxyId = record.id;
-      _revealTimer = Timer(revealDuration, hideSensitive);
       return true;
-    } catch (problem) {
-      if (!_disposed && epoch == _sensitiveEpoch) {
-        _error = problem is SecurityFailure
-            ? problem
-            : LocalizedText((l10n) => l10n.securityRevealFailed);
-      }
-      return false;
-    } finally {
-      if (epoch == _sensitiveEpoch) _authenticating = false;
-      _notify();
-    }
+    });
   }
 
   Future<void> _cleanup(List<String> refs) async {
@@ -670,48 +646,30 @@ class SecurityController extends ChangeNotifier {
         );
   }
 
+  /// Shows a credential's secret for [revealDuration] after device
+  /// authentication; it is re-checked against the stored metadata before and
+  /// after the native read.
   Future<bool> reveal(
     CredentialMetadata record, {
     AppLocalizations? l10n,
   }) async {
     if (busy || needsReload || _disposed) return false;
-    hideSensitive();
-    final epoch = _sensitiveEpoch;
-    _authenticating = true;
-    _error = null;
-    _notify();
-    try {
-      await _cancelAuthentication;
-      if (_disposed || epoch != _sensitiveEpoch) return false;
-      // Capture the language only for this explicit attempt. Locale changes must
-      // never restart authentication or trigger a secure-store read.
-      final attemptLocalizations = l10n ?? defaultLocalizations;
-      final deviceAuth = authenticator;
-      final authenticated = deviceAuth is LocalizedDeviceAuthenticator
-          ? await (deviceAuth as LocalizedDeviceAuthenticator)
-                .authenticateWithLocalizations(attemptLocalizations)
-          : await deviceAuth.authenticate();
-      if (!authenticated) {
-        if (epoch == _sensitiveEpoch) {
-          _error = LocalizedText((l10n) => l10n.securityAuthenticationHidden);
-        }
-        return false;
-      }
-      if (_disposed || epoch != _sensitiveEpoch) return false;
+    bool sameRecord(List<CredentialMetadata> all) => all.any(
+      (c) =>
+          c.id == record.id &&
+          c.revision == record.revision &&
+          c.secretRef == record.secretRef,
+    );
+    return _authenticatedReveal(l10n, (stale) async {
       final current = await store.credentials();
-      if (_disposed || epoch != _sensitiveEpoch) return false;
-      if (!current.any(
-        (c) =>
-            c.id == record.id &&
-            c.revision == record.revision &&
-            c.secretRef == record.secretRef,
-      )) {
+      if (stale()) return false;
+      if (!sameRecord(current)) {
         throw SecurityFailure(
           LocalizedText((l10n) => l10n.securityCredentialChanged),
         );
       }
       final encoded = await secrets.read(record.secretRef);
-      if (_disposed || epoch != _sensitiveEpoch) return false;
+      if (stale()) return false;
       if (encoded == null) {
         throw SecurityFailure(
           LocalizedText((l10n) => l10n.securitySavedPasswordMissing),
@@ -729,13 +687,8 @@ class SecurityController extends ChangeNotifier {
         );
       }
       final latest = await store.credentials();
-      if (_disposed || epoch != _sensitiveEpoch) return false;
-      if (!latest.any(
-        (c) =>
-            c.id == record.id &&
-            c.revision == record.revision &&
-            c.secretRef == record.secretRef,
-      )) {
+      if (stale()) return false;
+      if (!sameRecord(latest)) {
         throw SecurityFailure(
           LocalizedText((l10n) => l10n.securityCredentialChanged),
         );
@@ -743,10 +696,44 @@ class SecurityController extends ChangeNotifier {
       revealedSecret = envelope['secret'] as String;
       revealedPassphrase = envelope['passphrase'] as String?;
       revealedCredentialId = record.id;
+      return true;
+    });
+  }
+
+  /// The protocol both reveal flows share: device authentication (in the
+  /// language captured now, so a locale change never restarts it), then
+  /// [load] reads and publishes the secret and returns false when [stale].
+  /// Hiding or cancelling bumps the epoch and abandons the attempt.
+  Future<bool> _authenticatedReveal(
+    AppLocalizations? l10n,
+    Future<bool> Function(bool Function() stale) load,
+  ) async {
+    hideSensitive();
+    final epoch = _sensitiveEpoch;
+    bool stale() => _disposed || epoch != _sensitiveEpoch;
+    _authenticating = true;
+    _error = null;
+    _notify();
+    try {
+      await _cancelAuthentication;
+      if (stale()) return false;
+      final attemptLocalizations = l10n ?? defaultLocalizations;
+      final deviceAuth = authenticator;
+      final authenticated = deviceAuth is LocalizedDeviceAuthenticator
+          ? await (deviceAuth as LocalizedDeviceAuthenticator)
+                .authenticateWithLocalizations(attemptLocalizations)
+          : await deviceAuth.authenticate();
+      if (!authenticated) {
+        if (epoch == _sensitiveEpoch) {
+          _error = LocalizedText((l10n) => l10n.securityAuthenticationHidden);
+        }
+        return false;
+      }
+      if (stale() || !await load(stale)) return false;
       _revealTimer = Timer(revealDuration, hideSensitive);
       return true;
     } catch (problem) {
-      if (!_disposed && epoch == _sensitiveEpoch) {
+      if (!stale()) {
         _error = problem is SecurityFailure
             ? problem
             : LocalizedText((l10n) => l10n.securityRevealFailed);
