@@ -2382,7 +2382,7 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String get uiServersRowHint => '左滑或长按服务器查看快捷操作';
+  String get uiServersRowHint => '左右滑动或长按服务器查看快捷操作';
 
   @override
   String get serverClearFilters => '清除筛选';

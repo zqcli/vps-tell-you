@@ -4280,7 +4280,7 @@ abstract class AppLocalizations {
   /// No description provided for @uiServersRowHint.
   ///
   /// In zh, this message translates to:
-  /// **'左滑或长按服务器查看快捷操作'**
+  /// **'左右滑动或长按服务器查看快捷操作'**
   String get uiServersRowHint;
 
   /// No description provided for @serverClearFilters.

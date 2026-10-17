@@ -2747,7 +2747,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get uiServersRowHint =>
-      'Swipe left or long-press a server for quick actions';
+      'Swipe or long-press a server for quick actions';
 
   @override
   String get serverClearFilters => 'Clear Filters';

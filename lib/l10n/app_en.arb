@@ -1377,7 +1377,7 @@
       }
     }
   },
-  "uiServersRowHint": "Swipe left or long-press a server for quick actions",
+  "uiServersRowHint": "Swipe or long-press a server for quick actions",
   "serverClearFilters": "Clear Filters",
   "serverListObservationHelp": "Servers aren’t monitored. Days left use the device date.",
   "serverCostsMissing": "Add cost details",

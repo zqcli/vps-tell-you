@@ -1622,7 +1622,7 @@
       }
     }
   },
-  "uiServersRowHint": "左滑或长按服务器查看快捷操作",
+  "uiServersRowHint": "左右滑动或长按服务器查看快捷操作",
   "serverClearFilters": "清除筛选",
   "serverListObservationHelp": "不持续监控运行状态；到期天数按设备日期计算。",
   "serverCostsMissing": "费用待补充",
