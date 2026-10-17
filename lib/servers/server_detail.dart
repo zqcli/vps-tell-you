@@ -29,6 +29,7 @@ import '../settings/reminder_page.dart';
 import 'hardware_information_card.dart';
 import 'ledger_controller.dart';
 import 'refresh_failure_notice.dart';
+import 'server_archive.dart';
 import 'server_form.dart';
 import 'server_record.dart';
 
@@ -44,74 +45,6 @@ class ServerDetail extends StatelessWidget {
 
   /// Test seam for the SSH/SFTP connection service.
   final SshServiceFactory? sshServiceFactory;
-
-  Future<void> archive(BuildContext context, ServerRecord record) async {
-    final confirmed = await showAppConfirm(
-      context,
-      title: LocalizedText((l10n) => l10n.serverArchiveQuestion),
-      message: LocalizedText((l10n) => l10n.serverArchiveHelp(record.name)),
-      action: LocalizedText((l10n) => l10n.serverArchiveLocal),
-      dangerous: true,
-    );
-    if (!confirmed || !context.mounted) {
-      return;
-    }
-    try {
-      final token = await controller.mutate(
-        () => controller.store.archive(record),
-      );
-      if (!context.mounted) {
-        return;
-      }
-      final messenger = ScaffoldMessenger.of(context);
-      final canUndo = !controller.refreshFailed;
-      Navigator.pop(context);
-      messenger.showSnackBar(
-        SnackBar(
-          duration: const Duration(seconds: 8),
-          // The standard action remains persistent and once-only even though
-          // it lives in localized content so an open/queued label can rebuild.
-          persist: canUndo,
-          content: Builder(
-            builder: (context) => Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Text(context.l10n.serverArchived),
-                if (canUndo)
-                  Align(
-                    alignment: AlignmentDirectional.centerEnd,
-                    child: SnackBarAction(
-                      label: context.l10n.serverUndo,
-                      onPressed: () async {
-                        try {
-                          await controller.mutate(
-                            () => controller.store.undoArchive(token),
-                          );
-                        } catch (_) {
-                          messenger.showSnackBar(
-                            SnackBar(
-                              content: Builder(
-                                builder: (context) =>
-                                    Text(context.l10n.serverUndoArchiveFailed),
-                              ),
-                            ),
-                          );
-                        }
-                      },
-                    ),
-                  ),
-              ],
-            ),
-          ),
-        ),
-      );
-    } catch (error) {
-      if (context.mounted) {
-        showFailure(context, error);
-      }
-    }
-  }
 
   Future<void> _toggleFavorite(BuildContext context, ServerRecord s) async {
     try {
@@ -200,7 +133,12 @@ class ServerDetail extends StatelessWidget {
         AppMenuAction(
           label: context.l10n.serverArchiveLocal,
           destructive: true,
-          onPressed: () => archive(context, s),
+          onPressed: () => confirmAndArchiveServer(
+            context,
+            controller,
+            s,
+            popOnSuccess: true,
+          ),
         ),
       ],
     );
