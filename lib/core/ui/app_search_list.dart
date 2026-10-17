@@ -127,6 +127,54 @@ class AppListSection {
   final Widget Function(BuildContext context, int index) itemBuilder;
 }
 
+/// One row of a rounded inset group (the look of an [AppSection]) that is its
+/// own sliver child: the first/last row round the group's corners and every
+/// other row gets a hairline, [inset] from the start edge, above it.
+class AppGroupedRow extends StatelessWidget {
+  const AppGroupedRow({
+    super.key,
+    required this.first,
+    required this.last,
+    required this.inset,
+    required this.child,
+  });
+  final bool first, last;
+  final double inset;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final p = context.palette;
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Material(
+        color: p.surface,
+        clipBehavior: Clip.antiAlias,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(
+            top: Radius.circular(first ? 14 : 0),
+            bottom: Radius.circular(last ? 14 : 0),
+          ),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            if (!first)
+              Padding(
+                padding: EdgeInsetsDirectional.only(start: inset),
+                child: SizedBox(
+                  height: .5,
+                  child: ColoredBox(color: p.separator),
+                ),
+              ),
+            child,
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 /// Lazy, grouped-inset list (the look of [AppSection], built as one sliver
 /// so only the visible rows exist). Empty sections are skipped.
 class AppLazySections extends StatelessWidget {
@@ -173,36 +221,14 @@ class AppLazySections extends StatelessWidget {
       }
       final i = local - 1;
       final row = section.itemBuilder(context, i);
-      final first = i == 0, last = i == section.count - 1;
       final inset = row is AppSectionItem
           ? (row as AppSectionItem).separatorInset
           : 16.0;
-      return Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16),
-        child: Material(
-          color: p.surface,
-          clipBehavior: Clip.antiAlias,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.vertical(
-              top: Radius.circular(first ? 14 : 0),
-              bottom: Radius.circular(last ? 14 : 0),
-            ),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              if (!first)
-                Padding(
-                  padding: EdgeInsetsDirectional.only(start: inset),
-                  child: SizedBox(
-                    height: .5,
-                    child: ColoredBox(color: p.separator),
-                  ),
-                ),
-              row,
-            ],
-          ),
-        ),
+      return AppGroupedRow(
+        first: i == 0,
+        last: i == section.count - 1,
+        inset: inset,
+        child: row,
       );
     }
 

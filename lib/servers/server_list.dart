@@ -393,12 +393,15 @@ class _ServerListState extends State<ServerList> {
       if (visible.isNotEmpty)
         SliverList.builder(
           itemCount: visible.length,
-          itemBuilder: (context, i) => _groupedRow(
-            context,
-            visible[i],
+          itemBuilder: (context, i) => AppGroupedRow(
             first: i == 0,
             last: i == visible.length - 1,
             inset: big ? 16 : 70,
+            child: ServerRow(
+              key: ValueKey('server-row:${visible[i].id}'),
+              record: visible[i],
+              controller: c,
+            ),
           ),
         ),
       SliverToBoxAdapter(
@@ -412,49 +415,6 @@ class _ServerListState extends State<ServerList> {
         ),
       ),
     ];
-  }
-
-  /// One row of the rounded group (the look of an [AppSection], but each row
-  /// is its own sliver child so only the visible ones are built).
-  Widget _groupedRow(
-    BuildContext context,
-    ServerRecord record, {
-    required bool first,
-    required bool last,
-    required double inset,
-  }) {
-    final p = context.palette;
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: Material(
-        color: p.surface,
-        clipBehavior: Clip.antiAlias,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(
-            top: Radius.circular(first ? 14 : 0),
-            bottom: Radius.circular(last ? 14 : 0),
-          ),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            if (!first)
-              Padding(
-                padding: EdgeInsetsDirectional.only(start: inset),
-                child: SizedBox(
-                  height: .5,
-                  child: ColoredBox(color: p.separator),
-                ),
-              ),
-            ServerRow(
-              key: ValueKey('server-row:${record.id}'),
-              record: record,
-              controller: c,
-            ),
-          ],
-        ),
-      ),
-    );
   }
 }
 
