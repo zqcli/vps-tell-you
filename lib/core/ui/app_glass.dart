@@ -201,10 +201,12 @@ class AppGlass extends StatelessWidget {
     };
   }
 
-  static ImageFilter _liquidFilter() => ImageFilter.compose(
+  // Shared instead of one native filter object per build.
+  static final _liquidFilter = ImageFilter.compose(
     outer: const ColorFilter.matrix(_saturation),
     inner: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
   );
+  static final _frostedFilter = ImageFilter.blur(sigmaX: 20, sigmaY: 20);
 
   // Luminance-preserving saturation (Rec. 709 weights), factor 1.2: glass
   // picks up some colour of what is behind it without shifting greys.
@@ -223,7 +225,7 @@ class AppGlass extends StatelessWidget {
     final highContrast = MediaQuery.highContrastOf(context);
     final liquid = effective.isLiquid;
 
-    if (highContrast) return _opaque(context, p, liquid);
+    if (highContrast) return _opaque(p);
     return liquid ? _liquid(p) : _frosted(p);
   }
 
@@ -232,7 +234,7 @@ class AppGlass extends StatelessWidget {
       : ClipRRect(borderRadius: borderRadius, child: child);
 
   /// Opaque surface + outline for "Increase Contrast".
-  Widget _opaque(BuildContext context, AppPalette p, bool liquid) {
+  Widget _opaque(AppPalette p) {
     final base = kind == AppGlassKind.bar
         ? Color.alphaBlend(p.barBg, p.bg)
         : kind == AppGlassKind.floating
@@ -276,10 +278,7 @@ class AppGlass extends StatelessWidget {
     );
     return _clip(
       blur
-          ? BackdropFilter(
-              filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
-              child: decorated,
-            )
+          ? BackdropFilter(filter: _frostedFilter, child: decorated)
           : decorated,
     );
   }
@@ -307,7 +306,7 @@ class AppGlass extends StatelessWidget {
       ),
     );
     if (blur) {
-      surface = BackdropFilter(filter: _liquidFilter(), child: surface);
+      surface = BackdropFilter(filter: _liquidFilter, child: surface);
     }
     surface = _clip(surface);
     if (!flat) {

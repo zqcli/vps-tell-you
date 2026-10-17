@@ -7,7 +7,7 @@ class LedgerDate implements Comparable<LedgerDate> {
   final int day;
 
   static LedgerDate? tryParse(String value) {
-    if (!RegExp(r'^\d{4}-\d{2}-\d{2}$').hasMatch(value)) return null;
+    if (!_isoDate.hasMatch(value)) return null;
     final parts = value.split('-').map(int.parse).toList();
     final normalized = DateTime.utc(parts[0], parts[1], parts[2]);
     if (normalized.year != parts[0] ||
@@ -64,7 +64,7 @@ class Money {
   static const currencies = ['USD', 'CNY', 'EUR'];
   static const maxMinor = 999999999999;
   static int? parseMinor(String value) {
-    if (!RegExp(r'^\d{1,10}(\.\d{1,2})?$').hasMatch(value.trim())) return null;
+    if (!_amount.hasMatch(value.trim())) return null;
     final parts = value.trim().split('.');
     final minor =
         int.parse(parts[0]) * 100 +
@@ -77,3 +77,6 @@ class Money {
   String get formatted =>
       '${{'USD': '\$', 'CNY': '¥', 'EUR': '€'}[currency] ?? currency}$decimal';
 }
+
+final _isoDate = RegExp(r'^\d{4}-\d{2}-\d{2}$');
+final _amount = RegExp(r'^\d{1,10}(\.\d{1,2})?$');

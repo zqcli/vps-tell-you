@@ -63,6 +63,9 @@ class ProviderAvatar extends StatelessWidget implements AppLeading {
     Color(0xFFDB2777),
   ];
 
+  static final _wordSeparators = RegExp(r'[\s_\-.]+');
+  static final _capital = RegExp('[A-Z]');
+
   /// Stable colour for [name] (FNV-1a hash, independent of the Dart VM).
   static Color colorFor(String? name) {
     final text = name?.trim() ?? '';
@@ -82,13 +85,13 @@ class ProviderAvatar extends StatelessWidget implements AppLeading {
     final first = text.runes.first;
     if (first >= 0x2E80) return String.fromCharCode(first);
     final words = text
-        .split(RegExp(r'[\s_\-.]+'))
+        .split(_wordSeparators)
         .where((w) => w.isNotEmpty)
         .toList();
     if (words.length >= 2) {
       return (words[0][0] + words[1][0]).toUpperCase();
     }
-    final capitals = RegExp('[A-Z]').allMatches(words.first).toList();
+    final capitals = _capital.allMatches(words.first).toList();
     if (capitals.length >= 2) {
       return capitals.take(2).map((m) => m.group(0)!).join();
     }
