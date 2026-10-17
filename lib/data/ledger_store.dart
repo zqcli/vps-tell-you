@@ -19,6 +19,7 @@ import '../settings/reminder_rule.dart';
 part 'ledger_settings.dart';
 part 'ledger_backup.dart';
 part 'ledger_providers.dart';
+part 'ledger_schema.dart';
 
 class LedgerConflict implements Exception, LocalizedMessage {
   const LedgerConflict();
@@ -61,48 +62,8 @@ class LedgerStore {
         version: schemaVersion,
         onConfigure: (db) async => db.execute('PRAGMA foreign_keys = ON'),
         onCreate: (db, version) => createSchema(db),
-        onUpgrade: (db, oldVersion, newVersion) async {
-          if (oldVersion < 1 ||
-              oldVersion > schemaVersion ||
-              newVersion != schemaVersion) {
-            throw StateError('Unsupported ledger migration');
-          }
-          if (oldVersion < 2) {
-            await _addFinanceSchema(db);
-          }
-          if (oldVersion < 3) {
-            await _addSecuritySchema(db);
-          }
-          if (oldVersion < 4) {
-            await _addSnippetSchema(db);
-          }
-          if (oldVersion < 6) {
-            await _addSettingsSchema(db);
-          }
-          if (oldVersion < 7) {
-            await _addResourcesSchema(db);
-          }
-          // v8 permits partial local resources and a traffic period in JSON.
-          // Existing v7 rows are already valid and must not be rewritten; the
-          // version fence prevents older readers from accepting the new shape.
-          if (oldVersion < 9) {
-            await _addLanguageSchema(db);
-          }
-          // v5 once added the panel-adapter tables. They are dropped again in
-          // v12, so older databases skip them and go straight to v12.
-          if (oldVersion < 12) {
-            await _migrateToCatalogSchema(db, (clock ?? DateTime.now)());
-          }
-          // v13 removes packages: providers only, with a remote directory.
-          if (oldVersion < 13) {
-            await _migrateToProviderDirectorySchema(db);
-          }
-          // v14 adds saved proxies and ssh_configurations.proxy_id. sqflite
-          // runs onUpgrade in one transaction, so a failure rolls both back.
-          if (oldVersion < 14) {
-            await _addProxySchema(db);
-          }
-        },
+        onUpgrade: (db, oldVersion, newVersion) =>
+            _upgradeLedgerSchema(db, oldVersion, newVersion, clock),
         onDowngrade: (db, oldVersion, newVersion) async {
           throw StateError('Newer ledger version; upgrade the app');
         },
@@ -111,43 +72,9 @@ class LedgerStore {
     return LedgerStore._(db, clock ?? DateTime.now);
   }
 
-  /// Add explicit, transactional migrations only when a real schema changes.
-  static Future<void> createSchema(DatabaseExecutor db) async {
-    await db.execute('''CREATE TABLE server_groups (
-      id TEXT PRIMARY KEY, name TEXT NOT NULL COLLATE NOCASE UNIQUE,
-      position INTEGER NOT NULL)''');
-    await db.execute('''CREATE TABLE servers (
-      id TEXT PRIMARY KEY, name TEXT NOT NULL, vendor TEXT NOT NULL,
-      host TEXT NOT NULL DEFAULT '', region TEXT NOT NULL DEFAULT '',
-      purpose TEXT NOT NULL DEFAULT '', os TEXT NOT NULL DEFAULT '',
-      spec TEXT NOT NULL DEFAULT '', notes TEXT NOT NULL DEFAULT '',
-      group_id TEXT REFERENCES server_groups(id) ON DELETE SET NULL,
-      favorite INTEGER NOT NULL DEFAULT 0 CHECK(favorite IN (0,1)),
-      billing TEXT NOT NULL CHECK(billing IN ('unknown','prepaid','metered')),
-      currency TEXT NOT NULL CHECK(currency IN ('USD','CNY','EUR')),
-      amount_minor INTEGER CHECK(amount_minor >= 0), cycle_months INTEGER NOT NULL,
-      start_date TEXT, due_date TEXT, archived_at TEXT,
-      created_at TEXT NOT NULL, updated_at TEXT NOT NULL,
-      revision INTEGER NOT NULL DEFAULT 0,
-      is_demo INTEGER NOT NULL DEFAULT 0 CHECK(is_demo IN (0,1)))''');
-    await db.execute('CREATE INDEX servers_group ON servers(group_id)');
-    await db.execute('CREATE INDEX servers_archive ON servers(archived_at)');
-    await _addFinanceSchema(db);
-    await _addSecuritySchema(db);
-    await _addSnippetSchema(db);
-    await _addSettingsSchema(db);
-    await _addResourcesSchema(db);
-    await _addLanguageSchema(db);
-    await _createProviderTables(db);
-    await _addCatalogLink(db);
-    await _addDirectorySettings(db);
-    await _addProxySchema(db);
-  }
-
-  /// Nullable by design: old/manual records are not populated with fabricated
-  /// resource values, and this migration touches no finance or SSH fields.
-  static Future<void> _addResourcesSchema(DatabaseExecutor db) =>
-      db.execute('ALTER TABLE servers ADD COLUMN resources_json TEXT');
+  /// Creates the current schema in an empty database.
+  static Future<void> createSchema(DatabaseExecutor db) =>
+      _createLedgerSchema(db);
 
   Future<List<ServerRecord>> servers() async =>
       (await _db.query('servers'))
@@ -471,51 +398,6 @@ class LedgerStore {
         await _replaceInitialPeriod(txn, record);
       }
     });
-  }
-
-  static Future<void> _addFinanceSchema(DatabaseExecutor db) async {
-    await db.execute('ALTER TABLE servers ADD COLUMN renewal_anchor_date TEXT');
-    await db.execute(
-      '''CREATE TABLE payments (
-      id TEXT PRIMARY KEY,
-      server_id TEXT REFERENCES servers(id), target_name TEXT NOT NULL,
-      account_label TEXT, amount_minor INTEGER NOT NULL CHECK(amount_minor >= 0),
-      currency TEXT NOT NULL CHECK(currency IN ('USD','CNY','EUR')),
-      paid_date TEXT NOT NULL, from_date TEXT, until_date TEXT,
-      cycle_count INTEGER NOT NULL, note TEXT NOT NULL,
-      previous_due TEXT, applied_server_revision INTEGER,
-      created_at TEXT NOT NULL, voided_at TEXT, request_fingerprint TEXT NOT NULL,
-      CHECK((server_id IS NULL AND account_label IS NOT NULL AND cycle_count=0)
-        OR (server_id IS NOT NULL AND account_label IS NULL AND cycle_count BETWEEN 1 AND 3)))''',
-    );
-    await db.execute(
-      '''CREATE UNIQUE INDEX payments_active_until
-      ON payments(server_id,until_date) WHERE server_id IS NOT NULL AND voided_at IS NULL''',
-    );
-    await db.execute('''CREATE TABLE service_periods (
-      id TEXT PRIMARY KEY, server_id TEXT NOT NULL REFERENCES servers(id),
-      start_date TEXT NOT NULL, end_date TEXT NOT NULL CHECK(end_date > start_date),
-      inferred INTEGER NOT NULL CHECK(inferred IN (0,1)),
-      payment_id TEXT REFERENCES payments(id))''');
-    await db.execute(
-      'CREATE INDEX service_periods_server ON service_periods(server_id,start_date)',
-    );
-    await db.execute('''CREATE TABLE finance_settings (
-      id INTEGER PRIMARY KEY CHECK(id=1), display_currency TEXT NOT NULL,
-      usd_to_cny TEXT, eur_to_cny TEXT, rate_date TEXT)''');
-    await db.insert('finance_settings', const FxSettings().toMap());
-    final records = (await db.query('servers')).map(ServerRecord.fromMap);
-    for (final record in records) {
-      if (record.billing == BillingKind.prepaid && record.dueDate != null) {
-        await db.update(
-          'servers',
-          {'renewal_anchor_date': record.dueDate.toString()},
-          where: 'id = ?',
-          whereArgs: [record.id],
-        );
-      }
-      await _replaceInitialPeriod(db, record);
-    }
   }
 
   static Future<void> _replaceInitialPeriod(
@@ -1053,52 +935,6 @@ class LedgerStore {
     });
   }
 
-  static Future<void> _addSecuritySchema(DatabaseExecutor db) async {
-    await db.execute('''CREATE TABLE credentials (
-      id TEXT PRIMARY KEY, name TEXT NOT NULL,
-      kind TEXT NOT NULL CHECK(kind IN ('password','privateKey')),
-      default_username TEXT NOT NULL DEFAULT '', secret_ref TEXT NOT NULL UNIQUE,
-      key_algorithm TEXT, fingerprint TEXT,
-      created_at TEXT NOT NULL, updated_at TEXT NOT NULL,
-      revision INTEGER NOT NULL DEFAULT 0)''');
-    await db.execute('''CREATE TABLE ssh_configurations (
-      server_id TEXT PRIMARY KEY REFERENCES servers(id) ON DELETE CASCADE,
-      host TEXT NOT NULL, port INTEGER NOT NULL CHECK(port BETWEEN 1 AND 65535),
-      username TEXT NOT NULL, credential_id TEXT REFERENCES credentials(id),
-      revision INTEGER NOT NULL DEFAULT 0)''');
-    await db.execute(
-      'CREATE INDEX ssh_credential ON ssh_configurations(credential_id)',
-    );
-    // Both pre-write reservations and superseded immutable references live here.
-    // No secret data is ever written into this recovery journal.
-    await db.execute('''CREATE TABLE secret_cleanup (
-      secret_ref TEXT PRIMARY KEY, created_at TEXT NOT NULL)''');
-    await db.execute('''CREATE TABLE host_trust (
-      generation TEXT NOT NULL UNIQUE, host TEXT NOT NULL, port INTEGER NOT NULL CHECK(port BETWEEN 1 AND 65535),
-      algorithm TEXT NOT NULL, public_key TEXT NOT NULL, fingerprint TEXT NOT NULL,
-      verified_at TEXT NOT NULL, revision INTEGER NOT NULL DEFAULT 0,
-      PRIMARY KEY(host, port))''');
-  }
-
-  /// Saved proxies. The password lives only in secure storage ([secret_ref]);
-  /// deleting a referenced proxy is refused (RESTRICT), so a connection can
-  /// never silently turn into a direct one.
-  static Future<void> _addProxySchema(DatabaseExecutor db) async {
-    await db.execute('''CREATE TABLE proxies (
-      id TEXT PRIMARY KEY, name TEXT NOT NULL,
-      kind TEXT NOT NULL CHECK(kind IN ('socks5','http','https')),
-      host TEXT NOT NULL, port INTEGER NOT NULL CHECK(port BETWEEN 1 AND 65535),
-      username TEXT, secret_ref TEXT UNIQUE,
-      created_at TEXT NOT NULL, updated_at TEXT NOT NULL,
-      revision INTEGER NOT NULL DEFAULT 0,
-      CHECK(secret_ref IS NULL OR username IS NOT NULL))''');
-    await db.execute(
-      'ALTER TABLE ssh_configurations ADD COLUMN proxy_id TEXT '
-      'REFERENCES proxies(id) ON DELETE RESTRICT',
-    );
-    await db.execute('CREATE INDEX ssh_proxy ON ssh_configurations(proxy_id)');
-  }
-
   Future<List<CredentialMetadata>> credentials() async => (await _db.query(
     'credentials',
     orderBy: 'name COLLATE NOCASE, id',
@@ -1571,12 +1407,6 @@ class LedgerStore {
     if (count != 1) {
       throw const LedgerConflict();
     }
-  }
-
-  static Future<void> _addSnippetSchema(DatabaseExecutor db) async {
-    await db.execute('''CREATE TABLE snippets (
-      id TEXT PRIMARY KEY, name TEXT NOT NULL, content TEXT NOT NULL,
-      revision INTEGER NOT NULL DEFAULT 0 CHECK(revision >= 0))''');
   }
 
   Future<List<CommandSnippet>> snippets() async => (await _db.query(
