@@ -493,12 +493,15 @@ class _PaymentListPageState extends State<PaymentListPage> {
       final c = widget.controller;
       final l10n = context.l10n;
       final p = context.palette;
+      final groupOf = widget.groupId == null
+          ? null
+          : {for (final s in c.records) s.id: s.groupId ?? ''};
       final rows = c.payments.where((p) {
         if (!showVoided && p.voided) return false;
         if (serverId != null && p.serverId != serverId) return false;
-        if (widget.groupId != null &&
+        if (groupOf != null &&
             (p.serverId == null ||
-                (c.byId(p.serverId!)?.groupId ?? '') != widget.groupId)) {
+                (groupOf[p.serverId!] ?? '') != widget.groupId)) {
           return false;
         }
         final days = period.days;
@@ -507,6 +510,10 @@ class _PaymentListPageState extends State<PaymentListPage> {
         return age >= 0 && age < days;
       }).toList()..sort((a, b) => b.paidDate.compareTo(a.paidDate));
       final counted = rows.where((p) => !p.voided).toList();
+      final archivedIds = {
+        for (final s in c.records)
+          if (s.archived) s.id,
+      };
       final total = aggregateAmounts(
         counted.map((p) => FinanceAmount.money(p.amount)),
         c.fx,
@@ -649,8 +656,7 @@ class _PaymentListPageState extends State<PaymentListPage> {
                           ),
                           style: secondary,
                         ),
-                        if (pay.serverId != null &&
-                            c.byId(pay.serverId!)?.archived == true) ...[
+                        if (archivedIds.contains(pay.serverId)) ...[
                           Padding(
                             padding: const EdgeInsets.only(top: 6),
                             child: Align(

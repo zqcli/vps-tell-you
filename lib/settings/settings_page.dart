@@ -482,8 +482,11 @@ class GroupsPage extends StatelessWidget {
     listenable: controller,
     builder: (context, _) {
       final l10n = context.l10n;
-      int count(String? id) =>
-          controller.active.where((s) => s.groupId == id).length;
+      final counts = <String?, int>{};
+      for (final s in controller.active) {
+        counts[s.groupId] = (counts[s.groupId] ?? 0) + 1;
+      }
+      int count(String? id) => counts[id] ?? 0;
       return AppScaffold(
         title: l10n.manageGroups,
         largeTitle: false,
