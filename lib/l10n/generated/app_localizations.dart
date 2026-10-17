@@ -9638,6 +9638,120 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'{name} 副本'**
   String r14ServerCopyName(String name);
+
+  /// No description provided for @r14ErrorDetails.
+  ///
+  /// In zh, this message translates to:
+  /// **'错误详情'**
+  String get r14ErrorDetails;
+
+  /// No description provided for @r14ErrorStage.
+  ///
+  /// In zh, this message translates to:
+  /// **'失败环节'**
+  String get r14ErrorStage;
+
+  /// No description provided for @r14ErrorTarget.
+  ///
+  /// In zh, this message translates to:
+  /// **'目标'**
+  String get r14ErrorTarget;
+
+  /// No description provided for @r14ErrorProxy.
+  ///
+  /// In zh, this message translates to:
+  /// **'代理'**
+  String get r14ErrorProxy;
+
+  /// No description provided for @r14ErrorTime.
+  ///
+  /// In zh, this message translates to:
+  /// **'时间'**
+  String get r14ErrorTime;
+
+  /// No description provided for @r14ErrorTechnical.
+  ///
+  /// In zh, this message translates to:
+  /// **'技术详情'**
+  String get r14ErrorTechnical;
+
+  /// No description provided for @r14ErrorFootnote.
+  ///
+  /// In zh, this message translates to:
+  /// **'已移除密码、口令、私钥和代理凭据。这些内容只保存在内存中，不会写入数据库、日志或导出文件。'**
+  String get r14ErrorFootnote;
+
+  /// No description provided for @r14ErrorCopy.
+  ///
+  /// In zh, this message translates to:
+  /// **'复制详情'**
+  String get r14ErrorCopy;
+
+  /// No description provided for @r14ErrorCopied.
+  ///
+  /// In zh, this message translates to:
+  /// **'已复制'**
+  String get r14ErrorCopied;
+
+  /// No description provided for @r14StageSetup.
+  ///
+  /// In zh, this message translates to:
+  /// **'准备连接（读取凭据 / 检查目标）'**
+  String get r14StageSetup;
+
+  /// No description provided for @r14StageConnect.
+  ///
+  /// In zh, this message translates to:
+  /// **'DNS 解析 / TCP 连接'**
+  String get r14StageConnect;
+
+  /// No description provided for @r14StageProxy.
+  ///
+  /// In zh, this message translates to:
+  /// **'代理'**
+  String get r14StageProxy;
+
+  /// No description provided for @r14StageProxyTls.
+  ///
+  /// In zh, this message translates to:
+  /// **'与代理的 TLS 握手'**
+  String get r14StageProxyTls;
+
+  /// No description provided for @r14StageHandshake.
+  ///
+  /// In zh, this message translates to:
+  /// **'SSH 握手'**
+  String get r14StageHandshake;
+
+  /// No description provided for @r14StageHostKey.
+  ///
+  /// In zh, this message translates to:
+  /// **'主机公钥校验'**
+  String get r14StageHostKey;
+
+  /// No description provided for @r14StageAuthentication.
+  ///
+  /// In zh, this message translates to:
+  /// **'身份验证'**
+  String get r14StageAuthentication;
+
+  /// No description provided for @r14StageShell.
+  ///
+  /// In zh, this message translates to:
+  /// **'打开终端通道'**
+  String get r14StageShell;
+
+  /// No description provided for @r14StageSftp.
+  ///
+  /// In zh, this message translates to:
+  /// **'SFTP 子系统'**
+  String get r14StageSftp;
+
+  /// No description provided for @r14StageSession.
+  ///
+  /// In zh, this message translates to:
+  /// **'会话进行中'**
+  String get r14StageSession;
 }
 
 class _AppLocalizationsDelegate

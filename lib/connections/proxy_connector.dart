@@ -6,9 +6,11 @@ import 'dart:typed_data';
 import '../core/net_address.dart';
 import '../l10n/generated/app_localizations.dart';
 import '../security/proxy_models.dart';
+import 'error_details.dart';
 
-/// Why a proxied connection could not be made. Only fixed categories (plus an
-/// HTTP status number): no host names, credentials or native error text.
+/// Why a proxied connection could not be made. The user-facing message only
+/// uses these fixed categories (plus an HTTP status number); the wire-level
+/// text lives in `ProxyException.technical` for the redacted error details.
 enum ProxyFailure {
   /// TCP connection to the proxy itself failed.
   unreachable,
@@ -39,9 +41,23 @@ enum ProxyFailure {
 }
 
 class ProxyException implements Exception {
-  const ProxyException(this.failure, {this.httpStatus});
+  const ProxyException(this.failure, {this.httpStatus, this.technical});
   final ProxyFailure failure;
   final int? httpStatus;
+
+  /// What actually happened on the wire (SOCKS5 reply code, HTTP status line,
+  /// the underlying socket or TLS error). Never shown as the message; it only
+  /// feeds the redacted "Error Details" sheet.
+  final String? technical;
+
+  /// Stage for the error details: TLS to the proxy, or the proxy exchange.
+  ErrorStage get stage => failure == ProxyFailure.tlsFailed
+      ? ErrorStage.proxyTls
+      : ErrorStage.proxy;
+
+  /// Type, failure kind and the wire-level [technical] text.
+  String get detail =>
+      '${toString()}${technical == null ? '' : ': $technical'}';
 
   /// The target (not the proxy) is what refused or was not found.
   bool get targetRefused => failure == ProxyFailure.socksRefused;
@@ -151,7 +167,13 @@ class ProxyDial {
     if (limit != null) {
       _timer = Timer(
         limit,
-        () => _abort(const ProxyException(ProxyFailure.timeout)),
+        () => _abort(
+          ProxyException(
+            ProxyFailure.timeout,
+            technical:
+                'TimeoutException after $limit: no completion while ${_phase.name}',
+          ),
+        ),
       );
     }
     try {
@@ -221,13 +243,17 @@ class ProxyDial {
 
   ProxyException _classify(Object error) {
     if (error is ProxyException) return error;
+    final raw = describeError(error);
     if (error is HandshakeException || error is TlsException) {
-      return const ProxyException(ProxyFailure.tlsFailed);
+      return ProxyException(ProxyFailure.tlsFailed, technical: raw);
     }
     return switch (_phase) {
-      _Phase.connect => const ProxyException(ProxyFailure.unreachable),
-      _Phase.tls => const ProxyException(ProxyFailure.tlsFailed),
-      _Phase.protocol => const ProxyException(ProxyFailure.closed),
+      _Phase.connect => ProxyException(
+        ProxyFailure.unreachable,
+        technical: raw,
+      ),
+      _Phase.tls => ProxyException(ProxyFailure.tlsFailed, technical: raw),
+      _Phase.protocol => ProxyException(ProxyFailure.closed, technical: raw),
     };
   }
 
@@ -252,7 +278,12 @@ class ProxyDial {
     final withAuth = proxy.hasCredentials;
     out.add([5, withAuth ? 2 : 1, 0, if (withAuth) 2]);
     final choice = await reader.exactly(2);
-    if (choice[0] != 5) throw const ProxyException(ProxyFailure.protocol);
+    if (choice[0] != 5) {
+      throw ProxyException(
+        ProxyFailure.protocol,
+        technical: 'SOCKS5 method reply began with version ${choice[0]}',
+      );
+    }
     switch (choice[1]) {
       case 0:
         break;
@@ -261,16 +292,29 @@ class ProxyDial {
         final pass = utf8.encode(proxy.password!);
         out.add([1, user.length, ...user, pass.length, ...pass]);
         final status = await reader.exactly(2);
-        if (status[0] != 1) throw const ProxyException(ProxyFailure.protocol);
+        if (status[0] != 1) {
+          throw ProxyException(
+            ProxyFailure.protocol,
+            technical: 'SOCKS5 auth reply began with version ${status[0]}',
+          );
+        }
         if (status[1] != 0) {
-          throw const ProxyException(ProxyFailure.authRejected);
+          throw ProxyException(
+            ProxyFailure.authRejected,
+            technical:
+                'SOCKS5 username/password rejected (status 0x${_hex(status[1])})',
+          );
         }
       case 0xff:
         throw ProxyException(
           withAuth ? ProxyFailure.authRejected : ProxyFailure.authRequired,
+          technical: 'SOCKS5 no acceptable authentication method (0xff)',
         );
       default:
-        throw const ProxyException(ProxyFailure.protocol);
+        throw ProxyException(
+          ProxyFailure.protocol,
+          technical: 'SOCKS5 selected unsupported method 0x${_hex(choice[1])}',
+        );
     }
     final Uint8List address;
     final int type;
@@ -292,8 +336,19 @@ class ProxyDial {
     }
     out.add([5, 1, 0, type, ...address, port >> 8, port & 0xff]);
     final head = await reader.exactly(4);
-    if (head[0] != 5) throw const ProxyException(ProxyFailure.protocol);
-    if (head[1] != 0) throw ProxyException(_socksReply(head[1]));
+    if (head[0] != 5) {
+      throw ProxyException(
+        ProxyFailure.protocol,
+        technical: 'SOCKS5 reply began with version ${head[0]}',
+      );
+    }
+    if (head[1] != 0) {
+      throw ProxyException(
+        _socksReply(head[1]),
+        technical:
+            'SOCKS5 reply 0x${_hex(head[1])}: ${_socksReplyText(head[1])}',
+      );
+    }
     final int rest;
     switch (head[3]) {
       case 1:
@@ -303,10 +358,27 @@ class ProxyDial {
       case 3:
         rest = (await reader.exactly(1))[0];
       default:
-        throw const ProxyException(ProxyFailure.protocol);
+        throw ProxyException(
+          ProxyFailure.protocol,
+          technical: 'SOCKS5 unknown address type ${head[3]} in reply',
+        );
     }
     await reader.exactly(rest + 2); // bound address and port: unused
   }
+
+  static String _hex(int value) => value.toRadixString(16).padLeft(2, '0');
+
+  static String _socksReplyText(int code) => switch (code) {
+    1 => 'general SOCKS server failure',
+    2 => 'connection not allowed by ruleset',
+    3 => 'network unreachable',
+    4 => 'host unreachable',
+    5 => 'connection refused',
+    6 => 'TTL expired',
+    7 => 'command not supported',
+    8 => 'address type not supported',
+    _ => 'unassigned reply code',
+  };
 
   static ProxyFailure _socksReply(int code) => switch (code) {
     2 => ProxyFailure.socksNotAllowed,
@@ -344,7 +416,14 @@ class ProxyDial {
     );
     final match = RegExp(r'^HTTP/1\.[01] ([0-9]{3})(?: |$)')
         .firstMatch(statusLine);
-    if (match == null) throw const ProxyException(ProxyFailure.protocol);
+    // The status line is the proxy's own text; only printable ASCII is kept.
+    final shown = statusLine.replaceAll(RegExp(r'[^\x20-\x7e]'), '?');
+    if (match == null) {
+      throw ProxyException(
+        ProxyFailure.protocol,
+        technical: 'Not an HTTP status line: $shown',
+      );
+    }
     final status = int.parse(match.group(1)!);
     if (status >= 200 && status < 300) return;
     if (status == 407) {
@@ -353,9 +432,14 @@ class ProxyDial {
             ? ProxyFailure.authRejected
             : ProxyFailure.authRequired,
         httpStatus: status,
+        technical: shown,
       );
     }
-    throw ProxyException(ProxyFailure.httpStatus, httpStatus: status);
+    throw ProxyException(
+      ProxyFailure.httpStatus,
+      httpStatus: status,
+      technical: shown,
+    );
   }
 }
 
@@ -423,7 +507,12 @@ class _Reader {
 
   Future<void> _more() async {
     if (_failure != null) throw _failure!;
-    if (_ended) throw const ProxyException(ProxyFailure.closed);
+    if (_ended) {
+      throw const ProxyException(
+        ProxyFailure.closed,
+        technical: 'The proxy closed the connection before replying',
+      );
+    }
     final wake = _wake = Completer<void>();
     await wake.future;
     if (_failure != null) throw _failure!;
@@ -448,13 +537,19 @@ class _Reader {
             _buffer[i + 2] == 13 &&
             _buffer[i + 3] == 10) {
           if (i + 4 > limit) {
-            throw const ProxyException(ProxyFailure.protocol);
+            throw const ProxyException(
+              ProxyFailure.protocol,
+              technical: 'HTTP response header exceeds 16 KiB',
+            );
           }
           return exactly(i + 4);
         }
       }
       if (_buffer.length >= limit) {
-        throw const ProxyException(ProxyFailure.protocol);
+        throw const ProxyException(
+          ProxyFailure.protocol,
+          technical: 'HTTP response header exceeds 16 KiB',
+        );
       }
       from = _buffer.length < 3 ? 0 : _buffer.length - 3;
       await _more();

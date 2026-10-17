@@ -13,6 +13,8 @@ import '../core/background_grace.dart';
 import '../core/ui/ui.dart';
 import '../security/security_controller.dart';
 import '../servers/ledger_controller.dart';
+import 'error_details.dart';
+import 'error_details_ui.dart';
 import 'power_action.dart';
 import 'snippet.dart';
 import 'sftp_pages.dart';
@@ -26,6 +28,14 @@ import 'terminal_widgets.dart';
 import 'terminal_font.dart';
 
 typedef SshServiceFactory = SshService Function(SecurityController security);
+
+/// Why a terminal that never became a session closed again, handed back to the
+/// connect page: the localized headline and the original error (if any).
+class TerminalFailure {
+  const TerminalFailure(this.message, [this.details]);
+  final String message;
+  final ErrorDetails? details;
+}
 
 class TerminalPage extends StatefulWidget {
   const TerminalPage({
@@ -233,8 +243,12 @@ class _TerminalPageState extends State<TerminalPage>
     }
     final l10n = context.l10n;
     final error = _service.errorFor(l10n);
+    final details = _service.errorDetails;
     if (_hasConnected) {
-      // Established session ended: say so on the page we return to.
+      // Established session ended: say so on the page we return to. The
+      // toast outlives this page, so its details action opens from the
+      // navigator, which stays.
+      final navigator = Navigator.of(context).context;
       showAppToast(
         context,
         error ??
@@ -242,11 +256,18 @@ class _TerminalPageState extends State<TerminalPage>
               _endReason ?? LocalizedText((l) => l.terminalDisconnected),
               l10n,
             ),
+        actionLabel: details == null ? null : l10n.r14ErrorDetails,
+        duration: details == null ? null : const Duration(seconds: 8),
+        onAction: details == null
+            ? null
+            : () {
+                if (navigator.mounted) showErrorDetails(navigator, details);
+              },
       );
       _leave();
     } else if (_service.status == SshStatus.failed || error != null) {
       // Never established (auth, host key, timeout): the connect page shows it.
-      _leave(failure: error ?? l10n.terminalFailed);
+      _leave(failure: TerminalFailure(error ?? l10n.terminalFailed, details));
     } else {
       _leave();
     }
@@ -881,7 +902,7 @@ class _TerminalPageState extends State<TerminalPage>
   /// Closes the page (and anything stacked above it, e.g. the command panel
   /// or a confirmation) and discards the draft. [failure] is returned to the
   /// connect page when the session was never established.
-  void _leave({String? failure}) {
+  void _leave({TerminalFailure? failure}) {
     if (_closing) {
       return;
     }

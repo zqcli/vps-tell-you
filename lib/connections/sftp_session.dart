@@ -6,6 +6,8 @@ import 'dart:typed_data';
 
 import 'package:dartssh2/dartssh2.dart';
 
+import 'error_details.dart';
+
 /// SFTP file management over an already authenticated [SSHClient].
 ///
 /// This layer never performs host verification or authentication; those stay
@@ -42,8 +44,11 @@ enum SftpErrorKind {
 }
 
 class SftpException implements Exception {
-  const SftpException(this.kind, [this.path]);
+  const SftpException(this.kind, [this.path, this.technical]);
   final SftpErrorKind kind;
+
+  /// The original error behind [kind], for the redacted error details only.
+  final String? technical;
 
   /// The remote (or local, for [SftpErrorKind.localFile]) path involved.
   final String? path;
@@ -229,12 +234,16 @@ class DartSshSftpSession implements SftpSession {
       final sftp = await pending.timeout(openTimeout);
       try {
         await sftp.handshake.timeout(openTimeout);
-      } catch (_) {
+      } catch (problem) {
         unawaited(sftp.close().catchError((Object _) {}));
         if (client.isClosed) rethrow;
         // dartssh2 ignores a refused subsystem request, so a server that
         // disabled SFTP is only visible as a handshake that never answers.
-        throw const SftpException(SftpErrorKind.unavailable);
+        throw SftpException(
+          SftpErrorKind.unavailable,
+          null,
+          'SFTP handshake: ${describeError(problem)}',
+        );
       }
       return DartSshSftpSession._(
         sftp,
@@ -244,20 +253,28 @@ class DartSshSftpSession implements SftpSession {
         stallTimeout: stallTimeout,
         onClose: onClose,
       );
-    } on TimeoutException {
+    } on TimeoutException catch (problem) {
       // A late channel must not leak.
       unawaited(
         opening?.then((late) => late.close()).catchError((Object _) {}),
       );
-      throw const SftpException(SftpErrorKind.timeout);
+      throw SftpException(SftpErrorKind.timeout, null, describeError(problem));
     } catch (problem) {
       if (client.isClosed) {
-        throw const SftpException(SftpErrorKind.connectionLost);
+        throw SftpException(
+          SftpErrorKind.connectionLost,
+          null,
+          describeError(problem),
+        );
       }
       // Refusal of the subsystem surfaces as a channel error or abort.
       throw problem is SftpException
           ? problem
-          : const SftpException(SftpErrorKind.unavailable);
+          : SftpException(
+              SftpErrorKind.unavailable,
+              null,
+              describeError(problem),
+            );
     }
   }
 

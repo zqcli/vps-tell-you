@@ -67,9 +67,9 @@ import '../core/ui/ui.dart';      // everything below + AppPalette / context.pal
 | `AppMetricStrip` | **The rule for any "several small KPIs in a row"** (remaining value / days left / daily rate, counters …): `AppCard(child: AppMetricStrip(metrics: [AppMetric(label: 'Value left', value: r'$12.40'), AppMetric(label: 'Days left', value: '7 days'), AppMetric(label: 'Daily', value: r'$0.1370')]))`. 2–4 equal-width columns split by 0.5 px hairlines, **caption and figure both centered** (caption 13 secondary above figure 17 semibold tabular). Keep captions to 1–2 short words and figures pre-formatted (unknown → `—`). It measures real text and falls back to rows of two columns, then to caption-left / figure-right lines, so nothing clips at 320 px / 2× text. Never build ad-hoc `Row`s of `Column`s for this. `AppMetric(onTap:)` makes a column tappable (filters / drill-down, e.g. the server list counters, reminder overview); `onGradient: true` is the white-on-gradient variant. Replaces `AppStatGrid`/`AppStatTile`, which stay only for legacy use. |
 | `AppButton` | `AppButton(label: 'Add', icon: Icons.add, kind: AppButtonKind.tonal, compact: true, destructive: false, busy: saving, expand: true, onPressed: …)`. |
 | `AppProgressBar` | `AppProgressBar(value: .92, tone: AppTone.amber)`. |
-| `AppBanner` | `AppBanner(tone: AppTone.amber, icon: Icons.warning_amber_rounded, text: '…', onTap: …)`. |
+| `AppBanner` | `AppBanner(tone: AppTone.amber, icon: Icons.warning_amber_rounded, text: '…', onTap: …)`; `action:` puts a control with its own tap target (44 pt) where the chevron would be – connection errors use `ErrorBanner(text:, details:)` (lib/connections/error_details_ui.dart), which adds the ⓘ "Error Details" button. |
 | `AppLogo` | `AppLogo(size: 64)`. The app mark (`AppLogoPainter`); decorative unless `semanticLabel` is set. Launcher icons are exported from the same painter: `flutter test tool/app_icon_test.dart && uv run --with pillow python tool/app_icons.py`. |
-| `AppEmptyState` | `AppEmptyState(icon: Icons.dns_outlined, title: '…', message: '…', actions: [AppButton(...)])`. |
+| `AppEmptyState` | `AppEmptyState(icon: Icons.dns_outlined, title: '…', message: '…', messageAccessory: ErrorDetailsButton(details: d), actions: [AppButton(...)])`. |
 
 ## Overlays
 

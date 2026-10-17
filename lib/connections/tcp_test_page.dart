@@ -10,6 +10,7 @@ import '../security/proxy_models.dart';
 import '../security/proxy_pages.dart';
 import '../servers/ledger_controller.dart';
 import 'connection_form.dart';
+import 'error_details_ui.dart';
 import 'tcp_test.dart';
 
 class TcpTestPage extends StatefulWidget {
@@ -171,34 +172,39 @@ class _TcpTestPageState extends State<TcpTestPage> with WidgetsBindingObserver {
 
   /// Label and pill share one wrapping row so a long failure text is never
   /// truncated at large text scales.
-  Widget _resultRow(BuildContext context, Widget pill, {bool busy = false}) =>
-      AppRow.custom(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 12),
-          child: Wrap(
-            alignment: WrapAlignment.spaceBetween,
-            crossAxisAlignment: WrapCrossAlignment.center,
-            spacing: 12,
-            runSpacing: 6,
+  Widget _resultRow(
+    BuildContext context,
+    Widget pill, {
+    bool busy = false,
+    Widget? accessory,
+  }) => AppRow.custom(
+    child: Padding(
+      padding: const EdgeInsets.symmetric(vertical: 12),
+      child: Wrap(
+        alignment: WrapAlignment.spaceBetween,
+        crossAxisAlignment: WrapCrossAlignment.center,
+        spacing: 12,
+        runSpacing: 6,
+        children: [
+          Text(
+            context.l10n.uiConnResult,
+            style: TextStyle(fontSize: 16, color: context.palette.text),
+          ),
+          Row(
+            mainAxisSize: MainAxisSize.min,
             children: [
-              Text(
-                context.l10n.uiConnResult,
-                style: TextStyle(fontSize: 16, color: context.palette.text),
-              ),
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  if (busy) ...[
-                    const CupertinoActivityIndicator(radius: 8),
-                    const SizedBox(width: 8),
-                  ],
-                  Flexible(child: pill),
-                ],
-              ),
+              if (busy) ...[
+                const CupertinoActivityIndicator(radius: 8),
+                const SizedBox(width: 8),
+              ],
+              Flexible(child: pill),
+              ?accessory,
             ],
           ),
-        ),
-      );
+        ],
+      ),
+    ),
+  );
 
   @override
   Widget build(BuildContext context) => ListenableBuilder(
@@ -366,6 +372,9 @@ class _TcpTestPageState extends State<TcpTestPage> with WidgetsBindingObserver {
                           tone: _tone(result.outcome),
                           dot: true,
                         ),
+                        accessory: result.errorDetails == null
+                            ? null
+                            : ErrorDetailsButton(details: result.errorDetails!),
                       ),
                       AppKeyValueRow(
                         label: l10n.uiConnTarget,

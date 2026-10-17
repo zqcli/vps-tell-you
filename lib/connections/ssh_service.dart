@@ -15,6 +15,7 @@ import '../security/key_import.dart';
 import '../security/proxy_models.dart';
 import '../security/security_controller.dart';
 import '../security/security_models.dart';
+import 'error_details.dart';
 import 'proxy_connector.dart';
 import 'sftp_session.dart';
 import 'ssh_host_key_capture.dart';
@@ -110,6 +111,10 @@ abstract class SshService extends ChangeNotifier {
   SshStatus get status;
   String? get error;
   String? errorFor(AppLocalizations l10n) => error;
+
+  /// The original (redacted) error behind [error], in memory only. Null when
+  /// there is none, and for cancellations.
+  ErrorDetails? get errorDetails => null;
   SshTarget? get target;
   int get generation;
   bool get connected => status == SshStatus.connected;
@@ -182,6 +187,14 @@ class NativeSshService extends SshService {
   @override
   String? errorFor(AppLocalizations l10n) => localizedError?.messageFor(l10n);
   @override
+  ErrorDetails? errorDetails;
+
+  // What the next failure's details are built from (all cleared on release).
+  ErrorStage _stage = ErrorStage.setup;
+  String? _targetLabel, _proxyLabel, _hostKeyNote;
+  List<String> _secrets = const [];
+  Object? _closeCause;
+  @override
   SshTarget? target;
   @override
   int generation = 0;
@@ -217,10 +230,28 @@ class NativeSshService extends SshService {
     _phaseTimer?.cancel();
     _phaseTimer = Timer(duration, () {
       if (_active(epoch)) {
-        _fail(message);
+        _fail(
+          message,
+          details: _detail(
+            TimeoutException(
+              '${_stage.name} did not complete',
+              duration,
+            ).toString(),
+            _stage,
+          ),
+        );
       }
     });
   }
+
+  ErrorDetails _detail(String technical, ErrorStage stage, {String? note}) =>
+      ErrorDetails(
+        stage: stage,
+        technical: [technical, ?note, ?_hostKeyNote].join('\n'),
+        target: _targetLabel,
+        proxy: _proxyLabel,
+        secrets: _secrets,
+      );
 
   @override
   Future<void> connect(
@@ -240,6 +271,7 @@ class NativeSshService extends SshService {
       verifyHost,
       requestKeyPassphrase,
       (epoch, client) async {
+        _stage = ErrorStage.sftp;
         _deadline(
           epoch,
           sessionTimeout + const Duration(seconds: 2),
@@ -260,7 +292,7 @@ class NativeSshService extends SshService {
             },
           );
         } on SftpException catch (problem) {
-          throw SecurityFailure(
+          throw ConnectionFailure(
             LocalizedText(
               (l10n) => problem.kind == SftpErrorKind.timeout
                   ? l10n.r3SftpOpenTimeout
@@ -268,6 +300,8 @@ class NativeSshService extends SshService {
                   ? l10n.r3SftpUnavailable
                   : l10n.sshConnectionIncomplete,
             ),
+            stage: ErrorStage.sftp,
+            technical: problem.technical ?? problem.toString(),
           );
         }
         if (!_active(epoch)) {
@@ -276,6 +310,7 @@ class NativeSshService extends SshService {
         }
         _sftpSessions.add(opened);
         _phaseTimer?.cancel();
+        _stage = ErrorStage.session;
         _setStatus(SshStatus.connected);
         return opened;
       },
@@ -327,7 +362,14 @@ class NativeSshService extends SshService {
     _release();
     final epoch = ++generation;
     localizedError = null;
+    errorDetails = null;
     target = null;
+    _stage = ErrorStage.setup;
+    _targetLabel = requested.label;
+    _proxyLabel = null;
+    _hostKeyNote = null;
+    _closeCause = null;
+    _secrets = const [];
     _setStatus(SshStatus.connecting);
     try {
       if (!supportsNativeSsh) {
@@ -347,6 +389,7 @@ class NativeSshService extends SshService {
         isCancelled: () => !_active(epoch),
       );
       _guard(epoch);
+      _secrets = [credential.secret, ?credential.passphrase];
       SSHKeyPair? key;
       if (credential.metadata.kind == CredentialKind.privateKey) {
         var passphrase = credential.passphrase;
@@ -364,6 +407,7 @@ class NativeSshService extends SshService {
           );
           passphrase = await requestKeyPassphrase(credential.metadata.name);
           _guard(epoch);
+          _secrets = [..._secrets, ?passphrase];
           if (passphrase == null || passphrase.isEmpty) {
             throw SecurityFailure(
               LocalizedText((l10n) => l10n.sshPassphraseCancelled),
@@ -399,6 +443,12 @@ class NativeSshService extends SshService {
               isCancelled: () => !_active(epoch),
             );
       _guard(epoch);
+      if (proxy != null) {
+        final saved = security.proxyById(proxyId);
+        _proxyLabel = [?saved?.name, proxy.label].join(' · ');
+        _secrets = [..._secrets, ?proxy.password];
+      }
+      _stage = proxy == null ? ErrorStage.connect : ErrorStage.proxy;
       _deadline(
         epoch,
         connectTimeout,
@@ -419,6 +469,7 @@ class NativeSshService extends SshService {
         return null;
       }
       final socket = CapturedSshSocket(native);
+      _stage = ErrorStage.handshake;
       _deadline(
         epoch,
         handshakeTimeout,
@@ -453,6 +504,7 @@ class NativeSshService extends SshService {
         keepAliveInterval: const Duration(seconds: 15),
         onVerifyHostKey: (type, fingerprint) async {
           _guard(epoch);
+          _stage = ErrorStage.hostKey;
           final identity = socket.capture.verifiedIdentity(
             host: next.host,
             port: next.port,
@@ -472,6 +524,10 @@ class NativeSshService extends SshService {
               next.port,
             );
             _guard(epoch);
+            _hostKeyNote =
+                'Host key ${trust.name}: ${identity.algorithm} '
+                '${identity.fingerprint}'
+                '${previous == null ? '' : '\nPinned host key: ${previous.algorithm} ${previous.fingerprint}'}';
             _setStatus(SshStatus.verifying);
             _deadline(
               epoch,
@@ -513,6 +569,8 @@ class NativeSshService extends SshService {
           if (!permitted || attempt.cancelled) {
             return false;
           }
+          _stage = ErrorStage.authentication;
+          _hostKeyNote = null;
           _setStatus(SshStatus.authenticating);
           _deadline(
             epoch,
@@ -544,7 +602,10 @@ class NativeSshService extends SshService {
       unawaited(
         client.done.then(
           (_) => _finishRemoteClose(epoch),
-          onError: (Object _) => _finishRemoteClose(epoch),
+          onError: (Object problem) {
+            _closeCause ??= problem;
+            return _finishRemoteClose(epoch);
+          },
         ),
       );
       await client.authenticated;
@@ -562,13 +623,31 @@ class NativeSshService extends SshService {
               : status == SshStatus.verifying
               ? LocalizedText((l10n) => l10n.sshHostNotTrusted)
               : LocalizedText((l10n) => l10n.sshConnectionIncomplete),
+          details: _detailsFor(problem),
         );
       }
     }
     return null;
   }
 
+  /// Details for a failure caught in [_connect]. App-authored failures
+  /// (cancellations, passphrase / credential checks) carry none; a user who
+  /// cancelled never sees a details button.
+  ErrorDetails? _detailsFor(Object problem) {
+    if (problem is ConnectionFailure) {
+      return _detail(problem.technical, problem.stage);
+    }
+    if (problem is SecurityFailure) return null;
+    if (problem is ProxyException) {
+      return problem.failure == ProxyFailure.cancelled
+          ? null
+          : _detail(problem.detail, problem.stage);
+    }
+    return _detail(describeError(problem), _stage);
+  }
+
   Future<void> _openShell(int epoch, SSHClient client) async {
+    _stage = ErrorStage.shell;
     _deadline(
       epoch,
       sessionTimeout,
@@ -595,9 +674,13 @@ class NativeSshService extends SshService {
     unawaited(
       session.done.then(
         (_) => _finishRemoteClose(epoch),
-        onError: (Object _) => _finishRemoteClose(epoch),
+        onError: (Object problem) {
+          _closeCause ??= problem;
+          return _finishRemoteClose(epoch);
+        },
       ),
     );
+    _stage = ErrorStage.session;
     _setStatus(SshStatus.connected);
     // A resize may have arrived while the PTY request was awaiting its reply.
     session.resizeTerminal(_columns, _rows);
@@ -618,16 +701,35 @@ class NativeSshService extends SshService {
     if (!_active(epoch)) {
       return;
     }
+    final exitCode = _session?.exitCode;
+    final signal = _session?.exitSignal;
+    final cause = _closeCause;
+    final reason = [
+      if (cause != null)
+        'Connection closed with an error: ${describeError(cause)}'
+      else
+        'The server closed the session.',
+      if (exitCode != null) 'Exit status: $exitCode',
+      if (signal != null)
+        'Exit signal: SIG${signal.signalName}'
+            '${signal.coreDumped ? ' (core dumped)' : ''}'
+            '${signal.errorMessage.isEmpty ? '' : ' - ${signal.errorMessage}'}',
+      if (exitCode == null && signal == null)
+        'No exit status was reported by the server.',
+    ].join('\n');
+    final details = _detail(reason, ErrorStage.session);
     _release();
     generation++;
     localizedError = LocalizedText((l10n) => l10n.sshSessionEnded);
+    errorDetails = details;
     _setStatus(SshStatus.disconnected);
   }
 
-  void _fail(LocalizedMessage message) {
+  void _fail(LocalizedMessage message, {ErrorDetails? details}) {
     _release();
     generation++;
     localizedError = message;
+    errorDetails = details;
     _setStatus(SshStatus.failed);
   }
 
@@ -646,8 +748,11 @@ class NativeSshService extends SshService {
     }
     try {
       _session?.write(Uint8List.fromList(utf8.encode(value)));
-    } catch (_) {
-      _fail(LocalizedText((l10n) => l10n.sshInputUnconfirmed));
+    } catch (problem) {
+      _fail(
+        LocalizedText((l10n) => l10n.sshInputUnconfirmed),
+        details: _detail(describeError(problem), ErrorStage.session),
+      );
     }
   }
 
@@ -658,8 +763,11 @@ class NativeSshService extends SshService {
     if (connected && !_draining && _client?.isClosed == false) {
       try {
         _session?.resizeTerminal(_columns, _rows);
-      } catch (_) {
-        _fail(LocalizedText((l10n) => l10n.sshResizeFailed));
+      } catch (problem) {
+        _fail(
+          LocalizedText((l10n) => l10n.sshResizeFailed),
+          details: _detail(describeError(problem), ErrorStage.session),
+        );
       }
     }
   }
@@ -708,6 +816,7 @@ class NativeSshService extends SshService {
   }
 
   void _release() {
+    _secrets = const [];
     _phaseTimer?.cancel();
     _phaseTimer = null;
     _verification?.cancel();
@@ -739,6 +848,7 @@ class NativeSshService extends SshService {
     _release();
     generation++;
     localizedError = null;
+    errorDetails = null;
     _setStatus(SshStatus.disconnected);
   }
 

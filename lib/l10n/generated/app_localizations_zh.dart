@@ -5254,4 +5254,62 @@ class AppLocalizationsZh extends AppLocalizations {
   String r14ServerCopyName(String name) {
     return '$name 副本';
   }
+
+  @override
+  String get r14ErrorDetails => '错误详情';
+
+  @override
+  String get r14ErrorStage => '失败环节';
+
+  @override
+  String get r14ErrorTarget => '目标';
+
+  @override
+  String get r14ErrorProxy => '代理';
+
+  @override
+  String get r14ErrorTime => '时间';
+
+  @override
+  String get r14ErrorTechnical => '技术详情';
+
+  @override
+  String get r14ErrorFootnote =>
+      '已移除密码、口令、私钥和代理凭据。这些内容只保存在内存中，不会写入数据库、日志或导出文件。';
+
+  @override
+  String get r14ErrorCopy => '复制详情';
+
+  @override
+  String get r14ErrorCopied => '已复制';
+
+  @override
+  String get r14StageSetup => '准备连接（读取凭据 / 检查目标）';
+
+  @override
+  String get r14StageConnect => 'DNS 解析 / TCP 连接';
+
+  @override
+  String get r14StageProxy => '代理';
+
+  @override
+  String get r14StageProxyTls => '与代理的 TLS 握手';
+
+  @override
+  String get r14StageHandshake => 'SSH 握手';
+
+  @override
+  String get r14StageHostKey => '主机公钥校验';
+
+  @override
+  String get r14StageAuthentication => '身份验证';
+
+  @override
+  String get r14StageShell => '打开终端通道';
+
+  @override
+  String get r14StageSftp => 'SFTP 子系统';
+
+  @override
+  String get r14StageSession => '会话进行中';
 }

@@ -5930,4 +5930,63 @@ class AppLocalizationsEn extends AppLocalizations {
   String r14ServerCopyName(String name) {
     return '$name copy';
   }
+
+  @override
+  String get r14ErrorDetails => 'Error Details';
+
+  @override
+  String get r14ErrorStage => 'What failed';
+
+  @override
+  String get r14ErrorTarget => 'Target';
+
+  @override
+  String get r14ErrorProxy => 'Proxy';
+
+  @override
+  String get r14ErrorTime => 'Time';
+
+  @override
+  String get r14ErrorTechnical => 'Technical details';
+
+  @override
+  String get r14ErrorFootnote =>
+      'Passwords, passphrases, private keys and proxy credentials are removed. This stays in memory only and is never saved, logged or exported.';
+
+  @override
+  String get r14ErrorCopy => 'Copy Details';
+
+  @override
+  String get r14ErrorCopied => 'Copied';
+
+  @override
+  String get r14StageSetup =>
+      'Preparing the connection (credential / target check)';
+
+  @override
+  String get r14StageConnect => 'DNS / TCP connect';
+
+  @override
+  String get r14StageProxy => 'Proxy';
+
+  @override
+  String get r14StageProxyTls => 'TLS to the proxy';
+
+  @override
+  String get r14StageHandshake => 'SSH handshake';
+
+  @override
+  String get r14StageHostKey => 'Host key check';
+
+  @override
+  String get r14StageAuthentication => 'Authentication';
+
+  @override
+  String get r14StageShell => 'Opening the shell';
+
+  @override
+  String get r14StageSftp => 'SFTP subsystem';
+
+  @override
+  String get r14StageSession => 'During the session';
 }

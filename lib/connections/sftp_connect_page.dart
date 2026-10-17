@@ -11,6 +11,8 @@ import '../l10n/localized_message.dart';
 import '../security/security_models.dart';
 import '../security/ssh_configuration_page.dart';
 import '../servers/ledger_controller.dart';
+import 'error_details.dart';
+import 'error_details_ui.dart';
 import 'sftp_pages.dart';
 import 'sftp_session.dart';
 import 'sftp_support.dart';
@@ -76,6 +78,7 @@ class _SftpConnectPageState extends State<SftpConnectPage> {
   SshService? _service;
   SshTarget? _target;
   LocalizedMessage? _error;
+  ErrorDetails? _errorDetails;
   bool _needsCredential = false, _handedOver = false, _cancelled = false;
 
   @override
@@ -107,6 +110,7 @@ class _SftpConnectPageState extends State<SftpConnectPage> {
     final security = widget.ledger.security;
     setState(() {
       _error = null;
+      _errorDetails = null;
       _needsCredential = false;
       _cancelled = false;
     });
@@ -175,20 +179,40 @@ class _SftpConnectPageState extends State<SftpConnectPage> {
             .then((reason) => onClosed?.call(reason)),
       );
     } on SecurityFailure catch (problem) {
-      if (!_cancelled) _fail(problem);
+      // The service keeps the original error; cancellations have none.
+      if (!_cancelled) _fail(problem, details: service.errorDetails);
     } on SftpException catch (problem) {
       if (!_cancelled) {
-        _fail(LocalizedText((l10n) => sftpErrorText(l10n, problem)));
+        _fail(
+          LocalizedText((l10n) => sftpErrorText(l10n, problem)),
+          details: ErrorDetails(
+            stage: ErrorStage.sftp,
+            technical: [problem.toString(), ?problem.technical].join('\n'),
+            target: target.label,
+          ),
+        );
       }
-    } catch (_) {
+    } catch (problem) {
       if (!_cancelled) {
-        _fail(LocalizedText((l10n) => l10n.sshConnectionIncomplete));
+        _fail(
+          LocalizedText((l10n) => l10n.sshConnectionIncomplete),
+          details: ErrorDetails.from(
+            problem,
+            stage: ErrorStage.connect,
+            target: target.label,
+          ),
+        );
       }
     }
   }
 
-  void _fail(LocalizedMessage message) {
-    if (mounted) setState(() => _error = message);
+  void _fail(LocalizedMessage message, {ErrorDetails? details}) {
+    if (mounted) {
+      setState(() {
+        _error = message;
+        _errorDetails = details;
+      });
+    }
   }
 
   void _cancel() {
@@ -258,6 +282,9 @@ class _SftpConnectPageState extends State<SftpConnectPage> {
               icon: Icons.cloud_off_rounded,
               title: l10n.r3SftpConnectFailed,
               message: error.messageFor(l10n),
+              messageAccessory: _errorDetails == null
+                  ? null
+                  : ErrorDetailsButton(details: _errorDetails!),
               actions: [
                 if (_needsCredential)
                   AppButton(

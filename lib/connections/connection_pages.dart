@@ -13,6 +13,7 @@ import '../security/security_pages.dart';
 import '../security/ssh_configuration_page.dart';
 import '../servers/ledger_controller.dart';
 import 'connection_form.dart';
+import 'error_details_ui.dart';
 import 'ssh_service.dart';
 import 'terminal_page.dart';
 
@@ -63,7 +64,7 @@ class _SshConnectPageState extends State<SshConnectPage> {
   String? _serverId, _credentialId, _proxyId;
   LocalizedMessage? _error;
   // Why the last attempt never became a session (auth, host key, timeout).
-  String? _sessionError;
+  TerminalFailure? _sessionError;
   bool _loading = true, _opening = false;
 
   @override
@@ -134,9 +135,9 @@ class _SshConnectPageState extends State<SshConnectPage> {
         serverId: _serverId,
         proxyId: _proxyId,
       );
-      final failure = await Navigator.push<String>(
+      final failure = await Navigator.push<TerminalFailure>(
         context,
-        MaterialPageRoute<String>(
+        MaterialPageRoute<TerminalFailure>(
           settings: const RouteSettings(name: sshTerminalRouteName),
           builder: (_) => TerminalPage(
             ledger: widget.ledger,
@@ -336,10 +337,10 @@ class _SshConnectPageState extends State<SshConnectPage> {
                     text: l10n.connectionPowerAfterConnect,
                   ),
                 if (_sessionError != null)
-                  AppBanner(
-                    tone: AppTone.red,
-                    icon: Icons.error_outline_rounded,
-                    text: _sessionError!,
+                  ErrorBanner(
+                    key: const ValueKey('connect-session-error'),
+                    text: _sessionError!.message,
+                    details: _sessionError!.details,
                   ),
                 if (_error != null) ...[
                   AppBanner(

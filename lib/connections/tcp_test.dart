@@ -9,6 +9,7 @@ import 'package:flutter/foundation.dart';
 
 import '../core/net_address.dart';
 import '../security/proxy_models.dart';
+import 'error_details.dart';
 import 'proxy_connector.dart';
 
 typedef TcpConnector = Future<ConnectionTask<Socket>> Function(
@@ -74,8 +75,13 @@ class TcpTestResult {
     this.proxy,
     this.proxyName,
     this.proxyFailure,
+    this.errorDetails,
   });
   final TcpTarget target;
+
+  /// The original (redacted) error of a refused / timed-out / failed test;
+  /// null when it connected or was cancelled. In memory only.
+  final ErrorDetails? errorDetails;
 
   /// Set when the test went through a proxy (never carries credentials in
   /// anything shown). Then [remoteAddress] is the proxy's, not the target's.
@@ -157,7 +163,14 @@ class TcpTestController extends ChangeNotifier {
     _attempt = attempt;
     target = next;
     result = null;
-    attempt.timer = Timer(timeout, () => _finish(attempt, TcpOutcome.timedOut));
+    attempt.timer = Timer(
+      timeout,
+      () => _finish(
+        attempt,
+        TcpOutcome.timedOut,
+        cause: TimeoutException('No connection was established', timeout),
+      ),
+    );
     notifyListeners();
     unawaited(_connect(attempt));
     return attempt.done.future;
@@ -202,6 +215,7 @@ class TcpTestController extends ChangeNotifier {
               ? TcpOutcome.refused
               : TcpOutcome.failed,
           proxyFailure: problem,
+          cause: problem,
         );
       },
     );
@@ -237,7 +251,7 @@ class TcpTestController extends ChangeNotifier {
         },
         onError: (Object error, StackTrace stack) {
           if (!attempt.ended) {
-            _finish(attempt, _failureOutcome(error));
+            _finish(attempt, _failureOutcome(error), cause: error);
           }
         },
       );
@@ -247,7 +261,7 @@ class TcpTestController extends ChangeNotifier {
       await socketResult;
     } catch (error) {
       if (!attempt.ended) {
-        _finish(attempt, _failureOutcome(error));
+        _finish(attempt, _failureOutcome(error), cause: error);
       }
     }
   }
@@ -266,6 +280,7 @@ class TcpTestController extends ChangeNotifier {
     String? remoteAddress,
     NetHostKind? remoteFamily,
     ProxyException? proxyFailure,
+    Object? cause,
     bool publish = true,
   }) {
     if (attempt.ended) {
@@ -279,7 +294,28 @@ class TcpTestController extends ChangeNotifier {
       attempt.dial?.cancel();
     }
     if (!_disposed && identical(attempt, _attempt) && publish) {
+      final proxy = attempt.proxy;
+      final failed =
+          outcome == TcpOutcome.refused ||
+          outcome == TcpOutcome.timedOut ||
+          outcome == TcpOutcome.failed;
       result = TcpTestResult(
+        errorDetails: !failed || cause == null
+            ? null
+            : ErrorDetails(
+                stage: proxy == null
+                    ? ErrorStage.connect
+                    : (proxyFailure?.stage ?? ErrorStage.proxy),
+                technical: cause is ProxyException
+                    ? cause.detail
+                    : describeError(cause),
+                target: attempt.target.label,
+                proxy: proxy == null
+                    ? null
+                    : [?attempt.proxyName, proxy.label].join(' · '),
+                time: _clock(),
+                secrets: [?proxy?.password],
+              ),
         target: attempt.target,
         outcome: outcome,
         finishedAt: _clock().toUtc(),

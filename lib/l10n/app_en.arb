@@ -3343,5 +3343,24 @@
         "type": "String"
       }
     }
-  }
+  },
+  "r14ErrorDetails": "Error Details",
+  "r14ErrorStage": "What failed",
+  "r14ErrorTarget": "Target",
+  "r14ErrorProxy": "Proxy",
+  "r14ErrorTime": "Time",
+  "r14ErrorTechnical": "Technical details",
+  "r14ErrorFootnote": "Passwords, passphrases, private keys and proxy credentials are removed. This stays in memory only and is never saved, logged or exported.",
+  "r14ErrorCopy": "Copy Details",
+  "r14ErrorCopied": "Copied",
+  "r14StageSetup": "Preparing the connection (credential / target check)",
+  "r14StageConnect": "DNS / TCP connect",
+  "r14StageProxy": "Proxy",
+  "r14StageProxyTls": "TLS to the proxy",
+  "r14StageHandshake": "SSH handshake",
+  "r14StageHostKey": "Host key check",
+  "r14StageAuthentication": "Authentication",
+  "r14StageShell": "Opening the shell",
+  "r14StageSftp": "SFTP subsystem",
+  "r14StageSession": "During the session"
 }

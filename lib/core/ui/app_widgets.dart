@@ -1073,6 +1073,7 @@ class AppBanner extends StatelessWidget {
     this.icon,
     this.tone = AppTone.neutral,
     this.onTap,
+    this.action,
     this.margin = const EdgeInsets.fromLTRB(16, 10, 16, 0),
   });
 
@@ -1080,6 +1081,10 @@ class AppBanner extends StatelessWidget {
   final IconData? icon;
   final AppTone tone;
   final VoidCallback? onTap;
+
+  /// Trailing control with its own tap target (e.g. an ⓘ button); it sits
+  /// where the chevron would be, so give it a 44 pt box.
+  final Widget? action;
   final EdgeInsetsGeometry margin;
 
   @override
@@ -1094,7 +1099,12 @@ class AppBanner extends StatelessWidget {
         child: InkWell(
           onTap: onTap,
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            padding: EdgeInsetsDirectional.fromSTEB(
+              12,
+              action == null ? 10 : 0,
+              action == null ? 12 : 2,
+              action == null ? 10 : 0,
+            ),
             child: Row(
               children: [
                 if (icon != null) ...[
@@ -1102,12 +1112,18 @@ class AppBanner extends StatelessWidget {
                   const SizedBox(width: 9),
                 ],
                 Expanded(
-                  child: Text(
-                    text,
-                    style: TextStyle(fontSize: 13.5, height: 1.35, color: fg),
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(
+                      vertical: action == null ? 0 : 10,
+                    ),
+                    child: Text(
+                      text,
+                      style: TextStyle(fontSize: 13.5, height: 1.35, color: fg),
+                    ),
                   ),
                 ),
-                if (onTap != null) ...[
+                ?action,
+                if (onTap != null && action == null) ...[
                   const SizedBox(width: 8),
                   AppChevron(color: fg.withValues(alpha: .7), size: 13),
                 ],
@@ -1137,12 +1153,16 @@ class AppEmptyState extends StatelessWidget {
     required this.icon,
     required this.title,
     this.message,
+    this.messageAccessory,
     this.actions = const [],
   });
 
   final IconData icon;
   final String title;
   final String? message;
+
+  /// Small control after the message (e.g. an ⓘ button, 44 pt).
+  final Widget? messageAccessory;
   final List<Widget> actions;
 
   @override
@@ -1174,10 +1194,22 @@ class AppEmptyState extends StatelessWidget {
           ),
           if (message != null) ...[
             const SizedBox(height: 8),
-            Text(
-              message!,
-              textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 15, height: 1.55, color: p.text2),
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Flexible(
+                  child: Text(
+                    message!,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 15,
+                      height: 1.55,
+                      color: p.text2,
+                    ),
+                  ),
+                ),
+                ?messageAccessory,
+              ],
             ),
           ],
           if (actions.isNotEmpty) const SizedBox(height: 26),
