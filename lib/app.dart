@@ -26,6 +26,7 @@ class LedgerApp extends StatefulWidget {
     this.openStore = openLedger,
     this.reminderPlatform,
     this.directory,
+    this.deviceLocales,
   });
   final Future<LedgerStore> Function() openStore;
   final ReminderPlatform? reminderPlatform;
@@ -33,6 +34,11 @@ class LedgerApp extends StatefulWidget {
   /// The provider directory. `main` passes the real, downloading one; without
   /// it (tests) the app uses an empty directory and never touches the network.
   final ProviderDirectory? directory;
+
+  /// The device's preferred languages. When given, a ledger created by this
+  /// launch starts in the matching language ([LocalePreference.forNewLedger]);
+  /// `main` passes the real ones. Existing ledgers keep their stored choice.
+  final List<Locale>? deviceLocales;
   @override
   State<LedgerApp> createState() => _LedgerAppState();
 }
@@ -62,6 +68,16 @@ class _LedgerAppState extends State<LedgerApp> with WidgetsBindingObserver {
     LedgerController? ready;
     try {
       store = await widget.openStore();
+      final locales = widget.deviceLocales;
+      if (store.isNewLedger && locales != null) {
+        try {
+          await store.saveLanguagePreference(
+            LocalePreference.forNewLedger(locales),
+          );
+        } catch (_) {
+          // Keep the schema default (Chinese); the choice stays in Settings.
+        }
+      }
       ready = LedgerController(
         store,
         reminderPlatform:
