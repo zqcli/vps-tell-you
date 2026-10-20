@@ -30,6 +30,7 @@ This comment is not shown.
 - **Performance**: the server list builds only the rows on screen (1,000 servers open in 0.7 s instead of 3.4 s; search is about 10× faster); switching tabs no longer rebuilds the other open pages; Costs caches its figures per ledger revision; moving the caret in the SFTP editor no longer re-lays out the whole file, and transfer progress no longer rebuilds the page
 - Typing `exit` / `logout` in the terminal no longer shows an error, just “You left the SSH session”; network drops, server-side closes and signals still show Error Details
 - About › What’s New lists versions (newest first); tap one to read its notes, which match the GitHub release of the same tag
+- **The first App Store release is iPhone-only**: iPad is not supported for now (it runs in iPhone compatibility mode)
 
 ## 0.5.0 — 2026-10-16
 

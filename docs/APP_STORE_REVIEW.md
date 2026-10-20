@@ -1,5 +1,7 @@
 # VPS Tell You — first App Store submission audit
 
+> **Owner decisions (2026-10-20).** The first App Store release is **iPhone-only** (`TARGETED_DEVICE_FAMILY = 1`, no iPad orientations; iPad runs it in iPhone compatibility mode). M4 is therefore resolved by scope: no iPad screenshots or iPad QA are needed, and the iPad rows/items below no longer apply to this release. Provider logos are **kept unchanged** (M2 accepted risk). Findings text below is the original audit and was not rewritten.
+
 **Audit date:** October 20, 2026 (UTC). **Verdict: NOT READY — hold submission.**
 
 Repository: `/Users/zzq/Develops/vps-tell-you`, branch `dev`, HEAD `e8714d5` (full hash in `artifact-evidence.txt`). Working tree and index were clean at the initial inspection. This was a read-only audit: no source changes, commits, pushes, uploads, team changes, or provisioning changes. Audit outputs are confined to `/tmp/vps-ui-dev/appstore/`.
