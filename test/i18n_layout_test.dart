@@ -37,6 +37,7 @@ import 'package:vps_tell_you/settings/backup_page.dart';
 import 'package:vps_tell_you/settings/changelog.dart';
 import 'package:vps_tell_you/settings/changelog_page.dart';
 import 'package:vps_tell_you/settings/open_source_page.dart';
+import 'package:vps_tell_you/settings/privacy_page.dart';
 import 'package:vps_tell_you/settings/reminder_page.dart';
 import 'package:vps_tell_you/settings/settings_page.dart';
 
@@ -286,6 +287,7 @@ void main() {
     'changelog-release': () => ChangelogReleasePage(
       release: parseChangelog(File('CHANGELOG.md').readAsStringSync()).last,
     ),
+    'privacy': () => PrivacyPolicyPage(load: repoFile),
     'license': () => LicenseTextPage(load: () => repoFile('LICENSE')),
     'open-source': () => OpenSourcePage(index: LicenseIndex()),
     'all-licenses': () => AllLicensesPage(index: LicenseIndex()),
@@ -321,6 +323,23 @@ void main() {
         );
       });
     }
+    testWidgets('$locale tab bar labels are whole at 320px and 2x text', (
+      tester,
+    ) async {
+      await mount(tester, HomeShell(controller: ledger), locale: locale);
+      final l10n = lookupAppLocalizations(Locale(locale));
+      final labels = [l10n.servers, l10n.costs, l10n.tools, l10n.settings];
+      for (var i = 0; i < labels.length; i++) {
+        final paragraph = tester.renderObject<RenderParagraph>(
+          find.descendant(
+            of: find.byKey(ValueKey('tab-$i')),
+            matching: find.text(labels[i]),
+          ),
+        );
+        expect(paragraph.didExceedMaxLines, isFalse, reason: labels[i]);
+        expect(paragraph.size.width, lessThanOrEqualTo(80), reason: labels[i]);
+      }
+    });
     testWidgets('$locale settings banner shows the logo and slogan', (
       tester,
     ) async {

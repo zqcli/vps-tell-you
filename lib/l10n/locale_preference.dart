@@ -16,6 +16,12 @@ enum LocalePreference {
       values.where((entry) => entry.storageValue == value).firstOrNull ??
       chinese;
 
+  /// The initial choice for a brand-new ledger: Chinese on a Chinese device,
+  /// English otherwise. A concrete choice (not [system]) is stored so the
+  /// language stays put if the device language changes later.
+  static LocalePreference forNewLedger(Iterable<Locale> deviceLocales) =>
+      system.resolve(deviceLocales).languageCode == 'zh' ? chinese : english;
+
   Locale resolve(Iterable<Locale> systemLocales) {
     if (this == chinese) return const Locale('zh');
     if (this == english) return const Locale('en');

@@ -43,8 +43,12 @@ class ArchiveUndo {
 /// SQLite is the source of truth. All public mutations commit before returning.
 /// No delete/recreate or destructive downgrade fallback is permitted.
 class LedgerStore {
-  LedgerStore._(this._db, this.clock);
+  LedgerStore._(this._db, this.clock, {this.isNewLedger = false});
   final Database _db;
+
+  /// True when this very `open` created the database file (a first launch).
+  /// Existing ledgers, including upgraded ones, are never new.
+  final bool isNewLedger;
   final DateTime Function() clock;
   static const schemaVersion = 14;
   // Shared by both credential controllers using this store. A durable journal
@@ -56,12 +60,16 @@ class LedgerStore {
     required String path,
     DateTime Function()? clock,
   }) async {
+    var created = false;
     final db = await factory.openDatabase(
       path,
       options: OpenDatabaseOptions(
         version: schemaVersion,
         onConfigure: (db) async => db.execute('PRAGMA foreign_keys = ON'),
-        onCreate: (db, version) => createSchema(db),
+        onCreate: (db, version) async {
+          created = true;
+          await createSchema(db);
+        },
         onUpgrade: (db, oldVersion, newVersion) =>
             _upgradeLedgerSchema(db, oldVersion, newVersion, clock),
         onDowngrade: (db, oldVersion, newVersion) async {
@@ -69,7 +77,7 @@ class LedgerStore {
         },
       ),
     );
-    return LedgerStore._(db, clock ?? DateTime.now);
+    return LedgerStore._(db, clock ?? DateTime.now, isNewLedger: created);
   }
 
   /// Creates the current schema in an empty database.

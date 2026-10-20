@@ -15,6 +15,7 @@ import '../servers/ledger_controller.dart';
 import '../servers/refresh_failure_notice.dart';
 import '../servers/server_record.dart';
 import 'about_page.dart';
+import 'privacy_page.dart';
 import 'backup_page.dart';
 import 'reminder_page.dart';
 import 'reminder_scheduler.dart';
@@ -280,6 +281,14 @@ class _SettingsPageState extends State<SettingsPage> {
           ),
           AppSection(
             children: [
+              AppRow(
+                key: const ValueKey('settings-privacy'),
+                icon: Icons.privacy_tip_outlined,
+                iconColor: AppTints.green,
+                title: l10n.r18PrivacyPolicy,
+                chevron: true,
+                onTap: () => push((_) => const PrivacyPolicyPage()),
+              ),
               AppRow(
                 key: const ValueKey('settings-about'),
                 icon: Icons.info_outline,

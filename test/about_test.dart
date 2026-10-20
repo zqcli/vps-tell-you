@@ -19,6 +19,7 @@ import 'package:vps_tell_you/settings/about_page.dart';
 import 'package:vps_tell_you/settings/changelog.dart';
 import 'package:vps_tell_you/settings/changelog_page.dart';
 import 'package:vps_tell_you/settings/open_source_page.dart';
+import 'package:vps_tell_you/settings/privacy_page.dart';
 import 'package:vps_tell_you/settings/settings_page.dart';
 
 import 'security_store_test.dart' show FakeDeviceAuth, FakeSecretStore;
@@ -201,6 +202,7 @@ over two lines.
           tester.getTopLeft(find.byKey(ValueKey('changelog-$v'))).dy;
       expect(top('0.6.0'), lessThan(top('0.5.0')));
       expect(find.text('2026-10-16'), findsOneWidget);
+      expect(find.text('2026-10-20'), findsOneWidget);
       expect(find.text('当前版本'), findsOneWidget); // kAppVersion's row
       await tester.tap(find.byKey(const ValueKey('changelog-0.5.0')));
       await tester.pumpAndSettle();
@@ -217,18 +219,16 @@ over two lines.
       expect(tester.takeException(), isNull);
     });
 
-    testWidgets('en: an unreleased version has no GitHub release row', (
+    testWidgets('en: the store build is dated and has no unreleased entry', (
       tester,
     ) async {
       await mount(tester, const ChangelogPage(), locale: 'en');
       expect(find.text('What’s New'), findsOneWidget);
+      expect(find.text('Unreleased'), findsNothing);
+      expect(find.text('2026-10-20'), findsOneWidget);
       await tester.tap(find.byKey(const ValueKey('changelog-0.6.0')));
       await tester.pumpAndSettle();
-      expect(find.text('Unreleased'), findsOneWidget);
-      expect(
-        find.byKey(const ValueKey('changelog-github-release')),
-        findsNothing,
-      );
+      expect(find.byType(ChangelogReleasePage), findsOneWidget);
       expect(tester.takeException(), isNull);
     });
 
@@ -251,7 +251,7 @@ over two lines.
       await mount(tester, const AboutPage());
       expect(find.byType(AppLogo), findsOneWidget);
       expect(find.text('VPS Tell You'), findsOneWidget);
-      expect(find.text('Version 0.5.0'), findsOneWidget);
+      expect(find.text('Version 0.6.0'), findsOneWidget);
       expect(find.text('Know every VPS at a glance'), findsOneWidget);
       expect(find.text('What’s New'), findsOneWidget);
       expect(find.text('Source Code'), findsOneWidget);
@@ -259,7 +259,15 @@ over two lines.
       expect(find.text('License'), findsOneWidget);
       expect(find.text('MIT'), findsOneWidget);
       expect(find.text('Open-Source Components'), findsOneWidget);
-      expect(find.textContaining('voluntary donations'), findsOneWidget);
+      expect(
+        find.textContaining('No ads, no purchases, no account'),
+        findsOneWidget,
+      );
+      expect(
+        find.textContaining('SSH, SFTP, or TCP connection'),
+        findsOneWidget,
+      );
+      expect(find.textContaining('donation'), findsNothing);
       expect(find.textContaining('belong to their owners'), findsOneWidget);
     });
 
@@ -505,6 +513,29 @@ over two lines.
       await settle(tester);
       expect(find.byType(AboutPage), findsOneWidget);
       expect(find.text('Open-Source Components'), findsOneWidget);
+    });
+
+    testWidgets('a Privacy Policy row sits above About and opens the policy', (
+      tester,
+    ) async {
+      await mount(tester, Scaffold(body: SettingsPage(controller: ledger)));
+      const privacy = ValueKey('settings-privacy');
+      await tester.scrollUntilVisible(
+        find.byKey(privacy),
+        300,
+        scrollable: find.byType(Scrollable).first,
+      );
+      expect(find.text('Privacy Policy'), findsOneWidget);
+      expect(
+        tester.getTopLeft(find.byKey(privacy)).dy,
+        lessThan(
+          tester.getTopLeft(find.byKey(const ValueKey('settings-about'))).dy,
+        ),
+      );
+      await tester.tap(find.byKey(privacy));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 600));
+      expect(find.byType(PrivacyPolicyPage), findsOneWidget);
     });
   });
 }

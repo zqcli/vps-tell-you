@@ -2,7 +2,7 @@ name: vps_tell_you
 description: "Local-first personal VPS ledger for iOS and Android."
 publish_to: 'none'
 
-version: 0.5.0+5
+version: 0.6.0+6
 
 environment:
   sdk: ^3.13.5
@@ -63,6 +63,8 @@ flutter:
     - LICENSE
     - CHANGELOG.md
     - CHANGELOG.en.md
+    - PRIVACY.md
+    - PRIVACY.en.md
   fonts:
     - family: TerminalDejaVu
       fonts:

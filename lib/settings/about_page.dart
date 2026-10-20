@@ -7,6 +7,7 @@ import '../l10n/locale_preference.dart';
 import 'about_common.dart';
 import 'changelog_page.dart';
 import 'open_source_page.dart';
+import 'privacy_page.dart';
 
 /// Small indigo pill with the version label (settings banner and About page).
 class VersionPill extends StatelessWidget {
@@ -42,6 +43,14 @@ class AboutPage extends StatelessWidget {
     await Clipboard.setData(const ClipboardData(text: kRepoUrl));
     if (context.mounted) {
       showAppToast(context, context.l10n.r11AboutRepoCopied);
+    }
+  }
+
+  Future<void> _copySupport(BuildContext context) async {
+    final language = Localizations.localeOf(context).languageCode;
+    await Clipboard.setData(ClipboardData(text: supportUrl(language)));
+    if (context.mounted) {
+      showAppToast(context, context.l10n.r18SupportLinkCopied);
     }
   }
 
@@ -107,6 +116,21 @@ class AboutPage extends StatelessWidget {
               title: l10n.r11AboutWhatsNew,
               chevron: true,
               onTap: () => _push(context, (_) => const ChangelogPage()),
+            ),
+            AppRow(
+              key: const ValueKey('about-privacy'),
+              icon: Icons.privacy_tip_outlined,
+              iconColor: AppTints.green,
+              title: l10n.r18PrivacyPolicy,
+              chevron: true,
+              onTap: () => _push(context, (_) => const PrivacyPolicyPage()),
+            ),
+            AppRow(
+              key: const ValueKey('about-support'),
+              icon: Icons.help_outline,
+              iconColor: AppTints.teal,
+              title: l10n.r18AboutSupport,
+              onTap: () => _copySupport(context),
             ),
             AppRow(
               key: const ValueKey('about-source'),

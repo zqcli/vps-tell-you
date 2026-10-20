@@ -202,4 +202,4 @@ python3 tool/build_catalog.py --check
 
 ## 支持
 
-VPS Tell You 免费、开源，只接受自愿捐赠。捐赠链接稍后会添加到这里。
+VPS Tell You 免费开源：无广告、无内购、无需账号。使用帮助与问题反馈见 [SUPPORT.md](SUPPORT.md)，数据与隐私见 [PRIVACY.md](PRIVACY.md)。可以通过为仓库加星、反馈问题或提交改进来支持这个项目。

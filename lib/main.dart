@@ -1,3 +1,5 @@
+import 'dart:ui' show PlatformDispatcher;
+
 import 'package:flutter/material.dart';
 
 import 'app.dart';
@@ -8,5 +10,10 @@ void main() {
   WidgetsFlutterBinding.ensureInitialized();
   // Listed under Settings / About / Open-Source Components.
   registerTerminalFontLicense();
-  runApp(LedgerApp(directory: ProviderDirectory.remote()));
+  runApp(
+    LedgerApp(
+      directory: ProviderDirectory.remote(),
+      deviceLocales: PlatformDispatcher.instance.locales,
+    ),
+  );
 }

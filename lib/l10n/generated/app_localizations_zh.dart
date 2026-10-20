@@ -197,8 +197,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get r2TabsNotCoveredPill => '未覆盖';
 
   @override
-  String get r2TabsCoverageNote =>
-      '超出系统上限（iOS 64 / Android 256）或 366 天以后的提醒不会安排。';
+  String get r2TabsCoverageNote => '系统对待发送的提醒数量有上限，超过上限或 366 天以后的提醒不会安排。';
 
   @override
   String get r2TabsNoReminderServers => '未提醒的服务器';
@@ -249,7 +248,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get reminderHorizonHelp =>
-      '只提交未来 366 天内已知的到期提醒；过去的提醒时间不补发。iOS 最多排入最近 64 条，Android 最多 256 条，其余显示为未安排。请定期打开应用更新提醒。';
+      '只提交未来 366 天内已知的到期提醒；过去的提醒时间不补发。系统限制可同时排队的提醒数量（iOS 最多 64 条），其余显示为未安排。请定期打开应用更新提醒。';
 
   @override
   String get reminderDeliveryHelp =>
@@ -3805,7 +3804,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get securityCredentialProtectionDetail =>
-      '密码、私钥和密钥口令不进入台账数据库、导出或日志。密码查看需系统设备验证，20 秒后或离开页面即隐藏。Linux 不支持本应用的设备验证，无法查看秘密。\n\n设备认证是应用显示门禁，不代表秘密被生物识别硬件单独加密。iOS / Android 真机安全行为仍需验证。Dart 不保证内存安全擦除；当前不提供秘密复制或导出。';
+      '密码、私钥和密钥口令保存在本机的安全存储中（iOS 上为钥匙串），不进入台账数据库、导出或日志。查看已保存的密码需通过设备验证（Face ID、Touch ID 或锁屏密码），20 秒后或离开页面即隐藏。\n\n设备验证只控制应用是否显示已保存的密码，不代表每个秘密被生物识别硬件单独加密；连接时会直接使用已保存的凭据，不再询问。应用运行期间，秘密可能在内存中短暂停留。当前不提供秘密复制或导出。';
 
   @override
   String get securityLocalCredentialNotice =>
@@ -3975,8 +3974,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get securityPasswordRevealNotice => '20 秒后隐藏；离开页面或转入后台立即隐藏。';
 
   @override
-  String get securityPasswordHiddenNotice =>
-      '验证成功后仅短时显示。无设备认证能力时保持隐藏；Linux 暂不可查看。';
+  String get securityPasswordHiddenNotice => '验证成功后仅短时显示。设备验证不可用时保持隐藏。';
 
   @override
   String get securityHidePassword => '隐藏密码';
@@ -4472,7 +4470,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get r11AboutFootnote =>
-      '免费开源，仅靠自愿捐赠维持。没有广告，无需账号；台账只保存在本机，应用只会下载公开的提供商目录。';
+      '免费开源：无广告、无内购、无需账号。台账只保存在本机；应用会下载公开的提供商目录，只有在你发起 SSH、SFTP 或 TCP 连接时才会联网连接到你指定的地址。';
 
   @override
   String get r11AboutTrademark => '提供商的名称和 Logo 归各自所有者所有，仅用于识别。';
@@ -4892,4 +4890,25 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get r14StageSession => '会话进行中';
+
+  @override
+  String get r18PrivacyPolicy => '隐私政策';
+
+  @override
+  String get r18AboutSupport => '支持';
+
+  @override
+  String get r18SupportLinkCopied => '已复制支持页地址';
+
+  @override
+  String get r18PrivacyCopyLink => '复制公开链接';
+
+  @override
+  String get r18PrivacyLinkCopied => '已复制隐私政策地址';
+
+  @override
+  String get r18PrivacyUnavailable => '无法加载隐私政策。';
+
+  @override
+  String get r18PrivacyPublicFooter => '同样的内容也公开发布在上面的地址。';
 }
