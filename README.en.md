@@ -202,4 +202,4 @@ Released under the [MIT License](LICENSE), Copyright (c) 2026 zqcli and contribu
 
 ## Support
 
-VPS Tell You is free and open source, and accepts voluntary donations only. The donation link will be added here later.
+VPS Tell You is free and open source. No ads, no purchases, no account. For help and bug reports see [SUPPORT.en.md](SUPPORT.en.md); for data and privacy see [PRIVACY.en.md](PRIVACY.en.md). You can support the project by starring the repository, reporting issues or sending improvements.

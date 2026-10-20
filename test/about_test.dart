@@ -258,7 +258,15 @@ over two lines.
       expect(find.text('License'), findsOneWidget);
       expect(find.text('MIT'), findsOneWidget);
       expect(find.text('Open-Source Components'), findsOneWidget);
-      expect(find.textContaining('voluntary donations'), findsOneWidget);
+      expect(
+        find.textContaining('No ads, no purchases, no account'),
+        findsOneWidget,
+      );
+      expect(
+        find.textContaining('SSH, SFTP, or TCP connection'),
+        findsOneWidget,
+      );
+      expect(find.textContaining('donation'), findsNothing);
       expect(find.textContaining('belong to their owners'), findsOneWidget);
     });
 

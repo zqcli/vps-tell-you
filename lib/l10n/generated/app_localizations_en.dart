@@ -211,7 +211,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get r2TabsCoverageNote =>
-      'Reminders beyond the system limit (iOS 64 / Android 256) or more than 366 days out aren’t scheduled.';
+      'The system limits how many reminders can be pending, and reminders more than 366 days out aren’t scheduled.';
 
   @override
   String get r2TabsNoReminderServers => 'Servers without reminders';
@@ -264,7 +264,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get reminderHorizonHelp =>
-      'Only reminders for known due dates within the next 366 days are scheduled, and reminder times that have already passed aren’t retried. iOS allows up to 64 pending reminders and Android 256; the rest show as not scheduled. Open the app regularly to refresh them.';
+      'Only reminders for known due dates within the next 366 days are scheduled, and reminder times that have already passed aren’t retried. The system limits how many reminders can be pending (iOS allows 64); the rest show as not scheduled. Open the app regularly to refresh them.';
 
   @override
   String get reminderDeliveryHelp =>
@@ -4316,7 +4316,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get securityCredentialProtectionDetail =>
-      'Passwords, private keys, and key passphrases are excluded from the ledger database, exports, and logs. Viewing a password requires system device verification. It is hidden after 20 seconds or when you leave the page. This app doesn’t support device verification on Linux, so secrets can’t be viewed there.\n\nDevice authentication gates display in the app; it doesn’t mean each secret is separately encrypted by biometric hardware. Security behavior still needs verification on physical iOS / Android devices. Dart doesn’t guarantee secure memory erasure. Copying or exporting secrets is currently unavailable.';
+      'Passwords, private keys, and key passphrases are kept in this device’s secure storage (the Keychain on iOS). They are excluded from the ledger database, exports, and logs. Viewing a saved password requires device verification (Face ID, Touch ID, or your passcode). It is hidden after 20 seconds or when you leave the page.\n\nDevice verification only controls whether the app displays a saved password. It doesn’t mean each secret is separately encrypted by biometric hardware, and connections use saved credentials without asking again. A secret can stay in memory briefly while the app runs. Copying or exporting secrets is currently unavailable.';
 
   @override
   String get securityLocalCredentialNotice =>
@@ -4502,7 +4502,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get securityPasswordHiddenNotice =>
-      'Shown briefly after successful verification. It stays hidden if device authentication isn’t available. Viewing isn’t available on Linux yet.';
+      'Shown briefly after successful verification. It stays hidden if device verification isn’t available.';
 
   @override
   String get securityHidePassword => 'Hide Password';
@@ -5076,7 +5076,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get r11AboutFootnote =>
-      'Free and open source, supported only by voluntary donations. No ads and no account. Your ledger stays on this device; the app only downloads the public provider directory.';
+      'Free and open source. No ads, no purchases, no account. Your ledger stays on this device. The app downloads the public provider directory, and connects over the network only when you start an SSH, SFTP, or TCP connection.';
 
   @override
   String get r11AboutTrademark =>

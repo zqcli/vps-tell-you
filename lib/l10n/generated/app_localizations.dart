@@ -455,7 +455,7 @@ abstract class AppLocalizations {
   /// No description provided for @r2TabsCoverageNote.
   ///
   /// In zh, this message translates to:
-  /// **'超出系统上限（iOS 64 / Android 256）或 366 天以后的提醒不会安排。'**
+  /// **'系统对待发送的提醒数量有上限，超过上限或 366 天以后的提醒不会安排。'**
   String get r2TabsCoverageNote;
 
   /// No description provided for @r2TabsNoReminderServers.
@@ -551,7 +551,7 @@ abstract class AppLocalizations {
   /// No description provided for @reminderHorizonHelp.
   ///
   /// In zh, this message translates to:
-  /// **'只提交未来 366 天内已知的到期提醒；过去的提醒时间不补发。iOS 最多排入最近 64 条，Android 最多 256 条，其余显示为未安排。请定期打开应用更新提醒。'**
+  /// **'只提交未来 366 天内已知的到期提醒；过去的提醒时间不补发。系统限制可同时排队的提醒数量（iOS 最多 64 条），其余显示为未安排。请定期打开应用更新提醒。'**
   String get reminderHorizonHelp;
 
   /// No description provided for @reminderDeliveryHelp.
@@ -7035,7 +7035,7 @@ abstract class AppLocalizations {
   /// Security: CredentialProtectionDetail. App-authored UI text; do not translate user data or protocol tokens.
   ///
   /// In zh, this message translates to:
-  /// **'密码、私钥和密钥口令不进入台账数据库、导出或日志。密码查看需系统设备验证，20 秒后或离开页面即隐藏。Linux 不支持本应用的设备验证，无法查看秘密。\n\n设备认证是应用显示门禁，不代表秘密被生物识别硬件单独加密。iOS / Android 真机安全行为仍需验证。Dart 不保证内存安全擦除；当前不提供秘密复制或导出。'**
+  /// **'密码、私钥和密钥口令保存在本机的安全存储中（iOS 上为钥匙串），不进入台账数据库、导出或日志。查看已保存的密码需通过设备验证（Face ID、Touch ID 或锁屏密码），20 秒后或离开页面即隐藏。\n\n设备验证只控制应用是否显示已保存的密码，不代表每个秘密被生物识别硬件单独加密；连接时会直接使用已保存的凭据，不再询问。应用运行期间，秘密可能在内存中短暂停留。当前不提供秘密复制或导出。'**
   String get securityCredentialProtectionDetail;
 
   /// Security: LocalCredentialNotice. App-authored UI text; do not translate user data or protocol tokens.
@@ -7359,7 +7359,7 @@ abstract class AppLocalizations {
   /// Security: PasswordHiddenNotice. App-authored UI text; do not translate user data or protocol tokens.
   ///
   /// In zh, this message translates to:
-  /// **'验证成功后仅短时显示。无设备认证能力时保持隐藏；Linux 暂不可查看。'**
+  /// **'验证成功后仅短时显示。设备验证不可用时保持隐藏。'**
   String get securityPasswordHiddenNotice;
 
   /// Security: HidePassword. App-authored UI text; do not translate user data or protocol tokens.
@@ -8245,7 +8245,7 @@ abstract class AppLocalizations {
   /// No description provided for @r11AboutFootnote.
   ///
   /// In zh, this message translates to:
-  /// **'免费开源，仅靠自愿捐赠维持。没有广告，无需账号；台账只保存在本机，应用只会下载公开的提供商目录。'**
+  /// **'免费开源：无广告、无内购、无需账号。台账只保存在本机；应用会下载公开的提供商目录，只有在你发起 SSH、SFTP 或 TCP 连接时才会联网连接到你指定的地址。'**
   String get r11AboutFootnote;
 
   /// No description provided for @r11AboutTrademark.
