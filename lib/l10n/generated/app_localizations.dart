@@ -9033,6 +9033,48 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'会话进行中'**
   String get r14StageSession;
+
+  /// No description provided for @r18PrivacyPolicy.
+  ///
+  /// In zh, this message translates to:
+  /// **'隐私政策'**
+  String get r18PrivacyPolicy;
+
+  /// No description provided for @r18AboutSupport.
+  ///
+  /// In zh, this message translates to:
+  /// **'支持'**
+  String get r18AboutSupport;
+
+  /// No description provided for @r18SupportLinkCopied.
+  ///
+  /// In zh, this message translates to:
+  /// **'已复制支持页地址'**
+  String get r18SupportLinkCopied;
+
+  /// No description provided for @r18PrivacyCopyLink.
+  ///
+  /// In zh, this message translates to:
+  /// **'复制公开链接'**
+  String get r18PrivacyCopyLink;
+
+  /// No description provided for @r18PrivacyLinkCopied.
+  ///
+  /// In zh, this message translates to:
+  /// **'已复制隐私政策地址'**
+  String get r18PrivacyLinkCopied;
+
+  /// No description provided for @r18PrivacyUnavailable.
+  ///
+  /// In zh, this message translates to:
+  /// **'无法加载隐私政策。'**
+  String get r18PrivacyUnavailable;
+
+  /// No description provided for @r18PrivacyPublicFooter.
+  ///
+  /// In zh, this message translates to:
+  /// **'同样的内容也公开发布在上面的地址。'**
+  String get r18PrivacyPublicFooter;
 }
 
 class _AppLocalizationsDelegate

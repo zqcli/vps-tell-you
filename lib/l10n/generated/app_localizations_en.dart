@@ -5534,4 +5534,26 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get r14StageSession => 'During the session';
+
+  @override
+  String get r18PrivacyPolicy => 'Privacy Policy';
+
+  @override
+  String get r18AboutSupport => 'Support';
+
+  @override
+  String get r18SupportLinkCopied => 'Support link copied';
+
+  @override
+  String get r18PrivacyCopyLink => 'Copy Public Link';
+
+  @override
+  String get r18PrivacyLinkCopied => 'Privacy policy link copied';
+
+  @override
+  String get r18PrivacyUnavailable => 'Couldn’t load the privacy policy.';
+
+  @override
+  String get r18PrivacyPublicFooter =>
+      'The same text is published at the link above.';
 }

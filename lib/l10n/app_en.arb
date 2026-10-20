@@ -3145,5 +3145,12 @@
   "r14StageAuthentication": "Authentication",
   "r14StageShell": "Opening the shell",
   "r14StageSftp": "SFTP subsystem",
-  "r14StageSession": "During the session"
+  "r14StageSession": "During the session",
+  "r18PrivacyPolicy": "Privacy Policy",
+  "r18AboutSupport": "Support",
+  "r18SupportLinkCopied": "Support link copied",
+  "r18PrivacyCopyLink": "Copy Public Link",
+  "r18PrivacyLinkCopied": "Privacy policy link copied",
+  "r18PrivacyUnavailable": "Couldn’t load the privacy policy.",
+  "r18PrivacyPublicFooter": "The same text is published at the link above."
 }

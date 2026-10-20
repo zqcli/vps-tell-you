@@ -50,6 +50,8 @@ flutter:
     - LICENSE
     - CHANGELOG.md
     - CHANGELOG.en.md
+    - PRIVACY.md
+    - PRIVACY.en.md
   fonts:
     - family: TerminalDejaVu
       fonts:

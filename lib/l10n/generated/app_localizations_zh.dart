@@ -4890,4 +4890,25 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get r14StageSession => '会话进行中';
+
+  @override
+  String get r18PrivacyPolicy => '隐私政策';
+
+  @override
+  String get r18AboutSupport => '支持';
+
+  @override
+  String get r18SupportLinkCopied => '已复制支持页地址';
+
+  @override
+  String get r18PrivacyCopyLink => '复制公开链接';
+
+  @override
+  String get r18PrivacyLinkCopied => '已复制隐私政策地址';
+
+  @override
+  String get r18PrivacyUnavailable => '无法加载隐私政策。';
+
+  @override
+  String get r18PrivacyPublicFooter => '同样的内容也公开发布在上面的地址。';
 }

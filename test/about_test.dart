@@ -19,6 +19,7 @@ import 'package:vps_tell_you/settings/about_page.dart';
 import 'package:vps_tell_you/settings/changelog.dart';
 import 'package:vps_tell_you/settings/changelog_page.dart';
 import 'package:vps_tell_you/settings/open_source_page.dart';
+import 'package:vps_tell_you/settings/privacy_page.dart';
 import 'package:vps_tell_you/settings/settings_page.dart';
 
 import 'security_store_test.dart' show FakeDeviceAuth, FakeSecretStore;
@@ -512,6 +513,29 @@ over two lines.
       await settle(tester);
       expect(find.byType(AboutPage), findsOneWidget);
       expect(find.text('Open-Source Components'), findsOneWidget);
+    });
+
+    testWidgets('a Privacy Policy row sits above About and opens the policy', (
+      tester,
+    ) async {
+      await mount(tester, Scaffold(body: SettingsPage(controller: ledger)));
+      const privacy = ValueKey('settings-privacy');
+      await tester.scrollUntilVisible(
+        find.byKey(privacy),
+        300,
+        scrollable: find.byType(Scrollable).first,
+      );
+      expect(find.text('Privacy Policy'), findsOneWidget);
+      expect(
+        tester.getTopLeft(find.byKey(privacy)).dy,
+        lessThan(
+          tester.getTopLeft(find.byKey(const ValueKey('settings-about'))).dy,
+        ),
+      );
+      await tester.tap(find.byKey(privacy));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 600));
+      expect(find.byType(PrivacyPolicyPage), findsOneWidget);
     });
   });
 }
