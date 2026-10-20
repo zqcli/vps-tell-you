@@ -12,10 +12,11 @@ How to add entries (the app shows this file under Settings / About / What’s Ne
 This comment is not shown.
 -->
 
-## 0.6.0 — Unreleased
+## 0.6.0 — 2026-10-20
 
 ### Added
 
+- **Privacy Policy and Support**: Settings › About now has a Privacy Policy page (also published on GitHub) that explains what stays on your device and what is sent over the network, and a Support row that copies the support link
 - **SSH, SFTP and TCP tests can go through a proxy**: SOCKS5, HTTP and HTTPS proxies are saved under Settings › Proxies (the password stays in secure storage and is never exported or backed up) and chosen in the SSH connection settings; the terminal and SFTP share that connection. The TCP test can use a saved proxy or a temporary one, and empty means direct; a success through a proxy only shows the proxy can reach the target
 - **Duplicate a server**: swipe a server row to the right (or use the long-press menu) and choose Duplicate to open a new Add Server form named “… copy”, prefilled with the provider, group, region, purpose, OS, hardware and price. IP addresses and hostname, dates, notes, payments and SSH settings are not copied, and nothing is saved until you tap Save
 - **See the original error behind SSH, SFTP and TCP failures**: tap the message or its “Details ›” link to open Error Details, showing what failed (DNS / TCP, proxy, SSH handshake, host key, authentication, shell channel, SFTP), the target `user@host:port`, the proxy used, the time and the raw error text (SocketException, SSHAuthFailError, the SOCKS5 reply code, the HTTP status line, the remote exit status), with a Copy button. Passwords, passphrases, private keys, proxy credentials and Authorization headers are removed first; the text lives in memory only and is never saved, logged or exported. A connection you canceled yourself shows no button
@@ -23,8 +24,8 @@ This comment is not shown.
 ### Changed
 
 - **Restrained iOS 26 "Liquid Glass" look**: on iOS 26 and later the tab bar floats as a capsule, and navigation buttons, the search field, and the top and close button of bottom sheets use glass — light blur and saturation, a thin specular rim, a barely visible inner highlight. Lists, cards and other content are unchanged
-- iOS 18 and earlier, Android and other platforms keep the classic frosted look; with Increase Contrast on, surfaces turn opaque
-- **Going to the background no longer disconnects SSH at once**: iOS asks the system for background time (the system decides, typically about 30 s) and Android keeps the session for a fixed 30 s. Coming back in time continues the terminal untouched; otherwise the session is closed cleanly and you see “SSH session to … ended because the app stayed in the background”. SFTP behaves the same, and a running transfer is cancelled when the time runs out
+- iOS 18 and earlier keep the classic frosted look; with Increase Contrast on, surfaces turn opaque
+- **Going to the background no longer disconnects SSH at once**: the app asks iOS for a little background time (the system decides, typically about 30 s). Coming back in time continues the terminal untouched; otherwise the session is closed cleanly and you see “SSH session to … ended because the app stayed in the background”. SFTP behaves the same, and a running transfer is cancelled when the time runs out
 - Swiping a server row to the left now offers only SSH and Favorite; Archive moved to the long-press menu (still with its confirmation)
 - **Performance**: the server list builds only the rows on screen (1,000 servers open in 0.7 s instead of 3.4 s; search is about 10× faster); switching tabs no longer rebuilds the other open pages; Costs caches its figures per ledger revision; moving the caret in the SFTP editor no longer re-lays out the whole file, and transfer progress no longer rebuilds the page
 - Typing `exit` / `logout` in the terminal no longer shows an error, just “You left the SSH session”; network drops, server-side closes and signals still show Error Details
@@ -55,10 +56,10 @@ This comment is not shown.
 
 ### Changed
 
-- The interface was redesigned in an iOS style, with the same components and interactions on iOS and Android
+- The interface was redesigned in an iOS style, with consistent components and interactions throughout
 - New name styling, VPS Tell You, and a new app icon: a server stack inside a renewal countdown ring
 - The provider directory is downloaded from GitHub and cached, and the cache is used offline; the app never uploads your ledger
-- The project is open source under the MIT license, free to use and supported only by voluntary donations
+- The project is open source under the MIT license, free to use, with no ads, purchases or account
 
 ### Removed
 
