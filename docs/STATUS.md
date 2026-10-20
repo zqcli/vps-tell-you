@@ -2,7 +2,25 @@
 
 更新：2026-10-10 UTC
 
-## 当前增量：SSH 正常退出不再报错、更新记录按版本浏览（`dev`，0.6.0 未发布）
+## 当前增量：App Store 提交前审查与修复（`dev`，0.6.0+6）
+
+- **审查**：对照现行 App Store 审核指南和 App Store Connect 要求做了一轮完整审查，报告存放在 `docs/APP_STORE_REVIEW.md`。
+- **已修复**：
+  - 去掉 `sqlite3.framework`：pubspec 中设置 `hooks.user_defines.sqlite3.source: system`，干净构建后 iOS 包里只剩 App、Flutter、objective_c 三个框架，二进制中没有 `statfs`。
+  - 发布包不再链接 `integration_test`：截图脚本只在运行期间临时加回这个依赖。
+  - 新增 App 自己的隐私清单 `PrivacyInfo.xcprivacy`，声明 C617.1、3B52.1、35F9.1，不追踪、不收集数据。
+  - 新增本地网络权限说明 `NSLocalNetworkUsageDescription`（中英文）。
+  - 后台任务过期时同步结束。
+- **隐私与支持**：新增隐私政策和支持文档（`PRIVACY.md`、`PRIVACY.en.md`、`SUPPORT.md`、`SUPPORT.en.md`）；App 内「设置」和「关于」可以打开隐私政策，并复制支持页链接。
+- **文案**：
+  - 去掉了「捐助」的说法，改为「免费开源：无广告、无内购、无需账号」。
+  - 去掉了「仍需真机验证」这类工程状态描述，以及 Android、Linux 相关的说法。
+  - 新建的台账会按设备语言选择中文或英文。
+- **版本**：0.6.0+6，更新记录的版本标题为 `0.6.0 — 2026-10-20`；尚未打标签。
+- **验证**：全量测试 **1417/1417 通过**，analyze 零问题，release 包清单已检查。
+- **仍需开发者处理**：在付费团队下注册 Bundle ID 并用发布证书签名；准备审核用的 SSH 测试服务器；出口合规（加密）的申报；提供商 logo 的商标授权风险；iPad 截图（或改为仅支持 iPhone）；真机测试本地网络授权和后台挂起。
+
+## 前一增量：SSH 正常退出不再报错、更新记录按版本浏览（`dev`，0.6.0 未发布）
 
 - **SSH 正常退出**：原因是 `_remoteClosed` 把所有远端关闭都当成错误处理，用户输入 `exit` 后也会提示「SSH 会话已结束；命令是否完成请在重连后核实」，并附「错误详情」。新的规则：
   - shell 自己退出、带回退出码且没有信号（`exit`、`logout`、Ctrl‑D，退出码可以不为 0）：不算错误，只提示「已退出 SSH 会话（退出码 N）」，不提供详情。
