@@ -15,6 +15,9 @@ analyzer:
     - linux/**
     - android/**
     - ios/**
+    # Need the temporary integration_test dependency; see docs/SCREENSHOTS.md.
+    - integration_test/**
+    - test_driver/**
 
 linter:
   # The lint rules applied to this project can be customized in the

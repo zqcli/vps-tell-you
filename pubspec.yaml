@@ -36,9 +36,10 @@ dependencies:
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  # Reproducible store screenshots / GIFs (docs/SCREENSHOTS.md); never shipped.
-  integration_test:
-    sdk: flutter
+  # integration_test is deliberately NOT listed: Flutter 3.47 still links
+  # dev-dependency plugins into iOS/macOS release builds (flutter#163874).
+  # tool/make_screenshots.py adds it temporarily for `flutter drive` and
+  # restores this file and pubspec.lock afterwards (docs/SCREENSHOTS.md).
   flutter_lints: 6.0.0
   path_provider_platform_interface: 2.1.3
 
