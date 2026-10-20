@@ -191,6 +191,12 @@ flutter build apk --release --target-platform android-arm64,android-x64
 
 接手设备后逐项核对：安装与重启持久化；屏幕锁/Keystore/Keychain/设备验证；合成凭据 SSH 的键盘、IME、旋转、后台及切网；通知允许/拒绝/渠道关闭、重启、时区及省电限制；PNG/JSON 分享与取消、文件选择；空台账导入后重新授权与重新核实主机；iOS 签名安装。不要把 Linux 通过、APK 生成或模拟器安装当作这些项目全部通过。
 
+## iOS 提审构建说明（原生资产 / 隐私清单 / 插件）
+
+- **SQLite 原生资产**：`pubspec.yaml` 的 `hooks: user_defines: sqlite3: source: system`（`sqlite3` 3.5.2 的 build hook 选项，仅支持全局、不能按 OS 区分）让 hook 不再打包自带的 SQLite。`sqflite_common_ffi` 只服务 Linux / Windows 桌面适配（`lib/data/open_ledger.dart`）与测试；iOS / Android 用 sqflite 平台插件。此前 iOS 包内的 `Frameworks/sqlite3.framework` 导入 `statfs/stat` 且无隐私清单，现在不再产生。代价：Linux release bundle 不再自带 SQLite，运行时需 `libsqlite3.so`（Debian/Ubuntu 的 `libsqlite3-dev`，CI 已安装）；macOS 测试宿主使用系统 `libsqlite3.dylib`。验证：`flutter build ios --release --no-codesign` 后 `ls build/ios/iphoneos/Runner.app/Frameworks` 只有 `App`、`Flutter`、`objective_c` 三个框架。
+
+- **integration_test 插件**：Flutter 3.47.6 对 iOS / macOS 的 release 构建仍不过滤 dev 依赖插件（flutter#163874；`injectPlugins` 对 Darwin 使用未过滤列表），所以只要 `integration_test` 在 `pubspec.yaml` 里，`GeneratedPluginRegistrant.m` 与 SwiftPM 包就会把它链接进 release。因此它**不再写在 pubspec 里**；`tool/make_screenshots.py` 在跑 `flutter drive` 期间临时加入该 dev 依赖，结束（含失败）后恢复 `pubspec.yaml` / `pubspec.lock` 并重新 `pub get`。`analysis_options.yaml` 因此排除 `integration_test/**` 与 `test_driver/**`；需要分析它们时在脚本的临时依赖下运行 `flutter analyze`。截图流程见 [SCREENSHOTS](SCREENSHOTS.md)，命令不变。
+
 ## 许可证 / License
 
 本项目以 [MIT 许可证](../LICENSE) 发布（Copyright (c) 2026 zqcli and contributors），免费、开源，仅接受自愿捐赠。第三方组件保留各自的许可证（逐项核对见 [LICENSES](LICENSES.md)，应用内「设置 / 关于 / 开源组件」可查看全文）。`catalog/` 中的提供商名称和 Logo 属于各自所有者的商标或版权，仅用于识别。

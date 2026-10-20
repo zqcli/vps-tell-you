@@ -13,6 +13,7 @@ See docs/SCREENSHOTS.md for the whole procedure.
 """
 
 import argparse
+import contextlib
 import os
 import signal
 import subprocess
@@ -120,6 +121,32 @@ def start_demo_ssh(python):
     return process
 
 
+@contextlib.contextmanager
+def integration_test_dependency():
+    """Temporarily add the integration_test dev dependency.
+
+    It is not in the committed pubspec.yaml because Flutter 3.47 links
+    dev-dependency plugins into iOS release builds (flutter#163874). The
+    original pubspec.yaml / pubspec.lock are restored afterwards.
+    """
+    pubspec, lock = ROOT / "pubspec.yaml", ROOT / "pubspec.lock"
+    saved = pubspec.read_bytes(), lock.read_bytes()
+    text = saved[0].decode()
+    marker = "dev_dependencies:\n"
+    if "integration_test:" in text or marker not in text:
+        raise SystemExit("pubspec.yaml: unexpected dev_dependencies layout")
+    pubspec.write_text(text.replace(
+        marker, marker + "  integration_test:\n    sdk: flutter\n", 1))
+    try:
+        subprocess.run(["flutter", "pub", "get"], cwd=ROOT, check=True)
+        yield
+    finally:
+        pubspec.write_bytes(saved[0])
+        lock.write_bytes(saved[1])
+        subprocess.run(["flutter", "pub", "get", "--enforce-lockfile"],
+                       cwd=ROOT, check=False)
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--udid", required=True)
@@ -131,6 +158,11 @@ def main():
     parser.add_argument("--ssh-python", default=os.environ.get(
         "VPS_SSH_FIXTURE_PYTHON", sys.executable))
     args = parser.parse_args()
+    with integration_test_dependency():
+        run(args)
+
+
+def run(args):
     ssh = start_demo_ssh(args.ssh_python)
     try:
         for lang in args.lang or ["zh", "en"]:

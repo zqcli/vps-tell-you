@@ -1,1 +1,2 @@
 "NSFaceIDUsageDescription" = "Verify your identity to briefly view the login password saved on this device.";
+"NSLocalNetworkUsageDescription" = "Connect to servers and proxies you choose on your local network for SSH, SFTP, and TCP connectivity tests.";

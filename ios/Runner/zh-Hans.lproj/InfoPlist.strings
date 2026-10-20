@@ -1,1 +1,2 @@
 "NSFaceIDUsageDescription" = "验证本人后，短时显示本机保存的登录密码。";
+"NSLocalNetworkUsageDescription" = "连接你指定的局域网服务器和代理，用于 SSH、SFTP 和 TCP 连通性测试。";
