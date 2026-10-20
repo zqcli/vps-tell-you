@@ -13,12 +13,10 @@ import UIKit
 /// - `begin(name)` -> `{token: Int, remainingSeconds: Double}`
 /// - `end(token)` -> nil (unknown tokens are ignored)
 /// - `remaining()` -> Double (a huge value while the app is in the foreground)
-/// Native -> Dart: `expiring({token})`; the task is ended as soon as Dart
-/// answers, or after `expiryGrace` if it does not.
+/// Native -> Dart: `expiring({token})`, a best-effort notification posted just
+/// before the task is ended synchronously in the expiration handler.
 final class BackgroundTimeChannel {
   static let name = "vps_tell_you/background"
-  /// Longest we wait for Dart to close its sessions before ending the task.
-  private static let expiryGrace: TimeInterval = 0.5
 
   private let channel: FlutterMethodChannel
   private var tasks: [Int: UIBackgroundTaskIdentifier] = [:]
@@ -65,15 +63,15 @@ final class BackgroundTimeChannel {
     ])
   }
 
-  /// Expiration handler: tell Dart to close its sessions, then end the task.
+  /// Expiration handler. iOS may suspend the process as soon as this handler
+  /// returns, and requires the task to be ended before then, so the task is
+  /// ended synchronously here. The `expiring` message is only a best-effort
+  /// heads-up for Dart (which also runs its own safety timer from the measured
+  /// budget); its reply is not awaited and an unanswered message costs nothing.
   private func expired(_ token: Int) {
     guard tasks[token] != nil else { return }
-    channel.invokeMethod("expiring", arguments: ["token": token]) { [weak self] _ in
-      self?.finish(token)
-    }
-    DispatchQueue.main.asyncAfter(deadline: .now() + Self.expiryGrace) { [weak self] in
-      self?.finish(token)
-    }
+    channel.invokeMethod("expiring", arguments: ["token": token])
+    finish(token)
   }
 
   /// Ends a task exactly once.
