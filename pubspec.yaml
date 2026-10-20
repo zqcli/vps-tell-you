@@ -42,6 +42,18 @@ dev_dependencies:
   flutter_lints: 6.0.0
   path_provider_platform_interface: 2.1.3
 
+# sqlite3 (pulled in by sqflite_common_ffi, which only serves the Linux/Windows
+# desktop adapter and the tests) must not bundle its own native library: on
+# iOS/Android the app uses the platform sqflite plugin, and the bundled iOS
+# sqlite3.framework imports statfs/stat with no privacy manifest (App Store
+# required-reason APIs). `system` makes the hook ship nothing and lets the FFI
+# adapter dlopen the OS copy (libsqlite3.so on Linux, libsqlite3.dylib on
+# macOS test hosts). See docs/DEVELOPMENT.md.
+hooks:
+  user_defines:
+    sqlite3:
+      source: system
+
 flutter:
   generate: true
   uses-material-design: true
