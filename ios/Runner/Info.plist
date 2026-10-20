@@ -31,6 +31,8 @@
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
 	<key>NSFaceIDUsageDescription</key>
 	<string>验证本人后，短时显示本机保存的登录密码。</string>
+	<key>NSLocalNetworkUsageDescription</key>
+	<string>连接你指定的局域网服务器和代理，用于 SSH、SFTP 和 TCP 连通性测试。</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<!-- SFTP downloads are saved to Documents/SFTP Downloads. These two keys
