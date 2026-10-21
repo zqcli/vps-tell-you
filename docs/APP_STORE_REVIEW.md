@@ -1,6 +1,6 @@
 # VPS Tell You — first App Store submission audit
 
-> **Owner decisions (2026-10-20).** The first App Store release is **iPhone-only** (`TARGETED_DEVICE_FAMILY = 1`, no iPad orientations; iPad runs it in iPhone compatibility mode). M4 is therefore resolved by scope: no iPad screenshots or iPad QA are needed, and the iPad rows/items below no longer apply to this release. Provider logos are **kept unchanged** (M2 accepted risk). Findings text below is the original audit and was not rewritten.
+> **Owner decisions (2026-10-20).** The first App Store release is **iPhone-only** (`TARGETED_DEVICE_FAMILY = 1`, no iPad orientations; iPad runs it in iPhone compatibility mode). M4 is therefore resolved by scope: no iPad screenshots or iPad QA are needed, and the iPad rows/items below no longer apply to this release. Provider logos are **kept unchanged** (M2 accepted risk). App Store bundle ID: `com.zqcli.vpstellyou` (paid team); the old Personal Team ID `com.vpstellyou.vpsTellYou` is abandoned. Findings text below is the original audit and was not rewritten.
 
 **Audit date:** October 20, 2026 (UTC). **Verdict: NOT READY — hold submission.**
 

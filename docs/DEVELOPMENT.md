@@ -193,6 +193,7 @@ flutter build apk --release --target-platform android-arm64,android-x64
 
 ## iOS 提审构建说明（原生资产 / 隐私清单 / 插件）
 
+- **Bundle ID**：0.6.0 起 iOS 的 Bundle ID 为 `com.zqcli.vpstellyou`（付费团队，测试目标为 `….RunnerTests`），旧的 `com.vpstellyou.vpsTellYou`（个人团队侧载版）已弃用。因此 App Store 版是一个**全新的 App**：iOS 沙盒按 Bundle ID 隔离，不会从此前侧载的版本迁移台账，请先在旧版导出 JSON 备份再在新版导入。Android / Linux 应用 ID 不变。团队 ID 不写入工程，签名时通过命令行传入（如 `DEVELOPMENT_TEAM=<ID>`）。
 - **SQLite 原生资产**：`pubspec.yaml` 的 `hooks: user_defines: sqlite3: source: system`（`sqlite3` 3.5.2 的 build hook 选项，仅支持全局、不能按 OS 区分）让 hook 不再打包自带的 SQLite。`sqflite_common_ffi` 只服务 Linux / Windows 桌面适配（`lib/data/open_ledger.dart`）与测试；iOS / Android 用 sqflite 平台插件。此前 iOS 包内的 `Frameworks/sqlite3.framework` 导入 `statfs/stat` 且无隐私清单，现在不再产生。代价：Linux release bundle 不再自带 SQLite，运行时需 `libsqlite3.so`（Debian/Ubuntu 的 `libsqlite3-dev`，CI 已安装）；macOS 测试宿主使用系统 `libsqlite3.dylib`。验证：`flutter build ios --release --no-codesign` 后 `ls build/ios/iphoneos/Runner.app/Frameworks` 只有 `App`、`Flutter`、`objective_c` 三个框架。
 
 - **integration_test 插件**：Flutter 3.47.6 对 iOS / macOS 的 release 构建仍不过滤 dev 依赖插件（flutter#163874；`injectPlugins` 对 Darwin 使用未过滤列表），所以只要 `integration_test` 在 `pubspec.yaml` 里，`GeneratedPluginRegistrant.m` 与 SwiftPM 包就会把它链接进 release。因此它**不再写在 pubspec 里**；`tool/make_screenshots.py` 在跑 `flutter drive` 期间临时加入该 dev 依赖，结束（含失败）后恢复 `pubspec.yaml` / `pubspec.lock` 并重新 `pub get`。`analysis_options.yaml` 因此排除 `integration_test/**` 与 `test_driver/**`；需要分析它们时在脚本的临时依赖下运行 `flutter analyze`。截图流程见 [SCREENSHOTS](SCREENSHOTS.md)，命令不变。
