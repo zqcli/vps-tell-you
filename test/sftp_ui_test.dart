@@ -13,6 +13,42 @@ import 'package:vps_tell_you/l10n/generated/app_localizations.dart';
 
 import 'support/fake_sftp_session.dart';
 
+class _HeldListSession extends FakeSftpSession {
+  final heldLists = <String, Completer<void>>{};
+  int inFlight = 0, peakInFlight = 0, uploads = 0;
+
+  @override
+  Future<List<SftpEntry>> list(String path) async {
+    final snapshot = await super.list(path);
+    inFlight++;
+    if (inFlight > peakInFlight) peakInFlight = inFlight;
+    try {
+      await heldLists[path]?.future;
+      return snapshot;
+    } finally {
+      inFlight--;
+    }
+  }
+
+  @override
+  Future<void> upload(
+    File localFile,
+    String remotePath, {
+    bool overwrite = false,
+    SftpProgress? onProgress,
+    SftpCancelToken? cancel,
+  }) async {
+    await super.upload(
+      localFile,
+      remotePath,
+      overwrite: overwrite,
+      onProgress: onProgress,
+      cancel: cancel,
+    );
+    uploads++;
+  }
+}
+
 Future<void> _settle(WidgetTester tester) async {
   // Spinners (busy overlay, progress) never settle, and real file IO needs
   // real time next to the fake clock.
@@ -725,6 +761,37 @@ void main() {
       }
     });
 
+    testWidgets('caret changes reuse the editor and locate UTF-16 line starts', (
+      tester,
+    ) async {
+      const text = '你好😀\nsecond\r\n尾部\n';
+      await openEditor(tester, text);
+      final field = fieldWidget(tester);
+      final controller = field.controller!;
+      final offsets = <int, int>{
+        0: 0,
+        text.indexOf('\n'): 0,
+        text.indexOf('second'): 1,
+        text.indexOf('尾部'): 2,
+        text.length: 3,
+      };
+      for (final entry in offsets.entries) {
+        controller.selection = TextSelection.collapsed(offset: entry.key);
+        await tester.pump();
+        expect(gutter(tester).caretLine, entry.value);
+        expect(fieldWidget(tester), same(field));
+      }
+      controller.value = const TextEditingValue(
+        text: 'new\n你好😀\n',
+        selection: TextSelection.collapsed(offset: 4),
+        composing: TextRange(start: 4, end: 6),
+      );
+      await tester.pump();
+      expect(gutter(tester).caretLine, 1);
+      expect(gutter(tester).lines, 3);
+      expect(controller.value.composing, const TextRange(start: 4, end: 6));
+    });
+
     testWidgets('a 3000 line file scrolls to its last line', (tester) async {
       final text = lines(3000);
       await openEditor(tester, text);
@@ -860,6 +927,90 @@ void main() {
   group('transfers', () {
     File picked(String name, String content) =>
         File('${work.path}/$name')..writeAsStringSync(content);
+
+    testWidgets('batch uploads coalesce a pending directory refresh', (
+      tester,
+    ) async {
+      final remote = _HeldListSession();
+      await open(tester, session: remote);
+      final listing = remote.heldLists['/'] = Completer<void>();
+      local.picks = [
+        for (var i = 0; i < 8; i++) picked('file$i.txt', '$i'),
+      ];
+      await tapKey(tester, 'sftp-add');
+      await tester.tap(find.byKey(const ValueKey('sftp-upload')));
+      for (var i = 0; i < 10 && remote.uploads < 8; i++) {
+        await _settle(tester);
+      }
+      expect(remote.uploads, 8);
+      expect(remote.calls.where((c) => c == 'list:/'), hasLength(2));
+      expect(remote.peakInFlight, 1);
+
+      remote.heldLists.remove('/');
+      listing.complete();
+      await _settle(tester);
+      expect(remote.calls.where((c) => c == 'list:/'), hasLength(3));
+      expect(remote.peakInFlight, 1);
+      expect(entry('file7.txt'), findsOneWidget);
+    });
+
+    testWidgets('finishing an upload does not supersede directory navigation', (
+      tester,
+    ) async {
+      final remote = _HeldListSession()
+        ..dir('/other')
+        ..file('/other/visible.txt', 'other');
+      await open(tester, session: remote);
+      final upload = remote.hold = Completer<void>();
+      local.picks = [picked('uploaded.txt', 'root')];
+      await tapKey(tester, 'sftp-add');
+      await tester.tap(find.byKey(const ValueKey('sftp-upload')));
+      await _settle(tester);
+      final listing = remote.heldLists['/other'] = Completer<void>();
+      await tester.tap(entry('other'));
+      await tester.pump();
+
+      upload.complete();
+      await _settle(tester);
+      expect(remote.uploads, 1);
+      expect(remote.calls.where((c) => c == 'list:/'), hasLength(1));
+      expect(remote.calls.where((c) => c == 'list:/other'), hasLength(1));
+
+      remote.heldLists.remove('/other');
+      listing.complete();
+      await _settle(tester);
+      expect(entry('visible.txt'), findsOneWidget);
+      expect(entry('uploaded.txt'), findsNothing);
+    });
+
+    testWidgets('failed navigation refreshes uploads in the retained directory', (
+      tester,
+    ) async {
+      final remote = _HeldListSession()..dir('/other');
+      await open(tester, session: remote);
+      final upload = remote.hold = Completer<void>();
+      local.picks = [picked('uploaded.txt', 'root')];
+      await tapKey(tester, 'sftp-add');
+      await tester.tap(find.byKey(const ValueKey('sftp-upload')));
+      await _settle(tester);
+      final listing = remote.heldLists['/other'] = Completer<void>();
+      await tester.tap(entry('other'));
+      await tester.pump();
+
+      upload.complete();
+      await _settle(tester);
+      expect(remote.uploads, 1);
+      expect(remote.calls.where((c) => c == 'list:/'), hasLength(1));
+
+      remote.heldLists.remove('/other');
+      listing.completeError(
+        const SftpException(SftpErrorKind.permissionDenied, '/other'),
+      );
+      await _settle(tester);
+      expect(remote.calls.where((c) => c == 'list:/'), hasLength(2));
+      expect(entry('uploaded.txt'), findsOneWidget);
+      expect(entry('other'), findsOneWidget);
+    });
 
     testWidgets('uploads queue sequentially and conflicts ask', (tester) async {
       local.picks = [

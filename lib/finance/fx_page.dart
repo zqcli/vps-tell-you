@@ -51,7 +51,7 @@ class _FxPageState extends State<FxPage> with LocaleRevalidatingForm<FxPage> {
     );
     setState(() => saving = true);
     try {
-      await widget.controller.mutate(() => widget.controller.store.saveFx(fx));
+      await widget.controller.saveFx(fx);
       if (mounted) Navigator.pop(context);
     } catch (error) {
       if (mounted) {

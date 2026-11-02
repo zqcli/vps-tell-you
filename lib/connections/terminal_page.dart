@@ -11,7 +11,6 @@ import 'package:xterm/xterm.dart';
 import '../core/app_theme.dart';
 import '../core/background_grace.dart';
 import '../core/ui/ui.dart';
-import '../security/security_controller.dart';
 import '../servers/ledger_controller.dart';
 import 'error_details.dart';
 import 'error_details_ui.dart';
@@ -28,8 +27,6 @@ import 'terminal_highlighter.dart';
 import 'terminal_input.dart';
 import 'terminal_widgets.dart';
 import 'terminal_font.dart';
-
-typedef SshServiceFactory = SshService Function(SecurityController security);
 
 /// Why a terminal that never became a session closed again, handed back to the
 /// connect page: the localized headline and the original error (if any).

@@ -63,6 +63,7 @@ class _SftpTextEditorPageState extends State<SftpTextEditorPage> {
   final _scroll = ScrollController();
   final _focus = FocusNode(debugLabel: 'sftp-editor');
   final _areaKey = GlobalKey();
+  final _caretLine = ValueNotifier<int>(-1);
 
   // Derived from the text only when it changes (selection moves are frequent).
   late _TextShape _shape = _TextShape.of(_text.text);
@@ -77,7 +78,7 @@ class _SftpTextEditorPageState extends State<SftpTextEditorPage> {
   void initState() {
     super.initState();
     _shapeOf = _text.text;
-    _focus.addListener(_edited);
+    _focus.addListener(_focusChanged);
   }
 
   @override
@@ -93,15 +94,19 @@ class _SftpTextEditorPageState extends State<SftpTextEditorPage> {
       _shapeOf = text;
       _shape = _TextShape.of(text);
       _bytes = utf8.encode(text).length;
+      setState(() {});
     }
-    setState(() {});
+    _caretLine.value = _selectionLine();
   }
+
+  void _focusChanged() => setState(() {});
 
   @override
   void dispose() {
     _text.removeListener(_edited);
-    _focus.removeListener(_edited);
+    _focus.removeListener(_focusChanged);
     _text.dispose();
+    _caretLine.dispose();
     _focus.dispose();
     _scroll.dispose();
     super.dispose();
@@ -275,7 +280,6 @@ class _SftpTextEditorPageState extends State<SftpTextEditorPage> {
     );
     final metrics = _metricsFor(context, textStyle);
     final shown = _keyboardShown(context);
-    final caretLine = _caretLine();
     final dirty = _dirty;
     return PopScope(
       canPop: !dirty,
@@ -357,7 +361,6 @@ class _SftpTextEditorPageState extends State<SftpTextEditorPage> {
                         foreground: foreground,
                         background: background,
                         cursor: styled ? code.cursor : palette.primary,
-                        caretLine: caretLine,
                       ),
                     ),
                   ),
@@ -399,20 +402,10 @@ class _SftpTextEditorPageState extends State<SftpTextEditorPage> {
   }
 
   /// Zero-based line holding the caret (`-1` when there is no selection).
-  int _caretLine() {
+  int _selectionLine() {
     final selection = _text.selection;
     if (!selection.isValid) return -1;
-    final text = _text.text;
-    final end = math.min(selection.extentOffset, text.length);
-    var line = 0;
-    for (
-      var i = text.indexOf('\n');
-      i >= 0 && i < end;
-      i = text.indexOf('\n', i + 1)
-    ) {
-      line++;
-    }
-    return line;
+    return _shape.lineAt(math.min(selection.extentOffset, _text.text.length));
   }
 
   Widget _editorArea(
@@ -422,7 +415,6 @@ class _SftpTextEditorPageState extends State<SftpTextEditorPage> {
     required Color foreground,
     required Color background,
     required Color cursor,
-    required int caretLine,
   }) {
     final digits = math.max(2, '${_shape.lines}'.length);
     final gutterWidth =
@@ -430,15 +422,18 @@ class _SftpTextEditorPageState extends State<SftpTextEditorPage> {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        _Gutter(
-          key: const ValueKey('sftp-editor-gutter'),
-          width: gutterWidth,
-          scroll: _scroll,
-          lines: _shape.lines,
-          caretLine: caretLine,
-          metrics: metrics,
-          foreground: foreground,
-          background: background,
+        ValueListenableBuilder<int>(
+          valueListenable: _caretLine,
+          builder: (context, line, _) => _Gutter(
+            key: const ValueKey('sftp-editor-gutter'),
+            width: gutterWidth,
+            scroll: _scroll,
+            lines: _shape.lines,
+            caretLine: line,
+            metrics: metrics,
+            foreground: foreground,
+            background: background,
+          ),
         ),
         Expanded(
           child: LayoutBuilder(
@@ -505,15 +500,31 @@ const double _kGutterPadLeft = 8, _kGutterPadRight = 8;
 
 /// Line count and widest line (in monospace cells) of a text.
 class _TextShape {
-  const _TextShape(this.lines, this.cells, this.widestStart, this.widestEnd);
+  const _TextShape(this.lineStarts, this.cells, this.widestStart, this.widestEnd);
 
-  final int lines, cells;
+  final List<int> lineStarts;
+  final int cells;
+  int get lines => lineStarts.length;
+
+  int lineAt(int offset) {
+    var first = 0, end = lineStarts.length;
+    while (first + 1 < end) {
+      final middle = (first + end) ~/ 2;
+      if (lineStarts[middle] <= offset) {
+        first = middle;
+      } else {
+        end = middle;
+      }
+    }
+    return first;
+  }
 
   /// Range of the line with the most cells in the source text.
   final int widestStart, widestEnd;
 
   factory _TextShape.of(String text) {
-    var lines = 1, current = 0, widest = -1, start = 0;
+    final starts = <int>[0];
+    var current = 0, widest = -1, start = 0;
     var widestStart = 0, widestEnd = 0;
     void endLine(int end) {
       if (current > widest) {
@@ -526,7 +537,7 @@ class _TextShape {
     for (var i = 0; i < text.length; i++) {
       final unit = text.codeUnitAt(i);
       if (unit == 0x0A) {
-        lines++;
+        starts.add(i + 1);
         endLine(i);
         current = 0;
         start = i + 1;
@@ -538,7 +549,7 @@ class _TextShape {
       }
     }
     endLine(text.length);
-    return _TextShape(lines, widest, widestStart, widestEnd);
+    return _TextShape(starts, widest, widestStart, widestEnd);
   }
 }
 

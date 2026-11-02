@@ -684,6 +684,16 @@ class DartSshSftpSession implements SftpSession {
     RandomAccessFile? output;
     SftpFile? handle;
     StreamIterator<Uint8List>? iterator;
+    var readStopped = false;
+    void stopReading() {
+      final reader = iterator;
+      if (reader == null || readStopped) return;
+      readStopped = true;
+      // The iterator stops synchronously. Its async* source may still await a
+      // remote READ reply, which must not delay local partial-file cleanup.
+      unawaited(reader.cancel().catchError((Object _) {}));
+    }
+
     var committed = false;
     try {
       if (!overwrite && await localFile.exists()) {
@@ -702,26 +712,25 @@ class DartSshSftpSession implements SftpSession {
       final chunks = iterator = StreamIterator(
         opened.read(maxPendingRequests: 32),
       );
+      // One stop listener per transfer. Cancelling the iterator wakes a pending
+      // moveNext; the copy loop still awaits an in-flight disk write before its
+      // finally block can close or remove the partial file.
+      unawaited(stall.stopped.then((_) => stopReading()));
       var received = 0;
       stall.arm();
-      while (true) {
-        // Future.any prefers an already-completed chunk over the stop signal.
+      while (await chunks.moveNext()) {
         final reason = stall.reason;
         if (reason != null) throw reason;
-        final next = await Future.any<Object?>([
-          chunks.moveNext(),
-          stall.stopped,
-        ]);
-        if (next is! bool) {
-          throw next!;
-        }
-        if (!next) break;
         final chunk = chunks.current;
         await sink.writeFrom(chunk);
+        final stopped = stall.reason;
+        if (stopped != null) throw stopped;
         received += chunk.length;
         stall.arm();
         onProgress?.call(received, total);
       }
+      final stopped = stall.reason;
+      if (stopped != null) throw stopped;
       iterator = null;
       if (total != null && received < total) {
         // The file shrank or the stream ended early.
@@ -738,9 +747,7 @@ class DartSshSftpSession implements SftpSession {
     } finally {
       stall.dispose();
       if (!committed) {
-        if (iterator != null) {
-          unawaited(iterator.cancel().catchError((Object _) {}));
-        }
+        stopReading();
         try {
           await output?.close();
         } catch (_) {}

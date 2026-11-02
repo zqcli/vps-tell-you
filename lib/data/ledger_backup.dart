@@ -5,7 +5,7 @@ part of 'ledger_store.dart';
 /// emits version 2 (adds providers and each server's provider link); the reader
 /// also accepts version 1, which has neither. Package fields written by app
 /// versions 6–8 into version 2 files are ignored.
-class LedgerBackupSnapshot {
+final class LedgerBackupSnapshot {
   LedgerBackupSnapshot._({
     required this.exportedAt,
     required this.providers,
@@ -44,7 +44,9 @@ class LedgerBackupSnapshot {
     'service_periods': servicePeriods.length,
   });
 
-  String encode() => jsonEncode({
+  String encode() => _encoded;
+
+  late final String _encoded = jsonEncode({
     'format': format,
     'version': version,
     'exported_at': exportedAt,
@@ -464,46 +466,43 @@ class LedgerRestorePreview {
 }
 
 extension LedgerBackupStore on LedgerStore {
-  Future<LedgerBackupSnapshot> exportLedgerBackup() => _db.transaction((
-    txn,
-  ) async {
-    Future<List<Map<String, Object?>>> rows(
-      String table,
-      List<String> columns,
-    ) async => (await txn.query(
-      table,
-      columns: columns,
-      orderBy: 'id',
-    )).map((r) => Map<String, Object?>.from(r)).toList();
-    final serverRows = await rows('servers', _backupServerColumnsV2);
-    // Preserve the existing v1 nonempty-label contract without writing a
-    // business provider or fabricating any restored authorization. The local
-    // unspecified/blank field itself is never changed by export.
-    for (final server in serverRows) {
-      if ((server['vendor'] as String).trim().isEmpty) {
-        server['vendor'] = legacyUnknownVendor;
+  Future<LedgerBackupSnapshot> exportLedgerBackup() async {
+    final data = await _db.transaction((txn) async {
+      Future<List<Map<String, Object?>>> rows(
+        String table,
+        List<String> columns,
+      ) async => (await txn.query(
+        table,
+        columns: columns,
+        orderBy: 'id',
+      )).map((r) => Map<String, Object?>.from(r)).toList();
+      final serverRows = await rows('servers', _backupServerColumnsV2);
+      // Keep the v1 nonempty-label contract without changing the local ledger.
+      for (final server in serverRows) {
+        if ((server['vendor'] as String).trim().isEmpty) {
+          server['vendor'] = legacyUnknownVendor;
+        }
       }
-    }
-    final snapshot = LedgerBackupSnapshot._validated({
-      'format': LedgerBackupSnapshot.format,
-      'version': LedgerBackupSnapshot.version,
-      'exported_at': clock().toUtc().toIso8601String(),
-      'providers': await rows('providers', _backupProviderColumns),
-      'groups': await rows('server_groups', _backupGroupColumns),
-      'servers': serverRows,
-      'payments': await rows('payments', _backupPaymentColumns),
-      'service_periods': await rows('service_periods', _backupPeriodColumns),
-      'fx': (await txn.query(
-        'finance_settings',
-        columns: _backupFxColumns,
-        where: 'id = 1',
-      )).single,
+      return {
+        'format': LedgerBackupSnapshot.format,
+        'version': LedgerBackupSnapshot.version,
+        'exported_at': clock().toUtc().toIso8601String(),
+        'providers': await rows('providers', _backupProviderColumns),
+        'groups': await rows('server_groups', _backupGroupColumns),
+        'servers': serverRows,
+        'payments': await rows('payments', _backupPaymentColumns),
+        'service_periods': await rows('service_periods', _backupPeriodColumns),
+        'fx': (await txn.query(
+          'finance_settings',
+          columns: _backupFxColumns,
+          where: 'id = 1',
+        )).single,
+      };
     });
-    if (utf8.encode(snapshot.encode()).length > LedgerBackupSnapshot.maxBytes) {
-      throw LocalizedFormatException((l10n) => l10n.backupTooLarge);
-    }
+    final snapshot = LedgerBackupSnapshot._validated(data);
+    _checkEncodedBackupSize(snapshot);
     return snapshot;
-  });
+  }
 
   Future<LedgerRestorePreview> previewLedgerRestore(
     LedgerBackupSnapshot snapshot,
@@ -516,64 +515,73 @@ extension LedgerBackupStore on LedgerStore {
     LedgerBackupSnapshot snapshot, {
     Future<void> Function(int inserted)? afterInsert,
   }) async {
-    // Re-validate before starting a write transaction. Immutable snapshots prevent
-    // callers from changing the checked data while the transaction is awaited.
-    final checked = LedgerBackupSnapshot.decode(snapshot.encode());
+    // Snapshots can only be constructed by the validator and are immutable.
+    // A v1 file can grow when normalized, so check its encoded size as well.
+    _checkEncodedBackupSize(snapshot);
     await _db.transaction((txn) async {
       if ((await _backupConflicts(
         txn,
-        withProviders: checked.providers.isNotEmpty,
+        withProviders: snapshot.providers.isNotEmpty,
       )).isNotEmpty) {
         throw LocalizedStateError((l10n) => l10n.restoreRequiresEmptyLedger);
       }
+      var batch = txn.batch();
       var inserted = 0;
       Future<void> insert(String table, Map<String, Object?> row) async {
-        await txn.insert(
-          table,
-          row,
-          conflictAlgorithm: ConflictAlgorithm.abort,
-        );
-        await afterInsert?.call(++inserted);
+        batch.insert(table, row, conflictAlgorithm: ConflictAlgorithm.abort);
+        if (afterInsert != null) {
+          // The test hook observes actual inserts inside the same transaction.
+          await batch.commit(noResult: true);
+          batch = txn.batch();
+          await afterInsert(++inserted);
+        }
       }
 
-      for (final row in checked.providers) {
+      for (final row in snapshot.providers) {
         await insert('providers', {...row, 'revision': 0});
       }
-      for (final row in checked.groups) {
+      for (final row in snapshot.groups) {
         await insert('server_groups', row);
       }
-      for (final row in checked.servers) {
+      for (final row in snapshot.servers) {
         await insert('servers', {...row, 'notes': ''});
         // Schema 6 creates the ordinary reminder default on every server insert.
         // Imported records must remain silent until explicitly enabled again.
-        await txn.update(
+        batch.update(
           'reminder_rules',
           {'enabled': 0},
           where: 'server_id = ?',
           whereArgs: [row['id']],
         );
       }
-      for (final row in checked.payments) {
+      for (final row in snapshot.payments) {
         await insert('payments', {
           ...row,
           'note': '',
           'request_fingerprint': _backupPaymentFingerprint(row),
         });
       }
-      for (final row in checked.servicePeriods) {
+      for (final row in snapshot.servicePeriods) {
         await insert('service_periods', row);
       }
+      await batch.commit(noResult: true);
       // FX is one documented singleton; destination app/notification preferences
       // and any unrelated security records are intentionally left alone.
       final updated = await txn.update(
         'finance_settings',
-        checked.fx,
+        snapshot.fx,
         where: 'id = 1',
       );
       if (updated != 1) {
         throw LocalizedStateError((l10n) => l10n.restoreMissingRateSettings);
       }
     });
+  }
+}
+
+void _checkEncodedBackupSize(LedgerBackupSnapshot snapshot) {
+  if (utf8.encode(snapshot.encode()).length > LedgerBackupSnapshot.maxBytes) {
+    throw LocalizedFormatException((l10n) => l10n.backupTooLarge);
   }
 }
 

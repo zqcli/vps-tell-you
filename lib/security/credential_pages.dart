@@ -9,9 +9,8 @@ import '../servers/server_detail.dart';
 import 'credential_form.dart';
 import 'security_controller.dart';
 import 'security_models.dart';
+import 'security_route_observer.dart';
 import 'security_widgets.dart';
-
-final securityRouteObserver = RouteObserver<ModalRoute<dynamic>>();
 
 class CredentialDetailPage extends StatefulWidget {
   const CredentialDetailPage({

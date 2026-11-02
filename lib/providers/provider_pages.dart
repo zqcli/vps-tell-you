@@ -19,34 +19,6 @@ import 'provider_record.dart';
 
 export 'provider_lists.dart' show ProvidersPage, AllProvidersPage;
 
-/// What the user picked as the provider of a server. A null route result
-/// means cancellation. [provider] is the existing local provider; [catalog] is
-/// the catalog provider it belongs to (or, with a null [provider], the catalog
-/// provider whose local provider is created when the server is saved). Both
-/// null is the explicit "no provider" choice.
-class ProviderSelection {
-  const ProviderSelection(this.provider, {this.catalog});
-  final ProviderRecord? provider;
-  final CatalogProviderRef? catalog;
-
-  bool get isPending => provider == null && catalog != null;
-  String? get name => provider?.name ?? catalog?.name;
-  CatalogProviderRef? get pendingRef => isPending ? catalog : null;
-}
-
-String serverProviderLabel(
-  BuildContext context,
-  LedgerController ledger,
-  ServerRecord server,
-) => ledger.providerFor(server)?.name ?? context.l10n.providerUiUnspecified;
-
-String serverProviderMark(LedgerController ledger, ServerRecord server) {
-  final name = ledger.providerFor(server)?.name;
-  return name == null || name.isEmpty
-      ? 'VPS'
-      : name.runes.take(2).map(String.fromCharCode).join().toUpperCase();
-}
-
 /// Shared status for all provider routes. A successful write followed by a
 /// failed reload stays committed, and cannot be submitted a second time.
 class ProviderNotices extends StatelessWidget {

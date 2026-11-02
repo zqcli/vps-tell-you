@@ -24,6 +24,7 @@ import 'package:vps_tell_you/security/security_controller.dart';
 import 'package:vps_tell_you/security/security_models.dart';
 import 'package:vps_tell_you/security/credential_form.dart';
 import 'package:vps_tell_you/security/credential_pages.dart';
+import 'package:vps_tell_you/security/security_route_observer.dart';
 import 'package:vps_tell_you/security/security_pages.dart';
 import 'package:vps_tell_you/security/security_widgets.dart';
 import 'package:vps_tell_you/security/ssh_configuration_page.dart';

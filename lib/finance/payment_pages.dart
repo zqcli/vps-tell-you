@@ -436,6 +436,39 @@ class _PaymentListPageState extends State<PaymentListPage> {
   bool showVoided = false;
   late String? serverId = widget.serverId;
 
+  (Object, Object, Object, LedgerDate, String?, String?, int?, bool)? _projectionKey;
+  late ({List<PaymentRecord> rows, int validCount, Set<String> archivedIds,
+      FinanceTotal total}) _projection;
+
+  void _project(LedgerController c) {
+    final today = c.today;
+    final key = (c.payments, c.records, c.fx, today, serverId,
+        widget.groupId, period.days, showVoided);
+    if (key == _projectionKey) return;
+    final groupOf = widget.groupId == null
+        ? null
+        : {for (final s in c.records) s.id: s.groupId ?? ''};
+    final rows = c.payments.where((p) {
+      if (!showVoided && p.voided) return false;
+      if (serverId != null && p.serverId != serverId) return false;
+      if (groupOf != null &&
+          (p.serverId == null ||
+              (groupOf[p.serverId!] ?? '') != widget.groupId)) return false;
+      final days = period.days;
+      if (days == null) return true;
+      final age = p.paidDate.daysUntil(today);
+      return age >= 0 && age < days;
+    }).toList()..sort((a, b) => b.paidDate.compareTo(a.paidDate));
+    final counted = rows.where((p) => !p.voided).toList();
+    _projection = (
+      rows: rows,
+      validCount: counted.length,
+      archivedIds: {for (final s in c.records) if (s.archived) s.id},
+      total: aggregateAmounts(counted.map((p) => FinanceAmount.money(p.amount)), c.fx),
+    );
+    _projectionKey = key;
+  }
+
   Future<void> chooseTarget() async {
     final c = widget.controller;
     final picked = await showAppPicker<String>(
@@ -471,37 +504,19 @@ class _PaymentListPageState extends State<PaymentListPage> {
       final c = widget.controller;
       final l10n = context.l10n;
       final p = context.palette;
-      final groupOf = widget.groupId == null
-          ? null
-          : {for (final s in c.records) s.id: s.groupId ?? ''};
-      final rows = c.payments.where((p) {
-        if (!showVoided && p.voided) return false;
-        if (serverId != null && p.serverId != serverId) return false;
-        if (groupOf != null &&
-            (p.serverId == null ||
-                (groupOf[p.serverId!] ?? '') != widget.groupId)) {
-          return false;
-        }
-        final days = period.days;
-        if (days == null) return true;
-        final age = p.paidDate.daysUntil(c.today);
-        return age >= 0 && age < days;
-      }).toList()..sort((a, b) => b.paidDate.compareTo(a.paidDate));
-      final counted = rows.where((p) => !p.voided).toList();
-      final archivedIds = {
-        for (final s in c.records)
-          if (s.archived) s.id,
-      };
-      final total = aggregateAmounts(
-        counted.map((p) => FinanceAmount.money(p.amount)),
-        c.fx,
-      );
+      _project(c);
+      final rows = _projection.rows;
+      final archivedIds = _projection.archivedIds;
+      final total = _projection.total;
       final target = serverId == null ? null : c.byId(serverId!);
       final secondary = TextStyle(fontSize: 13, height: 1.4, color: p.text2);
       return AppScaffold(
         largeTitle: false,
         title: l10n.financePayments,
-        children: [
+        slivers: [
+          SliverToBoxAdapter(child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
           if (c.refreshFailed)
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
@@ -553,7 +568,7 @@ class _PaymentListPageState extends State<PaymentListPage> {
                   c.today.addDays(1 - period.days!).toString(),
                   c.today.toString(),
                 ),
-              l10n.financeValidPaymentsNote(counted.length),
+              l10n.financeValidPaymentsNote(_projection.validCount),
               if (widget.groupId != null)
                 l10n.financePaymentGroupNote(
                   c.groupName(widget.groupId, l10n: l10n),
@@ -563,7 +578,7 @@ class _PaymentListPageState extends State<PaymentListPage> {
               AppRow.custom(
                 child: Padding(
                   padding: const EdgeInsets.symmetric(vertical: 14),
-                  child: counted.isEmpty
+                  child: _projection.validCount == 0
                       ? Text(
                           l10n.financeNoPayments,
                           style: TextStyle(fontSize: 15, color: p.text2),
@@ -573,12 +588,21 @@ class _PaymentListPageState extends State<PaymentListPage> {
               ),
             ],
           ),
-          AppSection(
-            header: l10n.financePaymentDetails,
-            children: [
-              if (rows.isEmpty) AppRow(title: l10n.financeNoPaymentsInRange),
-              for (final pay in rows)
-                AppRow.custom(
+
+            ],
+          )),
+          AppLazySections(sections: [
+            AppListSection(
+              header: l10n.financePaymentDetails,
+              topSpacing: 22,
+              count: rows.isEmpty ? 1 : rows.length,
+              itemKey: (i) => rows.isEmpty
+                  ? const ValueKey('payment-empty')
+                  : ValueKey('payment-row-${rows[i].id}'),
+              itemBuilder: (context, i) {
+                if (rows.isEmpty) return AppRow(title: l10n.financeNoPaymentsInRange);
+                final pay = rows[i];
+                return AppRow.custom(
                   key: ValueKey('payment-${pay.id}'),
                   onTap: () => Navigator.push<void>(
                     context,
@@ -650,9 +674,10 @@ class _PaymentListPageState extends State<PaymentListPage> {
                       ],
                     ),
                   ),
-                ),
-            ],
-          ),
+                );
+              },
+            ),
+          ]),
         ],
       );
     },

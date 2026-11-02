@@ -439,9 +439,7 @@ class SecurityController extends ChangeNotifier {
 
     try {
       guard();
-      final record = (await store.proxies())
-          .where((p) => p.id == id)
-          .firstOrNull;
+      final record = await store.proxyById(id);
       guard();
       if (record == null) {
         throw SecurityFailure(LocalizedText((l10n) => l10n.r13ProxyMissing));
@@ -455,13 +453,9 @@ class SecurityController extends ChangeNotifier {
             LocalizedText((l10n) => l10n.r13ProxyPasswordMissing),
           );
         }
-        final current = (await store.proxies())
-            .where((p) => p.id == id)
-            .firstOrNull;
+        final current = await store.isProxyCurrent(record);
         guard();
-        if (current == null ||
-            current.revision != record.revision ||
-            current.secretRef != record.secretRef) {
+        if (!current) {
           throw SecurityFailure(LocalizedText((l10n) => l10n.r13ProxyChanged));
         }
       }
@@ -503,13 +497,9 @@ class SecurityController extends ChangeNotifier {
       return false;
     }
     return _authenticatedReveal(l10n, (stale) async {
-      final current = (await store.proxies())
-          .where((p) => p.id == record.id)
-          .firstOrNull;
+      final current = await store.isProxyCurrent(record);
       if (stale()) return false;
-      if (current == null ||
-          current.revision != record.revision ||
-          current.secretRef != record.secretRef) {
+      if (!current) {
         throw SecurityFailure(LocalizedText((l10n) => l10n.r13ProxyChanged));
       }
       final password = await _readProxyPassword(record);
@@ -579,9 +569,8 @@ class SecurityController extends ChangeNotifier {
 
     try {
       guard();
-      final records = await store.credentials();
+      final record = await store.credentialById(id);
       guard();
-      final record = records.where((c) => c.id == id).firstOrNull;
       if (record == null) {
         throw SecurityFailure(
           LocalizedText((l10n) => l10n.securityChooseAvailableCredential),
@@ -630,16 +619,8 @@ class SecurityController extends ChangeNotifier {
 
   Future<bool> isCredentialCurrent(CredentialMetadata record) async {
     if (_disposed || needsReload) return false;
-    final current = await store.credentials();
-    return !_disposed &&
-        !needsReload &&
-        current.any(
-          (c) =>
-              c.id == record.id &&
-              c.revision == record.revision &&
-              c.secretRef == record.secretRef &&
-              c.kind == record.kind,
-        );
+    final current = await store.isCredentialCurrent(record);
+    return !_disposed && !needsReload && current;
   }
 
   /// Shows a credential's secret for [revealDuration] after device
@@ -650,16 +631,10 @@ class SecurityController extends ChangeNotifier {
     AppLocalizations? l10n,
   }) async {
     if (busy || needsReload || _disposed) return false;
-    bool sameRecord(List<CredentialMetadata> all) => all.any(
-      (c) =>
-          c.id == record.id &&
-          c.revision == record.revision &&
-          c.secretRef == record.secretRef,
-    );
     return _authenticatedReveal(l10n, (stale) async {
-      final current = await store.credentials();
+      final current = await store.isCredentialCurrent(record);
       if (stale()) return false;
-      if (!sameRecord(current)) {
+      if (!current) {
         throw SecurityFailure(
           LocalizedText((l10n) => l10n.securityCredentialChanged),
         );
@@ -682,9 +657,9 @@ class SecurityController extends ChangeNotifier {
           LocalizedText((l10n) => l10n.securityStoredSecretUnreadable),
         );
       }
-      final latest = await store.credentials();
+      final latest = await store.isCredentialCurrent(record);
       if (stale()) return false;
-      if (!sameRecord(latest)) {
+      if (!latest) {
         throw SecurityFailure(
           LocalizedText((l10n) => l10n.securityCredentialChanged),
         );

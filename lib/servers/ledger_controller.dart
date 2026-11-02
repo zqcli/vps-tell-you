@@ -16,13 +16,8 @@ import '../providers/provider_record.dart';
 import '../security/security_controller.dart';
 import '../settings/reminder_rule.dart';
 import '../settings/reminder_scheduler.dart';
+import 'server_list_state.dart';
 import 'server_record.dart';
-
-enum ServerFilter { all, favorites, pending }
-
-enum DueFilter { all, overdue, next30, unknown }
-
-enum ServerSort { favorites, due, name, updated }
 
 class LedgerController extends ChangeNotifier {
   LedgerController(
@@ -77,6 +72,7 @@ class LedgerController extends ChangeNotifier {
   LocalePreference languagePreference = LocalePreference.chinese;
   bool savingLanguage = false;
   int _languageRevision = 0;
+  int _themeRevision = 0;
   bool _disposed = false;
 
   /// A language change is a preference-only write. Do not call mutate/refresh:
@@ -112,6 +108,7 @@ class LedgerController extends ChangeNotifier {
     directory.removeListener(notifyListeners);
     reminders.dispose();
     security.dispose();
+    listState.dispose();
     super.dispose();
   }
 
@@ -175,7 +172,7 @@ class LedgerController extends ChangeNotifier {
   );
 
   /// Repairs the term left behind by a deleted payment (see
-  /// [LedgerStore.rollbackOrphanTerm]); returns the restored due date.
+  /// [LedgerFinance.rollbackOrphanTerm]); returns the restored due date.
   Future<LedgerDate> rollbackOrphanTerm(ServerRecord server) => mutate(
     () => store.rollbackOrphanTerm(
       serverId: server.id,
@@ -183,12 +180,7 @@ class LedgerController extends ChangeNotifier {
     ),
   );
 
-  String search = '';
-  ServerFilter filter = ServerFilter.all;
-  DueFilter dueFilter = DueFilter.all;
-  ServerSort sort = ServerSort.favorites;
-  // null = all groups; empty string = ungrouped.
-  String? groupFilter;
+  final listState = ServerListState();
   bool busy = false;
   bool refreshFailed = false;
   bool get canMutate => !busy && !refreshFailed;
@@ -255,12 +247,20 @@ class LedgerController extends ChangeNotifier {
   /// order. Cached until the ledger, a filter or the date changes, so the many
   /// reads of one frame (and filter-sheet previews) filter and sort once.
   List<ServerRecord> get visible {
-    final key = (_index, search, filter, dueFilter, sort, groupFilter, today);
+    final key = (
+      _index,
+      listState.search,
+      listState.filter,
+      listState.dueFilter,
+      listState.sort,
+      listState.groupFilter,
+      today,
+    );
     if (key != _visibleKey) {
       _visible = _filtered(
-        filter: filter,
-        dueFilter: dueFilter,
-        groupFilter: groupFilter,
+        filter: listState.filter,
+        dueFilter: listState.dueFilter,
+        groupFilter: listState.groupFilter,
       );
       _visibleKey = key;
     }
@@ -281,7 +281,7 @@ class LedgerController extends ChangeNotifier {
     required DueFilter dueFilter,
     required String? groupFilter,
   }) {
-    final query = search.trim().toLowerCase();
+    final query = listState.search.trim().toLowerCase();
     // A pasted IPv6 in any spelling also finds its canonical stored form.
     final canonicalQuery = NetAddress.tryParse(query)?.isIpv6 == true
         ? NetAddress.tryParse(query)!.host
@@ -311,7 +311,7 @@ class LedgerController extends ChangeNotifier {
       }
     }
     result.sort((a, b) {
-      final result = switch (sort) {
+      final result = switch (listState.sort) {
         ServerSort.favorites => (b.favorite ? 1 : 0).compareTo(
           a.favorite ? 1 : 0,
         ),
@@ -328,6 +328,7 @@ class LedgerController extends ChangeNotifier {
 
   Future<void> refresh() async {
     final languageRevision = _languageRevision;
+    final themeRevision = _themeRevision;
     // Publish the complete loaded ledger only after every read succeeds.
     final (
       loadedRecords,
@@ -357,7 +358,7 @@ class LedgerController extends ChangeNotifier {
     payments = List.unmodifiable(loadedPayments);
     fx = loadedFx;
     reminderRules = List.unmodifiable(loadedRules);
-    themeMode = loadedTheme;
+    if (themeRevision == _themeRevision) themeMode = loadedTheme;
     // A slower pre-existing reload must not overwrite a newer preference-only
     // write or publish a pre-commit read while that write is pending.
     if (languageRevision == _languageRevision && !savingLanguage) {
@@ -366,18 +367,75 @@ class LedgerController extends ChangeNotifier {
     }
     records = loadedRecords;
     groups = loadedGroups;
-    if (groupFilter != null &&
-        groupFilter != '' &&
-        !groups.any((g) => g.id == groupFilter)) {
-      groupFilter = null;
-    }
+    _clearMissingGroup();
     notifyListeners();
     // Native permission/scheduling errors must never turn a committed ledger
     // mutation into a failed save or block access to local data.
     unawaited(reminders.reconcile());
   }
 
-  Future<T> mutate<T>(Future<T> Function() action) async {
+  Future<void> setFavorite(ServerRecord record, bool favorite) => _mutate(
+    () => store.setFavorite(record, favorite),
+    () async {
+      records = await store.servers();
+    },
+  );
+
+  Future<void> setThemeMode(String mode) => _mutate(
+    () => store.saveThemeMode(mode),
+    () async {
+      _themeRevision++;
+      themeMode = mode;
+    },
+  );
+
+  Future<void> saveFx(FxSettings settings) => _mutate(
+    () => store.saveFx(settings),
+    () async {
+      fx = await store.fxSettings();
+    },
+  );
+
+  Future<void> saveGroup(String name, {String? id}) =>
+      _mutate(() => store.saveGroup(name, id: id), _reloadGroups);
+
+  Future<void> moveGroup(String id, int delta) =>
+      _mutate(() => store.moveGroup(id, delta), _reloadGroups);
+
+  Future<void> deleteGroup(String id) => _mutate(
+    () => store.deleteGroup(id),
+    () async {
+      final (loadedRecords, loadedGroups) = await (
+        store.servers(),
+        store.groups(),
+      ).wait;
+      records = loadedRecords;
+      groups = loadedGroups;
+      _clearMissingGroup();
+    },
+  );
+
+  Future<void> _reloadGroups() async {
+    groups = await store.groups();
+    _clearMissingGroup();
+  }
+
+  void _clearMissingGroup() {
+    final selected = listState.groupFilter;
+    if (selected != null &&
+        selected != '' &&
+        !groups.any((g) => g.id == selected)) {
+      listState.setGroup(null);
+    }
+  }
+
+  /// Cross-table mutations publish a complete ledger and reconcile reminders.
+  Future<T> mutate<T>(Future<T> Function() action) => _mutate(action, refresh);
+
+  Future<T> _mutate<T>(
+    Future<T> Function() action,
+    Future<void> Function() reload,
+  ) async {
     if (busy) {
       throw LocalizedStateError((l10n) => l10n.serverWaitForOperation);
     }
@@ -389,7 +447,7 @@ class LedgerController extends ChangeNotifier {
     try {
       final result = await action();
       try {
-        await refresh();
+        await reload();
       } catch (_) {
         // The write has committed. Return its result, never invite a duplicate
         // submission; the UI exposes a retry notice instead.
@@ -400,40 +458,6 @@ class LedgerController extends ChangeNotifier {
       busy = false;
       notifyListeners();
     }
-  }
-
-  void updateFilters({
-    String? query,
-    ServerFilter? category,
-    DueFilter? due,
-    ServerSort? order,
-  }) {
-    if (query != null) {
-      search = query;
-    }
-    if (category != null) {
-      filter = category;
-    }
-    if (due != null) {
-      dueFilter = due;
-    }
-    if (order != null) {
-      sort = order;
-    }
-    notifyListeners();
-  }
-
-  void setGroup(String? id) {
-    groupFilter = id;
-    notifyListeners();
-  }
-
-  void resetFilters() {
-    search = '';
-    filter = ServerFilter.all;
-    dueFilter = DueFilter.all;
-    groupFilter = null;
-    notifyListeners();
   }
 }
 

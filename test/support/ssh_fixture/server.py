@@ -155,6 +155,18 @@ class Server(asyncssh.SSHServer):
         return Session(self)
 
 
+class SftpServer(asyncssh.SFTPServer):
+    def __init__(self, channel, chroot, reads):
+        super().__init__(channel, chroot=chroot)
+        self.reads = reads
+
+    async def read(self, file_obj, offset, size):
+        if not self.reads.is_set():
+            event("sftp_read_waiting")
+            await self.reads.wait()
+        return super().read(file_obj, offset, size)
+
+
 async def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--port", type=int, default=0)
@@ -165,6 +177,7 @@ async def main():
     parser.add_argument("--delay-auth", type=float, default=0)
     parser.add_argument("--login-timeout", type=float, default=10)
     parser.add_argument("--sftp-root", default=None)
+    parser.add_argument("--pause-sftp-reads", action="store_true")
     args = parser.parse_args()
     fixtures = Path(__file__).resolve().parents[2] / "fixtures" / "security"
     host_key = asyncssh.read_private_key(fixtures / args.host_key)
@@ -172,13 +185,16 @@ async def main():
              "delay_auth": args.delay_auth, "sftp_factory": None,
              "allowed_key": asyncssh.read_public_key(
                  fixtures / "ed25519_encrypted.fixture.pub")}
+    sftp_reads = asyncio.Event()
+    if not args.pause_sftp_reads:
+        sftp_reads.set()
     if args.sftp_root:
         root = Path(args.sftp_root).resolve()
         if not root.is_dir():
             raise SystemExit("--sftp-root must be an existing directory")
         chroot = str(root).encode("utf-8")
-        state["sftp_factory"] = lambda chan: asyncssh.SFTPServer(
-            chan, chroot=chroot)
+        state["sftp_factory"] = lambda chan: SftpServer(
+            chan, chroot, sftp_reads)
     listener = await asyncssh.create_server(
         lambda: Server(state), args.bind, args.port,
         server_host_keys=[host_key], encoding=None, line_editor=False,
@@ -193,6 +209,8 @@ async def main():
             command = json.loads(line)
             if command["action"] == "stop":
                 break
+            if command["action"] == "resume_sftp_reads":
+                sftp_reads.set()
             if command["action"] == "disconnect":
                 for connection in list(state["connections"]):
                     connection.close()
@@ -218,6 +236,7 @@ async def main():
                     await session.channel.wait_closed()
                     session.owner.connection.close()
     finally:
+        sftp_reads.set()
         listener.close()
         await listener.wait_closed()
         for connection in list(state["connections"]):

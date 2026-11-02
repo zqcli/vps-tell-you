@@ -10,30 +10,6 @@ import 'provider_lists.dart';
 import 'provider_pages.dart';
 import 'provider_record.dart';
 
-/// What the server form's provider picker returns. A null route result means
-/// cancelled; [none] is the explicit "no provider".
-class ProviderChoice {
-  const ProviderChoice.none() : local = null, catalog = null, draft = null;
-  const ProviderChoice.local(ProviderRecord this.local)
-    : catalog = null,
-      draft = null;
-  const ProviderChoice.catalog(CatalogProviderRef this.catalog)
-    : local = null,
-      draft = null;
-  const ProviderChoice.draft(ProviderRecord this.draft)
-    : local = null,
-      catalog = null;
-
-  /// An existing local provider.
-  final ProviderRecord? local;
-
-  /// A directory provider that gets its local provider when the server is saved.
-  final CatalogProviderRef? catalog;
-
-  /// A new user provider that is created when the server is saved.
-  final ProviderRecord? draft;
-}
-
 /// Full-height provider picker for the server form: search on top, then None,
 /// providers in use, the user's others, the directory and "New Provider…".
 /// Nothing is written: new and catalog providers are created on save.

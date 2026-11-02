@@ -85,7 +85,7 @@ void main() {
 
   test('unrelated notifications reuse the cache; new ledger data does not', () {
     final first = FinanceScope.of(ledger, null);
-    ledger.updateFilters(query: 'abc');
+    ledger.listState.updateFilters(query: 'abc');
     expect(FinanceScope.of(ledger, null), same(first));
     expect(FinanceScope.of(ledger, 'g'), isNot(same(first)));
     ledger.payments = [...ledger.payments];

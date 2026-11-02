@@ -79,7 +79,7 @@ Future<void> _addFinanceSchema(DatabaseExecutor db) async {
         whereArgs: [record.id],
       );
     }
-    await LedgerStore._replaceInitialPeriod(db, record);
+    await _replaceInitialPeriod(db, record);
   }
 }
 

@@ -231,7 +231,7 @@ class PaymentDetailPage extends StatelessWidget {
 
 /// Page-sheet form editing the bookkeeping of a payment. It never changes
 /// service periods, the due date or the cycle count; saving is guarded by the
-/// row the form was opened with ([LedgerStore.editPayment]).
+/// row the form was opened with (`LedgerFinance.editPayment`).
 class PaymentEditForm extends StatefulWidget {
   const PaymentEditForm({
     super.key,

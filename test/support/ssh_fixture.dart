@@ -37,6 +37,9 @@ class SshFixture {
     /// Enables the SFTP subsystem, confined to this existing directory.
     String? sftpRoot,
 
+    /// Holds SFTP read replies until [resumeSftpReads] is called.
+    bool pauseSftpReads = false,
+
     /// `127.0.0.1` or `::1` (the fixture refuses any other address).
     String bindAddress = '127.0.0.1',
   }) async {
@@ -49,6 +52,7 @@ class SshFixture {
       '--delay-auth',
       '${delayAuth.inMilliseconds / 1000}',
       if (sftpRoot != null) ...['--sftp-root', sftpRoot],
+      if (pauseSftpReads) '--pause-sftp-reads',
       '--bind',
       bindAddress,
     ]);
@@ -126,6 +130,11 @@ class SshFixture {
 
   Future<void> abortClients() async {
     process.stdin.writeln(jsonEncode({'action': 'abort'}));
+    await process.stdin.flush();
+  }
+
+  Future<void> resumeSftpReads() async {
+    process.stdin.writeln(jsonEncode({'action': 'resume_sftp_reads'}));
     await process.stdin.flush();
   }
 

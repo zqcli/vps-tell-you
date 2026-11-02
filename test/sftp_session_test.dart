@@ -675,6 +675,39 @@ void main() {
   });
 
   group('transfers', () {
+    test('cancel wakes a download waiting for its first read reply', () async {
+      inRoot('waiting.bin').writeAsBytesSync(pattern(1024 * 1024));
+      final remote = await SshFixture.start(
+        sftpRoot: root.path,
+        pauseSftpReads: true,
+      );
+      fixtures.add(remote);
+      final session = await connect(remote);
+      final cancel = SftpCancelToken();
+      final target = local('cancelled/waiting.bin');
+      var progress = 0;
+      final download = session.download(
+        '/waiting.bin',
+        target,
+        cancel: cancel,
+        onProgress: (_, _) => progress++,
+      );
+      final stopped = expectLater(download, _fails(SftpErrorKind.cancelled));
+      try {
+        await remote.waitFor('sftp_read_waiting');
+        cancel.cancel();
+        await stopped.timeout(const Duration(seconds: 3));
+        expect(progress, 0);
+        expect(target.parent.listSync(), isEmpty);
+      } finally {
+        await remote.resumeSftpReads();
+      }
+
+      // Late read replies cannot resume writes to the removed partial file.
+      expect((await session.stat('/waiting.bin')).size, 1024 * 1024);
+      expect(target.parent.listSync(), isEmpty);
+    });
+
     test('upload and download round trip with progress', () async {
       final data = pattern(1024 * 1024 + 123);
       final source = local('source.bin')..writeAsBytesSync(data);

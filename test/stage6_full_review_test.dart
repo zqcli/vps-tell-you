@@ -213,7 +213,7 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.byType(ServerDetail), findsNothing);
       controller.busy = false;
-      controller.updateFilters(query: '');
+      await controller.refresh();
       await tester.pumpAndSettle();
       expect(
         tester.widget<ServerDetail>(find.byType(ServerDetail)).id,
@@ -225,7 +225,7 @@ void main() {
       controller.busy = true;
       await notificationTap('fixture');
       controller.busy = false;
-      controller.updateFilters(query: '');
+      await controller.refresh();
       // A newer native tap arrives after writes finish but before the queued
       // frame consumes its old target. The old target must not overtake it.
       await notificationTap('second');
@@ -243,7 +243,7 @@ void main() {
         'second',
       );
       controller.refreshFailed = false;
-      controller.updateFilters(query: '');
+      await controller.refresh();
       await tester.pumpAndSettle();
       expect(
         tester.widget<ServerDetail>(find.byType(ServerDetail)).id,

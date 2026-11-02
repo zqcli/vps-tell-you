@@ -130,7 +130,8 @@ class _ThemeSample extends StatelessWidget {
         width: 350,
         child: Padding(
           padding: const EdgeInsets.all(16),
-          child: LedgerCard(
+          child: AppCard(
+            margin: EdgeInsets.zero,
             child: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -144,9 +145,9 @@ class _ThemeSample extends StatelessWidget {
                   spacing: 8,
                   runSpacing: 8,
                   children: [
-                    LedgerBadge('Cached'),
-                    LedgerBadge('Due soon', warning: true),
-                    LedgerBadge('Overdue', danger: true),
+                    StatusPill('Cached'),
+                    StatusPill('Due soon', tone: AppTone.amber),
+                    StatusPill('Overdue', tone: AppTone.red),
                   ],
                 ),
                 const TextField(
@@ -234,7 +235,7 @@ void main() {
       },
     );
 
-    testWidgets('$mode representative component golden and paired roles', (
+    testWidgets('$mode production component palette and paired roles', (
       tester,
     ) async {
       await _mount(
@@ -245,23 +246,25 @@ void main() {
       expect(tester.takeException(), isNull);
       final card = find
           .descendant(
-            of: find.byType(LedgerCard),
+            of: find.byType(AppCard),
             matching: find.byType(Material),
           )
           .first;
-      final colors = appTheme(brightness: brightness).colorScheme;
-      expect(tester.widget<Material>(card).color, colors.surface);
-      expect(
-        tester.widget<Text>(find.text('Overdue')).style!.color,
-        colors.onErrorContainer,
-      );
-      // The goldens are recorded on macOS; Linux CI anti-aliases blurs and
-      // shadows differently, so pixels are compared only where they were
-      // recorded. The colour roles above are checked everywhere.
-      if (Platform.isMacOS) {
-        await expectLater(
-          find.byKey(const ValueKey('theme-sample')),
-          matchesGoldenFile('goldens/mobile_theme_$mode.png'),
+      final palette = appTheme(brightness: brightness).extension<AppPalette>()!;
+      expect(tester.widget<Material>(card).color, palette.surface);
+      for (final entry in {
+        'Cached': AppTone.neutral,
+        'Due soon': AppTone.amber,
+        'Overdue': AppTone.red,
+      }.entries) {
+        final (foreground, background) = palette.tone(entry.value);
+        expect(
+          tester.widget<Text>(find.text(entry.key)).style!.color,
+          foreground,
+        );
+        expect(
+          _contrast(foreground, Color.alphaBlend(background, palette.surface)),
+          greaterThanOrEqualTo(4.5),
         );
       }
     });
