@@ -40,20 +40,21 @@ void main() {
       // These values are legacy input constraints or saved/demo data. They must
       // never be rewritten when the interface language changes.
       const allowed = {
-        '未分组',
-        '演示',
-        '搬瓦工',
-        '香港',
-        '生产主站',
-        '美国',
-        'API 服务',
-        '日本',
-        '开发环境',
-        '自定义厂商',
-        '新加坡',
-        '备用',
-        '仅演示：地址使用文档保留地址，不连接真实服务器。',
-        '服务商待填写',
+        'lib/data/ledger_store.dart': {'未分组', '服务商待填写'},
+        'lib/data/ledger_servers.dart': {
+          '演示',
+          '搬瓦工',
+          '香港',
+          '生产主站',
+          '美国',
+          'API 服务',
+          '日本',
+          '开发环境',
+          '自定义厂商',
+          '新加坡',
+          '备用',
+          '仅演示：地址使用文档保留地址，不连接真实服务器。',
+        },
       };
       final literal = RegExp(r"'([^'\n]*[\u3400-\u9fff][^'\n]*)'");
       for (final file in Directory(
@@ -64,12 +65,12 @@ void main() {
         }
         for (final match in literal.allMatches(file.readAsStringSync())) {
           expect(
-            file.path,
-            'lib/data/ledger_store.dart',
+            allowed,
+            contains(file.path),
             reason: 'Hardcoded UI text in ${file.path}',
           );
           expect(
-            allowed,
+            allowed[file.path],
             contains(match.group(1)),
             reason: 'Unexpected literal in ${file.path}',
           );
