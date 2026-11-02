@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../core/net_address.dart';
 import '../core/ui/ui.dart';
+import '../data/ledger_store.dart';
 import '../servers/ledger_controller.dart';
 import 'host_trust.dart';
 import 'security_models.dart';

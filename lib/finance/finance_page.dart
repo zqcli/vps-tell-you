@@ -305,8 +305,9 @@ class _FinancePageState extends State<FinancePage> {
               ? const ValueKey('upcoming-empty')
               : ValueKey('upcoming-${events[i].server.id}-${events[i].date}'),
           itemBuilder: (context, i) {
-            if (events.isEmpty)
+            if (events.isEmpty) {
               return AppRow(title: l10n.financeNoKnownRenewals);
+            }
             final e = events[i];
             return FinanceRenewalRow(
               event: e,

@@ -1,4 +1,23 @@
-# 阶段 1–4 验收
+# 验收记录
+
+## 0.7.0 工程整理验收范围
+
+日期：2026-11-02 UTC。分支：`refactor/v0.7.0-engineering`。版本：`0.7.0+7`。SDK：Flutter 3.47.6 / Dart 3.13.5。
+
+本轮保留功能、UI 和 UX，schema 14 与备份格式不变；下面列出本次新增或调整的回归范围。运行结果见 [PR #1 最新提交的 CI 检查](https://github.com/zqcli/vps-tell-you/pull/1/checks)，不沿用下面历史阶段的通过次数。
+
+- **局部更新**：搜索/筛选只通知列表状态；收藏、主题、汇率、分组不触发无关的提醒对账；已提交写入遇到重读失败仍保留成功结果、提示与后续写入保护。
+- **数据安全**：备份批量恢复失败整体回滚；验证后的快照保持不可变，保留规范化后的大小限制；凭证/代理精确查询仍检查 revision、secret reference 与凭证种类，包含 null secret reference 和取消后迟到读取。
+- **大列表**：120 条付款、财务明细、续期和归档仅构建屏幕附近行，末行可滚动抵达；付款缓存按日期、汇率、付款和服务器归属失效，语言更新不重复计算；1×/2× 字体下标题、行、页脚几何与原 AppSection 一致，重排行保留状态。
+- **传输生命周期**：真实 SSH 回环暂停远端 SFTP READ 回复时，取消仍结束本地操作并删除 partial；恢复迟到回复不会继续落盘。未知大小传输保持进度节流，同目录上传刷新合并，并覆盖导航成功和导航失败后仍显示原目录两种情况。
+- **编辑器**：选区移动不重建外层编辑区；行起点索引覆盖 UTF-16 offset、CJK/emoji、CRLF、尾部空行与 IME composing。
+- **既有回归**：继续执行全量测试，包括历史 schema/备份兼容、金额和日期、表单草稿、原生边界替身、SSH/SFTP 协议及真实页面布局。删除的两张 golden 仅属于已移除且无生产调用的旧 Card/Badge 合成 fixture；生产组件配色与对比度测试保留。
+
+CI 命令为 `python tool/build_catalog.py --check`、`flutter pub get --enforce-lockfile`、`dart format lib test` 后检查无差异、`flutter analyze`、`flutter test`（设置 `VPS_SSH_FIXTURE_PYTHON=python`）、`flutter build linux --release`。
+
+本轮不包含 iOS/Android 真机安装、签名或性能测量；自动化验证的构建数量、通知数量和取消行为不等于手机帧率、内存峰值或耗电实测。
+
+## 阶段 1–4 历史验收
 
 日期：2026-10-06 UTC。SDK：Flutter 3.47.6 / Dart 3.13.5。
 

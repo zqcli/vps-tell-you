@@ -6,6 +6,7 @@ import '../l10n/localized_message.dart';
 import '../core/app_theme.dart' show showFailure;
 import '../core/ui/ui.dart';
 import '../core/value_types.dart';
+import '../data/ledger_store.dart';
 import '../servers/ledger_controller.dart';
 import '../servers/refresh_failure_notice.dart';
 import '../servers/server_record.dart';
@@ -467,8 +468,9 @@ class _PaymentListPageState extends State<PaymentListPage> {
       if (serverId != null && p.serverId != serverId) return false;
       if (groupOf != null &&
           (p.serverId == null ||
-              (groupOf[p.serverId!] ?? '') != widget.groupId))
+              (groupOf[p.serverId!] ?? '') != widget.groupId)) {
         return false;
+      }
       final days = period.days;
       if (days == null) return true;
       final age = p.paidDate.daysUntil(today);
@@ -624,8 +626,9 @@ class _PaymentListPageState extends State<PaymentListPage> {
                     ? const ValueKey('payment-empty')
                     : ValueKey('payment-row-${rows[i].id}'),
                 itemBuilder: (context, i) {
-                  if (rows.isEmpty)
+                  if (rows.isEmpty) {
                     return AppRow(title: l10n.financeNoPaymentsInRange);
+                  }
                   final pay = rows[i];
                   return AppRow.custom(
                     key: ValueKey('payment-${pay.id}'),
