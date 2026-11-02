@@ -500,7 +500,12 @@ const double _kGutterPadLeft = 8, _kGutterPadRight = 8;
 
 /// Line count and widest line (in monospace cells) of a text.
 class _TextShape {
-  const _TextShape(this.lineStarts, this.cells, this.widestStart, this.widestEnd);
+  const _TextShape(
+    this.lineStarts,
+    this.cells,
+    this.widestStart,
+    this.widestEnd,
+  );
 
   final List<int> lineStarts;
   final int cells;

@@ -220,8 +220,10 @@ class _ServerListState extends State<ServerList> {
     final visible = c.visible;
     final today = c.today;
     final cached = _summary;
-    final summary = cached != null &&
-            identical(cached.records, all) && cached.today == today
+    final summary =
+        cached != null &&
+            identical(cached.records, all) &&
+            cached.today == today
         ? cached
         : _summary = _ServerSummary(all, today);
     final groups = c.groups.where((g) => summary.groupIds.contains(g.id));
@@ -296,20 +298,25 @@ class _ServerListState extends State<ServerList> {
           AppChip(
             label: l10n.serverAll,
             count: all.length,
-            selected: c.listState.filter == ServerFilter.all && c.listState.groupFilter == null,
+            selected:
+                c.listState.filter == ServerFilter.all &&
+                c.listState.groupFilter == null,
             onTap: () => selectCategory(ServerFilter.all),
           ),
           AppChip(
             label: l10n.serverFavorites,
             count: summary.favorites,
             selected:
-                c.listState.filter == ServerFilter.favorites && c.listState.groupFilter == null,
+                c.listState.filter == ServerFilter.favorites &&
+                c.listState.groupFilter == null,
             onTap: () => selectCategory(ServerFilter.favorites),
           ),
           AppChip(
             label: l10n.expiryChecks,
             count: summary.pending,
-            selected: c.listState.filter == ServerFilter.pending && c.listState.groupFilter == null,
+            selected:
+                c.listState.filter == ServerFilter.pending &&
+                c.listState.groupFilter == null,
             onTap: () => selectCategory(ServerFilter.pending),
           ),
           for (final g in groups)
@@ -338,13 +345,15 @@ class _ServerListState extends State<ServerList> {
                   label: l10n.serverExpired,
                   value: '${summary.overdue}',
                   valueColor: context.palette.red,
-                  onTap: () => c.listState.updateFilters(category: ServerFilter.pending),
+                  onTap: () =>
+                      c.listState.updateFilters(category: ServerFilter.pending),
                 ),
                 AppMetric(
                   label: l10n.uiServersDueSoon,
                   value: '${summary.pending - summary.overdue}',
                   valueColor: context.palette.amber,
-                  onTap: () => c.listState.updateFilters(category: ServerFilter.pending),
+                  onTap: () =>
+                      c.listState.updateFilters(category: ServerFilter.pending),
                 ),
                 AppMetric(
                   label: l10n.financeMonthlyReference,

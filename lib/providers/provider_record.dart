@@ -53,7 +53,6 @@ class ProviderSelection {
   CatalogProviderRef? get pendingRef => isPending ? catalog : null;
 }
 
-
 /// What the server form's provider picker returns. A null route result means
 /// cancelled; [none] is the explicit "no provider".
 class ProviderChoice {

@@ -23,7 +23,8 @@ import 'server_resources.dart';
         ? '${l10n.serverSpecifications}: $legacy'
         : '$notes\n${l10n.serverSpecifications}: $legacy';
   }
-  final host = legacyHost != null &&
+  final host =
+      legacyHost != null &&
           hostCarried &&
           legacyHost.fieldValue(resources).isNotEmpty
       ? ''

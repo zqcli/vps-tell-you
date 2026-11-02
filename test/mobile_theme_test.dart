@@ -245,10 +245,7 @@ void main() {
       );
       expect(tester.takeException(), isNull);
       final card = find
-          .descendant(
-            of: find.byType(AppCard),
-            matching: find.byType(Material),
-          )
+          .descendant(of: find.byType(AppCard), matching: find.byType(Material))
           .first;
       final palette = appTheme(brightness: brightness).extension<AppPalette>()!;
       expect(tester.widget<Material>(card).color, palette.surface);

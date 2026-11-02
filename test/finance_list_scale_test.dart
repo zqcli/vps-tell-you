@@ -38,6 +38,7 @@ class _CountingList<T> extends ListBase<T> {
     reads++;
     return values[index];
   }
+
   @override
   void operator []=(int index, T value) =>
       throw UnsupportedError('Read-only fixture');
@@ -109,91 +110,133 @@ void main() {
     await directory.delete(recursive: true);
   });
 
-  Future<void> mount(WidgetTester tester, Widget page, {double height = 844}) async {
+  Future<void> mount(
+    WidgetTester tester,
+    Widget page, {
+    double height = 844,
+  }) async {
     tester.view.physicalSize = Size(390, height);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
-    await tester.pumpWidget(ValueListenableBuilder<Locale>(
-      valueListenable: locale,
-      builder: (_, value, _) => MaterialApp(
-        theme: appTheme(),
-        locale: value,
-        localizationsDelegates: AppLocalizations.localizationsDelegates,
-        supportedLocales: AppLocalizations.supportedLocales,
-        home: page,
+    await tester.pumpWidget(
+      ValueListenableBuilder<Locale>(
+        valueListenable: locale,
+        builder: (_, value, _) => MaterialApp(
+          theme: appTheme(),
+          locale: value,
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: page,
+        ),
       ),
-    ));
+    );
     await tester.pumpAndSettle();
   }
 
   final pages = <String, (Widget Function(), String)>{
     'payments': (() => PaymentListPage(controller: ledger), 'payment-p119'),
     'finance details': (
-      () => FinanceDetailPage(controller: ledger, metric: FinanceMetric.monthly),
+      () =>
+          FinanceDetailPage(controller: ledger, metric: FinanceMetric.monthly),
       'finance-detail-s119',
     ),
-    'renewals': (() => RenewalsPage(controller: ledger), 'renewal-s99-2026-10-08'),
+    'renewals': (
+      () => RenewalsPage(controller: ledger),
+      'renewal-s99-2026-10-08',
+    ),
     'archive': (() => ArchivePage(controller: ledger), 'archive-a119'),
   };
   for (final entry in pages.entries) {
-    testWidgets('${entry.key}: long lists build a screenful and reach the last row', (tester) async {
-      await mount(tester, entry.value.$1());
-      final last = find.byKey(ValueKey(entry.value.$2));
-      expect(last, findsNothing);
-      expect(find.byType(AppGroupedRow).evaluate().length, lessThan(40));
-      await tester.scrollUntilVisible(
-        last,
-        700,
-        scrollable: find.byWidgetPredicate((w) => w is Scrollable && w.axis == Axis.vertical).first,
-        maxScrolls: 100,
-      );
-      await tester.pumpAndSettle();
-      expect(last, findsOneWidget);
-      expect(find.byType(AppGroupedRow).evaluate().length, lessThan(40));
-      expect(tester.takeException(), isNull);
-    });
+    testWidgets(
+      '${entry.key}: long lists build a screenful and reach the last row',
+      (tester) async {
+        await mount(tester, entry.value.$1());
+        final last = find.byKey(ValueKey(entry.value.$2));
+        expect(last, findsNothing);
+        expect(find.byType(AppGroupedRow).evaluate().length, lessThan(40));
+        await tester.scrollUntilVisible(
+          last,
+          700,
+          scrollable: find
+              .byWidgetPredicate(
+                (w) => w is Scrollable && w.axis == Axis.vertical,
+              )
+              .first,
+          maxScrolls: 100,
+        );
+        await tester.pumpAndSettle();
+        expect(last, findsOneWidget);
+        expect(find.byType(AppGroupedRow).evaluate().length, lessThan(40));
+        expect(tester.takeException(), isNull);
+      },
+    );
   }
 
-  testWidgets('payment projection survives locale and invalidates for day, FX, records and payments', (tester) async {
-    final source = _CountingList([
-      payment(0),
-      payment(1, age: 6),
-      payment(2, age: 9),
-      payment(3, voided: true),
-    ]);
-    ledger.payments = source;
-    await mount(tester, PaymentListPage(controller: ledger, groupId: 'g', period: PaymentPeriod.week), height: 1600);
-    FinanceTotal total() => tester.widget<FinanceTotalView>(find.byType(FinanceTotalView)).total;
-    expect(total().convertedMinor, Rational.of(300));
-    final initial = total();
-    final reads = source.reads;
-    locale.value = const Locale('zh');
-    await tester.pumpAndSettle();
-    expect(total(), same(initial));
-    expect(source.reads, reads, reason: 'Translating the page must not rescan payments.');
+  testWidgets(
+    'payment projection survives locale and invalidates for day, FX, records and payments',
+    (tester) async {
+      final source = _CountingList([
+        payment(0),
+        payment(1, age: 6),
+        payment(2, age: 9),
+        payment(3, voided: true),
+      ]);
+      ledger.payments = source;
+      await mount(
+        tester,
+        PaymentListPage(
+          controller: ledger,
+          groupId: 'g',
+          period: PaymentPeriod.week,
+        ),
+        height: 1600,
+      );
+      FinanceTotal total() =>
+          tester.widget<FinanceTotalView>(find.byType(FinanceTotalView)).total;
+      expect(total().convertedMinor, Rational.of(300));
+      final initial = total();
+      final reads = source.reads;
+      locale.value = const Locale('zh');
+      await tester.pumpAndSettle();
+      expect(total(), same(initial));
+      expect(
+        source.reads,
+        reads,
+        reason: 'Translating the page must not rescan payments.',
+      );
 
-    now = now.add(const Duration(days: 1));
-    ledger.changed();
-    await tester.pumpAndSettle();
-    expect(total().convertedMinor, Rational.of(100));
-    expect(source.reads, greaterThan(reads));
-    ledger.fx = const FxSettings(usdToCny: '7', rateDate: LedgerDate(2026, 10, 8));
-    ledger.changed();
-    await tester.pumpAndSettle();
-    expect(total().convertedMinor, Rational.of(700));
+      now = now.add(const Duration(days: 1));
+      ledger.changed();
+      await tester.pumpAndSettle();
+      expect(total().convertedMinor, Rational.of(100));
+      expect(source.reads, greaterThan(reads));
+      ledger.fx = const FxSettings(
+        usdToCny: '7',
+        rateDate: LedgerDate(2026, 10, 8),
+      );
+      ledger.changed();
+      await tester.pumpAndSettle();
+      expect(total().convertedMinor, Rational.of(700));
 
-    ledger.records = [server(0, group: null), server(1), server(2), server(3)];
-    ledger.changed();
-    await tester.pumpAndSettle();
-    expect(find.byType(FinanceTotalView), findsNothing);
-    ledger.payments = [
-      for (final p in source.values) if (p.id != 'p1') p,
-      payment(1),
-    ];
-    ledger.changed();
-    await tester.pumpAndSettle();
-    expect(total().convertedMinor, Rational.of(1400));
-    expect(tester.takeException(), isNull);
-  });
+      ledger.records = [
+        server(0, group: null),
+        server(1),
+        server(2),
+        server(3),
+      ];
+      ledger.changed();
+      await tester.pumpAndSettle();
+      expect(find.byType(FinanceTotalView), findsNothing);
+      ledger.payments = [
+        for (final p in source.values)
+          if (p.id != 'p1') p,
+        payment(1),
+      ];
+      ledger.changed();
+      await tester.pumpAndSettle();
+      expect(total().convertedMinor, Rational.of(1400));
+      expect(tester.takeException(), isNull);
+    },
+  );
 }

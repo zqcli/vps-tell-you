@@ -552,28 +552,31 @@ void main() {
     expect((await target.servers()).length, 2);
   });
 
-  test('a failed native batch rolls back every imported table and trigger row', () async {
-    await populateBackupFixture(source);
-    final snapshot = await source.exportLedgerBackup();
-    final before = (await target.exportLedgerBackup()).encode();
-    final db = await databaseFactoryFfiNoIsolate.openDatabase(targetPath);
-    await db.execute('''CREATE TRIGGER reject_import_payment
+  test(
+    'a failed native batch rolls back every imported table and trigger row',
+    () async {
+      await populateBackupFixture(source);
+      final snapshot = await source.exportLedgerBackup();
+      final before = (await target.exportLedgerBackup()).encode();
+      final db = await databaseFactoryFfiNoIsolate.openDatabase(targetPath);
+      await db.execute('''CREATE TRIGGER reject_import_payment
       BEFORE INSERT ON payments BEGIN
         SELECT RAISE(ABORT, 'injected batch failure');
       END''');
 
-    await expectLater(
-      target.restoreLedgerBackup(snapshot),
-      throwsA(isA<DatabaseException>()),
-    );
-    expect((await target.exportLedgerBackup()).encode(), before);
-    expect(await target.reminderRules(), isEmpty);
+      await expectLater(
+        target.restoreLedgerBackup(snapshot),
+        throwsA(isA<DatabaseException>()),
+      );
+      expect((await target.exportLedgerBackup()).encode(), before);
+      expect(await target.reminderRules(), isEmpty);
 
-    await db.execute('DROP TRIGGER reject_import_payment');
-    await target.restoreLedgerBackup(snapshot);
-    expect((await target.exportLedgerBackup()).encode(), snapshot.encode());
-    expect((await target.reminderRules()).every((r) => !r.enabled), isTrue);
-  });
+      await db.execute('DROP TRIGGER reject_import_payment');
+      await target.restoreLedgerBackup(snapshot);
+      expect((await target.exportLedgerBackup()).encode(), snapshot.encode());
+      expect((await target.reminderRules()).every((r) => !r.enabled), isTrue);
+    },
+  );
 
   test('strictly rejects wrong version, unknown fields, malformed types and relations', () async {
     await populateBackupFixture(source);

@@ -219,7 +219,12 @@ class AppLazySections extends StatelessWidget {
         return section.header == null
             ? SizedBox(height: section.topSpacing ?? (at == 0 ? 8 : 16))
             : Padding(
-                padding: EdgeInsets.fromLTRB(32, section.topSpacing ?? (at == 0 ? 8 : 22), 32, 7),
+                padding: EdgeInsets.fromLTRB(
+                  32,
+                  section.topSpacing ?? (at == 0 ? 8 : 22),
+                  32,
+                  7,
+                ),
                 child: Text(
                   section.header!,
                   style: TextStyle(fontSize: 13, color: p.text2),

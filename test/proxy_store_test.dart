@@ -176,33 +176,36 @@ void main() {
     expect(proxySecrets(), isEmpty);
   });
 
-  test('proxy lookup handles null references and rejects stale metadata', () async {
-    final id = await add();
-    final original = (await store.proxyById(id))!;
-    expect(original.secretRef, isNull);
-    expect(await store.isProxyCurrent(original), isTrue);
-    expect(await store.proxyById('missing'), isNull);
+  test(
+    'proxy lookup handles null references and rejects stale metadata',
+    () async {
+      final id = await add();
+      final original = (await store.proxyById(id))!;
+      expect(original.secretRef, isNull);
+      expect(await store.isProxyCurrent(original), isTrue);
+      expect(await store.proxyById('missing'), isNull);
 
-    expect(
-      await security.saveProxy(
-        existing: original,
-        name: original.name,
-        kind: original.kind,
-        host: original.host,
-        port: original.port,
-        username: 'alice',
-        password: 'replacement-password',
-      ),
-      id,
-    );
-    final updated = (await store.proxyById(id))!;
-    expect(updated.secretRef, isNotNull);
-    expect(await store.isProxyCurrent(original), isFalse);
-    expect(await store.isProxyCurrent(updated), isTrue);
-    expect(await security.deleteProxy(updated), isTrue);
-    expect(await store.proxyById(id), isNull);
-    expect(await store.isProxyCurrent(updated), isFalse);
-  });
+      expect(
+        await security.saveProxy(
+          existing: original,
+          name: original.name,
+          kind: original.kind,
+          host: original.host,
+          port: original.port,
+          username: 'alice',
+          password: 'replacement-password',
+        ),
+        id,
+      );
+      final updated = (await store.proxyById(id))!;
+      expect(updated.secretRef, isNotNull);
+      expect(await store.isProxyCurrent(original), isFalse);
+      expect(await store.isProxyCurrent(updated), isTrue);
+      expect(await security.deleteProxy(updated), isTrue);
+      expect(await store.proxyById(id), isNull);
+      expect(await store.isProxyCurrent(updated), isFalse);
+    },
+  );
 
   test('validation: nothing is written for bad input', () async {
     Future<void> bad(
