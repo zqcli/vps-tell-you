@@ -227,6 +227,33 @@ void main() {
       await tester.pumpAndSettle();
     }
 
+    testWidgets(
+      'generic errors do not diagnose unrelated group errors or expose drivers',
+      (tester) async {
+        await mount(
+          tester,
+          Scaffold(
+            body: Builder(
+              builder: (context) => TextButton(
+                onPressed: () =>
+                    showFailure(context, StateError('PRIVATE SQL DRIVER VALUES')),
+                child: const Text('模拟失败'),
+              ),
+            ),
+          ),
+          locale: 'zh',
+          width: 320,
+          scale: 2,
+        );
+        await tester.tap(find.text('模拟失败'));
+        await tester.pumpAndSettle();
+        expect(find.text('操作未完成，请重试。已保存的资料仍保留。'), findsOneWidget);
+        expect(find.textContaining('分组'), findsNothing);
+        expect(find.textContaining('PRIVATE'), findsNothing);
+      },
+    );
+
+
     Finder button() => find.byKey(const ValueKey('error-details-button'));
 
     testWidgets('the banner has one error icon and opens details from '
@@ -469,7 +496,6 @@ void main() {
                         credentialId: ledger.security.credentials.single.id,
                         serverId: id,
                       ),
-                      connectOnOpen: true,
                       serviceFactory: (_) => ssh,
                     ),
                   ),

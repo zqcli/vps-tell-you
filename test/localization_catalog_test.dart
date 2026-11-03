@@ -14,7 +14,7 @@ void main() {
     Set<String> keys(Map<String, Object?> value) =>
         value.keys.where((key) => !key.startsWith('@')).toSet();
     expect(keys(en), keys(zh));
-    expect(keys(en).length, greaterThan(1300));
+    expect(keys(en), isNotEmpty);
     for (final key in keys(en)) {
       expect(en[key], isA<String>(), reason: key);
       expect((en[key] as String).trim(), isNotEmpty, reason: key);

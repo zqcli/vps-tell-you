@@ -145,12 +145,6 @@ class FakeSftpSession implements SftpSession {
   }
 
   @override
-  Future<String> realpath(String path) async {
-    _enter('realpath', path);
-    return path;
-  }
-
-  @override
   Future<List<SftpEntry>> list(String path) async {
     _enter('list', path);
     final node = _need(path);

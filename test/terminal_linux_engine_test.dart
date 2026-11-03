@@ -3,15 +3,12 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
-import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:vps_tell_you/connections/ssh_service.dart';
-import 'package:vps_tell_you/connections/terminal_font.dart';
 import 'package:vps_tell_you/connections/terminal_page.dart';
 import 'package:vps_tell_you/core/app_theme.dart';
 import 'package:vps_tell_you/data/ledger_store.dart';
@@ -19,6 +16,10 @@ import 'package:vps_tell_you/security/secret_store.dart';
 import 'package:vps_tell_you/security/security_controller.dart';
 import 'package:vps_tell_you/servers/ledger_controller.dart';
 import 'package:xterm/xterm.dart';
+
+import 'support/terminal_test_helpers.dart';
+import 'support/widget_test_assets.dart';
+import 'support/connection_fakes.dart';
 
 class DeniedSecrets implements SecretStore {
   @override
@@ -29,13 +30,6 @@ class DeniedSecrets implements SecretStore {
       throw StateError('No secrets');
   @override
   Future<void> delete(String reference) async => throw StateError('No secrets');
-}
-
-class DeniedAuthentication implements DeviceAuthenticator {
-  @override
-  Future<bool> authenticate() async => false;
-  @override
-  Future<void> cancel() async {}
 }
 
 class MemorySsh extends SshService {
@@ -128,7 +122,7 @@ void main() {
       security: SecurityController(
         store: store,
         secrets: secrets,
-        authenticator: DeniedAuthentication(),
+        authenticator: DeniedDeviceAuth(),
       ),
     );
     await ledger.refresh();
@@ -162,43 +156,10 @@ void main() {
     addTearDown(tester.view.resetDevicePixelRatio);
     addTearDown(tester.view.resetViewInsets);
     if (!fontsLoaded) {
-      await tester.runAsync(() async {
-        final font = FontLoader(terminalFontFamily);
-        for (final name in ['DejaVuSansMono.ttf', 'DejaVuSansMono-Bold.ttf']) {
-          font.addFont(
-            File('assets/fonts/$name').readAsBytes().then(ByteData.sublistView),
-          );
-        }
-        await font.load();
-        final cjkFile = File(
-          Platform.environment['VPS_TERMINAL_CJK_FONT'] ??
-              '/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc',
-        );
-        if (await cjkFile.exists()) {
-          final cjk = await cjkFile.readAsBytes();
-          for (final name in [
-            'Roboto',
-            'Noto Sans CJK SC',
-            'Noto Sans Mono CJK SC',
-          ]) {
-            final font = FontLoader(name);
-            font.addFont(Future.value(ByteData.sublistView(cjk)));
-            await font.load();
-          }
-        } else if (evidence != null) {
-          fail('Visual evidence requires VPS_TERMINAL_CJK_FONT.');
-        }
-        final bootstrap = Platform.environment['FLUTTER_BOOTSTRAP_ROOT'];
-        if (bootstrap != null) {
-          final icons = FontLoader('MaterialIcons');
-          icons.addFont(
-            File(
-              '$bootstrap/flutter/bin/cache/artifacts/material_fonts/MaterialIcons-Regular.otf',
-            ).readAsBytes().then(ByteData.sublistView),
-          );
-          await icons.load();
-        }
-      });
+      await loadTerminalTestFonts(
+        tester,
+        requireFallback: evidence != null,
+      );
       fontsLoaded = true;
     }
     await tester.pumpWidget(
@@ -212,7 +173,6 @@ void main() {
         home: TerminalPage(
           ledger: ledger,
           target: target,
-          connectOnOpen: true,
           serviceFactory: (_) => ssh,
         ),
       ),
@@ -265,19 +225,8 @@ void main() {
   }
 
   Future<void> capture(WidgetTester tester, String name) async {
-    if (evidence == null) return;
-    await tester.pump();
-    final boundary = tester.renderObject<RenderRepaintBoundary>(
-      key('qa-image'),
-    );
-    await tester.runAsync(() async {
-      final image = await boundary.toImage();
-      final data = await image.toByteData(format: ui.ImageByteFormat.png);
-      await Directory(evidence).create(recursive: true);
-      await File('$evidence/$name.png')
-          .writeAsBytes(data!.buffer.asUint8List());
-      image.dispose();
-    });
+    if (evidence != null) await tester.pump();
+    await captureTestWidget(tester, key('qa-image'), evidence, name);
   }
 
   Future<void> seedHistory(WidgetTester tester) async {

@@ -6,8 +6,6 @@ import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:vps_tell_you/core/app_theme.dart';
 import 'package:vps_tell_you/data/ledger_store.dart';
 import 'package:vps_tell_you/l10n/generated/app_localizations.dart';
-import 'package:vps_tell_you/l10n/generated/app_localizations_en.dart';
-import 'package:vps_tell_you/l10n/generated/app_localizations_zh.dart';
 import 'package:vps_tell_you/servers/ledger_controller.dart';
 import 'package:vps_tell_you/servers/server_detail.dart';
 import 'package:vps_tell_you/servers/server_form.dart';
@@ -141,10 +139,6 @@ void main() {
       );
       await ledger.refresh();
       final legacy = ledger.byId('legacy-spec')!;
-      expect(
-        serverSpecSummary(legacy, AppLocalizationsZh()),
-        'Custom 4C/8G note',
-      );
       tester.view.physicalSize = const Size(390, 1600);
       tester.view.devicePixelRatio = 1;
       addTearDown(tester.view.resetPhysicalSize);
@@ -188,7 +182,6 @@ void main() {
       saved = (await store.servers()).singleWhere((s) => s.id == 'legacy-spec');
       expect(saved.spec, '4 vCPU');
       expect(saved.notes, contains('Custom 4C/8G note'));
-      expect(serverSpecSummary(saved, AppLocalizationsEn()), '4 vCPU');
     },
   );
 }

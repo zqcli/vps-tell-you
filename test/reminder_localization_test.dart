@@ -11,6 +11,7 @@ import 'package:vps_tell_you/l10n/generated/app_localizations_zh.dart';
 import 'package:vps_tell_you/l10n/locale_preference.dart';
 import 'package:vps_tell_you/servers/ledger_controller.dart';
 import 'package:vps_tell_you/servers/server_record.dart';
+import 'package:vps_tell_you/settings/reminder_page.dart' show reminderDaysLabel;
 import 'package:vps_tell_you/settings/reminder_planner.dart';
 import 'package:vps_tell_you/settings/reminder_rule.dart';
 import 'package:vps_tell_you/settings/reminder_scheduler.dart';
@@ -24,6 +25,11 @@ void main() {
   final en = AppLocalizationsEn(), zh = AppLocalizationsZh();
   final now = DateTime.utc(2026, 10, 7);
   const due = LedgerDate(2026, 10, 20);
+
+  test('reminder day labels preserve order and the empty state', () {
+    expect(reminderDaysLabel([7, 1, 0]), '提前 7 天、提前 1 天、到期当天');
+    expect(reminderDaysLabel([]), '未选择提醒日期');
+  });
 
   test(
     'notification locale changes text only, retaining dates, IDs and privacy',

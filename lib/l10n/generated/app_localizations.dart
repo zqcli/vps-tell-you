@@ -3576,12 +3576,6 @@ abstract class AppLocalizations {
   /// **'流量不限量'**
   String get resourceUnlimitedTraffic;
 
-  /// No description provided for @resourceUnknownTraffic.
-  ///
-  /// In zh, this message translates to:
-  /// **'流量未知'**
-  String get resourceUnknownTraffic;
-
   /// No description provided for @resourceTrafficQuota.
   ///
   /// In zh, this message translates to:
@@ -5801,24 +5795,6 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'正在建立安全连接…'**
   String get terminalEstablishingSecure;
-
-  /// No description provided for @terminalOffline.
-  ///
-  /// In zh, this message translates to:
-  /// **'终端未连接'**
-  String get terminalOffline;
-
-  /// No description provided for @terminalConnect.
-  ///
-  /// In zh, this message translates to:
-  /// **'连接'**
-  String get terminalConnect;
-
-  /// No description provided for @terminalBrowserUnsupported.
-  ///
-  /// In zh, this message translates to:
-  /// **'浏览器不支持原生 SSH，请使用原生应用。'**
-  String get terminalBrowserUnsupported;
 
   /// No description provided for @terminalDismissNotice.
   ///

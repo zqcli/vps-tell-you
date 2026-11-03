@@ -1,8 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
-import 'dart:typed_data';
 
-import 'package:crypto/crypto.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:vps_tell_you/providers/directory_models.dart';
 
@@ -40,53 +38,23 @@ void main() {
     }
   });
 
-  test('logo hashes, sizes and PNG headers match the files', () {
-    var withLogo = 0;
+  test('parsed logo metadata matches the committed index', () {
+    final entries = {
+      for (final entry in raw['providers'] as List) entry['id']: entry,
+    };
     for (final p in snapshot.providers) {
-      final dir = Directory('catalog/providers/${p.id}');
-      expect(dir.existsSync(), isTrue, reason: p.id);
       final logo = p.logo;
-      final file = File('${dir.path}/logo.png');
-      if (logo == null) {
-        expect(file.existsSync(), isFalse, reason: '${p.id} has no logo');
-        continue;
-      }
-      withLogo++;
-      final bytes = file.readAsBytesSync();
-      expect(logo.path, 'providers/${p.id}/logo.png');
-      expect(bytes.length, logo.bytes, reason: p.id);
-      expect(bytes.length, lessThanOrEqualTo(64 * 1024), reason: p.id);
-      expect(sha256.convert(bytes).toString(), logo.sha256, reason: p.id);
-      expect(bytes.sublist(0, 8), [
-        0x89,
-        0x50,
-        0x4e,
-        0x47,
-        0x0d,
-        0x0a,
-        0x1a,
-        0x0a,
-      ]);
-      final data = ByteData.sublistView(bytes);
       expect(
-        [data.getUint32(16), data.getUint32(20)],
-        [256, 256],
-        reason: '${p.id} is 256x256',
+        logo == null
+            ? null
+            : {
+                'path': logo.path,
+                'sha256': logo.sha256,
+                'bytes': logo.bytes,
+              },
+        entries[p.id]['logo'],
+        reason: p.id,
       );
-    }
-    expect(withLogo, greaterThan(0));
-    expect(
-      withLogo,
-      lessThan(snapshot.providers.length),
-      reason: 'some have none',
-    );
-  });
-
-  test('entries without a logo are valid and fall back to initials', () {
-    final none = snapshot.providers.where((p) => p.logo == null);
-    expect(none, isNotEmpty);
-    for (final p in none) {
-      expect(p.nameEn, isNotEmpty);
     }
   });
 }

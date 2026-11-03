@@ -148,7 +148,7 @@ class _ProviderPickerPageState extends State<ProviderPickerPage> {
             title: provider.name,
             subtitle: used == null
                 ? null
-                : l10n.r6CatProviderSummary(used.servers.length),
+                : l10n.r6CatProviderSummary(used.length),
             trailing: check(widget.selected?.id == provider.id),
             onTap: () => _pick(ProviderChoice.local(provider)),
           );

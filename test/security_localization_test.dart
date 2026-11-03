@@ -53,21 +53,15 @@ class LocalizationSecrets implements SecretStore {
   }
 }
 
-class LocalizationAuthentication
-    implements DeviceAuthenticator, LocalizedDeviceAuthenticator {
+class LocalizationAuthentication implements DeviceAuthenticator {
   int calls = 0, cancels = 0;
   final locales = <String>[];
   Completer<bool>? pending;
   @override
-  Future<bool> authenticate() async {
+  Future<bool> authenticate(AppLocalizations l10n) async {
     calls++;
-    return pending?.future ?? false;
-  }
-
-  @override
-  Future<bool> authenticateWithLocalizations(AppLocalizations l10n) {
     locales.add(l10n.localeName);
-    return authenticate();
+    return pending?.future ?? false;
   }
 
   @override
@@ -488,7 +482,7 @@ void main() {
     addTearDown(() => debugDefaultTargetPlatformOverride = null);
     final native = CapturingLocalAuthentication();
     final adapter = NativeDeviceAuthenticator(authentication: native);
-    await adapter.authenticateWithLocalizations(en);
+    await adapter.authenticate(en);
     expect(
       native.lastArguments![#localizedReason],
       en.securityDeviceAuthReason,
@@ -497,7 +491,7 @@ void main() {
     expect(messages.first.args['cancelButton'], en.securityAuthCancel);
     expect(messages.first.args['signInTitle'], en.securityAuthSignInTitle);
     expect(native.lastArguments![#persistAcrossBackgrounding], isFalse);
-    await adapter.authenticateWithLocalizations(zh);
+    await adapter.authenticate(zh);
     expect(
       native.lastArguments![#localizedReason],
       zh.securityDeviceAuthReason,

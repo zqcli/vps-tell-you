@@ -121,9 +121,7 @@ class _FxPageState extends State<FxPage> with LocaleRevalidatingForm<FxPage> {
                         check: (value) {
                           final text = value.trim();
                           if (text.isEmpty) return null;
-                          if (!RegExp(r'^\d{1,9}(\.\d{1,8})?$')
-                                  .hasMatch(text) ||
-                              (double.tryParse(text) ?? 0) <= 0) {
+                          if (FxSettings.parseRate(text) == null) {
                             return l10n.financeRateError;
                           }
                           return null;

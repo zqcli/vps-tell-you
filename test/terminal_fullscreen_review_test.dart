@@ -1,9 +1,6 @@
-import 'dart:async';
 import 'dart:io';
-import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
@@ -18,6 +15,8 @@ import 'package:vps_tell_you/security/security_controller.dart';
 import 'package:vps_tell_you/servers/ledger_controller.dart';
 import 'package:xterm/xterm.dart';
 
+import 'support/terminal_test_helpers.dart';
+import 'support/widget_test_assets.dart';
 import 'security_store_test.dart' show FakeDeviceAuth, FakeSecretStore;
 import 'terminal_widget_test.dart' show SpySshService;
 
@@ -87,8 +86,6 @@ void main() {
     WidgetTester tester, {
     Size size = const Size(390, 844),
     double scale = 1,
-    bool connect = true,
-    ValueNotifier<SshTarget>? targetSource,
   }) async {
     tester.view.physicalSize = size;
     tester.view.devicePixelRatio = 1;
@@ -98,43 +95,12 @@ void main() {
     final viewport = AppViewportObserver();
     addTearDown(viewport.dispose);
     if (!fontsLoaded) {
-      await tester.runAsync(() async {
-        final mono = FontLoader(terminalFontFamily);
-        for (final filename in [
-          'DejaVuSansMono.ttf',
-          'DejaVuSansMono-Bold.ttf',
-        ]) {
-          mono.addFont(
-            File('assets/fonts/$filename')
-                .readAsBytes()
-                .then(ByteData.sublistView),
-          );
-        }
-        await mono.load();
-        if (evidence != null) {
-          final cjk = await File(
-            Platform.environment['VPS_TERMINAL_CJK_FONT'] ??
-                '/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc',
-          ).readAsBytes();
-          for (final name in [
-            'Roboto',
-            'Noto Sans CJK SC',
-            'Noto Sans Mono CJK SC',
-          ]) {
-            final loader = FontLoader(name);
-            loader.addFont(Future.value(ByteData.sublistView(cjk)));
-            await loader.load();
-          }
-          final icons = FontLoader('MaterialIcons');
-          icons.addFont(
-            File(
-              '${Platform.environment['FLUTTER_BOOTSTRAP_ROOT']}/flutter/bin/cache/artifacts/material_fonts/MaterialIcons-Regular.otf',
-            ).readAsBytes().then(ByteData.sublistView),
-          );
-          await icons.load();
-        }
-        fontsLoaded = true;
-      });
+      await loadTerminalTestFonts(
+        tester,
+        loadFallback: evidence != null,
+        requireFallback: evidence != null,
+      );
+      fontsLoaded = true;
     }
     await tester.pumpWidget(
       MaterialApp(
@@ -168,20 +134,11 @@ void main() {
                 context,
                 MaterialPageRoute(
                   settings: const RouteSettings(name: sshTerminalRouteName),
-                  builder: (_) {
-                    Widget page(SshTarget value) => TerminalPage(
-                      ledger: ledger,
-                      target: value,
-                      connectOnOpen: connect,
-                      serviceFactory: (_) => ssh,
-                    );
-                    return targetSource == null
-                        ? page(target)
-                        : ValueListenableBuilder<SshTarget>(
-                            valueListenable: targetSource,
-                            builder: (_, value, _) => page(value),
-                          );
-                  },
+                  builder: (_) => TerminalPage(
+                    ledger: ledger,
+                    target: target,
+                    serviceFactory: (_) => ssh,
+                  ),
                 ),
               ),
               child: const Text('Open review terminal'),
@@ -201,18 +158,7 @@ void main() {
   }
 
   Future<void> capture(WidgetTester tester, String name) async {
-    if (evidence == null) return;
-    final boundary = tester.renderObject<RenderRepaintBoundary>(
-      keyed('terminal-review-evidence'),
-    );
-    await tester.runAsync(() async {
-      final image = await boundary.toImage();
-      final bytes = await image.toByteData(format: ui.ImageByteFormat.png);
-      await Directory(evidence).create(recursive: true);
-      await File('$evidence/$name.png')
-          .writeAsBytes(bytes!.buffer.asUint8List());
-      image.dispose();
-    });
+    await captureTestWidget(tester, keyed('terminal-review-evidence'), evidence, name);
   }
 
   Future<void> keyboard(WidgetTester tester) async {
@@ -232,12 +178,13 @@ void main() {
   testWidgets('review: full display width restores after leaving terminal', (
     tester,
   ) async {
-    await mount(tester, size: const Size(1200, 700), connect: false);
+    ssh.holdConnecting = true;
+    await mount(tester, size: const Size(1200, 700));
     expect(tester.getSize(keyed('terminal-fullscreen')).width, 1200);
     expect(tester.getSize(find.byType(TerminalView)).width, 1200);
     await tap(tester, find.byTooltip('退出终端'));
     expect(tester.getSize(keyed('review-ledger-home')).width, 760);
-    expect(ssh.connections, 0);
+    expect(ssh.connections, 1);
     expect(ssh.writes, isEmpty);
   });
 
@@ -595,32 +542,6 @@ void main() {
     },
   );
 
-  testWidgets('review: hardware paste enters local draft without executing', (
-    tester,
-  ) async {
-    const clipboard = 'echo synthetic\nnext-line\r';
-    final messenger = tester.binding.defaultBinaryMessenger;
-    messenger.setMockMethodCallHandler(SystemChannels.platform, (call) async {
-      if (call.method == 'Clipboard.getData') return {'text': clipboard};
-      return null;
-    });
-    addTearDown(
-      () => messenger.setMockMethodCallHandler(SystemChannels.platform, null),
-    );
-    await mount(tester);
-    await keyboard(tester);
-    await tester.sendKeyDownEvent(LogicalKeyboardKey.controlLeft);
-    await tester.sendKeyEvent(LogicalKeyboardKey.keyV);
-    await tester.sendKeyUpEvent(LogicalKeyboardKey.controlLeft);
-    await tester.pumpAndSettle();
-    expect(find.byType(TerminalCommandSheet), findsOneWidget);
-    expect(
-      tester.widget<TextField>(keyed('terminal-draft')).controller!.text,
-      clipboard,
-    );
-    expect(ssh.writes, isEmpty);
-  });
-
   testWidgets(
     'review: modal input isolation preserves terminal protocol replies',
     (tester) async {
@@ -651,40 +572,6 @@ void main() {
       expect(tester.takeException(), isNull);
     },
   );
-
-  testWidgets('review: deferred clipboard cannot cross a target change', (
-    tester,
-  ) async {
-    final clipboard = Completer<Object?>();
-    final messenger = tester.binding.defaultBinaryMessenger;
-    messenger.setMockMethodCallHandler(SystemChannels.platform, (call) {
-      if (call.method == 'Clipboard.getData') return clipboard.future;
-      return Future<Object?>.value();
-    });
-    addTearDown(
-      () => messenger.setMockMethodCallHandler(SystemChannels.platform, null),
-    );
-    final targets = ValueNotifier(target);
-    addTearDown(targets.dispose);
-    await mount(tester, targetSource: targets);
-    await keyboard(tester);
-    await tester.sendKeyDownEvent(LogicalKeyboardKey.controlLeft);
-    await tester.sendKeyEvent(LogicalKeyboardKey.keyV);
-    await tester.sendKeyUpEvent(LogicalKeyboardKey.controlLeft);
-    targets.value = const SshTarget(
-      name: '另一台合成目标',
-      host: '::1',
-      username: 'other',
-      credentialId: 'another-synthetic-only',
-    );
-    await tester.pumpAndSettle();
-    clipboard.complete({'text': 'must-not-follow-target'});
-    await tester.pumpAndSettle();
-    expect(find.byType(TerminalCommandSheet), findsNothing);
-    expect(ssh.writes, isEmpty);
-    expect(ssh.connections, 1);
-    expect(tester.takeException(), isNull);
-  });
 
   testWidgets('review: long press selection copies without sending SSH input', (
     tester,

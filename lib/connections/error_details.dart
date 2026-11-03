@@ -88,19 +88,6 @@ class ErrorDetails {
   /// Redacted raw text: exception type and message, protocol replies.
   final String technical;
 
-  ErrorDetails copyWith({
-    ErrorStage? stage,
-    String? target,
-    String? proxy,
-    String? technical,
-  }) => ErrorDetails(
-    stage: stage ?? this.stage,
-    technical: technical ?? this.technical,
-    target: target ?? this.target,
-    proxy: proxy ?? this.proxy,
-    time: time,
-  );
-
   String timeText() {
     String two(int v) => v.toString().padLeft(2, '0');
     final t = time.toLocal();

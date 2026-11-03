@@ -455,7 +455,6 @@ void main() {
       expect(await directory.refresh(), DirectoryOutcome.updated);
       expect(directory.logoFor('fixture-cloud'), isNull);
       expect(directory.logoFor('empty-host'), isNotNull);
-      expect(directory.logoFailures, 1);
       expect(
         directory.provider('fixture-cloud'),
         isNotNull,
@@ -469,7 +468,6 @@ void main() {
       expect(good, isNot(tampered));
       expect(await directory.refresh(), DirectoryOutcome.upToDate);
       expect(directory.logoFor('fixture-cloud'), isNotNull);
-      expect(directory.logoFailures, 0);
     });
 
     test(
@@ -480,7 +478,6 @@ void main() {
         final directory = open();
         await directory.refresh();
         expect(directory.logoFor('fixture-cloud'), isNull);
-        expect(directory.logoFailures, 1);
       },
     );
 
@@ -558,7 +555,6 @@ void main() {
       final directory = open();
       await directory.refresh();
       expect(directory.logoFor('fixture-cloud'), isNull);
-      expect(directory.logoFailures, 1);
       expect(directory.logoFor('empty-host'), isNotNull);
     });
   });

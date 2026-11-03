@@ -45,7 +45,7 @@ class SecurityController extends ChangeNotifier {
 
   /// Compatibility for contextless callers; intentionally fixed Chinese.
   String? get error => errorFor(defaultLocalizations);
-  String? revealedSecret, revealedPassphrase, revealedCredentialId;
+  String? revealedSecret, revealedCredentialId;
   String? revealedProxyPassword, revealedProxyId;
   int _sensitiveEpoch = 0;
   Timer? _revealTimer;
@@ -665,7 +665,6 @@ class SecurityController extends ChangeNotifier {
         );
       }
       revealedSecret = envelope['secret'] as String;
-      revealedPassphrase = envelope['passphrase'] as String?;
       revealedCredentialId = record.id;
       return true;
     });
@@ -689,11 +688,9 @@ class SecurityController extends ChangeNotifier {
       await _cancelAuthentication;
       if (stale()) return false;
       final attemptLocalizations = l10n ?? defaultLocalizations;
-      final deviceAuth = authenticator;
-      final authenticated = deviceAuth is LocalizedDeviceAuthenticator
-          ? await (deviceAuth as LocalizedDeviceAuthenticator)
-                .authenticateWithLocalizations(attemptLocalizations)
-          : await deviceAuth.authenticate();
+      final authenticated = await authenticator.authenticate(
+        attemptLocalizations,
+      );
       if (!authenticated) {
         if (epoch == _sensitiveEpoch) {
           _error = LocalizedText((l10n) => l10n.securityAuthenticationHidden);
@@ -720,7 +717,6 @@ class SecurityController extends ChangeNotifier {
     _revealTimer?.cancel();
     _revealTimer = null;
     revealedSecret = null;
-    revealedPassphrase = null;
     revealedCredentialId = null;
     revealedProxyPassword = null;
     revealedProxyId = null;

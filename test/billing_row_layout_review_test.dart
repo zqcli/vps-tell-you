@@ -4,10 +4,8 @@ import 'dart:ui' as ui;
 import 'package:flutter/cupertino.dart' show CupertinoDatePicker;
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
-import 'package:vps_tell_you/core/app_theme.dart';
 import 'package:vps_tell_you/core/ui/ui.dart';
 import 'package:vps_tell_you/core/value_types.dart';
 import 'package:vps_tell_you/data/ledger_store.dart';
@@ -16,11 +14,15 @@ import 'package:vps_tell_you/servers/server_form.dart';
 import 'package:vps_tell_you/servers/server_record.dart';
 import 'package:vps_tell_you/servers/server_resources.dart';
 
+import 'support/form_review_harness.dart';
 import 'support/form_test_helpers.dart';
 
 void main() {
-  final evidence = Platform.environment['VPS_BILLING_REVIEW_EVIDENCE_DIR'];
-  var fontsLoaded = false;
+  final harness = FormReviewHarness(
+    boundaryKey: const ValueKey('billing-review-evidence'),
+    fontFamily: 'Billing review Noto',
+    evidenceDirectory: Platform.environment['VPS_BILLING_REVIEW_EVIDENCE_DIR'],
+  );
   late Directory directory;
   late LedgerStore store;
   late LedgerController ledger;
@@ -74,83 +76,13 @@ void main() {
     double width = 320,
     double height = 844,
     ValueNotifier<double>? scale,
-  }) async {
-    tester.view.physicalSize = Size(width, height);
-    tester.view.devicePixelRatio = 1;
-    addTearDown(tester.view.resetPhysicalSize);
-    addTearDown(tester.view.resetDevicePixelRatio);
-    final textScale = scale ?? ValueNotifier<double>(2);
-    if (scale == null) addTearDown(textScale.dispose);
-    if (evidence != null && !fontsLoaded) {
-      await tester.runAsync(() async {
-        final font = FontLoader('Billing review Noto');
-        font.addFont(
-          File(
-            Platform.environment['VPS_FORM_EVIDENCE_FONT_PATH'] ??
-                '/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc',
-          ).readAsBytes().then(ByteData.sublistView),
-        );
-        await font.load();
-        final icons = FontLoader('MaterialIcons');
-        icons.addFont(
-          File(
-            '${Platform.environment['FLUTTER_BOOTSTRAP_ROOT']}/flutter/bin/cache/artifacts/material_fonts/MaterialIcons-Regular.otf',
-          ).readAsBytes().then(ByteData.sublistView),
-        );
-        await icons.load();
-        fontsLoaded = true;
-      });
-    }
-    final theme = appTheme();
-    await tester.pumpWidget(
-      MaterialApp(
-        theme: evidence == null
-            ? theme
-            : theme.copyWith(
-                textTheme: theme.textTheme.apply(
-                  fontFamily: 'Billing review Noto',
-                ),
-                appBarTheme: theme.appBarTheme.copyWith(
-                  titleTextStyle: theme.appBarTheme.titleTextStyle?.copyWith(
-                    fontFamily: 'Billing review Noto',
-                  ),
-                ),
-              ),
-        builder: (context, child) => ValueListenableBuilder<double>(
-          valueListenable: textScale,
-          child: RepaintBoundary(
-            key: const ValueKey('billing-review-evidence'),
-            child: child,
-          ),
-          builder: (context, factor, child) => MediaQuery(
-            data: MediaQuery.of(context)
-                .copyWith(textScaler: TextScaler.linear(factor)),
-            child: child!,
-          ),
-        ),
-        home: Builder(
-          builder: (context) => Scaffold(
-            body: Center(
-              child: FilledButton(
-                onPressed: () => Navigator.push<void>(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => ServerForm(
-                      controller: ledger,
-                      record: ledger.byId(record.id),
-                    ),
-                  ),
-                ),
-                child: const Text('Open billing review'),
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-    await tester.tap(find.text('Open billing review'));
-    await tester.pumpAndSettle();
-  }
+  }) => harness.mount(
+    tester,
+    size: Size(width, height),
+    textScale: scale,
+    routeLabel: 'Open billing review',
+    page: (_) => ServerForm(controller: ledger, record: ledger.byId(record.id)),
+  );
 
   Future<void> reveal(WidgetTester tester, Finder target) async {
     await Scrollable.ensureVisible(tester.element(target), alignment: 0.12);
@@ -202,21 +134,6 @@ void main() {
         );
   }
 
-  Future<void> capture(WidgetTester tester, String name) async {
-    if (evidence == null) return;
-    final boundary = tester.renderObject<RenderRepaintBoundary>(
-      find.byKey(const ValueKey('billing-review-evidence')),
-    );
-    await tester.runAsync(() async {
-      final image = await boundary.toImage();
-      final bytes = await image.toByteData(format: ui.ImageByteFormat.png);
-      await Directory(evidence).create(recursive: true);
-      await File('$evidence/$name.png')
-          .writeAsBytes(bytes!.buffer.asUint8List());
-      image.dispose();
-    });
-  }
-
   void expectFullDate(WidgetTester tester, String id, String expected) {
     final text = find.descendant(of: field(id), matching: find.text(expected));
     expect(text, findsOneWidget);
@@ -241,7 +158,7 @@ void main() {
     ) async {
       await mount(tester, width: width);
       await reveal(tester, find.byKey(const ValueKey('row-fees')));
-      await capture(tester, 'fee-row-${width.toInt()}-2x');
+      await harness.capture(tester, 'fee-row-${width.toInt()}-2x');
       await reveal(tester, field('start'));
       final start = tester.getRect(field('start'));
       final due = tester.getRect(field('due'));
@@ -251,7 +168,7 @@ void main() {
       expect(start.height, greaterThanOrEqualTo(48));
       expectFullDate(tester, 'start', '2024-02-29');
       expectFullDate(tester, 'due', '2027-01-01');
-      await capture(tester, 'complete-dates-${width.toInt()}-2x');
+      await harness.capture(tester, 'complete-dates-${width.toInt()}-2x');
       await save(tester);
       final saved = (await store.servers()).single;
       expect(saved.startDate, record.startDate);
@@ -330,7 +247,7 @@ void main() {
       expect(node.label, contains('续费金额'));
       expect(node.hint, contains('请输入有效金额，最多两位小数'));
       expect(node.validationResult, ui.SemanticsValidationResult.invalid);
-      await capture(tester, 'amount-error-320-2x');
+      await harness.capture(tester, 'amount-error-320-2x');
       await fill(tester, 'amount', '0.01');
       // Dates can only be set through the picker, so an invalid order is the
       // one date error a user can produce; it is marked on the due row.
@@ -344,7 +261,7 @@ void main() {
       expect(node.validationResult, ui.SemanticsValidationResult.invalid);
       node = tester.getSemantics(field('start'));
       expect(node.validationResult, ui.SemanticsValidationResult.valid);
-      await capture(tester, 'date-error-320-2x');
+      await harness.capture(tester, 'date-error-320-2x');
       await date(tester, 'due', DateTime(2027, 1, 1));
       await save(tester);
       final saved = (await store.servers()).single;
@@ -372,7 +289,7 @@ void main() {
         expect(field('cycle').hitTestable(), findsOneWidget);
         expect(tester.getRect(field('cycle')).right, lessThanOrEqualTo(320));
       }
-      await capture(tester, 'compact-period-320-2x');
+      await harness.capture(tester, 'compact-period-320-2x');
       await tester.tap(field('cycle'));
       await tester.pumpAndSettle();
       final lastPeriod = find.text('每 36 个月').last;
@@ -381,7 +298,7 @@ void main() {
         tester.renderObject<RenderParagraph>(lastPeriod).didExceedMaxLines,
         isFalse,
       );
-      await capture(tester, 'payment-period-menu-320-2x');
+      await harness.capture(tester, 'payment-period-menu-320-2x');
       await tester.tap(lastPeriod);
       await tester.pumpAndSettle();
       await save(tester);
@@ -440,66 +357,72 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('wrapped locked dates and cycle cannot rewrite paid history', (
-    tester,
-  ) async {
-    await store.recordPayment(
-      id: 'billing-review-payment',
-      server: record,
-      amount: const Money('USD', 9876),
-      paidDate: const LedgerDate(2026, 10, 6),
-      cycleCount: 1,
-      until: const LedgerDate(2027, 7, 1),
-      confirmed: true,
-    );
-    await ledger.refresh();
-    record = ledger.byId(record.id)!;
-    final beforePayments = (await store.payments())
-        .map((p) => p.toMap())
-        .toList();
-    final beforePeriods = (await store.servicePeriods())
-        .map((p) => p.toMap())
-        .toList();
-    await mount(tester);
-    // Locked: billing, cycle and dates explain the lock and never change.
-    for (final id in ['cycle', 'start', 'due']) {
-      await reveal(tester, field(id));
-      await tester.tap(field(id));
+  for (final amount in [('0', 0), ('9999999999.99', Money.maxMinor)]) {
+    testWidgets('locked paid history survives repeated save at amount ${amount.$1}', (
+      tester,
+    ) async {
+      await store.recordPayment(
+        id: 'billing-review-payment',
+        server: record,
+        amount: const Money('USD', 9876),
+        paidDate: const LedgerDate(2026, 10, 6),
+        cycleCount: 1,
+        until: const LedgerDate(2027, 7, 1),
+        confirmed: true,
+      );
+      await ledger.refresh();
+      record = ledger.byId(record.id)!;
+      final beforePayments = (await store.payments())
+          .map((p) => p.toMap())
+          .toList();
+      final beforePeriods = (await store.servicePeriods())
+          .map((p) => p.toMap())
+          .toList();
+      await mount(tester);
+      // Locked: billing, cycle and dates explain the lock and never change.
+      for (final id in ['cycle', 'start', 'due']) {
+        await reveal(tester, field(id));
+        await tester.tap(field(id));
+        await tester.pumpAndSettle();
+        expect(find.byType(BottomSheet), findsNothing);
+        expect(find.byType(CupertinoDatePicker), findsNothing);
+      }
+      await reveal(tester, field('billing'));
+      await tester.tap(
+        find.descendant(of: field('billing'), matching: find.text('按量')),
+        warnIfMissed: false,
+      );
       await tester.pumpAndSettle();
-      expect(find.byType(BottomSheet), findsNothing);
-      expect(find.byType(CupertinoDatePicker), findsNothing);
-    }
-    await reveal(tester, field('billing'));
-    await tester.tap(
-      find.descendant(of: field('billing'), matching: find.text('按量')),
-      warnIfMissed: false,
-    );
-    await tester.pumpAndSettle();
-    expect(
-      tester.widget<AppSegmented<BillingKind>>(field('billing')).value,
-      BillingKind.prepaid,
-    );
-    expectFullDate(tester, 'start', record.startDate.toString());
-    expectFullDate(tester, 'due', record.dueDate.toString());
-    await capture(tester, 'locked-dates-320-2x');
-    await select(tester, 'currency', 'CNY');
-    await fill(tester, 'amount', '0');
-    await save(tester);
-    final saved = (await store.servers()).single;
-    expect(saved.amountMinor, 0);
-    expect(saved.currency, 'CNY');
-    expect(saved.startDate, record.startDate);
-    expect(saved.dueDate, record.dueDate);
-    expect(saved.cycleMonths, record.cycleMonths);
-    expect(saved.billing, record.billing);
-    expect(
-      (await store.payments()).map((p) => p.toMap()).toList(),
-      beforePayments,
-    );
-    expect(
-      (await store.servicePeriods()).map((p) => p.toMap()).toList(),
-      beforePeriods,
-    );
-    expect(tester.takeException(), isNull);
-  });
+      expect(
+        tester.widget<AppSegmented<BillingKind>>(field('billing')).value,
+        BillingKind.prepaid,
+      );
+      expectFullDate(tester, 'start', record.startDate.toString());
+      expectFullDate(tester, 'due', record.dueDate.toString());
+      await harness.capture(tester, 'locked-dates-320-2x');
+      await select(tester, 'currency', 'CNY');
+      await fill(tester, 'amount', amount.$1);
+      await tester.tap(find.text('保存'));
+      await save(tester);
+      final saved = (await store.servers()).single;
+      expect(saved.amountMinor, amount.$2);
+      expect(saved.revision, record.revision + 1);
+      expect(saved.currency, 'CNY');
+      expect(saved.startDate, record.startDate);
+      expect(saved.dueDate, record.dueDate);
+      expect(saved.cycleMonths, record.cycleMonths);
+      expect(saved.billing, record.billing);
+      expect(saved.resources!.toJson(), record.resources!.toJson());
+      expect(
+        (await store.payments()).map((p) => p.toMap()).toList(),
+        beforePayments,
+      );
+      expect(
+        (await store.servicePeriods()).map((p) => p.toMap()).toList(),
+        beforePeriods,
+      );
+      expect(find.text('Open billing review'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    });
+  }
 }

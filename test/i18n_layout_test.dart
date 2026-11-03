@@ -16,7 +16,10 @@ import 'package:vps_tell_you/connections/tcp_test_page.dart';
 import 'package:vps_tell_you/core/app_theme.dart';
 import 'package:vps_tell_you/core/value_types.dart';
 import 'package:vps_tell_you/data/ledger_store.dart';
+import 'package:vps_tell_you/finance/calculation_share.dart';
+import 'package:vps_tell_you/finance/calculation_widgets.dart';
 import 'package:vps_tell_you/finance/calculator_page.dart';
+import 'package:vps_tell_you/finance/finance_math.dart';
 import 'package:vps_tell_you/finance/finance_page.dart';
 import 'package:vps_tell_you/finance/fx_page.dart';
 import 'package:vps_tell_you/finance/payment_pages.dart';
@@ -253,6 +256,61 @@ void main() {
     }
     await capture(tester, '$name-bottom-320x2');
   }
+
+  testWidgets(
+    'future period card and exported text use the same precise description',
+    (tester) async {
+      const asOf = LedgerDate(2025, 12, 1);
+      final value = serverValuation(
+        server,
+        ledger.periodsFor(server.id),
+        asOf,
+      )!;
+      await inspectPage(
+        tester,
+        'future-value',
+        Scaffold(
+          body: ListView(
+            padding: const EdgeInsets.all(20),
+            children: [
+              CalculationHero(value: value, fx: ledger.fx, asOf: asOf),
+              const SizedBox(height: 16),
+              CalculationDetails(
+                value: value,
+                renewal: server.money!,
+                cycleMonths: 12,
+                due: server.dueDate!,
+                asOf: asOf,
+              ),
+            ],
+          ),
+        ),
+      );
+      final data = CalculationShareData(
+        amount: value.amount.formatted,
+        currency: server.currency,
+        converted: '汇率未设置',
+        asOf: asOf,
+        start: value.activePeriod.start,
+        end: value.activePeriod.end,
+        due: server.dueDate!,
+        ratio: value.ratio.toDouble(),
+        activeRemaining: value.activeRemaining,
+        days: value.days,
+        remaining: value.remainingDays,
+        renewal: '24.00 EUR / 12 个月',
+        daily: '0.0658 EUR',
+        futurePeriods: value.futurePeriods,
+        fx: '汇率未设置',
+        fxSource: '手动汇率',
+        periodBasis: '引用已知服务期',
+      );
+      expect(data.plainText, contains('尚未开始的周期'));
+      expect(data.plainText, contains('不含结束日'));
+      expect(data.plainText, isNot(contains('本周期')));
+      expect(value.amount.minor!.round(), BigInt.from(2400));
+    },
+  );
 
   final pages = <String, Widget Function()>{
     'server-list': () => Scaffold(body: ServerList(controller: ledger)),

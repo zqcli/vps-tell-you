@@ -101,6 +101,7 @@ void main() {
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
+    if (initialPath != null) (session ?? fake).homePath = initialPath;
     await tester.pumpWidget(
       MaterialApp(
         theme: appTheme(),
@@ -122,7 +123,6 @@ void main() {
                     session: session ?? fake,
                     sheet: sheet,
                     localFiles: local,
-                    initialPath: initialPath,
                   ),
                 ),
               ),

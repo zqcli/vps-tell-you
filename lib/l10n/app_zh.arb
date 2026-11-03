@@ -1348,7 +1348,6 @@
   "resourceTooLarge": "本地资源配置过大",
   "resourceInvalidFields": "本地资源配置字段无效",
   "resourceUnlimitedTraffic": "流量不限量",
-  "resourceUnknownTraffic": "流量未知",
   "resourceTrafficQuota": "{p0} 流量",
   "@resourceTrafficQuota": {
     "placeholders": {
@@ -1915,9 +1914,6 @@
   "terminalClearSelection": "取消选择",
   "terminalLatestOutput": "回到最新输出",
   "terminalEstablishingSecure": "正在建立安全连接…",
-  "terminalOffline": "终端未连接",
-  "terminalConnect": "连接",
-  "terminalBrowserUnsupported": "浏览器不支持原生 SSH，请使用原生应用。",
   "terminalDismissNotice": "关闭提示",
   "terminalVerifyNewHost": "重新核实新的主机公钥",
   "terminalFirstHostVerification": "首次连接 · 核对主机身份",

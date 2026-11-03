@@ -38,7 +38,7 @@ void main() {
     () async {
       await source.saveServer(backupServer(), isNew: true);
       var server = (await source.servers()).single;
-      await source.recordPayment(
+      final payment = await source.recordPayment(
         id: 'renewal',
         server: server,
         amount: const Money('USD', 123),
@@ -47,7 +47,7 @@ void main() {
         until: renewalDate(server, 1),
         confirmed: true,
       );
-      await source.undoPayment('renewal');
+      await source.deletePayment(original: payment, rollbackRenewal: true);
       server = (await source.servers()).single;
       await source.saveServer(
         ServerRecord.fromMap({...server.toMap(), 'billing': 'metered'}),

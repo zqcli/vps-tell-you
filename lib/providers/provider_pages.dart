@@ -209,21 +209,6 @@ class _ProviderNameDialogState extends State<_ProviderNameDialog> {
   }
 }
 
-/// Opens the new-server form for [selection] as a page sheet and returns the
-/// id of the saved server.
-Future<String?> openServerForm(
-  BuildContext context,
-  LedgerController ledger,
-  ProviderSelection selection,
-) => showAppModal<String>(
-  context,
-  builder: (_) => ServerForm(
-    controller: ledger,
-    businessProvider: selection.provider,
-    catalogProvider: selection.isPending ? selection.catalog : null,
-  ),
-);
-
 class ProviderDetailsPage extends StatefulWidget {
   /// A local provider ([providerId]) or a catalog provider ([catalogId]); a
   /// catalog provider which has not been added yet shows an "Add" action.
@@ -281,7 +266,7 @@ class _ProviderDetailsPageState extends State<ProviderDetailsPage> {
   );
 
   Future<void> _delete(LedgerController ledger, ProviderRecord provider) async {
-    final count = ledger.providerUsage[provider.id]?.servers.length ?? 0;
+    final count = ledger.providerUsage[provider.id]?.length ?? 0;
     final confirmed = await showAppConfirm(
       context,
       title: LocalizedText((l10n) => l10n.r9ProviderDeleteTitle(provider.name)),
@@ -333,9 +318,9 @@ class _ProviderDetailsPageState extends State<ProviderDetailsPage> {
       }
       final servers = local == null
           ? const <ServerRecord>[]
-          : ledger.providerUsage[local.id]?.servers ?? const <ServerRecord>[];
+          : ledger.providerUsage[local.id] ?? const <ServerRecord>[];
       final editable = !opening && ledger.canMutate;
-      final selection = ProviderSelection(local, catalog: catalog?.refIn(l10n));
+      final pendingCatalog = local == null ? catalog?.refIn(l10n) : null;
       return AppScaffold(
         title: l10n.providerUiDetails,
         largeTitle: false,
@@ -378,7 +363,7 @@ class _ProviderDetailsPageState extends State<ProviderDetailsPage> {
                       const SizedBox(height: 3),
                       Text(
                         l10n.r6CatProviderSummary(
-                          ledger.providerUsage[local?.id]?.servers.length ?? 0,
+                          ledger.providerUsage[local?.id]?.length ?? 0,
                         ),
                         style: TextStyle(
                           fontSize: 14,
@@ -451,7 +436,7 @@ class _ProviderDetailsPageState extends State<ProviderDetailsPage> {
                           try {
                             await ledger.mutate(
                               () => ledger.store.addCatalogProvider(
-                                selection.pendingRef!,
+                                pendingCatalog!,
                               ),
                             );
                           } catch (error) {
@@ -503,10 +488,13 @@ class _ProviderDetailsPageState extends State<ProviderDetailsPage> {
                 enabled: editable,
                 onTap: editable
                     ? () => open(() async {
-                        final id = await openServerForm(
+                        final id = await showAppModal<String>(
                           context,
-                          ledger,
-                          selection,
+                          builder: (_) => ServerForm(
+                            controller: ledger,
+                            businessProvider: local,
+                            catalogProvider: pendingCatalog,
+                          ),
                         );
                         if (id != null &&
                             context.mounted &&

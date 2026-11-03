@@ -11,6 +11,7 @@ import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:vps_tell_you/core/value_types.dart';
 import 'package:vps_tell_you/data/ledger_store.dart';
 import 'package:vps_tell_you/finance/finance_models.dart';
+import 'package:vps_tell_you/l10n/generated/app_localizations.dart';
 import 'package:vps_tell_you/security/host_trust.dart';
 import 'package:vps_tell_you/security/secret_store.dart';
 import 'package:vps_tell_you/security/security_controller.dart';
@@ -54,7 +55,7 @@ class FakeDeviceAuth implements DeviceAuthenticator {
   int calls = 0, cancellations = 0;
   Completer<bool>? pending;
   @override
-  Future<bool> authenticate() async {
+  Future<bool> authenticate(AppLocalizations l10n) async {
     calls++;
     return pending == null ? allowed : await pending!.future;
   }
@@ -232,10 +233,12 @@ void main() {
     final sqliteBytes = latin1.decode(await File(path).readAsBytes());
     expect(sqliteBytes, isNot(contains('fixture-passphrase-only')));
     expect(sqliteBytes, isNot(contains('PRIVATE KEY')));
-    expect(await controller.reveal(original), isTrue);
-    expect(controller.revealedSecret, key);
-    expect(controller.revealedPassphrase, 'fixture-passphrase-only');
-    controller.hideSensitive();
+    final loaded = await controller.loadSshCredential(
+      original.id,
+      isCancelled: () => false,
+    );
+    expect(loaded.secret, key);
+    expect(loaded.passphrase, 'fixture-passphrase-only');
   });
 
   test('cancelled unresolved auth permits another request; late old success cannot unlock newer pending request', () async {
@@ -692,7 +695,6 @@ void main() {
     expect(controller.revealedSecret, 'synthetic-password');
     await Future<void>.delayed(const Duration(milliseconds: 35));
     expect(controller.revealedSecret, isNull);
-    expect(controller.revealedPassphrase, isNull);
   });
 
   test('first-use rejection and cancel prevent authentication; trusted full-key match alone permits callback', () async {

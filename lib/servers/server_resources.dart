@@ -213,25 +213,10 @@ class ServerResources {
       trafficBytes == null &&
       !trafficUnlimited;
 
-  String get trafficPeriodLabel => trafficPeriodLabelFor(defaultLocalizations);
-  String trafficPeriodLabelFor(AppLocalizations l10n) =>
-      trafficPeriodsFor(l10n)[trafficPeriodMonths] ?? l10n.notSet;
-
-  String get trafficSummary => trafficSummaryFor(defaultLocalizations);
-  String trafficSummaryFor(AppLocalizations l10n) {
-    final quota = trafficUnlimited
-        ? l10n.resourceUnlimitedTraffic
-        : trafficBytes == null
-        ? l10n.resourceUnknownTraffic
-        : l10n.resourceTrafficQuota((formatBytes(trafficBytes!)).toString());
-    return '$quota · ${trafficPeriodMonths == null ? l10n.resourcePeriodNotSet : l10n.resourceEveryPeriod(trafficPeriodLabelFor(l10n).toLowerCase())}';
-  }
-
   /// Language-neutral hardware summary such as `2 vCPU · 2 GiB · 40 GiB`
   /// (vCPU, memory, disk). Empty when none of the three is known. Traffic is
   /// shown separately because it also needs its period.
-  String get specSummary => specSummaryFor(defaultLocalizations);
-  String specSummaryFor(AppLocalizations l10n) => [
+  String get specSummary => [
     if (vcpu != null) '$vcpu vCPU',
     if (ramBytes != null) formatBytes(ramBytes!),
     if (diskBytes != null) formatBytes(diskBytes!),

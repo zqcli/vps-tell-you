@@ -9,6 +9,7 @@ import 'package:vps_tell_you/core/value_types.dart';
 import 'package:vps_tell_you/data/ledger_store.dart';
 import 'package:vps_tell_you/finance/finance_math.dart';
 import 'package:vps_tell_you/finance/finance_models.dart';
+import 'package:vps_tell_you/l10n/generated/app_localizations_zh.dart';
 import 'package:vps_tell_you/servers/server_record.dart';
 import 'package:vps_tell_you/servers/server_resources.dart';
 
@@ -45,9 +46,9 @@ Future<void> populateBackupFixture(LedgerStore store) async {
     backupServer(group: (await store.groups()).single.id),
     isNew: true,
   );
-  Future<void> pay(String id, int cycles) async {
+  Future<PaymentRecord> pay(String id, int cycles) async {
     final server = (await store.servers()).single;
-    await store.recordPayment(
+    return store.recordPayment(
       id: id,
       server: server,
       amount: const Money('EUR', 12345),
@@ -59,8 +60,8 @@ Future<void> populateBackupFixture(LedgerStore store) async {
     );
   }
 
-  await pay('void-payment', 1);
-  await store.undoPayment('void-payment');
+  final voided = await pay('void-payment', 1);
+  await store.deletePayment(original: voided, rollbackRenewal: true);
   await pay('active-payment', 2);
   await store.recordAccountPayment(
     id: 'account-payment',
@@ -205,7 +206,6 @@ void main() {
     );
     final preview = await target.previewLedgerRestore(snapshot);
     expect(preview.canRestore, isTrue);
-    expect(preview.exclusions, LedgerBackupSnapshot.exclusions);
     await target.restoreLedgerBackup(snapshot);
     await target.close();
     target = await LedgerStore.open(
@@ -249,7 +249,7 @@ void main() {
       throwsArgumentError,
     );
     expect((await target.payments()).length, 3);
-    await target.undoPayment('active-payment');
+    await target.deletePayment(original: same, rollbackRenewal: true);
     expect(
       (await target.servers()).firstWhere((s) => s.id == 'server').dueDate,
       const LedgerDate(2026, 2, 28),
@@ -509,56 +509,33 @@ void main() {
   });
 
   test('voided account payments alone block restore', () async {
-    await target.recordAccountPayment(
+    final payment = await target.recordAccountPayment(
       id: 'only-void',
       accountLabel: 'Fixture',
       amount: const Money('USD', 0),
       paidDate: const LedgerDate(2026, 1, 1),
     );
-    await target.undoPayment('only-void');
+    await target.deletePayment(original: payment);
     final snapshot = await source.exportLedgerBackup();
-    expect((await target.previewLedgerRestore(snapshot)).conflicts, [
-      '目标台账已有付款（含撤销）',
-    ]);
+    final preview = await target.previewLedgerRestore(snapshot);
+    expect(preview.conflictsFor(AppLocalizationsZh()), ['目标台账已有付款（含撤销）']);
     await expectLater(target.restoreLedgerBackup(snapshot), throwsStateError);
   });
 
-  test('mid-import failure rolls back ledger, FX, trigger rows and keeps unrelated data', () async {
-    await populateBackupFixture(source);
-    await target.saveFx(const FxSettings(displayCurrency: 'USD'));
-    await target.saveThemeMode('light');
-    final db = await databaseFactoryFfiNoIsolate.openDatabase(targetPath);
-    await db.insert('snippets', {
-      'id': 'kept',
-      'name': 'Kept',
-      'content': 'synthetic',
-    });
-    final before = (await target.exportLedgerBackup()).encode();
-    final snapshot = await source.exportLedgerBackup();
-    await expectLater(
-      target.restoreLedgerBackup(
-        snapshot,
-        afterInsert: (count) async {
-          if (count == 5) throw StateError('injected rollback');
-        },
-      ),
-      throwsStateError,
-    );
-    expect((await target.exportLedgerBackup()).encode(), before);
-    expect(await target.reminderRules(), isEmpty);
-    expect(await target.themeMode(), 'light');
-    expect((await target.snippets()).single.id, 'kept');
-    await target.restoreLedgerBackup(snapshot);
-    expect((await target.servers()).length, 2);
-  });
-
   test(
-    'a failed native batch rolls back every imported table and trigger row',
+    'a failed native batch rolls back ledger, FX and trigger rows and keeps unrelated data',
     () async {
       await populateBackupFixture(source);
+      await target.saveFx(const FxSettings(displayCurrency: 'USD'));
+      await target.saveThemeMode('light');
       final snapshot = await source.exportLedgerBackup();
       final before = (await target.exportLedgerBackup()).encode();
       final db = await databaseFactoryFfiNoIsolate.openDatabase(targetPath);
+      await db.insert('snippets', {
+        'id': 'kept',
+        'name': 'Kept',
+        'content': 'synthetic',
+      });
       await db.execute('''CREATE TRIGGER reject_import_payment
       BEFORE INSERT ON payments BEGIN
         SELECT RAISE(ABORT, 'injected batch failure');
@@ -570,6 +547,8 @@ void main() {
       );
       expect((await target.exportLedgerBackup()).encode(), before);
       expect(await target.reminderRules(), isEmpty);
+      expect(await target.themeMode(), 'light');
+      expect((await target.snippets()).single.id, 'kept');
 
       await db.execute('DROP TRIGGER reject_import_payment');
       await target.restoreLedgerBackup(snapshot);

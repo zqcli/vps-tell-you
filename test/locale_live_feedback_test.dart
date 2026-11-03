@@ -470,7 +470,6 @@ void main() {
           TerminalPage(
             ledger: ledger,
             target: target,
-            connectOnOpen: true,
             serviceFactory: (_) => ssh,
           ),
         );
@@ -598,7 +597,6 @@ void main() {
           TerminalPage(
             ledger: ledger,
             target: liveTarget,
-            connectOnOpen: true,
             serviceFactory: (_) => ssh,
           ),
         );

@@ -1,13 +1,10 @@
 import 'dart:io';
-import 'dart:ui' as ui;
 
 import 'package:flutter/cupertino.dart' show CupertinoSwitch;
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
-import 'package:vps_tell_you/core/app_theme.dart';
 import 'package:vps_tell_you/core/ui/ui.dart';
 import 'package:vps_tell_you/core/value_types.dart';
 import 'package:vps_tell_you/data/ledger_store.dart';
@@ -17,11 +14,15 @@ import 'package:vps_tell_you/servers/server_record.dart';
 import 'package:vps_tell_you/servers/server_resource_fields.dart';
 import 'package:vps_tell_you/servers/server_resources.dart';
 
+import 'support/form_review_harness.dart';
 import 'support/form_test_helpers.dart';
 
 void main() {
-  final evidence = Platform.environment['VPS_INLINE_UX_EVIDENCE_DIR'];
-  var fontsLoaded = false;
+  final harness = FormReviewHarness(
+    boundaryKey: const ValueKey('inline-ux-evidence'),
+    fontFamily: 'Inline UX Noto',
+    evidenceDirectory: Platform.environment['VPS_INLINE_UX_EVIDENCE_DIR'],
+  );
   late Directory directory;
   late LedgerStore store;
   late LedgerController ledger;
@@ -71,57 +72,13 @@ void main() {
     double scale, {
     bool create = false,
     double height = 844,
-  }) async {
-    tester.view.physicalSize = Size(width, height);
-    tester.view.devicePixelRatio = 1;
-    addTearDown(tester.view.resetPhysicalSize);
-    addTearDown(tester.view.resetDevicePixelRatio);
-    if (evidence != null && !fontsLoaded) {
-      await tester.runAsync(() async {
-        final font = FontLoader('Inline UX Noto');
-        font.addFont(
-          File(
-            Platform.environment['VPS_FORM_EVIDENCE_FONT_PATH'] ??
-                '/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc',
-          ).readAsBytes().then(ByteData.sublistView),
-        );
-        await font.load();
-        final icons = FontLoader('MaterialIcons');
-        icons.addFont(
-          File(
-            '${Platform.environment['FLUTTER_BOOTSTRAP_ROOT']}/flutter/bin/cache/artifacts/material_fonts/MaterialIcons-Regular.otf',
-          ).readAsBytes().then(ByteData.sublistView),
-        );
-        await icons.load();
-      });
-      fontsLoaded = true;
-    }
-    final theme = appTheme();
-    await tester.pumpWidget(
-      MaterialApp(
-        theme: evidence == null
-            ? theme
-            : theme.copyWith(
-                textTheme: theme.textTheme.apply(fontFamily: 'Inline UX Noto'),
-                appBarTheme: theme.appBarTheme.copyWith(
-                  titleTextStyle: theme.appBarTheme.titleTextStyle?.copyWith(
-                    fontFamily: 'Inline UX Noto',
-                  ),
-                ),
-              ),
-        builder: (context, child) => MediaQuery(
-          data: MediaQuery.of(context)
-              .copyWith(textScaler: TextScaler.linear(scale)),
-          child: child!,
-        ),
-        home: RepaintBoundary(
-          key: const ValueKey('inline-ux-evidence'),
-          child: ServerForm(controller: ledger, record: create ? null : record),
-        ),
-      ),
-    );
-    await tester.pumpAndSettle();
-  }
+  }) => harness.mount(
+    tester,
+    size: Size(width, height),
+    scale: scale,
+    captureRoutes: false,
+    page: (_) => ServerForm(controller: ledger, record: create ? null : record),
+  );
 
   Future<void> reveal(WidgetTester tester, Finder finder) async {
     await tester.ensureVisible(finder);
@@ -134,22 +91,6 @@ void main() {
     await tester.enterText(field, value);
     FocusManager.instance.primaryFocus?.unfocus();
     await tester.pumpAndSettle();
-  }
-
-  Future<void> capture(WidgetTester tester, String name) async {
-    if (evidence == null) return;
-    await tester.pumpAndSettle();
-    final boundary = tester.renderObject<RenderRepaintBoundary>(
-      find.byKey(const ValueKey('inline-ux-evidence')),
-    );
-    await tester.runAsync(() async {
-      final image = await boundary.toImage();
-      final bytes = await image.toByteData(format: ui.ImageByteFormat.png);
-      await Directory(evidence).create(recursive: true);
-      await File('$evidence/$name.png')
-          .writeAsBytes(bytes!.buffer.asUint8List());
-      image.dispose();
-    });
   }
 
   for (final width in [320.0, 360.0, 390.0]) {
@@ -234,7 +175,7 @@ void main() {
           expect(amount.decoration?.suffixText, isNull);
           expect(find.textContaining('每 36 个月续费金额，实付另记'), findsOneWidget);
           await reveal(tester, find.byKey(const ValueKey('row-billing')));
-          await capture(tester, 'finance-${width.toInt()}-${scale.toInt()}x');
+          await harness.capture(tester, 'finance-${width.toInt()}-${scale.toInt()}x');
           final unlimited = find.byKey(
             const ValueKey('resource-traffic-unlimited'),
           );
@@ -276,7 +217,7 @@ void main() {
             tester,
             find.byKey(const ValueKey('resource-row-trafficBytes')),
           );
-          await capture(tester, 'hardware-${width.toInt()}-${scale.toInt()}x');
+          await harness.capture(tester, 'hardware-${width.toInt()}-${scale.toInt()}x');
           expect(tester.takeException(), isNull);
         },
       );
@@ -300,7 +241,7 @@ void main() {
         findsOneWidget,
       );
       expect((await store.servers()).single.notes, isEmpty);
-      await capture(tester, 'date-error-320-2x');
+      await harness.capture(tester, 'date-error-320-2x');
       expect(fieldController(tester, 'field-notes').text, 'Keep this draft');
       expect(tester.takeException(), isNull);
     },
@@ -321,7 +262,7 @@ void main() {
         isFalse,
       );
       expect(find.text('保存').hitTestable(), findsOneWidget);
-      await capture(tester, 'ip-error-small-viewport');
+      await harness.capture(tester, 'ip-error-small-viewport');
       expect(tester.takeException(), isNull);
     },
   );
@@ -357,7 +298,7 @@ void main() {
       );
       expect(notes.keyboardType, TextInputType.multiline);
       expect(notes.textInputAction, TextInputAction.newline);
-      await capture(tester, 'new-server-390-1x');
+      await harness.capture(tester, 'new-server-390-1x');
       expect(tester.takeException(), isNull);
     },
   );

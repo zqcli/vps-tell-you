@@ -50,8 +50,6 @@ void main() {
     expect(legacy.length, 7);
     final restored = ServerResources.decode(jsonEncode(legacy));
     expect(restored.trafficPeriodMonths, isNull);
-    expect(restored.trafficPeriodLabel, '未设置');
-    expect(restored.trafficSummary, contains('周期未设置'));
     expect(restored.toJson(), _complete().toJson());
     for (final entry in {
       'ip': '',
@@ -80,7 +78,6 @@ void main() {
         ServerResources.decode(resources.encode()).trafficPeriodMonths,
         period,
       );
-      expect(resources.trafficSummary, contains('1 GiB 流量'));
     }
     final json = ServerResources().toJson();
     for (final period in [0, -1, 6, 24, 'month', 1.0, false]) {

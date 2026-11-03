@@ -7,14 +7,13 @@ import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:vps_tell_you/connections/ssh_service.dart';
 import 'package:vps_tell_you/data/ledger_store.dart';
 import 'package:vps_tell_you/security/host_trust.dart';
-import 'package:vps_tell_you/security/secret_store.dart';
 import 'package:vps_tell_you/security/security_controller.dart';
 import 'package:vps_tell_you/security/security_models.dart';
 
+import 'support/connection_fakes.dart';
 import 'support/ssh_fixture.dart';
 
-class _Secrets implements SecretStore {
-  final values = <String, String>{};
+class _Secrets extends MemorySecrets {
   int reads = 0;
   Completer<void>? holdRead;
   bool failRead = false;
@@ -26,23 +25,6 @@ class _Secrets implements SecretStore {
     if (failRead) throw StateError('synthetic-password-only PRIVATE KEY');
     return values[reference];
   }
-
-  @override
-  Future<void> write(String reference, String value) async {
-    values[reference] = value;
-  }
-
-  @override
-  Future<void> delete(String reference) async {
-    values.remove(reference);
-  }
-}
-
-class _NoDeviceAuth implements DeviceAuthenticator {
-  @override
-  Future<bool> authenticate() async => false;
-  @override
-  Future<void> cancel() async {}
 }
 
 void main() {
@@ -66,7 +48,7 @@ void main() {
     security = SecurityController(
       store: store,
       secrets: secrets,
-      authenticator: _NoDeviceAuth(),
+      authenticator: DeniedDeviceAuth(),
     );
     await security.initialize();
     service = NativeSshService(security: security);

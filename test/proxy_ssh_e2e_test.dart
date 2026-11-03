@@ -9,31 +9,12 @@ import 'package:vps_tell_you/data/ledger_store.dart';
 import 'package:vps_tell_you/l10n/generated/app_localizations_en.dart';
 import 'package:vps_tell_you/security/host_trust.dart';
 import 'package:vps_tell_you/security/proxy_models.dart';
-import 'package:vps_tell_you/security/secret_store.dart';
 import 'package:vps_tell_you/security/security_controller.dart';
-import 'package:vps_tell_you/security/security_models.dart';
 
 import 'support/fake_proxy.dart';
 import 'support/proxy_tls.dart';
+import 'support/connection_fakes.dart';
 import 'support/ssh_fixture.dart';
-
-class _Secrets implements SecretStore {
-  final values = <String, String>{};
-  @override
-  Future<String?> read(String reference) async => values[reference];
-  @override
-  Future<void> write(String reference, String value) async =>
-      values[reference] = value;
-  @override
-  Future<void> delete(String reference) async => values.remove(reference);
-}
-
-class _NoDeviceAuth implements DeviceAuthenticator {
-  @override
-  Future<bool> authenticate() async => false;
-  @override
-  Future<void> cancel() async {}
-}
 
 /// A name only the proxy can resolve: proves the target is never resolved or
 /// dialled by this device, and that trust stays keyed by the target.
@@ -42,7 +23,7 @@ const _targetName = 'ssh.target.test';
 void main() {
   late Directory work, root;
   late LedgerStore store;
-  late _Secrets secrets;
+  late MemorySecrets secrets;
   late SecurityController security;
   late SshFixture ssh;
   late ProxyTls tls;
@@ -61,20 +42,14 @@ void main() {
       factory: databaseFactoryFfiNoIsolate,
       path: '${work.path}/ledger.db',
     );
-    secrets = _Secrets();
+    secrets = MemorySecrets();
     security = SecurityController(
       store: store,
       secrets: secrets,
-      authenticator: _NoDeviceAuth(),
+      authenticator: DeniedDeviceAuth(),
     );
     await security.initialize();
-    await security.saveCredential(
-      name: 'Fixture',
-      kind: CredentialKind.password,
-      defaultUsername: 'fixture',
-      secret: 'synthetic-password-only',
-    );
-    credentialId = security.credentials.single.id;
+    credentialId = await saveFixtureCredential(security);
     ssh = await SshFixture.start(sftpRoot: root.path);
     service = NativeSshService(
       security: security,

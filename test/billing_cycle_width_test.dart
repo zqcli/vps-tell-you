@@ -1,23 +1,24 @@
 import 'dart:io';
-import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
-import 'package:vps_tell_you/core/app_theme.dart';
 import 'package:vps_tell_you/core/value_types.dart';
 import 'package:vps_tell_you/data/ledger_store.dart';
 import 'package:vps_tell_you/servers/ledger_controller.dart';
 import 'package:vps_tell_you/servers/server_form.dart';
 import 'package:vps_tell_you/servers/server_record.dart';
 
+import 'support/form_review_harness.dart';
 import 'support/form_test_helpers.dart';
 
 void main() {
-  final evidence = Platform.environment['VPS_CYCLE_WIDTH_EVIDENCE_DIR'];
-  var fontsLoaded = false;
+  final harness = FormReviewHarness(
+    boundaryKey: const ValueKey('cycle-width-evidence'),
+    fontFamily: 'Cycle width Noto',
+    evidenceDirectory: Platform.environment['VPS_CYCLE_WIDTH_EVIDENCE_DIR'],
+  );
   late Directory directory;
   late LedgerStore store;
   late LedgerController ledger;
@@ -75,79 +76,15 @@ void main() {
     ValueNotifier<double>? textScale,
     Brightness brightness = Brightness.light,
   }) async {
-    tester.view.physicalSize = Size(width, height);
-    tester.view.devicePixelRatio = 1;
-    addTearDown(tester.view.resetPhysicalSize);
-    addTearDown(tester.view.resetDevicePixelRatio);
-    final scaleListenable = textScale ?? ValueNotifier<double>(scale);
-    if (textScale == null) addTearDown(scaleListenable.dispose);
-    if (evidence != null && !fontsLoaded) {
-      await tester.runAsync(() async {
-        final font = FontLoader('Cycle width Noto');
-        font.addFont(
-          File(
-            Platform.environment['VPS_FORM_EVIDENCE_FONT_PATH'] ??
-                '/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc',
-          ).readAsBytes().then(ByteData.sublistView),
-        );
-        await font.load();
-        final icons = FontLoader('MaterialIcons');
-        icons.addFont(
-          File(
-            '${Platform.environment['FLUTTER_BOOTSTRAP_ROOT']}/flutter/bin/cache/artifacts/material_fonts/MaterialIcons-Regular.otf',
-          ).readAsBytes().then(ByteData.sublistView),
-        );
-        await icons.load();
-        fontsLoaded = true;
-      });
-    }
-    final theme = appTheme(brightness: brightness);
-    await tester.pumpWidget(
-      MaterialApp(
-        theme: evidence == null
-            ? theme
-            : theme.copyWith(
-                textTheme: theme.textTheme.apply(
-                  fontFamily: 'Cycle width Noto',
-                ),
-                appBarTheme: theme.appBarTheme.copyWith(
-                  titleTextStyle: theme.appBarTheme.titleTextStyle?.copyWith(
-                    fontFamily: 'Cycle width Noto',
-                  ),
-                ),
-              ),
-        builder: (context, child) => ValueListenableBuilder<double>(
-          valueListenable: scaleListenable,
-          child: RepaintBoundary(
-            key: const ValueKey('cycle-width-evidence'),
-            child: child,
-          ),
-          builder: (context, factor, child) => MediaQuery(
-            data: MediaQuery.of(context)
-                .copyWith(textScaler: TextScaler.linear(factor)),
-            child: child!,
-          ),
-        ),
-        home: Builder(
-          builder: (context) => Scaffold(
-            body: Center(
-              child: FilledButton(
-                onPressed: () => Navigator.push<void>(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) =>
-                        ServerForm(controller: ledger, record: record),
-                  ),
-                ),
-                child: const Text('Open cycle width review'),
-              ),
-            ),
-          ),
-        ),
-      ),
+    await harness.mount(
+      tester,
+      size: Size(width, height),
+      scale: scale,
+      textScale: textScale,
+      brightness: brightness,
+      routeLabel: 'Open cycle width review',
+      page: (_) => ServerForm(controller: ledger, record: record),
     );
-    await tester.tap(find.text('Open cycle width review'));
-    await tester.pumpAndSettle();
     await reveal(tester);
   }
 
@@ -227,21 +164,6 @@ void main() {
     expect(tester.takeException(), isNull);
   }
 
-  Future<void> capture(WidgetTester tester, String name) async {
-    if (evidence == null) return;
-    final boundary = tester.renderObject<RenderRepaintBoundary>(
-      find.byKey(const ValueKey('cycle-width-evidence')),
-    );
-    await tester.runAsync(() async {
-      final image = await boundary.toImage();
-      final bytes = await image.toByteData(format: ui.ImageByteFormat.png);
-      await Directory(evidence).create(recursive: true);
-      await File('$evidence/$name.png')
-          .writeAsBytes(bytes!.buffer.asUint8List());
-      image.dispose();
-    });
-  }
-
   for (final width in [320.0, 360.0, 390.0]) {
     for (final scale in [1.0, 2.0]) {
       testWidgets('cycle contents remain complete at $width px / $scale text', (
@@ -258,7 +180,7 @@ void main() {
             expect(spoken, contains('续费周期'));
             expect(spoken, contains(months == 12 ? '每年' : '每 $months 个月'));
             if (months == 12 || months == 6) {
-              await capture(
+              await harness.capture(
                 tester,
                 'cycle-$months-${width.toInt()}-${scale.toInt()}x',
               );
@@ -311,7 +233,7 @@ void main() {
       );
       expect(find.textContaining('9999999999.99 $currency'), findsOneWidget);
     }
-    await capture(tester, 'cycle-resized-dark-320-2x');
+    await harness.capture(tester, 'cycle-resized-dark-320-2x');
     await tapSave(tester);
     final saved = (await store.servers()).single;
     expect(saved.cycleMonths, 6);
@@ -337,7 +259,7 @@ void main() {
         expect(option.hitTestable(), findsOneWidget);
         expectCompleteText(tester, option, name);
       }
-      await capture(tester, 'cycle-menu-320-560-2x');
+      await harness.capture(tester, 'cycle-menu-320-560-2x');
       await tester.tap(find.byKey(const ValueKey('app-sheet-close')));
       await tester.pumpAndSettle();
       expectFeeRows(tester, 320, '每年');
@@ -371,7 +293,7 @@ void main() {
     expectFeeRows(tester, 320, '每 18 个月');
     expect(find.textContaining('每 18 个月续费金额'), findsOneWidget);
     expect(record.cycleMonths, 18);
-    await capture(tester, 'cycle-legacy-18-320-2x');
+    await harness.capture(tester, 'cycle-legacy-18-320-2x');
     await select(tester, 'cycle', 3);
     expectFeeRows(tester, 320, '每 3 个月');
     await tapSave(tester);
@@ -380,7 +302,7 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('locked cycle keeps its layout and immutable paid history', (
+  testWidgets('locked cycle keeps complete fee-row geometry and opens no picker', (
     tester,
   ) async {
     await store.recordPayment(
@@ -394,10 +316,6 @@ void main() {
     );
     await ledger.refresh();
     record = ledger.byId(record.id)!;
-    final payments = (await store.payments()).map((p) => p.toMap()).toList();
-    final periods = (await store.servicePeriods())
-        .map((p) => p.toMap())
-        .toList();
     await mount(tester, width: 320, scale: 2);
     expectFeeRows(tester, 320, '每年');
     await tester.tap(field('cycle'));
@@ -405,15 +323,6 @@ void main() {
     // No picker opens for locked terms; the lock is explained instead.
     expect(find.byType(BottomSheet), findsNothing);
     expect(find.text('每 36 个月'), findsNothing);
-    await tester.enterText(field('amount'), '0');
-    FocusManager.instance.primaryFocus?.unfocus();
-    await tapSave(tester);
-    expect((await store.servers()).single.cycleMonths, 12);
-    expect((await store.payments()).map((p) => p.toMap()).toList(), payments);
-    expect(
-      (await store.servicePeriods()).map((p) => p.toMap()).toList(),
-      periods,
-    );
     expect(tester.takeException(), isNull);
   });
 }

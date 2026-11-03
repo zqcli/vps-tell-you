@@ -24,6 +24,7 @@ import 'package:vps_tell_you/servers/server_record.dart';
 
 import 'security_store_test.dart' show FakeSecretStore, FakeDeviceAuth, hostKey;
 import 'support/fake_sftp_session.dart';
+import 'support/terminal_test_helpers.dart';
 import 'terminal_widget_test.dart' show SpySshService;
 
 /// Stands in for [NativeSshService.connectSftp]: drives the same callbacks the
@@ -500,13 +501,13 @@ void main() {
     Future<void> mountTerminal(
       WidgetTester tester, {
       String draft = '',
-      bool connect = true,
+      bool holdConnecting = false,
     }) async {
       tester.view.physicalSize = const Size(390, 844);
       tester.view.devicePixelRatio = 1;
       addTearDown(tester.view.resetPhysicalSize);
       addTearDown(tester.view.resetDevicePixelRatio);
-      ssh = SftpSpySsh(fake);
+      ssh = SftpSpySsh(fake)..holdConnecting = holdConnecting;
       await tester.pumpWidget(
         MaterialApp(
           theme: appTheme(),
@@ -522,8 +523,6 @@ void main() {
                     builder: (_) => TerminalPage(
                       ledger: ledger,
                       target: target,
-                      initialDraft: draft,
-                      connectOnOpen: connect,
                       serviceFactory: (_) => ssh,
                     ),
                   ),
@@ -536,6 +535,7 @@ void main() {
       );
       await tester.tap(find.text('Open terminal fixture'));
       await tester.pumpAndSettle();
+      await seedTerminalDraft(tester, draft);
     }
 
     Future<void> openSftpFromMenu(WidgetTester tester) async {
@@ -633,7 +633,7 @@ void main() {
     testWidgets('the menu entry is disabled while not connected', (
       tester,
     ) async {
-      await mountTerminal(tester, connect: false);
+      await mountTerminal(tester, holdConnecting: true);
       expect(ssh.connected, isFalse);
       await tester.tap(find.byTooltip('终端菜单'));
       await tester.pumpAndSettle();

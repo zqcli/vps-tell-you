@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:vps_tell_you/data/ledger_store.dart';
+import 'package:vps_tell_you/l10n/generated/app_localizations.dart';
 import 'package:vps_tell_you/l10n/generated/app_localizations_en.dart';
 import 'package:vps_tell_you/security/proxy_models.dart';
 import 'package:vps_tell_you/security/secret_store.dart';
@@ -35,7 +36,7 @@ class FakeAuth implements DeviceAuthenticator {
   bool allowed = true;
   int calls = 0;
   @override
-  Future<bool> authenticate() async {
+  Future<bool> authenticate(AppLocalizations l10n) async {
     calls++;
     return allowed;
   }

@@ -25,13 +25,11 @@ class SshConnectPage extends StatefulWidget {
     super.key,
     required this.ledger,
     this.initialServerId,
-    this.initialDraft = '',
     this.powerMode = false,
     this.serviceFactory,
   });
   final LedgerController ledger;
   final String? initialServerId;
-  final String initialDraft;
   final bool powerMode;
   final SshServiceFactory? serviceFactory;
 
@@ -124,9 +122,7 @@ class _SshConnectPageState extends State<SshConnectPage>
           builder: (_) => TerminalPage(
             ledger: widget.ledger,
             target: target,
-            initialDraft: widget.initialDraft,
             powerMode: widget.powerMode,
-            connectOnOpen: true,
             serviceFactory: widget.serviceFactory,
           ),
         ),
@@ -269,7 +265,6 @@ class _SshConnectPageState extends State<SshConnectPage>
     final notes = [
       l10n.connectionIdentityFirst,
       l10n.connectionTemporaryChangesHelp,
-      if (widget.initialDraft.isNotEmpty) l10n.connectionSnippetDraftOnly,
     ];
     final canConnect =
         !(_opening ||

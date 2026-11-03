@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../l10n/generated/app_localizations.dart';
@@ -156,19 +155,15 @@ class TerminalStatusPill extends StatelessWidget {
   }
 }
 
-/// Only before a session exists: connecting (with cancel) or the idle
-/// "connect" prompt. Once a session has ended the page closes instead.
+/// Connection progress with cancellation. An ended session closes the page.
 class TerminalConnectionBanner extends StatelessWidget {
   const TerminalConnectionBanner({
     super.key,
     required this.scheme,
-    required this.connecting,
     required this.onCancel,
-    required this.onConnect,
   });
   final TerminalScheme scheme;
-  final bool connecting;
-  final VoidCallback onCancel, onConnect;
+  final VoidCallback onCancel;
 
   @override
   Widget build(BuildContext context) => Container(
@@ -181,36 +176,21 @@ class TerminalConnectionBanner extends StatelessWidget {
       ),
       child: SingleChildScrollView(
         padding: const EdgeInsets.fromLTRB(16, 4, 12, 8),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Wrap(
+        child: Wrap(
               alignment: WrapAlignment.spaceBetween,
               crossAxisAlignment: WrapCrossAlignment.center,
               spacing: 8,
               children: [
                 Text(
-                  connecting
-                      ? context.l10n.terminalEstablishingSecure
-                      : context.l10n.terminalOffline,
+                  context.l10n.terminalEstablishingSecure,
                   style: Theme.of(context).textTheme.bodyMedium,
                 ),
-                if (connecting)
-                  TextButton(
+                TextButton(
                     key: const ValueKey('terminal-disconnect'),
                     onPressed: onCancel,
                     child: Text(context.l10n.terminalCancelConnection),
-                  )
-                else
-                  TextButton(
-                    key: const ValueKey('terminal-connect'),
-                    onPressed: kIsWeb ? null : onConnect,
-                    child: Text(context.l10n.terminalConnect),
                   ),
               ],
-            ),
-            if (kIsWeb) Text(context.l10n.terminalBrowserUnsupported),
-          ],
         ),
       ),
     ),

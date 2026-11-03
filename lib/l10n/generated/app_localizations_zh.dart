@@ -1968,9 +1968,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get resourceUnlimitedTraffic => '流量不限量';
 
   @override
-  String get resourceUnknownTraffic => '流量未知';
-
-  @override
   String resourceTrafficQuota(String p0) {
     return '$p0 流量';
   }
@@ -3140,15 +3137,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get terminalEstablishingSecure => '正在建立安全连接…';
-
-  @override
-  String get terminalOffline => '终端未连接';
-
-  @override
-  String get terminalConnect => '连接';
-
-  @override
-  String get terminalBrowserUnsupported => '浏览器不支持原生 SSH，请使用原生应用。';
 
   @override
   String get terminalDismissNotice => '关闭提示';

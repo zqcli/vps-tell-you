@@ -21,7 +21,6 @@ final class LedgerBackupSnapshot {
   static const _supportedVersions = [1, 2];
   static const maxBytes = 10 * 1024 * 1024;
   static const maxRows = 20000;
-  static List<String> get exclusions => exclusionsFor(defaultLocalizations);
   static List<String> exclusionsFor(AppLocalizations l10n) => [
     l10n.backupExcludedSecrets,
     l10n.backupExcludedConnections,
@@ -456,13 +455,11 @@ class LedgerRestorePreview {
     : _conflicts = List.unmodifiable(conflicts);
   final LedgerBackupSnapshot snapshot;
   final List<LocalizedText> _conflicts;
-  List<String> get conflicts => conflictsFor(defaultLocalizations);
   List<String> conflictsFor(AppLocalizations l10n) => [
     for (final conflict in _conflicts) conflict.messageFor(l10n),
   ];
   Map<String, int> get counts => snapshot.counts;
-  List<String> get exclusions => LedgerBackupSnapshot.exclusions;
-  bool get canRestore => conflicts.isEmpty;
+  bool get canRestore => _conflicts.isEmpty;
 }
 
 extension LedgerBackupStore on LedgerStore {
@@ -511,10 +508,7 @@ extension LedgerBackupStore on LedgerStore {
     await _backupConflicts(_db, withProviders: snapshot.providers.isNotEmpty),
   );
 
-  Future<void> restoreLedgerBackup(
-    LedgerBackupSnapshot snapshot, {
-    Future<void> Function(int inserted)? afterInsert,
-  }) async {
+  Future<void> restoreLedgerBackup(LedgerBackupSnapshot snapshot) async {
     // Snapshots can only be constructed by the validator and are immutable.
     // A v1 file can grow when normalized, so check its encoded size as well.
     _checkEncodedBackupSize(snapshot);
@@ -525,26 +519,15 @@ extension LedgerBackupStore on LedgerStore {
       )).isNotEmpty) {
         throw LocalizedStateError((l10n) => l10n.restoreRequiresEmptyLedger);
       }
-      var batch = txn.batch();
-      var inserted = 0;
-      Future<void> insert(String table, Map<String, Object?> row) async {
-        batch.insert(table, row, conflictAlgorithm: ConflictAlgorithm.abort);
-        if (afterInsert != null) {
-          // The test hook observes actual inserts inside the same transaction.
-          await batch.commit(noResult: true);
-          batch = txn.batch();
-          await afterInsert(++inserted);
-        }
-      }
-
+      final batch = txn.batch();
       for (final row in snapshot.providers) {
-        await insert('providers', {...row, 'revision': 0});
+        batch.insert('providers', {...row, 'revision': 0});
       }
       for (final row in snapshot.groups) {
-        await insert('server_groups', row);
+        batch.insert('server_groups', row);
       }
       for (final row in snapshot.servers) {
-        await insert('servers', {...row, 'notes': ''});
+        batch.insert('servers', {...row, 'notes': ''});
         // Schema 6 creates the ordinary reminder default on every server insert.
         // Imported records must remain silent until explicitly enabled again.
         batch.update(
@@ -555,14 +538,14 @@ extension LedgerBackupStore on LedgerStore {
         );
       }
       for (final row in snapshot.payments) {
-        await insert('payments', {
+        batch.insert('payments', {
           ...row,
           'note': '',
           'request_fingerprint': _backupPaymentFingerprint(row),
         });
       }
       for (final row in snapshot.servicePeriods) {
-        await insert('service_periods', row);
+        batch.insert('service_periods', row);
       }
       await batch.commit(noResult: true);
       // FX is one documented singleton; destination app/notification preferences

@@ -244,7 +244,7 @@ void main() {
     expect((await only()).dueDate, before.dueDate);
   });
 
-  test('durable monthly anchor survives separate commits/reopen; undo is atomic, tombstoned and conflict-safe; unrelated edits do not block it', () async {
+  test('durable monthly anchor survives commits/reopen; rollback is tombstoned and conflict-safe; unrelated edits do not block it', () async {
     await store.saveServer(
       fixture(cycle: 1, start: '2023-12-31', due: '2024-01-31'),
       isNew: true,
@@ -262,10 +262,10 @@ void main() {
     expect(c.canUndoPayment(first), isFalse);
     expect(c.canUndoPayment(second), isTrue);
     await expectLater(
-      store.undoPayment('first'),
+      store.deletePayment(original: first, rollbackRenewal: true),
       throwsA(isA<LedgerConflict>()),
     );
-    await store.undoPayment('second');
+    await store.deletePayment(original: second, rollbackRenewal: true);
     expect((await only()).dueDate, d('2024-02-29'));
     expect((await store.servicePeriods()).length, 2);
     expect(
@@ -274,9 +274,8 @@ void main() {
     );
     await reopen();
     await expectLater(pay(secondInput, id: 'second'), throwsArgumentError);
-    await store.undoPayment(
-      'second',
-    ); // Harmless repeated undo, cannot revive the key.
+    // Repeating the delete cannot revive the key.
+    await store.deletePayment(original: second, rollbackRenewal: true);
     final third = await pay(await only(), id: 'third');
     expect(third.until, d('2024-03-31'));
     // An unrelated edit (favourite) bumps the revision but must not block the
@@ -297,7 +296,7 @@ void main() {
       isFalse,
     );
     expect((await store.servicePeriods()).length, 3);
-    await store.undoPayment('third');
+    await store.deletePayment(original: third, rollbackRenewal: true);
     expect((await only()).dueDate, d('2024-02-29'));
     expect((await only()).favorite, isTrue);
     expect((await store.servicePeriods()).length, 2);
@@ -308,57 +307,7 @@ void main() {
     c.dispose();
   });
 
-  test('safe undo restores only due, removes owned periods/payment totals, and never reuses a void key', () async {
-    await store.saveServer(fixture(), isNew: true);
-    final before = await only();
-    await pay(before, cycles: 3, minor: 0);
-    await store.undoPayment('payment');
-    final restored = await only();
-    expect(restored.dueDate, before.dueDate);
-    expect(restored.startDate, before.startDate);
-    expect(restored.amountMinor, before.amountMinor);
-    expect(restored.revision, 2);
-    expect((await store.servicePeriods()).length, 1);
-    expect(
-      recentPayments(await store.payments(), LedgerDate.today(now)),
-      isEmpty,
-    );
-    await expectLater(pay(before, cycles: 3, minor: 0), throwsArgumentError);
-  });
-
-  test(
-    'SQLite abort at final undo step restores the entire payment transaction',
-    () async {
-      await store.saveServer(fixture(), isNew: true);
-      await pay(await only(), cycles: 2);
-      final serverBefore = (await only()).toMap();
-      final periodsBefore = (await store.servicePeriods())
-          .map((p) => p.toMap())
-          .toList();
-      final paymentBefore = (await store.payments()).single.toMap();
-      final db = await raw();
-      await db.execute(
-        "CREATE TRIGGER abort_void BEFORE UPDATE OF voided_at ON payments BEGIN SELECT RAISE(ABORT, 'test undo rollback'); END",
-      );
-      await expectLater(
-        store.undoPayment('payment'),
-        throwsA(isA<DatabaseException>()),
-      );
-      expect((await only()).toMap(), serverBefore);
-      expect(
-        (await store.servicePeriods()).map((p) => p.toMap()).toList(),
-        periodsBefore,
-      );
-      expect((await store.payments()).single.toMap(), paymentBefore);
-      await db.execute('DROP TRIGGER abort_void');
-      await store.undoPayment('payment');
-      expect((await only()).dueDate, d('2027-01-01'));
-      expect((await store.servicePeriods()).length, 1);
-      expect((await store.payments()).single.voided, isTrue);
-    },
-  );
-
-  test('independent account bills are stored once, omit group allocations, survive archive and undo without servers', () async {
+  test('independent account bills are stored once, omit group allocations, survive archive and delete without servers', () async {
     final amount = const Money('CNY', 10);
     final account = await store.recordAccountPayment(
       id: 'account',
@@ -424,7 +373,7 @@ void main() {
       ).formatted,
       '\$73.00',
     );
-    await store.undoPayment('account');
+    await store.deletePayment(original: account);
     expect(
       (await store.payments()).singleWhere((p) => p.id == 'account').voided,
       isTrue,
@@ -693,20 +642,24 @@ void main() {
     });
 
     test(
-      'delete with rollback restores due date and periods like undo',
+      'delete with rollback restores only due, removes owned periods and never reuses a void key',
       () async {
         await store.saveServer(fixture(), isNew: true);
         final before = await only();
-        final created = await pay(before, cycles: 2);
+        final created = await pay(before, cycles: 3, minor: 0);
         await store.deletePayment(original: created, rollbackRenewal: true);
         final restored = await only();
         expect(restored.dueDate, before.dueDate);
+        expect(restored.startDate, before.startDate);
+        expect(restored.amountMinor, before.amountMinor);
+        expect(restored.revision, 2);
         expect((await store.servicePeriods()).length, 1);
         expect((await stored('payment')).voided, isTrue);
         expect(
           recentPayments(await store.payments(), LedgerDate.today(now)),
           isEmpty,
         );
+        await expectLater(pay(before, cycles: 3, minor: 0), throwsArgumentError);
       },
     );
 
@@ -755,7 +708,7 @@ void main() {
     });
 
     test(
-      'a deleted payment can be neither edited, undone nor re-recorded',
+      'a deleted payment cannot be edited, rolled back or re-recorded',
       () async {
         await store.saveServer(fixture(), isNew: true);
         final server = await only();
@@ -771,8 +724,8 @@ void main() {
           ),
           throwsArgumentError,
         );
-        // An old undo token (the id) does nothing and cannot revert the term.
-        await store.undoPayment('payment');
+        // Repeating the delete with rollback cannot revert the retained term.
+        await store.deletePayment(original: created, rollbackRenewal: true);
         expect((await only()).toMap(), serverAfter);
         expect((await store.servicePeriods()).length, 2);
         // The idempotency key stays used after a reopen.
@@ -804,6 +757,10 @@ void main() {
       );
       expect((await stored('payment')).toMap(), created.toMap());
       await db.execute('DROP TRIGGER abort_void');
+      await store.deletePayment(original: created, rollbackRenewal: true);
+      expect((await only()).dueDate, d('2027-01-01'));
+      expect((await store.servicePeriods()).length, 1);
+      expect((await stored('payment')).voided, isTrue);
       await db.close();
     });
 
@@ -926,10 +883,6 @@ void main() {
         store.deletePayment(original: second, rollbackRenewal: true),
         throwsA(isA<LedgerConflict>()),
       );
-      await expectLater(
-        store.undoPayment('second'),
-        throwsA(isA<LedgerConflict>()),
-      );
       expect((await only()).toMap(), c.toMap());
       expect((await stored('second')).voided, isFalse);
       expect((await periodsOf('s')).length, 3);
@@ -986,9 +939,9 @@ void main() {
       );
       await renew('again');
       await renew('third');
-      await renew('fourth');
+      final fourth = await renew('fourth');
       expect((await only()).dueDate, d('2024-04-30'));
-      await store.undoPayment('fourth');
+      await store.deletePayment(original: fourth, rollbackRenewal: true);
       server = await only();
       expect(server.dueDate, d('2024-03-31'));
       expect(renewalDate(server, 1), d('2024-04-30'));
@@ -1137,7 +1090,7 @@ void main() {
     );
 
     test(
-      'undo tokens stay no-ops after repair; voided payments are never revived',
+      'repeated deletes stay no-ops after repair; voided payments are never revived',
       () async {
         await store.saveServer(fixture(), isNew: true);
         final payment = await renew('p1');
@@ -1148,7 +1101,7 @@ void main() {
           expectedRevision: server.revision,
         );
         final repaired = (await only()).toMap();
-        await store.undoPayment('p1');
+        await store.deletePayment(original: payment, rollbackRenewal: true);
         await store.deletePayment(
           original: await stored('p1'),
           rollbackRenewal: true,

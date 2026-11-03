@@ -41,15 +41,12 @@ class TerminalPage extends StatefulWidget {
     super.key,
     required this.ledger,
     required this.target,
-    this.initialDraft = '',
-    this.connectOnOpen = false,
     this.powerMode = false,
     this.serviceFactory,
   });
   final LedgerController ledger;
   final SshTarget target;
-  final String initialDraft;
-  final bool connectOnOpen, powerMode;
+  final bool powerMode;
   final SshServiceFactory? serviceFactory;
   @override
   State<TerminalPage> createState() => _TerminalPageState();
@@ -59,16 +56,16 @@ class _TerminalPageState extends State<TerminalPage>
     with WidgetsBindingObserver
     implements BackgroundSession {
   late final SshService _service;
-  late Terminal _terminal;
-  TerminalHighlighter? _highlighter;
-  late final TextEditingController _draft;
+  late final Terminal _terminal;
+  late final TerminalHighlighter _highlighter;
+  final _draft = TextEditingController();
   final _terminalFocus = FocusNode();
   var _terminalViewKey = GlobalKey<TerminalViewState>();
   final _terminalController = TerminalController();
   final _terminalScroll = ScrollController();
   bool _commandsOpen = false, _exitPromptOpen = false;
   bool _ctrlArmed = false, _scrolledBack = false, _hasOutput = false;
-  int _inputEpoch = 0, _commandsEpoch = 0;
+  int _commandsEpoch = 0;
   bool _pasteBusy = false, _sftpOpening = false;
   ModalRoute<dynamic>? _commandsRoute;
   Size? _lastViewportSize;
@@ -82,12 +79,10 @@ class _TerminalPageState extends State<TerminalPage>
     },
   );
   StreamSubscription<String>? _output;
-  bool _sendBusy = false,
-      _powerBusy = false,
+  bool _powerBusy = false,
       _hasConnected = false,
       _closing = false,
       _targetInvalidated = false;
-  int _targetEpoch = 0;
   bool _endQueued = false;
   // While the app is in the background nothing may be sent from the draft.
   bool _backgrounded = false;
@@ -105,7 +100,6 @@ class _TerminalPageState extends State<TerminalPage>
     terminalSmartHighlight.addListener(_highlightToggled);
     WidgetsBinding.instance.addObserver(this);
     BackgroundGrace.instance.register(this);
-    _draft = TextEditingController(text: widget.initialDraft);
     _terminalScroll.addListener(_scrollChanged);
     _service =
         widget.serviceFactory?.call(widget.ledger.security) ??
@@ -118,20 +112,16 @@ class _TerminalPageState extends State<TerminalPage>
       }
       _terminal.write(text);
     });
-    if (widget.connectOnOpen) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) {
-          _connect();
-        }
-      });
-    }
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _connect();
+    });
   }
 
   TerminalScheme get _scheme => terminalSchemeChoice.value;
 
   // Colours only: no bytes are sent and the session is not touched.
   void _highlightToggled() {
-    _highlighter?.enabled = terminalSmartHighlight.value;
+    _highlighter.enabled = terminalSmartHighlight.value;
   }
 
   /// Buffer rows currently on screen, for the highlighter.
@@ -162,10 +152,6 @@ class _TerminalPageState extends State<TerminalPage>
   BuildContext get _dialogContext => _terminalViewKey.currentContext ?? context;
 
   void _createTerminal() {
-    _lastViewportSize = null;
-    _viewportEpoch++;
-    _terminalViewKey = GlobalKey<TerminalViewState>();
-    _hasOutput = false;
     _terminal = MobileTerminal(
       maxLines: 3000,
       consumeControl: _consumeControl,
@@ -187,7 +173,6 @@ class _TerminalPageState extends State<TerminalPage>
         _service.resize(columns, rows);
       }
     };
-    _highlighter?.dispose();
     _highlighter = TerminalHighlighter(
       _terminal,
       enabled: terminalSmartHighlight.value,
@@ -285,7 +270,7 @@ class _TerminalPageState extends State<TerminalPage>
     if (!_terminalScroll.hasClients) {
       return;
     }
-    _highlighter?.notifyScrolled();
+    _highlighter.notifyScrolled();
     final back = _terminalScroll.position.extentAfter > 24;
     if (back != _scrolledBack && mounted) {
       setState(() => _scrolledBack = back);
@@ -388,7 +373,6 @@ class _TerminalPageState extends State<TerminalPage>
       try {
         if (!mounted ||
             ticket != _viewportEpoch ||
-            !identical(terminal, _terminal) ||
             generation != _service.generation ||
             !_terminalScroll.hasClients ||
             _terminalScroll.positions.length != 1) {
@@ -421,7 +405,6 @@ class _TerminalPageState extends State<TerminalPage>
         _commandsOpen ||
         _closing ||
         _exitPromptOpen ||
-        _sendBusy ||
         ModalRoute.of(context)?.isCurrent == false) {
       return;
     }
@@ -476,7 +459,6 @@ class _TerminalPageState extends State<TerminalPage>
     if (!_connected ||
         _commandsOpen ||
         _exitPromptOpen ||
-        _sendBusy ||
         ModalRoute.of(context)?.isCurrent == false) {
       return;
     }
@@ -544,7 +526,6 @@ class _TerminalPageState extends State<TerminalPage>
       return null;
     }
     _consumeControl();
-    final epoch = _targetEpoch;
     final generation = _service.generation;
     final commandsEpoch = _commandsEpoch;
     final before = _draft.value;
@@ -561,7 +542,6 @@ class _TerminalPageState extends State<TerminalPage>
       if (!mounted ||
           _closing ||
           _targetInvalidated ||
-          epoch != _targetEpoch ||
           generation != _service.generation ||
           commandsEpoch != _commandsEpoch ||
           route?.isCurrent != true) {
@@ -600,7 +580,6 @@ class _TerminalPageState extends State<TerminalPage>
 
   Future<bool> _replaceDraft(String content) async {
     final before = _draft.value;
-    final epoch = _targetEpoch;
     final generation = _service.generation;
     if (_draft.text.isNotEmpty && _draft.text != content) {
       final replace = await confirmAction(
@@ -616,7 +595,6 @@ class _TerminalPageState extends State<TerminalPage>
     if (!mounted ||
         _closing ||
         _targetInvalidated ||
-        epoch != _targetEpoch ||
         generation != _service.generation ||
         _draft.value != before) {
       return false;
@@ -803,26 +781,16 @@ class _TerminalPageState extends State<TerminalPage>
     if (oldWidget.target.label != widget.target.label ||
         oldWidget.target.credentialId != widget.target.credentialId) {
       _targetInvalidated = true;
-      _inputEpoch++;
       _closeKeyboard();
-      final epoch = ++_targetEpoch;
       // Updating a route may happen while another route's dialog is mounted.
       // Disconnect notifications must not rebuild that overlay during build.
       // Block local input synchronously, then invalidate the service generation
       // before the next event can interact with the changed target.
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (!mounted || _closing || epoch != _targetEpoch) {
+        if (!mounted || _closing) {
           return;
         }
-        _endReason = LocalizedText((l10n) => l10n.terminalTargetChanged);
-        _service.disconnect();
-        _draft.clear();
-        _terminalController.clearSelection();
-        _terminal.onOutput = null;
-        _terminal.onResize = null;
-        _createTerminal();
-        setState(() => _targetInvalidated = false);
-        showAppToast(context, localizedText(_endReason!, context.l10n));
+        showAppToast(context, context.l10n.terminalTargetChanged);
         _leave();
       });
     }
@@ -852,7 +820,7 @@ class _TerminalPageState extends State<TerminalPage>
   void dispose() {
     terminalSchemeChoice.removeListener(_schemeChanged);
     terminalSmartHighlight.removeListener(_highlightToggled);
-    _highlighter?.dispose();
+    _highlighter.dispose();
     WidgetsBinding.instance.removeObserver(this);
     BackgroundGrace.instance.unregister(this);
     _service.removeListener(_changed);
@@ -877,7 +845,6 @@ class _TerminalPageState extends State<TerminalPage>
       return;
     }
     setState(() {
-      _hasConnected = false;
       _notice = widget.powerMode
           ? LocalizedText((l10n) => l10n.terminalPowerMenuHelp)
           : null;
@@ -889,8 +856,7 @@ class _TerminalPageState extends State<TerminalPage>
     );
   }
 
-  bool get _showBanner =>
-      !_closing && (_connecting || _service.status == SshStatus.idle);
+  bool get _showBanner => !_closing && _connecting;
 
   bool get _connected => !_closing && !_targetInvalidated && _service.connected;
 
@@ -938,8 +904,7 @@ class _TerminalPageState extends State<TerminalPage>
     int generation,
     bool appendEnter,
   ) async {
-    if (_sendBusy ||
-        _backgrounded ||
+    if (_backgrounded ||
         !_connected ||
         !_service.acceptsInput ||
         exact.isEmpty ||
@@ -947,7 +912,6 @@ class _TerminalPageState extends State<TerminalPage>
         generation != _service.generation) {
       return false;
     }
-    setState(() => _sendBusy = true);
     try {
       // The two visible actions define the exact payload. Existing CR/LF or
       // controls in the draft are never removed or disguised as non-executing.
@@ -963,10 +927,6 @@ class _TerminalPageState extends State<TerminalPage>
     } catch (_) {
       // Do not log the text or retry a potentially accepted write.
       return false;
-    } finally {
-      if (mounted) {
-        setState(() => _sendBusy = false);
-      }
     }
   }
 
@@ -1124,9 +1084,7 @@ class _TerminalPageState extends State<TerminalPage>
                                 onPointerMove: _taps.move,
                                 onPointerUp: _taps.up,
                                 onPointerCancel: (_) => _taps.cancel(),
-                                child: KeyedSubtree(
-                                  key: ValueKey('terminal-input-$_inputEpoch'),
-                                  child: TerminalView(
+                                child: TerminalView(
                                     _terminal,
                                     key: _terminalViewKey,
                                     controller: _terminalController,
@@ -1136,8 +1094,7 @@ class _TerminalPageState extends State<TerminalPage>
                                     readOnly:
                                         !_connected ||
                                         _commandsOpen ||
-                                        _exitPromptOpen ||
-                                        _sendBusy,
+                                        _exitPromptOpen,
                                     deleteDetection: true,
                                     keyboardType: TextInputType.multiline,
                                     keyboardAppearance: scheme.brightness,
@@ -1159,7 +1116,6 @@ class _TerminalPageState extends State<TerminalPage>
                                       horizontal: 8,
                                       vertical: compactChrome ? 4 : 8,
                                     ),
-                                  ),
                                 ),
                               ),
                             ),
@@ -1195,9 +1151,7 @@ class _TerminalPageState extends State<TerminalPage>
                                         if (_showBanner)
                                           TerminalConnectionBanner(
                                             scheme: scheme,
-                                            connecting: _connecting,
                                             onCancel: _service.disconnect,
-                                            onConnect: _connect,
                                           ),
                                         if (_notice != null)
                                           TerminalNoticeBanner(

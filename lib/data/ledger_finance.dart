@@ -226,27 +226,8 @@ extension LedgerFinance on LedgerStore {
     });
   }
 
-  Future<void> undoPayment(String id) async {
-    await _db.transaction((txn) async {
-      final rows = await txn.query(
-        'payments',
-        where: 'id = ?',
-        whereArgs: [id],
-      );
-      if (rows.isEmpty) {
-        throw const LedgerConflict();
-      }
-      final payment = PaymentRecord.fromMap(rows.single);
-      if (payment.voided) {
-        return;
-      }
-      await _voidPayment(txn, payment, rollbackRenewal: !payment.isAccount);
-    });
-  }
-
   /// Marks [payment] voided (a tombstone: the row and its idempotency key stay,
-  /// so neither an old undo nor a repeated request can revive it; every total
-  /// already excludes voided rows).
+  /// so a repeated request cannot revive it; totals already exclude voided rows).
   ///
   /// With [rollbackRenewal] the term is rolled back as well (see
   /// [_rollbackTail]). Without it the periods stay linked to the (voided)

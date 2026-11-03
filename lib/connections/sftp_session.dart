@@ -133,7 +133,6 @@ abstract class SftpSession {
 
   /// The server-side home (or chroot root) directory.
   Future<String> home();
-  Future<String> realpath(String path);
 
   /// Directories first, then names case-insensitively; `.`/`..` omitted.
   Future<List<SftpEntry>> list(String path);

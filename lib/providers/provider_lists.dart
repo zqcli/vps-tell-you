@@ -8,10 +8,6 @@ import 'directory_widgets.dart';
 import 'provider_directory.dart';
 import 'provider_pages.dart';
 
-/// "3 servers" for a provider that has servers.
-String providerUsageLine(BuildContext context, ProviderUsage usage) =>
-    context.l10n.r6CatProviderSummary(usage.servers.length);
-
 int _byName(String a, String b) => compareNames(a, b);
 
 /// Directory providers that have no local provider yet.
@@ -119,7 +115,9 @@ class _ProvidersPageState extends State<ProvidersPage> {
                     key: ValueKey('provider-${provider.id}'),
                     leading: ProviderLogo(ledger: ledger, provider: provider),
                     title: provider.name,
-                    subtitle: providerUsageLine(context, usage[provider.id]!),
+                    subtitle: l10n.r6CatProviderSummary(
+                      usage[provider.id]!.length,
+                    ),
                     chevron: true,
                     onTap: opening
                         ? null
@@ -291,7 +289,7 @@ class _AllProvidersPageState extends State<AllProvidersPage> {
                       title: provider.name,
                       subtitle: used == null
                           ? null
-                          : l10n.r6CatProviderSummary(used.servers.length),
+                          : l10n.r6CatProviderSummary(used.length),
                       chevron: true,
                       onTap: opening
                           ? null

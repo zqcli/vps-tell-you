@@ -9,6 +9,7 @@ import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:vps_tell_you/core/app_theme.dart';
 import 'package:vps_tell_you/core/ui/ui.dart';
 import 'package:vps_tell_you/data/ledger_store.dart';
+import 'package:vps_tell_you/l10n/generated/app_localizations.dart';
 import 'package:vps_tell_you/security/host_trust.dart';
 import 'package:vps_tell_you/security/host_trust_pages.dart';
 import 'package:vps_tell_you/security/secret_store.dart';
@@ -42,7 +43,7 @@ class ReviewSecrets implements SecretStore {
 class ReviewAuthentication implements DeviceAuthenticator {
   final result = Completer<bool>();
   @override
-  Future<bool> authenticate() => result.future;
+  Future<bool> authenticate(AppLocalizations l10n) => result.future;
   @override
   Future<void> cancel() async {}
 }

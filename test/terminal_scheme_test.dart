@@ -230,7 +230,6 @@ void main() {
           home: TerminalPage(
             ledger: ledger,
             target: target,
-            connectOnOpen: true,
             serviceFactory: (_) => ssh,
           ),
         ),

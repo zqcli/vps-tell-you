@@ -15,7 +15,7 @@ import 'server_resources.dart';
   required String notes,
   required AppLocalizations l10n,
 }) {
-  final generated = resources.specSummaryFor(l10n);
+  final generated = resources.specSummary;
   final legacy = original?.spec.trim() ?? '';
   final custom = legacy.isNotEmpty && !_isAutoSpec(original!, legacy);
   if (generated.isNotEmpty && custom && !notes.contains(legacy)) {

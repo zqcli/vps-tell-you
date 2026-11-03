@@ -80,7 +80,6 @@ class ProviderDirectory extends ChangeNotifier {
   DirectoryOutcome? _lastOutcome;
   String? _etag, _etagBase;
   Future<DirectoryOutcome>? _running;
-  int _logoFailures = 0;
 
   /// False until [load] finished (the first frame never waits for it).
   bool get loaded => _loaded;
@@ -98,9 +97,6 @@ class ProviderDirectory extends ChangeNotifier {
   DateTime? get checkedAt => _checkedAt;
   DateTime? get attemptedAt => _attemptedAt;
   DirectoryOutcome? get lastOutcome => _lastOutcome;
-
-  /// Logos which could not be downloaded or verified in the last check.
-  int get logoFailures => _logoFailures;
 
   /// The cached logo of [id], or `null` (unknown provider, no logo, or not
   /// downloaded yet).
@@ -247,7 +243,6 @@ class ProviderDirectory extends ChangeNotifier {
 
   Future<DirectoryOutcome> _check() async {
     _checking = true;
-    _logoFailures = 0;
     _notify();
     final now = _clock();
     try {
@@ -359,9 +354,7 @@ class ProviderDirectory extends ChangeNotifier {
       while (next < pending.length) {
         final provider = pending[next++];
         final file = await _fetchLogo(root, provider, bases);
-        if (file == null) {
-          _logoFailures++;
-        } else {
+        if (file != null) {
           logos[provider.id] = file;
         }
       }

@@ -1,9 +1,5 @@
 import 'dart:async';
 import 'dart:io';
-import 'dart:ui' as ui;
-
-import 'package:flutter/services.dart';
-import 'package:flutter/rendering.dart';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -28,6 +24,8 @@ import 'package:vps_tell_you/servers/ledger_controller.dart';
 
 import 'security_store_test.dart' show FakeDeviceAuth, FakeSecretStore;
 import 'support/reminder_platform.dart';
+import 'support/terminal_test_helpers.dart';
+import 'support/widget_test_assets.dart';
 import 'terminal_widget_test.dart' show SpySshService;
 
 void main() {
@@ -134,43 +132,13 @@ void main() {
       addTearDown(tester.view.resetDevicePixelRatio);
       addTearDown(tester.view.resetPhysicalSize);
       if (evidence != null && !fontsLoaded) {
-        await tester.runAsync(() async {
-          final bytes = await File(
-            Platform.environment['VPS_I18N_FONT'] ??
-                'assets/fonts/DejaVuSansMono.ttf',
-          ).readAsBytes();
-          for (final name in [
-            'Roboto',
-            'Noto Sans CJK SC',
-            'Noto Sans Mono CJK SC',
-          ]) {
-            final font = FontLoader(name)
-              ..addFont(Future.value(ByteData.sublistView(bytes)));
-            await font.load();
-          }
-          final mono = FontLoader('TerminalDejaVu');
-          for (final name in [
-            'DejaVuSansMono.ttf',
-            'DejaVuSansMono-Bold.ttf',
-          ]) {
-            mono.addFont(
-              File('assets/fonts/$name')
-                  .readAsBytes()
-                  .then(ByteData.sublistView),
-            );
-          }
-          await mono.load();
-          if (Platform.environment['FLUTTER_BOOTSTRAP_ROOT'] case final sdk?) {
-            final icons = FontLoader('MaterialIcons')
-              ..addFont(
-                File(
-                  '$sdk/flutter/bin/cache/artifacts/material_fonts/MaterialIcons-Regular.otf',
-                ).readAsBytes().then(ByteData.sublistView),
-              );
-            await icons.load();
-          }
-          fontsLoaded = true;
-        });
+        await loadTerminalTestFonts(
+          tester,
+          fallbackPath: Platform.environment['VPS_I18N_FONT'] ??
+              'assets/fonts/DejaVuSansMono.ttf',
+          requireFallback: true,
+        );
+        fontsLoaded = true;
       }
       await tester.pumpWidget(
         ValueListenableBuilder<Locale>(
@@ -196,20 +164,12 @@ void main() {
       expect(tester.takeException(), isNull);
     }
 
-    Future<void> capture(WidgetTester tester, String name) async {
-      if (evidence == null) return;
-      final boundary = tester.renderObject<RenderRepaintBoundary>(
-        find.byKey(const ValueKey('connection-l10n-evidence')),
-      );
-      await tester.runAsync(() async {
-        final image = await boundary.toImage();
-        final bytes = await image.toByteData(format: ui.ImageByteFormat.png);
-        final file = File('$evidence/$name.png');
-        await file.parent.create(recursive: true);
-        await file.writeAsBytes(bytes!.buffer.asUint8List());
-        image.dispose();
-      });
-    }
+    Future<void> capture(WidgetTester tester, String name) => captureTestWidget(
+      tester,
+      find.byKey(const ValueKey('connection-l10n-evidence')),
+      evidence,
+      name,
+    );
 
     Future<void> change(WidgetTester tester, String language) async {
       locale.value = Locale(language);
@@ -246,8 +206,6 @@ void main() {
           TerminalPage(
             ledger: ledger,
             target: target,
-            initialDraft: 'printf "raw 用户 text"',
-            connectOnOpen: true,
             serviceFactory: (_) => ssh,
           ),
         );
@@ -257,6 +215,8 @@ void main() {
         final draft = tester
             .widget<TextField>(find.byKey(const ValueKey('terminal-draft')))
             .controller!;
+        draft.text = 'printf "raw 用户 text"';
+        await tester.pump();
         final oldController = draft;
         final before = List<String>.of(ssh.writes);
         await change(tester, 'zh');
@@ -448,8 +408,6 @@ void main() {
               TerminalPage(
                 ledger: ledger,
                 target: target,
-                initialDraft: 'echo safe synthetic draft',
-                connectOnOpen: true,
                 serviceFactory: (_) => ssh,
               ),
               size: size,
@@ -458,6 +416,11 @@ void main() {
             expect(tester.takeException(), isNull);
             await tester.tap(find.byKey(const ValueKey('terminal-commands')));
             await tester.pumpAndSettle();
+            tester
+                .widget<TextField>(find.byKey(const ValueKey('terminal-draft')))
+                .controller!
+                .text = 'echo safe synthetic draft';
+            await tester.pump();
             await scan(tester);
             await capture(
               tester,

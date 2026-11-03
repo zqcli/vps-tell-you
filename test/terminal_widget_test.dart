@@ -21,6 +21,7 @@ import 'package:vps_tell_you/servers/ledger_controller.dart';
 import 'package:vps_tell_you/servers/server_record.dart';
 
 import 'support/fake_background_native.dart';
+import 'support/terminal_test_helpers.dart';
 import 'security_store_test.dart' show FakeSecretStore, FakeDeviceAuth, hostKey;
 
 /// Never opens a socket or executes a real command, including power commands.
@@ -178,7 +179,6 @@ void main() {
     WidgetTester tester, {
     Widget? child,
     String draft = '',
-    bool connect = true,
     double scale = 1,
   }) async {
     tester.view.physicalSize = const Size(390, 844);
@@ -204,8 +204,6 @@ void main() {
                       TerminalPage(
                         ledger: ledger,
                         target: target,
-                        initialDraft: draft,
-                        connectOnOpen: connect,
                         serviceFactory: (_) => ssh,
                       ),
                 ),
@@ -218,6 +216,7 @@ void main() {
     );
     await tester.tap(find.text('Open terminal fixture'));
     await tester.pumpAndSettle();
+    await seedTerminalDraft(tester, draft);
   }
 
   // A new page needs a fresh service: the previous one was disposed with it.
@@ -281,7 +280,6 @@ void main() {
     if (finder.evaluate().isEmpty && description.contains('terminal-send')) {
       await openCommands(tester);
     }
-    if (description.contains('terminal-connect')) await closeCommands(tester);
     await tester.ensureVisible(finder);
     await tester.tap(finder);
     await tester.pumpAndSettle();
@@ -308,12 +306,10 @@ void main() {
   }
 
   testWidgets(
-    'opening terminal is offline unless explicitly connected; confirmed exit cleans immediately',
+    'opening the terminal connects once; confirmed exit cleans immediately',
     (tester) async {
-      await mount(tester, connect: false);
-      expect(ssh.connections, 0);
+      await mount(tester);
       expect(find.byType(TerminalView), findsOneWidget);
-      await tap(tester, find.byKey(const ValueKey('terminal-connect')));
       expect(ssh.connections, 1);
       expect(ssh.authentications, 1);
       expect(ssh.writes, isEmpty);
@@ -329,41 +325,6 @@ void main() {
       expect(find.text('Open terminal fixture'), findsOneWidget);
     },
   );
-
-  testWidgets(
-    'inline draft stays local until exact send; dismissing keeps contents',
-    (tester) async {
-      const content = 'echo one\nwhoami\r\x03\\r';
-      await mount(tester, draft: content);
-      await openCommands(tester);
-      expect(find.text(target.label), findsWidgets);
-      expect(find.text(escapedCommandPreview(content)), findsOneWidget);
-      expect(
-        find.byKey(const ValueKey('draft-control-warning')),
-        findsOneWidget,
-      );
-      expect(find.byType(AlertDialog), findsNothing);
-      expect(ssh.writes, isEmpty);
-      await closeCommands(tester);
-      expect(await currentDraft(tester), content);
-      expect(ssh.writes, isEmpty);
-      await tap(tester, find.byKey(const ValueKey('terminal-send')));
-      expect(ssh.writes, [content]);
-      expect(await currentDraft(tester), isEmpty);
-    },
-  );
-
-  testWidgets('send and execute appends one CR without a checkbox or dialog', (
-    tester,
-  ) async {
-    await mount(tester, draft: 'printf ready');
-    await openCommands(tester);
-    expect(find.byType(CheckboxListTile), findsNothing);
-    expect(find.byType(AlertDialog), findsNothing);
-    await tap(tester, find.byKey(const ValueKey('terminal-send-execute')));
-    expect(ssh.writes, ['printf ready\r']);
-    expect(find.byType(AlertDialog), findsNothing);
-  });
 
   testWidgets(
     'snippet preview and insert send zero bytes; ending the session closes the page and drops the draft',
@@ -824,58 +785,59 @@ void main() {
     },
   );
 
-  testWidgets(
-    'changing target invalidates pending Send, closes the page and never replays a draft',
-    (tester) async {
-      final targets = ValueNotifier(target);
-      addTearDown(targets.dispose);
-      await mount(
-        tester,
-        child: ValueListenableBuilder<SshTarget>(
-          valueListenable: targets,
-          builder: (_, value, _) => TerminalPage(
-            ledger: ledger,
-            target: value,
-            connectOnOpen: true,
-            initialDraft: 'echo old-target\r',
-            serviceFactory: (_) => ssh,
+  for (final execute in [false, true]) {
+    testWidgets(
+      'changing target invalidates pending ${execute ? 'execute' : 'send'}, closes the page and never replays a draft',
+      (tester) async {
+        final targets = ValueNotifier(target);
+        addTearDown(targets.dispose);
+        await mount(
+          tester,
+          draft: 'echo old-target\r',
+          child: ValueListenableBuilder<SshTarget>(
+            valueListenable: targets,
+            builder: (_, value, _) => TerminalPage(
+              ledger: ledger,
+              target: value,
+              serviceFactory: (_) => ssh,
+            ),
           ),
-        ),
-      );
-      await openCommands(tester);
-      final staleSend = tester
-          .widget<ButtonStyleButton>(
-            find.byKey(const ValueKey('terminal-send')),
-          )
-          .onPressed!;
-      const next = SshTarget(
-        name: 'Next synthetic target',
-        host: '::1',
-        username: 'other',
-        port: 22023,
-        credentialId: 'other-fixture',
-      );
-      targets.value = next;
-      await tester.pump();
-      await tester.pump();
-      expect(
-        tester
+        );
+        await openCommands(tester);
+        final staleSend = tester
             .widget<ButtonStyleButton>(
-              find.byKey(const ValueKey('terminal-send')),
+              find.byKey(ValueKey(execute ? 'terminal-send-execute' : 'terminal-send')),
             )
-            .onPressed,
-        isNull,
-      );
-      staleSend();
-      await tester.pumpAndSettle();
-      // The old session is disconnected and the page closes; no reconnect.
-      expect(ssh.writes, isEmpty);
-      expect(ssh.connected, isFalse);
-      expectClosed(tester);
-      expect(find.text('目标已变化，连接已断开'), findsOneWidget);
-      expect(ssh.connections, 1);
-    },
-  );
+            .onPressed!;
+        const next = SshTarget(
+          name: 'Next synthetic target',
+          host: '::1',
+          username: 'other',
+          port: 22023,
+          credentialId: 'other-fixture',
+        );
+        targets.value = next;
+        await tester.pump();
+        await tester.pump();
+        expect(
+          tester
+              .widget<ButtonStyleButton>(
+                find.byKey(ValueKey(execute ? 'terminal-send-execute' : 'terminal-send')),
+              )
+              .onPressed,
+          isNull,
+        );
+        staleSend();
+        await tester.pumpAndSettle();
+        // The old session is disconnected and the page closes; no reconnect.
+        expect(ssh.writes, isEmpty);
+        expect(ssh.connected, isFalse);
+        expectClosed(tester);
+        expect(find.text('目标已变化，连接已断开'), findsOneWidget);
+        expect(ssh.connections, 1);
+      },
+    );
+  }
 
   testWidgets(
     'stale verification after timeout cannot release authentication',
@@ -1085,7 +1047,6 @@ void main() {
           builder: (_, value, _) => TerminalPage(
             ledger: ledger,
             target: value,
-            connectOnOpen: true,
             serviceFactory: (_) => ssh,
           ),
         ),

@@ -214,7 +214,7 @@ class LedgerController extends ChangeNotifier {
   /// Servers (active and archived) per local provider id.
   /// Providers without servers are absent. Rebuilt only when [records] change,
   /// so lists of hundreds of providers stay cheap.
-  Map<String, ProviderUsage> get providerUsage => _index.usage;
+  Map<String, List<ServerRecord>> get providerUsage => _index.usage;
 
   ProviderRecord? providerFor(ServerRecord server) =>
       _index.providerById[server.providerId];
@@ -460,11 +460,9 @@ class _LedgerIndex {
       archived = List.unmodifiable(records.where((s) => s.archived)),
       byId = {for (final s in records) s.id: s},
       providerById = {for (final p in providers) p.id: p} {
-    final servers = <String, List<ServerRecord>>{};
     for (final s in records) {
-      if (s.providerId != null) (servers[s.providerId!] ??= []).add(s);
+      if (s.providerId != null) (usage[s.providerId!] ??= []).add(s);
     }
-    usage = {for (final e in servers.entries) e.key: ProviderUsage(e.value)};
   }
   final List<ServerRecord> records;
   final List<ProviderRecord> providers;
@@ -472,7 +470,7 @@ class _LedgerIndex {
   final List<ServerRecord> archived;
   final Map<String, ServerRecord> byId;
   final Map<String, ProviderRecord> providerById;
-  late final Map<String, ProviderUsage> usage;
+  final Map<String, List<ServerRecord>> usage = {};
 
   /// Lower-cased search haystack per active server, parallel to [active].
   late final List<String> searchText = [
@@ -495,10 +493,4 @@ String _providerName(
   return vendor.isNotEmpty && vendor != legacyUnknownVendor
       ? server.vendor
       : (l10n ?? defaultLocalizations).providerUiUnspecified;
-}
-
-/// What a provider is used for: its servers (active and archived).
-class ProviderUsage {
-  const ProviderUsage(this.servers);
-  final List<ServerRecord> servers;
 }

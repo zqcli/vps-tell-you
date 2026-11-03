@@ -7,35 +7,12 @@ import 'package:vps_tell_you/connections/sftp_session.dart';
 import 'package:vps_tell_you/connections/ssh_service.dart';
 import 'package:vps_tell_you/data/ledger_store.dart';
 import 'package:vps_tell_you/security/host_trust.dart';
-import 'package:vps_tell_you/security/secret_store.dart';
 import 'package:vps_tell_you/security/security_controller.dart';
-import 'package:vps_tell_you/security/security_models.dart';
 
+import 'support/connection_fakes.dart';
 import 'support/ssh_fixture.dart';
 
 /// SSH and SFTP against the loopback-only fixture bound to `::1`.
-class _Secrets implements SecretStore {
-  final values = <String, String>{};
-  @override
-  Future<String?> read(String reference) async => values[reference];
-  @override
-  Future<void> write(String reference, String value) async {
-    values[reference] = value;
-  }
-
-  @override
-  Future<void> delete(String reference) async {
-    values.remove(reference);
-  }
-}
-
-class _NoDeviceAuth implements DeviceAuthenticator {
-  @override
-  Future<bool> authenticate() async => false;
-  @override
-  Future<void> cancel() async {}
-}
-
 Future<bool> _hasIpv6Loopback() async {
   try {
     final probe = await ServerSocket.bind(InternetAddress.loopbackIPv6, 0);
@@ -70,22 +47,11 @@ Future<void> main() async {
     );
     security = SecurityController(
       store: store,
-      secrets: _Secrets(),
-      authenticator: _NoDeviceAuth(),
+      secrets: MemorySecrets(),
+      authenticator: DeniedDeviceAuth(),
     );
     await security.initialize();
-    expect(
-      await security.saveCredential(
-        name: 'Synthetic SSH fixture',
-        kind: CredentialKind.password,
-        defaultUsername: 'fixture',
-        secret: 'synthetic-password-only',
-        passphrase: null,
-        savePassphrase: false,
-      ),
-      isTrue,
-    );
-    credentialId = security.credentials.last.id;
+    credentialId = await saveFixtureCredential(security);
   });
 
   tearDown(() async {

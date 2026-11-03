@@ -2287,9 +2287,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get resourceUnlimitedTraffic => 'Unlimited traffic';
 
   @override
-  String get resourceUnknownTraffic => 'Traffic unknown';
-
-  @override
   String resourceTrafficQuota(String p0) {
     return '$p0 traffic';
   }
@@ -3574,16 +3571,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get terminalEstablishingSecure => 'Establishing a secure connection…';
-
-  @override
-  String get terminalOffline => 'Terminal disconnected';
-
-  @override
-  String get terminalConnect => 'Connect';
-
-  @override
-  String get terminalBrowserUnsupported =>
-      'Browsers don’t support native SSH. Use the native app.';
 
   @override
   String get terminalDismissNotice => 'Dismiss Notice';

@@ -9,7 +9,6 @@ import 'package:local_auth_darwin/types/auth_messages_macos.dart';
 
 import 'security_models.dart';
 import '../l10n/generated/app_localizations.dart';
-import '../l10n/locale_preference.dart';
 import '../l10n/localized_message.dart';
 
 abstract interface class SecretStore {
@@ -85,20 +84,13 @@ class NativeSecretStore implements SecretStore {
 }
 
 abstract interface class DeviceAuthenticator {
-  Future<bool> authenticate();
+  Future<bool> authenticate(AppLocalizations l10n);
   Future<void> cancel();
-}
-
-/// Optional explicit-locale contract; existing test and external adapters keep
-/// implementing DeviceAuthenticator without mutable locale state.
-abstract interface class LocalizedDeviceAuthenticator {
-  Future<bool> authenticateWithLocalizations(AppLocalizations l10n);
 }
 
 /// An application-level reveal gate. This is not a claim that each keychain
 /// item is cryptographically bound to biometrics or protected from rooted OSes.
-class NativeDeviceAuthenticator
-    implements DeviceAuthenticator, LocalizedDeviceAuthenticator {
+class NativeDeviceAuthenticator implements DeviceAuthenticator {
   NativeDeviceAuthenticator({LocalAuthentication? authentication})
     : _authentication = authentication ?? LocalAuthentication();
   final LocalAuthentication _authentication;
@@ -112,11 +104,7 @@ class NativeDeviceAuthenticator
       }.contains(defaultTargetPlatform);
 
   @override
-  Future<bool> authenticate() =>
-      authenticateWithLocalizations(defaultLocalizations);
-
-  @override
-  Future<bool> authenticateWithLocalizations(AppLocalizations l10n) async {
+  Future<bool> authenticate(AppLocalizations l10n) async {
     if (!supportedPlatform) {
       throw SecurityFailure(
         LocalizedText((l10n) => l10n.securityDeviceAuthUnsupported),

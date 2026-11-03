@@ -1,15 +1,15 @@
 import 'dart:async';
 import 'dart:io';
-import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:vps_tell_you/connections/ssh_service.dart';
-import 'package:vps_tell_you/connections/terminal_font.dart';
 import 'package:vps_tell_you/connections/terminal_widgets.dart';
 import 'package:vps_tell_you/core/app_theme.dart';
+
+import 'support/terminal_test_helpers.dart';
+import 'support/widget_test_assets.dart';
 
 class _MemorySsh extends SshService {
   @override
@@ -96,45 +96,8 @@ void main() {
 
   Future<void> loadFonts(WidgetTester tester) async {
     if (fontsLoaded) return;
-    await tester.runAsync(() async {
-      final mono = FontLoader(terminalFontFamily);
-      for (final name in ['DejaVuSansMono.ttf', 'DejaVuSansMono-Bold.ttf']) {
-        mono.addFont(
-          File('assets/fonts/$name').readAsBytes().then(ByteData.sublistView),
-        );
-      }
-      await mono.load();
-      final cjk = File(
-        Platform.environment['VPS_TERMINAL_CJK_FONT'] ??
-            '/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc',
-      );
-      if (await cjk.exists()) {
-        final bytes = ByteData.sublistView(await cjk.readAsBytes());
-        for (final name in [
-          'Roboto',
-          'Noto Sans CJK SC',
-          'Noto Sans Mono CJK SC',
-        ]) {
-          final loader = FontLoader(name)..addFont(Future.value(bytes));
-          await loader.load();
-        }
-      } else if (evidence != null) {
-        fail('Real CJK font is required for layout evidence.');
-      }
-      final root = Platform.environment['FLUTTER_BOOTSTRAP_ROOT'];
-      if (root != null) {
-        final icons = FontLoader('MaterialIcons');
-        icons.addFont(
-          File(
-            '$root/flutter/bin/cache/artifacts/material_fonts/MaterialIcons-Regular.otf',
-          ).readAsBytes().then(ByteData.sublistView),
-        );
-        await icons.load();
-      } else if (evidence != null) {
-        fail('Real MaterialIcons font is required for layout evidence.');
-      }
-      fontsLoaded = true;
-    });
+    await loadTerminalTestFonts(tester, requireFallback: evidence != null);
+    fontsLoaded = true;
   }
 
   Future<_PanelFixture> mount(
@@ -239,20 +202,12 @@ void main() {
     fail('The sheet did not make $target fully reachable by dragging.');
   }
 
-  Future<void> capture(WidgetTester tester, String name) async {
-    if (evidence == null) return;
-    final boundary = tester.renderObject<RenderRepaintBoundary>(
-      keyed('command-panel-review-evidence'),
-    );
-    await tester.runAsync(() async {
-      final image = await boundary.toImage();
-      final bytes = await image.toByteData(format: ui.ImageByteFormat.png);
-      await Directory(evidence).create(recursive: true);
-      await File('$evidence/$name.png')
-          .writeAsBytes(bytes!.buffer.asUint8List());
-      image.dispose();
-    });
-  }
+  Future<void> capture(WidgetTester tester, String name) => captureTestWidget(
+    tester,
+    keyed('command-panel-review-evidence'),
+    evidence,
+    name,
+  );
 
   void expectLogicalOrder(WidgetTester tester) {
     final choices = tester.getRect(keyed('terminal-command-choices'));

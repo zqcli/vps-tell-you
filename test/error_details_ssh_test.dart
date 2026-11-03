@@ -10,30 +10,12 @@ import 'package:vps_tell_you/data/ledger_store.dart';
 import 'package:vps_tell_you/l10n/generated/app_localizations_en.dart';
 import 'package:vps_tell_you/security/host_trust.dart';
 import 'package:vps_tell_you/security/proxy_models.dart';
-import 'package:vps_tell_you/security/secret_store.dart';
 import 'package:vps_tell_you/security/security_controller.dart';
 import 'package:vps_tell_you/security/security_models.dart';
 
 import 'support/fake_proxy.dart';
+import 'support/connection_fakes.dart';
 import 'support/ssh_fixture.dart';
-
-class _Secrets implements SecretStore {
-  final values = <String, String>{};
-  @override
-  Future<String?> read(String reference) async => values[reference];
-  @override
-  Future<void> write(String reference, String value) async =>
-      values[reference] = value;
-  @override
-  Future<void> delete(String reference) async => values.remove(reference);
-}
-
-class _NoDeviceAuth implements DeviceAuthenticator {
-  @override
-  Future<bool> authenticate() async => false;
-  @override
-  Future<void> cancel() async {}
-}
 
 const _password = 'synthetic-password-only';
 const _proxyPassword = 'synthetic-proxy-password';
@@ -56,17 +38,11 @@ void main() {
     );
     security = SecurityController(
       store: store,
-      secrets: _Secrets(),
-      authenticator: _NoDeviceAuth(),
+      secrets: MemorySecrets(),
+      authenticator: DeniedDeviceAuth(),
     );
     await security.initialize();
-    await security.saveCredential(
-      name: 'Fixture',
-      kind: CredentialKind.password,
-      defaultUsername: 'fixture',
-      secret: _password,
-    );
-    credentialId = security.credentials.single.id;
+    credentialId = await saveFixtureCredential(security);
   });
 
   tearDown(() async {

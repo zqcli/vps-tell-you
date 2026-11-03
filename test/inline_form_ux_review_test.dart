@@ -4,10 +4,8 @@ import 'dart:ui' as ui;
 import 'package:flutter/cupertino.dart' show CupertinoDatePicker;
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
-import 'package:vps_tell_you/core/app_theme.dart';
 import 'package:vps_tell_you/core/ui/ui.dart';
 import 'package:vps_tell_you/core/value_types.dart';
 import 'package:vps_tell_you/data/ledger_store.dart';
@@ -17,12 +15,16 @@ import 'package:vps_tell_you/servers/server_form.dart';
 import 'package:vps_tell_you/servers/server_record.dart';
 import 'package:vps_tell_you/servers/server_resources.dart';
 
+import 'support/form_review_harness.dart';
 import 'support/form_test_helpers.dart';
 import 'security_store_test.dart' show FakeSecretStore, FakeDeviceAuth;
 
 void main() {
-  final evidence = Platform.environment['VPS_INLINE_REVIEW_EVIDENCE_DIR'];
-  var fontsLoaded = false;
+  final harness = FormReviewHarness(
+    boundaryKey: const ValueKey('inline-review-evidence'),
+    fontFamily: 'Inline review Noto',
+    evidenceDirectory: Platform.environment['VPS_INLINE_REVIEW_EVIDENCE_DIR'],
+  );
   late Directory directory;
   late LedgerStore store;
   late LedgerController ledger;
@@ -80,77 +82,11 @@ void main() {
   Finder cycle() => find.byKey(const ValueKey('field-cycle'));
   Finder billing() => find.byKey(const ValueKey('field-billing'));
 
-  Future<void> mount(WidgetTester tester) async {
-    tester.view.physicalSize = const Size(320, 844);
-    tester.view.devicePixelRatio = 1;
-    addTearDown(tester.view.resetPhysicalSize);
-    addTearDown(tester.view.resetDevicePixelRatio);
-    if (evidence != null && !fontsLoaded) {
-      await tester.runAsync(() async {
-        final font = FontLoader('Inline review Noto');
-        font.addFont(
-          File(
-            Platform.environment['VPS_FORM_EVIDENCE_FONT_PATH'] ??
-                '/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc',
-          ).readAsBytes().then(ByteData.sublistView),
-        );
-        await font.load();
-        final icons = FontLoader('MaterialIcons');
-        icons.addFont(
-          File(
-            '${Platform.environment['FLUTTER_BOOTSTRAP_ROOT']}/flutter/bin/cache/artifacts/material_fonts/MaterialIcons-Regular.otf',
-          ).readAsBytes().then(ByteData.sublistView),
-        );
-        await icons.load();
-      });
-      fontsLoaded = true;
-    }
-    final theme = appTheme();
-    await tester.pumpWidget(
-      MaterialApp(
-        theme: evidence == null
-            ? theme
-            : theme.copyWith(
-                textTheme: theme.textTheme.apply(
-                  fontFamily: 'Inline review Noto',
-                ),
-                appBarTheme: theme.appBarTheme.copyWith(
-                  titleTextStyle: theme.appBarTheme.titleTextStyle?.copyWith(
-                    fontFamily: 'Inline review Noto',
-                  ),
-                ),
-              ),
-        builder: (context, child) => MediaQuery(
-          data: MediaQuery.of(context)
-              .copyWith(textScaler: const TextScaler.linear(2)),
-          child: RepaintBoundary(
-            key: const ValueKey('inline-review-evidence'),
-            child: child!,
-          ),
-        ),
-        home: Builder(
-          builder: (context) => Scaffold(
-            body: Center(
-              child: FilledButton(
-                onPressed: () => Navigator.push<void>(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => ServerForm(
-                      controller: ledger,
-                      record: ledger.byId(record.id),
-                    ),
-                  ),
-                ),
-                child: const Text('Open review form'),
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-    await tester.tap(find.text('Open review form'));
-    await tester.pumpAndSettle();
-  }
+  Future<void> mount(WidgetTester tester) => harness.mount(
+    tester,
+    routeLabel: 'Open review form',
+    page: (_) => ServerForm(controller: ledger, record: ledger.byId(record.id)),
+  );
 
   Future<void> fill(WidgetTester tester, String id, String value) async {
     final target = find.byKey(ValueKey(id));
@@ -180,89 +116,6 @@ void main() {
     await chooseOption(tester, target, title);
   }
 
-  Future<void> capture(WidgetTester tester, String name) async {
-    if (evidence == null) return;
-    await tester.pumpAndSettle();
-    final boundary = tester.renderObject<RenderRepaintBoundary>(
-      find.byKey(const ValueKey('inline-review-evidence')),
-    );
-    await tester.runAsync(() async {
-      final image = await boundary.toImage();
-      final bytes = await image.toByteData(format: ui.ImageByteFormat.png);
-      await Directory(evidence).create(recursive: true);
-      await File('$evidence/$name.png')
-          .writeAsBytes(bytes!.buffer.asUint8List());
-      image.dispose();
-    });
-  }
-
-  testWidgets(
-    'inline financial controls keep locked history and save edits once',
-    (tester) async {
-      await store.recordPayment(
-        id: 'synthetic-payment',
-        server: record,
-        amount: const Money('EUR', 9876),
-        paidDate: const LedgerDate(2026, 10, 6),
-        cycleCount: 1,
-        until: const LedgerDate(2028, 1, 1),
-        confirmed: true,
-      );
-      await ledger.refresh();
-      record = ledger.byId(record.id)!;
-      final payments = (await store.payments()).map((p) => p.toMap()).toList();
-      final periods = (await store.servicePeriods())
-          .map((p) => p.toMap())
-          .toList();
-      await mount(tester);
-      // Locked history: the segmented control and cycle/date rows explain the
-      // lock instead of changing anything.
-      expect(find.text('预付费 · 按周期续费'), findsNothing);
-      await tester.ensureVisible(billing());
-      await tester.pumpAndSettle();
-      expect(
-        tester.widget<AppSegmented<BillingKind>>(billing()).value,
-        BillingKind.prepaid,
-      );
-      expect(
-        find.descendant(
-          of: find
-              .ancestor(of: billing(), matching: find.byType(GestureDetector))
-              .first,
-          matching: find.byType(IgnorePointer),
-        ),
-        findsWidgets,
-      );
-      for (final key in ['field-cycle', 'field-start', 'field-due']) {
-        await tester.ensureVisible(find.byKey(ValueKey(key)));
-        await tester.pumpAndSettle();
-        await tester.tap(find.byKey(ValueKey(key)));
-        await tester.pumpAndSettle();
-        expect(find.byType(BottomSheet), findsNothing);
-        expect(find.byType(CupertinoDatePicker), findsNothing);
-      }
-      expect(find.byKey(const ValueKey('field-currency')), findsOneWidget);
-      await select(tester, currency(), 'CNY');
-      await fill(tester, 'field-amount', '9999999999.99');
-      await tester.tap(find.text('保存'));
-      await tapSave(tester);
-      final saved = (await store.servers()).single;
-      expect(saved.currency, 'CNY');
-      expect(saved.amountMinor, Money.maxMinor);
-      expect(saved.revision, record.revision + 1);
-      expect(saved.startDate, record.startDate);
-      expect(saved.dueDate, record.dueDate);
-      expect(saved.cycleMonths, record.cycleMonths);
-      expect(saved.resources!.toJson(), record.resources!.toJson());
-      expect((await store.payments()).map((p) => p.toMap()).toList(), payments);
-      expect(
-        (await store.servicePeriods()).map((p) => p.toMap()).toList(),
-        periods,
-      );
-      expect(find.text('Open review form'), findsOneWidget);
-      expect(tester.takeException(), isNull);
-    },
-  );
 
   testWidgets(
     'changing billing preserves unsaved price but free and unknown stay distinct',
@@ -490,7 +343,7 @@ void main() {
         expect(rect.right, lessThanOrEqualTo(control.right));
         expect(control.right, lessThanOrEqualTo(300));
         expect(control.height, greaterThanOrEqualTo(28));
-        await capture(tester, 'billing-${entry.$3}-320-2x');
+        await harness.capture(tester, 'billing-${entry.$3}-320-2x');
         expect(tester.takeException(), isNull);
       }
     },

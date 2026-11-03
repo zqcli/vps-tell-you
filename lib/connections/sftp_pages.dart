@@ -23,21 +23,18 @@ const _pageSize = 200;
 ///
 /// Used full-screen after a standalone SFTP connection, and as a page sheet on
 /// top of a running terminal ([sheet]), where closing only ends the SFTP
-/// channel. With [ownsSession] the session is closed when the page goes away.
+/// channel. The session is closed when the page goes away.
 class SftpBrowserPage extends StatefulWidget {
   const SftpBrowserPage({
     super.key,
     required this.session,
-    this.ownsSession = true,
     this.sheet = false,
-    this.initialPath,
     this.localFiles = const SystemSftpLocalFiles(),
     this.onClosed,
     this.label,
   });
   final SftpSession session;
-  final bool ownsSession, sheet;
-  final String? initialPath;
+  final bool sheet;
   final SftpLocalFiles localFiles;
 
   /// `user@host:port`, named in the message when the app stayed too long in
@@ -52,7 +49,6 @@ class SftpBrowserPage extends StatefulWidget {
 }
 
 class _SftpBrowserPageState extends State<SftpBrowserPage>
-    with WidgetsBindingObserver
     implements BackgroundSession {
   late final SftpTransferQueue _queue;
   (bool, bool) _queueState = (false, true);
@@ -77,10 +73,9 @@ class _SftpBrowserPageState extends State<SftpBrowserPage>
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addObserver(this);
     // A sheet over a terminal shares the terminal's connection, which the
     // terminal page keeps or closes itself.
-    if (!widget.sheet && widget.ownsSession) {
+    if (!widget.sheet) {
       BackgroundGrace.instance.register(this);
     }
     _queue = SftpTransferQueue(
@@ -93,24 +88,20 @@ class _SftpBrowserPageState extends State<SftpBrowserPage>
   }
 
   Future<void> _start() async {
-    var start = widget.initialPath;
-    if (start == null) {
-      try {
-        start = await _session.home();
-      } on SftpException catch (problem) {
-        if (_isLost(problem)) return _markEnded();
-        start = '/';
-      }
+    String start;
+    try {
+      start = await _session.home();
+    } on SftpException catch (problem) {
+      if (_isLost(problem)) return _markEnded();
+      start = '/';
     }
     if (mounted) await _open(start);
   }
 
   @override
   void dispose() {
-    WidgetsBinding.instance.removeObserver(this);
     BackgroundGrace.instance.unregister(this);
     _queue.removeListener(_queueChanged);
-    final owns = widget.ownsSession;
     final onClosed = widget.onClosed;
     final session = _session;
     final queue = _queue;
@@ -118,19 +109,14 @@ class _SftpBrowserPageState extends State<SftpBrowserPage>
     // goes away.
     unawaited(
       queue.shutdown().whenComplete(() async {
-        if (owns) {
-          await session.close();
-          await onClosed?.call();
-        }
+        await session.close();
+        await onClosed?.call();
         queue.dispose();
       }),
     );
     _search.dispose();
     super.dispose();
   }
-
-  @override
-  void didChangeAppLifecycleState(AppLifecycleState state) {}
 
   // Kept for the short background grace period (running transfers continue);
   // when it ends the page closes, which cancels transfers and removes their

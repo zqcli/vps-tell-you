@@ -255,10 +255,6 @@ class DartSshSftpSession implements SftpSession {
   Future<String> home() => _call('.', () => _sftp.absolute('.'));
 
   @override
-  Future<String> realpath(String path) =>
-      _call(path, () => _sftp.absolute(path));
-
-  @override
   Future<List<SftpEntry>> list(String path) => _call(path, () async {
     final names = await _sftp.listdir(path);
     final entries = <SftpEntry>[];

@@ -1,15 +1,12 @@
 import 'dart:async';
 import 'dart:io';
-import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:vps_tell_you/connections/snippet.dart';
 import 'package:vps_tell_you/connections/ssh_service.dart';
-import 'package:vps_tell_you/connections/terminal_font.dart';
 import 'package:vps_tell_you/connections/terminal_page.dart';
 import 'package:vps_tell_you/connections/terminal_widgets.dart';
 import 'package:vps_tell_you/core/app_theme.dart';
@@ -18,6 +15,8 @@ import 'package:vps_tell_you/security/security_controller.dart';
 import 'package:vps_tell_you/servers/ledger_controller.dart';
 import 'package:xterm/xterm.dart';
 
+import 'support/terminal_test_helpers.dart';
+import 'support/widget_test_assets.dart';
 import 'security_store_test.dart' show FakeDeviceAuth, FakeSecretStore;
 import 'terminal_widget_test.dart' show SpySshService;
 
@@ -89,49 +88,11 @@ void main() {
     addTearDown(tester.view.resetDevicePixelRatio);
     addTearDown(tester.view.resetViewInsets);
     if (!fontsLoaded) {
-      await tester.runAsync(() async {
-        final mono = FontLoader(terminalFontFamily);
-        for (final filename in [
-          'DejaVuSansMono.ttf',
-          'DejaVuSansMono-Bold.ttf',
-        ]) {
-          mono.addFont(
-            File('assets/fonts/$filename')
-                .readAsBytes()
-                .then(ByteData.sublistView),
-          );
-        }
-        await mono.load();
-        final cjk = File(
-          Platform.environment['VPS_TERMINAL_CJK_FONT'] ??
-              '/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc',
-        );
-        if (await cjk.exists()) {
-          final bytes = ByteData.sublistView(await cjk.readAsBytes());
-          for (final family in [
-            'Roboto',
-            'Noto Sans CJK SC',
-            'Noto Sans Mono CJK SC',
-          ]) {
-            final loader = FontLoader(family);
-            loader.addFont(Future.value(bytes));
-            await loader.load();
-          }
-        } else if (evidence != null) {
-          fail('Visual evidence requires the configured real CJK font.');
-        }
-        final root = Platform.environment['FLUTTER_BOOTSTRAP_ROOT'];
-        if (root != null) {
-          final icons = FontLoader('MaterialIcons');
-          icons.addFont(
-            File(
-              '$root/flutter/bin/cache/artifacts/material_fonts/MaterialIcons-Regular.otf',
-            ).readAsBytes().then(ByteData.sublistView),
-          );
-          await icons.load();
-        }
-        fontsLoaded = true;
-      });
+      await loadTerminalTestFonts(
+        tester,
+        requireFallback: evidence != null,
+      );
+      fontsLoaded = true;
     }
     await tester.pumpWidget(
       MaterialApp(
@@ -148,8 +109,6 @@ void main() {
             ? TerminalPage(
                 ledger: ledger,
                 target: target,
-                initialDraft: initialDraft,
-                connectOnOpen: true,
                 serviceFactory: (_) => ssh,
               )
             : ValueListenableBuilder<SshTarget>(
@@ -157,14 +116,13 @@ void main() {
                 builder: (_, value, _) => TerminalPage(
                   ledger: ledger,
                   target: value,
-                  initialDraft: initialDraft,
-                  connectOnOpen: true,
                   serviceFactory: (_) => ssh,
                 ),
               ),
       ),
     );
     await tester.pumpAndSettle();
+    await seedTerminalDraft(tester, initialDraft);
   }
 
   Future<void> tap(WidgetTester tester, Finder finder) async {
@@ -174,18 +132,7 @@ void main() {
   }
 
   Future<void> capture(WidgetTester tester, String name) async {
-    if (evidence == null) return;
-    final boundary = tester.renderObject<RenderRepaintBoundary>(
-      keyed('keyboard-send-evidence'),
-    );
-    await tester.runAsync(() async {
-      final image = await boundary.toImage();
-      final bytes = await image.toByteData(format: ui.ImageByteFormat.png);
-      await Directory(evidence).create(recursive: true);
-      await File('$evidence/$name.png')
-          .writeAsBytes(bytes!.buffer.asUint8List());
-      image.dispose();
-    });
+    await captureTestWidget(tester, keyed('keyboard-send-evidence'), evidence, name);
   }
 
   void expectCursorVisible(WidgetTester tester, {required String reason}) {
@@ -241,10 +188,15 @@ void main() {
       );
       expect(find.text(escapedCommandPreview(exact)), findsOneWidget);
       expect(keyed('draft-exact-preview'), findsOneWidget);
+      expect(keyed('draft-control-warning'), findsOneWidget);
       expect(find.byType(CheckboxListTile), findsNothing);
       expect(find.byType(AlertDialog), findsNothing);
       expect(ssh.writes, isEmpty);
       await capture(tester, 'inline-hazardous-draft-390x844');
+      await tap(tester, keyed('terminal-commands-close'));
+      await tap(tester, keyed('terminal-commands'));
+      expect(draft(tester).text, exact);
+      expect(ssh.writes, isEmpty);
       await tap(tester, keyed('terminal-send'));
       expect(ssh.writes, [exact]);
       expect(find.byType(AlertDialog), findsNothing);
@@ -254,16 +206,19 @@ void main() {
     },
   );
 
-  testWidgets('review: send and execute appends exactly one CR even after CR', (
-    tester,
-  ) async {
-    const exact = 'echo synthetic\r';
-    await mount(tester, initialDraft: exact);
-    await tap(tester, keyed('terminal-commands'));
-    await tap(tester, keyed('terminal-send-execute'));
-    expect(ssh.writes, ['$exact\r']);
-    expect(find.byType(AlertDialog), findsNothing);
-  });
+  for (final exact in ['echo synthetic', 'echo synthetic\r']) {
+    testWidgets('review: execute appends one CR to ${escapedCommandPreview(exact)}', (
+      tester,
+    ) async {
+      await mount(tester, initialDraft: exact);
+      await tap(tester, keyed('terminal-commands'));
+      expect(find.byType(CheckboxListTile), findsNothing);
+      expect(find.byType(AlertDialog), findsNothing);
+      await tap(tester, keyed('terminal-send-execute'));
+      expect(ssh.writes, ['$exact\r']);
+      expect(find.byType(AlertDialog), findsNothing);
+    });
+  }
 
   testWidgets(
     'review: mixed repeated send callbacks submit one current draft',
@@ -317,26 +272,6 @@ void main() {
       },
     );
   }
-
-  testWidgets(
-    'review: stale send callback cannot submit after target changes',
-    (tester) async {
-      final targets = ValueNotifier(target);
-      addTearDown(targets.dispose);
-      await mount(tester, initialDraft: 'old-target-only', targets: targets);
-      await tap(tester, keyed('terminal-commands'));
-      final execute = tester
-          .widget<ButtonStyleButton>(keyed('terminal-send-execute'))
-          .onPressed!;
-      targets.value = alternate;
-      await tester.pumpAndSettle();
-      execute();
-      await tester.pumpAndSettle();
-      expect(ssh.writes, isEmpty);
-      expect(ssh.connected, isFalse);
-      expect(tester.takeException(), isNull);
-    },
-  );
 
   testWidgets(
     'review: Ctrl V reads on click once and never writes or executes',
@@ -422,8 +357,15 @@ void main() {
       final targets = ValueNotifier(target);
       addTearDown(targets.dispose);
       await mount(tester, targets: targets);
-      await tester.ensureVisible(keyed('terminal-paste'));
-      await tester.tap(keyed('terminal-paste'));
+      if (transition == 'target') {
+        await tap(tester, keyed('terminal-keyboard'));
+        await tester.sendKeyDownEvent(LogicalKeyboardKey.controlLeft);
+        await tester.sendKeyEvent(LogicalKeyboardKey.keyV);
+        await tester.sendKeyUpEvent(LogicalKeyboardKey.controlLeft);
+      } else {
+        await tester.ensureVisible(keyed('terminal-paste'));
+        await tester.tap(keyed('terminal-paste'));
+      }
       await tester.pump();
       if (transition == 'target') {
         targets.value = alternate;
@@ -437,6 +379,7 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.byType(TerminalCommandSheet), findsNothing);
       expect(ssh.writes, isEmpty);
+      expect(ssh.connections, 1);
       expect(tester.takeException(), isNull);
     });
   }
