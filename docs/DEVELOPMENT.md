@@ -1,8 +1,8 @@
 # VPS Tell You 开发者指南
 
-> 面向使用者的介绍见根目录 [README](../README.md)（[English](../README.en.md)）。本文是从旧 README 迁移而来的开发、数据规则与安全边界说明，对应应用版本 0.5.0。
+> 面向使用者的介绍见根目录 [README](../README.md)（[English](../README.en.md)）。本文记录当前 0.7.0 开发分支的代码结构、数据规则与验证要求。
 
-VPS Tell You 是本地优先的个人 VPS 台账，Flutter 原生应用。最新发布版本 **0.5.0**（`pubspec.yaml` 仍为 0.5.0+5），`dev` 分支包含即将发布的 **0.6.0**（未发布，见 [CHANGELOG](../CHANGELOG.md)）。界面采用 iOS 风格的统一移动端设计，iOS 与 Android 共用同一套组件和交互，规范见 [MOBILE_UI_REDESIGN](MOBILE_UI_REDESIGN.md)。Android / iOS 工程已生成，Linux 用于原生开发与验证。
+VPS Tell You 是本地优先的个人 VPS 台账，Flutter 原生应用。当前开发版本为 **0.7.0+7**，基于 0.6.0，进行工程组织和性能优化；保持现有功能、UI 和 UX，数据库仍为 schema v14，备份写入格式仍为 v2。界面规范见 [MOBILE_UI_REDESIGN](MOBILE_UI_REDESIGN.md)，更新记录见 [CHANGELOG](../CHANGELOG.md)。Android / iOS 是产品平台，Linux 用于开发与自动验证。
 
 ## 当前可以做什么
 
@@ -89,8 +89,8 @@ flutter run -d <simulator-id>
 ## 代码结构与数据规则
 
 - `lib/core`：主题色板与 `lib/core/ui` 设计组件（用法见 `lib/core/ui/README.md`）、纯 Dart 日期 / Money 值类型
-- `lib/data`：schema v14、真实旧版本的事务迁移、SQLite 事务与平台打开方式
-- `lib/servers`：本地字段模型、ChangeNotifier 控制器、列表 / 表单 / 详情
+- `lib/data`：同一 LedgerStore / 数据库按服务器、财务、安全元数据、片段、设置、备份和迁移拆分实现；schema v14、事务边界与平台打开方式保持
+- `lib/servers`：本地字段模型、台账控制器、独立的 ServerListState 搜索筛选状态、列表 / 表单 / 详情，以及分组与归档管理
 - `lib/finance`：纯 Dart 财务 / FX、付款、计算器、白名单 PNG 导出
 - `lib/security`：凭据元数据与原生存储、密钥校验、设备认证、SSH 配置、已保存代理（`proxy_models.dart` / `proxy_pages.dart`）、完整主机信任
 - `lib/connections`：SSH 服务 / xterm、临时连接、单目标 TCP、片段 / 待发送区与电源确认

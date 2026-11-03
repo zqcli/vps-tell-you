@@ -10,6 +10,7 @@ import 'package:vps_tell_you/data/ledger_store.dart';
 import 'package:vps_tell_you/l10n/generated/app_localizations.dart';
 import 'package:vps_tell_you/servers/ledger_controller.dart';
 import 'package:vps_tell_you/servers/server_list.dart';
+import 'package:vps_tell_you/servers/server_list_state.dart';
 
 import 'support/provider_fixture.dart';
 
@@ -72,11 +73,11 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('显示 1 台'), findsOneWidget);
     // Nothing is applied before the confirm button.
-    expect(ledger.dueFilter, DueFilter.all);
+    expect(ledger.listState.dueFilter, DueFilter.all);
     await tester.tap(find.text('显示 1 台'));
     await tester.pumpAndSettle();
-    expect(ledger.dueFilter, DueFilter.overdue);
-    expect(ledger.sort, ServerSort.name);
+    expect(ledger.listState.dueFilter, DueFilter.overdue);
+    expect(ledger.listState.sort, ServerSort.name);
     expect(ledger.visible, hasLength(1));
   });
 

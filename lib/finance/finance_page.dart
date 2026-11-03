@@ -167,14 +167,12 @@ class _FinancePageState extends State<FinancePage> {
     );
     if (picked == null || picked == fx.displayCurrency || !mounted) return;
     try {
-      await c.mutate(
-        () => c.store.saveFx(
-          FxSettings(
-            displayCurrency: picked,
-            usdToCny: fx.usdToCny,
-            eurToCny: fx.eurToCny,
-            rateDate: fx.rateDate,
-          ),
+      await c.saveFx(
+        FxSettings(
+          displayCurrency: picked,
+          usdToCny: fx.usdToCny,
+          eurToCny: fx.eurToCny,
+          rateDate: fx.rateDate,
         ),
       );
     } catch (error) {
@@ -217,7 +215,10 @@ class _FinancePageState extends State<FinancePage> {
                 showFinanceRules(context, groupScoped: groupId != null),
           ),
         ],
-        children: [
+        slivers: [
+          SliverToBoxAdapter(child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
           if (c.refreshFailed)
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
@@ -263,7 +264,11 @@ class _FinancePageState extends State<FinancePage> {
                   ? () => detail(FinanceMetric.incomplete)
                   : openFx,
             ),
+
+            ],
+          )),
           _upcoming(context, c, scope.events),
+          SliverList(delegate: SliverChildListDelegate([
           _distribution(context, c, scope),
           _forecast(context, c, scope.forecast),
           _tools(context, c, scope.payments.length, scope.paid),
@@ -271,6 +276,7 @@ class _FinancePageState extends State<FinancePage> {
             l10n.uiFinanceFootnote,
             padding: const EdgeInsets.fromLTRB(32, 16, 32, 0),
           ),
+          ])),
         ],
       );
     },
@@ -282,19 +288,26 @@ class _FinancePageState extends State<FinancePage> {
     List<RenewalEvent> events,
   ) {
     final l10n = context.l10n;
-    return AppSection(
+    return AppLazySections(
       key: const ValueKey('finance-upcoming'),
-      header: l10n.financeUpcomingRenewals,
-      footer: l10n.financeRenewalEventNote(events.length),
-      children: [
-        if (events.isEmpty) AppRow(title: l10n.financeNoKnownRenewals),
-        for (final e in events)
-          FinanceRenewalRow(
+      sections: [AppListSection(
+        header: l10n.financeUpcomingRenewals,
+        footer: l10n.financeRenewalEventNote(events.length),
+        topSpacing: 22,
+        count: events.isEmpty ? 1 : events.length,
+        itemKey: (i) => events.isEmpty
+            ? const ValueKey('upcoming-empty')
+            : ValueKey('upcoming-${events[i].server.id}-${events[i].date}'),
+        itemBuilder: (context, i) {
+          if (events.isEmpty) return AppRow(title: l10n.financeNoKnownRenewals);
+          final e = events[i];
+          return FinanceRenewalRow(
             event: e,
             controller: c,
             onTap: () => openServer(e.server.id),
-          ),
-      ],
+          );
+        },
+      )],
     );
   }
 

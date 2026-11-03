@@ -13,8 +13,8 @@ class FinanceSlice {
 }
 
 /// Every figure the Costs pages show for one scope, computed lazily and at
-/// most once per ledger revision. The controller also notifies for search
-/// text, reminders, the busy flag and the provider directory; none of those
+/// most once per ledger revision. The controller also notifies for reminders,
+/// the busy flag and the provider directory; none of those
 /// change a figure, so the pages rebuild from this cache instead of
 /// re-aggregating thousands of periods and payments.
 class FinanceScope {
@@ -76,6 +76,10 @@ class FinanceScope {
   late final List<ServerRecord> incomplete = records
       .where(isIncomplete)
       .toList(growable: false);
+
+  late final List<ServerRecord> expired = records.where((s) =>
+      s.billing == BillingKind.prepaid && s.dueDate != null &&
+      s.dueDate!.compareTo(_today) < 0).toList(growable: false);
 
   late final FinanceTotal monthly = _monthlyOf(records);
 

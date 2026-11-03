@@ -26,6 +26,8 @@ import 'package:vps_tell_you/servers/refresh_failure_notice.dart';
 import 'package:vps_tell_you/servers/server_detail.dart';
 import 'package:vps_tell_you/servers/server_form.dart';
 import 'package:vps_tell_you/servers/server_list.dart';
+import 'package:vps_tell_you/servers/server_management_pages.dart';
+import 'package:vps_tell_you/servers/server_list_state.dart';
 import 'package:vps_tell_you/servers/server_record.dart';
 import 'package:vps_tell_you/servers/server_resources.dart';
 import 'package:vps_tell_you/settings/reminder_page.dart';
@@ -51,6 +53,13 @@ class FeedbackLedgerController extends LedgerController {
     mutations++;
     if (failMutation) throw StateError('Synthetic mutation failure');
     return super.mutate(action);
+  }
+
+  @override
+  Future<void> saveGroup(String name, {String? id}) {
+    mutations++;
+    if (failMutation) throw StateError('Synthetic mutation failure');
+    return super.saveGroup(name, id: id);
   }
 
   @override
@@ -665,10 +674,10 @@ void main() {
         ModalRoute.of(tester.element(find.text(zh.serverSortName))),
         same(popup),
       );
-      expect(ledger.sort, ServerSort.favorites);
+      expect(ledger.listState.sort, ServerSort.favorites);
       await tester.tap(find.text(zh.serverSortName));
       await tester.pumpAndSettle();
-      expect(ledger.sort, ServerSort.name);
+      expect(ledger.listState.sort, ServerSort.name);
       expect(ledger.mutations, 0);
       expect((await store.servers()).single.name, '用户自填名称');
     },

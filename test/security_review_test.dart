@@ -16,6 +16,7 @@ import 'package:vps_tell_you/security/security_controller.dart';
 import 'package:vps_tell_you/security/security_models.dart';
 import 'package:vps_tell_you/security/credential_form.dart';
 import 'package:vps_tell_you/security/credential_pages.dart';
+import 'package:vps_tell_you/security/security_route_observer.dart';
 import 'package:vps_tell_you/servers/ledger_controller.dart';
 
 class ReviewSecrets implements SecretStore {
@@ -61,22 +62,6 @@ class HoldingTrustController extends SecurityController {
     await ready.future;
     return super.verifyHost(identity, expected: expected);
   }
-}
-
-class HoldingCredentialsStore implements LedgerStore {
-  HoldingCredentialsStore(this.delegate);
-  final LedgerStore delegate;
-  final started = Completer<void>();
-  final release = Completer<void>();
-  @override
-  Future<List<CredentialMetadata>> credentials() async {
-    if (!started.isCompleted) started.complete();
-    await release.future;
-    return delegate.credentials();
-  }
-
-  @override
-  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
 HostKeyIdentity reviewIdentity([int variation = 0]) {
@@ -282,24 +267,26 @@ void main() {
     'cancel while metadata loads prevents subsequent native secret read',
     () async {
       await preparePassword();
-      final heldStore = HoldingCredentialsStore(store);
-      final heldSecurity = SecurityController(
-        store: heldStore,
-        secrets: secrets,
-        authenticator: auth,
+      final db = await databaseFactoryFfiNoIsolate.openDatabase(
+        '${directory.path}/ledger.db',
       );
-      try {
-        final pending = heldSecurity.reveal(security.credentials.single);
-        auth.result.complete(true);
-        await heldStore.started.future;
-        heldSecurity.hideSensitive();
-        heldStore.release.complete();
-        expect(await pending, isFalse);
-        expect(secrets.reads, 0);
-        expect(heldSecurity.revealedSecret, isNull);
-      } finally {
-        heldSecurity.dispose();
-      }
+      final started = Completer<void>();
+      final release = Completer<void>();
+      final blocked = db.transaction((_) async {
+        started.complete();
+        await release.future;
+      });
+      await started.future;
+      final pending = security.reveal(security.credentials.single);
+      auth.result.complete(true);
+      // Let authentication complete and the metadata query wait for the DB.
+      await Future<void>.delayed(Duration.zero);
+      security.hideSensitive();
+      release.complete();
+      await blocked;
+      expect(await pending, isFalse);
+      expect(secrets.reads, 0);
+      expect(security.revealedSecret, isNull);
     },
   );
 

@@ -252,7 +252,7 @@ void main() {
 
     test('search finds IPv4, IPv6, hostname and an old host', () {
       List<String> find(String q) {
-        ledger.search = q;
+        ledger.listState.updateFilters(query: q);
         return ledger.visible.map((s) => s.id).toList()..sort();
       }
 

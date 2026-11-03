@@ -200,6 +200,7 @@ over two lines.
       expect(find.text('更新记录'), findsOneWidget);
       double top(String v) =>
           tester.getTopLeft(find.byKey(ValueKey('changelog-$v'))).dy;
+      expect(top('0.7.0'), lessThan(top('0.6.0')));
       expect(top('0.6.0'), lessThan(top('0.5.0')));
       expect(find.text('2026-10-16'), findsOneWidget);
       expect(find.text('2026-10-20'), findsOneWidget);
@@ -219,14 +220,14 @@ over two lines.
       expect(tester.takeException(), isNull);
     });
 
-    testWidgets('en: the store build is dated and has no unreleased entry', (
+    testWidgets('en: current development notes precede dated releases', (
       tester,
     ) async {
       await mount(tester, const ChangelogPage(), locale: 'en');
       expect(find.text('What’s New'), findsOneWidget);
-      expect(find.text('Unreleased'), findsNothing);
+      expect(find.text('Unreleased'), findsOneWidget);
       expect(find.text('2026-10-20'), findsOneWidget);
-      await tester.tap(find.byKey(const ValueKey('changelog-0.6.0')));
+      await tester.tap(find.byKey(const ValueKey('changelog-0.7.0')));
       await tester.pumpAndSettle();
       expect(find.byType(ChangelogReleasePage), findsOneWidget);
       expect(tester.takeException(), isNull);
@@ -251,7 +252,7 @@ over two lines.
       await mount(tester, const AboutPage());
       expect(find.byType(AppLogo), findsOneWidget);
       expect(find.text('VPS Tell You'), findsOneWidget);
-      expect(find.text('Version 0.6.0'), findsOneWidget);
+      expect(find.text('Version 0.7.0'), findsOneWidget);
       expect(find.text('Know every VPS at a glance'), findsOneWidget);
       expect(find.text('What’s New'), findsOneWidget);
       expect(find.text('Source Code'), findsOneWidget);

@@ -112,7 +112,7 @@ void main() {
         (await store.servicePeriods()).map((p) => p.toMap()).toList(),
         periods,
       );
-      ledger.search = 'renamed provider';
+      ledger.listState.updateFilters(query: 'renamed provider');
       expect(ledger.visible.map((s) => s.id).toSet(), {'a', 'b'});
     } finally {
       ledger.dispose();

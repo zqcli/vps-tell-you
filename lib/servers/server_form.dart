@@ -1,19 +1,10 @@
 import '../l10n/localized_message.dart';
 import '../l10n/locale_preference.dart';
 import '../l10n/generated/app_localizations.dart';
-import '../l10n/generated/app_localizations_en.dart';
-import '../l10n/generated/app_localizations_zh.dart';
 
 import 'dart:math' as math;
 import 'dart:ui' show SemanticsValidationResult;
 
-import 'package:flutter/cupertino.dart'
-    show
-        CupertinoDatePicker,
-        CupertinoDatePickerMode,
-        CupertinoTextThemeData,
-        CupertinoTheme,
-        CupertinoThemeData;
 import 'package:flutter/material.dart';
 
 import '../core/app_theme.dart';
@@ -24,6 +15,7 @@ import '../providers/provider_pickers.dart';
 import '../providers/provider_record.dart';
 import 'ledger_controller.dart';
 import 'server_record.dart';
+import 'server_legacy_fields.dart';
 import 'server_resource_fields.dart';
 import 'server_resources.dart';
 
@@ -220,11 +212,11 @@ class _ServerFormState extends State<ServerForm>
       months == 12 ? l10n.serverEveryYear : l10n.serverEveryMonths(months);
 
   Future<void> _pickGroup() async {
-    final result = await showFormPicker<String>(
+    final result = await showAppPicker<String>(
       context,
       title: context.l10n.serverGroup,
       selected: groupId ?? '',
-      options: (l10n) => [
+      optionsBuilder: (l10n) => [
         AppPickerOption(value: '', title: l10n.ungrouped),
         for (final group in widget.controller.groups)
           AppPickerOption(value: group.id, title: group.name),
@@ -236,11 +228,11 @@ class _ServerFormState extends State<ServerForm>
   }
 
   Future<void> _pickCurrency() async {
-    final result = await showFormPicker<String>(
+    final result = await showAppPicker<String>(
       context,
       title: context.l10n.serverOriginalCurrency,
       selected: currency,
-      options: (_) => [
+      optionsBuilder: (_) => [
         for (final code in Money.currencies)
           AppPickerOption(value: code, title: code),
       ],
@@ -250,11 +242,11 @@ class _ServerFormState extends State<ServerForm>
 
   Future<void> _pickCycle() async {
     final months = {1, 3, 6, 12, 24, 36, cycle}.toList()..sort();
-    final result = await showFormPicker<int>(
+    final result = await showAppPicker<int>(
       context,
       title: context.l10n.serverRenewalCycle,
       selected: cycle,
-      options: (l10n) => [
+      optionsBuilder: (l10n) => [
         for (final m in months)
           AppPickerOption(value: m, title: _cycleDescription(m, l10n)),
       ],
@@ -282,10 +274,10 @@ class _ServerFormState extends State<ServerForm>
     final suggestion = id == 'due' && start != null
         ? start.addMonths(cycle)
         : today;
-    final result = await showAppSheet<String>(
+    final result = await showAppDateSheet(
       context,
       title: label,
-      builder: (_) => _DateSheet(initial: current ?? suggestion),
+      initial: current ?? suggestion,
     );
     if (result != null && mounted) {
       setState(() {
@@ -608,43 +600,6 @@ class _ServerFormState extends State<ServerForm>
     });
   }
 
-  /// Whether [spec] is something this app generated for the record's stored
-  /// hardware (current short form or the older long forms in either language).
-  bool _isAutoSpec(ServerRecord record, String spec) {
-    final resources = record.resources;
-    if (resources == null) return false;
-    if (spec == resources.specSummary) return true;
-    for (final l10n in [AppLocalizationsZh(), AppLocalizationsEn()]) {
-      final long = [
-        if (resources.vcpu != null) '${resources.vcpu} vCPU',
-        if (resources.ramBytes != null)
-          '${ServerResources.formatBytes(resources.ramBytes!)} RAM',
-        if (resources.diskBytes != null)
-          l10n.resourceDiskQuota(
-            ServerResources.formatBytes(resources.diskBytes!),
-          ),
-        if (resources.trafficUnlimited)
-          l10n.resourceUnlimitedTraffic
-        else if (resources.trafficBytes != null)
-          l10n.resourceTrafficQuota(
-            ServerResources.formatBytes(resources.trafficBytes!),
-          ),
-      ].join(' · ');
-      if (spec == long) return true;
-    }
-    return false;
-  }
-
-  /// A legacy `host` moves into its address field once it is stored there
-  /// (the user may have changed the prefilled value, but not blanked it);
-  /// otherwise it stays untouched so nothing is ever lost.
-  String _hostAfterSave(ServerRecord? old, ServerResources resources) {
-    final host = old?.host ?? '';
-    final legacy = _legacyHost;
-    if (legacy == null || !_hostCarried) return host;
-    return legacy.fieldValue(resources).isEmpty ? host : '';
-  }
-
   Future<void> save() async {
     if (saving || !widget.controller.canMutate) return;
     validationAttempted = true;
@@ -663,18 +618,14 @@ class _ServerFormState extends State<ServerForm>
     final now = widget.controller.clock();
     String text(String key) => fields[key]!.text.trim();
     final l10n = context.l10n;
-    // The specification is generated from the hardware. Free text written by
-    // an older version is never dropped: with known hardware it moves to the
-    // notes, without hardware it stays as the specification.
-    final generated = resources.specSummaryFor(l10n);
-    final legacy = old?.spec.trim() ?? '';
-    final legacyIsCustom = legacy.isNotEmpty && !_isAutoSpec(old!, legacy);
-    var notes = text('notes');
-    if (generated.isNotEmpty && legacyIsCustom && !notes.contains(legacy)) {
-      notes = notes.isEmpty
-          ? '${l10n.serverSpecifications}: $legacy'
-          : '$notes\n${l10n.serverSpecifications}: $legacy';
-    }
+    final legacy = preserveLegacyServerFields(
+      original: old,
+      resources: resources,
+      legacyHost: _legacyHost,
+      hostCarried: _hostCarried,
+      notes: text('notes'),
+      l10n: l10n,
+    );
     final s = ServerRecord(
       id: old?.id ?? newLocalId(),
       name: text('name'),
@@ -687,12 +638,12 @@ class _ServerFormState extends State<ServerForm>
           widget.template?.vendor ??
           '',
       providerId: selectedProvider?.id,
-      host: _hostAfterSave(old, resources),
+      host: legacy.host,
       region: text('region'),
       purpose: text('purpose'),
       os: text('os'),
-      spec: generated.isNotEmpty ? generated : legacy,
-      notes: notes,
+      spec: legacy.spec,
+      notes: legacy.notes,
       resources: resources,
       groupId: groupId,
       favorite: old?.favorite ?? false,
@@ -744,7 +695,9 @@ class _ServerFormState extends State<ServerForm>
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) => ListenableBuilder(
+    listenable: widget.controller,
+    builder: (context, _) {
     final l10n = context.l10n;
     final canSave = !saving && widget.controller.canMutate;
     final amountLabel = billing == BillingKind.metered
@@ -765,9 +718,7 @@ class _ServerFormState extends State<ServerForm>
             .firstOrNull
             ?.name ??
         l10n.ungrouped;
-    return ListenableBuilder(
-      listenable: widget.controller,
-      builder: (context, _) => PopScope(
+    return PopScope(
         canPop: !saving,
         child: AppScaffold.modal(
           title: widget.record == null ? l10n.serverAdd : l10n.serverEditTitle,
@@ -885,84 +836,7 @@ class _ServerFormState extends State<ServerForm>
             ),
           ],
         ),
-      ),
     );
-  }
-}
-
-/// Date wheel in a sheet. Pops an ISO date, or `''` for "set unknown"; closing
-/// the sheet any other way leaves the draft unchanged.
-class _DateSheet extends StatefulWidget {
-  const _DateSheet({required this.initial});
-  final LedgerDate initial;
-  @override
-  State<_DateSheet> createState() => _DateSheetState();
-}
-
-class _DateSheetState extends State<_DateSheet> {
-  late DateTime _value = DateTime(
-    widget.initial.year,
-    widget.initial.month,
-    widget.initial.day,
+    },
   );
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = context.l10n;
-    final p = context.palette;
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        SizedBox(
-          height: 216,
-          child: CupertinoTheme(
-            data: CupertinoThemeData(
-              brightness: p.isDark ? Brightness.dark : Brightness.light,
-              textTheme: CupertinoTextThemeData(
-                dateTimePickerTextStyle: TextStyle(fontSize: 21, color: p.text),
-              ),
-            ),
-            child: CupertinoDatePicker(
-              mode: CupertinoDatePickerMode.date,
-              initialDateTime: _value,
-              minimumYear: 1,
-              maximumYear: 9999,
-              onDateTimeChanged: (value) => _value = value,
-            ),
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
-          child: Row(
-            children: [
-              Expanded(
-                child: AppButton(
-                  key: const ValueKey('date-sheet-unknown'),
-                  label: l10n.uiFormSetUnknown,
-                  kind: AppButtonKind.tonal,
-                  onPressed: () => Navigator.pop(context, ''),
-                ),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: AppButton(
-                  key: const ValueKey('date-sheet-done'),
-                  label: l10n.uiFormDone,
-                  onPressed: () => Navigator.pop(
-                    context,
-                    LedgerDate(
-                      _value.year,
-                      _value.month,
-                      _value.day,
-                    ).toString(),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
 }

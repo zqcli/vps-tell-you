@@ -10,7 +10,6 @@ import '../core/ui/ui.dart';
 import '../finance/finance_math.dart';
 import '../finance/payment_pages.dart';
 import '../providers/directory_widgets.dart';
-import '../providers/provider_pages.dart';
 import 'ledger_controller.dart';
 import 'server_detail.dart';
 import 'server_duplicate.dart';
@@ -54,7 +53,7 @@ class _ServerRowState extends State<ServerRow> {
 
   Future<void> toggleFavorite() async {
     try {
-      await c.mutate(() => c.store.setFavorite(s, !s.favorite));
+      await c.setFavorite(s, !s.favorite);
     } catch (error) {
       if (mounted) showFailure(context, error);
     }

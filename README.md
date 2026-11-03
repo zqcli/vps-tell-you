@@ -8,7 +8,7 @@
 
 **本地优先的个人 VPS 台账：记账、到期提醒，顺手 SSH / SFTP。**
 
-[![版本](https://img.shields.io/badge/version-0.5.0-blue)](CHANGELOG.md)
+[![版本](https://img.shields.io/badge/version-0.7.0-blue)](CHANGELOG.md)
 [![Release](https://img.shields.io/github/v/release/zqcli/vps-tell-you)](https://github.com/zqcli/vps-tell-you/releases)
 [![CI](https://img.shields.io/github/actions/workflow/status/zqcli/vps-tell-you/ci.yml?branch=dev&label=CI)](https://github.com/zqcli/vps-tell-you/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
@@ -131,7 +131,7 @@
 
 ## 安装
 
-目前**没有预编译安装包**；最新发布版本是 0.5.0（仅源码），`dev` 分支包含即将发布的 0.6.0（见 [更新记录](CHANGELOG.md)）。需要从源码构建，使用 Flutter 3.47.6（stable）。
+本分支为 **0.7.0 工程优化版本（开发中）**，基于 0.6.0，保持现有功能、界面与操作方式（见 [更新记录](CHANGELOG.md)）。从源码构建请使用 Flutter 3.47.6（stable）。
 
 ```sh
 git clone https://github.com/zqcli/vps-tell-you.git

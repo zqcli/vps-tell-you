@@ -5,10 +5,12 @@ import 'package:flutter/material.dart';
 
 import '../core/app_theme.dart' show showFailure;
 import '../core/ui/ui.dart';
-import '../finance/finance_math.dart';
+import '../finance/finance_snapshot.dart';
+import '../core/value_types.dart';
 import '../l10n/generated/app_localizations.dart';
 import '../providers/provider_pages.dart';
 import 'ledger_controller.dart';
+import 'server_list_state.dart';
 import 'refresh_failure_notice.dart';
 import 'server_record.dart';
 import 'server_add.dart';
@@ -31,6 +33,7 @@ class ServerList extends StatefulWidget {
 class _ServerListState extends State<ServerList> {
   late final TextEditingController search;
   LedgerController get c => widget.controller;
+  _ServerSummary? _summary;
   bool openingCloud = false;
   bool openingAdd = false;
   Future<void> openAdd() async {
@@ -61,7 +64,7 @@ class _ServerListState extends State<ServerList> {
   @override
   void initState() {
     super.initState();
-    search = TextEditingController(text: c.search);
+    search = TextEditingController(text: c.listState.search);
   }
 
   @override
@@ -94,12 +97,12 @@ class _ServerListState extends State<ServerList> {
       builder: (_) => _FilterSheet(controller: c),
     );
     if (result == null) return;
-    c.updateFilters(
+    c.listState.updateFilters(
       category: ServerFilter.all,
       due: result.due,
       order: result.sort,
     );
-    c.setGroup(result.group);
+    c.listState.setGroup(result.group);
   }
 
   Future<void> openSort() async {
@@ -114,7 +117,7 @@ class _ServerListState extends State<ServerList> {
             for (final sort in ServerSort.values)
               AppRow(
                 title: _sortLabel(sheetContext.l10n, sort),
-                trailing: sort == c.sort
+                trailing: sort == c.listState.sort
                     ? Icon(Icons.check_rounded, size: 22, color: p.primary)
                     : null,
                 onTap: () => Navigator.pop(sheetContext, sort),
@@ -124,23 +127,23 @@ class _ServerListState extends State<ServerList> {
       },
     );
     if (picked != null) {
-      c.updateFilters(order: picked);
+      c.listState.updateFilters(order: picked);
     }
   }
 
   void selectCategory(ServerFilter category) {
-    c.setGroup(null);
-    c.updateFilters(category: category);
+    c.listState.setGroup(null);
+    c.listState.updateFilters(category: category);
   }
 
   void toggleGroup(String id) {
-    c.updateFilters(category: ServerFilter.all);
-    c.setGroup(c.groupFilter == id ? null : id);
+    c.listState.updateFilters(category: ServerFilter.all);
+    c.listState.setGroup(c.listState.groupFilter == id ? null : id);
   }
 
   @override
   Widget build(BuildContext context) => ListenableBuilder(
-    listenable: c,
+    listenable: Listenable.merge([c, c.listState]),
     builder: (context, _) {
       final l10n = context.l10n;
       final all = c.active;
@@ -215,27 +218,28 @@ class _ServerListState extends State<ServerList> {
     final l10n = context.l10n;
     final p = context.palette;
     final visible = c.visible;
-    final pending = all.where(c.isPending).toList();
-    final overdue = pending.where((s) => c.dueIn(s)! < 0).length;
-    final groups = c.groups
-        .where((g) => all.any((s) => s.groupId == g.id))
-        .toList();
+    final today = c.today;
+    final cached = _summary;
+    final summary = cached != null &&
+            identical(cached.records, all) && cached.today == today
+        ? cached
+        : _summary = _ServerSummary(all, today);
+    final groups = c.groups.where((g) => summary.groupIds.contains(g.id));
     final filterCount =
-        (c.groupFilter != null ? 1 : 0) +
-        (c.dueFilter != DueFilter.all ? 1 : 0);
+        (c.listState.groupFilter != null ? 1 : 0) +
+        (c.listState.dueFilter != DueFilter.all ? 1 : 0);
     final showStats =
-        c.filter == ServerFilter.all &&
-        c.groupFilter == null &&
-        c.search.isEmpty &&
-        c.dueFilter == DueFilter.all;
-    final monthly = aggregateAmounts(
-      all.map((s) => monthlyAmount(s, c.today)),
-      c.fx,
-    );
+        c.listState.filter == ServerFilter.all &&
+        c.listState.groupFilter == null &&
+        c.listState.search.isEmpty &&
+        c.listState.dueFilter == DueFilter.all;
+    final monthly = showStats && all.isNotEmpty
+        ? FinanceScope.of(c, null).monthly
+        : null;
     final big = MediaQuery.textScalerOf(context).scale(14) > 20;
-    final title = c.groupFilter != null
-        ? c.groupName(c.groupFilter, l10n: l10n)
-        : switch (c.filter) {
+    final title = c.listState.groupFilter != null
+        ? c.groupName(c.listState.groupFilter, l10n: l10n)
+        : switch (c.listState.filter) {
             ServerFilter.favorites => l10n.serverFavoriteServers,
             ServerFilter.pending => l10n.serverExpiryNeedsCheck,
             ServerFilter.all => l10n.serverAllServers,
@@ -267,7 +271,7 @@ class _ServerListState extends State<ServerList> {
               const SizedBox(width: 4),
               Flexible(
                 child: Text(
-                  _sortLabel(l10n, c.sort),
+                  _sortLabel(l10n, c.listState.sort),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(fontSize: 14, color: p.primary),
@@ -285,33 +289,33 @@ class _ServerListState extends State<ServerList> {
         key: const ValueKey('server-search'),
         controller: search,
         placeholder: l10n.serverSearchHint,
-        onChanged: (value) => c.updateFilters(query: value),
+        onChanged: (value) => c.listState.updateFilters(query: value),
       ),
       AppChipRow(
         children: [
           AppChip(
             label: l10n.serverAll,
             count: all.length,
-            selected: c.filter == ServerFilter.all && c.groupFilter == null,
+            selected: c.listState.filter == ServerFilter.all && c.listState.groupFilter == null,
             onTap: () => selectCategory(ServerFilter.all),
           ),
           AppChip(
             label: l10n.serverFavorites,
-            count: all.where((s) => s.favorite).length,
+            count: summary.favorites,
             selected:
-                c.filter == ServerFilter.favorites && c.groupFilter == null,
+                c.listState.filter == ServerFilter.favorites && c.listState.groupFilter == null,
             onTap: () => selectCategory(ServerFilter.favorites),
           ),
           AppChip(
             label: l10n.expiryChecks,
-            count: pending.length,
-            selected: c.filter == ServerFilter.pending && c.groupFilter == null,
+            count: summary.pending,
+            selected: c.listState.filter == ServerFilter.pending && c.listState.groupFilter == null,
             onTap: () => selectCategory(ServerFilter.pending),
           ),
           for (final g in groups)
             AppChip(
               label: g.name,
-              selected: c.groupFilter == g.id,
+              selected: c.listState.groupFilter == g.id,
               onTap: () => toggleGroup(g.id),
             ),
           AppChip(
@@ -324,7 +328,7 @@ class _ServerListState extends State<ServerList> {
           ),
         ],
       ),
-      if (showStats && all.isNotEmpty)
+      if (monthly != null)
         Padding(
           padding: const EdgeInsets.only(top: 12),
           child: AppCard(
@@ -332,15 +336,15 @@ class _ServerListState extends State<ServerList> {
               metrics: [
                 AppMetric(
                   label: l10n.serverExpired,
-                  value: '$overdue',
+                  value: '${summary.overdue}',
                   valueColor: context.palette.red,
-                  onTap: () => c.updateFilters(category: ServerFilter.pending),
+                  onTap: () => c.listState.updateFilters(category: ServerFilter.pending),
                 ),
                 AppMetric(
                   label: l10n.uiServersDueSoon,
-                  value: '${pending.length - overdue}',
+                  value: '${summary.pending - summary.overdue}',
                   valueColor: context.palette.amber,
-                  onTap: () => c.updateFilters(category: ServerFilter.pending),
+                  onTap: () => c.listState.updateFilters(category: ServerFilter.pending),
                 ),
                 AppMetric(
                   label: l10n.financeMonthlyReference,
@@ -381,7 +385,7 @@ class _ServerListState extends State<ServerList> {
                 compact: true,
                 onPressed: () {
                   search.clear();
-                  c.resetFilters();
+                  c.listState.resetFilters();
                 },
               ),
             ],
@@ -435,9 +439,9 @@ class _FilterSheet extends StatefulWidget {
 }
 
 class _FilterSheetState extends State<_FilterSheet> {
-  late String? group = widget.controller.groupFilter;
-  late DueFilter due = widget.controller.dueFilter;
-  late ServerSort sort = widget.controller.sort;
+  late String? group = widget.controller.listState.groupFilter;
+  late DueFilter due = widget.controller.listState.dueFilter;
+  late ServerSort sort = widget.controller.listState.sort;
 
   /// Result count with the pending selection.
   int get count => widget.controller.countMatching(group: group, due: due);
@@ -542,4 +546,23 @@ class _FilterSheetState extends State<_FilterSheet> {
       ],
     );
   }
+}
+
+/// Counts shared by the list chips and summary, once per records/date change.
+class _ServerSummary {
+  _ServerSummary(this.records, this.today) {
+    for (final server in records) {
+      if (server.favorite) favorites++;
+      if (server.groupId != null) groupIds.add(server.groupId!);
+      final due = server.billing == BillingKind.prepaid ? server.dueDate : null;
+      if (due == null) continue;
+      final days = today.daysUntil(due);
+      if (days < 30) pending++;
+      if (days < 0) overdue++;
+    }
+  }
+  final List<ServerRecord> records;
+  final LedgerDate today;
+  final groupIds = <String>{};
+  int favorites = 0, pending = 0, overdue = 0;
 }

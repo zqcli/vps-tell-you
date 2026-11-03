@@ -54,32 +54,42 @@ class FinanceDetailPage extends StatelessWidget {
                 showFinanceRules(context, groupScoped: groupId != null),
           ),
         ],
-        children: [
-          if (c.refreshFailed)
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-              child: RefreshFailureNotice(controller: c),
-            ),
-          FinanceNote(
-            l10n.financeDetailScope(
-              label ??
-                  (groupId == null
+        slivers: [
+          SliverToBoxAdapter(child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              if (c.refreshFailed)
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+                  child: RefreshFailureNotice(controller: c),
+                ),
+              FinanceNote(
+                l10n.financeDetailScope(
+                  label ?? (groupId == null
                       ? l10n.financeAllGroups
                       : c.groupName(groupId, l10n: l10n)),
-              records.length,
-            ),
-            padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
-          ),
-          AppSection(
-            children: [
-              if (records.isEmpty) AppRow(title: l10n.financeNoServersInRange),
-              for (final s in records) _detailRow(context, c, scope, s),
+                  records.length,
+                ),
+                padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
+              ),
             ],
-          ),
-          FinanceNote(
+          )),
+          AppLazySections(sections: [
+            AppListSection(
+              topSpacing: 16,
+              count: records.isEmpty ? 1 : records.length,
+              itemKey: (i) => records.isEmpty
+                  ? const ValueKey('finance-detail-empty')
+                  : ValueKey('finance-detail-${records[i].id}'),
+              itemBuilder: (context, i) => records.isEmpty
+                  ? AppRow(title: l10n.financeNoServersInRange)
+                  : _detailRow(context, c, scope, records[i]),
+            ),
+          ]),
+          SliverToBoxAdapter(child: FinanceNote(
             l10n.financeUnknownZeroNote,
             padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
-          ),
+          )),
         ],
       );
     },
@@ -197,19 +207,13 @@ class RenewalsPage extends StatelessWidget {
       final c = controller;
       final l10n = context.l10n;
       final scope = FinanceScope.of(c, groupId);
-      final events = month == null
-          ? scope.events
-          : scope.forecast.where((f) => f.month == month).firstOrNull?.events ??
-                <RenewalEvent>[];
-      final total = aggregateAmounts(events.map((e) => e.amount), c.fx);
-      final expired = month == null
-          ? scope.records.where(
-              (s) =>
-                  s.billing == BillingKind.prepaid &&
-                  s.dueDate != null &&
-                  s.dueDate!.compareTo(c.today) < 0,
-            )
-          : <ServerRecord>[];
+      final forecast = month == null ? null
+          : scope.forecast.where((f) => f.month == month).firstOrNull;
+      final events = month == null ? scope.events
+          : forecast?.events ?? const <RenewalEvent>[];
+      final total = month == null ? scope.renewals
+          : forecast?.total ?? aggregateAmounts(const <FinanceAmount>[], c.fx);
+      final expired = month == null ? scope.expired : const <ServerRecord>[];
       void openServer(String id) => Navigator.push<void>(
         context,
         MaterialPageRoute(
@@ -221,58 +225,64 @@ class RenewalsPage extends StatelessWidget {
         title: month == null
             ? l10n.financeRenewals30Title
             : l10n.financeRenewalsMonthTitle(month!.year, month!.month),
-        children: [
-          if (c.refreshFailed)
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-              child: RefreshFailureNotice(controller: c),
-            ),
-          const SizedBox(height: 12),
-          AppCard(child: FinanceTotalView(total: total)),
-          FinanceNote(
-            l10n.financeRenewalsScopeNote(
-              events.length,
-              groupId == null
-                  ? l10n.financeAllGroups
-                  : c.groupName(groupId, l10n: l10n),
-            ),
-          ),
-          AppSection(
+        slivers: [
+          SliverToBoxAdapter(child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              if (events.isEmpty) AppRow(title: l10n.financeNoKnownRenewals),
-              for (final e in events)
-                _financeRow(
+              if (c.refreshFailed)
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+                  child: RefreshFailureNotice(controller: c),
+                ),
+              const SizedBox(height: 12),
+              AppCard(child: FinanceTotalView(total: total)),
+              FinanceNote(l10n.financeRenewalsScopeNote(
+                events.length,
+                groupId == null ? l10n.financeAllGroups
+                    : c.groupName(groupId, l10n: l10n),
+              )),
+            ],
+          )),
+          AppLazySections(sections: [
+            AppListSection(
+              topSpacing: 16,
+              count: events.isEmpty ? 1 : events.length,
+              itemKey: (i) => events.isEmpty
+                  ? const ValueKey('renewal-empty')
+                  : ValueKey('renewal-${events[i].server.id}-${events[i].date}'),
+              itemBuilder: (context, i) {
+                if (events.isEmpty) return AppRow(title: l10n.financeNoKnownRenewals);
+                final e = events[i];
+                return _financeRow(
                   context,
                   name: e.server.name,
-                  captions: [
-                    l10n.financeRenewalEventDate(
-                      e.date.toString(),
-                      e.server.cycleMonths,
-                    ),
-                  ],
+                  captions: [l10n.financeRenewalEventDate(e.date.toString(), e.server.cycleMonths)],
                   figure: '${e.amount.formatted} ${e.amount.currency}',
                   converted: convertedAmount(e.amount, c.fx, l10n: l10n),
                   onTap: () => openServer(e.server.id),
-                ),
-            ],
-          ),
-          if (expired.isNotEmpty)
-            AppSection(
-              header: l10n.financeExpiredCheck,
-              children: [
-                for (final s in expired)
-                  AppRow(
-                    title: s.name,
-                    subtitle: l10n.financeExpiredDate(s.dueDate.toString()),
-                    chevron: true,
-                    onTap: () => openServer(s.id),
-                  ),
-              ],
+                );
+              },
             ),
-          FinanceNote(
+            AppListSection(
+              header: l10n.financeExpiredCheck,
+              topSpacing: 22,
+              count: expired.length,
+              itemKey: (i) => ValueKey('renewal-expired-${expired[i].id}'),
+              itemBuilder: (context, i) {
+                final s = expired[i];
+                return AppRow(
+                  title: s.name,
+                  subtitle: l10n.financeExpiredDate(s.dueDate.toString()),
+                  chevron: true,
+                  onTap: () => openServer(s.id),
+                );
+              },
+            ),
+          ]),
+          SliverToBoxAdapter(child: FinanceNote(
             l10n.financeMeteredRenewalNote,
             padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
-          ),
+          )),
         ],
       );
     },

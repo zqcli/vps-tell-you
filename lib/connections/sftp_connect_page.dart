@@ -18,7 +18,6 @@ import 'sftp_session.dart';
 import 'sftp_support.dart';
 import 'ssh_prompts.dart';
 import 'ssh_service.dart';
-import 'terminal_page.dart' show SshServiceFactory;
 
 /// Opens SFTP for a saved server: connect (same host-key and passphrase
 /// prompts as the terminal), then the file browser; shows a toast if the

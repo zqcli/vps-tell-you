@@ -48,7 +48,7 @@ void main() {
   });
 
   List<String> find(String query) {
-    ledger.search = query;
+    ledger.listState.updateFilters(query: query);
     return ledger.visible.map((s) => s.id).toList()..sort();
   }
 

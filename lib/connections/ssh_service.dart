@@ -39,6 +39,8 @@ enum SshPowerAction { reboot, shutdown }
 
 enum PowerResult { submitted, unknown, failed }
 
+typedef SshServiceFactory = SshService Function(SecurityController security);
+
 String powerCommand(SshPowerAction action) => switch (action) {
   SshPowerAction.reboot => 'sudo -n shutdown -r now',
   SshPowerAction.shutdown => 'sudo -n shutdown -h now',

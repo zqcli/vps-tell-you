@@ -6,6 +6,7 @@ import 'package:vps_tell_you/core/value_types.dart';
 import 'package:vps_tell_you/data/ledger_store.dart';
 import 'package:vps_tell_you/servers/ledger_controller.dart';
 import 'package:vps_tell_you/servers/server_record.dart';
+import 'package:vps_tell_you/servers/server_list_state.dart';
 
 final now = DateTime(2026, 10, 6, 12);
 ServerRecord record({
@@ -137,20 +138,20 @@ void main() {
     await store.loadDemo();
     final c = LedgerController(store, clock: () => now);
     await c.refresh();
-    c.updateFilters(query: '192.0.2');
+    c.listState.updateFilters(query: '192.0.2');
     expect(c.visible.single.name, 'HK-01');
-    c.resetFilters();
-    c.updateFilters(category: ServerFilter.favorites);
+    c.listState.resetFilters();
+    c.listState.updateFilters(category: ServerFilter.favorites);
     expect(c.visible.length, 2);
-    c.updateFilters(category: ServerFilter.pending);
+    c.listState.updateFilters(category: ServerFilter.pending);
     expect(c.visible.length, 2);
-    c.updateFilters(due: DueFilter.overdue);
+    c.listState.updateFilters(due: DueFilter.overdue);
     expect(c.visible.single.name, 'JP-01');
-    c.resetFilters();
-    c.setGroup('');
+    c.listState.resetFilters();
+    c.listState.setGroup('');
     expect(c.visible, isEmpty);
-    c.setGroup(c.groups.single.id);
-    c.updateFilters(order: ServerSort.due);
+    c.listState.setGroup(c.groups.single.id);
+    c.listState.updateFilters(order: ServerSort.due);
     expect(c.visible.first.name, 'JP-01');
     final boundary = ServerRecord.fromMap({
       ...record().toMap(),

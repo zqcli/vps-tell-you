@@ -46,40 +46,6 @@ double compactSegmentWidth(BuildContext context, Iterable<String> labels) {
   return labels.length * (widest.ceilToDouble() + 40) + 4;
 }
 
-/// Single-choice bottom sheet whose rows are built from the *current* locale,
-/// so an open picker follows a live language change. Returns the chosen value
-/// or `null` when dismissed.
-Future<T?> showFormPicker<T>(
-  BuildContext context, {
-  required String title,
-  required List<AppPickerOption<T>> Function(AppLocalizations l10n) options,
-  T? selected,
-  String Function(AppLocalizations l10n)? footnote,
-}) => showAppSheet<T>(
-  context,
-  title: title,
-  builder: (sheetContext) {
-    final l10n = sheetContext.l10n;
-    final p = sheetContext.palette;
-    return AppSection(
-      topSpacing: 4,
-      footer: footnote?.call(l10n),
-      children: [
-        for (final option in options(l10n))
-          AppRow(
-            key: option.key,
-            title: option.title,
-            subtitle: option.subtitle,
-            trailing: option.value == selected
-                ? Icon(Icons.check_rounded, size: 22, color: p.primary)
-                : null,
-            onTap: () => Navigator.pop(sheetContext, option.value),
-          ),
-      ],
-    );
-  },
-);
-
 /// An explicit local completion form. Merely editing it never starts a request
 /// or establishes SSH configuration/trust.
 ///
@@ -495,16 +461,16 @@ class ServerResourceFieldsState extends State<ServerResourceFields>
   Future<void> _pickPeriod() async {
     final newDefault =
         widget.defaultTrafficPeriodMonths == 1 && widget.initial == null;
-    final result = await showFormPicker<int>(
+    final result = await showAppPicker<int>(
       context,
       title: context.l10n.resourceTrafficPeriod,
       selected: _trafficPeriodMonths ?? 0,
-      options: (l10n) => [
+      optionsBuilder: (l10n) => [
         for (final months in ServerResources.trafficPeriodsFor(l10n).keys)
           AppPickerOption(value: months, title: _periodText(l10n, months)),
         AppPickerOption(value: 0, title: l10n.notSet),
       ],
-      footnote: (l10n) =>
+      footnoteBuilder: (l10n) =>
           newDefault ? l10n.resourceNewPeriodHelp : l10n.resourcePeriodHelp,
     );
     if (result != null && mounted) {

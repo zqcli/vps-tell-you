@@ -65,6 +65,8 @@ class _SftpBrowserPageState extends State<SftpBrowserPage>
   bool _showHidden = false;
   int _limit = _pageSize, _working = 0, _loadSeq = 0;
   String _requested = '/';
+  _DirectoryLoad? _directoryLoad;
+  bool _displayedDirectoryDirty = false;
   // A system picker or share sheet backgrounds the app on Android; that must
   // not look like the app being left.
   bool _externalUi = false;
@@ -100,7 +102,7 @@ class _SftpBrowserPageState extends State<SftpBrowserPage>
         start = '/';
       }
     }
-    if (mounted) await _open(start, initial: true);
+    if (mounted) await _open(start);
   }
 
   @override
@@ -175,33 +177,63 @@ class _SftpBrowserPageState extends State<SftpBrowserPage>
 
   // ------------------------------------------------------------- loading
 
-  Future<void> _open(String path, {bool initial = false}) async {
-    final seq = ++_loadSeq;
+  Future<void> _open(String path) {
+    final current = _directoryLoad;
+    if (current != null && current.path == path) {
+      current.dirty = true;
+      return current.done;
+    }
+    final request = _DirectoryLoad(path, ++_loadSeq);
+    _directoryLoad = request;
     _requested = path;
-    setState(() => _loading = true);
+    return request.done = _loadDirectory(request);
+  }
+
+  Future<void> _loadDirectory(_DirectoryLoad request) async {
+    final path = request.path;
     try {
-      final list = await _session.list(path);
-      if (!mounted || seq != _loadSeq) return;
-      final scroll = PrimaryScrollController.maybeOf(context);
-      final changed = path != _path;
-      setState(() {
-        _path = path;
-        _entries = list;
-        _loaded = true;
-        _loadError = null;
-        _loading = false;
-        _limit = _pageSize;
-        if (changed) _search.clear();
-      });
-      if (changed && scroll != null && scroll.hasClients) scroll.jumpTo(0);
-    } on SftpException catch (problem) {
-      if (!mounted || seq != _loadSeq) return;
-      if (_isLost(problem)) return _markEnded();
-      setState(() {
-        _loading = false;
-        if (!_loaded) _loadError = problem;
-      });
-      if (_loaded) _toastError(problem);
+      do {
+        request.dirty = false;
+        setState(() => _loading = true);
+        try {
+          final list = await _session.list(path);
+          if (!mounted || request.seq != _loadSeq) return;
+          final scroll = PrimaryScrollController.maybeOf(context);
+          final changed = path != _path;
+          setState(() {
+            _path = path;
+            _entries = list;
+            _loaded = true;
+            _loadError = null;
+            _loading = false;
+            _displayedDirectoryDirty = false;
+            _limit = _pageSize;
+            if (changed) _search.clear();
+          });
+          if (changed && scroll != null && scroll.hasClients) scroll.jumpTo(0);
+        } on SftpException catch (problem) {
+          if (!mounted || request.seq != _loadSeq) return;
+          if (_isLost(problem)) return _markEnded();
+          setState(() {
+            _loading = false;
+            if (!_loaded) _loadError = problem;
+          });
+          if (_loaded) _toastError(problem);
+          if (_displayedDirectoryDirty && path != _path) {
+            _displayedDirectoryDirty = false;
+            await _open(_path);
+            return;
+          }
+        }
+        // Changes during this listing need one follow-up, not another listing
+        // per completed upload. Navigation still supersedes the old request.
+      } while (mounted &&
+          request.seq == _loadSeq &&
+          request.dirty &&
+          !_closing &&
+          !_ended);
+    } finally {
+      if (identical(_directoryLoad, request)) _directoryLoad = null;
     }
   }
 
@@ -423,10 +455,17 @@ class _SftpBrowserPageState extends State<SftpBrowserPage>
   void _transferFinished(SftpTransferItem item) {
     if (!mounted) return;
     final l10n = context.l10n;
+    final shownPath = _loading ? _requested : _path;
     if (item.kind == SftpTransferKind.upload &&
-        item.state == SftpTransferState.done &&
-        p.posix.dirname(item.remotePath) == _path) {
-      unawaited(_open(_path));
+        item.state == SftpTransferState.done) {
+      final directory = p.posix.dirname(item.remotePath);
+      if (directory == shownPath) {
+        unawaited(_open(shownPath));
+      } else if (directory == _path) {
+        // Keep navigation in charge; refresh this directory only if the
+        // requested directory fails and the previous listing stays visible.
+        _displayedDirectoryDirty = true;
+      }
     }
     if (item.state == SftpTransferState.done &&
         item.kind == SftpTransferKind.download &&
@@ -879,4 +918,12 @@ class _SftpBrowserPageState extends State<SftpBrowserPage>
       ),
     );
   }
+}
+
+class _DirectoryLoad {
+  _DirectoryLoad(this.path, this.seq);
+  final String path;
+  final int seq;
+  late final Future<void> done;
+  bool dirty = false;
 }

@@ -9,6 +9,7 @@ import 'package:flutter/cupertino.dart'
 import 'package:flutter/material.dart';
 
 import '../../l10n/locale_preference.dart';
+import '../../l10n/generated/app_localizations.dart';
 import '../../l10n/localized_message.dart';
 import '../app_palette.dart';
 import 'app_glass.dart';
@@ -389,6 +390,8 @@ class AppPickerOption<T> {
 /// Single-choice list in a bottom sheet with a check mark on the current
 /// value and an optional footnote. Returns the chosen value, or `null` when
 /// dismissed (use a sentinel value such as `''` for a "None" option).
+/// Use [optionsBuilder] / [footnoteBuilder] when an open picker must follow
+/// live language changes; provide either [options] or [optionsBuilder].
 ///
 /// ```dart
 /// final cycle = await showAppPicker<int>(
@@ -405,19 +408,23 @@ class AppPickerOption<T> {
 Future<T?> showAppPicker<T>(
   BuildContext context, {
   String? title,
-  required List<AppPickerOption<T>> options,
+  List<AppPickerOption<T>>? options,
+  List<AppPickerOption<T>> Function(AppLocalizations)? optionsBuilder,
   T? selected,
   String? footnote,
-}) => showAppSheet<T>(
+  String Function(AppLocalizations)? footnoteBuilder,
+}) {
+  assert((options == null) != (optionsBuilder == null));
+  return showAppSheet<T>(
   context,
   title: title,
   builder: (sheetContext) {
     final p = sheetContext.palette;
     return AppSection(
       topSpacing: 4,
-      footer: footnote,
+      footer: footnoteBuilder?.call(sheetContext.l10n) ?? footnote,
       children: [
-        for (final option in options)
+        for (final option in optionsBuilder?.call(sheetContext.l10n) ?? options!)
           AppRow(
             key: option.key,
             icon: option.icon,
@@ -432,7 +439,8 @@ Future<T?> showAppPicker<T>(
       ],
     );
   },
-);
+  );
+}
 
 /// Floating dark toast (SnackBar) with an optional action such as "Undo".
 ///

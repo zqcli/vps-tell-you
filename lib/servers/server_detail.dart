@@ -12,14 +12,13 @@ import '../core/ui/ui.dart';
 import '../core/value_types.dart';
 import '../connections/connection_pages.dart';
 import '../connections/sftp_connect_page.dart';
-import '../connections/terminal_page.dart' show SshServiceFactory;
+import '../connections/ssh_service.dart' show SshServiceFactory;
 import '../connections/tcp_test_page.dart';
 import '../finance/calculator_page.dart';
 import '../finance/finance_math.dart';
 import '../finance/finance_models.dart';
 import '../finance/payment_pages.dart';
 import '../providers/directory_widgets.dart';
-import '../providers/provider_pages.dart';
 import '../security/host_trust.dart' show normalizedHost;
 import '../security/host_trust_pages.dart';
 import '../security/security_models.dart' show SshConfiguration;
@@ -49,9 +48,7 @@ class ServerDetail extends StatelessWidget {
 
   Future<void> _toggleFavorite(BuildContext context, ServerRecord s) async {
     try {
-      await controller.mutate(
-        () => controller.store.setFavorite(s, !s.favorite),
-      );
+      await controller.setFavorite(s, !s.favorite);
     } catch (error) {
       if (context.mounted) {
         showFailure(context, error);

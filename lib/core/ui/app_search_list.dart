@@ -116,11 +116,17 @@ class AppListSection {
   const AppListSection({
     this.header,
     this.footer,
+    this.topSpacing,
+    this.itemKey,
     required this.count,
     required this.itemBuilder,
   });
   final String? header, footer;
+  final double? topSpacing;
   final int count;
+
+  /// Stable row identity, retained when filtering or reordering the section.
+  final Key Function(int index)? itemKey;
 
   /// Usually returns an [AppRow] (or any widget; [AppSectionItem]s control the
   /// separator inset).
@@ -190,9 +196,16 @@ class AppLazySections extends StatelessWidget {
     ];
     // slot layout per section: header/spacer, rows..., optional footer
     final starts = <int>[];
+    final indices = <Key, int>{};
     var total = 0;
     for (final s in shown) {
       starts.add(total);
+      final keyOf = s.itemKey;
+      if (keyOf != null) {
+        for (var i = 0; i < s.count; i++) {
+          indices[keyOf(i)] = total + 1 + i;
+        }
+      }
       total += 1 + s.count + (s.footer != null ? 1 : 0);
     }
     Widget build(BuildContext context, int index) {
@@ -204,9 +217,9 @@ class AppLazySections extends StatelessWidget {
       final local = index - starts[at];
       if (local == 0) {
         return section.header == null
-            ? SizedBox(height: at == 0 ? 8 : 16)
+            ? SizedBox(height: section.topSpacing ?? (at == 0 ? 8 : 16))
             : Padding(
-                padding: EdgeInsets.fromLTRB(32, at == 0 ? 8 : 22, 32, 7),
+                padding: EdgeInsets.fromLTRB(32, section.topSpacing ?? (at == 0 ? 8 : 22), 32, 7),
                 child: Text(
                   section.header!,
                   style: TextStyle(fontSize: 13, color: p.text2),
@@ -225,6 +238,7 @@ class AppLazySections extends StatelessWidget {
           ? (row as AppSectionItem).separatorInset
           : 16.0;
       return AppGroupedRow(
+        key: section.itemKey?.call(i),
         first: i == 0,
         last: i == section.count - 1,
         inset: inset,
@@ -233,7 +247,11 @@ class AppLazySections extends StatelessWidget {
     }
 
     return SliverList(
-      delegate: SliverChildBuilderDelegate(build, childCount: total),
+      delegate: SliverChildBuilderDelegate(
+        build,
+        childCount: total,
+        findChildIndexCallback: indices.isEmpty ? null : (key) => indices[key],
+      ),
     );
   }
 }

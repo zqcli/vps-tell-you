@@ -103,9 +103,9 @@ chips, buttons), `app_widgets` (card, pill, banner, empty state, progress), `app
 | `TextField` with outline | `AppFormRow(child: AppTextField(...))` |
 | `ScaffoldMessenger…showSnackBar` | `showAppToast` (`showFailure` still works) |
 
-The legacy widgets (`LedgerCard`, `LedgerBadge`, `InfoNote`,
-`confirmAction`, `showFailure`) stay and are
-restyled, so unmigrated pages already look close; `confirmAction` still shows a
+`InfoNote`, `confirmAction`, and `showFailure` remain for their existing
+call sites; the unused `LedgerCard` and `LedgerBadge` have been removed.
+`confirmAction` still shows a
 Material `AlertDialog` (iOS-styled) so existing `find.byType(AlertDialog)` test
 finders keep working until a page switches to `showAppConfirm`
 (`CupertinoAlertDialog` / `CupertinoActionSheet`).

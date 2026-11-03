@@ -12,6 +12,15 @@ How to add entries (the app shows this file under Settings / About / What’s Ne
 This comment is not shown.
 -->
 
+## 0.7.0 — Unreleased
+
+### Changed
+
+- Improve responsiveness when searching or changing favorites, appearance, exchange rates and groups, with fewer unrelated data refreshes and reminder reschedules
+- Improve payment history, cost details, renewal and archive lists with many records while keeping the existing layout and interactions
+- Reduce resource use during long SFTP downloads and improve directory refreshes after multiple uploads and progress updates when file size is unknown
+- Improve caret movement in the SFTP text editor and restoration of larger ledger backups while preserving validation and cancellation behavior
+
 ## 0.6.0 — 2026-10-20
 
 ### Added

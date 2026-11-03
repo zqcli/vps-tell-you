@@ -455,6 +455,27 @@ void main() {
     }
 
     Finder row(int age) => find.byKey(ValueKey('payment-age$age'));
+    Future<void> expectRows(WidgetTester tester, List<int> ages) async {
+      final scrollable = find.byWidgetPredicate(
+        (w) => w is Scrollable && w.axis == Axis.vertical,
+      ).first;
+      final position = tester.state<ScrollableState>(scrollable).position;
+      position.jumpTo(0);
+      await tester.pumpAndSettle();
+      final seen = <int>{};
+      for (var i = 0; i < 30; i++) {
+        for (final age in [3, 20, 60, 200, 400]) {
+          if (row(age).evaluate().isNotEmpty) seen.add(age);
+        }
+        if (position.extentAfter <= 0) break;
+        await tester.drag(scrollable, const Offset(0, -400));
+        await tester.pumpAndSettle();
+      }
+      expect(seen, unorderedEquals(ages));
+      position.jumpTo(0);
+      await tester.pumpAndSettle();
+    }
+
     String total(WidgetTester tester) => tester
         .widget<FinanceTotalView>(find.byType(FinanceTotalView))
         .total
@@ -468,9 +489,7 @@ void main() {
         tester,
         PaymentListPage(controller: controller, period: PaymentPeriod.month),
       );
-      expect(row(3), findsOneWidget);
-      expect(row(20), findsOneWidget);
-      expect(row(60), findsNothing);
+      await expectRows(tester, [3, 20]);
       expect(total(tester), '¥23.00');
       for (final step in [
         (PaymentPeriod.week, [3], '¥3.00'),
@@ -484,13 +503,7 @@ void main() {
         await tester.pumpAndSettle();
         await tester.tap(chip);
         await tester.pumpAndSettle();
-        for (final age in [3, 20, 60, 200, 400]) {
-          expect(
-            row(age),
-            step.$2.contains(age) ? findsOneWidget : findsNothing,
-            reason: '${step.$1.name} age $age',
-          );
-        }
+        await expectRows(tester, step.$2);
         expect(total(tester), step.$3, reason: step.$1.name);
       }
     });
@@ -504,18 +517,16 @@ void main() {
       );
       await controller.refresh();
       await mount(tester, PaymentListPage(controller: controller));
-      expect(row(400), findsOneWidget);
-      expect(row(3), findsNothing);
+      await expectRows(tester, [20, 60, 200, 400]);
       expect(total(tester), '¥680.00');
       await tester.tap(find.byKey(const ValueKey('payment-voided')));
       await tester.pumpAndSettle();
-      expect(row(3), findsOneWidget);
+      await expectRows(tester, [3, 20, 60, 200, 400]);
       // Deleted records are listed but never counted.
       expect(total(tester), '¥680.00');
       await tester.tap(find.byKey(const ValueKey('payment-period-week')));
       await tester.pumpAndSettle();
-      expect(row(3), findsOneWidget);
-      expect(row(20), findsNothing);
+      await expectRows(tester, [3]);
     });
   });
 

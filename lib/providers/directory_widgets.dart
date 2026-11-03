@@ -7,6 +7,7 @@ import '../core/ui/ui.dart';
 import '../l10n/generated/app_localizations.dart';
 import '../l10n/locale_preference.dart';
 import '../servers/ledger_controller.dart';
+import '../servers/server_record.dart';
 import 'provider_directory.dart';
 import 'provider_record.dart';
 
@@ -167,4 +168,17 @@ class DirectorySettingsSection extends StatelessWidget {
       ],
     );
   }
+}
+
+String serverProviderLabel(
+  BuildContext context,
+  LedgerController ledger,
+  ServerRecord server,
+) => ledger.providerFor(server)?.name ?? context.l10n.providerUiUnspecified;
+
+String serverProviderMark(LedgerController ledger, ServerRecord server) {
+  final name = ledger.providerFor(server)?.name;
+  return name == null || name.isEmpty
+      ? 'VPS'
+      : name.runes.take(2).map(String.fromCharCode).join().toUpperCase();
 }

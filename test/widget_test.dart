@@ -10,7 +10,7 @@ import 'package:vps_tell_you/data/ledger_store.dart';
 import 'package:vps_tell_you/servers/ledger_controller.dart';
 import 'package:vps_tell_you/servers/server_detail.dart';
 import 'package:vps_tell_you/servers/server_form.dart';
-import 'package:vps_tell_you/settings/settings_page.dart';
+import 'package:vps_tell_you/servers/server_management_pages.dart';
 
 void main() {
   late Directory directory;

@@ -325,6 +325,29 @@ void main() {
     },
   );
 
+  test('credential lookup keeps reference, kind and revision checks authoritative', () async {
+    expect(await save(), isTrue);
+    final original = controller.credentials.single;
+    expect((await store.credentialById(original.id))!.toMap(), original.toMap());
+    expect(await store.credentialById('missing'), isNull);
+    expect(await store.isCredentialCurrent(original), isTrue);
+    expect(
+      await store.isCredentialCurrent(
+        CredentialMetadata.fromMap({...original.toMap(), 'kind': 'privateKey'}),
+      ),
+      isFalse,
+    );
+
+    expect(await save(existing: original, secret: 'replacement-password'), isTrue);
+    final updated = controller.credentials.single;
+    expect(updated.secretRef, isNot(original.secretRef));
+    expect(await store.isCredentialCurrent(original), isFalse);
+    expect(await store.isCredentialCurrent(updated), isTrue);
+    expect(await controller.deleteCredential(updated), isTrue);
+    expect(await store.credentialById(updated.id), isNull);
+    expect(await store.isCredentialCurrent(updated), isFalse);
+  });
+
   test('native-only metadata storage survives restart; SQLite has no secret payload', () async {
     expect(await save(), isTrue);
     final first = controller.credentials.single;

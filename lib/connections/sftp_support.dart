@@ -298,7 +298,7 @@ class SftpTransferQueue extends ChangeNotifier {
     void progress(int done, int? total) {
       item.done = done;
       item.total = total ?? item.total;
-      _change(force: done >= (item.total ?? -1));
+      _change(force: item.total != null && done >= item.total!);
     }
 
     try {

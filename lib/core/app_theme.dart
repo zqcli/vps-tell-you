@@ -272,63 +272,6 @@ ThemeData _buildTheme(Brightness brightness) {
   );
 }
 
-/// Legacy card. Prefer [AppSection] (grouped rows) or [AppCard].
-///
-/// Restyled to the new design: surface fill, radius 14, no border.
-class LedgerCard extends StatelessWidget {
-  const LedgerCard({
-    super.key,
-    required this.child,
-    this.padding = const EdgeInsets.all(16),
-  });
-  final Widget child;
-  final EdgeInsetsGeometry padding;
-  @override
-  Widget build(BuildContext context) => Material(
-    color: Theme.of(context).colorScheme.surface,
-    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-    clipBehavior: Clip.antiAlias,
-    child: Padding(padding: padding, child: child),
-  );
-}
-
-/// Legacy badge. Prefer [StatusPill]. Renders as a pill.
-class LedgerBadge extends StatelessWidget {
-  const LedgerBadge(
-    this.text, {
-    super.key,
-    this.warning = false,
-    this.danger = false,
-  });
-  final String text;
-  final bool warning, danger;
-  @override
-  Widget build(BuildContext context) => Container(
-    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-    decoration: BoxDecoration(
-      color: danger
-          ? Theme.of(context).colorScheme.errorContainer
-          : warning
-          ? Theme.of(context).colorScheme.tertiaryContainer
-          : Theme.of(context).colorScheme.surfaceContainerLow,
-      borderRadius: BorderRadius.circular(11),
-    ),
-    child: Text(
-      text,
-      style: TextStyle(
-        fontSize: 12,
-        height: 1.5,
-        fontWeight: FontWeight.w600,
-        color: danger
-            ? Theme.of(context).colorScheme.onErrorContainer
-            : warning
-            ? Theme.of(context).colorScheme.onTertiaryContainer
-            : Theme.of(context).colorScheme.onSurfaceVariant,
-      ),
-    ),
-  );
-}
-
 /// Legacy explanatory note. Prefer `AppSection(footer: …)`.
 ///
 /// Renders in footnote style (12.5 px, secondary colour).
