@@ -4,6 +4,7 @@ import '../core/app_theme.dart' show showFailure;
 import '../core/ui/ui.dart';
 import '../l10n/locale_preference.dart';
 import '../l10n/localized_message.dart';
+import '../data/ledger_store.dart';
 import 'ledger_controller.dart';
 import 'server_record.dart';
 

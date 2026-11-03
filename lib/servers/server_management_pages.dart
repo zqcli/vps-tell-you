@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../core/app_theme.dart' show showFailure;
 import '../core/ui/ui.dart';
-import '../data/ledger_store.dart' show ArchiveUndo;
+import '../data/ledger_store.dart';
 import '../l10n/locale_preference.dart';
 import '../l10n/localized_message.dart';
 import '../providers/directory_widgets.dart';
@@ -218,8 +218,9 @@ class ArchivePage extends StatelessWidget {
                     ? const ValueKey('archive-empty')
                     : ValueKey('archive-${controller.archived[i].id}'),
                 itemBuilder: (context, i) {
-                  if (controller.archived.isEmpty)
+                  if (controller.archived.isEmpty) {
                     return _TextRow(l10n.noArchivedRecords);
+                  }
                   final s = controller.archived[i];
                   return AppRow(
                     icon: Icons.inventory_2_outlined,

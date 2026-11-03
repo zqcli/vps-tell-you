@@ -10,6 +10,7 @@ import 'package:dartssh2/dartssh2.dart';
 import 'package:flutter/foundation.dart';
 
 import '../core/net_address.dart';
+import '../data/ledger_store.dart';
 import '../security/host_trust.dart';
 import '../security/key_import.dart';
 import '../security/proxy_models.dart';

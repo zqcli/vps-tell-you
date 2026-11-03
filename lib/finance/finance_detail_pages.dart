@@ -269,8 +269,9 @@ class RenewalsPage extends StatelessWidget {
                         'renewal-${events[i].server.id}-${events[i].date}',
                       ),
                 itemBuilder: (context, i) {
-                  if (events.isEmpty)
+                  if (events.isEmpty) {
                     return AppRow(title: l10n.financeNoKnownRenewals);
+                  }
                   final e = events[i];
                   return _financeRow(
                     context,
