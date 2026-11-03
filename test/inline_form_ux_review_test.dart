@@ -116,7 +116,6 @@ void main() {
     await chooseOption(tester, target, title);
   }
 
-
   testWidgets(
     'changing billing preserves unsaved price but free and unknown stay distinct',
     (tester) async {

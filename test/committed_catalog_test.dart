@@ -47,11 +47,7 @@ void main() {
       expect(
         logo == null
             ? null
-            : {
-                'path': logo.path,
-                'sha256': logo.sha256,
-                'bytes': logo.bytes,
-              },
+            : {'path': logo.path, 'sha256': logo.sha256, 'bytes': logo.bytes},
         entries[p.id]['logo'],
         reason: p.id,
       );

@@ -158,7 +158,12 @@ void main() {
   }
 
   Future<void> capture(WidgetTester tester, String name) async {
-    await captureTestWidget(tester, keyed('terminal-review-evidence'), evidence, name);
+    await captureTestWidget(
+      tester,
+      keyed('terminal-review-evidence'),
+      evidence,
+      name,
+    );
   }
 
   Future<void> keyboard(WidgetTester tester) async {

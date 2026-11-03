@@ -42,7 +42,11 @@ void main() {
       page: (_) => Scaffold(
         body: SingleChildScrollView(
           padding: const EdgeInsets.all(20),
-          child: ServerResourceFields(key: key, initial: initial, enabled: enabled),
+          child: ServerResourceFields(
+            key: key,
+            initial: initial,
+            enabled: enabled,
+          ),
         ),
       ),
     );
@@ -123,7 +127,10 @@ void main() {
             expect(period.right, lessThanOrEqualTo(width - 16 + 0.001));
             expect(period.height, greaterThanOrEqualTo(44));
 
-            await harness.capture(tester, 'traffic-${width.toInt()}-${scale.toInt()}x');
+            await harness.capture(
+              tester,
+              'traffic-${width.toInt()}-${scale.toInt()}x',
+            );
           }
           expect(tester.takeException(), isNull);
         }
@@ -196,7 +203,10 @@ void main() {
         await tester.ensureVisible(
           find.byKey(const ValueKey('resource-row-trafficBytes')),
         );
-        await harness.capture(tester, 'quarter-${width.toInt()}-${scale.toInt()}x');
+        await harness.capture(
+          tester,
+          'quarter-${width.toInt()}-${scale.toInt()}x',
+        );
       });
     }
   }

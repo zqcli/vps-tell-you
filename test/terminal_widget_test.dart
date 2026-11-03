@@ -806,7 +806,9 @@ void main() {
         await openCommands(tester);
         final staleSend = tester
             .widget<ButtonStyleButton>(
-              find.byKey(ValueKey(execute ? 'terminal-send-execute' : 'terminal-send')),
+              find.byKey(
+                ValueKey(execute ? 'terminal-send-execute' : 'terminal-send'),
+              ),
             )
             .onPressed!;
         const next = SshTarget(
@@ -822,7 +824,9 @@ void main() {
         expect(
           tester
               .widget<ButtonStyleButton>(
-                find.byKey(ValueKey(execute ? 'terminal-send-execute' : 'terminal-send')),
+                find.byKey(
+                  ValueKey(execute ? 'terminal-send-execute' : 'terminal-send'),
+                ),
               )
               .onPressed,
           isNull,

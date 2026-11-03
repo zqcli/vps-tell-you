@@ -235,8 +235,10 @@ void main() {
           Scaffold(
             body: Builder(
               builder: (context) => TextButton(
-                onPressed: () =>
-                    showFailure(context, StateError('PRIVATE SQL DRIVER VALUES')),
+                onPressed: () => showFailure(
+                  context,
+                  StateError('PRIVATE SQL DRIVER VALUES'),
+                ),
                 child: const Text('模拟失败'),
               ),
             ),
@@ -252,7 +254,6 @@ void main() {
         expect(find.textContaining('PRIVATE'), findsNothing);
       },
     );
-
 
     Finder button() => find.byKey(const ValueKey('error-details-button'));
 

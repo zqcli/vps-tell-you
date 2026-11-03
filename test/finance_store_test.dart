@@ -641,27 +641,24 @@ void main() {
       await db.close();
     });
 
-    test(
-      'delete with rollback restores only due, removes owned periods and never reuses a void key',
-      () async {
-        await store.saveServer(fixture(), isNew: true);
-        final before = await only();
-        final created = await pay(before, cycles: 3, minor: 0);
-        await store.deletePayment(original: created, rollbackRenewal: true);
-        final restored = await only();
-        expect(restored.dueDate, before.dueDate);
-        expect(restored.startDate, before.startDate);
-        expect(restored.amountMinor, before.amountMinor);
-        expect(restored.revision, 2);
-        expect((await store.servicePeriods()).length, 1);
-        expect((await stored('payment')).voided, isTrue);
-        expect(
-          recentPayments(await store.payments(), LedgerDate.today(now)),
-          isEmpty,
-        );
-        await expectLater(pay(before, cycles: 3, minor: 0), throwsArgumentError);
-      },
-    );
+    test('delete with rollback restores only due, removes owned periods and never reuses a void key', () async {
+      await store.saveServer(fixture(), isNew: true);
+      final before = await only();
+      final created = await pay(before, cycles: 3, minor: 0);
+      await store.deletePayment(original: created, rollbackRenewal: true);
+      final restored = await only();
+      expect(restored.dueDate, before.dueDate);
+      expect(restored.startDate, before.startDate);
+      expect(restored.amountMinor, before.amountMinor);
+      expect(restored.revision, 2);
+      expect((await store.servicePeriods()).length, 1);
+      expect((await stored('payment')).voided, isTrue);
+      expect(
+        recentPayments(await store.payments(), LedgerDate.today(now)),
+        isEmpty,
+      );
+      await expectLater(pay(before, cycles: 3, minor: 0), throwsArgumentError);
+    });
 
     test('delete with rollback is refused once the server moved on', () async {
       await store.saveServer(fixture(), isNew: true);
@@ -1089,28 +1086,25 @@ void main() {
       },
     );
 
-    test(
-      'repeated deletes stay no-ops after repair; voided payments are never revived',
-      () async {
-        await store.saveServer(fixture(), isNew: true);
-        final payment = await renew('p1');
-        await store.deletePayment(original: payment);
-        final server = await only();
-        await store.rollbackOrphanTerm(
-          serverId: 's',
-          expectedRevision: server.revision,
-        );
-        final repaired = (await only()).toMap();
-        await store.deletePayment(original: payment, rollbackRenewal: true);
-        await store.deletePayment(
-          original: await stored('p1'),
-          rollbackRenewal: true,
-        );
-        expect((await only()).toMap(), repaired);
-        await expectLater(pay(await only(), id: 'p1'), throwsArgumentError);
-        expect((await stored('p1')).voided, isTrue);
-      },
-    );
+    test('repeated deletes stay no-ops after repair; voided payments are never revived', () async {
+      await store.saveServer(fixture(), isNew: true);
+      final payment = await renew('p1');
+      await store.deletePayment(original: payment);
+      final server = await only();
+      await store.rollbackOrphanTerm(
+        serverId: 's',
+        expectedRevision: server.revision,
+      );
+      final repaired = (await only()).toMap();
+      await store.deletePayment(original: payment, rollbackRenewal: true);
+      await store.deletePayment(
+        original: await stored('p1'),
+        rollbackRenewal: true,
+      );
+      expect((await only()).toMap(), repaired);
+      await expectLater(pay(await only(), id: 'p1'), throwsArgumentError);
+      expect((await stored('p1')).voided, isTrue);
+    });
   });
 }
 

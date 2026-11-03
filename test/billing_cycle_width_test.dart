@@ -302,27 +302,28 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('locked cycle keeps complete fee-row geometry and opens no picker', (
-    tester,
-  ) async {
-    await store.recordPayment(
-      id: 'cycle-width-payment',
-      server: record,
-      amount: const Money('USD', 1250),
-      paidDate: const LedgerDate(2026, 10, 7),
-      cycleCount: 1,
-      until: const LedgerDate(2028, 1, 1),
-      confirmed: true,
-    );
-    await ledger.refresh();
-    record = ledger.byId(record.id)!;
-    await mount(tester, width: 320, scale: 2);
-    expectFeeRows(tester, 320, '每年');
-    await tester.tap(field('cycle'));
-    await tester.pumpAndSettle();
-    // No picker opens for locked terms; the lock is explained instead.
-    expect(find.byType(BottomSheet), findsNothing);
-    expect(find.text('每 36 个月'), findsNothing);
-    expect(tester.takeException(), isNull);
-  });
+  testWidgets(
+    'locked cycle keeps complete fee-row geometry and opens no picker',
+    (tester) async {
+      await store.recordPayment(
+        id: 'cycle-width-payment',
+        server: record,
+        amount: const Money('USD', 1250),
+        paidDate: const LedgerDate(2026, 10, 7),
+        cycleCount: 1,
+        until: const LedgerDate(2028, 1, 1),
+        confirmed: true,
+      );
+      await ledger.refresh();
+      record = ledger.byId(record.id)!;
+      await mount(tester, width: 320, scale: 2);
+      expectFeeRows(tester, 320, '每年');
+      await tester.tap(field('cycle'));
+      await tester.pumpAndSettle();
+      // No picker opens for locked terms; the lock is explained instead.
+      expect(find.byType(BottomSheet), findsNothing);
+      expect(find.text('每 36 个月'), findsNothing);
+      expect(tester.takeException(), isNull);
+    },
+  );
 }

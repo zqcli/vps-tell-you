@@ -156,10 +156,7 @@ void main() {
     addTearDown(tester.view.resetDevicePixelRatio);
     addTearDown(tester.view.resetViewInsets);
     if (!fontsLoaded) {
-      await loadTerminalTestFonts(
-        tester,
-        requireFallback: evidence != null,
-      );
+      await loadTerminalTestFonts(tester, requireFallback: evidence != null);
       fontsLoaded = true;
     }
     await tester.pumpWidget(

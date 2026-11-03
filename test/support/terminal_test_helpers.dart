@@ -54,9 +54,10 @@ Future<void> seedTerminalDraft(WidgetTester tester, String text) async {
   await tester.tap(find.byKey(const ValueKey('terminal-commands')));
   await tester.pumpAndSettle();
   tester
-      .widget<TextField>(find.byKey(const ValueKey('terminal-draft')))
-      .controller!
-      .text = text;
+          .widget<TextField>(find.byKey(const ValueKey('terminal-draft')))
+          .controller!
+          .text =
+      text;
   await tester.pump();
   await tester.tap(find.byKey(const ValueKey('terminal-commands-close')));
   await tester.pumpAndSettle();

@@ -88,10 +88,7 @@ void main() {
     addTearDown(tester.view.resetDevicePixelRatio);
     addTearDown(tester.view.resetViewInsets);
     if (!fontsLoaded) {
-      await loadTerminalTestFonts(
-        tester,
-        requireFallback: evidence != null,
-      );
+      await loadTerminalTestFonts(tester, requireFallback: evidence != null);
       fontsLoaded = true;
     }
     await tester.pumpWidget(
@@ -132,7 +129,12 @@ void main() {
   }
 
   Future<void> capture(WidgetTester tester, String name) async {
-    await captureTestWidget(tester, keyed('keyboard-send-evidence'), evidence, name);
+    await captureTestWidget(
+      tester,
+      keyed('keyboard-send-evidence'),
+      evidence,
+      name,
+    );
   }
 
   void expectCursorVisible(WidgetTester tester, {required String reason}) {
@@ -207,17 +209,18 @@ void main() {
   );
 
   for (final exact in ['echo synthetic', 'echo synthetic\r']) {
-    testWidgets('review: execute appends one CR to ${escapedCommandPreview(exact)}', (
-      tester,
-    ) async {
-      await mount(tester, initialDraft: exact);
-      await tap(tester, keyed('terminal-commands'));
-      expect(find.byType(CheckboxListTile), findsNothing);
-      expect(find.byType(AlertDialog), findsNothing);
-      await tap(tester, keyed('terminal-send-execute'));
-      expect(ssh.writes, ['$exact\r']);
-      expect(find.byType(AlertDialog), findsNothing);
-    });
+    testWidgets(
+      'review: execute appends one CR to ${escapedCommandPreview(exact)}',
+      (tester) async {
+        await mount(tester, initialDraft: exact);
+        await tap(tester, keyed('terminal-commands'));
+        expect(find.byType(CheckboxListTile), findsNothing);
+        expect(find.byType(AlertDialog), findsNothing);
+        await tap(tester, keyed('terminal-send-execute'));
+        expect(ssh.writes, ['$exact\r']);
+        expect(find.byType(AlertDialog), findsNothing);
+      },
+    );
   }
 
   testWidgets(

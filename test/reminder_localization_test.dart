@@ -11,7 +11,8 @@ import 'package:vps_tell_you/l10n/generated/app_localizations_zh.dart';
 import 'package:vps_tell_you/l10n/locale_preference.dart';
 import 'package:vps_tell_you/servers/ledger_controller.dart';
 import 'package:vps_tell_you/servers/server_record.dart';
-import 'package:vps_tell_you/settings/reminder_page.dart' show reminderDaysLabel;
+import 'package:vps_tell_you/settings/reminder_page.dart'
+    show reminderDaysLabel;
 import 'package:vps_tell_you/settings/reminder_planner.dart';
 import 'package:vps_tell_you/settings/reminder_rule.dart';
 import 'package:vps_tell_you/settings/reminder_scheduler.dart';

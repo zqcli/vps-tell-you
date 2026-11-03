@@ -134,7 +134,8 @@ void main() {
       if (evidence != null && !fontsLoaded) {
         await loadTerminalTestFonts(
           tester,
-          fallbackPath: Platform.environment['VPS_I18N_FONT'] ??
+          fallbackPath:
+              Platform.environment['VPS_I18N_FONT'] ??
               'assets/fonts/DejaVuSansMono.ttf',
           requireFallback: true,
         );
@@ -417,9 +418,12 @@ void main() {
             await tester.tap(find.byKey(const ValueKey('terminal-commands')));
             await tester.pumpAndSettle();
             tester
-                .widget<TextField>(find.byKey(const ValueKey('terminal-draft')))
-                .controller!
-                .text = 'echo safe synthetic draft';
+                    .widget<TextField>(
+                      find.byKey(const ValueKey('terminal-draft')),
+                    )
+                    .controller!
+                    .text =
+                'echo safe synthetic draft';
             await tester.pump();
             await scan(tester);
             await capture(

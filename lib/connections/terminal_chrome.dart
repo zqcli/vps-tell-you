@@ -177,20 +177,20 @@ class TerminalConnectionBanner extends StatelessWidget {
       child: SingleChildScrollView(
         padding: const EdgeInsets.fromLTRB(16, 4, 12, 8),
         child: Wrap(
-              alignment: WrapAlignment.spaceBetween,
-              crossAxisAlignment: WrapCrossAlignment.center,
-              spacing: 8,
-              children: [
-                Text(
-                  context.l10n.terminalEstablishingSecure,
-                  style: Theme.of(context).textTheme.bodyMedium,
-                ),
-                TextButton(
-                    key: const ValueKey('terminal-disconnect'),
-                    onPressed: onCancel,
-                    child: Text(context.l10n.terminalCancelConnection),
-                  ),
-              ],
+          alignment: WrapAlignment.spaceBetween,
+          crossAxisAlignment: WrapCrossAlignment.center,
+          spacing: 8,
+          children: [
+            Text(
+              context.l10n.terminalEstablishingSecure,
+              style: Theme.of(context).textTheme.bodyMedium,
+            ),
+            TextButton(
+              key: const ValueKey('terminal-disconnect'),
+              onPressed: onCancel,
+              child: Text(context.l10n.terminalCancelConnection),
+            ),
+          ],
         ),
       ),
     ),

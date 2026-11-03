@@ -175,7 +175,10 @@ void main() {
           expect(amount.decoration?.suffixText, isNull);
           expect(find.textContaining('每 36 个月续费金额，实付另记'), findsOneWidget);
           await reveal(tester, find.byKey(const ValueKey('row-billing')));
-          await harness.capture(tester, 'finance-${width.toInt()}-${scale.toInt()}x');
+          await harness.capture(
+            tester,
+            'finance-${width.toInt()}-${scale.toInt()}x',
+          );
           final unlimited = find.byKey(
             const ValueKey('resource-traffic-unlimited'),
           );
@@ -217,7 +220,10 @@ void main() {
             tester,
             find.byKey(const ValueKey('resource-row-trafficBytes')),
           );
-          await harness.capture(tester, 'hardware-${width.toInt()}-${scale.toInt()}x');
+          await harness.capture(
+            tester,
+            'hardware-${width.toInt()}-${scale.toInt()}x',
+          );
           expect(tester.takeException(), isNull);
         },
       );

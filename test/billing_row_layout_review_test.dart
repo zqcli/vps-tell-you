@@ -358,71 +358,72 @@ void main() {
   });
 
   for (final amount in [('0', 0), ('9999999999.99', Money.maxMinor)]) {
-    testWidgets('locked paid history survives repeated save at amount ${amount.$1}', (
-      tester,
-    ) async {
-      await store.recordPayment(
-        id: 'billing-review-payment',
-        server: record,
-        amount: const Money('USD', 9876),
-        paidDate: const LedgerDate(2026, 10, 6),
-        cycleCount: 1,
-        until: const LedgerDate(2027, 7, 1),
-        confirmed: true,
-      );
-      await ledger.refresh();
-      record = ledger.byId(record.id)!;
-      final beforePayments = (await store.payments())
-          .map((p) => p.toMap())
-          .toList();
-      final beforePeriods = (await store.servicePeriods())
-          .map((p) => p.toMap())
-          .toList();
-      await mount(tester);
-      // Locked: billing, cycle and dates explain the lock and never change.
-      for (final id in ['cycle', 'start', 'due']) {
-        await reveal(tester, field(id));
-        await tester.tap(field(id));
+    testWidgets(
+      'locked paid history survives repeated save at amount ${amount.$1}',
+      (tester) async {
+        await store.recordPayment(
+          id: 'billing-review-payment',
+          server: record,
+          amount: const Money('USD', 9876),
+          paidDate: const LedgerDate(2026, 10, 6),
+          cycleCount: 1,
+          until: const LedgerDate(2027, 7, 1),
+          confirmed: true,
+        );
+        await ledger.refresh();
+        record = ledger.byId(record.id)!;
+        final beforePayments = (await store.payments())
+            .map((p) => p.toMap())
+            .toList();
+        final beforePeriods = (await store.servicePeriods())
+            .map((p) => p.toMap())
+            .toList();
+        await mount(tester);
+        // Locked: billing, cycle and dates explain the lock and never change.
+        for (final id in ['cycle', 'start', 'due']) {
+          await reveal(tester, field(id));
+          await tester.tap(field(id));
+          await tester.pumpAndSettle();
+          expect(find.byType(BottomSheet), findsNothing);
+          expect(find.byType(CupertinoDatePicker), findsNothing);
+        }
+        await reveal(tester, field('billing'));
+        await tester.tap(
+          find.descendant(of: field('billing'), matching: find.text('按量')),
+          warnIfMissed: false,
+        );
         await tester.pumpAndSettle();
-        expect(find.byType(BottomSheet), findsNothing);
-        expect(find.byType(CupertinoDatePicker), findsNothing);
-      }
-      await reveal(tester, field('billing'));
-      await tester.tap(
-        find.descendant(of: field('billing'), matching: find.text('按量')),
-        warnIfMissed: false,
-      );
-      await tester.pumpAndSettle();
-      expect(
-        tester.widget<AppSegmented<BillingKind>>(field('billing')).value,
-        BillingKind.prepaid,
-      );
-      expectFullDate(tester, 'start', record.startDate.toString());
-      expectFullDate(tester, 'due', record.dueDate.toString());
-      await harness.capture(tester, 'locked-dates-320-2x');
-      await select(tester, 'currency', 'CNY');
-      await fill(tester, 'amount', amount.$1);
-      await tester.tap(find.text('保存'));
-      await save(tester);
-      final saved = (await store.servers()).single;
-      expect(saved.amountMinor, amount.$2);
-      expect(saved.revision, record.revision + 1);
-      expect(saved.currency, 'CNY');
-      expect(saved.startDate, record.startDate);
-      expect(saved.dueDate, record.dueDate);
-      expect(saved.cycleMonths, record.cycleMonths);
-      expect(saved.billing, record.billing);
-      expect(saved.resources!.toJson(), record.resources!.toJson());
-      expect(
-        (await store.payments()).map((p) => p.toMap()).toList(),
-        beforePayments,
-      );
-      expect(
-        (await store.servicePeriods()).map((p) => p.toMap()).toList(),
-        beforePeriods,
-      );
-      expect(find.text('Open billing review'), findsOneWidget);
-      expect(tester.takeException(), isNull);
-    });
+        expect(
+          tester.widget<AppSegmented<BillingKind>>(field('billing')).value,
+          BillingKind.prepaid,
+        );
+        expectFullDate(tester, 'start', record.startDate.toString());
+        expectFullDate(tester, 'due', record.dueDate.toString());
+        await harness.capture(tester, 'locked-dates-320-2x');
+        await select(tester, 'currency', 'CNY');
+        await fill(tester, 'amount', amount.$1);
+        await tester.tap(find.text('保存'));
+        await save(tester);
+        final saved = (await store.servers()).single;
+        expect(saved.amountMinor, amount.$2);
+        expect(saved.revision, record.revision + 1);
+        expect(saved.currency, 'CNY');
+        expect(saved.startDate, record.startDate);
+        expect(saved.dueDate, record.dueDate);
+        expect(saved.cycleMonths, record.cycleMonths);
+        expect(saved.billing, record.billing);
+        expect(saved.resources!.toJson(), record.resources!.toJson());
+        expect(
+          (await store.payments()).map((p) => p.toMap()).toList(),
+          beforePayments,
+        );
+        expect(
+          (await store.servicePeriods()).map((p) => p.toMap()).toList(),
+          beforePeriods,
+        );
+        expect(find.text('Open billing review'), findsOneWidget);
+        expect(tester.takeException(), isNull);
+      },
+    );
   }
 }

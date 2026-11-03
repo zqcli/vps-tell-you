@@ -522,40 +522,37 @@ void main() {
     await expectLater(target.restoreLedgerBackup(snapshot), throwsStateError);
   });
 
-  test(
-    'a failed native batch rolls back ledger, FX and trigger rows and keeps unrelated data',
-    () async {
-      await populateBackupFixture(source);
-      await target.saveFx(const FxSettings(displayCurrency: 'USD'));
-      await target.saveThemeMode('light');
-      final snapshot = await source.exportLedgerBackup();
-      final before = (await target.exportLedgerBackup()).encode();
-      final db = await databaseFactoryFfiNoIsolate.openDatabase(targetPath);
-      await db.insert('snippets', {
-        'id': 'kept',
-        'name': 'Kept',
-        'content': 'synthetic',
-      });
-      await db.execute('''CREATE TRIGGER reject_import_payment
+  test('a failed native batch rolls back ledger, FX and trigger rows and keeps unrelated data', () async {
+    await populateBackupFixture(source);
+    await target.saveFx(const FxSettings(displayCurrency: 'USD'));
+    await target.saveThemeMode('light');
+    final snapshot = await source.exportLedgerBackup();
+    final before = (await target.exportLedgerBackup()).encode();
+    final db = await databaseFactoryFfiNoIsolate.openDatabase(targetPath);
+    await db.insert('snippets', {
+      'id': 'kept',
+      'name': 'Kept',
+      'content': 'synthetic',
+    });
+    await db.execute('''CREATE TRIGGER reject_import_payment
       BEFORE INSERT ON payments BEGIN
         SELECT RAISE(ABORT, 'injected batch failure');
       END''');
 
-      await expectLater(
-        target.restoreLedgerBackup(snapshot),
-        throwsA(isA<DatabaseException>()),
-      );
-      expect((await target.exportLedgerBackup()).encode(), before);
-      expect(await target.reminderRules(), isEmpty);
-      expect(await target.themeMode(), 'light');
-      expect((await target.snippets()).single.id, 'kept');
+    await expectLater(
+      target.restoreLedgerBackup(snapshot),
+      throwsA(isA<DatabaseException>()),
+    );
+    expect((await target.exportLedgerBackup()).encode(), before);
+    expect(await target.reminderRules(), isEmpty);
+    expect(await target.themeMode(), 'light');
+    expect((await target.snippets()).single.id, 'kept');
 
-      await db.execute('DROP TRIGGER reject_import_payment');
-      await target.restoreLedgerBackup(snapshot);
-      expect((await target.exportLedgerBackup()).encode(), snapshot.encode());
-      expect((await target.reminderRules()).every((r) => !r.enabled), isTrue);
-    },
-  );
+    await db.execute('DROP TRIGGER reject_import_payment');
+    await target.restoreLedgerBackup(snapshot);
+    expect((await target.exportLedgerBackup()).encode(), snapshot.encode());
+    expect((await target.reminderRules()).every((r) => !r.enabled), isTrue);
+  });
 
   test('strictly rejects wrong version, unknown fields, malformed types and relations', () async {
     await populateBackupFixture(source);

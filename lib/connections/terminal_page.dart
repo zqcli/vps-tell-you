@@ -1085,37 +1085,37 @@ class _TerminalPageState extends State<TerminalPage>
                                 onPointerUp: _taps.up,
                                 onPointerCancel: (_) => _taps.cancel(),
                                 child: TerminalView(
-                                    _terminal,
-                                    key: _terminalViewKey,
-                                    controller: _terminalController,
-                                    scrollController: _terminalScroll,
-                                    focusNode: _terminalFocus,
-                                    autofocus: false,
-                                    readOnly:
-                                        !_connected ||
-                                        _commandsOpen ||
-                                        _exitPromptOpen,
-                                    deleteDetection: true,
-                                    keyboardType: TextInputType.multiline,
-                                    keyboardAppearance: scheme.brightness,
-                                    onKeyEvent: _terminalKeyEvent,
-                                    shortcuts: const {
-                                      SingleActivator(
-                                        LogicalKeyboardKey.keyC,
-                                        control: true,
-                                        shift: true,
-                                      ): CopySelectionTextIntent.copy,
-                                      SingleActivator(
-                                        LogicalKeyboardKey.keyC,
-                                        meta: true,
-                                      ): CopySelectionTextIntent.copy,
-                                    },
-                                    theme: scheme.theme,
-                                    textStyle: const CodingTerminalStyle(),
-                                    padding: EdgeInsets.symmetric(
-                                      horizontal: 8,
-                                      vertical: compactChrome ? 4 : 8,
-                                    ),
+                                  _terminal,
+                                  key: _terminalViewKey,
+                                  controller: _terminalController,
+                                  scrollController: _terminalScroll,
+                                  focusNode: _terminalFocus,
+                                  autofocus: false,
+                                  readOnly:
+                                      !_connected ||
+                                      _commandsOpen ||
+                                      _exitPromptOpen,
+                                  deleteDetection: true,
+                                  keyboardType: TextInputType.multiline,
+                                  keyboardAppearance: scheme.brightness,
+                                  onKeyEvent: _terminalKeyEvent,
+                                  shortcuts: const {
+                                    SingleActivator(
+                                      LogicalKeyboardKey.keyC,
+                                      control: true,
+                                      shift: true,
+                                    ): CopySelectionTextIntent.copy,
+                                    SingleActivator(
+                                      LogicalKeyboardKey.keyC,
+                                      meta: true,
+                                    ): CopySelectionTextIntent.copy,
+                                  },
+                                  theme: scheme.theme,
+                                  textStyle: const CodingTerminalStyle(),
+                                  padding: EdgeInsets.symmetric(
+                                    horizontal: 8,
+                                    vertical: compactChrome ? 4 : 8,
+                                  ),
                                 ),
                               ),
                             ),
