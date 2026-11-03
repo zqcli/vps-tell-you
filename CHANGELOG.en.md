@@ -12,7 +12,7 @@ How to add entries (the app shows this file under Settings / About / What’s Ne
 This comment is not shown.
 -->
 
-## 0.7.0 — Unreleased
+## 0.8.0 — Unreleased
 
 ### Changed
 

@@ -8,7 +8,7 @@
 
 **A local-first ledger for your personal VPS fleet: costs, renewals, and quick SSH / SFTP.**
 
-[![Version](https://img.shields.io/badge/version-0.7.0-blue)](CHANGELOG.en.md)
+[![Version](https://img.shields.io/badge/version-0.8.0-blue)](CHANGELOG.en.md)
 [![Release](https://img.shields.io/github/v/release/zqcli/vps-tell-you)](https://github.com/zqcli/vps-tell-you/releases)
 [![CI](https://img.shields.io/github/actions/workflow/status/zqcli/vps-tell-you/ci.yml?branch=dev&label=CI)](https://github.com/zqcli/vps-tell-you/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
@@ -131,7 +131,7 @@ For the full boundaries see the [developer guide](docs/DEVELOPMENT.md) (Chinese)
 
 ## Install
 
-This branch contains **0.7.0 engineering improvements (in development)** on top of 0.6.0, preserving existing features, layout and interactions (see the [changelog](CHANGELOG.en.md)). Build from source with Flutter 3.47.6 (stable).
+This branch contains **0.8.0 engineering improvements (in development)** on top of 0.6.0, preserving existing features, layout and interactions (see the [changelog](CHANGELOG.en.md)). Build from source with Flutter 3.47.6 (stable).
 
 ```sh
 git clone https://github.com/zqcli/vps-tell-you.git

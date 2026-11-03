@@ -1,8 +1,8 @@
 # VPS Tell You 开发者指南
 
-> 面向使用者的介绍见根目录 [README](../README.md)（[English](../README.en.md)）。本文记录当前 0.7.0 开发分支的代码结构、数据规则与验证要求。
+> 面向使用者的介绍见根目录 [README](../README.md)（[English](../README.en.md)）。本文记录当前 0.8.0 开发分支的代码结构、数据规则与验证要求。
 
-VPS Tell You 是本地优先的个人 VPS 台账，Flutter 原生应用。当前开发版本为 **0.7.0+7**，基于 0.6.0，进行工程组织和性能优化；保持现有功能、UI 和 UX，数据库仍为 schema v14，备份写入格式仍为 v2。界面规范见 [MOBILE_UI_REDESIGN](MOBILE_UI_REDESIGN.md)，更新记录见 [CHANGELOG](../CHANGELOG.md)。Android / iOS 是产品平台，Linux 用于开发与自动验证。
+VPS Tell You 是本地优先的个人 VPS 台账，Flutter 原生应用。当前开发版本为 **0.8.0+1**，基于 0.6.0，进行工程组织和性能优化；保持现有功能、UI 和 UX，数据库仍为 schema v14，备份写入格式仍为 v2。界面规范见 [MOBILE_UI_REDESIGN](MOBILE_UI_REDESIGN.md)，更新记录见 [CHANGELOG](../CHANGELOG.md)。Android / iOS 是产品平台，Linux 用于开发与自动验证。
 
 ## 当前可以做什么
 

@@ -1,10 +1,24 @@
 # 验收记录
 
-## 0.7.0 工程整理验收范围
+## 0.8.0 第二轮代码精简验收范围
+
+日期：2026-11-03。分支：`refactor/v0.8.0-cleanup`。版本：`0.8.0+1`。SDK：Flutter 3.47.6 / Dart 3.13.5。
+
+本轮在上一轮工程整理基础上删除旧入口、无调用分支和重复测试准备；保留 UI、UX、schema 14 与备份 v1/v2 兼容。直接提交开发分支，运行结果见 [分支最新提交的 Actions](https://github.com/zqcli/vps-tell-you/actions?query=branch%3Arefactor%2Fv0.8.0-cleanup)，不复用历史通过次数。
+
+- **付款与恢复**：付款删除仍覆盖三周期、零金额、月末锚点、幂等墓碑、版本冲突与真实 SQLite 故障回滚；备份失败仍保留原有 FX、主题和片段，回滚提醒触发器生成行，解除故障后可重试。
+- **认证与秘密**：统一认证接口后继续验证尝试期间的语言捕获、原生提示语、OS 拒绝、取消、后台及过期结果；私钥口令通过实际 SSH 凭据加载路径验证。
+- **终端与 SFTP**：自动连接、命令面板草稿、发送及发送并执行、输入精确性、代际检查、后台与目标变化、剪贴板迟到结果、写入失败和真实协议回环覆盖保留；SFTP 页面退出等待队列清理，远端路径与 symlink 约束、暂停读取时取消和传输进度取消分别保留。
+- **表单与本地化**：历史付款锁定的金额、日期、硬件、版本及真实点击断言合并保留；共享挂载准备仍区分路由与首页、可变字号、截图和视口。双语布局继续覆盖窄屏大字，未来服务期间估值和导出一致性、错误隐私及提醒文案保留在对应功能测试中。
+- **目录与翻译**：`tool/build_catalog.py --check` 校验实际目录文件及 PNG；Dart 继续校验所有目录条目均被严格解析、ID 顺序与唯一性、客户端 Logo 元数据一致。翻译测试要求两种语言具有相同的非空 key 集合及有效内容，不再依赖任意条目数量门槛。
+
+CI 命令为 `python tool/build_catalog.py --check`、`flutter pub get --enforce-lockfile`、`dart format lib test` 后检查无差异、`flutter analyze`、`flutter test`（设置 `VPS_SSH_FIXTURE_PYTHON=python`）、`flutter build linux --release`。本轮未进行 iOS/Android 真机、签名或性能实测。
+
+## 0.7.0 工程整理验收范围（历史）
 
 日期：2026-11-02 UTC。分支：`refactor/v0.7.0-engineering`。版本：`0.7.0+7`。SDK：Flutter 3.47.6 / Dart 3.13.5。
 
-本轮保留功能、UI 和 UX，schema 14 与备份格式不变；下面列出本次新增或调整的回归范围。运行结果见 [PR #1 最新提交的 CI 检查](https://github.com/zqcli/vps-tell-you/pull/1/checks)，不沿用下面历史阶段的通过次数。
+本轮保留功能、UI 和 UX，schema 14 与备份格式不变；下面列出当时新增或调整的回归范围。历史运行结果见 [上一轮 CI](https://github.com/zqcli/vps-tell-you/actions/runs/41466157457)，不作为 0.8.0 的通过结论。
 
 - **局部更新**：搜索/筛选只通知列表状态；收藏、主题、汇率、分组不触发无关的提醒对账；已提交写入遇到重读失败仍保留成功结果、提示与后续写入保护。
 - **数据安全**：备份批量恢复失败整体回滚；验证后的快照保持不可变，保留规范化后的大小限制；凭证/代理精确查询仍检查 revision、secret reference 与凭证种类，包含 null secret reference 和取消后迟到读取。
