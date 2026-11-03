@@ -206,33 +206,38 @@ class ArchivePage extends StatelessWidget {
         slivers: [
           if (controller.refreshFailed)
             SliverToBoxAdapter(child: _refreshNotice(controller)),
-          AppLazySections(sections: [
-            AppListSection(
-              topSpacing: 16,
-              footer: l10n.archiveHelp,
-              count: controller.archived.isEmpty ? 1 : controller.archived.length,
-              itemKey: (i) => controller.archived.isEmpty
-                  ? const ValueKey('archive-empty')
-                  : ValueKey('archive-${controller.archived[i].id}'),
-              itemBuilder: (context, i) {
-                if (controller.archived.isEmpty) return _TextRow(l10n.noArchivedRecords);
-                final s = controller.archived[i];
-                return AppRow(
-                  icon: Icons.inventory_2_outlined,
-                  iconColor: AppTints.purple,
-                  title: s.name,
-                  subtitle:
-                      '${serverProviderLabel(context, controller, s)} · ${controller.groupName(s.groupId)}',
-                  trailing: AppLinkButton(
-                    label: l10n.restoreRecord,
-                    onPressed: controller.canMutate
-                        ? () => restore(context, s)
-                        : null,
-                  ),
-                );
-              },
-            ),
-          ]),
+          AppLazySections(
+            sections: [
+              AppListSection(
+                topSpacing: 16,
+                footer: l10n.archiveHelp,
+                count: controller.archived.isEmpty
+                    ? 1
+                    : controller.archived.length,
+                itemKey: (i) => controller.archived.isEmpty
+                    ? const ValueKey('archive-empty')
+                    : ValueKey('archive-${controller.archived[i].id}'),
+                itemBuilder: (context, i) {
+                  if (controller.archived.isEmpty)
+                    return _TextRow(l10n.noArchivedRecords);
+                  final s = controller.archived[i];
+                  return AppRow(
+                    icon: Icons.inventory_2_outlined,
+                    iconColor: AppTints.purple,
+                    title: s.name,
+                    subtitle:
+                        '${serverProviderLabel(context, controller, s)} · ${controller.groupName(s.groupId)}',
+                    trailing: AppLinkButton(
+                      label: l10n.restoreRecord,
+                      onPressed: controller.canMutate
+                          ? () => restore(context, s)
+                          : null,
+                    ),
+                  );
+                },
+              ),
+            ],
+          ),
         ],
       );
     },

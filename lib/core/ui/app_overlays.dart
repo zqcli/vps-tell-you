@@ -416,29 +416,30 @@ Future<T?> showAppPicker<T>(
 }) {
   assert((options == null) != (optionsBuilder == null));
   return showAppSheet<T>(
-  context,
-  title: title,
-  builder: (sheetContext) {
-    final p = sheetContext.palette;
-    return AppSection(
-      topSpacing: 4,
-      footer: footnoteBuilder?.call(sheetContext.l10n) ?? footnote,
-      children: [
-        for (final option in optionsBuilder?.call(sheetContext.l10n) ?? options!)
-          AppRow(
-            key: option.key,
-            icon: option.icon,
-            iconColor: option.iconColor,
-            title: option.title,
-            subtitle: option.subtitle,
-            trailing: option.value == selected
-                ? Icon(Icons.check_rounded, size: 22, color: p.primary)
-                : null,
-            onTap: () => Navigator.pop(sheetContext, option.value),
-          ),
-      ],
-    );
-  },
+    context,
+    title: title,
+    builder: (sheetContext) {
+      final p = sheetContext.palette;
+      return AppSection(
+        topSpacing: 4,
+        footer: footnoteBuilder?.call(sheetContext.l10n) ?? footnote,
+        children: [
+          for (final option
+              in optionsBuilder?.call(sheetContext.l10n) ?? options!)
+            AppRow(
+              key: option.key,
+              icon: option.icon,
+              iconColor: option.iconColor,
+              title: option.title,
+              subtitle: option.subtitle,
+              trailing: option.value == selected
+                  ? Icon(Icons.check_rounded, size: 22, color: p.primary)
+                  : null,
+              onTap: () => Navigator.pop(sheetContext, option.value),
+            ),
+        ],
+      );
+    },
   );
 }
 

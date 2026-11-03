@@ -456,9 +456,9 @@ void main() {
 
     Finder row(int age) => find.byKey(ValueKey('payment-age$age'));
     Future<void> expectRows(WidgetTester tester, List<int> ages) async {
-      final scrollable = find.byWidgetPredicate(
-        (w) => w is Scrollable && w.axis == Axis.vertical,
-      ).first;
+      final scrollable = find
+          .byWidgetPredicate((w) => w is Scrollable && w.axis == Axis.vertical)
+          .first;
       final position = tester.state<ScrollableState>(scrollable).position;
       position.jumpTo(0);
       await tester.pumpAndSettle();

@@ -698,27 +698,27 @@ class _ServerFormState extends State<ServerForm>
   Widget build(BuildContext context) => ListenableBuilder(
     listenable: widget.controller,
     builder: (context, _) {
-    final l10n = context.l10n;
-    final canSave = !saving && widget.controller.canMutate;
-    final amountLabel = billing == BillingKind.metered
-        ? l10n.serverMonthlyEstimate
-        : l10n.serverRenewalAmount;
-    final providerName =
-        widget.controller.providers
-            .where((p) => p.id == selectedProvider?.id)
-            .firstOrNull
-            ?.name ??
-        selectedProvider?.name ??
-        pendingCatalog?.name ??
-        pendingNew?.name;
-    final canChooseProvider = !saving && widget.controller.canMutate;
-    final groupName =
-        widget.controller.groups
-            .where((g) => g.id == groupId)
-            .firstOrNull
-            ?.name ??
-        l10n.ungrouped;
-    return PopScope(
+      final l10n = context.l10n;
+      final canSave = !saving && widget.controller.canMutate;
+      final amountLabel = billing == BillingKind.metered
+          ? l10n.serverMonthlyEstimate
+          : l10n.serverRenewalAmount;
+      final providerName =
+          widget.controller.providers
+              .where((p) => p.id == selectedProvider?.id)
+              .firstOrNull
+              ?.name ??
+          selectedProvider?.name ??
+          pendingCatalog?.name ??
+          pendingNew?.name;
+      final canChooseProvider = !saving && widget.controller.canMutate;
+      final groupName =
+          widget.controller.groups
+              .where((g) => g.id == groupId)
+              .firstOrNull
+              ?.name ??
+          l10n.ungrouped;
+      return PopScope(
         canPop: !saving,
         child: AppScaffold.modal(
           title: widget.record == null ? l10n.serverAdd : l10n.serverEditTitle,
@@ -836,7 +836,7 @@ class _ServerFormState extends State<ServerForm>
             ),
           ],
         ),
-    );
+      );
     },
   );
 }

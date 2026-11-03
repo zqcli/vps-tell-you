@@ -7,7 +7,11 @@ extension LedgerSecurity on LedgerStore {
   )).map(CredentialMetadata.fromMap).toList(growable: false);
 
   Future<CredentialMetadata?> credentialById(String id) async {
-    final rows = await _db.query('credentials', where: 'id = ?', whereArgs: [id]);
+    final rows = await _db.query(
+      'credentials',
+      where: 'id = ?',
+      whereArgs: [id],
+    );
     return rows.isEmpty ? null : CredentialMetadata.fromMap(rows.single);
   }
 
@@ -16,7 +20,12 @@ extension LedgerSecurity on LedgerStore {
         'credentials',
         columns: ['id'],
         where: 'id = ? AND revision = ? AND secret_ref = ? AND kind = ?',
-        whereArgs: [record.id, record.revision, record.secretRef, record.kind.name],
+        whereArgs: [
+          record.id,
+          record.revision,
+          record.secretRef,
+          record.kind.name,
+        ],
         limit: 1,
       )).isNotEmpty;
 
@@ -451,10 +460,7 @@ extension LedgerSecurity on LedgerStore {
   }
 }
 
-Future<bool> _secretIsReferenced(
-  DatabaseExecutor db,
-  String ref,
-) async {
+Future<bool> _secretIsReferenced(DatabaseExecutor db, String ref) async {
   return (await db.query(
         'credentials',
         where: 'secret_ref = ?',

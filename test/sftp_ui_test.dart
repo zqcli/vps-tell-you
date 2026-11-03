@@ -761,36 +761,37 @@ void main() {
       }
     });
 
-    testWidgets('caret changes reuse the editor and locate UTF-16 line starts', (
-      tester,
-    ) async {
-      const text = '你好😀\nsecond\r\n尾部\n';
-      await openEditor(tester, text);
-      final field = fieldWidget(tester);
-      final controller = field.controller!;
-      final offsets = <int, int>{
-        0: 0,
-        text.indexOf('\n'): 0,
-        text.indexOf('second'): 1,
-        text.indexOf('尾部'): 2,
-        text.length: 3,
-      };
-      for (final entry in offsets.entries) {
-        controller.selection = TextSelection.collapsed(offset: entry.key);
+    testWidgets(
+      'caret changes reuse the editor and locate UTF-16 line starts',
+      (tester) async {
+        const text = '你好😀\nsecond\r\n尾部\n';
+        await openEditor(tester, text);
+        final field = fieldWidget(tester);
+        final controller = field.controller!;
+        final offsets = <int, int>{
+          0: 0,
+          text.indexOf('\n'): 0,
+          text.indexOf('second'): 1,
+          text.indexOf('尾部'): 2,
+          text.length: 3,
+        };
+        for (final entry in offsets.entries) {
+          controller.selection = TextSelection.collapsed(offset: entry.key);
+          await tester.pump();
+          expect(gutter(tester).caretLine, entry.value);
+          expect(fieldWidget(tester), same(field));
+        }
+        controller.value = const TextEditingValue(
+          text: 'new\n你好😀\n',
+          selection: TextSelection.collapsed(offset: 4),
+          composing: TextRange(start: 4, end: 6),
+        );
         await tester.pump();
-        expect(gutter(tester).caretLine, entry.value);
-        expect(fieldWidget(tester), same(field));
-      }
-      controller.value = const TextEditingValue(
-        text: 'new\n你好😀\n',
-        selection: TextSelection.collapsed(offset: 4),
-        composing: TextRange(start: 4, end: 6),
-      );
-      await tester.pump();
-      expect(gutter(tester).caretLine, 1);
-      expect(gutter(tester).lines, 3);
-      expect(controller.value.composing, const TextRange(start: 4, end: 6));
-    });
+        expect(gutter(tester).caretLine, 1);
+        expect(gutter(tester).lines, 3);
+        expect(controller.value.composing, const TextRange(start: 4, end: 6));
+      },
+    );
 
     testWidgets('a 3000 line file scrolls to its last line', (tester) async {
       final text = lines(3000);
@@ -934,9 +935,7 @@ void main() {
       final remote = _HeldListSession();
       await open(tester, session: remote);
       final listing = remote.heldLists['/'] = Completer<void>();
-      local.picks = [
-        for (var i = 0; i < 8; i++) picked('file$i.txt', '$i'),
-      ];
+      local.picks = [for (var i = 0; i < 8; i++) picked('file$i.txt', '$i')];
       await tapKey(tester, 'sftp-add');
       await tester.tap(find.byKey(const ValueKey('sftp-upload')));
       for (var i = 0; i < 10 && remote.uploads < 8; i++) {
@@ -983,34 +982,35 @@ void main() {
       expect(entry('uploaded.txt'), findsNothing);
     });
 
-    testWidgets('failed navigation refreshes uploads in the retained directory', (
-      tester,
-    ) async {
-      final remote = _HeldListSession()..dir('/other');
-      await open(tester, session: remote);
-      final upload = remote.hold = Completer<void>();
-      local.picks = [picked('uploaded.txt', 'root')];
-      await tapKey(tester, 'sftp-add');
-      await tester.tap(find.byKey(const ValueKey('sftp-upload')));
-      await _settle(tester);
-      final listing = remote.heldLists['/other'] = Completer<void>();
-      await tester.tap(entry('other'));
-      await tester.pump();
+    testWidgets(
+      'failed navigation refreshes uploads in the retained directory',
+      (tester) async {
+        final remote = _HeldListSession()..dir('/other');
+        await open(tester, session: remote);
+        final upload = remote.hold = Completer<void>();
+        local.picks = [picked('uploaded.txt', 'root')];
+        await tapKey(tester, 'sftp-add');
+        await tester.tap(find.byKey(const ValueKey('sftp-upload')));
+        await _settle(tester);
+        final listing = remote.heldLists['/other'] = Completer<void>();
+        await tester.tap(entry('other'));
+        await tester.pump();
 
-      upload.complete();
-      await _settle(tester);
-      expect(remote.uploads, 1);
-      expect(remote.calls.where((c) => c == 'list:/'), hasLength(1));
+        upload.complete();
+        await _settle(tester);
+        expect(remote.uploads, 1);
+        expect(remote.calls.where((c) => c == 'list:/'), hasLength(1));
 
-      remote.heldLists.remove('/other');
-      listing.completeError(
-        const SftpException(SftpErrorKind.permissionDenied, '/other'),
-      );
-      await _settle(tester);
-      expect(remote.calls.where((c) => c == 'list:/'), hasLength(2));
-      expect(entry('uploaded.txt'), findsOneWidget);
-      expect(entry('other'), findsOneWidget);
-    });
+        remote.heldLists.remove('/other');
+        listing.completeError(
+          const SftpException(SftpErrorKind.permissionDenied, '/other'),
+        );
+        await _settle(tester);
+        expect(remote.calls.where((c) => c == 'list:/'), hasLength(2));
+        expect(entry('uploaded.txt'), findsOneWidget);
+        expect(entry('other'), findsOneWidget);
+      },
+    );
 
     testWidgets('uploads queue sequentially and conflicts ask', (tester) async {
       local.picks = [

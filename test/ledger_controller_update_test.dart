@@ -56,7 +56,11 @@ void main() {
       isNew: true,
     );
     platform = _CountingReminders();
-    controller = LedgerController(store, clock: () => now, reminderPlatform: platform);
+    controller = LedgerController(
+      store,
+      clock: () => now,
+      reminderPlatform: platform,
+    );
     await controller.refresh();
     await controller.reminders.reconcile();
   });
@@ -67,67 +71,73 @@ void main() {
     await directory.delete(recursive: true);
   });
 
-  test('list controls notify only the list and preserve financial snapshots', () {
-    var ledgerChanges = 0, listChanges = 0;
-    controller.addListener(() => ledgerChanges++);
-    controller.listState.addListener(() => listChanges++);
-    final finance = FinanceScope.of(controller, null);
+  test(
+    'list controls notify only the list and preserve financial snapshots',
+    () {
+      var ledgerChanges = 0, listChanges = 0;
+      controller.addListener(() => ledgerChanges++);
+      controller.listState.addListener(() => listChanges++);
+      final finance = FinanceScope.of(controller, null);
 
-    controller.listState.updateFilters(query: 'Alpha');
-    expect(controller.visible.single.id, 'server');
-    controller.listState.updateFilters(category: ServerFilter.favorites);
-    expect(controller.visible, isEmpty);
-    controller.listState.setGroup('');
-    controller.listState.resetFilters();
+      controller.listState.updateFilters(query: 'Alpha');
+      expect(controller.visible.single.id, 'server');
+      controller.listState.updateFilters(category: ServerFilter.favorites);
+      expect(controller.visible, isEmpty);
+      controller.listState.setGroup('');
+      controller.listState.resetFilters();
 
-    expect(controller.visible.single.id, 'server');
-    expect(listChanges, 4);
-    expect(ledgerChanges, 0);
-    expect(FinanceScope.of(controller, null), same(finance));
-  });
+      expect(controller.visible.single.id, 'server');
+      expect(listChanges, 4);
+      expect(ledgerChanges, 0);
+      expect(FinanceScope.of(controller, null), same(finance));
+    },
+  );
 
-  test('small writes preserve unrelated data and do not reschedule reminders', () async {
-    final records = controller.records;
-    final periods = controller.periods;
-    final payments = controller.payments;
-    final rules = controller.reminderRules;
-    final checks = platform.checks;
-    final schedules = platform.schedules;
-    final cancelled = platform.cancelled.length;
-    final group = controller.groups.single;
+  test(
+    'small writes preserve unrelated data and do not reschedule reminders',
+    () async {
+      final records = controller.records;
+      final periods = controller.periods;
+      final payments = controller.payments;
+      final rules = controller.reminderRules;
+      final checks = platform.checks;
+      final schedules = platform.schedules;
+      final cancelled = platform.cancelled.length;
+      final group = controller.groups.single;
 
-    await controller.setThemeMode('dark');
-    expect(controller.themeMode, 'dark');
-    expect(await store.themeMode(), 'dark');
-    await controller.saveFx(const FxSettings(displayCurrency: 'USD'));
-    expect(controller.fx.displayCurrency, 'USD');
-    await controller.saveGroup('Renamed', id: group.id);
-    await controller.saveGroup('B');
-    await controller.moveGroup(controller.groups.last.id, -1);
-    expect(controller.groups.map((g) => g.name), ['B', 'Renamed']);
-    expect(controller.records, same(records));
+      await controller.setThemeMode('dark');
+      expect(controller.themeMode, 'dark');
+      expect(await store.themeMode(), 'dark');
+      await controller.saveFx(const FxSettings(displayCurrency: 'USD'));
+      expect(controller.fx.displayCurrency, 'USD');
+      await controller.saveGroup('Renamed', id: group.id);
+      await controller.saveGroup('B');
+      await controller.moveGroup(controller.groups.last.id, -1);
+      expect(controller.groups.map((g) => g.name), ['B', 'Renamed']);
+      expect(controller.records, same(records));
 
-    await controller.setFavorite(controller.byId('server')!, true);
-    expect(controller.byId('server')!.favorite, isTrue);
-    expect(controller.byId('server')!.revision, 1);
-    controller.listState.setGroup(group.id);
-    await controller.deleteGroup(group.id);
-    expect(controller.byId('server')!.groupId, isNull);
-    expect(controller.listState.groupFilter, isNull);
-    expect(controller.periods, same(periods));
-    expect(controller.payments, same(payments));
-    expect(controller.reminderRules, same(rules));
-    await Future<void>.delayed(Duration.zero);
-    expect(platform.checks, checks);
-    expect(platform.schedules, schedules);
-    expect(platform.cancelled.length, cancelled);
+      await controller.setFavorite(controller.byId('server')!, true);
+      expect(controller.byId('server')!.favorite, isTrue);
+      expect(controller.byId('server')!.revision, 1);
+      controller.listState.setGroup(group.id);
+      await controller.deleteGroup(group.id);
+      expect(controller.byId('server')!.groupId, isNull);
+      expect(controller.listState.groupFilter, isNull);
+      expect(controller.periods, same(periods));
+      expect(controller.payments, same(payments));
+      expect(controller.reminderRules, same(rules));
+      await Future<void>.delayed(Duration.zero);
+      expect(platform.checks, checks);
+      expect(platform.schedules, schedules);
+      expect(platform.cancelled.length, cancelled);
 
-    await controller.refresh();
-    await Future<void>.delayed(Duration.zero);
-    expect(platform.checks, greaterThan(checks));
-    await controller.reminders.reconcile();
-    expect(controller.reminders.state, ReminderSyncState.ready);
-  });
+      await controller.refresh();
+      await Future<void>.delayed(Duration.zero);
+      expect(platform.checks, greaterThan(checks));
+      await controller.reminders.reconcile();
+      expect(controller.reminders.state, ReminderSyncState.ready);
+    },
+  );
 
   test('a committed favorite survives a targeted reload failure', () async {
     final db = await databaseFactoryFfiNoIsolate.openDatabase(path);

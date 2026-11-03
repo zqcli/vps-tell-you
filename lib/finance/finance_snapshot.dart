@@ -77,9 +77,14 @@ class FinanceScope {
       .where(isIncomplete)
       .toList(growable: false);
 
-  late final List<ServerRecord> expired = records.where((s) =>
-      s.billing == BillingKind.prepaid && s.dueDate != null &&
-      s.dueDate!.compareTo(_today) < 0).toList(growable: false);
+  late final List<ServerRecord> expired = records
+      .where(
+        (s) =>
+            s.billing == BillingKind.prepaid &&
+            s.dueDate != null &&
+            s.dueDate!.compareTo(_today) < 0,
+      )
+      .toList(growable: false);
 
   late final FinanceTotal monthly = _monthlyOf(records);
 

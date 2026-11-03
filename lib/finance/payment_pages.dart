@@ -436,14 +436,28 @@ class _PaymentListPageState extends State<PaymentListPage> {
   bool showVoided = false;
   late String? serverId = widget.serverId;
 
-  (Object, Object, Object, LedgerDate, String?, String?, int?, bool)? _projectionKey;
-  late ({List<PaymentRecord> rows, int validCount, Set<String> archivedIds,
-      FinanceTotal total}) _projection;
+  (Object, Object, Object, LedgerDate, String?, String?, int?, bool)?
+  _projectionKey;
+  late ({
+    List<PaymentRecord> rows,
+    int validCount,
+    Set<String> archivedIds,
+    FinanceTotal total,
+  })
+  _projection;
 
   void _project(LedgerController c) {
     final today = c.today;
-    final key = (c.payments, c.records, c.fx, today, serverId,
-        widget.groupId, period.days, showVoided);
+    final key = (
+      c.payments,
+      c.records,
+      c.fx,
+      today,
+      serverId,
+      widget.groupId,
+      period.days,
+      showVoided,
+    );
     if (key == _projectionKey) return;
     final groupOf = widget.groupId == null
         ? null
@@ -453,7 +467,8 @@ class _PaymentListPageState extends State<PaymentListPage> {
       if (serverId != null && p.serverId != serverId) return false;
       if (groupOf != null &&
           (p.serverId == null ||
-              (groupOf[p.serverId!] ?? '') != widget.groupId)) return false;
+              (groupOf[p.serverId!] ?? '') != widget.groupId))
+        return false;
       final days = period.days;
       if (days == null) return true;
       final age = p.paidDate.daysUntil(today);
@@ -463,8 +478,14 @@ class _PaymentListPageState extends State<PaymentListPage> {
     _projection = (
       rows: rows,
       validCount: counted.length,
-      archivedIds: {for (final s in c.records) if (s.archived) s.id},
-      total: aggregateAmounts(counted.map((p) => FinanceAmount.money(p.amount)), c.fx),
+      archivedIds: {
+        for (final s in c.records)
+          if (s.archived) s.id,
+      },
+      total: aggregateAmounts(
+        counted.map((p) => FinanceAmount.money(p.amount)),
+        c.fx,
+      ),
     );
     _projectionKey = key;
   }
@@ -514,170 +535,175 @@ class _PaymentListPageState extends State<PaymentListPage> {
         largeTitle: false,
         title: l10n.financePayments,
         slivers: [
-          SliverToBoxAdapter(child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-          if (c.refreshFailed)
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-              child: RefreshFailureNotice(controller: c),
-            ),
-          AppSection(
-            children: [
-              AppFormRow.pick(
-                key: const ValueKey('payment-target'),
-                label: l10n.financePaymentTarget,
-                value: target == null
-                    ? l10n.financeAllPayments
-                    : l10n.financeArchivedName(
-                        target.name,
-                        target.archived ? 'yes' : 'no',
+          SliverToBoxAdapter(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                if (c.refreshFailed)
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+                    child: RefreshFailureNotice(controller: c),
+                  ),
+                AppSection(
+                  children: [
+                    AppFormRow.pick(
+                      key: const ValueKey('payment-target'),
+                      label: l10n.financePaymentTarget,
+                      value: target == null
+                          ? l10n.financeAllPayments
+                          : l10n.financeArchivedName(
+                              target.name,
+                              target.archived ? 'yes' : 'no',
+                            ),
+                      onTap: chooseTarget,
+                    ),
+                  ],
+                ),
+                if (target != null)
+                  OrphanTermBanner(controller: c, server: target),
+                AppChipRow(
+                  children: [
+                    for (final option in PaymentPeriod.values)
+                      AppChip(
+                        key: ValueKey('payment-period-${option.name}'),
+                        label: option.label(l10n),
+                        selected: period == option,
+                        onTap: () => setState(() => period = option),
                       ),
-                onTap: chooseTarget,
-              ),
-            ],
-          ),
-          if (target != null) OrphanTermBanner(controller: c, server: target),
-          AppChipRow(
-            children: [
-              for (final option in PaymentPeriod.values)
-                AppChip(
-                  key: ValueKey('payment-period-${option.name}'),
-                  label: option.label(l10n),
-                  selected: period == option,
-                  onTap: () => setState(() => period = option),
+                  ],
                 ),
-            ],
-          ),
-          AppChipRow(
-            padding: const EdgeInsets.fromLTRB(16, 4, 16, 4),
-            children: [
-              AppChip(
-                key: const ValueKey('payment-voided'),
-                label: l10n.financeShowVoided,
-                selected: showVoided,
-                onTap: () => setState(() => showVoided = !showVoided),
-              ),
-            ],
-          ),
-          AppSection(
-            header: l10n.financeRecordedPaidTotal,
-            footer: [
-              if (period.days != null)
-                l10n.financePaymentPeriodRange(
-                  c.today.addDays(1 - period.days!).toString(),
-                  c.today.toString(),
-                ),
-              l10n.financeValidPaymentsNote(_projection.validCount),
-              if (widget.groupId != null)
-                l10n.financePaymentGroupNote(
-                  c.groupName(widget.groupId, l10n: l10n),
-                ),
-            ].join('\n'),
-            children: [
-              AppRow.custom(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  child: _projection.validCount == 0
-                      ? Text(
-                          l10n.financeNoPayments,
-                          style: TextStyle(fontSize: 15, color: p.text2),
-                        )
-                      : FinanceTotalView(total: total),
-                ),
-              ),
-            ],
-          ),
-
-            ],
-          )),
-          AppLazySections(sections: [
-            AppListSection(
-              header: l10n.financePaymentDetails,
-              topSpacing: 22,
-              count: rows.isEmpty ? 1 : rows.length,
-              itemKey: (i) => rows.isEmpty
-                  ? const ValueKey('payment-empty')
-                  : ValueKey('payment-row-${rows[i].id}'),
-              itemBuilder: (context, i) {
-                if (rows.isEmpty) return AppRow(title: l10n.financeNoPaymentsInRange);
-                final pay = rows[i];
-                return AppRow.custom(
-                  key: ValueKey('payment-${pay.id}'),
-                  onTap: () => Navigator.push<void>(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) =>
-                          PaymentDetailPage(controller: c, id: pay.id),
+                AppChipRow(
+                  padding: const EdgeInsets.fromLTRB(16, 4, 16, 4),
+                  children: [
+                    AppChip(
+                      key: const ValueKey('payment-voided'),
+                      label: l10n.financeShowVoided,
+                      selected: showVoided,
+                      onTap: () => setState(() => showVoided = !showVoided),
                     ),
-                  ),
-                  chevron: true,
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Flexible(
-                              child: Text(
-                                pay.targetName,
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w600,
-                                  color: p.text,
-                                ),
-                              ),
-                            ),
-                            if (pay.voided) ...[
-                              const SizedBox(width: 8),
-                              Flexible(
-                                child: StatusPill(
-                                  l10n.uiFinanceVoidedPill,
-                                  tone: AppTone.red,
-                                ),
-                              ),
-                            ],
-                          ],
-                        ),
-                        const SizedBox(height: 3),
-                        Text(
-                          '${pay.amount.formatted} ${pay.amount.currency}',
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w600,
-                            color: p.text,
-                            fontFeatures: kTabularFigures,
-                          ),
-                        ),
-                        Text(
-                          l10n.financePaymentSummary(
-                            pay.paidDate.toString(),
-                            pay.serverId == null ? 'yes' : 'no',
-                            pay.until?.toString() ?? l10n.financeUnknown,
-                          ),
-                          style: secondary,
-                        ),
-                        if (archivedIds.contains(pay.serverId)) ...[
-                          Padding(
-                            padding: const EdgeInsets.only(top: 6),
-                            child: Align(
-                              alignment: AlignmentDirectional.centerStart,
-                              child: StatusPill(
-                                l10n.uiFinanceArchivedPill,
-                                tone: AppTone.neutral,
-                              ),
-                            ),
-                          ),
-                          Text(l10n.financeArchivedPayment, style: secondary),
-                        ],
-                      ],
+                  ],
+                ),
+                AppSection(
+                  header: l10n.financeRecordedPaidTotal,
+                  footer: [
+                    if (period.days != null)
+                      l10n.financePaymentPeriodRange(
+                        c.today.addDays(1 - period.days!).toString(),
+                        c.today.toString(),
+                      ),
+                    l10n.financeValidPaymentsNote(_projection.validCount),
+                    if (widget.groupId != null)
+                      l10n.financePaymentGroupNote(
+                        c.groupName(widget.groupId, l10n: l10n),
+                      ),
+                  ].join('\n'),
+                  children: [
+                    AppRow.custom(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        child: _projection.validCount == 0
+                            ? Text(
+                                l10n.financeNoPayments,
+                                style: TextStyle(fontSize: 15, color: p.text2),
+                              )
+                            : FinanceTotalView(total: total),
+                      ),
                     ),
-                  ),
-                );
-              },
+                  ],
+                ),
+              ],
             ),
-          ]),
+          ),
+          AppLazySections(
+            sections: [
+              AppListSection(
+                header: l10n.financePaymentDetails,
+                topSpacing: 22,
+                count: rows.isEmpty ? 1 : rows.length,
+                itemKey: (i) => rows.isEmpty
+                    ? const ValueKey('payment-empty')
+                    : ValueKey('payment-row-${rows[i].id}'),
+                itemBuilder: (context, i) {
+                  if (rows.isEmpty)
+                    return AppRow(title: l10n.financeNoPaymentsInRange);
+                  final pay = rows[i];
+                  return AppRow.custom(
+                    key: ValueKey('payment-${pay.id}'),
+                    onTap: () => Navigator.push<void>(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) =>
+                            PaymentDetailPage(controller: c, id: pay.id),
+                      ),
+                    ),
+                    chevron: true,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Flexible(
+                                child: Text(
+                                  pay.targetName,
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w600,
+                                    color: p.text,
+                                  ),
+                                ),
+                              ),
+                              if (pay.voided) ...[
+                                const SizedBox(width: 8),
+                                Flexible(
+                                  child: StatusPill(
+                                    l10n.uiFinanceVoidedPill,
+                                    tone: AppTone.red,
+                                  ),
+                                ),
+                              ],
+                            ],
+                          ),
+                          const SizedBox(height: 3),
+                          Text(
+                            '${pay.amount.formatted} ${pay.amount.currency}',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w600,
+                              color: p.text,
+                              fontFeatures: kTabularFigures,
+                            ),
+                          ),
+                          Text(
+                            l10n.financePaymentSummary(
+                              pay.paidDate.toString(),
+                              pay.serverId == null ? 'yes' : 'no',
+                              pay.until?.toString() ?? l10n.financeUnknown,
+                            ),
+                            style: secondary,
+                          ),
+                          if (archivedIds.contains(pay.serverId)) ...[
+                            Padding(
+                              padding: const EdgeInsets.only(top: 6),
+                              child: Align(
+                                alignment: AlignmentDirectional.centerStart,
+                                child: StatusPill(
+                                  l10n.uiFinanceArchivedPill,
+                                  tone: AppTone.neutral,
+                                ),
+                              ),
+                            ),
+                            Text(l10n.financeArchivedPayment, style: secondary),
+                          ],
+                        ],
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ],
+          ),
         ],
       );
     },

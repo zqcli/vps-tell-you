@@ -216,67 +216,72 @@ class _FinancePageState extends State<FinancePage> {
           ),
         ],
         slivers: [
-          SliverToBoxAdapter(child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-          if (c.refreshFailed)
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-              child: RefreshFailureNotice(controller: c),
+          SliverToBoxAdapter(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                if (c.refreshFailed)
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+                    child: RefreshFailureNotice(controller: c),
+                  ),
+                AppChipRow(
+                  children: [
+                    AppChip(
+                      key: const ValueKey('finance-scope'),
+                      icon: Icons.folder_outlined,
+                      label: scopeLabel,
+                      onTap: pickScope,
+                    ),
+                    AppChip(
+                      key: const ValueKey('finance-currency'),
+                      label: l10n.uiFinanceDisplayChip(c.fx.displayCurrency),
+                      onTap: pickCurrency,
+                    ),
+                  ],
+                ),
+                FinanceSummaryCard(
+                  monthly: monthly,
+                  values: scope.value,
+                  renewals: scope.renewals,
+                  fx: c.fx,
+                  onMonthly: () => detail(FinanceMetric.monthly),
+                  onValue: () => detail(FinanceMetric.value),
+                  onRenewals: () => open(
+                    (_) => RenewalsPage(controller: c, groupId: groupId),
+                  ),
+                  onFx: openFx,
+                ),
+                if (incomplete > 0 || monthly.missingFx > 0)
+                  AppBanner(
+                    key: const ValueKey('finance-incomplete'),
+                    tone: AppTone.amber,
+                    icon: Icons.warning_amber_rounded,
+                    text: [
+                      if (incomplete > 0)
+                        l10n.financeIncompleteCount(incomplete),
+                      if (monthly.missingFx > 0)
+                        l10n.uiFinanceBannerMissingFx(monthly.missingFx),
+                    ].join(' · '),
+                    onTap: incomplete > 0
+                        ? () => detail(FinanceMetric.incomplete)
+                        : openFx,
+                  ),
+              ],
             ),
-          AppChipRow(
-            children: [
-              AppChip(
-                key: const ValueKey('finance-scope'),
-                icon: Icons.folder_outlined,
-                label: scopeLabel,
-                onTap: pickScope,
-              ),
-              AppChip(
-                key: const ValueKey('finance-currency'),
-                label: l10n.uiFinanceDisplayChip(c.fx.displayCurrency),
-                onTap: pickCurrency,
-              ),
-            ],
           ),
-          FinanceSummaryCard(
-            monthly: monthly,
-            values: scope.value,
-            renewals: scope.renewals,
-            fx: c.fx,
-            onMonthly: () => detail(FinanceMetric.monthly),
-            onValue: () => detail(FinanceMetric.value),
-            onRenewals: () =>
-                open((_) => RenewalsPage(controller: c, groupId: groupId)),
-            onFx: openFx,
-          ),
-          if (incomplete > 0 || monthly.missingFx > 0)
-            AppBanner(
-              key: const ValueKey('finance-incomplete'),
-              tone: AppTone.amber,
-              icon: Icons.warning_amber_rounded,
-              text: [
-                if (incomplete > 0) l10n.financeIncompleteCount(incomplete),
-                if (monthly.missingFx > 0)
-                  l10n.uiFinanceBannerMissingFx(monthly.missingFx),
-              ].join(' · '),
-              onTap: incomplete > 0
-                  ? () => detail(FinanceMetric.incomplete)
-                  : openFx,
-            ),
-
-            ],
-          )),
           _upcoming(context, c, scope.events),
-          SliverList(delegate: SliverChildListDelegate([
-          _distribution(context, c, scope),
-          _forecast(context, c, scope.forecast),
-          _tools(context, c, scope.payments.length, scope.paid),
-          FinanceNote(
-            l10n.uiFinanceFootnote,
-            padding: const EdgeInsets.fromLTRB(32, 16, 32, 0),
+          SliverList(
+            delegate: SliverChildListDelegate([
+              _distribution(context, c, scope),
+              _forecast(context, c, scope.forecast),
+              _tools(context, c, scope.payments.length, scope.paid),
+              FinanceNote(
+                l10n.uiFinanceFootnote,
+                padding: const EdgeInsets.fromLTRB(32, 16, 32, 0),
+              ),
+            ]),
           ),
-          ])),
         ],
       );
     },
@@ -290,24 +295,27 @@ class _FinancePageState extends State<FinancePage> {
     final l10n = context.l10n;
     return AppLazySections(
       key: const ValueKey('finance-upcoming'),
-      sections: [AppListSection(
-        header: l10n.financeUpcomingRenewals,
-        footer: l10n.financeRenewalEventNote(events.length),
-        topSpacing: 22,
-        count: events.isEmpty ? 1 : events.length,
-        itemKey: (i) => events.isEmpty
-            ? const ValueKey('upcoming-empty')
-            : ValueKey('upcoming-${events[i].server.id}-${events[i].date}'),
-        itemBuilder: (context, i) {
-          if (events.isEmpty) return AppRow(title: l10n.financeNoKnownRenewals);
-          final e = events[i];
-          return FinanceRenewalRow(
-            event: e,
-            controller: c,
-            onTap: () => openServer(e.server.id),
-          );
-        },
-      )],
+      sections: [
+        AppListSection(
+          header: l10n.financeUpcomingRenewals,
+          footer: l10n.financeRenewalEventNote(events.length),
+          topSpacing: 22,
+          count: events.isEmpty ? 1 : events.length,
+          itemKey: (i) => events.isEmpty
+              ? const ValueKey('upcoming-empty')
+              : ValueKey('upcoming-${events[i].server.id}-${events[i].date}'),
+          itemBuilder: (context, i) {
+            if (events.isEmpty)
+              return AppRow(title: l10n.financeNoKnownRenewals);
+            final e = events[i];
+            return FinanceRenewalRow(
+              event: e,
+              controller: c,
+              onTap: () => openServer(e.server.id),
+            );
+          },
+        ),
+      ],
     );
   }
 

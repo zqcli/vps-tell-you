@@ -374,27 +374,21 @@ class LedgerController extends ChangeNotifier {
     unawaited(reminders.reconcile());
   }
 
-  Future<void> setFavorite(ServerRecord record, bool favorite) => _mutate(
-    () => store.setFavorite(record, favorite),
-    () async {
-      records = await store.servers();
-    },
-  );
+  Future<void> setFavorite(ServerRecord record, bool favorite) =>
+      _mutate(() => store.setFavorite(record, favorite), () async {
+        records = await store.servers();
+      });
 
-  Future<void> setThemeMode(String mode) => _mutate(
-    () => store.saveThemeMode(mode),
-    () async {
-      _themeRevision++;
-      themeMode = mode;
-    },
-  );
+  Future<void> setThemeMode(String mode) =>
+      _mutate(() => store.saveThemeMode(mode), () async {
+        _themeRevision++;
+        themeMode = mode;
+      });
 
-  Future<void> saveFx(FxSettings settings) => _mutate(
-    () => store.saveFx(settings),
-    () async {
-      fx = await store.fxSettings();
-    },
-  );
+  Future<void> saveFx(FxSettings settings) =>
+      _mutate(() => store.saveFx(settings), () async {
+        fx = await store.fxSettings();
+      });
 
   Future<void> saveGroup(String name, {String? id}) =>
       _mutate(() => store.saveGroup(name, id: id), _reloadGroups);
@@ -402,18 +396,16 @@ class LedgerController extends ChangeNotifier {
   Future<void> moveGroup(String id, int delta) =>
       _mutate(() => store.moveGroup(id, delta), _reloadGroups);
 
-  Future<void> deleteGroup(String id) => _mutate(
-    () => store.deleteGroup(id),
-    () async {
-      final (loadedRecords, loadedGroups) = await (
-        store.servers(),
-        store.groups(),
-      ).wait;
-      records = loadedRecords;
-      groups = loadedGroups;
-      _clearMissingGroup();
-    },
-  );
+  Future<void> deleteGroup(String id) =>
+      _mutate(() => store.deleteGroup(id), () async {
+        final (loadedRecords, loadedGroups) = await (
+          store.servers(),
+          store.groups(),
+        ).wait;
+        records = loadedRecords;
+        groups = loadedGroups;
+        _clearMissingGroup();
+      });
 
   Future<void> _reloadGroups() async {
     groups = await store.groups();

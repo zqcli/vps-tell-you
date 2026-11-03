@@ -518,9 +518,7 @@ Future<void> _replaceInitialPeriod(
   }
   final knownStart = record.startDate;
   final hasStart =
-      knownStart != null &&
-      knownStart.isValid &&
-      knownStart.compareTo(due) < 0;
+      knownStart != null && knownStart.isValid && knownStart.compareTo(due) < 0;
   final start = hasStart ? knownStart : due.addMonths(-record.cycleMonths);
   if (!start.isValid || start.compareTo(due) >= 0) {
     return;
