@@ -17,7 +17,6 @@ import 'support/fake_proxy.dart';
 import 'support/connection_fakes.dart';
 import 'support/ssh_fixture.dart';
 
-const _password = 'synthetic-password-only';
 const _proxyPassword = 'synthetic-proxy-password';
 
 void main() {

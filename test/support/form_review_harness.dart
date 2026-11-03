@@ -89,8 +89,8 @@ class FormReviewHarness {
               ? scaled(context, scale, content)
               : ValueListenableBuilder<double>(
                   valueListenable: textScale,
-                  child: content,
                   builder: scaled,
+                  child: content,
                 );
         },
         home: captureRoutes ? home : boundary(home),
