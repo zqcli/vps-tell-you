@@ -317,6 +317,7 @@ void main() {
         testWidgets(
           '${brightness.name} 390px ${scale}x: every real page scrolls without overflow',
           (tester) async {
+            final ssh = SpySshService();
             final pages = <String, Widget Function()>{
               'terminal': () => TerminalPage(
                 ledger: ledger,
@@ -326,7 +327,7 @@ void main() {
                   username: 'fixture',
                   credentialId: 'synthetic',
                 ),
-                serviceFactory: (_) => SpySshService(),
+                serviceFactory: (_) => ssh,
               ),
               'server list': () =>
                   Scaffold(body: ServerList(controller: ledger)),
@@ -373,7 +374,9 @@ void main() {
                   ),
                   greaterThanOrEqualTo(4.5),
                 );
-                expect(terminal.readOnly, isTrue);
+                // The session is connected by the time layout settles.
+                expect(ssh.connections, 1);
+                expect(terminal.readOnly, isFalse);
               }
               if (page.key == 'server list') {
                 final p = appTheme(brightness: brightness)

@@ -33,5 +33,5 @@ Future<String> saveFixtureCredential(SecurityController security) async {
     isTrue,
     reason: security.error,
   );
-  return security.credentials.last.id;
+  return security.credentials.single.id;
 }

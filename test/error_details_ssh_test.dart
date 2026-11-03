@@ -156,7 +156,9 @@ void main() {
         defaultUsername: 'fixture',
         secret: 'synthetic-wrong-password',
       );
-      credentialId = security.credentials.last.id;
+      credentialId = security.credentials
+          .singleWhere((record) => record.name == 'Wrong')
+          .id;
       final svc = make();
       await svc.connect(target(remote.port), verifyHost: accept);
       await remote.waitFor('closed');
@@ -313,7 +315,9 @@ void main() {
         passphrase: 'fixture-passphrase-only',
         savePassphrase: false,
       );
-      credentialId = security.credentials.last.id;
+      credentialId = security.credentials
+          .singleWhere((record) => record.kind == CredentialKind.privateKey)
+          .id;
       final remote = await ssh();
       final svc = make();
       await svc.connect(
